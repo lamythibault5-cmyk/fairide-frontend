@@ -35,7 +35,10 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register, loginWithGoogle } = useAuth();
+  const [pendingEmail, setPendingEmail] = useState('');
+  const [code, setCode] = useState('');
+  const [resending, setResending] = useState(false);
+  const { login, register, verifyEmail, resendCode, loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -95,7 +98,6 @@ export default function Auth() {
     if (!email || !password) { toast('Email et mot de passe requis.'); return; }
     setLoading(true);
     try {
-      let data;
       if (mode === 'register') {
         if (!firstName.trim() || !lastName.trim()) { toast('Ton prénom et ton nom sont requis.'); setLoading(false); return; }
         if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
@@ -104,23 +106,90 @@ export default function Auth() {
           setLoading(false);
           return;
         }
-        data = await register({
+        const data = await register({
           firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role,
           phone: phone.trim(), gender: gender || undefined, birthDate: birthDate || undefined,
           referralCode: referralCode.trim() || undefined,
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
           addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
         });
+        if (data.needsVerification) {
+          setPendingEmail(data.email);
+          toast('Un code de vérification t\'a été envoyé par email.');
+        }
       } else {
-        data = await login(email.trim(), password);
+        const data = await login(email.trim(), password);
+        toast(`Bienvenue, ${data.user.name} !`);
+        navigate('/');
       }
-      toast(mode === 'register' ? `Bienvenue, ${data.user.name} ! Un email de confirmation t'a été envoyé.` : `Bienvenue, ${data.user.name} !`);
+    } catch (err) {
+      if (err.message === 'EMAIL_NOT_VERIFIED') {
+        setPendingEmail(email.trim());
+        toast('Confirme d\'abord ton adresse email avec le code qu\'on t\'a envoyé.');
+      } else {
+        toast(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function submitCode(e) {
+    e.preventDefault();
+    if (!code.trim()) { toast('Entre le code reçu par email.'); return; }
+    setLoading(true);
+    try {
+      const data = await verifyEmail(pendingEmail, code.trim());
+      toast(`Bienvenue, ${data.user.name} !`);
       navigate('/');
     } catch (err) {
       toast(err.message);
     } finally {
       setLoading(false);
     }
+  }
+
+  async function handleResend() {
+    setResending(true);
+    try {
+      await resendCode(pendingEmail);
+      toast('Nouveau code envoyé.');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setResending(false);
+    }
+  }
+
+  if (pendingEmail) {
+    return (
+      <div className="auth-box">
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>Confirme ton email</h2>
+          <p className="small" style={{ marginBottom: 14 }}>
+            On a envoyé un code à 6 chiffres à <b>{pendingEmail}</b>. Entre-le ci-dessous pour activer ton compte.
+          </p>
+          <form onSubmit={submitCode}>
+            <div className="field">
+              <label>Code de vérification</label>
+              <input
+                value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456"
+                maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
+              />
+            </div>
+            <button type="submit" className="btn-gold btn-block" disabled={loading}>
+              {loading ? '...' : 'Confirmer'}
+            </button>
+          </form>
+          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending} onClick={handleResend}>
+            {resending ? '...' : 'Renvoyer le code'}
+          </button>
+          <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setPendingEmail(''); setCode(''); }}>
+            &larr; Retour
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

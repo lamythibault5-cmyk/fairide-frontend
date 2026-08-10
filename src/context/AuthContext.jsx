@@ -27,8 +27,18 @@ export function AuthProvider({ children }) {
 
   async function register(payload) {
     const data = await api('/auth/register', { method: 'POST', body: payload });
+    if (!data.needsVerification) setSession(data);
+    return data;
+  }
+
+  async function verifyEmail(email, code) {
+    const data = await api('/auth/verify-email', { method: 'POST', body: { email, code } });
     setSession(data);
     return data;
+  }
+
+  async function resendCode(email) {
+    return api('/auth/resend-code', { method: 'POST', body: { email } });
   }
 
   async function loginWithGoogle(credential, role, extra) {
@@ -59,6 +69,8 @@ export function AuthProvider({ children }) {
     role: session?.user?.role || null,
     login,
     register,
+    verifyEmail,
+    resendCode,
     loginWithGoogle,
     updateProfile,
     refreshUser,

@@ -23,7 +23,10 @@ export default function Dashboard() {
   const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
   const [customCuisine, setCustomCuisine] = useState('');
   const [desc, setDesc] = useState('');
-  const [address, setAddress] = useState('');
+  const [addressStreet, setAddressStreet] = useState('');
+  const [addressNumber, setAddressNumber] = useState('');
+  const [addressPostalCode, setAddressPostalCode] = useState('');
+  const [addressCity, setAddressCity] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [openingHours, setOpeningHours] = useState('');
 
@@ -33,7 +36,10 @@ export default function Dashboard() {
   const [editCustomCuisine, setEditCustomCuisine] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
-  const [editAddress, setEditAddress] = useState('');
+  const [editAddressStreet, setEditAddressStreet] = useState('');
+  const [editAddressNumber, setEditAddressNumber] = useState('');
+  const [editAddressPostalCode, setEditAddressPostalCode] = useState('');
+  const [editAddressCity, setEditAddressCity] = useState('');
   const [editCover, setEditCover] = useState('');
   const [editOpeningHours, setEditOpeningHours] = useState('');
   const [editOpenFlag, setEditOpenFlag] = useState(true);
@@ -81,7 +87,10 @@ export default function Dashboard() {
       setEditCustomCuisine(knownType ? '' : (restoData.cuisine || ''));
       setEditCommune(restoData.commune || COMMUNES[0]);
       setEditNeighborhood(restoData.neighborhood || '');
-      setEditAddress(restoData.address || '');
+      setEditAddressStreet(restoData.addressStreet || '');
+      setEditAddressNumber(restoData.addressNumber || '');
+      setEditAddressPostalCode(restoData.addressPostalCode || '');
+      setEditAddressCity(restoData.addressCity || '');
       setEditCover(restoData.coverImageUrl || '');
       setEditOpeningHours(restoData.openingHours || '');
       setEditOpenFlag(restoData.open);
@@ -99,15 +108,24 @@ export default function Dashboard() {
 
   async function createResto() {
     if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
-    if (!address.trim()) { toast("Donne l'adresse du restaurant (pour les livreurs)."); return; }
+    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
+      toast("Donne l'adresse complète du restaurant (rue, numéro, code postal, ville) pour les livreurs et la carte.");
+      return;
+    }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
-        body: { name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim() }
+        body: {
+          name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
+          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+          coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim()
+        }
       });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
+      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
+      setAddressStreet(''); setAddressNumber(''); setAddressPostalCode(''); setAddressCity('');
+      setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
     } catch (e) {
@@ -121,7 +139,11 @@ export default function Dashboard() {
     try {
       const r = await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
-        body: { desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag }
+        body: {
+          desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(),
+          addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editAddressCity.trim(),
+          coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag
+        }
       });
       setRestaurant(r);
       setMyRestos((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: r.name } : x)));
@@ -271,7 +293,18 @@ export default function Dashboard() {
               </select>
             </div>
             <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
-            <div className="field"><label>Adresse (pour les livreurs)</label><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
+            <div className="field"><label>Rue / Avenue (pour les livreurs et la carte)</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Numéro</label>
+                <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Code postal</label>
+                <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+              </div>
+            </div>
+            <div className="field"><label>Ville / Commune (postale)</label><input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" /></div>
             <div className="field">
               <label>Type de restaurant</label>
               <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
@@ -318,7 +351,18 @@ export default function Dashboard() {
                 </select>
               </div>
               <div className="field"><label>Quartier (optionnel)</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
-              <div className="field"><label>Adresse (pour les livreurs)</label><input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
+              <div className="field"><label>Rue / Avenue (pour les livreurs et la carte)</label><input value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Numéro</label>
+                  <input value={editAddressNumber} onChange={(e) => setEditAddressNumber(e.target.value)} placeholder="12" />
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Code postal</label>
+                  <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
+                </div>
+              </div>
+              <div className="field"><label>Ville / Commune (postale)</label><input value={editAddressCity} onChange={(e) => setEditAddressCity(e.target.value)} placeholder="Bruxelles" /></div>
               <div className="field">
                 <label>Type de restaurant</label>
                 <select value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)}>

@@ -91,6 +91,7 @@ export default function Admin() {
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <div>
                   <b>{u.name}</b> <span className="pill teal" style={{ marginLeft: 6 }}>{u.role}</span>
+                  {!u.emailVerified && <span className="pill" style={{ marginLeft: 6, color: 'var(--red)' }}>Email non vérifié</span>}
                   <div className="small">{u.email}{u.phone ? ` · ${u.phone}` : ''}</div>
                 </div>
                 {u.role === 'client' && <div className="small">Solde : <b>{u.balance.toFixed(2)}€</b></div>}
@@ -102,6 +103,11 @@ export default function Admin() {
                     value={balanceInputs[u.id] || ''} onChange={(e) => setBalanceInputs((prev) => ({ ...prev, [u.id]: e.target.value }))}
                   />
                   <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => creditBalance(u.id)}>Ajuster le solde</button>
+                </div>
+              )}
+              {(u.role === 'restaurant' || u.role === 'driver') && (u.payoutIban || u.payoutAccountHolder) && (
+                <div className="small" style={{ marginTop: 6 }}>
+                  💳 {u.payoutAccountHolder || '(titulaire non renseigné)'} — {u.payoutIban || '(IBAN non renseigné)'}
                 </div>
               )}
             </div>

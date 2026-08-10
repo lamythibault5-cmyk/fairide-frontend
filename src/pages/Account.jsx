@@ -26,9 +26,26 @@ export default function Account() {
   const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [savingInfo, setSavingInfo] = useState(false);
 
+  const [payoutIban, setPayoutIban] = useState(user.payoutIban || '');
+  const [payoutAccountHolder, setPayoutAccountHolder] = useState(user.payoutAccountHolder || '');
+  const [savingPayout, setSavingPayout] = useState(false);
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
+
+  async function savePayout(e) {
+    e.preventDefault();
+    setSavingPayout(true);
+    try {
+      await updateProfile({ payoutIban: payoutIban.trim(), payoutAccountHolder: payoutAccountHolder.trim() });
+      toast('Infos de paiement enregistrées.');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setSavingPayout(false);
+    }
+  }
 
   async function saveInfo(e) {
     e.preventDefault();
@@ -131,6 +148,26 @@ export default function Account() {
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : 'Enregistrer'}</button>
         </form>
       </div>
+
+      {(role === 'restaurant' || role === 'driver') && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Coordonnées de paiement</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>
+            Renseigne où tu souhaites recevoir tes paiements Fairide. Le versement automatique arrive bientôt — en attendant, ces infos servent à Fairide pour te payer manuellement.
+          </p>
+          <form onSubmit={savePayout}>
+            <div className="field">
+              <label>Titulaire du compte</label>
+              <input value={payoutAccountHolder} onChange={(e) => setPayoutAccountHolder(e.target.value)} placeholder="Nom complet ou raison sociale" />
+            </div>
+            <div className="field">
+              <label>IBAN</label>
+              <input value={payoutIban} onChange={(e) => setPayoutIban(e.target.value)} placeholder="BE00 0000 0000 0000" />
+            </div>
+            <button type="submit" className="btn-teal" disabled={savingPayout}>{savingPayout ? '...' : 'Enregistrer'}</button>
+          </form>
+        </div>
+      )}
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Changer de mot de passe</h3>
