@@ -13,8 +13,11 @@ const GENDERS = [
 ];
 
 export default function Account() {
-  const { user, role, updateProfile, logout } = useAuth();
+  const { user, role, updateProfile, deleteAccount, logout } = useAuth();
   const toast = useToast();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
   const [gender, setGender] = useState(user.gender || '');
@@ -62,6 +65,18 @@ export default function Account() {
       toast(err.message);
     } finally {
       setSavingInfo(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    if (!user.hasGoogleAuth && !deletePassword) { toast('Entre ton mot de passe pour confirmer.'); return; }
+    setDeleting(true);
+    try {
+      const result = await deleteAccount(deletePassword);
+      toast(result.anonymized ? 'Compte supprimé. Ton historique de commandes reste visible pour les autres, sans tes données personnelles.' : 'Compte supprimé.');
+    } catch (err) {
+      toast(err.message);
+      setDeleting(false);
     }
   }
 
@@ -182,6 +197,33 @@ export default function Account() {
           </div>
           <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : 'Changer le mot de passe'}</button>
         </form>
+      </div>
+
+      <div className="card">
+        <h3 style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--red)' }}>Supprimer mon compte</h3>
+        {!confirmDeleteOpen && (
+          <button className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>🗑️ Supprimer mon compte</button>
+        )}
+        {confirmDeleteOpen && (
+          <div>
+            <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>
+              Cette action est irréversible. Si tu as déjà des commandes, tes données personnelles seront effacées
+              mais ton historique de commandes restera visible (anonymisé) pour les commerces/livreurs concernés.
+            </p>
+            {!user.hasGoogleAuth && (
+              <div className="field">
+                <label>Confirme avec ton mot de passe</label>
+                <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
+              </div>
+            )}
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
+                {deleting ? '...' : 'Oui, supprimer définitivement'}
+              </button>
+              <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeletePassword(''); }}>Annuler</button>
+            </div>
+          </div>
+        )}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>Se déconnecter</button>

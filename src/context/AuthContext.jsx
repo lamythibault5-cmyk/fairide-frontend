@@ -59,6 +59,12 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  async function deleteAccount(password) {
+    const data = await api('/auth/me', { method: 'DELETE', token: session.token, body: { password } });
+    setSession(null);
+    return data;
+  }
+
   function logout() {
     setSession(null);
   }
@@ -74,6 +80,7 @@ export function AuthProvider({ children }) {
     loginWithGoogle,
     updateProfile,
     refreshUser,
+    deleteAccount,
     logout
   };
 
