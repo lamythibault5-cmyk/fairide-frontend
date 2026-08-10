@@ -6,11 +6,13 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { CATEGORIES, defaultItemImage } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
+import { StarsDisplay } from '../../components/Stars';
 import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  const [reviews, setReviews] = useState(null);
   const [discover, setDiscover] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [favoriteBusy, setFavoriteBusy] = useState(false);
@@ -30,6 +32,7 @@ export default function RestaurantMenu() {
   useEffect(() => {
     cart.startOrder(id);
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
+    api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
     api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -37,7 +40,7 @@ export default function RestaurantMenu() {
 
   if (!restaurant) return <SkeletonCards count={3} />;
 
-  const totals = cart.totals(restaurant.menu);
+  const totals = cart.totals(restaurant.menu, restaurant.activePromo);
   const isFavorite = favoriteIds.has(id);
 
   async function toggleFavorite() {
@@ -101,8 +104,17 @@ export default function RestaurantMenu() {
             {isFavorite ? '❤️' : '🤍'}
           </button>
         </div>
+        <div className="row" style={{ gap: 6, margin: '2px 0' }}>
+          <StarsDisplay value={restaurant.rating} />
+          <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Nouveau'}</span>
+        </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
-        <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
+        <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
+        {restaurant.activePromo && (
+          <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
+            🏷️ Promo en cours : {restaurant.activePromo.label}
+          </div>
+        )}
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
         {CATEGORIES.map((cat) => {
           const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
@@ -151,7 +163,10 @@ export default function RestaurantMenu() {
             })}
             <div className="divider" />
             <div className="breakdown">
-              <div className="line"><span>Sous-total</span><span>{totals.subtotal.toFixed(2)}€</span></div>
+              <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
+              {totals.promoDiscount > 0 && (
+                <div className="line"><span>Promo {restaurant.activePromo?.label}</span><span>-{totals.promoDiscount.toFixed(2)}€</span></div>
+              )}
               <div className="line"><span>Livraison</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
               <div className="line"><span>dont commission Fairide (6%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
@@ -201,6 +216,21 @@ export default function RestaurantMenu() {
             </button>
           </div>
         </>
+      )}
+
+      {reviews && reviews.reviews.length > 0 && (
+        <div className="card" style={{ marginTop: 18 }}>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Avis clients</h3>
+          {reviews.reviews.map((r, i) => (
+            <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <b style={{ fontSize: 13 }}>{r.clientName}</b>
+                <StarsDisplay value={r.foodRating} />
+              </div>
+              {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
+            </div>
+          ))}
+        </div>
       )}
 
       {discover.length > 0 && (

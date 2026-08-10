@@ -64,6 +64,7 @@ a { color: inherit; }
 .pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--cream-dim); color: var(--ink-soft); font-weight: 600; }
 .pill.teal { background: rgba(47,111,94,0.12); color: var(--teal-deep); }
 .pill.gold { background: rgba(217,164,65,0.18); color: var(--gold-deep); }
+.promo-badge { position: absolute; top: 10px; left: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; z-index: 1; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
 input, select, textarea {

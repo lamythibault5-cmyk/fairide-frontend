@@ -32,15 +32,27 @@ export function CartProvider({ children }) {
 
   const count = useMemo(() => Object.values(items).reduce((a, b) => a + b, 0), [items]);
 
-  function totals(menu) {
-    let subtotal = 0;
+  function totals(menu, promo) {
+    let rawSubtotal = 0;
+    let totalQty = 0;
+    const unitPrices = [];
     Object.entries(items).forEach(([id, qty]) => {
       const item = menu?.find((m) => m.id === id);
-      if (item) subtotal += item.price * qty;
+      if (item) {
+        rawSubtotal += item.price * qty;
+        totalQty += qty;
+        for (let i = 0; i < qty; i++) unitPrices.push(item.price);
+      }
     });
+    let promoDiscount = 0;
+    if (promo) {
+      if (promo.type === 'percent') promoDiscount = rawSubtotal * (promo.value / 100);
+      else if (promo.type === 'bogo' && totalQty >= 2) promoDiscount = Math.min(...unitPrices, Infinity) || 0;
+    }
+    const subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
     const total = +(subtotal + DELIVERY_FEE).toFixed(2);
-    return { subtotal: +subtotal.toFixed(2), deliveryFee: DELIVERY_FEE, commission, total };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), subtotal, deliveryFee: DELIVERY_FEE, commission, total };
   }
 
   return (

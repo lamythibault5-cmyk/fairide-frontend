@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { StarsDisplay } from '../../components/Stars';
 import { DeliveryTiming, deliveryInstructionLabel } from '../../orderStatus';
 
 export default function DriverDashboard() {
@@ -10,17 +11,20 @@ export default function DriverDashboard() {
   const toast = useToast();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
+  const [reviews, setReviews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [codeInputs, setCodeInputs] = useState({});
 
   async function load() {
     try {
-      const [availableData, mineData] = await Promise.all([
+      const [availableData, mineData, reviewsData] = await Promise.all([
         api('/orders/available', { token }),
-        api('/orders/mine/deliveries', { token })
+        api('/orders/mine/deliveries', { token }),
+        api('/reviews/driver/mine', { token })
       ]);
       setAvailable(availableData);
       setMine(mineData);
+      setReviews(reviewsData);
     } catch (e) {
       toast(e.message);
     } finally {
@@ -58,7 +62,26 @@ export default function DriverDashboard() {
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
         <div className="stat-card highlight"><div className="num">{(delivered.length * 4.5).toFixed(2)}€</div><div className="label">Gains estimés</div></div>
+        <div className="stat-card">
+          <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
+          <div className="label">{reviews?.count > 0 ? `${reviews.avg.toFixed(1)} (${reviews.count} avis)` : 'Pas encore d\'avis'}</div>
+        </div>
       </div>
+
+      {reviews && reviews.reviews.length > 0 && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Avis sur mes livraisons</h3>
+          {reviews.reviews.map((r, i) => (
+            <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <b style={{ fontSize: 13 }}>{r.clientName} · {r.restaurantName}</b>
+                <StarsDisplay value={r.deliveryRating} />
+              </div>
+              {r.deliveryComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.deliveryComment}</p>}
+            </div>
+          ))}
+        </div>
+      )}
 
       <h2 className="section-title" style={{ marginTop: 0 }}>Commandes prêtes à récupérer</h2>
       {available.length === 0 && <div className="empty">Aucune commande prête pour l'instant.</div>}

@@ -4,10 +4,58 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
+import { StarsInput } from '../../components/Stars';
+
+function ReviewForm({ order, token, toast, onDone }) {
+  const [foodRating, setFoodRating] = useState(5);
+  const [foodComment, setFoodComment] = useState('');
+  const [deliveryRating, setDeliveryRating] = useState(order.driverName ? 5 : 0);
+  const [deliveryComment, setDeliveryComment] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  async function submit() {
+    setSaving(true);
+    try {
+      await api(`/orders/${order.id}/review`, {
+        method: 'POST', token,
+        body: {
+          foodRating, foodComment: foodComment.trim(),
+          deliveryRating: order.driverName ? deliveryRating : undefined,
+          deliveryComment: order.driverName ? deliveryComment.trim() : undefined
+        }
+      });
+      toast('Merci pour ton avis !');
+      onDone();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
+      <div style={{ marginBottom: 10 }}>
+        <div className="small" style={{ marginBottom: 4 }}>Note pour la nourriture</div>
+        <StarsInput value={foodRating} onChange={setFoodRating} />
+        <input value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder="Un commentaire sur le repas (optionnel)" style={{ marginTop: 6 }} />
+      </div>
+      {order.driverName && (
+        <div style={{ marginBottom: 10 }}>
+          <div className="small" style={{ marginBottom: 4 }}>Note pour la livraison</div>
+          <StarsInput value={deliveryRating} onChange={setDeliveryRating} />
+          <input value={deliveryComment} onChange={(e) => setDeliveryComment(e.target.value)} placeholder="Un commentaire sur la livraison (optionnel)" style={{ marginTop: 6 }} />
+        </div>
+      )}
+      <button className="btn-teal" disabled={saving} onClick={submit}>{saving ? '...' : 'Envoyer mon avis'}</button>
+    </div>
+  );
+}
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewingId, setReviewingId] = useState(null);
   const { token } = useAuth();
   const toast = useToast();
 
@@ -48,6 +96,19 @@ export default function Orders() {
             <span className="small">{o.paid ? '✅ Payée' : '⏳ Paiement en attente'}</span>
             <b>{o.total.toFixed(2)}€</b>
           </div>
+
+          {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (
+            <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>⭐ Laisser un avis</button>
+          )}
+          {o.status === 'livre' && o.reviewed && (
+            <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>✓ Avis envoyé, merci !</div>
+          )}
+          {reviewingId === o.id && (
+            <ReviewForm
+              order={o} token={token} toast={toast}
+              onDone={() => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true } : x))); }}
+            />
+          )}
         </div>
       ))}
     </div>

@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { StarsDisplay } from '../../components/Stars';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 
 export default function RestaurantList() {
@@ -71,12 +72,17 @@ export default function RestaurantList() {
             >
               {favoriteIds.has(r.id) ? '❤️' : '🤍'}
             </button>
+            {r.activePromo && <span className="promo-badge">🏷️ {r.activePromo.label}</span>}
             {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
             <div className="pill-row">
               <span className="pill teal">{r.commune}</span>
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
             </div>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
+            <div className="row" style={{ gap: 6, margin: '2px 0' }}>
+              <StarsDisplay value={r.rating} />
+              <span className="small">{r.reviewCount > 0 ? `(${r.reviewCount})` : 'Nouveau'}</span>
+            </div>
             <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>
             <span className="small">{r.menu.length} plats</span>
           </Link>
