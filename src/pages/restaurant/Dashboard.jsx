@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { ProgressBar, statusLabel } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
 import { CATEGORIES, STARTER_TEMPLATE } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 
@@ -181,6 +181,7 @@ export default function Dashboard() {
                     <span className={`status-badge status-${o.status}`}>{statusLabel(o.status)}</span>
                   </div>
                   <ProgressBar status={o.status} />
+                  <DeliveryTiming order={o} />
                   <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
                   <div className="small">📍 {o.address}</div>
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}

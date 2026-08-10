@@ -12,6 +12,31 @@ export function statusLabel(status) {
   }[status] || status;
 }
 
+function formatTime(ms) {
+  return new Date(ms).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+}
+
+export function DeliveryTiming({ order }) {
+  const { createdAt, estimatedDeliveryAt, status } = order;
+  if (status === 'refuse') return null;
+
+  if (status === 'livre') {
+    return <div className="small">🕐 Commandée à {formatTime(createdAt)}</div>;
+  }
+
+  if (!estimatedDeliveryAt) {
+    return <div className="small">🕐 Commandée à {formatTime(createdAt)}</div>;
+  }
+
+  const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
+  return (
+    <div className="small">
+      🕐 Commandée à {formatTime(createdAt)} · Livraison estimée à <b>{formatTime(estimatedDeliveryAt)}</b>
+      {minutesLeft > 0 ? ` (~${minutesLeft} min)` : ' (imminente)'}
+    </div>
+  );
+}
+
 export function ProgressBar({ status }) {
   if (status === 'refuse') {
     return <p className="small" style={{ color: 'var(--red)' }}>Commande refusée par le restaurant.</p>;

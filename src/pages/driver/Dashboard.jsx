@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { DeliveryTiming } from '../../orderStatus';
 
 export default function DriverDashboard() {
   const { token } = useAuth();
@@ -59,8 +60,9 @@ export default function DriverDashboard() {
             <span className="pill teal">{o.commune}</span>
           </div>
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
-          <div className="small" style={{ marginBottom: 6 }}>📍 {o.address}</div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div className="small" style={{ marginBottom: 4 }}>📍 {o.address}</div>
+          <DeliveryTiming order={o} />
+          <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
             <span className="small">Course : 2.50€</span>
             <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
           </div>
@@ -74,6 +76,7 @@ export default function DriverDashboard() {
           <b>{o.restaurantName}</b> → {o.clientName}
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
           <div className="small">📍 {o.address}</div>
+          <DeliveryTiming order={o} />
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <button className="btn-teal" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>Marquer livrée</button>
         </div>
