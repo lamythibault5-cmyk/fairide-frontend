@@ -2,9 +2,9 @@ import { useNavigate } from 'react-router-dom';
 
 const FEATURES = [
   {
-    icon: '🥗',
-    title: 'Sain & savoureux',
-    text: "Des plats frais, préparés par de vrais restaurants du quartier — pas de la malbouffe industrielle. Filtre par cuisine et découvre des options équilibrées près de chez toi."
+    icon: '🏪',
+    title: '100% commerces locaux',
+    text: "Restaurants, supermarchés, night shops, boulangeries... découvre et soutiens les commerces de ton quartier, pas des chaînes anonymes."
   },
   {
     icon: '🚲',
@@ -13,13 +13,13 @@ const FEATURES = [
   },
   {
     icon: '🤝',
-    title: 'Commission réduite',
-    text: "6% de commission au lieu des 25-30% des grandes plateformes. Les restaurants gardent plus, les prix restent justes."
+    title: 'Juste pour tout le monde',
+    text: "6% de commission au lieu des 25-30% des grandes plateformes : les restaurants gardent plus, et les livreurs sont mieux payés pour chaque course."
   }
 ];
 
 const STEPS = [
-  { num: '1', title: 'Choisis ton resto', text: 'Parcours les restaurants locaux et leurs plats du jour.' },
+  { num: '1', title: 'Choisis ton commerce', text: 'Parcours les restaurants et commerces locaux près de chez toi.' },
   { num: '2', title: 'Commande & paie', text: 'Paiement sécurisé, commande transmise instantanément.' },
   { num: '3', title: 'Reçois ta livraison', text: 'Suis ta commande en temps réel jusqu\'à ta porte.' }
 ];
@@ -30,17 +30,17 @@ export default function Landing() {
   return (
     <div>
       <div className="landing-hero">
-        <span className="pill teal" style={{ marginBottom: 14 }}>🌱 Manger bien, livrer mieux</span>
+        <span className="pill teal" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
         <h1 className="landing-title">
-          Des repas sains qui donnent envie,<br />livrés de façon éco-responsable.
+          Les commerces de ton quartier,<br />livrés par des gens d'ici.
         </h1>
         <p className="landing-sub">
-          Fairide connecte les restaurants locaux, les livreurs et toi — sans prendre une commission excessive au passage.
-          Paie le repas, pas la plateforme.
+          Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés —
+          sans la commission excessive des grandes plateformes. Paie ta commande, pas la plateforme.
         </p>
         <div className="row" style={{ gap: 10 }}>
-          <button className="btn-gold" onClick={() => navigate('/login')}>🧑‍🍳 Commander maintenant</button>
-          <button className="btn-outline" onClick={() => navigate('/login')}>🍽️ Devenir partenaire</button>
+          <button className="btn-gold" onClick={() => navigate('/login')}>🛍️ Commander maintenant</button>
+          <button className="btn-outline" onClick={() => navigate('/login')}>🏪 Devenir partenaire</button>
         </div>
       </div>
 
@@ -66,9 +66,9 @@ export default function Landing() {
       </div>
 
       <div className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
-        <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>Prêt à goûter la différence ?</h2>
+        <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>Prêt à soutenir ton quartier ?</h2>
         <p className="small" style={{ color: 'var(--cream)', opacity: 0.85, marginBottom: 16 }}>
-          Rejoins Fairide comme client, restaurant ou livreur — c'est gratuit à l'inscription.
+          Rejoins Fairide comme client, commerce ou livreur — c'est gratuit à l'inscription.
         </p>
         <button className="btn-gold" onClick={() => navigate('/login')}>Créer mon compte</button>
       </div>

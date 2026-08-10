@@ -35,7 +35,7 @@ export default function Layout() {
                 </>
               )}
               {role === 'restaurant' && (
-                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>Mon restaurant</NavLink>
+                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>Mon commerce</NavLink>
               )}
               {role === 'driver' && (
                 <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>Livraisons</NavLink>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
-const ROLE_LABEL = { client: 'Client', restaurant: 'Restaurant', driver: 'Livreur' };
+const ROLE_LABEL = { client: 'Client', restaurant: 'Commerce', driver: 'Livreur' };
 
 export default function Account() {
   const { user, role, updateProfile, logout } = useAuth();

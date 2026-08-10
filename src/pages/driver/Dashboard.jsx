@@ -11,6 +11,7 @@ export default function DriverDashboard() {
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [codeInputs, setCodeInputs] = useState({});
 
   async function load() {
     try {
@@ -35,8 +36,16 @@ export default function DriverDashboard() {
   }
 
   async function deliver(id) {
-    try { await api(`/orders/${id}/deliver`, { method: 'PATCH', token }); load(); }
-    catch (e) { toast(e.message); }
+    const code = (codeInputs[id] || '').trim();
+    if (!code) { toast('Demande le code de livraison au client.'); return; }
+    try {
+      await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code } });
+      setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
+      toast('Livraison confirmée !');
+      load();
+    } catch (e) {
+      toast(e.message);
+    }
   }
 
   if (loading) return <SkeletonCards count={3} />;
@@ -48,7 +57,7 @@ export default function DriverDashboard() {
     <div>
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
-        <div className="stat-card highlight"><div className="num">{(delivered.length * 2.5).toFixed(2)}€</div><div className="label">Gains estimés</div></div>
+        <div className="stat-card highlight"><div className="num">{(delivered.length * 4.5).toFixed(2)}€</div><div className="label">Gains estimés</div></div>
       </div>
 
       <h2 className="section-title" style={{ marginTop: 0 }}>Commandes prêtes à récupérer</h2>
@@ -64,7 +73,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small">Course : 2.50€</span>
+            <span className="small">Course : 4.50€</span>
             <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
           </div>
         </div>
@@ -80,7 +89,15 @@ export default function DriverDashboard() {
           <div className="small">🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
-          <button className="btn-teal" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>Marquer livrée</button>
+          <div className="row" style={{ marginTop: 8, gap: 8 }}>
+            <input
+              placeholder="Code du client"
+              style={{ maxWidth: 140 }}
+              value={codeInputs[o.id] || ''}
+              onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+            />
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>Confirmer la livraison</button>
+          </div>
         </div>
       ))}
     </div>

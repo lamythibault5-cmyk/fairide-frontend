@@ -19,6 +19,9 @@ export const RESTAURANT_TYPES = [
   { value: 'Healthy', emoji: '🥗' },
   { value: 'Végétarien', emoji: '🌱' },
   { value: 'Kebab & Grill', emoji: '🥙' },
+  { value: 'Boulangerie', emoji: '🥐' },
+  { value: 'Supermarché', emoji: '🛒' },
+  { value: 'Night Shop', emoji: '🌙' },
   { value: 'Autre', emoji: '🍽️' }
 ];
 
@@ -203,6 +206,64 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Ayran', price: 2.5, desc: '' },
       { name: 'Coca-Cola 33cl', price: 3, desc: '' }
+    ]
+  },
+  Boulangerie: {
+    entree: [
+      { name: 'Sandwich jambon-fromage', price: 4.5, desc: '' },
+      { name: 'Sandwich poulet-crudités', price: 5, desc: '' }
+    ],
+    plat: [
+      { name: 'Quiche lorraine', price: 4, desc: 'La part' },
+      { name: 'Tarte salée aux légumes', price: 4, desc: 'La part' }
+    ],
+    dessert: [
+      { name: 'Croissant', price: 1.5, desc: '' },
+      { name: 'Pain au chocolat', price: 1.6, desc: '' },
+      { name: 'Éclair au chocolat', price: 3, desc: '' }
+    ],
+    boisson: [
+      { name: 'Café', price: 2, desc: '' },
+      { name: 'Jus d\'orange 25cl', price: 2.5, desc: '' }
+    ]
+  },
+  'Supermarché': {
+    entree: [
+      { name: 'Chips nature 150g', price: 2, desc: '' },
+      { name: 'Cacahuètes salées', price: 2.5, desc: '' }
+    ],
+    plat: [
+      { name: 'Plat préparé du jour', price: 5.5, desc: '' },
+      { name: 'Pizza surgelée', price: 4, desc: '' },
+      { name: 'Pâtes fraîches', price: 3.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Tablette de chocolat', price: 2.5, desc: '' },
+      { name: 'Paquet de biscuits', price: 2, desc: '' }
+    ],
+    boisson: [
+      { name: 'Eau plate 1.5L', price: 1.5, desc: '' },
+      { name: 'Pack de sodas 6x33cl', price: 5, desc: '' },
+      { name: 'Jus de fruits 1L', price: 2.5, desc: '' }
+    ]
+  },
+  'Night Shop': {
+    entree: [
+      { name: 'Chips 150g', price: 2.5, desc: '' },
+      { name: 'Mix apéro', price: 3, desc: '' }
+    ],
+    plat: [
+      { name: 'Sandwich thon', price: 4, desc: '' },
+      { name: 'Panini jambon-fromage', price: 4.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Barre chocolatée', price: 1.5, desc: '' },
+      { name: 'Bonbons', price: 2, desc: '' }
+    ],
+    boisson: [
+      { name: 'Bière 33cl', price: 2.5, desc: '' },
+      { name: 'Energy drink 25cl', price: 2.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 1.5, desc: '' }
     ]
   }
 };

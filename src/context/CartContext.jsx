@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
-const DELIVERY_FEE = 2.5;
+const DELIVERY_FEE = 4.5;
 const COMMISSION_RATE = 0.06;
 
 export function CartProvider({ children }) {

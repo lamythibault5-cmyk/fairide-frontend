@@ -5,7 +5,7 @@ import { useToast } from '../context/ToastContext';
 
 const ROLES = [
   { value: 'client', label: '🧑‍🍳 Client' },
-  { value: 'restaurant', label: '🍽️ Restaurant' },
+  { value: 'restaurant', label: '🏪 Commerce' },
   { value: 'driver', label: '🛵 Livreur' }
 ];
 
