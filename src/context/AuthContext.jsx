@@ -43,6 +43,12 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  async function refreshUser() {
+    const user = await api('/auth/me', { token: session.token });
+    setSession((prev) => ({ ...prev, user }));
+    return user;
+  }
+
   function logout() {
     setSession(null);
   }
@@ -55,6 +61,7 @@ export function AuthProvider({ children }) {
     register,
     loginWithGoogle,
     updateProfile,
+    refreshUser,
     logout
   };
 

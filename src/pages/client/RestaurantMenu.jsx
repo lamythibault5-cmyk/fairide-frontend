@@ -11,7 +11,7 @@ import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
   const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
@@ -53,6 +53,7 @@ export default function RestaurantMenu() {
       });
       const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
       cart.clear();
+      if (order.balanceUsed > 0) refreshUser().catch(() => {});
       if (pay.simulated) {
         toast('Commande passée et payée (paiement simulé).');
         navigate('/orders');
