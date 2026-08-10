@@ -25,8 +25,8 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function register(name, email, password, role, phone) {
-    const data = await api('/auth/register', { method: 'POST', body: { name, email, password, role, phone } });
+  async function register(name, email, password, role, phone, address) {
+    const data = await api('/auth/register', { method: 'POST', body: { name, email, password, role, phone, address } });
     setSession(data);
     return data;
   }

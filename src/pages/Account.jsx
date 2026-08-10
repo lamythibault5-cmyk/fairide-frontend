@@ -9,6 +9,7 @@ export default function Account() {
   const toast = useToast();
   const [name, setName] = useState(user.name);
   const [phone, setPhone] = useState(user.phone || '');
+  const [address, setAddress] = useState(user.address || '');
   const [savingInfo, setSavingInfo] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -19,7 +20,7 @@ export default function Account() {
     e.preventDefault();
     setSavingInfo(true);
     try {
-      await updateProfile({ name: name.trim(), phone: phone.trim() });
+      await updateProfile({ name: name.trim(), phone: phone.trim(), address: address.trim() });
       toast('Infos mises à jour.');
     } catch (err) {
       toast(err.message);
@@ -61,6 +62,10 @@ export default function Account() {
           <div className="field">
             <label>Téléphone</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+          </div>
+          <div className="field">
+            <label>Adresse</label>
+            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" />
           </div>
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : 'Enregistrer'}</button>
         </form>

@@ -10,9 +10,9 @@ import { SkeletonCards } from '../../components/Skeleton';
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
-  const [address, setAddress] = useState('');
+  const { token, user } = useAuth();
+  const [address, setAddress] = useState(user.address || '');
   const [placing, setPlacing] = useState(false);
-  const { token } = useAuth();
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();

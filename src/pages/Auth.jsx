@@ -14,6 +14,7 @@ export default function Auth() {
   const [role, setRole] = useState('client');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +31,8 @@ export default function Auth() {
       if (mode === 'register') {
         if (!name.trim()) { toast('Ton prénom est requis.'); setLoading(false); return; }
         if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
-        data = await register(name.trim(), email.trim(), password, role, phone.trim());
+        if (!address.trim()) { toast('Ton adresse est requise.'); setLoading(false); return; }
+        data = await register(name.trim(), email.trim(), password, role, phone.trim(), address.trim());
       } else {
         data = await login(email.trim(), password);
       }
@@ -67,6 +69,10 @@ export default function Auth() {
             <div className="field">
               <label>Téléphone</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+            </div>
+            <div className="field">
+              <label>Adresse</label>
+              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" />
             </div>
           </>
         )}
