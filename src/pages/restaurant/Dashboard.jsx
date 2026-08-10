@@ -52,10 +52,6 @@ export default function Dashboard() {
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [reviews, setReviews] = useState(null);
-  const [promotions, setPromotions] = useState([]);
-  const [promoType, setPromoType] = useState('percent');
-  const [promoValue, setPromoValue] = useState('15');
-  const [savingPromo, setSavingPromo] = useState(false);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
@@ -71,16 +67,14 @@ export default function Dashboard() {
 
   async function loadDashboard(id) {
     try {
-      const [ordersData, restoData, reviewsData, promotionsData] = await Promise.all([
+      const [ordersData, restoData, reviewsData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         api(`/restaurants/${id}`),
-        api(`/restaurants/${id}/reviews`),
-        api(`/restaurants/${id}/promotions/mine`, { token })
+        api(`/restaurants/${id}/reviews`)
       ]);
       setOrders(ordersData);
       setRestaurant(restoData);
       setReviews(reviewsData);
-      setPromotions(promotionsData);
       setEditDesc(restoData.desc || '');
       const knownType = RESTAURANT_TYPES.some((t) => t.value === restoData.cuisine);
       setEditCuisine(knownType ? restoData.cuisine : 'Autre');
@@ -227,30 +221,18 @@ export default function Dashboard() {
     }
   }
 
-  async function createPromo() {
-    setSavingPromo(true);
+  async function setItemPromo(itemId, body) {
     try {
-      const body = promoType === 'percent' ? { type: 'percent', value: Number(promoValue) } : { type: 'bogo' };
-      await api(`/restaurants/${restoId}/promotions`, { method: 'POST', token, body });
-      loadDashboard(restoId);
-      toast('Promotion activée !');
+      await api(`/restaurants/${restoId}/menu/${itemId}/promotions`, { method: 'POST', token, body });
+      await loadDashboard(restoId);
+      toast('Promotion activée sur ce plat !');
     } catch (e) {
       toast(e.message);
-    } finally {
-      setSavingPromo(false);
+      throw e;
     }
   }
 
-  async function togglePromo(promoId, active) {
-    try {
-      await api(`/promotions/${promoId}`, { method: 'PATCH', token, body: { active } });
-      loadDashboard(restoId);
-    } catch (e) {
-      toast(e.message);
-    }
-  }
-
-  async function deletePromo(promoId) {
+  async function clearItemPromo(promoId) {
     try {
       await api(`/promotions/${promoId}`, { method: 'DELETE', token });
       loadDashboard(restoId);
@@ -377,40 +359,6 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="card">
-            <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Promotions</h3>
-            {promotions.length === 0 && <p className="small" style={{ margin: '0 0 10px' }}>Aucune promo pour l'instant.</p>}
-            {promotions.map((p) => (
-              <div key={p.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                <span>🏷️ {p.label} {p.active ? <span className="pill teal" style={{ marginLeft: 6 }}>Active</span> : <span className="pill" style={{ marginLeft: 6 }}>Inactive</span>}</span>
-                <div className="row" style={{ gap: 6 }}>
-                  {!p.active && <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => togglePromo(p.id, true)}>Activer</button>}
-                  {p.active && <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => togglePromo(p.id, false)}>Désactiver</button>}
-                  <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => deletePromo(p.id)}>Supprimer</button>
-                </div>
-              </div>
-            ))}
-            <div className="row" style={{ gap: 8, marginTop: 10, alignItems: 'flex-end' }}>
-              <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                <label>Type de promo</label>
-                <select value={promoType} onChange={(e) => setPromoType(e.target.value)}>
-                  <option value="percent">Réduction en %</option>
-                  <option value="bogo">1 acheté = 1 offert</option>
-                </select>
-              </div>
-              {promoType === 'percent' && (
-                <div className="field" style={{ flex: 1, marginBottom: 0 }}>
-                  <label>Réduction</label>
-                  <select value={promoValue} onChange={(e) => setPromoValue(e.target.value)}>
-                    {[10, 15, 20, 25, 30].map((v) => <option key={v} value={v}>{v}%</option>)}
-                  </select>
-                </div>
-              )}
-              <button className="btn-teal" disabled={savingPromo} onClick={createPromo}>{savingPromo ? '...' : 'Activer cette promo'}</button>
-            </div>
-            <p className="small" style={{ marginTop: 8 }}>Une seule promo active à la fois : en activer une nouvelle désactive l'ancienne.</p>
-          </div>
-
           {reviews && reviews.reviews.length > 0 && (
             <div className="card">
               <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Avis clients</h3>
@@ -469,7 +417,7 @@ export default function Dashboard() {
                         <span>{cat.label}</span>
                       </div>
                       {items.map((item) => (
-                        <MenuItemRow key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem} />
+                        <MenuItemRow key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem} onSetPromo={setItemPromo} onClearPromo={clearItemPromo} />
                       ))}
                     </div>
                   );
@@ -529,8 +477,8 @@ export default function Dashboard() {
             <h4 style={{ margin: '0 0 6px' }}>Articles</h4>
             {selectedOrder.items.map((i) => (
               <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                <span>{i.qty}× {i.name}</span>
-                <span>{(i.price * i.qty).toFixed(2)}€</span>
+                <span>{i.qty}× {i.name}{i.discount > 0 ? ' 🏷️' : ''}</span>
+                <span>{(i.price * i.qty - (i.discount || 0)).toFixed(2)}€</span>
               </div>
             ))}
             <div className="divider" />

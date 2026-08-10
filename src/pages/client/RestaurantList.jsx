@@ -72,7 +72,7 @@ export default function RestaurantList() {
             >
               {favoriteIds.has(r.id) ? '❤️' : '🤍'}
             </button>
-            {r.activePromo && <span className="promo-badge">🏷️ {r.activePromo.label}</span>}
+            {r.hasPromo && <span className="promo-badge">🏷️ Promo</span>}
             {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
             <div className="pill-row">
               <span className="pill teal">{r.commune}</span>

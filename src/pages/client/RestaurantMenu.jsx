@@ -40,7 +40,7 @@ export default function RestaurantMenu() {
 
   if (!restaurant) return <SkeletonCards count={3} />;
 
-  const totals = cart.totals(restaurant.menu, restaurant.activePromo);
+  const totals = cart.totals(restaurant.menu);
   const isFavorite = favoriteIds.has(id);
 
   async function toggleFavorite() {
@@ -110,9 +110,9 @@ export default function RestaurantMenu() {
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
-        {restaurant.activePromo && (
+        {restaurant.hasPromo && (
           <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            🏷️ Promo en cours : {restaurant.activePromo.label}
+            🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
           </div>
         )}
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
@@ -127,7 +127,8 @@ export default function RestaurantMenu() {
               </div>
               <div className="menu-grid">
                 {items.map((item) => (
-                  <div className="menu-item-card" key={item.id} style={item.available === false ? { opacity: 0.5 } : undefined}>
+                  <div className="menu-item-card" key={item.id} style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
+                    {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
                     <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
                     <div className="name">{item.name}</div>
                     <div className="small desc">{item.available === false ? 'Indisponible pour le moment' : (item.desc || '')}</div>
@@ -164,9 +165,9 @@ export default function RestaurantMenu() {
             <div className="divider" />
             <div className="breakdown">
               <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
-              {totals.promoDiscount > 0 && (
-                <div className="line"><span>Promo {restaurant.activePromo?.label}</span><span>-{totals.promoDiscount.toFixed(2)}€</span></div>
-              )}
+              {totals.discountedItems.map((d, i) => (
+                <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
+              ))}
               <div className="line"><span>Livraison</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
               <div className="line"><span>dont commission Fairide (6%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (

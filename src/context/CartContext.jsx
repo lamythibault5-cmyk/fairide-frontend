@@ -32,27 +32,29 @@ export function CartProvider({ children }) {
 
   const count = useMemo(() => Object.values(items).reduce((a, b) => a + b, 0), [items]);
 
-  function totals(menu, promo) {
+  function totals(menu) {
     let rawSubtotal = 0;
-    let totalQty = 0;
-    const unitPrices = [];
+    let promoDiscount = 0;
+    const discountedItems = [];
     Object.entries(items).forEach(([id, qty]) => {
       const item = menu?.find((m) => m.id === id);
-      if (item) {
-        rawSubtotal += item.price * qty;
-        totalQty += qty;
-        for (let i = 0; i < qty; i++) unitPrices.push(item.price);
+      if (!item) return;
+      rawSubtotal += item.price * qty;
+      const promo = item.activePromo;
+      let discount = 0;
+      if (promo) {
+        if (promo.type === 'percent') discount = item.price * qty * (promo.value / 100);
+        else if (promo.type === 'bogo') discount = Math.floor(qty / 2) * item.price;
+      }
+      if (discount > 0) {
+        promoDiscount += discount;
+        discountedItems.push({ name: item.name, label: promo.label, discount });
       }
     });
-    let promoDiscount = 0;
-    if (promo) {
-      if (promo.type === 'percent') promoDiscount = rawSubtotal * (promo.value / 100);
-      else if (promo.type === 'bogo' && totalQty >= 2) promoDiscount = Math.min(...unitPrices, Infinity) || 0;
-    }
     const subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
     const total = +(subtotal + DELIVERY_FEE).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), subtotal, deliveryFee: DELIVERY_FEE, commission, total };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, commission, total };
   }
 
   return (
