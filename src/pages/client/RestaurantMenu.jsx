@@ -127,13 +127,13 @@ export default function RestaurantMenu() {
               </div>
               <div className="menu-grid">
                 {items.map((item) => (
-                  <div className="menu-item-card" key={item.id}>
+                  <div className="menu-item-card" key={item.id} style={item.available === false ? { opacity: 0.5 } : undefined}>
                     <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
                     <div className="name">{item.name}</div>
-                    <div className="small desc">{item.desc || ''}</div>
+                    <div className="small desc">{item.available === false ? 'Indisponible pour le moment' : (item.desc || '')}</div>
                     <div className="bottom-row">
                       <span className="price">{item.price.toFixed(2)}€</span>
-                      <button className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => cart.changeQty(item.id, 1)}>+</button>
+                      <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => cart.changeQty(item.id, 1)}>+</button>
                     </div>
                   </div>
                 ))}

@@ -4,6 +4,10 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 import Home from './pages/Home';
 import Account from './pages/Account';
+import Admin from './pages/Admin';
+import LegalNotice from './pages/legal/LegalNotice';
+import Terms from './pages/legal/Terms';
+import Privacy from './pages/legal/Privacy';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
 import Favorites from './pages/client/Favorites';
@@ -29,6 +33,11 @@ export default function App() {
         <Route path="/dashboard" element={<ProtectedRoute role="restaurant"><RestaurantDashboard /></ProtectedRoute>} />
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />
+
+        <Route path="/mentions-legales" element={<LegalNotice />} />
+        <Route path="/cgv" element={<Terms />} />
+        <Route path="/confidentialite" element={<Privacy />} />
       </Route>
     </Routes>
   );

@@ -62,6 +62,13 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (!restoId) return;
+    const interval = setInterval(() => loadDashboard(restoId), 15000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoId]);
+
   async function loadDashboard(id) {
     try {
       const [ordersData, restoData, reviewsData, promotionsData] = await Promise.all([

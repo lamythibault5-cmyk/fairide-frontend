@@ -40,13 +40,16 @@ export default function MenuItemRow({ item, onSave, onDelete }) {
   }
 
   return (
-    <div className="menu-item">
+    <div className="menu-item" style={item.available === false ? { opacity: 0.5 } : undefined}>
       <div className="row" style={{ gap: 10 }}>
         <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb" />
-        <span>{item.name}</span>
+        <span>{item.name}{item.available === false ? ' (indisponible)' : ''}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>
         <span className="price">{item.price.toFixed(2)}€</span>
+        <button className="btn-ghost" onClick={() => onSave(item.id, { available: item.available === false })} title={item.available === false ? 'Rendre disponible' : 'Marquer indisponible'}>
+          {item.available === false ? '🚫' : '✅'}
+        </button>
         <button className="btn-ghost" onClick={() => setEditing(true)}>✏️</button>
         <button className="btn-danger-ghost" onClick={() => onDelete(item.id)}>Supprimer</button>
       </div>

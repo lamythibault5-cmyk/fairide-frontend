@@ -61,6 +61,10 @@ export default function Orders() {
 
   useEffect(() => {
     api('/orders/mine', { token }).then(setOrders).catch((e) => toast(e.message)).finally(() => setLoading(false));
+    const interval = setInterval(() => {
+      api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    }, 15000);
+    return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -32,7 +32,11 @@ export default function DriverDashboard() {
     }
   }
 
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }

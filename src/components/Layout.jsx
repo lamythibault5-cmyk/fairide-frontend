@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import BrandMark from './BrandMark';
+import Footer from './Footer';
+import CookieBanner from './CookieBanner';
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
@@ -42,6 +44,7 @@ export default function Layout() {
                 <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>Livraisons</NavLink>
               )}
               <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>Mon compte</NavLink>
+              {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>Admin</NavLink>}
             </nav>
           )}
         </div>
@@ -50,7 +53,9 @@ export default function Layout() {
         <div className="page-fade" key={location.pathname}>
           <Outlet />
         </div>
+        <Footer />
       </div>
+      <CookieBanner />
     </>
   );
 }
