@@ -13,6 +13,7 @@ export default function Auth() {
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('client');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,11 +29,12 @@ export default function Auth() {
       let data;
       if (mode === 'register') {
         if (!name.trim()) { toast('Ton prénom est requis.'); setLoading(false); return; }
-        data = await register(name.trim(), email.trim(), password, role);
+        if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
+        data = await register(name.trim(), email.trim(), password, role, phone.trim());
       } else {
         data = await login(email.trim(), password);
       }
-      toast(`Bienvenue, ${data.user.name} !`);
+      toast(mode === 'register' ? `Bienvenue, ${data.user.name} ! Un email de confirmation t'a été envoyé.` : `Bienvenue, ${data.user.name} !`);
       navigate('/');
     } catch (err) {
       toast(err.message);
@@ -61,6 +63,10 @@ export default function Auth() {
             <div className="field">
               <label>Nom</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ton prénom" />
+            </div>
+            <div className="field">
+              <label>Téléphone</label>
+              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
             </div>
           </>
         )}

@@ -25,10 +25,16 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function register(name, email, password, role) {
-    const data = await api('/auth/register', { method: 'POST', body: { name, email, password, role } });
+  async function register(name, email, password, role, phone) {
+    const data = await api('/auth/register', { method: 'POST', body: { name, email, password, role, phone } });
     setSession(data);
     return data;
+  }
+
+  async function updateProfile(patch) {
+    const user = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch });
+    setSession((prev) => ({ ...prev, user }));
+    return user;
   }
 
   function logout() {
@@ -41,6 +47,7 @@ export function AuthProvider({ children }) {
     role: session?.user?.role || null,
     login,
     register,
+    updateProfile,
     logout
   };
 

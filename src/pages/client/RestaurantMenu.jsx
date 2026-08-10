@@ -4,6 +4,8 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
+import { CATEGORIES } from '../../menuCategories';
+import { SkeletonCards } from '../../components/Skeleton';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -21,7 +23,7 @@ export default function RestaurantMenu() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
-  if (!restaurant) return <div className="small">Chargement…</div>;
+  if (!restaurant) return <SkeletonCards count={3} />;
 
   const totals = cart.totals(restaurant.menu);
 
@@ -53,18 +55,27 @@ export default function RestaurantMenu() {
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
         <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
-        {restaurant.menu.map((item) => (
-          <div className="menu-item" key={item.id}>
-            <div>
-              <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
-              <div className="small">{item.desc || ''}</div>
+        {CATEGORIES.map((cat) => {
+          const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
+          if (!items.length) return null;
+          return (
+            <div key={cat.value} style={{ marginBottom: 8 }}>
+              <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '10px 0 2px' }}>{cat.label}</div>
+              {items.map((item) => (
+                <div className="menu-item" key={item.id}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
+                    <div className="small">{item.desc || ''}</div>
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <span className="price">{item.price.toFixed(2)}€</span>
+                    <button className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => cart.changeQty(item.id, 1)}>+</button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="row" style={{ gap: 8 }}>
-              <span className="price">{item.price.toFixed(2)}€</span>
-              <button className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => cart.changeQty(item.id, 1)}>+</button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {cart.count > 0 && (

@@ -3,6 +3,8 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { ProgressBar, statusLabel } from '../../orderStatus';
+import { CATEGORIES, STARTER_TEMPLATE } from '../../menuCategories';
+import { SkeletonCards } from '../../components/Skeleton';
 
 const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
 
@@ -22,6 +24,11 @@ export default function Dashboard() {
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
+  const [itemCategory, setItemCategory] = useState('plat');
+
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [templatePicked, setTemplatePicked] = useState(() => new Set());
+  const [addingTemplate, setAddingTemplate] = useState(false);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
@@ -72,12 +79,40 @@ export default function Dashboard() {
     const price = parseFloat(itemPrice);
     if (!itemName.trim() || !price) { toast('Nom et prix requis.'); return; }
     try {
-      await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price } });
+      await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory } });
       setItemName(''); setItemPrice('');
       loadDashboard(restoId);
       toast('Plat ajouté au menu.');
     } catch (e) {
       toast(e.message);
+    }
+  }
+
+  function toggleTemplateCategory(cat) {
+    setTemplatePicked((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  }
+
+  async function addStarterTemplate() {
+    const items = [];
+    templatePicked.forEach((cat) => {
+      STARTER_TEMPLATE[cat].forEach((it) => items.push({ ...it, category: cat }));
+    });
+    if (!items.length) { toast('Choisis au moins une catégorie.'); return; }
+    setAddingTemplate(true);
+    try {
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      setTemplatePicked(new Set());
+      setTemplateOpen(false);
+      loadDashboard(restoId);
+      toast(`${items.length} plat(s) ajouté(s) au menu.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setAddingTemplate(false);
     }
   }
 
@@ -90,7 +125,7 @@ export default function Dashboard() {
     }
   }
 
-  if (!myRestos) return <div className="small">Chargement…</div>;
+  if (!myRestos) return <SkeletonCards count={2} />;
 
   const delivered = orders.filter((o) => o.status === 'livre');
   const revenue = orders.reduce((a, o) => a + o.subtotal, 0);
@@ -148,6 +183,7 @@ export default function Dashboard() {
                   <ProgressBar status={o.status} />
                   <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
                   <div className="small">📍 {o.address}</div>
+                  {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
                   <div className="row" style={{ marginTop: 10, gap: 8 }}>
                     {o.status === 'nouveau' && (
                       <>
@@ -166,20 +202,59 @@ export default function Dashboard() {
               <h2 className="section-title" style={{ marginTop: 0 }}>Menu</h2>
               <div className="card">
                 {restaurant.menu.length === 0 && <div className="small">Pas encore de plat au menu.</div>}
-                {restaurant.menu.map((item) => (
-                  <div className="menu-item" key={item.id}>
-                    <span>{item.name}</span>
-                    <div className="row" style={{ gap: 10 }}>
-                      <span className="price">{item.price.toFixed(2)}€</span>
-                      <button className="btn-danger-ghost" onClick={() => deleteMenuItem(item.id)}>Supprimer</button>
+                {CATEGORIES.map((cat) => {
+                  const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
+                  if (!items.length) return null;
+                  return (
+                    <div key={cat.value} style={{ marginBottom: 10 }}>
+                      <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '6px 0' }}>{cat.label}</div>
+                      {items.map((item) => (
+                        <div className="menu-item" key={item.id}>
+                          <span>{item.name}</span>
+                          <div className="row" style={{ gap: 10 }}>
+                            <span className="price">{item.price.toFixed(2)}€</span>
+                            <button className="btn-danger-ghost" onClick={() => deleteMenuItem(item.id)}>Supprimer</button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
+
+              {!templateOpen && (
+                <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Utiliser un menu de démarrage</button>
+              )}
+              {templateOpen && (
+                <div className="card">
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Menu de démarrage</h3>
+                  <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter des plats types en un clic — tu pourras ensuite les modifier ou les supprimer.</p>
+                  {CATEGORIES.map((cat) => (
+                    <label key={cat.value} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
+                      <input type="checkbox" style={{ width: 'auto' }} checked={templatePicked.has(cat.value)} onChange={() => toggleTemplateCategory(cat.value)} />
+                      <span>{cat.label}</span>
+                      <span className="small">({STARTER_TEMPLATE[cat.value].map((i) => i.name).join(', ')})</span>
+                    </label>
+                  ))}
+                  <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                    <button className="btn-teal" disabled={addingTemplate} onClick={addStarterTemplate}>
+                      {addingTemplate ? '...' : 'Ajouter la sélection'}
+                    </button>
+                    <button className="btn-ghost" onClick={() => setTemplateOpen(false)}>Annuler</button>
+                  </div>
+                </div>
+              )}
+
               <div className="card">
                 <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Ajouter un plat</h3>
                 <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
                 <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                <div className="field">
+                  <label>Catégorie</label>
+                  <select value={itemCategory} onChange={(e) => setItemCategory(e.target.value)}>
+                    {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
                 <button className="btn-teal" onClick={addMenuItem}>Ajouter au menu</button>
               </div>
             </div>

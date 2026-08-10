@@ -1,9 +1,10 @@
-import { Link, NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import BrandMark from './BrandMark';
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
+  const location = useLocation();
 
   return (
     <>
@@ -16,7 +17,9 @@ export default function Layout() {
             </Link>
             {user && (
               <div className="userbar" style={{ padding: 0 }}>
-                <span style={{ marginRight: 10 }}>{user.name}</span>
+                <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
+                  {user.name}
+                </Link>
                 <button className="btn-ghost" style={{ color: 'var(--cream)' }} onClick={logout}>
                   Se déconnecter
                 </button>
@@ -37,12 +40,15 @@ export default function Layout() {
               {role === 'driver' && (
                 <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>Livraisons</NavLink>
               )}
+              <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>Mon compte</NavLink>
             </nav>
           )}
         </div>
       </div>
       <div className="wrap" style={{ paddingTop: 24 }}>
-        <Outlet />
+        <div className="page-fade" key={location.pathname}>
+          <Outlet />
+        </div>
       </div>
     </>
   );

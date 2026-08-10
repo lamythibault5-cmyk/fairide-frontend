@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useToast } from '../../context/ToastContext';
+import { SkeletonCards } from '../../components/Skeleton';
 
 const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
 
@@ -32,8 +33,9 @@ export default function RestaurantList() {
         </select>
       </div>
       {!loading && <div className="small" style={{ marginBottom: 14 }}>{list.length} restaurant(s)</div>}
+      {loading && <SkeletonCards count={4} />}
       <div className="rest-grid">
-        {list.map((r) => (
+        {!loading && list.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
             <span className="pill teal">{r.commune}</span>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
