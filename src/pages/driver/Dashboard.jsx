@@ -60,7 +60,8 @@ export default function DriverDashboard() {
             <span className="pill teal">{o.commune}</span>
           </div>
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
-          <div className="small" style={{ marginBottom: 4 }}>📍 {o.address}</div>
+          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
+          <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
             <span className="small">Course : 2.50€</span>
@@ -75,7 +76,8 @@ export default function DriverDashboard() {
         <div className="card" key={o.id}>
           <b>{o.restaurantName}</b> → {o.clientName}
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
-          <div className="small">📍 {o.address}</div>
+          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
+          <div className="small">🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <button className="btn-teal" style={{ marginTop: 8, padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>Marquer livrée</button>

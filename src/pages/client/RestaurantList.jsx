@@ -37,6 +37,7 @@ export default function RestaurantList() {
       <div className="rest-grid">
         {!loading && list.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
+            {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
             <span className="pill teal">{r.commune}</span>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
             <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>

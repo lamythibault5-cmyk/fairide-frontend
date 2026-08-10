@@ -52,6 +52,7 @@ export default function RestaurantMenu() {
     <div>
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; Tous les restaurants</Link>
       <div className="card">
+        {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
         <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
@@ -63,9 +64,12 @@ export default function RestaurantMenu() {
               <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '10px 0 2px' }}>{cat.label}</div>
               {items.map((item) => (
                 <div className="menu-item" key={item.id}>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
-                    <div className="small">{item.desc || ''}</div>
+                  <div className="row" style={{ gap: 10 }}>
+                    {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="dish-thumb" />}
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
+                      <div className="small">{item.desc || ''}</div>
+                    </div>
                   </div>
                   <div className="row" style={{ gap: 8 }}>
                     <span className="price">{item.price.toFixed(2)}€</span>

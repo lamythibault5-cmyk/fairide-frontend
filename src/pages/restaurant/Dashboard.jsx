@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
 import { CATEGORIES, STARTER_TEMPLATE } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
+import MenuItemRow from '../../components/MenuItemRow';
 
 const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
 
@@ -21,10 +22,21 @@ export default function Dashboard() {
   const [commune, setCommune] = useState(COMMUNES[0]);
   const [cuisine, setCuisine] = useState('');
   const [desc, setDesc] = useState('');
+  const [address, setAddress] = useState('');
+  const [coverImageUrl, setCoverImageUrl] = useState('');
+
+  const [editOpen, setEditOpen] = useState(false);
+  const [editDesc, setEditDesc] = useState('');
+  const [editCuisine, setEditCuisine] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [editCover, setEditCover] = useState('');
+  const [editOpenFlag, setEditOpenFlag] = useState(true);
+  const [savingResto, setSavingResto] = useState(false);
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategory, setItemCategory] = useState('plat');
+  const [itemImageUrl, setItemImageUrl] = useState('');
 
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templatePicked, setTemplatePicked] = useState(() => new Set());
@@ -43,6 +55,11 @@ export default function Dashboard() {
       ]);
       setOrders(ordersData);
       setRestaurant(restoData);
+      setEditDesc(restoData.desc || '');
+      setEditCuisine(restoData.cuisine || '');
+      setEditAddress(restoData.address || '');
+      setEditCover(restoData.coverImageUrl || '');
+      setEditOpenFlag(restoData.open);
     } catch (e) {
       toast(e.message);
     }
@@ -50,19 +67,41 @@ export default function Dashboard() {
 
   function pickResto(id) {
     setRestoId(id);
+    setEditOpen(false);
     loadDashboard(id);
   }
 
   async function createResto() {
     if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
+    if (!address.trim()) { toast("Donne l'adresse du restaurant (pour les livreurs)."); return; }
     try {
-      const r = await api('/restaurants', { method: 'POST', token, body: { name: name.trim(), commune, cuisine: cuisine.trim(), desc: desc.trim() } });
+      const r = await api('/restaurants', {
+        method: 'POST', token,
+        body: { name: name.trim(), commune, cuisine: cuisine.trim(), desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
+      });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(''); setDesc(''); setNewRestoOpen(false);
+      setName(''); setCuisine(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
     } catch (e) {
       toast(e.message);
+    }
+  }
+
+  async function saveRestoInfo() {
+    setSavingResto(true);
+    try {
+      const r = await api(`/restaurants/${restoId}`, {
+        method: 'PATCH', token,
+        body: { desc: editDesc.trim(), cuisine: editCuisine.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
+      });
+      setRestaurant(r);
+      setMyRestos((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: r.name } : x)));
+      toast('Restaurant mis à jour.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSavingResto(false);
     }
   }
 
@@ -79,12 +118,23 @@ export default function Dashboard() {
     const price = parseFloat(itemPrice);
     if (!itemName.trim() || !price) { toast('Nom et prix requis.'); return; }
     try {
-      await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory } });
-      setItemName(''); setItemPrice('');
+      await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory, imageUrl: itemImageUrl.trim() } });
+      setItemName(''); setItemPrice(''); setItemImageUrl('');
       loadDashboard(restoId);
       toast('Plat ajouté au menu.');
     } catch (e) {
       toast(e.message);
+    }
+  }
+
+  async function saveMenuItem(itemId, patch) {
+    try {
+      await api(`/restaurants/${restoId}/menu/${itemId}`, { method: 'PATCH', token, body: patch });
+      await loadDashboard(restoId);
+      toast('Plat mis à jour.');
+    } catch (e) {
+      toast(e.message);
+      throw e;
     }
   }
 
@@ -154,8 +204,10 @@ export default function Dashboard() {
                 {COMMUNES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
+            <div className="field"><label>Adresse (pour les livreurs)</label><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
             <div className="field"><label>Type de cuisine</label><input value={cuisine} onChange={(e) => setCuisine(e.target.value)} placeholder="Ex: Belge, Italien..." /></div>
             <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
+            <div className="field"><label>Image de couverture (URL)</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
             <button className="btn-teal" onClick={createResto}>Créer</button>
           </div>
         )}
@@ -163,12 +215,35 @@ export default function Dashboard() {
 
       {restaurant && (
         <>
+          {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner" />}
+
           <div className="stat-grid">
             <div className="stat-card"><div className="num">{orders.length}</div><div className="label">Commandes</div></div>
             <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livrées</div></div>
             <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">CA plats</div></div>
             <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs Uber Eats</div></div>
           </div>
+
+          {!editOpen && (
+            <button type="button" className="btn-ghost" style={{ marginBottom: 14 }} onClick={() => setEditOpen(true)}>✏️ Modifier les infos du restaurant</button>
+          )}
+          {editOpen && (
+            <div className="card">
+              <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
+              <div className="field"><label>Adresse (pour les livreurs)</label><input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
+              <div className="field"><label>Type de cuisine</label><input value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)} /></div>
+              <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
+              <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
+              <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
+                <span className="small">Restaurant ouvert (visible aux clients)</span>
+              </label>
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
+                <button className="btn-ghost" onClick={() => setEditOpen(false)}>Fermer</button>
+              </div>
+            </div>
+          )}
 
           <div className="two-col">
             <div>
@@ -210,13 +285,7 @@ export default function Dashboard() {
                     <div key={cat.value} style={{ marginBottom: 10 }}>
                       <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '6px 0' }}>{cat.label}</div>
                       {items.map((item) => (
-                        <div className="menu-item" key={item.id}>
-                          <span>{item.name}</span>
-                          <div className="row" style={{ gap: 10 }}>
-                            <span className="price">{item.price.toFixed(2)}€</span>
-                            <button className="btn-danger-ghost" onClick={() => deleteMenuItem(item.id)}>Supprimer</button>
-                          </div>
-                        </div>
+                        <MenuItemRow key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem} />
                       ))}
                     </div>
                   );
@@ -256,6 +325,7 @@ export default function Dashboard() {
                     {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                 </div>
+                <div className="field"><label>Image (URL)</label><input value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="https://..." /></div>
                 <button className="btn-teal" onClick={addMenuItem}>Ajouter au menu</button>
               </div>
             </div>
