@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
+import RestaurantsMap from '../../components/RestaurantsMap';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 
 export default function RestaurantList() {
@@ -15,6 +16,7 @@ export default function RestaurantList() {
   const [search, setSearch] = useState('');
   const [commune, setCommune] = useState('');
   const [cuisine, setCuisine] = useState('');
+  const [view, setView] = useState('list');
   const toast = useToast();
 
   useEffect(() => {
@@ -60,10 +62,20 @@ export default function RestaurantList() {
           {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
         </select>
       </div>
+      <div className="role-pick" style={{ marginBottom: 14 }}>
+        <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>📋 Liste</div>
+        <div className={`chip${view === 'map' ? ' active' : ''}`} onClick={() => setView('map')}>🗺️ Carte</div>
+      </div>
       {!loading && <div className="small" style={{ marginBottom: 14 }}>{list.length} restaurant(s)</div>}
       {loading && <SkeletonCards count={4} />}
+      {!loading && view === 'map' && (
+        <div className="card">
+          <RestaurantsMap restaurants={list} />
+        </div>
+      )}
+      {!loading && view === 'list' && (
       <div className="rest-grid">
-        {!loading && list.map((r) => (
+        {list.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
             <button
               onClick={(e) => toggleFavorite(e, r.id)}
@@ -88,6 +100,7 @@ export default function RestaurantList() {
           </Link>
         ))}
       </div>
+      )}
       {!loading && list.length === 0 && (
         <div className="empty">Aucun restaurant pour le moment.</div>
       )}

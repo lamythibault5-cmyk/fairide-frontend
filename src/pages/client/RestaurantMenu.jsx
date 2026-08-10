@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { CATEGORIES, defaultItemImage } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
+import RestaurantsMap from '../../components/RestaurantsMap';
 import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 
 export default function RestaurantMenu() {
@@ -110,6 +111,11 @@ export default function RestaurantMenu() {
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
+        {restaurant.lat && restaurant.lng && (
+          <div style={{ marginBottom: 14 }}>
+            <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />
+          </div>
+        )}
         {restaurant.hasPromo && (
           <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
             🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
