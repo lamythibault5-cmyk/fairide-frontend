@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { RESTAURANT_TYPES } from '../../menuCategories';
 
 const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
 
@@ -11,6 +12,7 @@ export default function RestaurantList() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [commune, setCommune] = useState('');
+  const [cuisine, setCuisine] = useState('');
   const toast = useToast();
 
   useEffect(() => {
@@ -19,6 +21,7 @@ export default function RestaurantList() {
 
   const list = restaurants.filter((r) => {
     if (commune && r.commune !== commune) return false;
+    if (cuisine && r.cuisine !== cuisine) return false;
     if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -30,6 +33,10 @@ export default function RestaurantList() {
         <select style={{ flex: 1, minWidth: 130 }} value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">Toutes les communes</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
+        </select>
+        <select style={{ flex: 1, minWidth: 130 }} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+          <option value="">Tous les types</option>
+          {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
         </select>
       </div>
       {!loading && <div className="small" style={{ marginBottom: 14 }}>{list.length} restaurant(s)</div>}

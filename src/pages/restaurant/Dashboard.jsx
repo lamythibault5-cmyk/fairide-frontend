@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
-import { CATEGORIES, STARTER_TEMPLATE } from '../../menuCategories';
+import { CATEGORIES, RESTAURANT_TYPES, getStarterTemplate } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import MenuItemRow from '../../components/MenuItemRow';
 
@@ -20,7 +20,8 @@ export default function Dashboard() {
   const [newRestoOpen, setNewRestoOpen] = useState(false);
   const [name, setName] = useState('');
   const [commune, setCommune] = useState(COMMUNES[0]);
-  const [cuisine, setCuisine] = useState('');
+  const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
+  const [customCuisine, setCustomCuisine] = useState('');
   const [desc, setDesc] = useState('');
   const [address, setAddress] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
@@ -28,6 +29,7 @@ export default function Dashboard() {
   const [editOpen, setEditOpen] = useState(false);
   const [editDesc, setEditDesc] = useState('');
   const [editCuisine, setEditCuisine] = useState('');
+  const [editCustomCuisine, setEditCustomCuisine] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editCover, setEditCover] = useState('');
   const [editOpenFlag, setEditOpenFlag] = useState(true);
@@ -56,7 +58,9 @@ export default function Dashboard() {
       setOrders(ordersData);
       setRestaurant(restoData);
       setEditDesc(restoData.desc || '');
-      setEditCuisine(restoData.cuisine || '');
+      const knownType = RESTAURANT_TYPES.some((t) => t.value === restoData.cuisine);
+      setEditCuisine(knownType ? restoData.cuisine : 'Autre');
+      setEditCustomCuisine(knownType ? '' : (restoData.cuisine || ''));
       setEditAddress(restoData.address || '');
       setEditCover(restoData.coverImageUrl || '');
       setEditOpenFlag(restoData.open);
@@ -74,13 +78,14 @@ export default function Dashboard() {
   async function createResto() {
     if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
     if (!address.trim()) { toast("Donne l'adresse du restaurant (pour les livreurs)."); return; }
+    const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
-        body: { name: name.trim(), commune, cuisine: cuisine.trim(), desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
+        body: { name: name.trim(), commune, cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
       });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
+      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
     } catch (e) {
@@ -90,10 +95,11 @@ export default function Dashboard() {
 
   async function saveRestoInfo() {
     setSavingResto(true);
+    const finalCuisine = editCuisine === 'Autre' ? editCustomCuisine.trim() || 'Autre' : editCuisine;
     try {
       const r = await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
-        body: { desc: editDesc.trim(), cuisine: editCuisine.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
+        body: { desc: editDesc.trim(), cuisine: finalCuisine, address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
       });
       setRestaurant(r);
       setMyRestos((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: r.name } : x)));
@@ -147,9 +153,10 @@ export default function Dashboard() {
   }
 
   async function addStarterTemplate() {
+    const template = getStarterTemplate(restaurant.cuisine);
     const items = [];
     templatePicked.forEach((cat) => {
-      STARTER_TEMPLATE[cat].forEach((it) => items.push({ ...it, category: cat }));
+      template[cat].forEach((it) => items.push({ ...it, category: cat }));
     });
     if (!items.length) { toast('Choisis au moins une catégorie.'); return; }
     setAddingTemplate(true);
@@ -205,7 +212,15 @@ export default function Dashboard() {
               </select>
             </div>
             <div className="field"><label>Adresse (pour les livreurs)</label><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
-            <div className="field"><label>Type de cuisine</label><input value={cuisine} onChange={(e) => setCuisine(e.target.value)} placeholder="Ex: Belge, Italien..." /></div>
+            <div className="field">
+              <label>Type de restaurant</label>
+              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+                {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
+              </select>
+            </div>
+            {cuisine === 'Autre' && (
+              <div className="field"><label>Précise le type</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+            )}
             <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
             <div className="field"><label>Image de couverture (URL)</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
             <button className="btn-teal" onClick={createResto}>Créer</button>
@@ -231,7 +246,15 @@ export default function Dashboard() {
             <div className="card">
               <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
               <div className="field"><label>Adresse (pour les livreurs)</label><input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
-              <div className="field"><label>Type de cuisine</label><input value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)} /></div>
+              <div className="field">
+                <label>Type de restaurant</label>
+                <select value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)}>
+                  {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
+                </select>
+              </div>
+              {editCuisine === 'Autre' && (
+                <div className="field"><label>Précise le type</label><input value={editCustomCuisine} onChange={(e) => setEditCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+              )}
               <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
               <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
               <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
@@ -297,13 +320,13 @@ export default function Dashboard() {
               )}
               {templateOpen && (
                 <div className="card">
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Menu de démarrage</h3>
-                  <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter des plats types en un clic — tu pourras ensuite les modifier ou les supprimer.</p>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Menu de démarrage — {restaurant.cuisine}</h3>
+                  <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter des plats types adaptés à ton type de restaurant — tu pourras ensuite les modifier ou les supprimer.</p>
                   {CATEGORIES.map((cat) => (
                     <label key={cat.value} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
                       <input type="checkbox" style={{ width: 'auto' }} checked={templatePicked.has(cat.value)} onChange={() => toggleTemplateCategory(cat.value)} />
                       <span>{cat.label}</span>
-                      <span className="small">({STARTER_TEMPLATE[cat.value].map((i) => i.name).join(', ')})</span>
+                      <span className="small">({getStarterTemplate(restaurant.cuisine)[cat.value].map((i) => i.name).join(', ')})</span>
                     </label>
                   ))}
                   <div className="row" style={{ marginTop: 10, gap: 8 }}>
