@@ -3,11 +3,9 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
-import { CATEGORIES, RESTAURANT_TYPES, getStarterTemplate } from '../../menuCategories';
+import { CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import MenuItemRow from '../../components/MenuItemRow';
-
-const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
 
 export default function Dashboard() {
   const { token } = useAuth();
@@ -20,6 +18,7 @@ export default function Dashboard() {
   const [newRestoOpen, setNewRestoOpen] = useState(false);
   const [name, setName] = useState('');
   const [commune, setCommune] = useState(COMMUNES[0]);
+  const [neighborhood, setNeighborhood] = useState('');
   const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
   const [customCuisine, setCustomCuisine] = useState('');
   const [desc, setDesc] = useState('');
@@ -30,10 +29,14 @@ export default function Dashboard() {
   const [editDesc, setEditDesc] = useState('');
   const [editCuisine, setEditCuisine] = useState('');
   const [editCustomCuisine, setEditCustomCuisine] = useState('');
+  const [editCommune, setEditCommune] = useState('');
+  const [editNeighborhood, setEditNeighborhood] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editCover, setEditCover] = useState('');
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -61,6 +64,8 @@ export default function Dashboard() {
       const knownType = RESTAURANT_TYPES.some((t) => t.value === restoData.cuisine);
       setEditCuisine(knownType ? restoData.cuisine : 'Autre');
       setEditCustomCuisine(knownType ? '' : (restoData.cuisine || ''));
+      setEditCommune(restoData.commune || COMMUNES[0]);
+      setEditNeighborhood(restoData.neighborhood || '');
       setEditAddress(restoData.address || '');
       setEditCover(restoData.coverImageUrl || '');
       setEditOpenFlag(restoData.open);
@@ -72,6 +77,7 @@ export default function Dashboard() {
   function pickResto(id) {
     setRestoId(id);
     setEditOpen(false);
+    setConfirmDelete(false);
     loadDashboard(id);
   }
 
@@ -82,10 +88,10 @@ export default function Dashboard() {
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
-        body: { name: name.trim(), commune, cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
+        body: { name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
       });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
+      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
     } catch (e) {
@@ -99,7 +105,7 @@ export default function Dashboard() {
     try {
       const r = await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
-        body: { desc: editDesc.trim(), cuisine: finalCuisine, address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
+        body: { desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
       });
       setRestaurant(r);
       setMyRestos((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: r.name } : x)));
@@ -108,6 +114,23 @@ export default function Dashboard() {
       toast(e.message);
     } finally {
       setSavingResto(false);
+    }
+  }
+
+  async function deleteRestaurant() {
+    setDeleting(true);
+    try {
+      await api(`/restaurants/${restoId}`, { method: 'DELETE', token });
+      setMyRestos((prev) => prev.filter((x) => x.id !== restoId));
+      setRestoId(null);
+      setRestaurant(null);
+      setEditOpen(false);
+      setConfirmDelete(false);
+      toast('Restaurant supprimé.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -211,6 +234,7 @@ export default function Dashboard() {
                 {COMMUNES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
+            <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
             <div className="field"><label>Adresse (pour les livreurs)</label><input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
             <div className="field">
               <label>Type de restaurant</label>
@@ -245,6 +269,13 @@ export default function Dashboard() {
           {editOpen && (
             <div className="card">
               <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
+              <div className="field">
+                <label>Commune</label>
+                <select value={editCommune} onChange={(e) => setEditCommune(e.target.value)}>
+                  {COMMUNES.map((c) => <option key={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="field"><label>Quartier (optionnel)</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
               <div className="field"><label>Adresse (pour les livreurs)</label><input value={editAddress} onChange={(e) => setEditAddress(e.target.value)} placeholder="Rue..., n°, commune" /></div>
               <div className="field">
                 <label>Type de restaurant</label>
@@ -265,6 +296,23 @@ export default function Dashboard() {
                 <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
                 <button className="btn-ghost" onClick={() => setEditOpen(false)}>Fermer</button>
               </div>
+              <div className="divider" />
+              {!confirmDelete && (
+                <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>🗑️ Supprimer ce restaurant</button>
+              )}
+              {confirmDelete && (
+                <div>
+                  <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
+                    Es-tu sûr ? Cette action est irréversible (plats supprimés aussi). Impossible si des commandes existent déjà.
+                  </p>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
+                      {deleting ? '...' : 'Oui, supprimer définitivement'}
+                    </button>
+                    <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>Annuler</button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -306,7 +354,10 @@ export default function Dashboard() {
                   if (!items.length) return null;
                   return (
                     <div key={cat.value} style={{ marginBottom: 10 }}>
-                      <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '6px 0' }}>{cat.label}</div>
+                      <div className="category-header">
+                        {cat.image && <img src={cat.image} alt={cat.label} />}
+                        <span>{cat.label}</span>
+                      </div>
                       {items.map((item) => (
                         <MenuItemRow key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem} />
                       ))}

@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import { RESTAURANT_TYPES } from '../../menuCategories';
-
-const COMMUNES = ['Ixelles', 'Saint-Gilles', 'Etterbeek', 'Schaerbeek', 'Uccle', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'];
+import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 
 export default function RestaurantList() {
   const [restaurants, setRestaurants] = useState([]);
@@ -45,7 +43,7 @@ export default function RestaurantList() {
         {!loading && list.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
             {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
-            <span className="pill teal">{r.commune}</span>
+            <span className="pill teal">{r.commune}{r.neighborhood ? ` · ${r.neighborhood}` : ''}</span>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
             <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>
             <span className="small">{r.menu.length} plats</span>

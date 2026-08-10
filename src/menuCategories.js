@@ -1,13 +1,24 @@
 export const CATEGORIES = [
-  { value: 'entree', label: 'Entrées' },
-  { value: 'plat', label: 'Plats' },
-  { value: 'dessert', label: 'Desserts' },
-  { value: 'boisson', label: 'Boissons' }
+  { value: 'entree', label: 'Entrées', image: 'https://images.unsplash.com/photo-1626200419199-391ae4be7a41?w=200&q=80' },
+  { value: 'plat', label: 'Plats', image: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=200&q=80' },
+  { value: 'dessert', label: 'Desserts', image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=200&q=80' },
+  { value: 'boisson', label: 'Boissons', image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=200&q=80' }
 ];
 
 export function categoryLabel(value) {
   return CATEGORIES.find((c) => c.value === value)?.label || value;
 }
+
+export function categoryImage(value) {
+  return CATEGORIES.find((c) => c.value === value)?.image || '';
+}
+
+export const COMMUNES = [
+  'Anderlecht', 'Auderghem', 'Berchem-Sainte-Agathe', 'Bruxelles', 'Etterbeek', 'Evere',
+  'Forest', 'Ganshoren', 'Ixelles', 'Jette', 'Koekelberg', 'Molenbeek-Saint-Jean',
+  'Saint-Gilles', 'Saint-Josse-ten-Noode', 'Schaerbeek', 'Uccle', 'Watermael-Boitsfort',
+  'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'
+];
 
 export const RESTAURANT_TYPES = [
   { value: 'Pizza', emoji: '🍕' },

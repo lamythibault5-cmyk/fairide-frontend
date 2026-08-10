@@ -67,7 +67,10 @@ export default function RestaurantMenu() {
           if (!items.length) return null;
           return (
             <div key={cat.value} style={{ marginBottom: 8 }}>
-              <div className="small" style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.03em', margin: '10px 0 2px' }}>{cat.label}</div>
+              <div className="category-header">
+                {cat.image && <img src={cat.image} alt={cat.label} />}
+                <span>{cat.label}</span>
+              </div>
               {items.map((item) => (
                 <div className="menu-item" key={item.id}>
                   <div className="row" style={{ gap: 10 }}>
