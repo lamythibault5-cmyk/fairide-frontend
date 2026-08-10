@@ -9,14 +9,29 @@ const ROLES = [
   { value: 'driver', label: '🛵 Livreur' }
 ];
 
+const GENDERS = [
+  { value: '', label: 'Genre (optionnel)' },
+  { value: 'Femme', label: 'Femme' },
+  { value: 'Homme', label: 'Homme' },
+  { value: 'Autre', label: 'Autre' },
+  { value: 'Préfère ne pas dire', label: 'Préfère ne pas dire' }
+];
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Auth() {
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('client');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
+  const [birthDate, setBirthDate] = useState('');
   const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+  const [addressStreet, setAddressStreet] = useState('');
+  const [addressNumber, setAddressNumber] = useState('');
+  const [addressPostalCode, setAddressPostalCode] = useState('');
+  const [addressCity, setAddressCity] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,18 +40,22 @@ export default function Auth() {
   const navigate = useNavigate();
 
   const googleBtnRef = useRef(null);
-  const stateRef = useRef({ mode, role, phone, address });
-  useEffect(() => { stateRef.current = { mode, role, phone, address }; });
+  const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity });
+  useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity }; });
 
   async function handleGoogleCredential(response) {
-    const { mode, role, phone, address } = stateRef.current;
-    if (mode === 'register' && (!phone.trim() || !address.trim())) {
-      toast('Renseigne ton téléphone et ton adresse avant de continuer avec Google.');
+    const { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity } = stateRef.current;
+    if (mode === 'register' && (!phone.trim() || !addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
+      toast('Renseigne ton téléphone et ton adresse complète avant de continuer avec Google.');
       return;
     }
     setLoading(true);
     try {
-      const data = await loginWithGoogle(response.credential, role, phone.trim(), address.trim());
+      const data = await loginWithGoogle(response.credential, role, {
+        phone: phone.trim(),
+        addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+        addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
+      });
       toast(`Bienvenue, ${data.user.name} !`);
       navigate('/');
     } catch (err) {
@@ -78,10 +97,20 @@ export default function Auth() {
     try {
       let data;
       if (mode === 'register') {
-        if (!name.trim()) { toast('Ton prénom est requis.'); setLoading(false); return; }
+        if (!firstName.trim() || !lastName.trim()) { toast('Ton prénom et ton nom sont requis.'); setLoading(false); return; }
         if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
-        if (!address.trim()) { toast('Ton adresse est requise.'); setLoading(false); return; }
-        data = await register(name.trim(), email.trim(), password, role, phone.trim(), address.trim());
+        if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
+          toast('Ton adresse complète (rue, numéro, code postal, ville) est requise.');
+          setLoading(false);
+          return;
+        }
+        data = await register({
+          firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role,
+          phone: phone.trim(), gender: gender || undefined, birthDate: birthDate || undefined,
+          referralCode: referralCode.trim() || undefined,
+          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+          addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
+        });
       } else {
         data = await login(email.trim(), password);
       }
@@ -111,17 +140,55 @@ export default function Auth() {
                 </div>
               ))}
             </div>
-            <div className="field">
-              <label>Nom</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ton prénom" />
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Prénom</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Prénom" />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Nom</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nom" />
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Genre</label>
+                <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                  {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+                </select>
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Date de naissance (optionnel)</label>
+                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+              </div>
             </div>
             <div className="field">
               <label>Téléphone</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
             </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 2 }}>
+                <label>Rue / Avenue</label>
+                <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Numéro</label>
+                <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Code postal</label>
+                <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+              </div>
+              <div className="field" style={{ flex: 2 }}>
+                <label>Ville / Commune</label>
+                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+              </div>
+            </div>
             <div className="field">
-              <label>Adresse</label>
-              <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" />
+              <label>Code promo (optionnel)</label>
+              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Un code reçu ? Ajoute-le ici" />
             </div>
           </>
         )}

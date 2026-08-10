@@ -12,9 +12,13 @@ export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
   const { token, user } = useAuth();
-  const [address, setAddress] = useState(user.address || '');
+  const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
+  const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
+  const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
+  const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
   const [deliveryNote, setDeliveryNote] = useState('');
+  const [useBalance, setUseBalance] = useState(true);
   const [placing, setPlacing] = useState(false);
   const cart = useCart();
   const toast = useToast();
@@ -31,13 +35,21 @@ export default function RestaurantMenu() {
   const totals = cart.totals(restaurant.menu);
 
   async function placeOrder() {
-    if (!address.trim()) { toast('Ajoute ton adresse de livraison.'); return; }
+    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
+      toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
+      return;
+    }
     const items = Object.entries(cart.items).map(([itemId, qty]) => ({ itemId, qty }));
     setPlacing(true);
     try {
       const order = await api('/orders', {
         method: 'POST', token,
-        body: { restaurantId: id, items, address: address.trim(), deliveryInstructions, deliveryNote: deliveryNote.trim() }
+        body: {
+          restaurantId: id, items,
+          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+          addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+          deliveryInstructions, deliveryNote: deliveryNote.trim(), useBalance
+        }
       });
       const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
       cart.clear();
@@ -60,7 +72,8 @@ export default function RestaurantMenu() {
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
-        <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
+        <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
+        <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
         {CATEGORIES.map((cat) => {
           const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
@@ -114,12 +127,35 @@ export default function RestaurantMenu() {
               <div className="line"><span>Sous-total</span><span>{totals.subtotal.toFixed(2)}€</span></div>
               <div className="line"><span>Livraison</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
               <div className="line"><span>dont commission Fairide (6%)</span><span>{totals.commission.toFixed(2)}€</span></div>
-              <div className="line total"><span>Total</span><span>{totals.total.toFixed(2)}€</span></div>
+              {useBalance && user.balance > 0 && (
+                <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, totals.total).toFixed(2)}€</span></div>
+              )}
+              <div className="line total"><span>Total</span><span>{Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span></div>
+            </div>
+            {user.balance > 0 && (
+              <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
+                <span className="small">Utiliser mon solde Fairide ({Number(user.balance).toFixed(2)}€ disponible)</span>
+              </label>
+            )}
+          </div>
+          <div className="field">
+            <label>Rue / Avenue</label>
+            <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Numéro</label>
+              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Code postal</label>
+              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
             </div>
           </div>
           <div className="field">
-            <label>Adresse de livraison</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., commune" />
+            <label>Ville / Commune</label>
+            <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
           </div>
           <div className="field">
             <label>À la livraison</label>
@@ -132,7 +168,7 @@ export default function RestaurantMenu() {
             <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
           </div>
           <div className="cart-bar">
-            <span>{cart.count} article(s) · {totals.total.toFixed(2)}€</span>
+            <span>{cart.count} article(s) · {Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span>
             <button className="btn-gold" disabled={placing} onClick={placeOrder}>
               {placing ? '...' : 'Commander et payer'}
             </button>

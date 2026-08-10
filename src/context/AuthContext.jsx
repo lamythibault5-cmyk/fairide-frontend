@@ -25,14 +25,14 @@ export function AuthProvider({ children }) {
     return data;
   }
 
-  async function register(name, email, password, role, phone, address) {
-    const data = await api('/auth/register', { method: 'POST', body: { name, email, password, role, phone, address } });
+  async function register(payload) {
+    const data = await api('/auth/register', { method: 'POST', body: payload });
     setSession(data);
     return data;
   }
 
-  async function loginWithGoogle(credential, role, phone, address) {
-    const data = await api('/auth/google', { method: 'POST', body: { credential, role, phone, address } });
+  async function loginWithGoogle(credential, role, extra) {
+    const data = await api('/auth/google', { method: 'POST', body: { credential, role, ...extra } });
     setSession(data);
     return data;
   }

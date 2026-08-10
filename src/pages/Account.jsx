@@ -4,12 +4,26 @@ import { useToast } from '../context/ToastContext';
 
 const ROLE_LABEL = { client: 'Client', restaurant: 'Commerce', driver: 'Livreur' };
 
+const GENDERS = [
+  { value: '', label: 'Genre (optionnel)' },
+  { value: 'Femme', label: 'Femme' },
+  { value: 'Homme', label: 'Homme' },
+  { value: 'Autre', label: 'Autre' },
+  { value: 'Préfère ne pas dire', label: 'Préfère ne pas dire' }
+];
+
 export default function Account() {
   const { user, role, updateProfile, logout } = useAuth();
   const toast = useToast();
-  const [name, setName] = useState(user.name);
+  const [firstName, setFirstName] = useState(user.firstName || '');
+  const [lastName, setLastName] = useState(user.lastName || '');
+  const [gender, setGender] = useState(user.gender || '');
+  const [birthDate, setBirthDate] = useState(user.birthDate || '');
   const [phone, setPhone] = useState(user.phone || '');
-  const [address, setAddress] = useState(user.address || '');
+  const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
+  const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
+  const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
+  const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [savingInfo, setSavingInfo] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
@@ -20,7 +34,12 @@ export default function Account() {
     e.preventDefault();
     setSavingInfo(true);
     try {
-      await updateProfile({ name: name.trim(), phone: phone.trim(), address: address.trim() });
+      await updateProfile({
+        firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(),
+        gender, birthDate: birthDate || '',
+        addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+        addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
+      });
       toast('Infos mises à jour.');
     } catch (err) {
       toast(err.message);
@@ -54,18 +73,60 @@ export default function Account() {
           <span className="pill teal">{ROLE_LABEL[role] || role}</span>
           <span className="small">{user.email}</span>
         </div>
+
+        {role === 'client' && (
+          <div className="stat-card highlight" style={{ marginBottom: 14 }}>
+            <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
+            <div className="label">Ton solde Fairide</div>
+          </div>
+        )}
+
         <form onSubmit={saveInfo}>
-          <div className="field">
-            <label>Nom</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} />
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Prénom</label>
+              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Nom</label>
+              <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Genre</label>
+              <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+              </select>
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Date de naissance</label>
+              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+            </div>
           </div>
           <div className="field">
             <label>Téléphone</label>
             <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
           </div>
-          <div className="field">
-            <label>Adresse</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" />
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 2 }}>
+              <label>Rue / Avenue</label>
+              <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Numéro</label>
+              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
+            </div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>Code postal</label>
+              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
+            </div>
+            <div className="field" style={{ flex: 2 }}>
+              <label>Ville / Commune</label>
+              <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+            </div>
           </div>
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : 'Enregistrer'}</button>
         </form>

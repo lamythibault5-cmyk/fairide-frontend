@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel } from '../../orderStatus';
 import { CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import MenuItemRow from '../../components/MenuItemRow';
@@ -24,6 +24,7 @@ export default function Dashboard() {
   const [desc, setDesc] = useState('');
   const [address, setAddress] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
+  const [openingHours, setOpeningHours] = useState('');
 
   const [editOpen, setEditOpen] = useState(false);
   const [editDesc, setEditDesc] = useState('');
@@ -33,6 +34,7 @@ export default function Dashboard() {
   const [editNeighborhood, setEditNeighborhood] = useState('');
   const [editAddress, setEditAddress] = useState('');
   const [editCover, setEditCover] = useState('');
+  const [editOpeningHours, setEditOpeningHours] = useState('');
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -46,6 +48,7 @@ export default function Dashboard() {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templatePicked, setTemplatePicked] = useState(() => new Set());
   const [addingTemplate, setAddingTemplate] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
@@ -68,6 +71,7 @@ export default function Dashboard() {
       setEditNeighborhood(restoData.neighborhood || '');
       setEditAddress(restoData.address || '');
       setEditCover(restoData.coverImageUrl || '');
+      setEditOpeningHours(restoData.openingHours || '');
       setEditOpenFlag(restoData.open);
     } catch (e) {
       toast(e.message);
@@ -88,10 +92,10 @@ export default function Dashboard() {
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
-        body: { name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim() }
+        body: { name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(), address: address.trim(), coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim() }
       });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setNewRestoOpen(false);
+      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc(''); setAddress(''); setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
     } catch (e) {
@@ -105,7 +109,7 @@ export default function Dashboard() {
     try {
       const r = await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
-        body: { desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), open: editOpenFlag }
+        body: { desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(), address: editAddress.trim(), coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag }
       });
       setRestaurant(r);
       setMyRestos((prev) => prev.map((x) => (x.id === r.id ? { ...x, name: r.name } : x)));
@@ -247,6 +251,7 @@ export default function Dashboard() {
             )}
             <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
             <div className="field"><label>Image de couverture (URL)</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+            <div className="field"><label>Horaires d'ouverture (optionnel)</label><input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
             <button className="btn-teal" onClick={createResto}>Créer</button>
           </div>
         )}
@@ -260,7 +265,7 @@ export default function Dashboard() {
             <div className="stat-card"><div className="num">{orders.length}</div><div className="label">Commandes</div></div>
             <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livrées</div></div>
             <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">CA plats</div></div>
-            <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs Uber Eats</div></div>
+            <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs les grandes plateformes</div></div>
           </div>
 
           {!editOpen && (
@@ -288,6 +293,7 @@ export default function Dashboard() {
               )}
               <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
               <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
+              <div className="field"><label>Horaires d'ouverture (optionnel)</label><input value={editOpeningHours} onChange={(e) => setEditOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
               <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
                 <span className="small">Restaurant ouvert (visible aux clients)</span>
@@ -321,7 +327,7 @@ export default function Dashboard() {
               <h2 className="section-title" style={{ marginTop: 0 }}>Commandes entrantes</h2>
               {orders.length === 0 && <div className="empty">Pas encore de commande.</div>}
               {orders.map((o) => (
-                <div className="card" key={o.id}>
+                <div className="card order-card-clickable" key={o.id} onClick={() => setSelectedOrder(o)}>
                   <div className="row" style={{ justifyContent: 'space-between' }}>
                     <b>{o.clientName}</b>
                     <span className={`status-badge status-${o.status}`}>{statusLabel(o.status)}</span>
@@ -331,7 +337,7 @@ export default function Dashboard() {
                   <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
                   <div className="small">📍 {o.address}</div>
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
-                  <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                  <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
                     {o.status === 'nouveau' && (
                       <>
                         <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'accept')}>Accepter</button>
@@ -405,6 +411,41 @@ export default function Dashboard() {
             </div>
           </div>
         </>
+      )}
+
+      {selectedOrder && (
+        <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
+              <h3 style={{ margin: 0 }}>Commande de {selectedOrder.clientName}</h3>
+              <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status)}</span>
+            </div>
+            <DeliveryTiming order={selectedOrder} />
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Articles</h4>
+            {selectedOrder.items.map((i) => (
+              <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
+                <span>{i.qty}× {i.name}</span>
+                <span>{(i.price * i.qty).toFixed(2)}€</span>
+              </div>
+            ))}
+            <div className="divider" />
+            <div className="breakdown">
+              <div className="line"><span>Sous-total</span><span>{selectedOrder.subtotal.toFixed(2)}€</span></div>
+              <div className="line"><span>Livraison</span><span>{selectedOrder.deliveryFee.toFixed(2)}€</span></div>
+              {selectedOrder.balanceUsed > 0 && <div className="line"><span>Solde client utilisé</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
+              <div className="line total"><span>Total payé</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
+            </div>
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Livraison</h4>
+            <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>
+            {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
+            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
+            {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
+            {selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>🛵 Livreur : {selectedOrder.driverName}{selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : ''}</p>}
+            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedOrder(null)}>Fermer</button>
+          </div>
+        </div>
       )}
     </div>
   );
