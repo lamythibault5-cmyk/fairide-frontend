@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -9,6 +9,8 @@ const ROLES = [
   { value: 'driver', label: '🛵 Livreur' }
 ];
 
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+
 export default function Auth() {
   const [mode, setMode] = useState('login');
   const [role, setRole] = useState('client');
@@ -18,9 +20,56 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+
+  const googleBtnRef = useRef(null);
+  const stateRef = useRef({ mode, role, phone, address });
+  useEffect(() => { stateRef.current = { mode, role, phone, address }; });
+
+  async function handleGoogleCredential(response) {
+    const { mode, role, phone, address } = stateRef.current;
+    if (mode === 'register' && (!phone.trim() || !address.trim())) {
+      toast('Renseigne ton téléphone et ton adresse avant de continuer avec Google.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await loginWithGoogle(response.credential, role, phone.trim(), address.trim());
+      toast(`Bienvenue, ${data.user.name} !`);
+      navigate('/');
+    } catch (err) {
+      if (err.message === 'INCOMPLETE_PROFILE') {
+        setMode('register');
+        toast('Complète ton profil (téléphone, adresse) puis reclique sur Continuer avec Google.');
+      } else {
+        toast(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+    let cancelled = false;
+    function tryInit() {
+      if (cancelled) return;
+      if (window.google?.accounts?.id && googleBtnRef.current) {
+        googleBtnRef.current.innerHTML = '';
+        window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with'
+        });
+      } else {
+        setTimeout(tryInit, 200);
+      }
+    }
+    tryInit();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   async function submit(e) {
     e.preventDefault();
@@ -73,6 +122,19 @@ export default function Auth() {
             <div className="field">
               <label>Adresse</label>
               <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., n°, commune" />
+            </div>
+          </>
+        )}
+
+        {GOOGLE_CLIENT_ID && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
+              <div ref={googleBtnRef} />
+            </div>
+            <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+              <span className="small">ou</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
             </div>
           </>
         )}

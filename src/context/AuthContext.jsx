@@ -31,6 +31,12 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function loginWithGoogle(credential, role, phone, address) {
+    const data = await api('/auth/google', { method: 'POST', body: { credential, role, phone, address } });
+    setSession(data);
+    return data;
+  }
+
   async function updateProfile(patch) {
     const user = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch });
     setSession((prev) => ({ ...prev, user }));
@@ -47,6 +53,7 @@ export function AuthProvider({ children }) {
     role: session?.user?.role || null,
     login,
     register,
+    loginWithGoogle,
     updateProfile,
     logout
   };
