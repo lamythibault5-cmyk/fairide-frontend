@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CATEGORIES } from '../menuCategories';
+import { CATEGORIES, defaultItemImage } from '../menuCategories';
 
 export default function MenuItemRow({ item, onSave, onDelete }) {
   const [editing, setEditing] = useState(false);
@@ -42,7 +42,7 @@ export default function MenuItemRow({ item, onSave, onDelete }) {
   return (
     <div className="menu-item">
       <div className="row" style={{ gap: 10 }}>
-        {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="dish-thumb" />}
+        <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb" />
         <span>{item.name}</span>
       </div>
       <div className="row" style={{ gap: 8 }}>

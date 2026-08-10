@@ -282,3 +282,37 @@ const TYPE_TEMPLATES = {
 export function getStarterTemplate(cuisineType) {
   return TYPE_TEMPLATES[cuisineType] || GENERIC_TEMPLATE;
 }
+
+const KEYWORD_IMAGES = [
+  { keywords: ['pizza'], image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&q=80' },
+  { keywords: ['burger'], image: 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300&q=80' },
+  { keywords: ['sushi', 'maki', 'nigiri', 'sashimi', 'california roll', 'dragon roll'], image: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=300&q=80' },
+  { keywords: ['pâtes', 'pate', 'pasta', 'lasagne', 'carbonara', 'risotto', 'spaghetti', 'nouilles'], image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=300&q=80' },
+  { keywords: ['salade', 'bowl', 'buddha'], image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=300&q=80' },
+  { keywords: ['soupe', 'miso', 'tom yum'], image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=300&q=80' },
+  { keywords: ['frites', 'onion rings', 'nuggets'], image: 'https://images.unsplash.com/photo-1600628421066-f6bda6a7b976?w=300&q=80' },
+  { keywords: ['kebab', 'durum', 'chawarma', 'grillades', 'grill', 'mixed grill'], image: 'https://images.unsplash.com/photo-1526318472351-c75fcf070305?w=300&q=80' },
+  { keywords: ['sandwich', 'panini', 'wrap'], image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=300&q=80' },
+  { keywords: ['glace', 'mochi', 'sorbet'], image: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&q=80' },
+  { keywords: ['chocolat', 'brownie', 'cookie', 'tiramisu', 'panna cotta', 'gâteau', 'gateau', 'tarte', 'brownie', 'baklava'], image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=300&q=80' },
+  { keywords: ['coca', 'soda', 'fanta', 'ice tea', 'limonade', 'ayran', 'energy drink'], image: 'https://images.unsplash.com/photo-1497515114629-f71d768fd07c?w=300&q=80' },
+  { keywords: ['eau plate', 'eau pétillante', 'eau petillante', "san pellegrino"], image: 'https://images.unsplash.com/photo-1497534446932-c925b458314e?w=300&q=80' },
+  { keywords: ['café', 'cafe', 'expresso', 'espresso'], image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80' },
+  { keywords: ['bière', 'biere'], image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&q=80' },
+  { keywords: ['vin'], image: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=300&q=80' },
+  { keywords: ['jus'], image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&q=80' },
+  { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair'], image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&q=80' },
+  { keywords: ['poulet', 'chicken', 'nem', 'beignet'], image: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=300&q=80' },
+  { keywords: ['riz', 'curry', 'cantonais'], image: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80' },
+  { keywords: ['saumon', 'poisson', 'thon'], image: 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=300&q=80' },
+  { keywords: ['chips', 'cacahuète', 'cacahuete', 'nachos', 'bretzel', 'apéro', 'apero', 'olives', 'biltong'], image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300&q=80' },
+  { keywords: ['légume', 'legume', 'houmous', 'falafel', 'edamame', 'quiche'], image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80' }
+];
+
+export function defaultItemImage(item) {
+  const name = (item?.name || '').toLowerCase();
+  for (const entry of KEYWORD_IMAGES) {
+    if (entry.keywords.some((k) => name.includes(k))) return entry.image;
+  }
+  return categoryImage(item?.category) || '';
+}

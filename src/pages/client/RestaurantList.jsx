@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 
 export default function RestaurantList() {
+  const { token } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [commune, setCommune] = useState('');
@@ -15,7 +18,26 @@ export default function RestaurantList() {
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
+    api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function toggleFavorite(e, id) {
+    e.preventDefault();
+    e.stopPropagation();
+    const isFav = favoriteIds.has(id);
+    try {
+      if (isFav) {
+        await api(`/restaurants/${id}/favorite`, { method: 'DELETE', token });
+        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      } else {
+        await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
+        setFavoriteIds((prev) => new Set(prev).add(id));
+      }
+    } catch (err) {
+      toast(err.message);
+    }
+  }
 
   const list = restaurants.filter((r) => {
     if (commune && r.commune !== commune) return false;
@@ -41,9 +63,19 @@ export default function RestaurantList() {
       {loading && <SkeletonCards count={4} />}
       <div className="rest-grid">
         {!loading && list.map((r) => (
-          <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
+          <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
+            <button
+              onClick={(e) => toggleFavorite(e, r.id)}
+              style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: 16, cursor: 'pointer' }}
+              title="Ajouter aux favoris"
+            >
+              {favoriteIds.has(r.id) ? '❤️' : '🤍'}
+            </button>
             {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
-            <span className="pill teal">{r.commune}{r.neighborhood ? ` · ${r.neighborhood}` : ''}</span>
+            <div className="pill-row">
+              <span className="pill teal">{r.commune}</span>
+              {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
+            </div>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
             <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>
             <span className="small">{r.menu.length} plats</span>

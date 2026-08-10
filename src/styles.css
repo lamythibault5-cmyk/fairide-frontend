@@ -63,6 +63,8 @@ a { color: inherit; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--cream-dim); color: var(--ink-soft); font-weight: 600; }
 .pill.teal { background: rgba(47,111,94,0.12); color: var(--teal-deep); }
+.pill.gold { background: rgba(217,164,65,0.18); color: var(--gold-deep); }
+.pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
 input, select, textarea {
   font-family: inherit; font-size: 14px; padding: 10px 12px;
@@ -102,6 +104,20 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 }
 .order-card-clickable { cursor: pointer; }
 .order-card-clickable:hover { box-shadow: var(--shadow); }
+
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
+.menu-item-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
+.menu-item-card .name { font-weight: 600; font-size: 14px; margin: 0 0 2px; }
+.menu-item-card .desc { flex: 1; margin: 0 0 8px; }
+.menu-item-card .bottom-row { display: flex; justify-content: space-between; align-items: center; }
+
+.discover-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.discover-card { flex: 0 0 150px; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; transition: border-color .15s; }
+.discover-card:hover { border-color: var(--gold); }
+.discover-card img { width: 100%; height: 80px; object-fit: cover; background: var(--cream-dim); display: block; }
+.discover-card .info { padding: 8px 10px; }
+.discover-card .info b { font-size: 13px; display: block; margin-bottom: 2px; }
 .dish-thumb-lg { width: 100%; height: 130px; border-radius: 10px; object-fit: cover; background: var(--cream-dim); display: block; margin-bottom: 8px; }
 .cover-banner { width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius); margin-bottom: 14px; background: var(--cream-dim); }
 .cover-banner-sm { width: 100%; height: 110px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 10px; width: calc(100% + 36px); }

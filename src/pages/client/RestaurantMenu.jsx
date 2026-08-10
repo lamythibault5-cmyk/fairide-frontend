@@ -4,13 +4,16 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
-import { CATEGORIES } from '../../menuCategories';
+import { CATEGORIES, defaultItemImage } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  const [discover, setDiscover] = useState([]);
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
   const { token, user, refreshUser } = useAuth();
   const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
   const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
@@ -27,12 +30,32 @@ export default function RestaurantMenu() {
   useEffect(() => {
     cart.startOrder(id);
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
+    api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
+    api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const totals = cart.totals(restaurant.menu);
+  const isFavorite = favoriteIds.has(id);
+
+  async function toggleFavorite() {
+    setFavoriteBusy(true);
+    try {
+      if (isFavorite) {
+        await api(`/restaurants/${id}/favorite`, { method: 'DELETE', token });
+        setFavoriteIds((prev) => { const next = new Set(prev); next.delete(id); return next; });
+      } else {
+        await api(`/restaurants/${id}/favorite`, { method: 'POST', token });
+        setFavoriteIds((prev) => new Set(prev).add(id));
+      }
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setFavoriteBusy(false);
+    }
+  }
 
   async function placeOrder() {
     if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
@@ -72,7 +95,12 @@ export default function RestaurantMenu() {
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; Tous les restaurants</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
-        <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
+          <button className="btn-ghost" style={{ padding: '6px 10px', fontSize: 18 }} disabled={favoriteBusy} onClick={toggleFavorite} title="Ajouter aux favoris">
+            {isFavorite ? '❤️' : '🤍'}
+          </button>
+        </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 14px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
@@ -80,26 +108,24 @@ export default function RestaurantMenu() {
           const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
           if (!items.length) return null;
           return (
-            <div key={cat.value} style={{ marginBottom: 8 }}>
+            <div key={cat.value}>
               <div className="category-header">
                 {cat.image && <img src={cat.image} alt={cat.label} />}
                 <span>{cat.label}</span>
               </div>
-              {items.map((item) => (
-                <div className="menu-item" key={item.id}>
-                  <div className="row" style={{ gap: 10 }}>
-                    {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="dish-thumb" />}
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14 }}>{item.name}</div>
-                      <div className="small">{item.desc || ''}</div>
+              <div className="menu-grid">
+                {items.map((item) => (
+                  <div className="menu-item-card" key={item.id}>
+                    <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
+                    <div className="name">{item.name}</div>
+                    <div className="small desc">{item.desc || ''}</div>
+                    <div className="bottom-row">
+                      <span className="price">{item.price.toFixed(2)}€</span>
+                      <button className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => cart.changeQty(item.id, 1)}>+</button>
                     </div>
                   </div>
-                  <div className="row" style={{ gap: 8 }}>
-                    <span className="price">{item.price.toFixed(2)}€</span>
-                    <button className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => cart.changeQty(item.id, 1)}>+</button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           );
         })}
@@ -175,6 +201,23 @@ export default function RestaurantMenu() {
             </button>
           </div>
         </>
+      )}
+
+      {discover.length > 0 && (
+        <div style={{ marginTop: 18 }}>
+          <h3 className="section-title" style={{ fontSize: 16 }}>Découvrir aussi</h3>
+          <div className="discover-scroll">
+            {discover.map((r) => (
+              <Link key={r.id} to={`/restaurants/${r.id}`} className="discover-card">
+                {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
+                <div className="info">
+                  <b>{r.name}</b>
+                  <span className="small">{r.commune}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

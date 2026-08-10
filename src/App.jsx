@@ -6,6 +6,7 @@ import Home from './pages/Home';
 import Account from './pages/Account';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
+import Favorites from './pages/client/Favorites';
 import Orders from './pages/client/Orders';
 import OrderResult from './pages/client/OrderResult';
 import RestaurantDashboard from './pages/restaurant/Dashboard';
@@ -20,6 +21,7 @@ export default function App() {
 
         <Route path="/restaurants" element={<ProtectedRoute role="client"><RestaurantList /></ProtectedRoute>} />
         <Route path="/restaurants/:id" element={<ProtectedRoute role="client"><RestaurantMenu /></ProtectedRoute>} />
+        <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
