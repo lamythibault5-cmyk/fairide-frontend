@@ -1,0 +1,13 @@
+export default function BrandMark({ size = 34 }) {
+  return (
+    <span className="mark" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg">
+        <rect width="60" height="60" fill="#16233A" />
+        <path d="M 12 33 L 30 20 L 48 33 Z" fill="#B5482E" />
+        <rect x="15" y="33" width="30" height="17" fill="#0e1727" />
+        <rect x="20" y="37" width="8" height="13" fill="#D9A441" />
+        <rect x="33" y="37" width="8" height="9" fill="#FBF8F2" />
+      </svg>
+    </span>
+  );
+}
