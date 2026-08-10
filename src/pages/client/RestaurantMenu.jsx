@@ -6,12 +6,15 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { CATEGORIES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
+import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
   const { token, user } = useAuth();
   const [address, setAddress] = useState(user.address || '');
+  const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
+  const [deliveryNote, setDeliveryNote] = useState('');
   const [placing, setPlacing] = useState(false);
   const cart = useCart();
   const toast = useToast();
@@ -32,7 +35,10 @@ export default function RestaurantMenu() {
     const items = Object.entries(cart.items).map(([itemId, qty]) => ({ itemId, qty }));
     setPlacing(true);
     try {
-      const order = await api('/orders', { method: 'POST', token, body: { restaurantId: id, items, address: address.trim() } });
+      const order = await api('/orders', {
+        method: 'POST', token,
+        body: { restaurantId: id, items, address: address.trim(), deliveryInstructions, deliveryNote: deliveryNote.trim() }
+      });
       const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
       cart.clear();
       if (pay.simulated) {
@@ -111,6 +117,16 @@ export default function RestaurantMenu() {
           <div className="field">
             <label>Adresse de livraison</label>
             <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Rue..., commune" />
+          </div>
+          <div className="field">
+            <label>À la livraison</label>
+            <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
+              {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+          <div className="field">
+            <label>Note pour le livreur (optionnel)</label>
+            <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
           </div>
           <div className="cart-bar">
             <span>{cart.count} article(s) · {totals.total.toFixed(2)}€</span>

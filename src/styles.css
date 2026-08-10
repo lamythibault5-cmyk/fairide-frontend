@@ -136,10 +136,18 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
 
-.landing-hero { text-align: center; max-width: 640px; margin: 10px auto 40px; display: flex; flex-direction: column; align-items: center; }
-.landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; }
-.landing-sub { color: var(--ink-soft); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
-@media (max-width: 640px) { .landing-title { font-size: 26px; } }
+.landing-hero {
+  text-align: center; max-width: 720px; margin: 0 auto 40px; display: flex; flex-direction: column; align-items: center;
+  background:
+    linear-gradient(160deg, rgba(22,35,58,0.90) 0%, rgba(31,50,83,0.82) 100%),
+    url('https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1600&q=80') center/cover;
+  border-radius: var(--radius);
+  padding: 56px 24px;
+  color: var(--cream);
+}
+.landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; color: var(--cream); }
+.landing-sub { color: rgba(251,248,242,0.88); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
+@media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 40px 18px; } }
 
 .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .feature-card { text-align: center; }

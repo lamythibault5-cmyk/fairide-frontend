@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import { DeliveryTiming } from '../../orderStatus';
+import { DeliveryTiming, deliveryInstructionLabel } from '../../orderStatus';
 
 export default function DriverDashboard() {
   const { token } = useAuth();
@@ -87,6 +87,9 @@ export default function DriverDashboard() {
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small">🏁 Livraison : {o.address}</div>
+          {o.deliveryInstructions && (
+            <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
+          )}
           <DeliveryTiming order={o} />
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>

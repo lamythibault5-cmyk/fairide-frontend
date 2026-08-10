@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DeliveryTiming, ProgressBar, statusLabel } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 
 export default function Orders() {
@@ -32,6 +32,9 @@ export default function Orders() {
           <DeliveryTiming order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
           <div className="small">📍 {o.address}</div>
+          {o.deliveryInstructions && (
+            <div className="small">{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
+          )}
           {o.driverName && (
             <div className="small">🛵 Livreur : {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</div>
           )}

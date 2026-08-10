@@ -1,3 +1,14 @@
+export const DELIVERY_INSTRUCTION_OPTIONS = [
+  { value: 'sonner', label: '🔔 Sonner et attendre', icon: '🔔' },
+  { value: 'deposer', label: '🚪 Déposer devant la porte', icon: '🚪' },
+  { value: 'concierge', label: '🏢 Laisser au/à la concierge', icon: '🏢' },
+  { value: 'appeler', label: "📞 M'appeler à l'arrivée", icon: '📞' }
+];
+
+export function deliveryInstructionLabel(value) {
+  return DELIVERY_INSTRUCTION_OPTIONS.find((o) => o.value === value)?.label || value;
+}
+
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
 const LABELS = ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'];
 
