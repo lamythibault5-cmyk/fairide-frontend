@@ -109,6 +109,28 @@ export default function Admin() {
     }
   }
 
+  async function setRestaurantStatus(id, status) {
+    try {
+      await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status } });
+      setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
+      if (selectedRestaurant?.id === id) setSelectedRestaurant((prev) => ({ ...prev, adminStatus: status }));
+      toast(status === 'approved' ? 'Restaurant approuvé.' : status === 'blocked' ? 'Restaurant bloqué.' : 'Statut mis à jour.');
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
+  async function setDriverStatus(id, status) {
+    try {
+      await api(`/admin/drivers/${id}/status`, { method: 'PATCH', token, body: { status } });
+      setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
+      if (selectedDriver?.id === id) setSelectedDriver((prev) => ({ ...prev, adminStatus: status }));
+      toast(status === 'approved' ? 'Livreur approuvé.' : status === 'blocked' ? 'Livreur bloqué.' : 'Statut mis à jour.');
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
   async function deleteReview(id) {
     try {
       await api(`/admin/reviews/${id}`, { method: 'DELETE', token });
@@ -220,11 +242,24 @@ export default function Admin() {
             <div className="card order-card-clickable" key={r.id} onClick={() => openRestaurant(r)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{r.name}</b>
-                <span className="pill teal">{r.open ? 'Ouvert' : 'Fermé'}</span>
+                <div className="row" style={{ gap: 6 }}>
+                  <span className="pill teal">{r.open ? 'Ouvert' : 'Fermé'}</span>
+                  <span className="pill" style={{ color: r.adminStatus === 'approved' ? 'var(--teal-deep)' : r.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
+                    {r.adminStatus === 'approved' ? '✅ Approuvé' : r.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente'}
+                  </span>
+                </div>
               </div>
               <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
               <div className="small">Propriétaire : {r.ownerEmail}{r.ownerPhone ? ` · ${r.ownerPhone}` : ''}</div>
               <div className="small">{r.orderCount} commande(s) payée(s) · {r.revenue.toFixed(2)}€ de CA plats</div>
+              <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                {r.adminStatus !== 'approved' && (
+                  <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setRestaurantStatus(r.id, 'approved')}>Approuver</button>
+                )}
+                {r.adminStatus !== 'blocked' && (
+                  <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setRestaurantStatus(r.id, 'blocked')}>Bloquer</button>
+                )}
+              </div>
             </div>
           ))}
         </div>
@@ -238,7 +273,12 @@ export default function Admin() {
             <div className="card order-card-clickable" key={d.id} onClick={() => openDriver(d)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{d.name}</b>
-                {!d.emailVerified && <span className="pill" style={{ color: 'var(--red)' }}>Email non vérifié</span>}
+                <div className="row" style={{ gap: 6 }}>
+                  {!d.emailVerified && <span className="pill" style={{ color: 'var(--red)' }}>Email non vérifié</span>}
+                  <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
+                    {d.adminStatus === 'approved' ? '✅ Approuvé' : d.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente'}
+                  </span>
+                </div>
               </div>
               <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}</div>
               <div className="small">
@@ -248,6 +288,14 @@ export default function Admin() {
               {(d.payoutIban || d.payoutAccountHolder) && (
                 <div className="small">💳 {d.payoutAccountHolder || '(titulaire non renseigné)'} — {d.payoutIban || '(IBAN non renseigné)'}</div>
               )}
+              <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                {d.adminStatus !== 'approved' && (
+                  <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setDriverStatus(d.id, 'approved')}>Approuver</button>
+                )}
+                {d.adminStatus !== 'blocked' && (
+                  <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setDriverStatus(d.id, 'blocked')}>Bloquer</button>
+                )}
+              </div>
             </div>
           ))}
         </div>

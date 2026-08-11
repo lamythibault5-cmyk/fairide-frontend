@@ -519,6 +519,27 @@ export default function Dashboard() {
         )}
       </div>
 
+      {restaurant && restaurant.adminStatus !== 'approved' && (
+        <div className="card" style={{ border: '2px solid var(--red)' }}>
+          {restaurant.adminStatus === 'blocked' ? (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚫 Compte bloqué par Fairide</h3>
+              <p className="small" style={{ margin: 0 }}>
+                Ton restaurant a été bloqué par l'équipe Fairide et n'est pas visible aux clients, quel que soit ton statut d'abonnement. Contacte le support pour plus d'informations.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
+              <p className="small" style={{ margin: 0 }}>
+                Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — même avec un abonnement actif.
+                C'est généralement rapide, repasse un peu plus tard.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
       {restaurant && (
         <div className="card" style={{ border: `2px solid ${['active', 'trialing'].includes(restaurant.subscriptionStatus) ? 'var(--teal)' : 'var(--red)'}` }}>
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>

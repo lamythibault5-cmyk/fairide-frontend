@@ -102,6 +102,26 @@ export default function DriverDashboard() {
 
   return (
     <div>
+      {user?.adminStatus !== 'approved' && (
+        <div className="card" style={{ border: '2px solid var(--red)' }}>
+          {user?.adminStatus === 'blocked' ? (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚫 Compte bloqué par Fairide</h3>
+              <p className="small" style={{ margin: 0 }}>
+                Ton compte livreur a été bloqué par l'équipe Fairide — tu ne peux plus voir ni prendre de commandes. Contacte le support pour plus d'informations.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
+              <p className="small" style={{ margin: 0 }}>
+                Ton compte livreur doit être validé par l'équipe Fairide avant de pouvoir voir et prendre des commandes. C'est généralement rapide, repasse un peu plus tard.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
         <div className="stat-card highlight"><div className="num">{delivered.reduce((a, o) => a + o.deliveryFee, 0).toFixed(2)}€</div><div className="label">Gains estimés</div></div>
