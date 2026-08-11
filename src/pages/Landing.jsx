@@ -40,7 +40,7 @@ export default function Landing() {
         </p>
         <div className="row" style={{ gap: 10 }}>
           <button className="btn-gold" onClick={() => navigate('/login')}>🛍️ Commander maintenant</button>
-          <button className="btn-outline hero" onClick={() => navigate('/login')}>🏪 Devenir partenaire</button>
+          <button className="btn-teal" onClick={() => navigate('/login')}>🏪 Devenir partenaire</button>
         </div>
       </div>
 
