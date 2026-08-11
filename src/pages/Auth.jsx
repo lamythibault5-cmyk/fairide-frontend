@@ -34,6 +34,7 @@ export default function Auth() {
   const [referralCode, setReferralCode] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [code, setCode] = useState('');
@@ -103,6 +104,16 @@ export default function Auth() {
         if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
         if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
           toast('Ton adresse complète (rue, numéro, code postal, ville) est requise.');
+          setLoading(false);
+          return;
+        }
+        if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+          toast('Le mot de passe doit faire au moins 5 caractères et contenir une majuscule et une minuscule.');
+          setLoading(false);
+          return;
+        }
+        if (password !== passwordConfirm) {
+          toast('Les deux mots de passe ne correspondent pas.');
           setLoading(false);
           return;
         }
@@ -282,8 +293,17 @@ export default function Auth() {
           </div>
           <div className="field">
             <label>Mot de passe</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="8 caractères minimum" />
+            <input
+              type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+              placeholder={mode === 'register' ? '5 caractères min., 1 majuscule, 1 minuscule' : 'Mot de passe'}
+            />
           </div>
+          {mode === 'register' && (
+            <div className="field">
+              <label>Confirme ton mot de passe</label>
+              <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder="Retape le même mot de passe" />
+            </div>
+          )}
           <button type="submit" className="btn-gold btn-block" disabled={loading}>
             {loading ? '...' : mode === 'register' ? 'Créer mon compte' : 'Se connecter'}
           </button>
