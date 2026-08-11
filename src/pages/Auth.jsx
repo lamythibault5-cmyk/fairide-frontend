@@ -258,9 +258,14 @@ export default function Auth() {
               </div>
             )}
             {role === 'driver' && (
-              <p className="small" style={{ marginTop: -6, marginBottom: 12 }}>
-                📍 En créant ton compte livreur, ton navigateur te demandera d'autoriser la géolocalisation — elle sert à partager ta position en direct avec les clients pendant tes livraisons. Tu peux la désactiver à tout moment dans les réglages de ton compte.
-              </p>
+              <>
+                <p className="small" style={{ marginTop: -6, marginBottom: 8 }}>
+                  📍 En créant ton compte livreur, ton navigateur te demandera d'autoriser la géolocalisation — elle sert à partager ta position en direct avec les clients pendant tes livraisons. Tu peux la désactiver à tout moment dans les réglages de ton compte.
+                </p>
+                <p className="small" style={{ marginBottom: 12 }}>
+                  💶 Aucune commission Fairide sur tes livraisons. Des frais techniques peuvent s'appliquer pour couvrir notamment le traitement des paiements et les services de la plateforme.
+                </p>
+              </>
             )}
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>

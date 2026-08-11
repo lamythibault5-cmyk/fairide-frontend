@@ -31,10 +31,11 @@ export default function Terms() {
         espèces, n'est pas transférable, et ne peut être utilisé que pour des commandes sur la plateforme.
       </p>
 
-      <h3>5. Commission</h3>
+      <h3>5. Commission et frais</h3>
       <p className="small">
-        Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, dont le taux est communiqué au commerce lors
-        de son inscription.
+        Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, plafonnée à 6% du montant des produits.
+        Les livreurs ne paient aucune commission Fairide sur leurs livraisons. Des frais techniques peuvent néanmoins s'appliquer sur
+        les versements aux livreurs, pour couvrir notamment le traitement des paiements et les services de la plateforme.
       </p>
 
       <h3>6. Annulation et remboursement</h3>
