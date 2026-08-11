@@ -35,8 +35,11 @@ a { color: inherit; }
   background: linear-gradient(160deg, var(--ink) 0%, #1F3253 100%);
   color: var(--cream);
   padding: 28px 20px 24px;
-  position: relative;
+  position: sticky;
+  top: 0;
+  z-index: 40;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(22,35,58,0.18);
 }
 .hero::after {
   content: "";
@@ -207,6 +210,17 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; color: var(--cream); }
 .landing-sub { color: rgba(251,248,242,0.88); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
 @media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 40px 18px; } }
+
+.stats-bar {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 28px;
+  max-width: 640px; margin: -64px auto 36px; position: relative; z-index: 2;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px 24px; box-shadow: var(--shadow);
+}
+.stats-bar-item { text-align: center; }
+.stats-bar-item b { display: block; font-family: 'Fraunces', serif; font-size: 26px; color: var(--teal-deep); line-height: 1.1; }
+.stats-bar-item span { font-size: 11px; color: var(--ink-soft); font-weight: 600; }
+@media (max-width: 640px) { .stats-bar { margin-top: 16px; gap: 18px 24px; } }
 
 .join-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 18px 0 36px; }
 .join-card {

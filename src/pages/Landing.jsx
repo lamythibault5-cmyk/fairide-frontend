@@ -18,7 +18,7 @@ const JOIN_CARDS = [
   },
   {
     key: 'driver',
-    image: 'https://images.unsplash.com/photo-1571745544682-83ecb4b0839a?w=700&q=80',
+    image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=700&q=80',
     title: 'Roule et sois payé plus justement à chaque course',
     link: '🛵 Devenir livreur',
     to: '/login?audience=partner&role=driver'
@@ -71,6 +71,12 @@ export default function Landing() {
           <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>🛍️ Commander maintenant</button>
           <button className="btn-teal" onClick={() => navigate('/login?audience=partner')}>🏪 Devenir partenaire</button>
         </div>
+      </div>
+
+      <div className="stats-bar">
+        <div className="stats-bar-item"><b>6%</b><span>de commission (vs 25-30% ailleurs)</span></div>
+        <div className="stats-bar-item"><b>19</b><span>communes bruxelloises couvertes</span></div>
+        <div className="stats-bar-item"><b>100%</b><span>commerces et livreurs locaux</span></div>
       </div>
 
       <div className="feature-grid">
