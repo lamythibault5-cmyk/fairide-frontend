@@ -11,6 +11,7 @@ export default function Footer() {
             <b style={{ fontFamily: "'Fraunces', serif", fontSize: 17 }}>Fairide</b>
           </div>
           <p className="small">La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.</p>
+          <p className="small">🇧🇪 Conçu et opéré depuis la Belgique, par des Belges, pour des Belges.</p>
         </div>
         <div className="footer-col">
           <h4>Rejoindre</h4>

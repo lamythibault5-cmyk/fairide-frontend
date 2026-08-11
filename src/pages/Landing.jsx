@@ -59,7 +59,10 @@ export default function Landing() {
       <div className="decor-blob teal" style={{ width: 260, height: 260, bottom: -60, left: '35%' }} />
 
       <div className="landing-hero">
-        <span className="pill hero" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
+        <div className="row" style={{ justifyContent: 'center', gap: 8, marginBottom: 14 }}>
+          <span className="pill hero">📍 Local d'abord</span>
+          <span className="pill hero">🇧🇪 Fièrement belge</span>
+        </div>
         <h1 className="landing-title">
           Les commerces de ton quartier,<br />livrés chez toi.
         </h1>
