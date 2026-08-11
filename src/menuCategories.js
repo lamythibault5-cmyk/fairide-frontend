@@ -492,7 +492,10 @@ const TYPE_TEMPLATES = {
       { name: 'Soupe miso vegan', price: 4.5, desc: '' },
       { name: 'Rouleaux de printemps tofu', price: 5, desc: '' },
       { name: 'Chips de patate douce', price: 4, desc: '' },
-      { name: 'Salade de betteraves', price: 5, desc: '' }
+      { name: 'Salade de betteraves', price: 5, desc: '' },
+      { name: 'Edamame', price: 4.5, desc: '' },
+      { name: 'Bruschetta tomate-basilic', price: 5, desc: '' },
+      { name: 'Nems tofu croustillant', price: 5.5, desc: '' }
     ],
     plat: [
       { name: 'Curry de légumes', price: 10.5, desc: '' },
@@ -503,20 +506,27 @@ const TYPE_TEMPLATES = {
       { name: 'Buddha bowl vegan', price: 11, desc: '' },
       { name: 'Wrap houmous légumes', price: 8.5, desc: '' },
       { name: 'Chili sin carne', price: 10, desc: '' },
-      { name: 'Pâtes vegan au pesto', price: 10.5, desc: '' }
+      { name: 'Pâtes vegan au pesto', price: 10.5, desc: '' },
+      { name: 'Lasagne végétarienne', price: 11.5, desc: '' },
+      { name: 'Galettes de quinoa', price: 10, desc: '' },
+      { name: 'Curry vert thaï vegan', price: 11, desc: '' },
+      { name: 'Menu Burger Végétarien (frites & boisson)', price: 14.5, desc: '' },
+      { name: 'Menu Falafel Wrap (frites & boisson)', price: 13.5, desc: '' }
     ],
     dessert: [
       { name: 'Brownie vegan', price: 4.5, desc: '' },
       { name: 'Cookie vegan', price: 3, desc: '' },
       { name: 'Cheesecake vegan citron', price: 5, desc: '' },
-      { name: 'Muffin vegan', price: 3.5, desc: '' }
+      { name: 'Muffin vegan', price: 3.5, desc: '' },
+      { name: 'Tarte crumble pommes vegan', price: 4.5, desc: '' }
     ],
     boisson: [
       { name: 'Jus pressé pomme', price: 4, desc: '' },
       { name: 'Eau plate 50cl', price: 2, desc: '' },
       { name: 'Lait d\'amande chaud', price: 3.5, desc: '' },
       { name: 'Kombucha', price: 4, desc: '' },
-      { name: 'Jus vert détox', price: 4.5, desc: '' }
+      { name: 'Jus vert détox', price: 4.5, desc: '' },
+      { name: 'Smoothie mangue', price: 5, desc: '' }
     ]
   },
   'Kebab & Grill': {
@@ -526,7 +536,8 @@ const TYPE_TEMPLATES = {
       { name: 'Böreks fromage (3pcs)', price: 5.5, desc: '' },
       { name: 'Houmous & pita', price: 5, desc: '' },
       { name: 'Taboulé', price: 4.5, desc: '' },
-      { name: 'Salade turque', price: 5, desc: '' }
+      { name: 'Salade turque', price: 5, desc: '' },
+      { name: 'Cigares au fromage (5pcs)', price: 5.5, desc: '' }
     ],
     plat: [
       { name: 'Kebab poulet', price: 8.5, desc: '' },
@@ -537,19 +548,28 @@ const TYPE_TEMPLATES = {
       { name: 'Lahmacun', price: 6, desc: '' },
       { name: 'Pide au fromage', price: 9, desc: '' },
       { name: 'Shish taouk', price: 11.5, desc: '' },
-      { name: 'Durum végétarien', price: 8, desc: '' }
+      { name: 'Durum végétarien', price: 8, desc: '' },
+      { name: 'Durum poulet', price: 9, desc: '' },
+      { name: 'Beyti kebab', price: 12, desc: '' },
+      { name: 'Kofte grillé', price: 10.5, desc: '' },
+      { name: 'Menu Kebab Poulet (frites & boisson)', price: 12.5, desc: '' },
+      { name: 'Menu Durum Bœuf (frites & boisson)', price: 13, desc: '' },
+      { name: 'Menu Mixed Grill (frites & boisson)', price: 17, desc: '' },
+      { name: 'Menu Adana (frites & boisson)', price: 16, desc: '' }
     ],
     dessert: [
       { name: 'Baklava (2 pièces)', price: 3.5, desc: '' },
       { name: 'Künefe', price: 5.5, desc: '' },
-      { name: 'Loukoum assortiment', price: 3.5, desc: '' }
+      { name: 'Loukoum assortiment', price: 3.5, desc: '' },
+      { name: 'Sütlaç (riz au lait turc)', price: 4, desc: '' }
     ],
     boisson: [
       { name: 'Ayran', price: 2.5, desc: '' },
       { name: 'Coca-Cola 33cl', price: 3, desc: '' },
       { name: 'Salgam', price: 3, desc: '' },
       { name: 'Thé turc', price: 2.5, desc: '' },
-      { name: 'Citronnade', price: 3.5, desc: '' }
+      { name: 'Citronnade', price: 3.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' }
     ]
   },
   Boulangerie: {
@@ -558,6 +578,7 @@ const TYPE_TEMPLATES = {
       { name: 'Sandwich poulet-crudités', price: 5, desc: '' },
       { name: 'Sandwich thon-crudités', price: 4.5, desc: '' },
       { name: 'Sandwich végétarien', price: 4.5, desc: '' },
+      { name: 'Sandwich saumon-fromage frais', price: 5.5, desc: '' },
       { name: 'Wrap poulet curry', price: 5, desc: '' }
     ],
     plat: [
@@ -566,7 +587,9 @@ const TYPE_TEMPLATES = {
       { name: 'Quiche saumon-épinards', price: 4.2, desc: '' },
       { name: 'Croque-monsieur', price: 5, desc: '' },
       { name: 'Tarte flamiche', price: 4.2, desc: '' },
-      { name: 'Panini poulet', price: 5, desc: '' }
+      { name: 'Panini poulet', price: 5, desc: '' },
+      { name: 'Formule Sandwich + Boisson', price: 6.5, desc: '' },
+      { name: 'Formule Quiche + Salade', price: 7.5, desc: '' }
     ],
     dessert: [
       { name: 'Croissant', price: 1.5, desc: '' },
@@ -578,14 +601,17 @@ const TYPE_TEMPLATES = {
       { name: 'Cookie pépites', price: 2, desc: '' },
       { name: 'Financier amande', price: 2, desc: '' },
       { name: 'Cannelé', price: 2.2, desc: '' },
-      { name: 'Tarte citron meringuée', price: 3.5, desc: '' }
+      { name: 'Tarte citron meringuée', price: 3.5, desc: '' },
+      { name: 'Baguette tradition', price: 1.4, desc: '' },
+      { name: 'Tarte aux pommes', price: 3, desc: 'La part' }
     ],
     boisson: [
       { name: 'Café', price: 2, desc: '' },
       { name: 'Jus d\'orange 25cl', price: 2.5, desc: '' },
       { name: 'Chocolat chaud', price: 3, desc: '' },
       { name: 'Thé Earl Grey', price: 2.2, desc: '' },
-      { name: 'Jus de pomme 25cl', price: 2.5, desc: '' }
+      { name: 'Jus de pomme 25cl', price: 2.5, desc: '' },
+      { name: 'Café Latte', price: 3, desc: '' }
     ]
   },
   'Supermarché': {
@@ -597,7 +623,8 @@ const TYPE_TEMPLATES = {
       { name: 'Houmous nature 200g', price: 2.8, desc: '' },
       { name: 'Crackers apéro 100g', price: 2.2, desc: '' },
       { name: 'Mix apéro noix 150g', price: 3.5, desc: '' },
-      { name: 'Saucisson sec', price: 4, desc: '' }
+      { name: 'Saucisson sec', price: 4, desc: '' },
+      { name: 'Biltong bœuf séché', price: 4.5, desc: '' }
     ],
     plat: [
       { name: 'Plat préparé du jour', price: 5.5, desc: '' },
@@ -609,7 +636,8 @@ const TYPE_TEMPLATES = {
       { name: 'Salade composée', price: 4.2, desc: '' },
       { name: 'Riz basmati 1kg', price: 3, desc: '' },
       { name: 'Conserve ravioli', price: 2.3, desc: '' },
-      { name: 'Œufs (6)', price: 2.6, desc: '' }
+      { name: 'Œufs (6)', price: 2.6, desc: '' },
+      { name: 'Pâtes penne 500g', price: 1.8, desc: '' }
     ],
     dessert: [
       { name: 'Tablette de chocolat', price: 2.5, desc: '' },
@@ -618,7 +646,8 @@ const TYPE_TEMPLATES = {
       { name: 'Glace vanille 1L', price: 4.5, desc: '' },
       { name: 'Donut chocolat', price: 1.8, desc: '' },
       { name: 'Barres céréales (6)', price: 3, desc: '' },
-      { name: 'Fruits secs mélangés 200g', price: 3.2, desc: '' }
+      { name: 'Fruits secs mélangés 200g', price: 3.2, desc: '' },
+      { name: 'Compote pomme (4)', price: 2.4, desc: '' }
     ],
     boisson: [
       { name: 'Eau plate 1.5L', price: 1.5, desc: '' },
@@ -626,7 +655,8 @@ const TYPE_TEMPLATES = {
       { name: 'Jus de fruits 1L', price: 2.5, desc: '' },
       { name: 'Eau pétillante 1.5L', price: 1.4, desc: '' },
       { name: 'Café moulu 250g', price: 4.2, desc: '' },
-      { name: 'Lait demi-écrémé 1L', price: 1.3, desc: '' }
+      { name: 'Lait demi-écrémé 1L', price: 1.3, desc: '' },
+      { name: 'Thé glacé 1.5L', price: 2.2, desc: '' }
     ]
   },
   'Night Shop': {
@@ -637,7 +667,8 @@ const TYPE_TEMPLATES = {
       { name: 'Nachos & sauce fromage', price: 4, desc: '' },
       { name: 'Bretzels salés', price: 2.8, desc: '' },
       { name: 'Olives marinées', price: 3, desc: '' },
-      { name: 'Biltong bœuf séché', price: 4.5, desc: '' }
+      { name: 'Biltong bœuf séché', price: 4.5, desc: '' },
+      { name: 'Popcorn salé', price: 2.5, desc: '' }
     ],
     plat: [
       { name: 'Sandwich thon', price: 4, desc: '' },
@@ -647,7 +678,8 @@ const TYPE_TEMPLATES = {
       { name: 'Wrap kebab', price: 5, desc: '' },
       { name: 'Hot-dog', price: 4, desc: '' },
       { name: 'Pizza part chaude', price: 3.5, desc: '' },
-      { name: 'Nouilles instantanées', price: 2.2, desc: '' }
+      { name: 'Nouilles instantanées', price: 2.2, desc: '' },
+      { name: 'Pack Soirée (sandwich, chips & boisson)', price: 8, desc: '' }
     ],
     dessert: [
       { name: 'Barre chocolatée', price: 1.5, desc: '' },
@@ -655,7 +687,8 @@ const TYPE_TEMPLATES = {
       { name: 'Muffin chocolat', price: 2.5, desc: '' },
       { name: 'Glace bâtonnet', price: 2, desc: '' },
       { name: 'Cookies (3)', price: 2.2, desc: '' },
-      { name: 'Popcorn sucré', price: 2.5, desc: '' }
+      { name: 'Popcorn sucré', price: 2.5, desc: '' },
+      { name: 'Donut glacé', price: 2, desc: '' }
     ],
     boisson: [
       { name: 'Bière 33cl', price: 2.5, desc: '' },
@@ -664,7 +697,8 @@ const TYPE_TEMPLATES = {
       { name: 'Bière spéciale 33cl', price: 3, desc: '' },
       { name: 'Vin rouge 25cl', price: 4.5, desc: '' },
       { name: 'Soda cola 50cl', price: 2.2, desc: '' },
-      { name: 'Ice tea 50cl', price: 2.2, desc: '' }
+      { name: 'Ice tea 50cl', price: 2.2, desc: '' },
+      { name: 'Jus de fruits 33cl', price: 2, desc: '' }
     ]
   }
 };
