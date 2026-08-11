@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
+import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 
 function ReviewForm({ order, token, toast, onDone }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -89,6 +90,18 @@ export default function Orders() {
           )}
           {o.driverName && (
             <div className="small">🛵 Livreur : {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</div>
+          )}
+          {o.status === 'livraison' && o.restaurantLat && o.deliveryLat && (
+            <div style={{ margin: '10px 0' }}>
+              <DeliveryTrackingMap
+                restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
+                deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
+                driverLat={o.driverLat} driverLng={o.driverLng}
+              />
+              <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
+                {o.driverLat ? '🛵 Position du livreur en direct' : "🛵 En attente de la position du livreur..."}
+              </div>
+            </div>
           )}
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
             <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '8px 0' }}>

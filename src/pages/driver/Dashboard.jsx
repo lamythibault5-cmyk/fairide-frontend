@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -14,6 +14,8 @@ export default function DriverDashboard() {
   const [reviews, setReviews] = useState(null);
   const [loading, setLoading] = useState(true);
   const [codeInputs, setCodeInputs] = useState({});
+  const [sharingLocation, setSharingLocation] = useState(false);
+  const activeIdsRef = useRef([]);
 
   async function load() {
     try {
@@ -37,6 +39,39 @@ export default function DriverDashboard() {
     const interval = setInterval(load, 15000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);
+  }, [mine]);
+
+  useEffect(() => {
+    if (!('geolocation' in navigator)) return;
+    let deniedNotified = false;
+    function tick() {
+      if (!activeIdsRef.current.length) return;
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setSharingLocation(true);
+          const { latitude, longitude } = pos.coords;
+          activeIdsRef.current.forEach((id) => {
+            api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
+          });
+        },
+        () => {
+          setSharingLocation(false);
+          if (!deniedNotified) {
+            deniedNotified = true;
+            toast('Active la géolocalisation pour partager ta position en direct avec le client.');
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000 }
+      );
+    }
+    tick();
+    const interval = setInterval(tick, 12000);
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
 
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
@@ -107,6 +142,11 @@ export default function DriverDashboard() {
       ))}
 
       <h2 className="section-title">Mes livraisons en cours</h2>
+      {active.length > 0 && (
+        <div className="small" style={{ marginBottom: 10 }}>
+          {sharingLocation ? '📍 Ta position est partagée en direct avec le(s) client(s).' : '📍 Active la géolocalisation pour partager ta position en direct.'}
+        </div>
+      )}
       {active.length === 0 && <div className="empty">Pas de livraison en cours.</div>}
       {active.map((o) => (
         <div className="card" key={o.id}>
