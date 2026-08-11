@@ -33,8 +33,8 @@ const FEATURES = [
   },
   {
     icon: '🚲',
-    title: 'Livraison éco-responsable',
-    text: 'Nos livreurs se déplacent à vélo ou en scooter électrique. Moins de circulation, moins d\'émissions, une livraison qui a du sens.'
+    title: 'Livraison agile en deux-roues',
+    text: 'Vélo, vélo électrique ou deux-roues motorisé : nos livreurs se faufilent partout dans Bruxelles, bien plus agiles qu\'une voiture. Moins de bouchons, moins de place perdue en ville, une livraison qui a du sens.'
   },
   {
     icon: '🤝',
