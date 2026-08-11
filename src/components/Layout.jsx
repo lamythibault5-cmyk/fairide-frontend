@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
+import AssistantWidget from './AssistantWidget';
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
@@ -56,6 +57,7 @@ export default function Layout() {
         <Footer />
       </div>
       <CookieBanner />
+      <AssistantWidget />
     </>
   );
 }
