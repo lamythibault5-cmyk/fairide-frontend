@@ -96,6 +96,7 @@ export default function DriverDashboard() {
 
   if (loading) return <SkeletonCards count={3} />;
 
+  const awaitingPickup = mine.filter((o) => ['preparation', 'pret'].includes(o.status));
   const active = mine.filter((o) => o.status === 'livraison');
   const delivered = mine.filter((o) => o.status === 'livre');
 
@@ -125,14 +126,17 @@ export default function DriverDashboard() {
         </div>
       )}
 
-      <h2 className="section-title" style={{ marginTop: 0 }}>Commandes prêtes à récupérer</h2>
-      {available.length === 0 && <div className="empty">Aucune commande prête pour l'instant.</div>}
+      <h2 className="section-title" style={{ marginTop: 0 }}>Commandes disponibles</h2>
+      {available.length === 0 && <div className="empty">Aucune commande disponible pour l'instant.</div>}
       {available.map((o) => (
         <div className="card" key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
             <span className="pill teal">{o.commune}</span>
           </div>
+          <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
+            {o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}
+          </span>
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
@@ -141,6 +145,27 @@ export default function DriverDashboard() {
             <span className="small">Course : 4.50€</span>
             <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
           </div>
+        </div>
+      ))}
+
+      <h2 className="section-title">En attente de retrait</h2>
+      {awaitingPickup.length === 0 && <div className="empty">Pas de commande à récupérer pour l'instant.</div>}
+      {awaitingPickup.map((o) => (
+        <div className="card" key={o.id}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <b>{o.restaurantName}</b>
+            <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}</span>
+          </div>
+          <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
+          <DeliveryTiming order={o} />
+          <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
+            <div className="small" style={{ marginBottom: 2 }}>Code à donner au restaurant lors du retrait</div>
+            <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.pickupCode}</div>
+          </div>
+          {o.status !== 'pret' && (
+            <p className="small">La commande est encore en préparation — direction le restaurant, elle sera bientôt prête.</p>
+          )}
         </div>
       ))}
 

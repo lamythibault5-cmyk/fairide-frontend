@@ -68,6 +68,8 @@ export default function Dashboard() {
   const [templatePicked, setTemplatePicked] = useState(() => new Set());
   const [addingTemplate, setAddingTemplate] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [pickupCodeInputs, setPickupCodeInputs] = useState({});
+  const [confirmingPickup, setConfirmingPickup] = useState(null);
 
   const [reviews, setReviews] = useState(null);
 
@@ -206,6 +208,22 @@ export default function Dashboard() {
       loadDashboard(restoId);
     } catch (e) {
       toast(e.message);
+    }
+  }
+
+  async function confirmPickup(orderId) {
+    const code = (pickupCodeInputs[orderId] || '').trim();
+    if (!code) { toast('Demande le code de retrait au livreur.'); return; }
+    setConfirmingPickup(orderId);
+    try {
+      await api(`/orders/${orderId}/confirm-pickup`, { method: 'PATCH', token, body: { code } });
+      setPickupCodeInputs((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
+      toast('Retrait confirmé, le client est prévenu !');
+      loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setConfirmingPickup(null);
     }
   }
 
@@ -489,6 +507,9 @@ export default function Dashboard() {
                   <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
                   <div className="small">📍 {o.address}</div>
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
+                  {o.driverName && ['preparation', 'pret'].includes(o.status) && (
+                    <div className="small" style={{ fontWeight: 600 }}>🛵 Livreur assigné : {o.driverName}</div>
+                  )}
                   <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
                     {o.status === 'nouveau' && (
                       <>
@@ -500,6 +521,22 @@ export default function Dashboard() {
                       <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>Marquer prêt</button>
                     )}
                   </div>
+                  {o.status === 'pret' && o.driverId && (
+                    <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        placeholder="Code du livreur"
+                        style={{ maxWidth: 140 }}
+                        value={pickupCodeInputs[o.id] || ''}
+                        onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+                      />
+                      <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmPickup(o.id)}>
+                        {confirmingPickup === o.id ? '...' : 'Confirmer le retrait'}
+                      </button>
+                    </div>
+                  )}
+                  {o.status === 'pret' && !o.driverId && (
+                    <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>En attente qu'un livreur prenne en charge la commande...</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -597,6 +634,19 @@ export default function Dashboard() {
             {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
             {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
             {selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>🛵 Livreur : {selectedOrder.driverName}{selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : ''}</p>}
+            {selectedOrder.status === 'pret' && selectedOrder.driverId && (
+              <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                <input
+                  placeholder="Code du livreur"
+                  style={{ maxWidth: 140 }}
+                  value={pickupCodeInputs[selectedOrder.id] || ''}
+                  onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
+                />
+                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmPickup(selectedOrder.id)}>
+                  {confirmingPickup === selectedOrder.id ? '...' : 'Confirmer le retrait'}
+                </button>
+              </div>
+            )}
             <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedOrder(null)}>Fermer</button>
           </div>
         </div>
