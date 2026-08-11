@@ -173,9 +173,10 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
-.cuisine-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 12px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-.cuisine-scroll::-webkit-scrollbar { height: 5px; }
-.cuisine-scroll::-webkit-scrollbar-thumb { background: var(--cream-dim); border-radius: 10px; }
+.cuisine-scroll { overflow: hidden; padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
+.cuisine-track { display: flex; gap: 8px; width: max-content; animation: cuisineMarquee 34s linear infinite; }
+.cuisine-scroll:hover .cuisine-track { animation-play-state: paused; }
+@keyframes cuisineMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 20px; line-height: 1; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }

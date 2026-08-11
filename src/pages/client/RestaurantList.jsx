@@ -42,6 +42,8 @@ export default function RestaurantList() {
     }
   }
 
+  const cuisineOptions = [{ value: '', emoji: '🍽️', label: 'Tous' }, ...RESTAURANT_TYPES.map((t) => ({ value: t.value, emoji: t.emoji, label: t.value }))];
+
   const list = restaurants.filter((r) => {
     if (commune && r.commune !== commune) return false;
     if (cuisine && r.cuisine !== cuisine) return false;
@@ -52,20 +54,30 @@ export default function RestaurantList() {
   return (
     <div>
       <div className="cuisine-scroll">
-        <div className={`cuisine-chip${cuisine === '' ? ' active' : ''}`} onClick={() => setCuisine('')}>
-          <span className="emoji">🍽️</span>
-          <span>Tous</span>
+        <div className="cuisine-track">
+          {cuisineOptions.map((t) => (
+            <div
+              key={`a-${t.value}`}
+              className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
+              onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
+            >
+              <span className="emoji">{t.emoji}</span>
+              <span>{t.label}</span>
+            </div>
+          ))}
+          {cuisineOptions.map((t) => (
+            <div
+              key={`b-${t.value}`}
+              aria-hidden="true"
+              tabIndex={-1}
+              className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
+              onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
+            >
+              <span className="emoji">{t.emoji}</span>
+              <span>{t.label}</span>
+            </div>
+          ))}
         </div>
-        {RESTAURANT_TYPES.map((t) => (
-          <div
-            key={t.value}
-            className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
-            onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
-          >
-            <span className="emoji">{t.emoji}</span>
-            <span>{t.value}</span>
-          </div>
-        ))}
       </div>
       <div className="row" style={{ marginBottom: 14 }}>
         <input placeholder="Chercher un restaurant ou un plat" style={{ flex: 2, minWidth: 160 }} value={search} onChange={(e) => setSearch(e.target.value)} />
