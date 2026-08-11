@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
@@ -83,7 +83,7 @@ export default function Orders() {
           </div>
           <ProgressBar status={o.status} />
           <DeliveryTiming order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+          <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           <div className="small">📍 {o.address}</div>
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>

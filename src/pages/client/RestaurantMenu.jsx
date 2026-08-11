@@ -8,6 +8,7 @@ import { CATEGORIES, defaultItemImage } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
+import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
 
 export default function RestaurantMenu() {
@@ -26,6 +27,7 @@ export default function RestaurantMenu() {
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
   const [placing, setPlacing] = useState(false);
+  const [pickerItem, setPickerItem] = useState(null);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -61,12 +63,20 @@ export default function RestaurantMenu() {
     }
   }
 
+  function addToCart(item) {
+    if (item.optionGroups?.length > 0) {
+      setPickerItem(item);
+    } else {
+      cart.addOne(item.id, item.price);
+    }
+  }
+
   async function placeOrder() {
     if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
       toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
       return;
     }
-    const items = Object.entries(cart.items).map(([itemId, qty]) => ({ itemId, qty }));
+    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     setPlacing(true);
     try {
       const order = await api('/orders', {
@@ -140,7 +150,7 @@ export default function RestaurantMenu() {
                     <div className="small desc">{item.available === false ? 'Indisponible pour le moment' : (item.desc || '')}</div>
                     <div className="bottom-row">
                       <span className="price">{item.price.toFixed(2)}€</span>
-                      <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => cart.changeQty(item.id, 1)}>+</button>
+                      <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => addToCart(item)}>+</button>
                     </div>
                   </div>
                 ))}
@@ -154,16 +164,21 @@ export default function RestaurantMenu() {
         <>
           <div className="card">
             <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ton panier</h3>
-            {Object.entries(cart.items).map(([itemId, qty]) => {
-              const item = restaurant.menu.find((m) => m.id === itemId);
+            {Object.entries(cart.lines).map(([lineKey, line]) => {
+              const item = restaurant.menu.find((m) => m.id === line.itemId);
               if (!item) return null;
               return (
-                <div key={itemId} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                  <span>{item.name}</span>
+                <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+                  <span>
+                    {item.name}
+                    {line.optionsSnapshot?.length > 0 && (
+                      <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
+                    )}
+                  </span>
                   <div className="row" style={{ gap: 8 }}>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeQty(itemId, -1)}>−</button>
-                    <span>{qty}</span>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeQty(itemId, 1)}>+</button>
+                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
+                    <span>{line.qty}</span>
+                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
                   </div>
                 </div>
               );
@@ -256,6 +271,17 @@ export default function RestaurantMenu() {
             ))}
           </div>
         </div>
+      )}
+
+      {pickerItem && (
+        <OptionsPickerModal
+          item={pickerItem}
+          onCancel={() => setPickerItem(null)}
+          onConfirm={(optionItemIds, snapshot, unitPrice) => {
+            cart.addOne(pickerItem.id, unitPrice, optionItemIds, snapshot);
+            setPickerItem(null);
+          }}
+        />
       )}
     </div>
   );

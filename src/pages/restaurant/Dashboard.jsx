@@ -3,11 +3,15 @@ import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel } from '../../orderStatus';
-import { CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate } from '../../menuCategories';
+import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
+import {
+  CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate,
+  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems
+} from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import MenuItemRow from '../../components/MenuItemRow';
+import OptionGroupManager from '../../components/OptionGroupManager';
 
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
@@ -68,6 +72,10 @@ export default function Dashboard() {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [templatePicked, setTemplatePicked] = useState(() => new Set());
   const [addingTemplate, setAddingTemplate] = useState(false);
+  const [startChoiceMade, setStartChoiceMade] = useState(false);
+  const [applyingStarter, setApplyingStarter] = useState(false);
+  const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
+  const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [pickupCodeInputs, setPickupCodeInputs] = useState({});
   const [confirmingPickup, setConfirmingPickup] = useState(null);
@@ -117,6 +125,7 @@ export default function Dashboard() {
     setRestoId(id);
     setEditOpen(false);
     setConfirmDelete(false);
+    setStartChoiceMade(false);
     loadDashboard(id);
   }
 
@@ -252,6 +261,48 @@ export default function Dashboard() {
     }
   }
 
+  async function saveMenuItemOptionGroups(itemId, groupIds) {
+    try {
+      await api(`/restaurants/${restoId}/menu/${itemId}/option-groups`, { method: 'PATCH', token, body: { groupIds } });
+      await loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+      throw e;
+    }
+  }
+
+  async function createOptionGroup(payload) {
+    try {
+      await api(`/restaurants/${restoId}/option-groups`, { method: 'POST', token, body: payload });
+      await loadDashboard(restoId);
+      toast('Groupe d\'options créé.');
+    } catch (e) {
+      toast(e.message);
+      throw e;
+    }
+  }
+
+  async function updateOptionGroup(groupId, payload) {
+    try {
+      await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'PATCH', token, body: payload });
+      await loadDashboard(restoId);
+      toast('Groupe d\'options mis à jour.');
+    } catch (e) {
+      toast(e.message);
+      throw e;
+    }
+  }
+
+  async function deleteOptionGroup(groupId) {
+    try {
+      await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'DELETE', token });
+      await loadDashboard(restoId);
+      toast('Groupe d\'options supprimé.');
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
   function toggleTemplateCategory(cat) {
     setTemplatePicked((prev) => {
       const next = new Set(prev);
@@ -278,6 +329,36 @@ export default function Dashboard() {
       toast(e.message);
     } finally {
       setAddingTemplate(false);
+    }
+  }
+
+  async function applyStarter(size) {
+    const items = size === 'complet' ? fullTemplateItems(restaurant.cuisine) : quickTemplateItems(restaurant.cuisine);
+    setApplyingStarter(true);
+    try {
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      setStartChoiceMade(true);
+      loadDashboard(restoId);
+      toast(`${items.length} plat(s) ajouté(s) — modifie ou supprime ce dont tu n'as pas besoin.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setApplyingStarter(false);
+    }
+  }
+
+  async function addClassics(list, category, setBusy) {
+    const items = missingClassicItems(restaurant.menu, list).map((it) => ({ ...it, category }));
+    if (!items.length) { toast('Déjà tous présents dans ton menu.'); return; }
+    setBusy(true);
+    try {
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      loadDashboard(restoId);
+      toast(`${items.length} produit(s) ajouté(s).`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -505,7 +586,7 @@ export default function Dashboard() {
                   </div>
                   <ProgressBar status={o.status} />
                   <DeliveryTiming order={o} />
-                  <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+                  <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
                   <div className="small">📍 {o.address}</div>
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
                   {o.driverName && ['preparation', 'pret'].includes(o.status) && (
@@ -543,8 +624,28 @@ export default function Dashboard() {
             </div>
             <div>
               <h2 className="section-title" style={{ marginTop: 0 }}>Menu</h2>
+
+              {restaurant.menu.length === 0 && !startChoiceMade && (
+                <div className="card" style={{ border: '2px solid var(--teal)' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
+                  <p className="small" style={{ margin: '0 0 12px' }}>
+                    Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite —
+                    vous n'aurez plus qu'à modifier les prix, les photos et supprimer ce que vous ne vendez pas.
+                  </p>
+                  <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                    <button className="btn-teal" disabled={applyingStarter} onClick={() => applyStarter('rapide')}>
+                      {applyingStarter ? '...' : `⚡ Menu rapide (${quickTemplateItems(restaurant.cuisine).length} produits)`}
+                    </button>
+                    <button className="btn-gold" disabled={applyingStarter} onClick={() => applyStarter('complet')}>
+                      {applyingStarter ? '...' : `🍽 Menu complet (${fullTemplateItems(restaurant.cuisine).length} produits)`}
+                    </button>
+                    <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
+                  </div>
+                </div>
+              )}
+
               <div className="card">
-                {restaurant.menu.length === 0 && <div className="small">Pas encore de plat au menu.</div>}
+                {restaurant.menu.length === 0 && startChoiceMade && <div className="small">Pas encore de plat au menu.</div>}
                 {CATEGORIES.map((cat) => {
                   const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
                   if (!items.length) return null;
@@ -555,15 +656,37 @@ export default function Dashboard() {
                         <span>{cat.label}</span>
                       </div>
                       {items.map((item) => (
-                        <MenuItemRow key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem} onSetPromo={setItemPromo} onClearPromo={clearItemPromo} />
+                        <MenuItemRow
+                          key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                          onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
+                          allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                        />
                       ))}
                     </div>
                   );
                 })}
               </div>
 
+              <OptionGroupManager
+                groups={restaurant.optionGroups || []}
+                onCreate={createOptionGroup}
+                onUpdate={updateOptionGroup}
+                onDelete={deleteOptionGroup}
+              />
+
+              {(restaurant.menu.length > 0 || startChoiceMade) && (
+                <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
+                    {addingClassicDrinks ? '...' : '+ Ajouter les boissons classiques'}
+                  </button>
+                  <button type="button" className="btn-ghost" disabled={addingClassicDesserts} onClick={() => addClassics(CLASSIC_DESSERTS, 'dessert', setAddingClassicDesserts)}>
+                    {addingClassicDesserts ? '...' : '+ Ajouter les desserts classiques'}
+                  </button>
+                </div>
+              )}
+
               {!templateOpen && (
-                <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Utiliser un menu de démarrage</button>
+                <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Utiliser un menu de démarrage (par catégorie)</button>
               )}
               {templateOpen && (
                 <div className="card">
@@ -614,8 +737,11 @@ export default function Dashboard() {
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>Articles</h4>
             {selectedOrder.items.map((i) => (
-              <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                <span>{i.qty}× {i.name}{i.discount > 0 ? ' 🏷️' : ''}</span>
+              <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
+                <span>
+                  {i.qty}× {i.name}{i.discount > 0 ? ' 🏷️' : ''}
+                  {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
+                </span>
                 <span>{(i.price * i.qty - (i.discount || 0)).toFixed(2)}€</span>
               </div>
             ))}

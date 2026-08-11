@@ -9,6 +9,12 @@ export function deliveryInstructionLabel(value) {
   return DELIVERY_INSTRUCTION_OPTIONS.find((o) => o.value === value)?.label || value;
 }
 
+// "2× Cheeseburger (Extra cheddar, Bacon)"
+export function formatOrderItem(i) {
+  const options = i.options?.length ? ` (${i.options.map((o) => o.name).join(', ')})` : '';
+  return `${i.qty}× ${i.name}${options}`;
+}
+
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
 const LABELS = ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'];
 

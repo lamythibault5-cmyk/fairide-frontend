@@ -707,6 +707,62 @@ export function getStarterTemplate(cuisineType) {
   return TYPE_TEMPLATES[cuisineType] || GENERIC_TEMPLATE;
 }
 
+// Menu complet : tous les produits du template, toutes catégories confondues.
+export function fullTemplateItems(cuisineType) {
+  const template = getStarterTemplate(cuisineType);
+  const items = [];
+  Object.entries(template).forEach(([cat, list]) => {
+    list.forEach((it) => items.push({ ...it, category: cat }));
+  });
+  return items;
+}
+
+// Menu rapide : un sous-ensemble du template (les premiers produits de chaque catégorie).
+export function quickTemplateItems(cuisineType, capPerCategory = 3) {
+  const template = getStarterTemplate(cuisineType);
+  const items = [];
+  Object.entries(template).forEach(([cat, list]) => {
+    list.slice(0, capPerCategory).forEach((it) => items.push({ ...it, category: cat }));
+  });
+  return items;
+}
+
+// Boissons et desserts standards Fairide, proposables en un clic sur n'importe quel type de commerce.
+export const CLASSIC_DRINKS = [
+  { name: 'Coca-Cola', price: 2.8 },
+  { name: 'Coca-Cola Zero', price: 2.8 },
+  { name: 'Fanta Orange', price: 2.8 },
+  { name: 'Sprite', price: 2.8 },
+  { name: 'Fuze Tea Pêche', price: 3.0 },
+  { name: 'Eau plate', price: 2.5 },
+  { name: 'Eau pétillante', price: 2.5 },
+  { name: 'Limonade maison', price: 4.0 },
+  { name: "Jus d'orange", price: 3.5 },
+  { name: 'Jus de pomme', price: 3.5 }
+];
+
+export const CLASSIC_DESSERTS = [
+  { name: 'Tiramisu', price: 6.0 },
+  { name: 'Fondant au chocolat', price: 6.5 },
+  { name: 'Cheesecake', price: 6.0 },
+  { name: 'Mousse au chocolat', price: 5.5 },
+  { name: 'Brownie au chocolat', price: 4.5 },
+  { name: 'Cookie aux pépites de chocolat', price: 3.5 },
+  { name: 'Crème brûlée', price: 6.0 },
+  { name: 'Panna cotta', price: 5.5 },
+  { name: 'Tarte aux pommes', price: 5.5 },
+  { name: 'Salade de fruits frais', price: 5.0 }
+];
+
+// Évite les doublons : un produit "classique" est déjà présent si son nom recoupe un plat existant.
+export function missingClassicItems(existingMenu, classicList) {
+  const existingNames = existingMenu.map((i) => i.name.toLowerCase());
+  return classicList.filter((c) => {
+    const n = c.name.toLowerCase();
+    return !existingNames.some((en) => en.includes(n) || n.includes(en));
+  });
+}
+
 const KEYWORD_IMAGES = [
   // --- Burgers (spécifique avant générique) ---
   { keywords: ['double cheeseburger', 'double smash', 'double burger', 'double chicken burger'], image: 'https://images.unsplash.com/photo-1550317138-10000687a72b?w=300&q=80' },

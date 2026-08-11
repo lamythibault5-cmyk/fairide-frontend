@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
-import { DeliveryTiming, deliveryInstructionLabel } from '../../orderStatus';
+import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 
 export default function DriverDashboard() {
   const { token, user } = useAuth();
@@ -137,7 +137,7 @@ export default function DriverDashboard() {
           <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
             {o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}
           </span>
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+          <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
@@ -156,7 +156,7 @@ export default function DriverDashboard() {
             <b>{o.restaurantName}</b>
             <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}</span>
           </div>
-          <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+          <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <DeliveryTiming order={o} />
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
@@ -183,7 +183,7 @@ export default function DriverDashboard() {
       {active.map((o) => (
         <div className="card" key={o.id}>
           <b>{o.restaurantName}</b> → {o.clientName}
-          <div className="small" style={{ margin: '4px 0' }}>{o.items.map((i) => `${i.qty}× ${i.name}`).join(', ')}</div>
+          <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small">🏁 Livraison : {o.address}</div>
           {o.deliveryInstructions && (

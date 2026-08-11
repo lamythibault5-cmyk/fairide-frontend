@@ -5,47 +5,63 @@ const DELIVERY_FEE = 4.5;
 const SERVICE_FEE = 0.5;
 const COMMISSION_RATE = 0.06;
 
+function lineKeyFor(itemId, optionItemIds) {
+  return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
+}
+
 export function CartProvider({ children }) {
   const [restaurantId, setRestaurantId] = useState(null);
-  const [items, setItems] = useState({}); // itemId -> qty
+  // lineKey -> { itemId, optionItemIds, optionsSnapshot, unitPrice, qty }
+  const [lines, setLines] = useState({});
 
   function startOrder(newRestaurantId) {
     if (newRestaurantId !== restaurantId) {
       setRestaurantId(newRestaurantId);
-      setItems({});
+      setLines({});
     }
   }
 
-  function changeQty(itemId, delta) {
-    setItems((prev) => {
+  // Ajoute une unité d'un plat (avec ses options éventuelles) au panier — crée la ligne si elle n'existe pas encore.
+  function addOne(itemId, unitPrice, optionItemIds = [], optionsSnapshot = []) {
+    const key = lineKeyFor(itemId, optionItemIds);
+    setLines((prev) => {
+      const existing = prev[key];
+      return { ...prev, [key]: { itemId, optionItemIds, optionsSnapshot, unitPrice, qty: (existing?.qty || 0) + 1 } };
+    });
+  }
+
+  // Modifie la quantité d'une ligne déjà présente dans le panier (utilisé par le stepper +/- du récap panier).
+  function changeLineQty(lineKey, delta) {
+    setLines((prev) => {
+      const existing = prev[lineKey];
+      if (!existing) return prev;
+      const qty = existing.qty + delta;
       const next = { ...prev };
-      const qty = (next[itemId] || 0) + delta;
-      if (qty <= 0) delete next[itemId];
-      else next[itemId] = qty;
+      if (qty <= 0) delete next[lineKey]; else next[lineKey] = { ...existing, qty };
       return next;
     });
   }
 
   function clear() {
-    setItems({});
+    setLines({});
     setRestaurantId(null);
   }
 
-  const count = useMemo(() => Object.values(items).reduce((a, b) => a + b, 0), [items]);
+  const count = useMemo(() => Object.values(lines).reduce((a, l) => a + l.qty, 0), [lines]);
 
   function totals(menu) {
     let rawSubtotal = 0;
     let promoDiscount = 0;
     const discountedItems = [];
-    Object.entries(items).forEach(([id, qty]) => {
-      const item = menu?.find((m) => m.id === id);
+    Object.values(lines).forEach((line) => {
+      const item = menu?.find((m) => m.id === line.itemId);
       if (!item) return;
-      rawSubtotal += item.price * qty;
+      rawSubtotal += line.unitPrice * line.qty;
       const promo = item.activePromo;
       let discount = 0;
       if (promo) {
-        if (promo.type === 'percent') discount = item.price * qty * (promo.value / 100);
-        else if (promo.type === 'bogo') discount = Math.floor(qty / 2) * item.price;
+        if (promo.type === 'percent') discount = item.price * line.qty * (promo.value / 100);
+        else if (promo.type === 'bogo') discount = Math.floor(line.qty / 2) * item.price;
       }
       if (discount > 0) {
         promoDiscount += discount;
@@ -59,7 +75,7 @@ export function CartProvider({ children }) {
   }
 
   return (
-    <CartContext.Provider value={{ restaurantId, items, count, startOrder, changeQty, clear, totals }}>
+    <CartContext.Provider value={{ restaurantId, lines, count, startOrder, addOne, changeLineQty, clear, totals }}>
       {children}
     </CartContext.Provider>
   );

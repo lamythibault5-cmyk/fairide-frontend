@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { CATEGORIES, defaultItemImage } from '../menuCategories';
 
-export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo }) {
+export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo, allOptionGroups = [], onSetOptionGroups }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
+  const [desc, setDesc] = useState(item.desc || '');
   const [price, setPrice] = useState(String(item.price));
   const [category, setCategory] = useState(item.category || 'plat');
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
   const [saving, setSaving] = useState(false);
+  const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
+
+  function toggleGroup(id) {
+    setGroupIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
 
   const [promoOpen, setPromoOpen] = useState(false);
   const [promoType, setPromoType] = useState('percent');
@@ -17,7 +27,8 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), price: parseFloat(price), category, imageUrl: imageUrl.trim() });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, imageUrl: imageUrl.trim() });
+      if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       setEditing(false);
     } finally {
       setSaving(false);
@@ -41,6 +52,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
     return (
       <div className="card" style={{ marginBottom: 10 }}>
         <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ingrédients, préparation..." /></div>
         <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
         <div className="field">
           <label>Catégorie</label>
@@ -49,6 +61,17 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
           </select>
         </div>
         <div className="field"><label>Image (URL)</label><input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." /></div>
+        {allOptionGroups.length > 0 && (
+          <div className="field">
+            <label>Groupes d'options</label>
+            {allOptionGroups.map((g) => (
+              <label key={g.id} className="row" style={{ gap: 8, marginBottom: 4, cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto' }} checked={groupIds.has(g.id)} onChange={() => toggleGroup(g.id)} />
+                <span className="small">{g.name}</span>
+              </label>
+            ))}
+          </div>
+        )}
         <div className="row" style={{ gap: 8 }}>
           <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : 'Enregistrer'}</button>
           <button className="btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
@@ -62,7 +85,10 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
       <div className="menu-item" style={{ padding: 0, border: 'none', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
         <div className="row" style={{ gap: 10 }}>
           <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb" />
-          <span>{item.name}{item.available === false ? ' (indisponible)' : ''}</span>
+          <span>
+            {item.name}{item.available === false ? ' (indisponible)' : ''}
+            {item.optionGroups?.length > 0 && <span className="small" style={{ marginLeft: 6 }}>· {item.optionGroups.map((g) => g.name).join(', ')}</span>}
+          </span>
         </div>
         <div className="row" style={{ gap: 8 }}>
           <span className="price">{item.price.toFixed(2)}€</span>
