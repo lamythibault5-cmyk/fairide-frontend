@@ -28,7 +28,11 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div>
+    <div className="decor-page">
+      <div className="decor-blob teal" style={{ width: 380, height: 380, top: -140, left: -160 }} />
+      <div className="decor-blob gold" style={{ width: 300, height: 300, top: 260, right: -120 }} />
+      <div className="decor-blob teal" style={{ width: 260, height: 260, bottom: -60, left: '35%' }} />
+
       <div className="landing-hero">
         <span className="pill hero" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
         <h1 className="landing-title">
@@ -39,8 +43,8 @@ export default function Landing() {
           sans la commission excessive des grandes plateformes. Paie ta commande, pas la plateforme.
         </p>
         <div className="row" style={{ gap: 10 }}>
-          <button className="btn-gold" onClick={() => navigate('/login')}>🛍️ Commander maintenant</button>
-          <button className="btn-teal" onClick={() => navigate('/login')}>🏪 Devenir partenaire</button>
+          <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>🛍️ Commander maintenant</button>
+          <button className="btn-teal" onClick={() => navigate('/login?audience=partner')}>🏪 Devenir partenaire</button>
         </div>
       </div>
 

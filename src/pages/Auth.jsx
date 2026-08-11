@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -20,8 +20,14 @@ const GENDERS = [
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Auth() {
-  const [mode, setMode] = useState('login');
-  const [role, setRole] = useState('client');
+  const [searchParams] = useSearchParams();
+  const audience = searchParams.get('audience'); // 'client' | 'partner' | null
+  const visibleRoles = audience === 'client' ? ROLES.filter((r) => r.value === 'client')
+    : audience === 'partner' ? ROLES.filter((r) => r.value !== 'client')
+    : ROLES;
+
+  const [mode, setMode] = useState(audience ? 'register' : 'login');
+  const [role, setRole] = useState(audience === 'partner' ? 'restaurant' : 'client');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
@@ -177,9 +183,14 @@ export default function Auth() {
     }
   }
 
+  const decorClass = audience === 'partner' ? 'partner' : audience === 'client' ? 'client' : '';
+
   if (pendingEmail) {
     return (
-      <div className="auth-box">
+      <div className={`decor-page auth-decor ${decorClass}`}>
+        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
+        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
+        <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Confirme ton email</h2>
           <p className="small" style={{ marginBottom: 14 }}>
@@ -204,12 +215,26 @@ export default function Auth() {
             &larr; Retour
           </button>
         </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="auth-box">
+    <div className={`decor-page auth-decor ${decorClass}`}>
+      <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
+      <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
+      {audience && (
+        <div style={{ textAlign: 'center', marginBottom: 18 }}>
+          <span className={`pill ${audience === 'client' ? 'gold' : 'teal'}`}>
+            {audience === 'client' ? '🛍️ Espace client' : '🏪 Espace partenaires'}
+          </span>
+          <h2 style={{ margin: '10px 0 0', fontSize: 22 }}>
+            {audience === 'client' ? 'Commande chez les commerces de ton quartier' : 'Rejoins Fairide comme commerce ou livreur'}
+          </h2>
+        </div>
+      )}
+      <div className="auth-box">
       <div className="card">
         <div className="auth-tabs">
           <div className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>Se connecter</div>
@@ -218,13 +243,15 @@ export default function Auth() {
 
         {mode === 'register' && (
           <>
-            <div className="role-pick">
-              {ROLES.map((r) => (
-                <div key={r.value} className={`chip${role === r.value ? ' active' : ''}`} onClick={() => setRole(r.value)}>
-                  {r.label}
-                </div>
-              ))}
-            </div>
+            {visibleRoles.length > 1 && (
+              <div className="role-pick">
+                {visibleRoles.map((r) => (
+                  <div key={r.value} className={`chip${role === r.value ? ' active' : ''}`} onClick={() => setRole(r.value)}>
+                    {r.label}
+                  </div>
+                ))}
+              </div>
+            )}
             {role === 'driver' && (
               <p className="small" style={{ marginTop: -6, marginBottom: 12 }}>
                 📍 En créant ton compte livreur, ton navigateur te demandera d'autoriser la géolocalisation — elle sert à partager ta position en direct avec les clients pendant tes livraisons. Tu peux la désactiver à tout moment dans les réglages de ton compte.
@@ -318,6 +345,7 @@ export default function Auth() {
             {loading ? '...' : mode === 'register' ? 'Créer mon compte' : 'Se connecter'}
           </button>
         </form>
+      </div>
       </div>
     </div>
   );

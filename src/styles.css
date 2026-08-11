@@ -46,10 +46,13 @@ a { color: inherit; }
 }
 .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
 
-.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.brand .mark { width: 34px; height: 34px; border-radius: 10px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.brand .mark { border-radius: 12px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
 .brand .mark svg { display: block; width: 100%; height: 100%; }
-.brand h1 { font-size: 20px; color: var(--cream); }
+.brand-text { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
+.brand h1 { font-size: 21px; color: var(--cream); line-height: 1.1; }
+.brand-slogan { font-size: 11px; font-weight: 500; color: var(--gold); opacity: 0.85; letter-spacing: 0.01em; white-space: nowrap; }
+@media (max-width: 480px) { .brand-slogan { display: none; } }
 
 .userbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--cream); opacity: .9; }
 .role-nav { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
@@ -176,6 +179,12 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
+
+.decor-page { position: relative; overflow-x: hidden; }
+.decor-page > *:not(.decor-blob) { position: relative; z-index: 1; }
+.decor-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; pointer-events: none; z-index: 0; }
+.decor-blob.teal { background: var(--teal); }
+.decor-blob.gold { background: var(--gold); }
 
 .landing-hero {
   text-align: center; max-width: 720px; margin: 0 auto 40px; display: flex; flex-direction: column; align-items: center;
