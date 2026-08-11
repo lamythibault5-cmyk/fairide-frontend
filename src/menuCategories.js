@@ -34,6 +34,7 @@ export const RESTAURANT_TYPES = [
   { value: 'Libanais', emoji: '🧆' },
   { value: 'Fried Chicken', emoji: '🍗' },
   { value: 'Boulangerie', emoji: '🥐' },
+  { value: 'Boucherie', emoji: '🥩' },
   { value: 'Supermarché', emoji: '🛒' },
   { value: 'Night Shop', emoji: '🌙' },
   { value: 'Autre', emoji: '🍽️' }
@@ -700,6 +701,50 @@ const TYPE_TEMPLATES = {
       { name: 'Ice tea 50cl', price: 2.2, desc: '' },
       { name: 'Jus de fruits 33cl', price: 2, desc: '' }
     ]
+  },
+  Boucherie: {
+    entree: [
+      { name: "Jambon d'Ardenne", price: 4.5, desc: 'La tranche' },
+      { name: 'Pâté de campagne', price: 4, desc: 'Les 150g' },
+      { name: 'Terrine de canard', price: 5.5, desc: 'Les 150g' },
+      { name: 'Rillettes de porc', price: 4, desc: 'Les 150g' },
+      { name: 'Salade de museau', price: 4.5, desc: 'Les 200g' },
+      { name: 'Fromage de tête', price: 4.5, desc: 'Les 150g' },
+      { name: 'Saucisson sec', price: 4, desc: '' },
+      { name: 'Boudin blanc', price: 5, desc: 'Les 2 pièces' }
+    ],
+    plat: [
+      { name: 'Entrecôte de bœuf', price: 9.5, desc: 'Prix au kilo' },
+      { name: 'Filet pur de bœuf', price: 14.5, desc: 'Prix au kilo' },
+      { name: "Côte à l'os", price: 12.5, desc: 'Prix au kilo' },
+      { name: 'Steak haché pur bœuf', price: 6, desc: 'Les 2 pièces' },
+      { name: 'Escalope de poulet fermier', price: 7, desc: 'Prix au kilo' },
+      { name: 'Cuisse de poulet fermier', price: 5, desc: 'Prix au kilo' },
+      { name: 'Filet de porc', price: 6.5, desc: 'Prix au kilo' },
+      { name: "Côtelettes d'agneau", price: 11.5, desc: 'Prix au kilo' },
+      { name: 'Saucisses de Toulouse', price: 5.5, desc: 'Les 4 pièces' },
+      { name: 'Merguez', price: 5.5, desc: 'Les 6 pièces' },
+      { name: 'Boudin noir', price: 4.5, desc: 'Les 2 pièces' },
+      { name: 'Chipolatas', price: 5, desc: 'Les 6 pièces' },
+      { name: 'Vol-au-vent maison', price: 8.5, desc: 'Prêt à réchauffer' },
+      { name: 'Carbonade flamande', price: 9, desc: 'Prête à réchauffer' },
+      { name: 'Lapin à la bière', price: 10.5, desc: 'Prêt à réchauffer' },
+      { name: 'Steak tartare préparé', price: 9.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Tarte au riz', price: 3.5, desc: 'La part' },
+      { name: 'Mousse au chocolat', price: 3.5, desc: '' },
+      { name: 'Panna Cotta', price: 3.5, desc: '' },
+      { name: 'Tiramisu', price: 4, desc: '' }
+    ],
+    boisson: [
+      { name: 'Vin rouge', price: 8, desc: 'La bouteille' },
+      { name: 'Vin blanc', price: 8, desc: 'La bouteille' },
+      { name: 'Bière trappiste', price: 3, desc: '' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
+      { name: 'Jus de pomme', price: 2.5, desc: '' }
+    ]
   }
 };
 
@@ -1119,7 +1164,32 @@ const ITEM_IMAGE_OVERRIDES = {
   'adana kebab': U('1565560665129-4831aa15206c'),
   'shish taouk': U('1629450748686-c86699b710ac'),
   'beyti kebab': U('1676300186554-671b04fed976'),
-  'kofte grillé': U('1733860539640-cfb176102773')
+  'kofte grillé': U('1733860539640-cfb176102773'),
+
+  // --- Boucherie ---
+  "jambon d'ardenne": U('1460122109654-7e46ab4fc9b9'),
+  'pâté de campagne': U('1462837019796-6f0204b48d95'),
+  'terrine de canard': U('1694460263761-c93d3759f4b3'),
+  'rillettes de porc': U('1694460265637-5beb1d12a92e'),
+  'salade de museau': U('1663250540918-42681cb3aa91'),
+  'fromage de tête': U('1571513062809-2ac71eab2656'),
+  'boudin blanc': U('1552913903-2cffa1962dc7'),
+  'entrecôte de bœuf': U('1690983325551-b922137727be'),
+  'filet pur de bœuf': U('1690983323238-0b91789e1b5a'),
+  "côte à l'os": U('1603048297172-c92544798d5a'),
+  'steak haché pur bœuf': U('1690983330536-3b0089d07cf9'),
+  'escalope de poulet fermier': U('1588347818036-558601350947'),
+  'cuisse de poulet fermier': U('1722928566022-8a6f179eab9e'),
+  'filet de porc': U('1602470521006-59ab77068b0d'),
+  "côtelettes d'agneau": U('1690983329845-638ec321647d'),
+  'saucisses de toulouse': U('1585325701165-351af916e581'),
+  'merguez': U('1598401863352-3de5501f4890'),
+  'boudin noir': U('1624772398061-bbfa87ec6b5a'),
+  'chipolatas': U('1591989330748-777649e84466'),
+  'vol-au-vent maison': U('1756137949222-e36c028dfedf'),
+  'carbonade flamande': U('1445979323117-80453f573b71'),
+  'lapin à la bière': U('1596797038530-2c107229654b'),
+  'steak tartare préparé': U('1785517605613-e55a1470305d')
 };
 
 export function defaultItemImage(item) {
