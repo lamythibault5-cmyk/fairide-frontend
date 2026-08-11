@@ -1,4 +1,29 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { COMMUNES } from '../menuCategories';
+
+const JOIN_CARDS = [
+  {
+    key: 'client',
+    image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&q=80',
+    title: 'Commande chez les commerces de ton quartier',
+    link: '🛍️ Commander maintenant',
+    to: '/login?audience=client'
+  },
+  {
+    key: 'restaurant',
+    image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=700&q=80',
+    title: 'Vends tes plats sans te faire dévorer par les commissions',
+    link: '🏪 Ajouter mon commerce',
+    to: '/login?audience=partner&role=restaurant'
+  },
+  {
+    key: 'driver',
+    image: 'https://images.unsplash.com/photo-1571745544682-83ecb4b0839a?w=700&q=80',
+    title: 'Roule et sois payé plus justement à chaque course',
+    link: '🛵 Devenir livreur',
+    to: '/login?audience=partner&role=driver'
+  }
+];
 
 const FEATURES = [
   {
@@ -67,6 +92,21 @@ export default function Landing() {
             <p className="small">{s.text}</p>
           </div>
         ))}
+      </div>
+
+      <h2 className="section-title" style={{ textAlign: 'center' }}>Rejoindre Fairide</h2>
+      <div className="join-grid">
+        {JOIN_CARDS.map((c) => (
+          <Link key={c.key} to={c.to} className="join-card" style={{ backgroundImage: `url('${c.image}')` }}>
+            <h3>{c.title}</h3>
+            <span className="join-link">{c.link}</span>
+          </Link>
+        ))}
+      </div>
+
+      <h2 className="section-title" style={{ textAlign: 'center' }}>Communes desservies à Bruxelles</h2>
+      <div className="commune-pills">
+        {COMMUNES.map((c) => <span key={c} className="pill teal">{c}</span>)}
       </div>
 
       <div className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>

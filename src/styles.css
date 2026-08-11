@@ -81,6 +81,15 @@ label { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: bloc
 button { font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer; border: none; border-radius: 9px; padding: 11px 18px; transition: transform .1s, filter .1s; }
 button:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
+a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
+  display: inline-block; font-family: inherit; font-weight: 600; font-size: 14px; cursor: pointer;
+  border-radius: 9px; padding: 11px 18px; text-decoration: none; transition: transform .1s, filter .1s, box-shadow .15s;
+}
+a.btn-primary:active, a.btn-gold:active, a.btn-teal:active, a.btn-outline:active { transform: scale(.97); }
+a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { filter: brightness(1.06); }
+
+.header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14px; opacity: 0.9; display: flex; align-items: center; }
+.header-auth-link:hover { opacity: 1; }
 .btn-primary { background: var(--ink); color: var(--cream); }
 .btn-gold { background: var(--gold); color: var(--ink); }
 .btn-teal { background: var(--teal); color: #fff; }
@@ -198,6 +207,32 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; color: var(--cream); }
 .landing-sub { color: rgba(251,248,242,0.88); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
 @media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 40px 18px; } }
+
+.join-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin: 18px 0 36px; }
+.join-card {
+  position: relative; display: flex; flex-direction: column; justify-content: flex-end;
+  height: 220px; border-radius: var(--radius); padding: 18px; text-decoration: none;
+  background-size: cover; background-position: center; box-shadow: var(--shadow);
+  transition: transform .15s ease, box-shadow .15s ease; overflow: hidden;
+}
+.join-card::before {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgba(22,35,58,0) 35%, rgba(22,35,58,0.88) 100%);
+}
+.join-card:hover { transform: translateY(-3px); box-shadow: 0 14px 32px rgba(22,35,58,0.22); }
+.join-card h3 { position: relative; z-index: 1; color: #fff; font-size: 17px; margin: 0 0 6px; line-height: 1.25; }
+.join-card .join-link { position: relative; z-index: 1; font-size: 13px; font-weight: 700; color: var(--cream); text-decoration: underline; }
+
+.commune-pills { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 36px; }
+
+.site-footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 32px 0 20px; }
+.footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px; margin-bottom: 20px; }
+.footer-col { display: flex; flex-direction: column; gap: 8px; }
+.footer-col h4 { font-family: 'Fraunces', serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 2px; }
+.footer-col a.small { color: var(--ink-soft); text-decoration: none; }
+.footer-col a.small:hover { color: var(--ink); text-decoration: underline; }
+.footer-bottom { text-align: center; border-top: 1px solid var(--line); padding-top: 16px; }
+@media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; gap: 20px; } }
 
 .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 20px; }
 .feature-card { text-align: center; }

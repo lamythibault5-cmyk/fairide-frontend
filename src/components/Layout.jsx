@@ -31,6 +31,12 @@ export default function Layout() {
                 </button>
               </div>
             )}
+            {!user && (
+              <div className="row header-auth" style={{ gap: 10 }}>
+                <Link to="/login" className="header-auth-link">Connexion</Link>
+                <Link to="/login?audience=client" className="btn-gold" style={{ padding: '9px 18px', fontSize: 13 }}>Inscription</Link>
+              </div>
+            )}
           </div>
           {user && (
             <nav className="role-nav">

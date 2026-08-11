@@ -22,12 +22,17 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 export default function Auth() {
   const [searchParams] = useSearchParams();
   const audience = searchParams.get('audience'); // 'client' | 'partner' | null
+  const roleHint = searchParams.get('role'); // optional pre-pick within an audience, e.g. 'driver'
   const visibleRoles = audience === 'client' ? ROLES.filter((r) => r.value === 'client')
     : audience === 'partner' ? ROLES.filter((r) => r.value !== 'client')
     : ROLES;
 
   const [mode, setMode] = useState(audience ? 'register' : 'login');
-  const [role, setRole] = useState(audience === 'partner' ? 'restaurant' : 'client');
+  const [role, setRole] = useState(() => {
+    if (audience === 'client') return 'client';
+    if (audience === 'partner') return visibleRoles.some((r) => r.value === roleHint) ? roleHint : 'restaurant';
+    return 'client';
+  });
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState('');
