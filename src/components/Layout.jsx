@@ -15,7 +15,7 @@ export default function Layout() {
         <div className="hero-inner">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <Link className="brand" to="/">
-              <BrandMark size={46} />
+              <BrandMark size={64} />
               <div className="brand-text">
                 <h1>Fairide</h1>
                 <span className="brand-slogan">Pay the meal, not the platform.</span>

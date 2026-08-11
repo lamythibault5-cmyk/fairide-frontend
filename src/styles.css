@@ -34,7 +34,7 @@ a { color: inherit; }
 .hero {
   background: linear-gradient(160deg, var(--ink) 0%, #1F3253 100%);
   color: var(--cream);
-  padding: 28px 20px 24px;
+  padding: 20px 24px;
   position: sticky;
   top: 0;
   z-index: 40;
@@ -49,12 +49,13 @@ a { color: inherit; }
 }
 .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
 
-.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-.brand .mark { border-radius: 12px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
+.brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
+.brand .mark { border-radius: 14px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
 .brand .mark svg { display: block; width: 100%; height: 100%; }
-.brand-text { display: flex; flex-direction: column; justify-content: center; gap: 1px; }
-.brand h1 { font-size: 21px; color: var(--cream); line-height: 1.1; }
-.brand-slogan { font-size: 11px; font-weight: 500; color: var(--gold); opacity: 0.85; letter-spacing: 0.01em; white-space: nowrap; }
+.brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.brand h1 { font-size: 32px; color: var(--cream); line-height: 1.1; }
+.brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
+@media (max-width: 640px) { .brand h1 { font-size: 24px; } .brand-slogan { font-size: 12px; } }
 @media (max-width: 480px) { .brand-slogan { display: none; } }
 
 .userbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--cream); opacity: .9; }
