@@ -61,7 +61,7 @@ export default function Landing() {
       <div className="landing-hero">
         <span className="pill hero" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
         <h1 className="landing-title">
-          Les commerces de ton quartier,<br />livrés par des gens d'ici.
+          Les commerces de ton quartier,<br />livrés chez toi.
         </h1>
         <p className="landing-sub">
           Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés —
