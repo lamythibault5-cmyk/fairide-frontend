@@ -28,6 +28,8 @@ export default function RestaurantMenu() {
   const [useBalance, setUseBalance] = useState(true);
   const [placing, setPlacing] = useState(false);
   const [pickerItem, setPickerItem] = useState(null);
+  const [pendingOrder, setPendingOrder] = useState(null);
+  const [paying, setPaying] = useState(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -63,6 +65,22 @@ export default function RestaurantMenu() {
     }
   }
 
+  async function confirmAndPay() {
+    setPaying(true);
+    try {
+      const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
+      if (pay.simulated) {
+        toast('Commande passée et payée (paiement simulé).');
+        navigate('/orders');
+      } else {
+        window.location.href = pay.checkoutUrl;
+      }
+    } catch (e) {
+      toast(e.message);
+      setPaying(false);
+    }
+  }
+
   function addToCart(item) {
     if (item.optionGroups?.length > 0) {
       setPickerItem(item);
@@ -79,6 +97,8 @@ export default function RestaurantMenu() {
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     setPlacing(true);
     try {
+      // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
+      // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
       const order = await api('/orders', {
         method: 'POST', token,
         body: {
@@ -88,15 +108,9 @@ export default function RestaurantMenu() {
           deliveryInstructions, deliveryNote: deliveryNote.trim(), useBalance
         }
       });
-      const pay = await api(`/payments/checkout/${order.id}`, { method: 'POST', token });
       cart.clear();
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
-      if (pay.simulated) {
-        toast('Commande passée et payée (paiement simulé).');
-        navigate('/orders');
-      } else {
-        window.location.href = pay.checkoutUrl;
-      }
+      setPendingOrder(order);
     } catch (e) {
       toast(e.message);
     } finally {
@@ -189,9 +203,9 @@ export default function RestaurantMenu() {
               {totals.discountedItems.map((d, i) => (
                 <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
-              <div className="line"><span>Livraison</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
-              <div className="line"><span>Frais de service</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
-              <div className="line"><span>dont commission Fairide (6%)</span><span>{totals.commission.toFixed(2)}€</span></div>
+              <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+              <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+              <div className="line"><span>dont commission Fairide (10%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
                 <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, totals.total).toFixed(2)}€</span></div>
               )}
@@ -233,12 +247,31 @@ export default function RestaurantMenu() {
             <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
           </div>
           <div className="cart-bar">
-            <span>{cart.count} article(s) · {Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span>
+            <span>{cart.count} article(s) · à partir de {Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span>
             <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-              {placing ? '...' : 'Commander et payer'}
+              {placing ? '...' : 'Commander'}
             </button>
           </div>
         </>
+      )}
+
+      {pendingOrder && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
+          <div className="breakdown">
+            <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
+            {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
+            <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+            <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+            {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
+            <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+          </div>
+          <div className="row" style={{ gap: 8, marginTop: 12 }}>
+            <button className="btn-gold" disabled={paying} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
+            <button className="btn-ghost" disabled={paying} onClick={() => setPendingOrder(null)}>Annuler</button>
+          </div>
+        </div>
       )}
 
       {reviews && reviews.reviews.length > 0 && (

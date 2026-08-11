@@ -1,9 +1,9 @@
 import { createContext, useContext, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
-const DELIVERY_FEE = 4.5;
-const SERVICE_FEE = 0.5;
-const COMMISSION_RATE = 0.06;
+const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
+const SYSTEM_FEE_RATE = 0.10;
+const COMMISSION_RATE = 0.10;
 
 function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
@@ -70,8 +70,9 @@ export function CartProvider({ children }) {
     });
     const subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
-    const total = +(subtotal + DELIVERY_FEE + SERVICE_FEE).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee: SERVICE_FEE, commission, total };
+    const serviceFee = +(DELIVERY_FEE * SYSTEM_FEE_RATE).toFixed(2);
+    const total = +(subtotal + DELIVERY_FEE + serviceFee).toFixed(2);
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee, commission, total };
   }
 
   return (

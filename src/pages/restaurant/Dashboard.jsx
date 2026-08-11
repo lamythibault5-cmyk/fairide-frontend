@@ -81,9 +81,14 @@ export default function Dashboard() {
   const [confirmingPickup, setConfirmingPickup] = useState(null);
 
   const [reviews, setReviews] = useState(null);
+  const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
+    if (new URLSearchParams(window.location.search).get('subscribed')) {
+      toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
+      window.history.replaceState({}, '', '/dashboard');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -258,6 +263,17 @@ export default function Dashboard() {
     } catch (e) {
       toast(e.message);
       throw e;
+    }
+  }
+
+  async function subscribeNow() {
+    setSubscribing(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token });
+      window.location.href = r.checkoutUrl;
+    } catch (e) {
+      toast(e.message);
+      setSubscribing(false);
     }
   }
 
@@ -448,6 +464,29 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {restaurant && restaurant.subscriptionStatus !== 'active' && (
+        <div className="card" style={{ border: '2px solid var(--red)' }}>
+          {restaurant.subscriptionStatus === 'past_due' ? (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Paiement de l'abonnement échoué</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n'est plus visible aux clients tant que ce n'est pas régularisé.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🔒 Restaurant pas encore visible aux clients</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
+              </p>
+            </>
+          )}
+          <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
+            {subscribing ? '...' : "S'abonner — 20€/mois"}
+          </button>
+        </div>
+      )}
 
       {restaurant && (
         <>

@@ -33,9 +33,11 @@ export default function Terms() {
 
       <h3>5. Commission et frais</h3>
       <p className="small">
-        Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, plafonnée à 6% du montant des produits.
-        Les livreurs ne paient aucune commission Fairide sur leurs livraisons. Des frais techniques peuvent néanmoins s'appliquer sur
-        les versements aux livreurs, pour couvrir notamment le traitement des paiements et les services de la plateforme.
+        Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, plafonnée à 10% (hors TVA) du montant des produits.
+        Les commerces partenaires s'acquittent également d'un abonnement mensuel de 20€ leur donnant accès à la plateforme.
+        Les frais de livraison affichés au client sont calculés selon la distance entre le commerce et l'adresse de livraison, et
+        reviennent intégralement au livreur. Un frais de système supplémentaire, égal à 10% du montant de la livraison, est prélevé
+        auprès du client pour couvrir le traitement des paiements et les services de la plateforme — il ne réduit pas la part du livreur.
       </p>
 
       <h3>6. Annulation et remboursement</h3>

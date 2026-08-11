@@ -39,7 +39,7 @@ const FEATURES = [
   {
     icon: '🤝',
     title: 'Juste pour tout le monde',
-    text: "6% de commission au lieu des 25-30% des grandes plateformes : les restaurants gardent plus, et les livreurs sont mieux payés pour chaque course."
+    text: "10% de commission au lieu des 22-32% des grandes plateformes : les restaurants gardent plus, et les livreurs touchent 100% des frais de livraison."
   }
 ];
 
@@ -79,7 +79,7 @@ export default function Landing() {
       </div>
 
       <div className="stats-bar">
-        <div className="stats-bar-item"><b>6%</b><span>de commission (vs 25-30% ailleurs)</span></div>
+        <div className="stats-bar-item"><b>10%</b><span>de commission (vs 22-32% ailleurs)</span></div>
         <div className="stats-bar-item"><b>19</b><span>communes bruxelloises couvertes</span></div>
         <div className="stats-bar-item"><b>100%</b><span>commerces et livreurs locaux</span></div>
       </div>
