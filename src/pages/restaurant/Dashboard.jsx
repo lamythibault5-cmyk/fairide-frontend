@@ -82,6 +82,16 @@ export default function Dashboard() {
 
   const [reviews, setReviews] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [pausingSub, setPausingSub] = useState(false);
+  const [resumingSub, setResumingSub] = useState(false);
+  const [cancelingSub, setCancelingSub] = useState(false);
+  const [confirmCancelSub, setConfirmCancelSub] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const clock = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(clock);
+  }, []);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
@@ -277,6 +287,46 @@ export default function Dashboard() {
     }
   }
 
+  async function pauseSubscription() {
+    setPausingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/pause`, { method: 'POST', token });
+      await loadDashboard(restoId);
+      toast('Abonnement mis en pause — ton restaurant n\'est plus visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setPausingSub(false);
+    }
+  }
+
+  async function resumeSubscription() {
+    setResumingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/resume`, { method: 'POST', token });
+      await loadDashboard(restoId);
+      toast('Abonnement repris — ton restaurant est de nouveau visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setResumingSub(false);
+    }
+  }
+
+  async function cancelSubscription() {
+    setCancelingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/cancel`, { method: 'POST', token });
+      await loadDashboard(restoId);
+      setConfirmCancelSub(false);
+      toast('Abonnement résilié — ton restaurant n\'est plus visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCancelingSub(false);
+    }
+  }
+
   async function saveMenuItemOptionGroups(itemId, groupIds) {
     try {
       await api(`/restaurants/${restoId}/menu/${itemId}/option-groups`, { method: 'PATCH', token, body: { groupIds } });
@@ -424,8 +474,11 @@ export default function Dashboard() {
             {myRestos.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
-        {!newRestoOpen && (
-          <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>+ Créer un nouveau restaurant</button>
+        {!newRestoOpen && myRestos.length === 0 && (
+          <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>+ Créer mon restaurant</button>
+        )}
+        {myRestos.length > 0 && (
+          <p className="small" style={{ margin: 0 }}>Un compte restaurateur ne peut gérer qu'un seul restaurant sur Fairide.</p>
         )}
         {newRestoOpen && (
           <div style={{ marginTop: 10 }}>
@@ -465,26 +518,96 @@ export default function Dashboard() {
         )}
       </div>
 
-      {restaurant && restaurant.subscriptionStatus !== 'active' && (
-        <div className="card" style={{ border: '2px solid var(--red)' }}>
-          {restaurant.subscriptionStatus === 'past_due' ? (
+      {restaurant && (
+        <div className="card" style={{ border: `2px solid ${['active', 'trialing'].includes(restaurant.subscriptionStatus) ? 'var(--teal)' : 'var(--red)'}` }}>
+          <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
+            Aujourd'hui : {now.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} à {now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+
+          {restaurant.subscriptionStatus === 'trialing' && (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>✅ Essai gratuit en cours</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Ton restaurant est visible aux clients. Premier mois offert
+                {restaurant.subscriptionCurrentPeriodEnd ? ` — premier prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : '.'}
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'active' && (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>✅ Abonnement actif</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Ton restaurant est visible aux clients.
+                {restaurant.subscriptionCurrentPeriodEnd ? ` Prochain prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'past_due' && (
             <>
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Paiement de l'abonnement échoué</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n'est plus visible aux clients tant que ce n'est pas régularisé.
               </p>
             </>
-          ) : (
+          )}
+          {restaurant.subscriptionStatus === 'paused' && (
             <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🔒 Restaurant pas encore visible aux clients</h3>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⏸️ Abonnement en pause</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
+                Ton restaurant n'est plus visible aux clients et ne reçoit plus de commandes. Aucun prélèvement tant qu'il reste en pause.
               </p>
             </>
           )}
-          <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-            {subscribing ? '...' : "S'abonner — 20€/mois"}
-          </button>
+          {restaurant.subscriptionStatus === 'canceled' && (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>❌ Abonnement résilié</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>Ton restaurant n'est plus visible aux clients.</p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'inactive' && (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🔒 Restaurant pas encore visible aux clients</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes —
+                le premier mois est offert, tu ne seras débité qu'au mois suivant.
+              </p>
+            </>
+          )}
+
+          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && (
+            <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
+              {subscribing ? '...' : "S'abonner — 20€/mois (1er mois offert)"}
+            </button>
+          )}
+          {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : '⏸️ Mettre en pause'}</button>
+              {!confirmCancelSub && (
+                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+              )}
+            </div>
+          )}
+          {restaurant.subscriptionStatus === 'paused' && (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
+              {!confirmCancelSub && (
+                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+              )}
+            </div>
+          )}
+          {confirmCancelSub && (
+            <div style={{ marginTop: 10 }}>
+              <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
+                Es-tu sûr ? Ton restaurant disparaîtra immédiatement des résultats clients. Il faudra un nouvel abonnement pour redevenir visible.
+              </p>
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
+                  {cancelingSub ? '...' : 'Oui, résilier'}
+                </button>
+                <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
