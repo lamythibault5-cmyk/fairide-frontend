@@ -82,6 +82,8 @@ button:disabled { opacity: .5; cursor: not-allowed; }
 .btn-gold { background: var(--gold); color: var(--ink); }
 .btn-teal { background: var(--teal); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink); }
+.btn-outline.hero { border: 1.5px solid rgba(251,248,242,0.7); color: var(--cream); }
+.btn-outline.hero:hover:not(:disabled) { background: rgba(251,248,242,0.12); border-color: var(--cream); }
 .btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
 .btn-block { width: 100%; }
