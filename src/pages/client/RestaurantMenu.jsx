@@ -175,6 +175,7 @@ export default function RestaurantMenu() {
                 <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
               <div className="line"><span>Livraison</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+              <div className="line"><span>Frais de service</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
               <div className="line"><span>dont commission Fairide (6%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
                 <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, totals.total).toFixed(2)}€</span></div>

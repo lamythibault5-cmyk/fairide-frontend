@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
 const DELIVERY_FEE = 4.5;
+const SERVICE_FEE = 0.5;
 const COMMISSION_RATE = 0.06;
 
 export function CartProvider({ children }) {
@@ -53,8 +54,8 @@ export function CartProvider({ children }) {
     });
     const subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
-    const total = +(subtotal + DELIVERY_FEE).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, commission, total };
+    const total = +(subtotal + DELIVERY_FEE + SERVICE_FEE).toFixed(2);
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee: SERVICE_FEE, commission, total };
   }
 
   return (
