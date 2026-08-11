@@ -18,7 +18,7 @@ const RESTO_DELETION_REASONS = [
 ];
 
 export default function Dashboard() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const toast = useToast();
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
@@ -55,9 +55,7 @@ export default function Dashboard() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteReason, setDeleteReason] = useState(RESTO_DELETION_REASONS[0]);
   const [deleteComment, setDeleteComment] = useState('');
-  const [deleteCodeSent, setDeleteCodeSent] = useState(false);
-  const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
-  const [deleteCode, setDeleteCode] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -166,31 +164,17 @@ export default function Dashboard() {
     }
   }
 
-  async function sendDeleteCode() {
-    setSendingDeleteCode(true);
-    try {
-      await api(`/restaurants/${restoId}/request-deletion`, { method: 'POST', token });
-      setDeleteCodeSent(true);
-      toast('Code envoyé par email.');
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setSendingDeleteCode(false);
-    }
-  }
-
   async function deleteRestaurant() {
-    if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
+    if (!user.hasGoogleAuth && !deletePassword) { toast('Entre ton mot de passe pour confirmer.'); return; }
     setDeleting(true);
     try {
-      await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code: deleteCode, reason: deleteReason, comment: deleteComment.trim() } });
+      await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { password: deletePassword, reason: deleteReason, comment: deleteComment.trim() } });
       setMyRestos((prev) => prev.filter((x) => x.id !== restoId));
       setRestoId(null);
       setRestaurant(null);
       setEditOpen(false);
       setConfirmDelete(false);
-      setDeleteCodeSent(false);
-      setDeleteCode('');
+      setDeletePassword('');
       setDeleteComment('');
       toast('Restaurant supprimé.');
     } catch (e) {
@@ -418,46 +402,28 @@ export default function Dashboard() {
                   <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
                     Es-tu sûr ? Cette action est irréversible (plats supprimés aussi). Impossible si des commandes existent déjà.
                   </p>
-
-                  {!deleteCodeSent && (
-                    <>
-                      <div className="field">
-                        <label>Pourquoi supprimes-tu ce restaurant ?</label>
-                        <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
-                          {RESTO_DELETION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label>Un commentaire (optionnel)</label>
-                        <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
-                      </div>
-                      <div className="row" style={{ gap: 8 }}>
-                        <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingDeleteCode} onClick={sendDeleteCode}>
-                          {sendingDeleteCode ? '...' : 'Recevoir un code de confirmation'}
-                        </button>
-                        <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>Annuler</button>
-                      </div>
-                    </>
+                  <div className="field">
+                    <label>Pourquoi supprimes-tu ce restaurant ?</label>
+                    <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+                      {RESTO_DELETION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Un commentaire (optionnel)</label>
+                    <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
+                  </div>
+                  {!user.hasGoogleAuth && (
+                    <div className="field">
+                      <label>Confirme avec ton mot de passe</label>
+                      <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
+                    </div>
                   )}
-
-                  {deleteCodeSent && (
-                    <>
-                      <p className="small" style={{ marginBottom: 10 }}>
-                        Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
-                      </p>
-                      <div className="field">
-                        <label>Code reçu par email</label>
-                        <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
-                      </div>
-                      <div className="row" style={{ gap: 8 }}>
-                        <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
-                          {deleting ? '...' : 'Oui, supprimer définitivement'}
-                        </button>
-                        <button className="btn-ghost" disabled={sendingDeleteCode} onClick={sendDeleteCode}>Renvoyer le code</button>
-                        <button className="btn-ghost" onClick={() => { setConfirmDelete(false); setDeleteCodeSent(false); setDeleteCode(''); }}>Annuler</button>
-                      </div>
-                    </>
-                  )}
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
+                      {deleting ? '...' : 'Oui, supprimer définitivement'}
+                    </button>
+                    <button className="btn-ghost" onClick={() => { setConfirmDelete(false); setDeletePassword(''); }}>Annuler</button>
+                  </div>
                 </div>
               )}
             </div>
