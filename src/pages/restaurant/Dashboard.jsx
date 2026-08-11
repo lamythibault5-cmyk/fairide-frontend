@@ -18,7 +18,7 @@ const RESTO_DELETION_REASONS = [
 ];
 
 export default function Dashboard() {
-  const { token, user } = useAuth();
+  const { token } = useAuth();
   const toast = useToast();
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
@@ -55,7 +55,6 @@ export default function Dashboard() {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteReason, setDeleteReason] = useState(RESTO_DELETION_REASONS[0]);
   const [deleteComment, setDeleteComment] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
   const [deleteCodeSent, setDeleteCodeSent] = useState(false);
   const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
   const [deleteCode, setDeleteCode] = useState('');
@@ -181,17 +180,15 @@ export default function Dashboard() {
   }
 
   async function deleteRestaurant() {
-    if (!user.hasGoogleAuth && !deletePassword) { toast('Entre ton mot de passe pour confirmer.'); return; }
-    if (user.hasGoogleAuth && !deleteCode) { toast('Entre le code reçu par email.'); return; }
+    if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
     setDeleting(true);
     try {
-      await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { password: deletePassword, code: deleteCode, reason: deleteReason, comment: deleteComment.trim() } });
+      await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code: deleteCode, reason: deleteReason, comment: deleteComment.trim() } });
       setMyRestos((prev) => prev.filter((x) => x.id !== restoId));
       setRestoId(null);
       setRestaurant(null);
       setEditOpen(false);
       setConfirmDelete(false);
-      setDeletePassword('');
       setDeleteCode('');
       setDeleteCodeSent(false);
       setDeleteComment('');
@@ -431,32 +428,18 @@ export default function Dashboard() {
                     <label>Un commentaire (optionnel)</label>
                     <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
                   </div>
-                  {!user.hasGoogleAuth && (
-                    <>
-                      <div className="field">
-                        <label>Confirme avec ton mot de passe</label>
-                        <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
-                      </div>
-                      <div className="row" style={{ gap: 8 }}>
-                        <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
-                          {deleting ? '...' : 'Oui, supprimer définitivement'}
-                        </button>
-                        <button className="btn-ghost" onClick={() => { setConfirmDelete(false); setDeletePassword(''); }}>Annuler</button>
-                      </div>
-                    </>
-                  )}
-                  {user.hasGoogleAuth && !deleteCodeSent && (
+                  {!deleteCodeSent && (
                     <div className="row" style={{ gap: 8 }}>
                       <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingDeleteCode} onClick={sendDeleteCode}>
-                        {sendingDeleteCode ? '...' : 'Recevoir un code de confirmation'}
+                        {sendingDeleteCode ? '...' : 'Recevoir un code de validation de suppression'}
                       </button>
                       <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>Annuler</button>
                     </div>
                   )}
-                  {user.hasGoogleAuth && deleteCodeSent && (
+                  {deleteCodeSent && (
                     <>
                       <p className="small" style={{ marginBottom: 10 }}>
-                        Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
+                        Un code de validation de suppression vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
                       </p>
                       <div className="field">
                         <label>Code reçu par email</label>

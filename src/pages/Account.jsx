@@ -31,7 +31,6 @@ export default function Account() {
   const [deleteCodeSent, setDeleteCodeSent] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
   const [deleteCode, setDeleteCode] = useState('');
-  const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [firstName, setFirstName] = useState(user.firstName || '');
   const [lastName, setLastName] = useState(user.lastName || '');
@@ -98,10 +97,9 @@ export default function Account() {
 
   async function handleDeleteAccount() {
     if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
-    if (!user.hasGoogleAuth && !deletePassword) { toast('Entre ton mot de passe pour confirmer.'); return; }
     setDeleting(true);
     try {
-      const result = await deleteAccount({ password: deletePassword, code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
+      const result = await deleteAccount({ code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
       toast(result.anonymized ? 'Compte supprimé. Ton historique de commandes reste visible pour les autres, sans tes données personnelles.' : 'Compte supprimé.');
     } catch (err) {
       toast(err.message);
@@ -254,7 +252,7 @@ export default function Account() {
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
-                    {sendingCode ? '...' : 'Recevoir un code de confirmation'}
+                    {sendingCode ? '...' : 'Recevoir un code de validation de suppression'}
                   </button>
                   <button className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>Annuler</button>
                 </div>
@@ -264,24 +262,18 @@ export default function Account() {
             {deleteCodeSent && (
               <>
                 <p className="small" style={{ marginBottom: 10 }}>
-                  Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
+                  Un code de validation de suppression vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
                 </p>
                 <div className="field">
                   <label>Code reçu par email</label>
                   <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
-                {!user.hasGoogleAuth && (
-                  <div className="field">
-                    <label>Confirme avec ton mot de passe</label>
-                    <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
-                  </div>
-                )}
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
                     {deleting ? '...' : 'Oui, supprimer définitivement'}
                   </button>
                   <button className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>Renvoyer le code</button>
-                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); setDeletePassword(''); }}>Annuler</button>
+                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>Annuler</button>
                 </div>
               </>
             )}

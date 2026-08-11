@@ -63,8 +63,8 @@ export function AuthProvider({ children }) {
     return api('/auth/me/request-deletion', { method: 'POST', token: session.token });
   }
 
-  async function deleteAccount({ password, code, reason, comment }) {
-    const data = await api('/auth/me', { method: 'DELETE', token: session.token, body: { password, code, reason, comment } });
+  async function deleteAccount({ code, reason, comment }) {
+    const data = await api('/auth/me', { method: 'DELETE', token: session.token, body: { code, reason, comment } });
     setSession(null);
     return data;
   }
