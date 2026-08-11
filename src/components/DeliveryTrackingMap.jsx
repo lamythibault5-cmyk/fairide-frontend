@@ -17,6 +17,16 @@ const RESTAURANT_ICON = emojiIcon('🏪', '#2F6F5E');
 const DELIVERY_ICON = emojiIcon('🏠', '#D9A441');
 const DRIVER_ICON = emojiIcon('🛵', '#16233A');
 
+async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
+  const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('routing-failed');
+  const data = await res.json();
+  const coords = data.routes?.[0]?.geometry?.coordinates;
+  if (!coords || !coords.length) throw new Error('no-route');
+  return coords.map(([lng, lat]) => [lat, lng]);
+}
+
 export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, height = 260 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
@@ -62,14 +72,26 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       }
     }
     if (hasResto && hasDelivery) {
-      const latlngs = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
+      const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(latlngs, { color: '#2F6F5E', weight: 3, dashArray: '6, 8', opacity: 0.7 }).addTo(mapRef.current);
+        lineRef.current = L.polyline(straightLine, { color: '#2F6F5E', weight: 3, dashArray: '6, 8', opacity: 0.6 }).addTo(mapRef.current);
       } else {
-        lineRef.current.setLatLngs(latlngs);
+        lineRef.current.setLatLngs(straightLine);
       }
-      const bounds = L.latLngBounds(latlngs);
-      mapRef.current.fitBounds(bounds, { padding: [40, 40] });
+      mapRef.current.fitBounds(L.latLngBounds(straightLine), { padding: [40, 40] });
+
+      let cancelled = false;
+      fetchStreetRoute(restaurantLat, restaurantLng, deliveryLat, deliveryLng)
+        .then((routeLatLngs) => {
+          if (cancelled || !lineRef.current) return;
+          lineRef.current.setLatLngs(routeLatLngs);
+          lineRef.current.setStyle({ dashArray: null, opacity: 0.8 });
+          mapRef.current.fitBounds(L.latLngBounds(routeLatLngs), { padding: [40, 40] });
+        })
+        .catch(() => {
+          // OSRM indisponible : on garde la ligne droite en secours
+        });
+      return () => { cancelled = true; };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantLat, restaurantLng, deliveryLat, deliveryLng]);
