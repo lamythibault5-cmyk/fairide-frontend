@@ -51,15 +51,27 @@ export default function RestaurantList() {
 
   return (
     <div>
+      <div className="cuisine-scroll">
+        <div className={`cuisine-chip${cuisine === '' ? ' active' : ''}`} onClick={() => setCuisine('')}>
+          <span className="emoji">🍽️</span>
+          <span>Tous</span>
+        </div>
+        {RESTAURANT_TYPES.map((t) => (
+          <div
+            key={t.value}
+            className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
+            onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
+          >
+            <span className="emoji">{t.emoji}</span>
+            <span>{t.value}</span>
+          </div>
+        ))}
+      </div>
       <div className="row" style={{ marginBottom: 14 }}>
         <input placeholder="Chercher un restaurant ou un plat" style={{ flex: 2, minWidth: 160 }} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select style={{ flex: 1, minWidth: 130 }} value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">Toutes les communes</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-        <select style={{ flex: 1, minWidth: 130 }} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-          <option value="">Tous les types</option>
-          {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
         </select>
       </div>
       <div className="role-pick" style={{ marginBottom: 14 }}>
