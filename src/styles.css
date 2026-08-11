@@ -209,6 +209,12 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
   padding: 56px 24px;
   color: var(--cream);
 }
+.be-flag {
+  position: absolute; top: 16px; left: 16px; width: 44px; height: 30px;
+  border-radius: 4px; overflow: hidden; display: flex;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.15);
+}
+.be-flag-stripe { flex: 1; }
 .landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; color: var(--cream); }
 .landing-sub { color: rgba(251,248,242,0.88); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
 @media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 40px 18px; } }

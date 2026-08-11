@@ -59,10 +59,12 @@ export default function Landing() {
       <div className="decor-blob teal" style={{ width: 260, height: 260, bottom: -60, left: '35%' }} />
 
       <div className="landing-hero">
-        <div className="row" style={{ justifyContent: 'center', gap: 8, marginBottom: 14 }}>
-          <span className="pill hero">📍 Local d'abord</span>
-          <span className="pill hero">🇧🇪 Fièrement belge</span>
+        <div className="be-flag" title="Fièrement belge">
+          <span className="be-flag-stripe" style={{ background: '#000' }} />
+          <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
+          <span className="be-flag-stripe" style={{ background: '#ED2939' }} />
         </div>
+        <span className="pill hero" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
         <h1 className="landing-title">
           Les commerces de ton quartier,<br />livrés chez toi.
         </h1>
