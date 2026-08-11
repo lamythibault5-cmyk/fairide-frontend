@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from '../components/Skeleton';
 
-const TABS = ['Stats', 'Clients', 'Commandes', 'Avis', 'Restaurants'];
+const TABS = ['Stats', 'Clients', 'Livreurs', 'Restaurants', 'Commandes', 'Avis'];
 
 export default function Admin() {
   const { token } = useAuth();
@@ -16,7 +16,14 @@ export default function Admin() {
   const [orders, setOrders] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [restaurants, setRestaurants] = useState(null);
+  const [drivers, setDrivers] = useState(null);
   const [balanceInputs, setBalanceInputs] = useState({});
+
+  const [selectedDriver, setSelectedDriver] = useState(null);
+  const [driverOrders, setDriverOrders] = useState(null);
+  const [selectedRestaurant, setSelectedRestaurant] = useState(null);
+  const [restaurantDetail, setRestaurantDetail] = useState(null);
+  const [restaurantOrders, setRestaurantOrders] = useState(null);
 
   useEffect(() => { api('/admin/stats', { token }).then(setStats).catch((e) => toast(e.message)); }, []); // eslint-disable-line
 
@@ -30,8 +37,23 @@ export default function Admin() {
     if (tab === 'Commandes' && orders === null) api('/admin/orders', { token }).then(setOrders).catch((e) => toast(e.message));
     if (tab === 'Avis' && reviews === null) api('/admin/reviews', { token }).then(setReviews).catch((e) => toast(e.message));
     if (tab === 'Restaurants' && restaurants === null) api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
+    if (tab === 'Livreurs' && drivers === null) api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  function openDriver(d) {
+    setSelectedDriver(d);
+    setDriverOrders(null);
+    api(`/admin/orders?driverId=${d.id}&limit=20`, { token }).then(setDriverOrders).catch((e) => toast(e.message));
+  }
+
+  function openRestaurant(r) {
+    setSelectedRestaurant(r);
+    setRestaurantDetail(null);
+    setRestaurantOrders(null);
+    api(`/restaurants/${r.id}`).then(setRestaurantDetail).catch((e) => toast(e.message));
+    api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then(setRestaurantOrders).catch((e) => toast(e.message));
+  }
 
   async function creditBalance(userId) {
     const raw = balanceInputs[userId];
@@ -155,15 +177,100 @@ export default function Admin() {
         <div>
           {!restaurants && <SkeletonCards count={3} />}
           {restaurants && restaurants.map((r) => (
-            <div className="card" key={r.id}>
+            <div className="card order-card-clickable" key={r.id} onClick={() => openRestaurant(r)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{r.name}</b>
                 <span className="pill teal">{r.open ? 'Ouvert' : 'Fermé'}</span>
               </div>
               <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
-              <div className="small">Propriétaire : {r.ownerEmail}</div>
+              <div className="small">Propriétaire : {r.ownerEmail}{r.ownerPhone ? ` · ${r.ownerPhone}` : ''}</div>
+              <div className="small">{r.orderCount} commande(s) payée(s) · {r.revenue.toFixed(2)}€ de CA plats</div>
             </div>
           ))}
+        </div>
+      )}
+
+      {tab === 'Livreurs' && (
+        <div>
+          {!drivers && <SkeletonCards count={3} />}
+          {drivers && drivers.length === 0 && <div className="empty">Aucun livreur inscrit.</div>}
+          {drivers && drivers.map((d) => (
+            <div className="card order-card-clickable" key={d.id} onClick={() => openDriver(d)}>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <b>{d.name}</b>
+                {!d.emailVerified && <span className="pill" style={{ color: 'var(--red)' }}>Email non vérifié</span>}
+              </div>
+              <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}</div>
+              <div className="small">
+                {d.deliveriesCount} livraison(s) terminée(s)
+                {d.reviewCount > 0 ? ` · ${d.avgRating.toFixed(1)}★ (${d.reviewCount} avis)` : ' · pas encore d\'avis'}
+              </div>
+              {(d.payoutIban || d.payoutAccountHolder) && (
+                <div className="small">💳 {d.payoutAccountHolder || '(titulaire non renseigné)'} — {d.payoutIban || '(IBAN non renseigné)'}</div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {selectedDriver && (
+        <div className="modal-overlay" onClick={() => setSelectedDriver(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 8px' }}>{selectedDriver.name}</h3>
+            <p className="small" style={{ margin: '2px 0' }}>{selectedDriver.email}{selectedDriver.phone ? ` · ${selectedDriver.phone}` : ''}</p>
+            <p className="small" style={{ margin: '2px 0' }}>
+              {selectedDriver.deliveriesCount} livraison(s) terminée(s)
+              {selectedDriver.reviewCount > 0 ? ` · ${selectedDriver.avgRating.toFixed(1)}★ (${selectedDriver.reviewCount} avis)` : ' · pas encore d\'avis'}
+            </p>
+            {(selectedDriver.payoutIban || selectedDriver.payoutAccountHolder) && (
+              <p className="small" style={{ margin: '2px 0' }}>💳 {selectedDriver.payoutAccountHolder || '(titulaire non renseigné)'} — {selectedDriver.payoutIban || '(IBAN non renseigné)'}</p>
+            )}
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Livraisons récentes</h4>
+            {!driverOrders && <div className="small">Chargement...</div>}
+            {driverOrders && driverOrders.length === 0 && <div className="small">Aucune commande pour l'instant.</div>}
+            {driverOrders && driverOrders.map((o) => (
+              <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
+                <span className="small">{o.restaurantName} → {o.clientName}</span>
+                <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>
+            ))}
+            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedDriver(null)}>Fermer</button>
+          </div>
+        </div>
+      )}
+
+      {selectedRestaurant && (
+        <div className="modal-overlay" onClick={() => setSelectedRestaurant(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 8px' }}>{selectedRestaurant.name}</h3>
+            <p className="small" style={{ margin: '2px 0' }}>{selectedRestaurant.commune} · {selectedRestaurant.cuisine} · {selectedRestaurant.rating.toFixed(1)}★</p>
+            <p className="small" style={{ margin: '2px 0' }}>Propriétaire : {selectedRestaurant.ownerEmail}{selectedRestaurant.ownerPhone ? ` · ${selectedRestaurant.ownerPhone}` : ''}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{selectedRestaurant.orderCount} commande(s) payée(s) · {selectedRestaurant.revenue.toFixed(2)}€ de CA plats</p>
+            {restaurantDetail?.address && <p className="small" style={{ margin: '2px 0' }}>📍 {restaurantDetail.address}</p>}
+            {restaurantDetail?.openingHours && <p className="small" style={{ margin: '2px 0' }}>🕐 {restaurantDetail.openingHours}</p>}
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Menu ({restaurantDetail?.menu?.length ?? '...'})</h4>
+            {!restaurantDetail && <div className="small">Chargement...</div>}
+            {restaurantDetail && restaurantDetail.menu.length === 0 && <div className="small">Aucun plat au menu.</div>}
+            {restaurantDetail && restaurantDetail.menu.map((item) => (
+              <div key={item.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
+                <span className="small">{item.name}</span>
+                <span className="small">{Number(item.price).toFixed(2)}€</span>
+              </div>
+            ))}
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Commandes récentes</h4>
+            {!restaurantOrders && <div className="small">Chargement...</div>}
+            {restaurantOrders && restaurantOrders.length === 0 && <div className="small">Aucune commande pour l'instant.</div>}
+            {restaurantOrders && restaurantOrders.map((o) => (
+              <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
+                <span className="small">{o.clientName}{o.driverName ? ` · livré par ${o.driverName}` : ''}</span>
+                <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>
+            ))}
+            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedRestaurant(null)}>Fermer</button>
+          </div>
         </div>
       )}
     </div>
