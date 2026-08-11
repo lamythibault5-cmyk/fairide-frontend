@@ -30,7 +30,7 @@ export default function Landing() {
   return (
     <div>
       <div className="landing-hero">
-        <span className="pill teal" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
+        <span className="pill hero" style={{ marginBottom: 14 }}>📍 Local d'abord</span>
         <h1 className="landing-title">
           Les commerces de ton quartier,<br />livrés par des gens d'ici.
         </h1>

@@ -26,7 +26,6 @@ export default function Dashboard() {
   const [addressStreet, setAddressStreet] = useState('');
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState('');
-  const [addressCity, setAddressCity] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [openingHours, setOpeningHours] = useState('');
 
@@ -39,7 +38,6 @@ export default function Dashboard() {
   const [editAddressStreet, setEditAddressStreet] = useState('');
   const [editAddressNumber, setEditAddressNumber] = useState('');
   const [editAddressPostalCode, setEditAddressPostalCode] = useState('');
-  const [editAddressCity, setEditAddressCity] = useState('');
   const [editCover, setEditCover] = useState('');
   const [editOpeningHours, setEditOpeningHours] = useState('');
   const [editOpenFlag, setEditOpenFlag] = useState(true);
@@ -90,7 +88,6 @@ export default function Dashboard() {
       setEditAddressStreet(restoData.addressStreet || '');
       setEditAddressNumber(restoData.addressNumber || '');
       setEditAddressPostalCode(restoData.addressPostalCode || '');
-      setEditAddressCity(restoData.addressCity || '');
       setEditCover(restoData.coverImageUrl || '');
       setEditOpeningHours(restoData.openingHours || '');
       setEditOpenFlag(restoData.open);
@@ -108,8 +105,8 @@ export default function Dashboard() {
 
   async function createResto() {
     if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
-    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
-      toast("Donne l'adresse complète du restaurant (rue, numéro, code postal, ville) pour les livreurs et la carte.");
+    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim()) {
+      toast("Donne l'adresse complète du restaurant (rue, numéro, code postal) pour les livreurs et la carte.");
       return;
     }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
@@ -118,13 +115,13 @@ export default function Dashboard() {
         method: 'POST', token,
         body: {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
-          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim()
         }
       });
       setMyRestos((prev) => [...prev, r]);
       setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
-      setAddressStreet(''); setAddressNumber(''); setAddressPostalCode(''); setAddressCity('');
+      setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
       pickResto(r.id);
       toast('Restaurant créé !');
@@ -141,7 +138,7 @@ export default function Dashboard() {
         method: 'PATCH', token,
         body: {
           desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(),
-          addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editAddressCity.trim(),
+          addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag
         }
       });
@@ -304,7 +301,6 @@ export default function Dashboard() {
                 <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
               </div>
             </div>
-            <div className="field"><label>Ville / Commune (postale)</label><input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" /></div>
             <div className="field">
               <label>Type de restaurant</label>
               <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
@@ -362,7 +358,6 @@ export default function Dashboard() {
                   <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
                 </div>
               </div>
-              <div className="field"><label>Ville / Commune (postale)</label><input value={editAddressCity} onChange={(e) => setEditAddressCity(e.target.value)} placeholder="Bruxelles" /></div>
               <div className="field">
                 <label>Type de restaurant</label>
                 <select value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)}>

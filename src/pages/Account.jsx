@@ -4,6 +4,16 @@ import { useToast } from '../context/ToastContext';
 
 const ROLE_LABEL = { client: 'Client', restaurant: 'Commerce', driver: 'Livreur' };
 
+const DELETION_REASONS = [
+  'Je n\'utilise plus le service',
+  'Prix ou frais trop élevés',
+  'Mauvaise expérience avec une commande',
+  'Problème avec un restaurant ou un livreur',
+  'Je préfère une autre application',
+  'Problème de confidentialité ou de sécurité',
+  'Autre raison'
+];
+
 const GENDERS = [
   { value: '', label: 'Genre (optionnel)' },
   { value: 'Femme', label: 'Femme' },
@@ -13,9 +23,14 @@ const GENDERS = [
 ];
 
 export default function Account() {
-  const { user, role, updateProfile, deleteAccount, logout } = useAuth();
+  const { user, role, updateProfile, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0]);
+  const [deleteComment, setDeleteComment] = useState('');
+  const [deleteCodeSent, setDeleteCodeSent] = useState(false);
+  const [sendingCode, setSendingCode] = useState(false);
+  const [deleteCode, setDeleteCode] = useState('');
   const [deletePassword, setDeletePassword] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [firstName, setFirstName] = useState(user.firstName || '');
@@ -68,11 +83,25 @@ export default function Account() {
     }
   }
 
+  async function handleSendDeleteCode() {
+    setSendingCode(true);
+    try {
+      await requestDeletionCode();
+      setDeleteCodeSent(true);
+      toast('Code envoyé par email.');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setSendingCode(false);
+    }
+  }
+
   async function handleDeleteAccount() {
+    if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
     if (!user.hasGoogleAuth && !deletePassword) { toast('Entre ton mot de passe pour confirmer.'); return; }
     setDeleting(true);
     try {
-      const result = await deleteAccount(deletePassword);
+      const result = await deleteAccount({ password: deletePassword, code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
       toast(result.anonymized ? 'Compte supprimé. Ton historique de commandes reste visible pour les autres, sans tes données personnelles.' : 'Compte supprimé.');
     } catch (err) {
       toast(err.message);
@@ -210,18 +239,52 @@ export default function Account() {
               Cette action est irréversible. Si tu as déjà des commandes, tes données personnelles seront effacées
               mais ton historique de commandes restera visible (anonymisé) pour les commerces/livreurs concernés.
             </p>
-            {!user.hasGoogleAuth && (
-              <div className="field">
-                <label>Confirme avec ton mot de passe</label>
-                <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
-              </div>
+
+            {!deleteCodeSent && (
+              <>
+                <div className="field">
+                  <label>Pourquoi souhaites-tu nous quitter ?</label>
+                  <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+                    {DELETION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                </div>
+                <div className="field">
+                  <label>Un commentaire (optionnel)</label>
+                  <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
+                    {sendingCode ? '...' : 'Recevoir un code de confirmation'}
+                  </button>
+                  <button className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>Annuler</button>
+                </div>
+              </>
             )}
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
-                {deleting ? '...' : 'Oui, supprimer définitivement'}
-              </button>
-              <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeletePassword(''); }}>Annuler</button>
-            </div>
+
+            {deleteCodeSent && (
+              <>
+                <p className="small" style={{ marginBottom: 10 }}>
+                  Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
+                </p>
+                <div className="field">
+                  <label>Code reçu par email</label>
+                  <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
+                </div>
+                {!user.hasGoogleAuth && (
+                  <div className="field">
+                    <label>Confirme avec ton mot de passe</label>
+                    <input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} />
+                  </div>
+                )}
+                <div className="row" style={{ gap: 8 }}>
+                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
+                    {deleting ? '...' : 'Oui, supprimer définitivement'}
+                  </button>
+                  <button className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>Renvoyer le code</button>
+                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); setDeletePassword(''); }}>Annuler</button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
