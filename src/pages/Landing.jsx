@@ -29,7 +29,7 @@ const FEATURES = [
   {
     icon: '🏪',
     title: '100% commerces locaux',
-    text: "Restaurants, supermarchés, night shops, boulangeries... découvre et soutiens les commerces de ton quartier, pas des chaînes anonymes."
+    text: "Restaurants, supermarchés, night shops, boulangeries... découvre et soutiens les commerces de ton quartier, accessibles à tous."
   },
   {
     icon: '🚲',
