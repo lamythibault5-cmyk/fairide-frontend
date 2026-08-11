@@ -117,6 +117,11 @@ export default function Auth() {
           setLoading(false);
           return;
         }
+        if (role === 'driver' && 'geolocation' in navigator) {
+          // Demande l'autorisation de géolocalisation une seule fois, à la création du compte.
+          // Elle pourra être désactivée plus tard dans les réglages du compte.
+          navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 5000 });
+        }
         const data = await register({
           firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role,
           phone: phone.trim(), gender: gender || undefined, birthDate: birthDate || undefined,
@@ -220,6 +225,11 @@ export default function Auth() {
                 </div>
               ))}
             </div>
+            {role === 'driver' && (
+              <p className="small" style={{ marginTop: -6, marginBottom: 12 }}>
+                📍 En créant ton compte livreur, ton navigateur te demandera d'autoriser la géolocalisation — elle sert à partager ta position en direct avec les clients pendant tes livraisons. Tu peux la désactiver à tout moment dans les réglages de ton compte.
+              </p>
+            )}
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label>Prénom</label>

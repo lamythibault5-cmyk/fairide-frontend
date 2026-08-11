@@ -7,7 +7,7 @@ import { StarsDisplay } from '../../components/Stars';
 import { DeliveryTiming, deliveryInstructionLabel } from '../../orderStatus';
 
 export default function DriverDashboard() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const toast = useToast();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
@@ -45,7 +45,10 @@ export default function DriverDashboard() {
   }, [mine]);
 
   useEffect(() => {
-    if (!('geolocation' in navigator)) return;
+    if (!('geolocation' in navigator) || user?.locationSharingEnabled === false) {
+      setSharingLocation(false);
+      return;
+    }
     let deniedNotified = false;
     function tick() {
       if (!activeIdsRef.current.length) return;
@@ -61,7 +64,7 @@ export default function DriverDashboard() {
           setSharingLocation(false);
           if (!deniedNotified) {
             deniedNotified = true;
-            toast('Active la géolocalisation pour partager ta position en direct avec le client.');
+            toast('Autorise la géolocalisation dans ton navigateur pour partager ta position en direct avec le client.');
           }
         },
         { enableHighAccuracy: true, timeout: 8000 }
@@ -71,7 +74,7 @@ export default function DriverDashboard() {
     const interval = setInterval(tick, 12000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+  }, [token, user?.locationSharingEnabled]);
 
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
@@ -144,7 +147,11 @@ export default function DriverDashboard() {
       <h2 className="section-title">Mes livraisons en cours</h2>
       {active.length > 0 && (
         <div className="small" style={{ marginBottom: 10 }}>
-          {sharingLocation ? '📍 Ta position est partagée en direct avec le(s) client(s).' : '📍 Active la géolocalisation pour partager ta position en direct.'}
+          {user?.locationSharingEnabled === false
+            ? '📍 Partage de position désactivé (réactivable dans les réglages du compte).'
+            : sharingLocation
+              ? '📍 Ta position est partagée en direct avec le(s) client(s).'
+              : '📍 En attente de ton autorisation de géolocalisation...'}
         </div>
       )}
       {active.length === 0 && <div className="empty">Pas de livraison en cours.</div>}

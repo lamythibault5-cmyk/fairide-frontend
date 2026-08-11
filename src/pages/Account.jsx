@@ -47,6 +47,9 @@ export default function Account() {
   const [payoutAccountHolder, setPayoutAccountHolder] = useState(user.payoutAccountHolder || '');
   const [savingPayout, setSavingPayout] = useState(false);
 
+  const [locationSharingEnabled, setLocationSharingEnabled] = useState(user.locationSharingEnabled !== false);
+  const [savingLocationSharing, setSavingLocationSharing] = useState(false);
+
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
@@ -61,6 +64,21 @@ export default function Account() {
       toast(err.message);
     } finally {
       setSavingPayout(false);
+    }
+  }
+
+  async function toggleLocationSharing(e) {
+    const next = e.target.checked;
+    setLocationSharingEnabled(next);
+    setSavingLocationSharing(true);
+    try {
+      await updateProfile({ locationSharingEnabled: next });
+      toast(next ? 'Partage de position en direct activé.' : 'Partage de position en direct désactivé.');
+    } catch (err) {
+      setLocationSharingEnabled(!next);
+      toast(err.message);
+    } finally {
+      setSavingLocationSharing(false);
     }
   }
 
@@ -208,6 +226,19 @@ export default function Account() {
             </div>
             <button type="submit" className="btn-teal" disabled={savingPayout}>{savingPayout ? '...' : 'Enregistrer'}</button>
           </form>
+        </div>
+      )}
+
+      {role === 'driver' && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Géolocalisation</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>
+            Quand c'est activé, ta position est partagée en direct avec le client pendant tes livraisons, pour qu'il puisse te suivre sur la carte.
+          </p>
+          <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
+            <span className="small">Partager ma position en direct pendant les livraisons</span>
+          </label>
         </div>
       )}
 
