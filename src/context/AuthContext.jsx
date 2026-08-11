@@ -41,6 +41,14 @@ export function AuthProvider({ children }) {
     return api('/auth/resend-code', { method: 'POST', body: { email } });
   }
 
+  async function forgotPassword(email) {
+    return api('/auth/forgot-password', { method: 'POST', body: { email } });
+  }
+
+  async function resetPassword(token, password) {
+    return api('/auth/reset-password', { method: 'POST', body: { token, password } });
+  }
+
   async function loginWithGoogle(credential, role, extra) {
     const data = await api('/auth/google', { method: 'POST', body: { credential, role, ...extra } });
     setSession(data);
@@ -81,6 +89,8 @@ export function AuthProvider({ children }) {
     register,
     verifyEmail,
     resendCode,
+    forgotPassword,
+    resetPassword,
     loginWithGoogle,
     updateProfile,
     refreshUser,

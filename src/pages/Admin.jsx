@@ -5,7 +5,12 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from '../components/Skeleton';
 
-const TABS = ['Stats', 'Clients', 'Livreurs', 'Restaurants', 'Commandes', 'Avis'];
+const TABS = ['Stats', 'Clients', 'Livreurs', 'Restaurants', 'Commandes', 'Avis', 'Codes promo'];
+
+const PROMO_TYPES = [
+  { value: 'client_balance', label: 'Solde client (€)' },
+  { value: 'restaurant_trial_months', label: 'Mois d\'essai restaurateur' }
+];
 
 export default function Admin() {
   const { token } = useAuth();
@@ -19,6 +24,12 @@ export default function Admin() {
   const [restaurants, setRestaurants] = useState(null);
   const [drivers, setDrivers] = useState(null);
   const [balanceInputs, setBalanceInputs] = useState({});
+  const [promoCodes, setPromoCodes] = useState(null);
+  const [newPromoCode, setNewPromoCode] = useState('');
+  const [newPromoType, setNewPromoType] = useState('client_balance');
+  const [newPromoValue, setNewPromoValue] = useState('');
+  const [newPromoMaxUses, setNewPromoMaxUses] = useState('');
+  const [creatingPromo, setCreatingPromo] = useState(false);
 
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [driverOrders, setDriverOrders] = useState(null);
@@ -39,8 +50,36 @@ export default function Admin() {
     if (tab === 'Avis' && reviews === null) api('/admin/reviews', { token }).then(setReviews).catch((e) => toast(e.message));
     if (tab === 'Restaurants' && restaurants === null) api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
     if (tab === 'Livreurs' && drivers === null) api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
+    if (tab === 'Codes promo' && promoCodes === null) api('/admin/promo-codes', { token }).then(setPromoCodes).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
+
+  async function createPromoCode() {
+    if (!newPromoCode.trim() || !newPromoValue) { toast('Code et valeur requis.'); return; }
+    setCreatingPromo(true);
+    try {
+      const created = await api('/admin/promo-codes', {
+        method: 'POST', token,
+        body: { code: newPromoCode.trim(), type: newPromoType, value: Number(newPromoValue), maxUses: newPromoMaxUses ? Number(newPromoMaxUses) : undefined }
+      });
+      setPromoCodes((prev) => [created, ...(prev || [])]);
+      setNewPromoCode(''); setNewPromoValue(''); setNewPromoMaxUses('');
+      toast(`Code ${created.code} créé.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCreatingPromo(false);
+    }
+  }
+
+  async function togglePromoCode(id, active) {
+    try {
+      const updated = await api(`/admin/promo-codes/${id}`, { method: 'PATCH', token, body: { active } });
+      setPromoCodes((prev) => prev.map((p) => (p.id === id ? updated : p)));
+    } catch (e) {
+      toast(e.message);
+    }
+  }
 
   function openDriver(d) {
     setSelectedDriver(d);
@@ -209,6 +248,59 @@ export default function Admin() {
               {(d.payoutIban || d.payoutAccountHolder) && (
                 <div className="small">💳 {d.payoutAccountHolder || '(titulaire non renseigné)'} — {d.payoutIban || '(IBAN non renseigné)'}</div>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'Codes promo' && (
+        <div>
+          <div className="card">
+            <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Créer un code promo</h3>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Code</label>
+                <input value={newPromoCode} onChange={(e) => setNewPromoCode(e.target.value)} placeholder="Ex: RESTO2MOIS" />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Type</label>
+                <select value={newPromoType} onChange={(e) => setNewPromoType(e.target.value)}>
+                  {PROMO_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Valeur ({newPromoType === 'client_balance' ? '€' : 'mois'})</label>
+                <input type="number" step="1" value={newPromoValue} onChange={(e) => setNewPromoValue(e.target.value)} placeholder={newPromoType === 'client_balance' ? '20' : '2'} />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>Utilisations max (optionnel)</label>
+                <input type="number" step="1" value={newPromoMaxUses} onChange={(e) => setNewPromoMaxUses(e.target.value)} placeholder="Illimité si vide" />
+              </div>
+            </div>
+            <button className="btn-teal" disabled={creatingPromo} onClick={createPromoCode}>{creatingPromo ? '...' : 'Créer le code'}</button>
+          </div>
+
+          {!promoCodes && <SkeletonCards count={3} />}
+          {promoCodes && promoCodes.length === 0 && <div className="empty">Aucun code promo.</div>}
+          {promoCodes && promoCodes.map((p) => (
+            <div className="card" key={p.id}>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <div>
+                  <b style={{ fontFamily: 'monospace', fontSize: 15 }}>{p.code}</b>{' '}
+                  <span className="pill teal" style={{ marginLeft: 6 }}>
+                    {p.type === 'client_balance' ? `${p.value}€ client` : `${p.value} mois offert(s) restaurateur`}
+                  </span>
+                  {!p.active && <span className="pill" style={{ marginLeft: 6, color: 'var(--red)' }}>Désactivé</span>}
+                </div>
+                <button className={p.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => togglePromoCode(p.id, !p.active)}>
+                  {p.active ? 'Désactiver' : 'Activer'}
+                </button>
+              </div>
+              <div className="small" style={{ marginTop: 4 }}>
+                {p.usesCount} utilisation(s){p.maxUses ? ` / ${p.maxUses} max` : ' (illimité)'}
+              </div>
             </div>
           ))}
         </div>

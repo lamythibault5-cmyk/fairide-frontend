@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
+import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Account from './pages/Account';
 import Admin from './pages/Admin';
@@ -22,6 +23,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Auth />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="/restaurants" element={<ProtectedRoute role="client"><RestaurantList /></ProtectedRoute>} />
         <Route path="/restaurants/:id" element={<ProtectedRoute role="client"><RestaurantMenu /></ProtectedRoute>} />

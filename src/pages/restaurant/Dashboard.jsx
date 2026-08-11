@@ -82,6 +82,7 @@ export default function Dashboard() {
 
   const [reviews, setReviews] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
   const [pausingSub, setPausingSub] = useState(false);
   const [resumingSub, setResumingSub] = useState(false);
   const [cancelingSub, setCancelingSub] = useState(false);
@@ -279,7 +280,7 @@ export default function Dashboard() {
   async function subscribeNow() {
     setSubscribing(true);
     try {
-      const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token });
+      const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token, body: { promoCode: promoCodeInput.trim() || undefined } });
       window.location.href = r.checkoutUrl;
     } catch (e) {
       toast(e.message);
@@ -575,9 +576,15 @@ export default function Dashboard() {
           )}
 
           {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && (
-            <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-              {subscribing ? '...' : "S'abonner — 20€/mois (1er mois offert)"}
-            </button>
+            <div>
+              <div className="field" style={{ maxWidth: 260 }}>
+                <label>Code promo (optionnel)</label>
+                <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder="Un code reçu ? Ajoute-le ici" />
+              </div>
+              <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
+                {subscribing ? '...' : "S'abonner — 20€/mois (1er mois offert)"}
+              </button>
+            </div>
           )}
           {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>

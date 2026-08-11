@@ -50,7 +50,11 @@ export default function Auth() {
   const [pendingEmail, setPendingEmail] = useState('');
   const [code, setCode] = useState('');
   const [resending, setResending] = useState(false);
-  const { login, register, verifyEmail, resendCode, loginWithGoogle } = useAuth();
+  const [forgotMode, setForgotMode] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSubmitted, setForgotSubmitted] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -176,6 +180,20 @@ export default function Auth() {
     }
   }
 
+  async function submitForgotPassword(e) {
+    e.preventDefault();
+    if (!forgotEmail.trim()) { toast('Entre ton adresse email.'); return; }
+    setForgotLoading(true);
+    try {
+      await forgotPassword(forgotEmail.trim());
+      setForgotSubmitted(true);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setForgotLoading(false);
+    }
+  }
+
   async function handleResend() {
     setResending(true);
     try {
@@ -189,6 +207,48 @@ export default function Auth() {
   }
 
   const decorClass = audience === 'partner' ? 'partner' : audience === 'client' ? 'client' : '';
+
+  if (forgotMode) {
+    return (
+      <div className={`decor-page auth-decor ${decorClass}`}>
+        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
+        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
+        <div className="auth-box">
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>Mot de passe oublié</h2>
+          {forgotSubmitted ? (
+            <>
+              <p className="small" style={{ marginBottom: 14 }}>
+                Si un compte existe avec l'adresse <b>{forgotEmail}</b>, un lien de réinitialisation vient de lui être envoyé par email. Il expire dans 1 heure.
+              </p>
+              <button className="btn-ghost" onClick={() => { setForgotMode(false); setForgotSubmitted(false); setForgotEmail(''); }}>
+                &larr; Retour à la connexion
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="small" style={{ marginBottom: 14 }}>
+                Entre ton adresse email, on t'enverra un lien pour choisir un nouveau mot de passe.
+              </p>
+              <form onSubmit={submitForgotPassword}>
+                <div className="field">
+                  <label>Email</label>
+                  <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="toi@exemple.com" />
+                </div>
+                <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
+                  {forgotLoading ? '...' : 'Envoyer le lien'}
+                </button>
+              </form>
+              <button className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setForgotMode(false)}>
+                &larr; Retour à la connexion
+              </button>
+            </>
+          )}
+        </div>
+        </div>
+      </div>
+    );
+  }
 
   if (pendingEmail) {
     return (
@@ -345,6 +405,11 @@ export default function Auth() {
               placeholder={mode === 'register' ? '5 caractères min., 1 majuscule, 1 minuscule' : 'Mot de passe'}
             />
           </div>
+          {mode === 'login' && (
+            <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
+              Mot de passe oublié ?
+            </button>
+          )}
           {mode === 'register' && (
             <div className="field">
               <label>Confirme ton mot de passe</label>
