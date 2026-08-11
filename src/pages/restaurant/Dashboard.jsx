@@ -6,7 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import {
   CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate,
-  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems
+  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage
 } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
@@ -483,15 +483,31 @@ export default function Dashboard() {
         )}
         {newRestoOpen && (
           <div style={{ marginTop: 10 }}>
-            <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+            <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
+              Une fois créé, Fairide te propose de générer ton menu et ta photo de couverture automatiquement — tu n'as que le strict nécessaire à remplir ici.
+            </p>
+
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Identité</h4>
+            <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
+            <div className="field">
+              <label>Type de commerce</label>
+              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+                {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
+              </select>
+            </div>
+            {cuisine === 'Autre' && (
+              <div className="field"><label>Précise le type</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+            )}
+
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Adresse (pour les livreurs et la carte)</h4>
             <div className="field">
               <label>Commune</label>
               <select value={commune} onChange={(e) => setCommune(e.target.value)}>
                 {COMMUNES.map((c) => <option key={c}>{c}</option>)}
               </select>
             </div>
-            <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
-            <div className="field"><label>Rue / Avenue (pour les livreurs et la carte)</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
+            <div className="field"><label>Rue / Avenue</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
                 <label>Numéro</label>
@@ -502,19 +518,14 @@ export default function Dashboard() {
                 <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
               </div>
             </div>
-            <div className="field">
-              <label>Type de restaurant</label>
-              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-                {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
-              </select>
-            </div>
-            {cuisine === 'Autre' && (
-              <div className="field"><label>Précise le type</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
-            )}
-            <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} /></div>
-            <div className="field"><label>Image de couverture (URL)</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
-            <div className="field"><label>Horaires d'ouverture (optionnel)</label><input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
-            <button className="btn-teal" onClick={createResto}>Créer</button>
+            <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
+
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Présentation (tout est optionnel)</h4>
+            <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Une phrase pour présenter ton commerce" /></div>
+            <div className="field"><label>Image de couverture (URL) — une photo par défaut est utilisée sinon</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+            <div className="field"><label>Horaires d'ouverture</label><input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
+            <button className="btn-teal" onClick={createResto}>Créer mon restaurant</button>
           </div>
         )}
       </div>
@@ -819,8 +830,8 @@ export default function Dashboard() {
                 <div className="card" style={{ border: '2px solid var(--teal)' }}>
                   <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
                   <p className="small" style={{ margin: '0 0 12px' }}>
-                    Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite —
-                    vous n'aurez plus qu'à modifier les prix, les photos et supprimer ce que vous ne vendez pas.
+                    Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite,
+                    avec photos incluses automatiquement — vous n'aurez plus qu'à ajuster les prix et supprimer ce que vous ne vendez pas.
                   </p>
                   <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                     <button className="btn-teal" disabled={applyingStarter} onClick={() => applyStarter('rapide')}>
@@ -865,37 +876,39 @@ export default function Dashboard() {
               />
 
               {(restaurant.menu.length > 0 || startChoiceMade) && (
-                <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                  <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
-                    {addingClassicDrinks ? '...' : '+ Ajouter les boissons classiques'}
-                  </button>
-                  <button type="button" className="btn-ghost" disabled={addingClassicDesserts} onClick={() => addClassics(CLASSIC_DESSERTS, 'dessert', setAddingClassicDesserts)}>
-                    {addingClassicDesserts ? '...' : '+ Ajouter les desserts classiques'}
-                  </button>
-                </div>
-              )}
-
-              {!templateOpen && (
-                <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Utiliser un menu de démarrage (par catégorie)</button>
-              )}
-              {templateOpen && (
-                <div className="card">
-                  <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Menu de démarrage — {restaurant.cuisine}</h3>
-                  <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter des plats types adaptés à ton type de restaurant — tu pourras ensuite les modifier ou les supprimer.</p>
-                  {CATEGORIES.map((cat) => (
-                    <label key={cat.value} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
-                      <input type="checkbox" style={{ width: 'auto' }} checked={templatePicked.has(cat.value)} onChange={() => toggleTemplateCategory(cat.value)} />
-                      <span>{cat.label}</span>
-                      <span className="small">({getStarterTemplate(restaurant.cuisine)[cat.value].map((i) => i.name).join(', ')})</span>
-                    </label>
-                  ))}
-                  <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                    <button className="btn-teal" disabled={addingTemplate} onClick={addStarterTemplate}>
-                      {addingTemplate ? '...' : 'Ajouter la sélection'}
+                <>
+                  <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
+                      {addingClassicDrinks ? '...' : '+ Ajouter les boissons classiques'}
                     </button>
-                    <button className="btn-ghost" onClick={() => setTemplateOpen(false)}>Annuler</button>
+                    <button type="button" className="btn-ghost" disabled={addingClassicDesserts} onClick={() => addClassics(CLASSIC_DESSERTS, 'dessert', setAddingClassicDesserts)}>
+                      {addingClassicDesserts ? '...' : '+ Ajouter les desserts classiques'}
+                    </button>
                   </div>
-                </div>
+
+                  {!templateOpen && (
+                    <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Piocher d'autres plats types dans le menu de démarrage</button>
+                  )}
+                  {templateOpen && (
+                    <div className="card">
+                      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Plats types — {restaurant.cuisine}</h3>
+                      <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter d'autres plats types (avec photos automatiques) adaptés à ton type de restaurant — tu pourras ensuite les modifier ou les supprimer.</p>
+                      {CATEGORIES.map((cat) => (
+                        <label key={cat.value} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
+                          <input type="checkbox" style={{ width: 'auto' }} checked={templatePicked.has(cat.value)} onChange={() => toggleTemplateCategory(cat.value)} />
+                          <span>{cat.label}</span>
+                          <span className="small">({getStarterTemplate(restaurant.cuisine)[cat.value].map((i) => i.name).join(', ')})</span>
+                        </label>
+                      ))}
+                      <div className="row" style={{ marginTop: 10, gap: 8 }}>
+                        <button className="btn-teal" disabled={addingTemplate} onClick={addStarterTemplate}>
+                          {addingTemplate ? '...' : 'Ajouter la sélection'}
+                        </button>
+                        <button className="btn-ghost" onClick={() => setTemplateOpen(false)}>Annuler</button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <div className="card">
@@ -908,7 +921,15 @@ export default function Dashboard() {
                     {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                   </select>
                 </div>
-                <div className="field"><label>Image (URL)</label><input value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="https://..." /></div>
+                <div className="field">
+                  <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
+                  <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                    {itemName.trim() && (
+                      <img src={itemImageUrl || defaultItemImage({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                    )}
+                    <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+                  </div>
+                </div>
                 <button className="btn-teal" onClick={addMenuItem}>Ajouter au menu</button>
               </div>
             </div>

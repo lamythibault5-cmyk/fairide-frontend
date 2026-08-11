@@ -995,8 +995,136 @@ const KEYWORD_IMAGES = [
   { keywords: ['soupe', 'soup', 'velouté', 'veloute'], image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=300&q=80' }
 ];
 
+const U = (id) => `https://images.unsplash.com/photo-${id}?w=300&q=80`;
+
+// Images assignées par nom exact de plat : garantit qu'au sein d'un même menu, deux plats différents
+// n'affichent jamais la même photo. Deux restos avec le même plat (même nom) partagent volontairement
+// la même image — c'est le comportement voulu, pas un doublon. Sert de première passe avant le
+// matching par mot-clé (KEYWORD_IMAGES) ci-dessus, qui reste le filet de sécurité pour les plats
+// que le restaurateur tape lui-même et qui ne figurent pas dans les menus de démarrage.
+const ITEM_IMAGE_OVERRIDES = {
+  // --- Pizza (désambiguïsation des variantes qui partageaient toutes la même photo) ---
+  'quattro stagioni': U('1671106681075-5a7233268cbd'),
+  'capricciosa': U('1585238342024-78d387f4a707'),
+  'parma': U('1550401728-539ebf40d9e9'),
+  'mortadella & pistacchio': U('1716237388431-c6e5f4b754c7'),
+  'prosciutto e funghi': U('1617470702892-e01504297e84'),
+  'vegetariana': U('1621998257812-20849f2491f3'),
+  'calzone': U('1753656681797-3234c89d6d4d'),
+  'marinara': U('1559183533-ee5f4826d3db'),
+  'napoli': U('1707551624156-bb6369857026'),
+  'bruschetta al pomodoro': U('1594978583693-8dfdfc93f052'),
+  'antipasti italiani': U('1536739782508-c2388552aad3'),
+  'acqua panna': U('1523362628745-0c100150b504'),
+  'aranciata san pellegrino': U('1689066117649-0ca9762fc92c'),
+  'cannoli siciliani': U('1749767138348-2e5bf1cbcef2'),
+  'cannoli': U('1749767138348-2e5bf1cbcef2'),
+
+  // --- Italien (entrées qui partageaient toutes la même photo "burrata") ---
+  'caprese': U('1630230596637-28f416b537ff'),
+  'antipasti': U('1598309141235-06d295271f81'),
+  'bruschetta': U('1572695157366-5e585ab2b69f'),
+
+  // --- Sushi (nigiri/box/mix qui partageaient toutes la même photo) ---
+  'tuna nigiri ×2': U('1617196034796-73dfa7b1fd56'),
+  'salmon box': U('1709984110217-57d7d18e5299'),
+  'california box': U('1653122024993-31e02aedb1ac'),
+  'sushi mix': U('1636425730695-febe95eda12e'),
+
+  // --- Sandwichs (Boulangerie / Night Shop — jusqu'à 9 plats partageaient la même photo) ---
+  'sandwich jambon-fromage': U('1481070414801-51fd732d7184'),
+  'panini jambon-fromage': U('1481070414801-51fd732d7184'),
+  'sandwich poulet-crudités': U('1554433607-66b5efe9d304'),
+  'sandwich poulet': U('1554433607-66b5efe9d304'),
+  'sandwich thon-crudités': U('1655279562015-047c3da9a271'),
+  'sandwich végétarien': U('1528736235302-52922df5c122'),
+  'sandwich saumon-fromage frais': U('1539252554453-80ab65ce3586'),
+  'wrap poulet curry': U('1496113269490-84ffe1a410cb'),
+  'croque-monsieur': U('1540713434306-58505cf1b6fc'),
+  'panini poulet': U('1559054663-e8d23213f55c'),
+  'formule sandwich + boisson': U('1553909489-cd47e0907980'),
+  'pack soirée (sandwich, chips & boisson)': U('1553909489-cd47e0907980'),
+  'sandwich thon': U('1528735602780-2552fd46c7af'),
+
+  // --- Apéro / chips (Supermarché / Night Shop — jusqu'à 8 produits partageaient la même photo) ---
+  'chips nature 150g': U('1647764430080-6000fbe7efee'),
+  'chips 150g': U('1736883624742-61826190b91a'),
+  'cacahuètes salées': U('1626697556426-8a55a8af4999'),
+  'chips paprika 150g': U('1641693148759-843d17ceac24'),
+  'olives marinées 200g': U('1786175705114-8757e45fae8b'),
+  'olives marinées': U('1786175705114-8757e45fae8b'),
+  'crackers apéro 100g': U('1708746333890-8e775f97f0a6'),
+  'mix apéro noix 150g': U('1616252576862-bd9abd7467f9'),
+  'mix apéro': U('1701341964637-94945a277fe0'),
+  'saucisson sec': U('1764436988814-4eff7322ee9c'),
+  'fruits secs mélangés 200g': U('1600189020840-e9918c25269d'),
+
+  // --- Boulangerie (viennoiseries et tartes qui partageaient toutes la même photo) ---
+  'pain aux raisins': U('1498099916438-d96f52d0c7ff'),
+  'chausson aux pommes': U('1530610476181-d83430b64dcd'),
+  'muffin myrtille': U('1702742322469-36315505728f'),
+  'financier amande': U('1635348965813-fa7d0dfb99d2'),
+  'cannelé': U('1483695028939-5bb13f8648b0'),
+  'baguette tradition': U('1587912001191-0cd4f14fd89e'),
+  'tarte flamiche': U('1564354273277-c6d4b8532100'),
+  'pain au chocolat': U('1715187985248-84b03aabe629'),
+  'éclair au chocolat': U('1701551706185-eeb97b17de55'),
+  'cookie pépites': U('1499636136210-6f4ee915583e'),
+  'tarte citron meringuée': U('1683806627629-a7edf7262176'),
+
+  // --- Sushi (rolls et maki qui partageaient tous la même photo) ---
+  'cucumber maki ×6': U('1579871494447-9811cf80d66c'),
+  'salmon maki ×6': U('1582450871972-ab5ca641643d'),
+  'tuna maki ×6': U('1635526910429-051cf1ed127e'),
+  'spicy tuna roll ×8': U('1633478062482-790e3b5dd810'),
+  'salmon avocado roll ×8': U('1730900737644-e146f78db8e7'),
+  'crispy chicken roll ×8': U('1648146299257-080ffe5968f8'),
+  'shrimp tempura roll ×8': U('1580822184713-fc5400e7fe10'),
+
+  // --- Asiatique (nouilles/teriyaki/gyoza qui partageaient toutes la même photo) ---
+  'chicken teriyaki noodles': U('1619371042685-827b1c646923'),
+  'beef teriyaki noodles': U('1619371000980-ec90e765eb32'),
+  'chicken teriyaki': U('1695606452836-c3c6e62d407b'),
+  'beef teriyaki': U('1732988978816-ce0c78c79f4c'),
+  'shrimp pad thai': U('1619371067654-315ebd0f0087'),
+  'vegetable pad thai': U('1732988978863-ea51837b5f54'),
+  'spicy chicken noodles': U('1707546944460-dda9069b9c1e'),
+  'singapore noodles': U('1645500498403-970672caf43e'),
+  'chicken gyoza': U('1638502338747-f7f368214cce'),
+  'vegetable gyoza': U('1551638059-d1fb82606c4a'),
+  'chicken spring rolls': U('1638502521795-89107ac5e246'),
+  'gyoza chicken': U('1638502338747-f7f368214cce'),
+  'gyoza vegetable': U('1551638059-d1fb82606c4a'),
+
+  // --- Mexicain (burritos et tacos qui partageaient tous la même photo) ---
+  'beef burrito': U('1671572579845-52270341950f'),
+  'pulled pork burrito': U('1731090389603-d63060ee08a6'),
+  'spicy chicken burrito': U('1731090389457-7e62135a657f'),
+  'veggie burrito': U('1731090389462-351421240be9'),
+  'vegan burrito': U('1722239315206-95b344366a62'),
+  'beef tacos ×3': U('1768716575089-7ba787da9afb'),
+  'pulled pork tacos ×3': U('1746648858213-c7b5d2e34265'),
+  'shrimp tacos ×3': U('1768716697811-75b2ce9c5b54'),
+  'veggie tacos ×3': U('1768716575003-2f7450b1344a'),
+
+  // --- Kebab & Grill (kebabs, durums et menus qui partageaient tous la même photo) ---
+  'menu kebab poulet (frites & boisson)': U('1676471980189-08de3e001215'),
+  'menu durum bœuf (frites & boisson)': U('1594489883219-010b0e5eeb9d'),
+  'menu mixed grill (frites & boisson)': U('1653982960203-c8361d7bed96'),
+  'menu adana (frites & boisson)': U('1620167789273-d66c723fe754'),
+  'assiette mixte grillades': U('1532636875304-0c89119d9b4d'),
+  'chawarma bœuf': U('1620167790054-de54f34308bb'),
+  'durum végétarien': U('1748955308143-5055af50bba6'),
+  'durum poulet': U('1644364935906-792b2245a2c0'),
+  'adana kebab': U('1565560665129-4831aa15206c'),
+  'shish taouk': U('1629450748686-c86699b710ac'),
+  'beyti kebab': U('1676300186554-671b04fed976'),
+  'kofte grillé': U('1733860539640-cfb176102773')
+};
+
 export function defaultItemImage(item) {
-  const name = (item?.name || '').toLowerCase();
+  const name = (item?.name || '').toLowerCase().trim();
+  if (ITEM_IMAGE_OVERRIDES[name]) return ITEM_IMAGE_OVERRIDES[name];
   for (const entry of KEYWORD_IMAGES) {
     if (entry.keywords.some((k) => name.includes(k))) return entry.image;
   }

@@ -60,7 +60,13 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
             {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
           </select>
         </div>
-        <div className="field"><label>Image (URL)</label><input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="https://..." /></div>
+        <div className="field">
+          <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
+          <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+            <img src={imageUrl || defaultItemImage({ name, category })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+          </div>
+        </div>
         {allOptionGroups.length > 0 && (
           <div className="field">
             <label>Groupes d'options</label>
