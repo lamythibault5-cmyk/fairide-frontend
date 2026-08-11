@@ -823,6 +823,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['mediterranean bowl', 'avocado quinoa bowl', 'protein chicken bowl', 'falafel bowl'], image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80' },
   { keywords: ['açai', 'acai'], image: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=300&q=80' },
   { keywords: ['chia'], image: 'https://images.unsplash.com/photo-1517093157656-b9eccef91cb1?w=300&q=80' },
+  { keywords: ['yaourt', 'yoghurt', 'yogurt', 'compote'], image: 'https://images.unsplash.com/photo-1571212515416-fef01fc43637?w=300&q=80' },
   { keywords: ['energy balls', 'barres céréales', 'barres cereales'], image: 'https://images.unsplash.com/photo-1505253758473-96b7015fcd40?w=300&q=80' },
   { keywords: ['galettes de quinoa', 'quinoa'], image: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80' },
   { keywords: ['perles de coco'], image: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&q=80' },
@@ -882,7 +883,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['café', 'cafe', 'expresso', 'espresso'], image: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80' },
   { keywords: ['bière', 'biere'], image: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=300&q=80' },
   { keywords: ['vin', 'prosecco', 'chianti', 'limoncello'], image: 'https://images.unsplash.com/photo-1608198093002-ad4e005484ec?w=300&q=80' },
-  { keywords: ['jus', 'aranciata', 'lemonata'], image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&q=80' },
+  { keywords: ['jus', 'aranciata', 'lemonata', 'mango drink', 'pack sodas', 'pack de sodas'], image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&q=80' },
   { keywords: ['thé', 'the', 'tea'], image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=300&q=80' },
   { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair', 'cramique', 'financier', 'cannelé', 'canele', 'muffin', 'baguette', 'chausson'], image: 'https://images.unsplash.com/photo-1512058564366-18510be2db19?w=300&q=80' },
   { keywords: ['poulet', 'chicken', 'beignet'], image: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=300&q=80' },
@@ -890,6 +891,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['saumon', 'salmon', 'poisson', 'thon', 'tuna', 'shrimp', 'crevette'], image: 'https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?w=300&q=80' },
   { keywords: ['chips', 'cacahuète', 'cacahuete', 'bretzel', 'apéro', 'apero', 'olives', 'biltong', 'saucisson', 'fruits secs'], image: 'https://images.unsplash.com/photo-1550547660-d9450f859349?w=300&q=80' },
   { keywords: ['légume', 'legume', 'quiche'], image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=300&q=80' },
+  { keywords: ['œufs', 'oeufs', 'eggs'], image: 'https://images.unsplash.com/photo-1518569656558-1f25e69d93d7?w=300&q=80' },
   { keywords: ['salade', 'bowl', 'buddha'], image: 'https://images.unsplash.com/photo-1547592166-23ac45744acd?w=300&q=80' },
   { keywords: ['soupe', 'soup', 'velouté', 'veloute'], image: 'https://images.unsplash.com/photo-1547592180-85f173990554?w=300&q=80' }
 ];
