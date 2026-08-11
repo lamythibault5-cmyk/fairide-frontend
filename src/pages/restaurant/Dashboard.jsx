@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -602,7 +603,7 @@ export default function Dashboard() {
         </>
       )}
 
-      {selectedOrder && (
+      {selectedOrder && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
@@ -649,7 +650,8 @@ export default function Dashboard() {
             )}
             <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedOrder(null)}>Fermer</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -213,7 +214,7 @@ export default function Admin() {
         </div>
       )}
 
-      {selectedDriver && (
+      {selectedDriver && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedDriver(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 8px' }}>{selectedDriver.name}</h3>
@@ -237,10 +238,11 @@ export default function Admin() {
             ))}
             <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedDriver(null)}>Fermer</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {selectedRestaurant && (
+      {selectedRestaurant && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedRestaurant(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 8px' }}>{selectedRestaurant.name}</h3>
@@ -271,7 +273,8 @@ export default function Admin() {
             ))}
             <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedRestaurant(null)}>Fermer</button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
