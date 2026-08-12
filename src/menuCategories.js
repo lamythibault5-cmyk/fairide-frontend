@@ -33,6 +33,7 @@ export const RESTAURANT_TYPES = [
   { value: 'Mexicain', emoji: '🌮' },
   { value: 'Libanais', emoji: '🧆' },
   { value: 'Fried Chicken', emoji: '🍗' },
+  { value: 'Coffee Shop', emoji: '☕' },
   { value: 'Boulangerie', emoji: '🥐' },
   { value: 'Boucherie', emoji: '🥩' },
   { value: 'Supermarché', emoji: '🛒' },
@@ -614,6 +615,50 @@ const TYPE_TEMPLATES = {
       { name: 'Thé turc', price: 2.5, desc: '' },
       { name: 'Citronnade', price: 3.5, desc: '' },
       { name: 'Boza', price: 3.5, desc: '' }
+    ]
+  },
+  'Coffee Shop': {
+    entree: [
+      { name: 'Granola Bowl', price: 5.5, desc: 'Yaourt, fruits frais, miel' },
+      { name: 'Yaourt Grec & Miel', price: 4.5, desc: '' },
+      { name: 'Salade de Fruits Frais', price: 4.8, desc: '' },
+      { name: 'Energy Balls (3)', price: 3.5, desc: '' }
+    ],
+    plat: [
+      { name: 'Avocado Toast', price: 7.5, desc: '' },
+      { name: 'Bagel Saumon', price: 8.5, desc: '' },
+      { name: 'Club Sandwich', price: 7.9, desc: '' },
+      { name: 'Panini Poulet Pesto', price: 6.9, desc: '' },
+      { name: 'Wrap Poulet Curry', price: 6.5, desc: '' },
+      { name: 'Quiche du jour', price: 5.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Croissant', price: 1.8, desc: '' },
+      { name: 'Pain au chocolat', price: 1.9, desc: '' },
+      { name: 'Muffin myrtille', price: 3.2, desc: '' },
+      { name: 'Cookie pépites', price: 2.8, desc: '' },
+      { name: 'Carrot Cake', price: 4.5, desc: '' },
+      { name: 'New York Cheesecake', price: 4.8, desc: '' },
+      { name: 'Cinnamon Roll', price: 3.9, desc: '' },
+      { name: 'Banana Bread', price: 3.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Espresso', price: 2.2, desc: '' },
+      { name: 'Americano', price: 2.8, desc: '' },
+      { name: 'Cappuccino', price: 3.5, desc: '' },
+      { name: 'Café Latte', price: 3.8, desc: '' },
+      { name: 'Flat White', price: 3.9, desc: '' },
+      { name: 'Caramel Macchiato', price: 4.5, desc: '' },
+      { name: 'Mocha', price: 4.5, desc: '' },
+      { name: 'Cold Brew', price: 4.2, desc: '' },
+      { name: 'Iced Latte', price: 4.2, desc: '' },
+      { name: 'Matcha Latte', price: 4.5, desc: '' },
+      { name: 'Iced Matcha Latte', price: 4.8, desc: '' },
+      { name: 'Chai Latte', price: 4.2, desc: '' },
+      { name: 'Thé Earl Grey', price: 2.8, desc: '' },
+      { name: 'Chocolat chaud', price: 3.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 2.2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2.2, desc: '' }
     ]
   },
   Boulangerie: {
@@ -1352,7 +1397,27 @@ const ITEM_IMAGE_OVERRIDES = {
   'homemade limeade': U('1621263764928-df1444c5e859'),
   'green smoothie': U('1633096013004-e2cb4023b560'),
   'mango smoothie': U('1604298331663-de303fbc7059'),
-  'ramune lychee': U('1663870316229-cb3986d34e8c')
+  'ramune lychee': U('1663870316229-cb3986d34e8c'),
+
+  // --- Coffee Shop ---
+  'americano': U('1514432324607-a09d9b4aefdd'),
+  'cappuccino': U('1670404161009-29548c027d06'),
+  'café latte': U('1506372023823-741c83b836fe'),
+  'flat white': U('1497636577773-f1231844b336'),
+  'caramel macchiato': U('1570517130750-10c67ffdde09'),
+  'mocha': U('1619286310410-a95de97b0aec'),
+  'cold brew': U('1562878424-0da674456d33'),
+  'iced latte': U('1620360289100-030b032e5a27'),
+  'iced matcha latte': U('1631679263367-9095fca628de'),
+  'chai latte': U('1636920272028-c27f1ae474c3'),
+  'croissant': U('1587912001191-0cd4f14fd89e'),
+  'carrot cake': U('1676300186098-9b5ae9916e3c'),
+  'cinnamon roll': U('1585190775852-3e6bb2b80184'),
+  'banana bread': U('1621955629759-5a2d9f99c4e7'),
+  'bagel saumon': U('1613152834645-875f24eb961c'),
+  'club sandwich': U('1567234669003-dce7a7a88821'),
+  'panini poulet pesto': U('1621852004158-f3bc188ace2d'),
+  'granola bowl': U('1612182062572-e29c5dfb5eb4')
 };
 
 export function defaultItemImage(item) {
