@@ -108,6 +108,8 @@ export default function Dashboard() {
       setMyRestos(list);
       // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
       if (list.length === 1) pickResto(list[0].id);
+      // Pas encore de restaurant -> on ouvre directement le formulaire de création, pas besoin de cliquer.
+      else if (list.length === 0) setNewRestoOpen(true);
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
