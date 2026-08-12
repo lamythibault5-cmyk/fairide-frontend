@@ -167,6 +167,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .status-livraison { background: rgba(22,35,58,0.08); color: var(--ink); }
 .status-livre { background: #e8f3ee; color: var(--teal-deep); }
 .status-refuse { background: rgba(181,72,46,0.12); color: var(--red); }
+.status-annule { background: rgba(181,72,46,0.12); color: var(--red); }
 
 /* Couleur du type de commande, pour repérer d'un coup d'œil : jaune = livraison, bleu = à emporter,
    orange = heure programmée (prioritaire sur le type). Voir orderTypeColor() dans orderStatus.jsx. */

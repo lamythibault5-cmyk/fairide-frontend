@@ -98,6 +98,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
   const { token } = useAuth();
   const toast = useToast();
 
@@ -109,6 +110,20 @@ export default function Orders() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Le client peut annuler tant que la commande n'est pas payée, quel que soit son statut par ailleurs.
+  async function cancelOrder(orderId) {
+    setCancellingId(orderId);
+    try {
+      const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
+      setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
+      toast('Commande annulée.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCancellingId(null);
+    }
+  }
 
   if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>Mes commandes</h2><SkeletonCards count={3} /></div>;
   if (orders.length === 0) return <div className="empty">Tu n'as pas encore passé de commande.</div>;
@@ -161,6 +176,17 @@ export default function Orders() {
             <span className="small">{o.paid ? '✅ Payée' : '⏳ Paiement en attente'}</span>
             <b>{o.total.toFixed(2)}€</b>
           </div>
+
+          {!o.paid && o.status !== 'annule' && o.status !== 'refuse' && (
+            <button
+              className="btn-ghost"
+              style={{ marginTop: 8, color: 'var(--red)' }}
+              disabled={cancellingId === o.id}
+              onClick={() => cancelOrder(o.id)}
+            >
+              {cancellingId === o.id ? '...' : 'Annuler ma commande'}
+            </button>
+          )}
 
           {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (
             <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>⭐ Laisser un avis</button>

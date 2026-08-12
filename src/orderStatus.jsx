@@ -29,7 +29,8 @@ export function statusLabel(status, orderType) {
     pret: 'Prête',
     livraison: 'En livraison',
     livre: 'Livrée',
-    refuse: 'Refusée'
+    refuse: 'Refusée',
+    annule: 'Annulée'
   }[status] || status;
 }
 
@@ -59,7 +60,7 @@ function formatDateTime(ms) {
 
 export function DeliveryTiming({ order }) {
   const { createdAt, estimatedDeliveryAt, status, orderType, scheduledFor } = order;
-  if (status === 'refuse') return null;
+  if (status === 'refuse' || status === 'annule') return null;
 
   const isPickup = orderType === 'pickup';
   const doneStatus = 'livre';
@@ -94,6 +95,9 @@ export function DeliveryTiming({ order }) {
 export function ProgressBar({ status, orderType }) {
   if (status === 'refuse') {
     return <p className="small" style={{ color: 'var(--red)' }}>Commande refusée par le restaurant.</p>;
+  }
+  if (status === 'annule') {
+    return <p className="small" style={{ color: 'var(--red)' }}>Commande annulée.</p>;
   }
   const steps = orderType === 'pickup' ? PICKUP_STEPS : STEPS;
   const labels = orderType === 'pickup' ? PICKUP_LABELS : LABELS;

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -64,9 +64,11 @@ export default function RestaurantMenu() {
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const pendingOrderRef = useRef(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -77,6 +79,14 @@ export default function RestaurantMenu() {
     api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Le client attend qu'on l'amène directement au résumé de sa commande après avoir cliqué "Commander",
+  // plutôt que de devoir chercher la carte de confirmation plus bas dans la page.
+  useEffect(() => {
+    if (pendingOrder && pendingOrderRef.current) {
+      pendingOrderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [pendingOrder]);
 
   if (!restaurant) return <SkeletonCards count={3} />;
 
@@ -116,6 +126,20 @@ export default function RestaurantMenu() {
     } catch (e) {
       toast(e.message);
       setPaying(false);
+    }
+  }
+
+  async function cancelOrder() {
+    setCancelling(true);
+    try {
+      await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
+      toast('Commande annulée.');
+      setPendingOrder(null);
+      if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCancelling(false);
     }
   }
 
@@ -341,49 +365,47 @@ export default function RestaurantMenu() {
       )}
 
       {pendingOrder && (
-        <div className="card">
+        <div className="card" ref={pendingOrderRef}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
           {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
             <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
           )}
 
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
-            {pendingOrder.orderType === 'delivery' ? (
-              <>
-                <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>📍 Vérifie tes informations de livraison</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
-                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
-                {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: '0 0 8px' }}><b>📅 Livraison programmée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: '0 0 8px' }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>🏠 Vérifie les informations de retrait</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
-                {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: '0 0 8px' }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: '0 0 8px' }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
-                )}
-              </>
-            )}
-            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: 0 }}>
+            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 8px' }}>
               <input
                 type="checkbox"
                 checked={deliveryConfirmed}
                 onChange={(e) => setDeliveryConfirmed(e.target.checked)}
                 style={{ marginTop: 2 }}
               />
-              <span className="small">
+              <span className="small" style={{ fontWeight: 600 }}>
                 {pendingOrder.orderType === 'delivery'
-                  ? 'Je confirme que ces informations de livraison sont correctes'
-                  : 'Je confirme vouloir venir chercher ma commande moi-même'}
+                  ? '📍 Je confirme que mes informations de livraison sont correctes'
+                  : "🏠 Je confirme vouloir venir chercher ma commande moi-même"}
               </span>
             </label>
+            {pendingOrder.orderType === 'delivery' ? (
+              <>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
+                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
+                {pendingOrder.scheduledFor ? (
+                  <p className="small" style={{ margin: 0 }}><b>📅 Livraison programmée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                ) : pendingOrder.estimatedDeliveryAt && (
+                  <p className="small" style={{ margin: 0 }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
+                {pendingOrder.scheduledFor ? (
+                  <p className="small" style={{ margin: 0 }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                ) : pendingOrder.estimatedDeliveryAt && (
+                  <p className="small" style={{ margin: 0 }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                )}
+              </>
+            )}
           </div>
 
           <div className="breakdown">
@@ -403,8 +425,8 @@ export default function RestaurantMenu() {
             <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer avant de payer.</p>
           )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <button className="btn-gold" disabled={paying || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
-            <button className="btn-ghost" disabled={paying} onClick={() => setPendingOrder(null)}>Annuler</button>
+            <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
+            <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : 'Annuler'}</button>
           </div>
         </div>
       )}
