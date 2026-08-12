@@ -643,8 +643,9 @@ export default function Dashboard() {
             <>
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>✅ Essai gratuit en cours</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Ton restaurant est visible aux clients. {restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : 'Premier mois offert'}
-                {restaurant.subscriptionCurrentPeriodEnd ? ` — premier prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : '.'}
+                Ton restaurant est visible aux clients. Le premier mois est offert pour tout restaurant, dans tous les cas
+                {restaurant.freeTrialMonths > 1 ? ` — et comme ton restaurant fait partie des premiers inscrits sur Fairide, tu profites en réalité de ${restaurant.freeTrialMonths} mois offerts au total` : ''}
+                {restaurant.subscriptionCurrentPeriodEnd ? ` (premier prélèvement de 20€ le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}).` : '.'}
               </p>
             </>
           )}
@@ -683,10 +684,12 @@ export default function Dashboard() {
             <>
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🔒 Restaurant pas encore visible aux clients</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes —
+                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
+                Le premier mois est offert pour tout restaurant, dans tous les cas — et Fairide offre aussi 3 mois aux 50 premiers
+                restaurants inscrits sur la plateforme, puis 2 mois aux 100 suivants.
                 {restaurant.freeTrialMonths > 1
-                  ? ` ${restaurant.freeTrialMonths} mois offerts (parmi les premiers restos sur Fairide !), tu ne seras débité qu'au mois suivant.`
-                  : ' le premier mois est offert, tu ne seras débité qu\'au mois suivant.'}
+                  ? ` Ton restaurant fait partie de ceux-là : tu profites de ${restaurant.freeTrialMonths} mois offerts au total, tu ne seras débité qu'au mois suivant.`
+                  : ' Tu ne seras débité qu\'au mois suivant.'}
               </p>
             </>
           )}
