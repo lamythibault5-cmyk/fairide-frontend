@@ -90,9 +90,7 @@ const TYPE_TEMPLATES = {
     dessert: [
       { name: 'Chocolate Brownie', price: 4.5, desc: '' },
       { name: 'New York Cheesecake', price: 5.5, desc: '' },
-      { name: 'Chocolate Chip Cookie', price: 3, desc: '' },
-      { name: 'Oreo Milkshake', price: 5.9, desc: '' },
-      { name: 'Vanilla Milkshake', price: 5.5, desc: '' }
+      { name: 'Chocolate Chip Cookie', price: 3, desc: '' }
     ],
     boisson: [
       { name: 'Coca-Cola', price: 2.8, desc: '' },
@@ -103,6 +101,7 @@ const TYPE_TEMPLATES = {
       { name: 'Fanta', price: 2.8, desc: '' },
       { name: 'Homemade Lemonade', price: 4, desc: '' },
       { name: 'Root Beer', price: 3.2, desc: '' },
+      { name: 'Oreo Milkshake', price: 5.9, desc: '' },
       { name: 'Vanilla Milkshake', price: 5.5, desc: '' },
       { name: 'Iced Tea', price: 3, desc: '' }
     ]
@@ -1151,6 +1150,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['limonade', 'lemonade', 'limeade', 'citronnade', 'limonata', 'lemon mint'], image: 'https://images.unsplash.com/photo-1621263764928-df1444c5e859?w=300&q=80' },
   { keywords: ['energy drink'], image: 'https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=300&q=80' },
   { keywords: ['root beer'], image: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=300&q=80' },
+  { keywords: ['coca-cola zero', 'coca zero', 'coke zero'], image: 'https://images.unsplash.com/photo-1543253687-c931c8e01820?w=300&q=80' },
   { keywords: ['coca', 'soda cola'], image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=300&q=80' },
   { keywords: ['eau pétillante', 'eau petillante', 'sparkling water', "san pellegrino", 'acqua panna', 'spa reine'], image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300&q=80' },
   { keywords: ['eau plate', 'still water', 'eau citronnée'], image: 'https://images.unsplash.com/photo-1534616042650-80f5c9b61f09?w=300&q=80' },
@@ -1206,10 +1206,11 @@ const ITEM_IMAGE_OVERRIDES = {
   'bruschetta': U('1572695157366-5e585ab2b69f'),
 
   // --- Sushi (nigiri/box/mix qui partageaient toutes la même photo) ---
-  'tuna nigiri ×2': U('1579584425555-c3ce17fd4351'),
+  'tuna nigiri ×2': U('1772285268647-11deb0bdbe29'),
   'salmon box': U('1693082146027-2062d794f305'),
   'california box': U('1653122024993-31e02aedb1ac'),
   'sushi mix': U('1636425730695-febe95eda12e'),
+  'mochi coconut': U('1763469024755-a19c6a13ef11'),
 
   // --- Sandwichs (Boulangerie / Night Shop — jusqu'à 9 plats partageaient la même photo) ---
   'sandwich jambon-fromage': U('1647505794572-0a6d945d664d'),
@@ -1246,7 +1247,8 @@ const ITEM_IMAGE_OVERRIDES = {
   'financier amande': U('1638518909918-27910011e4d6'),
   'cannelé': U('1593353994452-97b4560c50c2'),
   'baguette tradition': U('1586765501019-cbe3973ef8fa'),
-  'tarte flamiche': U('1650844010413-3f24dc1c182b'),
+  'tarte flamiche': U('1633205772834-c0b9943c5a54'),
+  'formule quiche + salade': U('1767065584079-87834f242fe9'),
   'pain au chocolat': U('1613929231151-d7571591259e'),
   'éclair au chocolat': U('1774119649906-c82806125e23'),
   'cookie pépites': U('1499636136210-6f4ee915583e'),
@@ -1292,7 +1294,8 @@ const ITEM_IMAGE_OVERRIDES = {
   'menu durum bœuf (frites & boisson)': U('1719282431723-9d0f4370d4bc'),
   'menu mixed grill (frites & boisson)': U('1702827487086-9ab8a573d825'),
   'menu adana (frites & boisson)': U('1580121676785-ea9ca33e3fb2'),
-  'assiette mixte grillades': U('1532636875304-0c89119d9b4d'),
+  'assiette mixte grillades': U('1750190624608-57ceddba8d69'),
+  'cigares au fromage (5pcs)': U('1747045142479-8c29f86307cd'),
   'chawarma bœuf': U('1777199298385-07e46ccc2004'),
   'durum végétarien': U('1743187363021-2a89f881937f'),
   'durum poulet': U('1719282431565-3b30bb7d2658'),
@@ -1350,19 +1353,25 @@ const ITEM_IMAGE_OVERRIDES = {
   'carbonade flamande': U('1445979323117-80453f573b71'),
   'lapin à la bière': U('1596797038530-2c107229654b'),
   'steak tartare préparé': U('1785517605613-e55a1470305d'),
+  'vin blanc': U('1579721333016-b58535cc0dc3'),
 
   // --- Burgers / Fried Chicken (variantes qui partageaient toutes la même photo) ---
-  'spicy chicken burger': U('1610440042657-612c34d95e9f'),
+  'spicy chicken burger': U('1705131186176-1c7cdb830815'),
   'avocado chicken burger': U('1596649299486-4cdea56fd59d'),
   'truffle burger': U('1609167830220-7164aa360951'),
   'oklahoma onion burger': U('1611698529094-6a518c46a0de'),
   'chicken burger menu': U('1609167830240-fc81e9cfd9bf'),
+  'double smash burger': U('1572802419224-296b0aeee0d9'),
+  'bbq bacon burger': U('1610614819513-58e34989848b'),
+  'bacon & cheese fries': U('1743193711514-4f7bc5d78d4d'),
+  'oreo milkshake': U('1641665271888-575e46923776'),
 
   // --- Asiatique ---
   'thai green curry chicken': U('1761315412830-2f59480377b0'),
   'thai red curry beef': U('1761314037211-63fff18c5187'),
   'beef fried rice': U('1578160112054-954a67602b88'),
   'vegetable fried rice': U('1765872690457-2b1d2b8ca6d8'),
+  'spicy edamame': U('1724705341631-8f62faaf9014'),
 
   // --- Sushi ---
   'salmon lovers': U('1607301406259-dfb186e15de8'),
@@ -1375,6 +1384,9 @@ const ITEM_IMAGE_OVERRIDES = {
   'spicy shrimp bowl': U('1602881917760-7379db593981'),
   'nachos & guacamole': U('1680350681703-5879c3be90d3'),
   'loaded nachos': U('1513456852971-30c0b8199d4d'),
+  'black beans': U('1647545401750-6dd5539879ac'),
+  'quesadilla cheese': U('1719957770167-bb66133ba808'),
+  'churros & chocolate': U('1779119512166-a3a01cd81a91'),
 
   // --- Libanais ---
   'beef shawarma': U('1665989215795-f67f4723087d'),
@@ -1386,6 +1398,12 @@ const ITEM_IMAGE_OVERRIDES = {
   'falafel plate': U('1701688596783-231b3764ef67'),
   'vegetarian mezze': U('1670165088604-5a39f5c1be51'),
   'mixed mezze': U('1718801594068-a7b7c5aeccb4'),
+  'hummus beiruti': U('1637949385162-e416fb15b2ce'),
+  'baba ganoush': U('1700481947515-7a162cbe4df7'),
+  'fattoush': U('1581570378868-0a0a8656fb77'),
+  'halloumi wrap': U('1748955308143-5055af50bba6'),
+  'jallab': U('1630184799082-05623dbdc7f7'),
+  'tamarind juice': U('1613518972312-267f92ae4aa2'),
 
   // --- Healthy ---
   'spicy salmon poke': U('1780805663865-c9ab052da2e4'),
@@ -1397,15 +1415,17 @@ const ITEM_IMAGE_OVERRIDES = {
   'protein chicken bowl': U('1626204983652-f43427142ce1'),
   'avocado side': U('1602292705803-518f65289bc8'),
   'açai bowl': U('1654923064926-be7e64267a31'),
+  'spicy tuna poke': U('1768326119231-bf064c1b8fdf'),
 
   // --- Italien ---
   'linguine gamberi': U('1498579150354-977475b7ea0b'),
   'truffle tagliatelle': U('1616299915952-04c803388e5f'),
   'tagliatelle al ragù': U('1597131628347-c769fc631754'),
   'lasagna bolognese': U('1709429790175-b02bb1b19207'),
-  'penne amatriciana': U('1621996346565-e3dbc646d9a9'),
+  'penne amatriciana': U('1516100882582-96c3a05fe590'),
   'rigatoni alla vodka': U('1606853181531-a3a54d2ad57b'),
   'ravioli ricotta & spinach': U('1623073119837-076224785565'),
+  'tiramisù pistachio': U('1785960160511-aa7ed5af05e1'),
 
   // --- Fried Chicken ---
   '5 crispy tenders': U('1605291581926-df4bf7ee3e89'),
@@ -1416,22 +1436,36 @@ const ITEM_IMAGE_OVERRIDES = {
   '8 wings menu': U('1663430218462-8024770c830e'),
 
   // --- Belge ---
-  'fricadelle spéciale': U('1713517915303-ae3b3429f939'),
+  'fricadelle spéciale': U('1675523300593-667579c8488a'),
   'mexicano': U('1785929163609-dfddfcb0e8c0'),
   'viandelle': U('1738599935343-991708a2895b'),
   'boulette': U('1760304396110-8dc2b644fd05'),
+  'croquette de crevettes': U('1764337290548-5e116a0030d0'),
+  'poulycroc': U('1671522635501-f03491b207e6'),
+  'frites sauce andalouse & oignons': U('1763208385612-fbbf89e4a5ed'),
+  'frites cheddar bacon': U('1762284513031-3d7ad15562bc'),
+  'andalouse': U('1779939855509-58261716ec8c'),
+  'samouraï': U('1779939855596-8506096e2ebe'),
+  'brazil': U('1731415101106-3eb6031aad74'),
+  'tartare': U('1777199264017-84af9308a41f'),
+  'ketchup': U('1633253037293-91cdfb8cecff'),
 
   // --- Végétarien ---
   'curry de pois chiches': U('1582576163090-09d3b6f8a969'),
   'galettes de quinoa': U('1607095597425-6f61dee8ab7e'),
+  'wrap houmous légumes': U('1752095809096-f09d22c466c5'),
+  'nems tofu croustillant': U('1515022376298-7333f33e704b'),
+  'salade de betteraves': U('1649597357231-4e721665af6e'),
+  'menu burger végétarien (frites & boisson)': U('1763689389824-dd2cea2e5772'),
+  'tarte crumble pommes vegan': U('1772547103123-823bfb230fb0'),
 
   // --- Boissons (variantes qui partageaient toutes la même photo) ---
-  'jarritos mango': U('1632852521784-d85d5b62dd62'),
+  'jarritos mango': U('1623065422902-30a2d299bbe4'),
   'jarritos guava': U('1681250918992-14488ad03a6f'),
   'homemade limeade': U('1621263764928-df1444c5e859'),
   'green smoothie': U('1633096013004-e2cb4023b560'),
   'mango smoothie': U('1604298331663-de303fbc7059'),
-  'ramune lychee': U('1663870316229-cb3986d34e8c'),
+  'ramune lychee': U('1785950179234-7aee375c02f7'),
 
   // --- Coffee Shop ---
   'americano': U('1514432324607-a09d9b4aefdd'),
@@ -1453,7 +1487,14 @@ const ITEM_IMAGE_OVERRIDES = {
   'panini poulet pesto': U('1621852004158-f3bc188ace2d'),
   'granola bowl': U('1612182062572-e29c5dfb5eb4'),
 
+  // --- Supermarché (produits qui partageaient tous la même photo) ---
+  'pâtes penne 500g': U('1737718952107-be42ec98a028'),
+  'compote pomme (4)': U('1745964276896-96f8e8eb0e4e'),
+  'jus de fruits 1l': U('1647776145663-84951b6c6c9f'),
+
   // --- Night Shop ---
+  'pistaches salées 150g': U('1707548686201-b6d960b55f54'),
+  'noix de cajou 150g': U('1641718087616-859c6754efb9'),
   'chips barbecue 150g': U('1621447504864-d8686e12698c'),
   'bretzels salés 150g': U('1632116766245-ac9ff0e59ceb'),
   'popcorn salé': U('1512149177596-f817c7ef5d4c'),
