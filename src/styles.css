@@ -130,7 +130,14 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .menu-item-card .desc { flex: 1; margin: 0 0 8px; }
 .menu-item-card .bottom-row { display: flex; justify-content: space-between; align-items: center; }
 
-.discover-scroll { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 6px; }
+.discover-marquee { overflow: hidden; padding-bottom: 6px; }
+.discover-track { display: flex; gap: 12px; width: max-content; }
+.discover-track.animate { animation-name: discover-marquee-move; animation-timing-function: linear; animation-iteration-count: infinite; }
+.discover-track.animate:hover { animation-play-state: paused; }
+@keyframes discover-marquee-move {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0%); }
+}
 .discover-card { flex: 0 0 150px; background: #fff; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; text-decoration: none; color: inherit; transition: border-color .15s; }
 .discover-card:hover { border-color: var(--gold); }
 .discover-card img { width: 100%; height: 80px; object-fit: cover; background: var(--cream-dim); display: block; }

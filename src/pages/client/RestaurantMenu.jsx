@@ -35,6 +35,7 @@ export default function RestaurantMenu() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     cart.startOrder(id);
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
@@ -146,8 +147,6 @@ export default function RestaurantMenu() {
           </div>
         )}
       </div>
-
-      {discover.length > 0 && <DiscoverSection restaurants={discover} />}
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
@@ -311,19 +310,26 @@ export default function RestaurantMenu() {
 }
 
 function DiscoverSection({ restaurants }) {
+  const canLoop = restaurants.length >= 3;
+  const items = canLoop ? [...restaurants, ...restaurants] : restaurants;
   return (
     <div style={{ marginTop: 18, marginBottom: 18 }}>
       <h3 className="section-title" style={{ fontSize: 16 }}>Découvrir aussi</h3>
-      <div className="discover-scroll">
-        {restaurants.map((r) => (
-          <Link key={r.id} to={`/restaurants/${r.id}`} className="discover-card">
-            {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
-            <div className="info">
-              <b>{r.name}</b>
-              <span className="small">{r.commune}</span>
-            </div>
-          </Link>
-        ))}
+      <div className="discover-marquee">
+        <div
+          className={`discover-track${canLoop ? ' animate' : ''}`}
+          style={canLoop ? { animationDuration: `${restaurants.length * 4}s` } : undefined}
+        >
+          {items.map((r, i) => (
+            <Link key={`${r.id}-${i}`} to={`/restaurants/${r.id}`} className="discover-card">
+              {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
+              <div className="info">
+                <b>{r.name}</b>
+                <span className="small">{r.commune}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
