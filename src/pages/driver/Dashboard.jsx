@@ -124,7 +124,7 @@ export default function DriverDashboard() {
 
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
-        <div className="stat-card highlight"><div className="num">{delivered.reduce((a, o) => a + o.deliveryFee, 0).toFixed(2)}€</div><div className="label">Gains estimés</div></div>
+        <div className="stat-card highlight"><div className="num">{delivered.reduce((a, o) => a + o.deliveryFee + (o.tipAmount || 0), 0).toFixed(2)}€</div><div className="label">Gains estimés (pourboires inclus)</div></div>
         <div className="stat-card">
           <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
           <div className="label">{reviews?.count > 0 ? `${reviews.avg.toFixed(1)} (${reviews.count} avis)` : 'Pas encore d\'avis'}</div>
@@ -162,7 +162,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
           <DeliveryTiming order={o} />
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small">Course : {o.deliveryFee.toFixed(2)}€</span>
+            <span className="small">Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</span>
             <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
           </div>
         </div>
