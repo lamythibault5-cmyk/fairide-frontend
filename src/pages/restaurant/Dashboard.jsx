@@ -12,6 +12,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
+import RestaurantPreview from '../../components/RestaurantPreview';
 
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
@@ -44,6 +45,7 @@ export default function Dashboard() {
   const [openingHours, setOpeningHours] = useState('');
 
   const [editOpen, setEditOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [editDesc, setEditDesc] = useState('');
   const [editCuisine, setEditCuisine] = useState('');
   const [editCustomCuisine, setEditCustomCuisine] = useState('');
@@ -142,6 +144,7 @@ export default function Dashboard() {
     setEditOpen(false);
     setConfirmDelete(false);
     setStartChoiceMade(false);
+    setPreviewOpen(false);
     loadDashboard(id);
   }
 
@@ -668,9 +671,22 @@ export default function Dashboard() {
             <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs les grandes plateformes</div></div>
           </div>
 
-          {!editOpen && (
-            <button type="button" className="btn-ghost" style={{ marginBottom: 14 }} onClick={() => setEditOpen(true)}>✏️ Modifier les infos du restaurant</button>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
+            {!editOpen && (
+              <button type="button" className="btn-ghost" onClick={() => setEditOpen(true)}>✏️ Modifier les infos du restaurant</button>
+            )}
+            <button type="button" className="btn-ghost" onClick={() => setPreviewOpen((v) => !v)}>
+              {previewOpen ? '✕ Fermer l\'aperçu' : '👁️ Aperçu — vue client'}
+            </button>
+          </div>
+
+          {previewOpen && (
+            <div className="card" style={{ border: '2px solid var(--ink)' }}>
+              <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Aperçu</h3>
+              <RestaurantPreview restaurant={restaurant} />
+            </div>
           )}
+
           {editOpen && (
             <div className="card">
               <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
