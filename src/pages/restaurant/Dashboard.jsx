@@ -104,7 +104,11 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    api('/restaurants/mine/dashboard', { token }).then(setMyRestos).catch((e) => toast(e.message));
+    api('/restaurants/mine/dashboard', { token }).then((list) => {
+      setMyRestos(list);
+      // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
+      if (list.length === 1) pickResto(list[0].id);
+    }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
       window.history.replaceState({}, '', '/dashboard');
@@ -524,20 +528,24 @@ export default function Dashboard() {
 
   return (
     <div>
-      <div className="card">
-        <h2 style={{ marginTop: 0 }}>Mon restaurant</h2>
-        <div className="row" style={{ marginBottom: 10 }}>
-          <select style={{ flex: 1 }} value={restoId || ''} onChange={(e) => e.target.value && pickResto(e.target.value)}>
-            <option value="">— Choisir un restaurant —</option>
-            {myRestos.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
-          </select>
+      {myRestos.length === 1 ? (
+        <h2 style={{ margin: '0 0 14px' }}>{myRestos[0].name}</h2>
+      ) : (
+        <div className="card">
+          <h2 style={{ marginTop: 0 }}>Mon restaurant</h2>
+          {myRestos.length > 1 && (
+            <div className="row" style={{ marginBottom: 10 }}>
+              <select style={{ flex: 1 }} value={restoId || ''} onChange={(e) => e.target.value && pickResto(e.target.value)}>
+                <option value="">— Choisir un restaurant —</option>
+                {myRestos.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          )}
+          {!newRestoOpen && myRestos.length === 0 && (
+            <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>+ Créer mon restaurant</button>
+          )}
         </div>
-        {!newRestoOpen && myRestos.length === 0 && (
-          <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>+ Créer mon restaurant</button>
-        )}
-        {myRestos.length > 0 && (
-          <p className="small" style={{ margin: 0 }}>Un compte restaurateur ne peut gérer qu'un seul restaurant sur Fairide.</p>
-        )}
+      )}
         {newRestoOpen && (
           <div style={{ marginTop: 10 }}>
             <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
@@ -600,7 +608,6 @@ export default function Dashboard() {
             <button className="btn-teal" onClick={createResto}>Créer mon restaurant</button>
           </div>
         )}
-      </div>
 
       {restaurant && restaurant.adminStatus !== 'approved' && (
         <div className="card" style={{ border: '2px solid var(--red)' }}>

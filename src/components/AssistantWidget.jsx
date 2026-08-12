@@ -2,17 +2,49 @@ import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 
 const GREETING = "Bonjour ! Je suis l'assistant Fairide 🤖 Pose-moi tes questions sur les commandes, les livraisons, les commissions ou comment devenir partenaire !";
+const SEEN_KEY = 'fairide_assistant_seen';
 
 export default function AssistantWidget() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [pulse, setPulse] = useState(false);
   const listRef = useRef(null);
 
   useEffect(() => {
     if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
   }, [messages, open]);
+
+  // Une seule fois par session : un petit rappel discret que l'assistant existe, pour qu'on le remarque
+  // sans être intrusif (une bulle, pas de popup bloquant, disparaît toute seule ou au premier clic).
+  useEffect(() => {
+    if (sessionStorage.getItem(SEEN_KEY)) return;
+    const showTimer = setTimeout(() => {
+      setShowTooltip(true);
+      setPulse(true);
+    }, 2500);
+    return () => clearTimeout(showTimer);
+  }, []);
+
+  useEffect(() => {
+    if (!showTooltip) return;
+    const hideTimer = setTimeout(() => dismissTooltip(), 9000);
+    return () => clearTimeout(hideTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showTooltip]);
+
+  function dismissTooltip() {
+    setShowTooltip(false);
+    setPulse(false);
+    sessionStorage.setItem(SEEN_KEY, '1');
+  }
+
+  function toggleOpen() {
+    dismissTooltip();
+    setOpen((o) => !o);
+  }
 
   async function send(e) {
     e.preventDefault();
@@ -57,7 +89,13 @@ export default function AssistantWidget() {
           </form>
         </div>
       )}
-      <button className="assistant-toggle" onClick={() => setOpen((o) => !o)} aria-label="Ouvrir l'assistant Fairide">
+      {!open && showTooltip && (
+        <div className="assistant-tooltip">
+          <button className="assistant-tooltip-close" onClick={dismissTooltip} aria-label="Fermer">✕</button>
+          <span>👋 Une question sur Fairide ? Je suis là pour t'aider !</span>
+        </div>
+      )}
+      <button className={`assistant-toggle${pulse ? ' pulse' : ''}`} onClick={toggleOpen} aria-label="Ouvrir l'assistant Fairide">
         {open ? '✕' : '💬'}
       </button>
     </div>
