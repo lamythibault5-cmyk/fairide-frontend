@@ -145,6 +145,11 @@ export default function RestaurantMenu() {
             🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
           </div>
         )}
+      </div>
+
+      {discover.length > 0 && <DiscoverSection restaurants={discover} />}
+
+      <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
         {CATEGORIES.map((cat) => {
           const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
@@ -289,22 +294,7 @@ export default function RestaurantMenu() {
         </div>
       )}
 
-      {discover.length > 0 && (
-        <div style={{ marginTop: 18 }}>
-          <h3 className="section-title" style={{ fontSize: 16 }}>Découvrir aussi</h3>
-          <div className="discover-scroll">
-            {discover.map((r) => (
-              <Link key={r.id} to={`/restaurants/${r.id}`} className="discover-card">
-                {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
-                <div className="info">
-                  <b>{r.name}</b>
-                  <span className="small">{r.commune}</span>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      )}
+      {discover.length > 0 && <DiscoverSection restaurants={discover} />}
 
       {pickerItem && (
         <OptionsPickerModal
@@ -316,6 +306,25 @@ export default function RestaurantMenu() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+function DiscoverSection({ restaurants }) {
+  return (
+    <div style={{ marginTop: 18, marginBottom: 18 }}>
+      <h3 className="section-title" style={{ fontSize: 16 }}>Découvrir aussi</h3>
+      <div className="discover-scroll">
+        {restaurants.map((r) => (
+          <Link key={r.id} to={`/restaurants/${r.id}`} className="discover-card">
+            {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
+            <div className="info">
+              <b>{r.name}</b>
+              <span className="small">{r.commune}</span>
+            </div>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
