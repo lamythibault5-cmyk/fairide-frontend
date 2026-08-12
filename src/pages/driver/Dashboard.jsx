@@ -160,6 +160,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
+          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
           <DeliveryTiming order={o} />
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
             <span className="small">Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</span>
@@ -178,7 +179,10 @@ export default function DriverDashboard() {
           </div>
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
+          <div className="small">🏁 Livraison : {o.address}</div>
+          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
           <DeliveryTiming order={o} />
+          <div className="small" style={{ marginTop: 4 }}>Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</div>
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
             <div className="small" style={{ marginBottom: 2 }}>Code à donner au restaurant lors du retrait</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.pickupCode}</div>
@@ -206,10 +210,12 @@ export default function DriverDashboard() {
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
           {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
           <div className="small">🏁 Livraison : {o.address}</div>
+          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
           {o.deliveryInstructions && (
             <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
           )}
           <DeliveryTiming order={o} />
+          <div className="small" style={{ marginTop: 2 }}>Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
             <input
