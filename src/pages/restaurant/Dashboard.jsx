@@ -561,7 +561,7 @@ export default function Dashboard() {
             <>
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>✅ Essai gratuit en cours</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Ton restaurant est visible aux clients. Premier mois offert
+                Ton restaurant est visible aux clients. {restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : 'Premier mois offert'}
                 {restaurant.subscriptionCurrentPeriodEnd ? ` — premier prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : '.'}
               </p>
             </>
@@ -602,7 +602,9 @@ export default function Dashboard() {
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🔒 Restaurant pas encore visible aux clients</h3>
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes —
-                le premier mois est offert, tu ne seras débité qu'au mois suivant.
+                {restaurant.freeTrialMonths > 1
+                  ? ` ${restaurant.freeTrialMonths} mois offerts (parmi les premiers restos sur Fairide !), tu ne seras débité qu'au mois suivant.`
+                  : ' le premier mois est offert, tu ne seras débité qu\'au mois suivant.'}
               </p>
             </>
           )}
@@ -614,7 +616,7 @@ export default function Dashboard() {
                 <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder="Un code reçu ? Ajoute-le ici" />
               </div>
               <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                {subscribing ? '...' : "S'abonner — 20€/mois (1er mois offert)"}
+                {subscribing ? '...' : `S'abonner — 20€/mois (${restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : '1er mois offert'})`}
               </button>
             </div>
           )}
