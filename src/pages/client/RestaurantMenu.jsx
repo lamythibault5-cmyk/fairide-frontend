@@ -9,7 +9,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
-import { DELIVERY_INSTRUCTION_OPTIONS } from '../../orderStatus';
+import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -32,6 +32,7 @@ export default function RestaurantMenu() {
   const [paying, setPaying] = useState(false);
   const [tipInput, setTipInput] = useState('');
   const [settingTip, setSettingTip] = useState(false);
+  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -126,6 +127,7 @@ export default function RestaurantMenu() {
       });
       cart.clear();
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
+      setDeliveryConfirmed(false);
       setPendingOrder(order);
     } catch (e) {
       toast(e.message);
@@ -278,6 +280,26 @@ export default function RestaurantMenu() {
         <div className="card">
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
+
+          <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
+            <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>📍 Vérifie tes informations de livraison</p>
+            <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
+            <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
+            {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
+            {pendingOrder.estimatedDeliveryAt && (
+              <p className="small" style={{ margin: '0 0 8px' }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+            )}
+            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: 0 }}>
+              <input
+                type="checkbox"
+                checked={deliveryConfirmed}
+                onChange={(e) => setDeliveryConfirmed(e.target.checked)}
+                style={{ marginTop: 2 }}
+              />
+              <span className="small">Je confirme que ces informations de livraison sont correctes</span>
+            </label>
+          </div>
+
           <div className="breakdown">
             <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
             {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
@@ -324,8 +346,11 @@ export default function RestaurantMenu() {
             </div>
           </div>
 
-          <div className="row" style={{ gap: 8, marginTop: 12 }}>
-            <button className="btn-gold" disabled={paying} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
+          {!deliveryConfirmed && (
+            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer tes informations de livraison avant de payer.</p>
+          )}
+          <div className="row" style={{ gap: 8, marginTop: 4 }}>
+            <button className="btn-gold" disabled={paying || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
             <button className="btn-ghost" disabled={paying} onClick={() => setPendingOrder(null)}>Annuler</button>
           </div>
         </div>
