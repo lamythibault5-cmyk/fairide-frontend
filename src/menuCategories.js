@@ -96,11 +96,14 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Coca-Cola', price: 2.8, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Fanta', price: 2.8, desc: '' },
       { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Still Water', price: 2.5, desc: '' },
       { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Homemade Lemonade', price: 4, desc: '' }
+      { name: 'Fanta', price: 2.8, desc: '' },
+      { name: 'Homemade Lemonade', price: 4, desc: '' },
+      { name: 'Root Beer', price: 3.2, desc: '' },
+      { name: 'Vanilla Milkshake', price: 5.5, desc: '' },
+      { name: 'Iced Tea', price: 3, desc: '' }
     ]
   },
   Pizza: {
@@ -140,9 +143,12 @@ const TYPE_TEMPLATES = {
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
       { name: 'San Pellegrino', price: 3, desc: '' },
       { name: 'Acqua Panna', price: 3, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Aranciata San Pellegrino', price: 3.5, desc: '' },
       { name: 'Limonata San Pellegrino', price: 3.5, desc: '' },
-      { name: 'Italian Lemon Iced Tea', price: 3.5, desc: '' }
+      { name: 'Italian Lemon Iced Tea', price: 3.5, desc: '' },
+      { name: 'Peach Iced Tea', price: 3.5, desc: '' },
+      { name: 'Chinotto', price: 3, desc: '' }
     ]
   },
   Asiatique: {
@@ -182,11 +188,14 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Coca-Cola', price: 2.8, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Still Water', price: 2.5, desc: '' },
       { name: 'Sparkling Water', price: 2.5, desc: '' },
       { name: 'Japanese Green Tea', price: 3.5, desc: '' },
       { name: 'Lychee Drink', price: 3.5, desc: '' },
-      { name: 'Mango Drink', price: 3.5, desc: '' }
+      { name: 'Mango Drink', price: 3.5, desc: '' },
+      { name: 'Thai Iced Tea', price: 3.5, desc: '' },
+      { name: 'Bubble Tea', price: 4.5, desc: '' }
     ]
   },
   Sushi: {
@@ -226,10 +235,14 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Coca-Cola', price: 2.8, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
+      { name: 'Still Water', price: 2.5, desc: '' },
+      { name: 'Sparkling Water', price: 2.5, desc: '' },
       { name: 'Ramune Original', price: 3.9, desc: '' },
       { name: 'Ramune Lychee', price: 3.9, desc: '' },
       { name: 'Japanese Green Tea', price: 3.5, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' }
+      { name: 'Matcha Latte', price: 4, desc: '' },
+      { name: 'Bubble Tea', price: 4.5, desc: '' }
     ]
   },
   Mexicain: {
@@ -268,11 +281,14 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Coca-Cola', price: 2.8, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
+      { name: 'Still Water', price: 2.5, desc: '' },
+      { name: 'Sparkling Water', price: 2.5, desc: '' },
       { name: 'Jarritos Lime', price: 3.9, desc: '' },
       { name: 'Jarritos Mango', price: 3.9, desc: '' },
       { name: 'Jarritos Guava', price: 3.9, desc: '' },
       { name: 'Homemade Limeade', price: 4, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' }
+      { name: 'Horchata', price: 4, desc: '' }
     ]
   },
   Libanais: {
@@ -309,12 +325,16 @@ const TYPE_TEMPLATES = {
       { name: 'Dates & Nuts', price: 5, desc: '' }
     ],
     boisson: [
-      { name: 'Ayran', price: 3, desc: '' },
-      { name: 'Homemade Lemon Mint', price: 4.5, desc: '' },
       { name: 'Coca-Cola', price: 2.8, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' }
+      { name: 'Sparkling Water', price: 2.5, desc: '' },
+      { name: 'Ayran', price: 3, desc: '' },
+      { name: 'Homemade Lemon Mint', price: 4.5, desc: '' },
+      { name: 'Thé à la menthe', price: 2.8, desc: '' },
+      { name: 'Jallab', price: 4, desc: '' },
+      { name: 'Tamarind Juice', price: 4, desc: '' }
     ]
   },
   Healthy: {
@@ -350,13 +370,16 @@ const TYPE_TEMPLATES = {
       { name: 'Protein Chocolate Brownie', price: 4.5, desc: '' }
     ],
     boisson: [
-      { name: 'Homemade Lemonade', price: 4, desc: '' },
+      { name: 'Coca-Cola', price: 2.8, desc: '' },
+      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
+      { name: 'Still Water', price: 2.5, desc: '' },
+      { name: 'Sparkling Water', price: 2.5, desc: '' },
       { name: 'Ginger Shot', price: 3, desc: '' },
       { name: 'Green Smoothie', price: 5.5, desc: '' },
       { name: 'Mango Smoothie', price: 5.5, desc: '' },
       { name: 'Kombucha', price: 4.5, desc: '' },
-      { name: 'Coconut Water', price: 3.9, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' }
+      { name: 'Coconut Water', price: 3.9, desc: '' }
     ]
   },
   Italien: {
@@ -396,9 +419,12 @@ const TYPE_TEMPLATES = {
       { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
       { name: 'San Pellegrino', price: 3, desc: '' },
       { name: 'Acqua Panna', price: 3, desc: '' },
+      { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Limonata', price: 3.5, desc: '' },
       { name: 'Aranciata', price: 3.5, desc: '' },
-      { name: 'Peach Iced Tea', price: 3.5, desc: '' }
+      { name: 'Peach Iced Tea', price: 3.5, desc: '' },
+      { name: 'Chinotto', price: 3, desc: '' },
+      { name: 'Espresso', price: 2, desc: '' }
     ]
   },
   'Fried Chicken': {
@@ -440,7 +466,11 @@ const TYPE_TEMPLATES = {
       { name: 'Fanta', price: 2.8, desc: '' },
       { name: 'Sprite', price: 2.8, desc: '' },
       { name: 'Homemade Iced Tea', price: 3.5, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' }
+      { name: 'Still Water', price: 2.5, desc: '' },
+      { name: 'Sparkling Water', price: 2.5, desc: '' },
+      { name: 'Root Beer', price: 3.2, desc: '' },
+      { name: 'Vanilla Milkshake', price: 5.5, desc: '' },
+      { name: 'Homemade Lemonade', price: 4, desc: '' }
     ]
   },
   Belge: {
@@ -482,9 +512,14 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Coca-Cola', price: 2.5, desc: '' },
       { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
+      { name: 'Sprite', price: 2.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 2.2, desc: '' },
+      { name: 'Spa Reine', price: 2.2, desc: '' },
       { name: 'Fanta', price: 2.5, desc: '' },
       { name: 'Ice Tea', price: 2.5, desc: '' },
-      { name: 'Spa Reine', price: 2.2, desc: '' }
+      { name: 'Bière Jupiler', price: 3, desc: '' },
+      { name: 'Vin rouge', price: 5, desc: '' },
+      { name: 'Chocolat chaud', price: 3, desc: '' }
     ]
   },
   'Végétarien': {
@@ -522,8 +557,12 @@ const TYPE_TEMPLATES = {
       { name: 'Tarte crumble pommes vegan', price: 4.5, desc: '' }
     ],
     boisson: [
-      { name: 'Jus pressé pomme', price: 4, desc: '' },
+      { name: 'Coca-Cola', price: 2.5, desc: '' },
+      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
+      { name: 'Sprite', price: 2.5, desc: '' },
       { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
+      { name: 'Jus pressé pomme', price: 4, desc: '' },
       { name: 'Lait d\'amande chaud', price: 3.5, desc: '' },
       { name: 'Kombucha', price: 4, desc: '' },
       { name: 'Jus vert détox', price: 4.5, desc: '' },
@@ -565,12 +604,16 @@ const TYPE_TEMPLATES = {
       { name: 'Sütlaç (riz au lait turc)', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Ayran', price: 2.5, desc: '' },
       { name: 'Coca-Cola 33cl', price: 3, desc: '' },
+      { name: 'Coca-Cola Zero', price: 3, desc: '' },
+      { name: 'Sprite', price: 3, desc: '' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
+      { name: 'Ayran', price: 2.5, desc: '' },
       { name: 'Salgam', price: 3, desc: '' },
       { name: 'Thé turc', price: 2.5, desc: '' },
       { name: 'Citronnade', price: 3.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' }
+      { name: 'Boza', price: 3.5, desc: '' }
     ]
   },
   Boulangerie: {
@@ -607,11 +650,15 @@ const TYPE_TEMPLATES = {
       { name: 'Tarte aux pommes', price: 3, desc: 'La part' }
     ],
     boisson: [
+      { name: 'Coca-Cola', price: 2.5, desc: '' },
+      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
+      { name: 'Sprite', price: 2.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
       { name: 'Café', price: 2, desc: '' },
       { name: 'Jus d\'orange 25cl', price: 2.5, desc: '' },
       { name: 'Chocolat chaud', price: 3, desc: '' },
       { name: 'Thé Earl Grey', price: 2.2, desc: '' },
-      { name: 'Jus de pomme 25cl', price: 2.5, desc: '' },
       { name: 'Café Latte', price: 3, desc: '' }
     ]
   },
@@ -651,10 +698,13 @@ const TYPE_TEMPLATES = {
       { name: 'Compote pomme (4)', price: 2.4, desc: '' }
     ],
     boisson: [
+      { name: 'Coca-Cola 1.5L', price: 2.2, desc: '' },
+      { name: 'Coca-Cola Zero 1.5L', price: 2.2, desc: '' },
+      { name: 'Sprite 1.5L', price: 2.2, desc: '' },
       { name: 'Eau plate 1.5L', price: 1.5, desc: '' },
+      { name: 'Eau pétillante 1.5L', price: 1.4, desc: '' },
       { name: 'Pack de sodas 6x33cl', price: 5, desc: '' },
       { name: 'Jus de fruits 1L', price: 2.5, desc: '' },
-      { name: 'Eau pétillante 1.5L', price: 1.4, desc: '' },
       { name: 'Café moulu 250g', price: 4.2, desc: '' },
       { name: 'Lait demi-écrémé 1L', price: 1.3, desc: '' },
       { name: 'Thé glacé 1.5L', price: 2.2, desc: '' }
@@ -692,14 +742,16 @@ const TYPE_TEMPLATES = {
       { name: 'Donut glacé', price: 2, desc: '' }
     ],
     boisson: [
-      { name: 'Bière 33cl', price: 2.5, desc: '' },
-      { name: 'Energy drink 25cl', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 1.5, desc: '' },
-      { name: 'Bière spéciale 33cl', price: 3, desc: '' },
-      { name: 'Vin rouge 25cl', price: 4.5, desc: '' },
       { name: 'Soda cola 50cl', price: 2.2, desc: '' },
-      { name: 'Ice tea 50cl', price: 2.2, desc: '' },
-      { name: 'Jus de fruits 33cl', price: 2, desc: '' }
+      { name: 'Coca-Cola Zero 50cl', price: 2.2, desc: '' },
+      { name: 'Sprite 50cl', price: 2.2, desc: '' },
+      { name: 'Eau plate 50cl', price: 1.5, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 1.5, desc: '' },
+      { name: 'Bière 33cl', price: 2.5, desc: '' },
+      { name: 'Bière spéciale 33cl', price: 3, desc: '' },
+      { name: 'Energy drink 25cl', price: 2.5, desc: '' },
+      { name: 'Vin rouge 25cl', price: 4.5, desc: '' },
+      { name: 'Ice tea 50cl', price: 2.2, desc: '' }
     ]
   },
   Boucherie: {
@@ -738,12 +790,16 @@ const TYPE_TEMPLATES = {
       { name: 'Tiramisu', price: 4, desc: '' }
     ],
     boisson: [
+      { name: 'Coca-Cola', price: 2.5, desc: '' },
+      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
+      { name: 'Sprite', price: 2.5, desc: '' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
       { name: 'Vin rouge', price: 8, desc: 'La bouteille' },
       { name: 'Vin blanc', price: 8, desc: 'La bouteille' },
       { name: 'Bière trappiste', price: 3, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
-      { name: 'Jus de pomme', price: 2.5, desc: '' }
+      { name: 'Jus de pomme', price: 2.5, desc: '' },
+      { name: 'Jus d\'orange', price: 2.5, desc: '' }
     ]
   }
 };
@@ -1288,7 +1344,15 @@ const ITEM_IMAGE_OVERRIDES = {
 
   // --- Végétarien ---
   'curry de pois chiches': U('1582576163090-09d3b6f8a969'),
-  'galettes de quinoa': U('1644946762933-8716dd20d0b1')
+  'galettes de quinoa': U('1644946762933-8716dd20d0b1'),
+
+  // --- Boissons (variantes qui partageaient toutes la même photo) ---
+  'jarritos mango': U('1632852521784-d85d5b62dd62'),
+  'jarritos guava': U('1688079305282-77bce3f5d253'),
+  'homemade limeade': U('1473425990767-8324e48b48b5'),
+  'green smoothie': U('1583577612013-4fecf7bf8f13'),
+  'mango smoothie': U('1604298331663-de303fbc7059'),
+  'ramune lychee': U('1663870316229-cb3986d34e8c')
 };
 
 export function defaultItemImage(item) {
