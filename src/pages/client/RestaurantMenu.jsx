@@ -81,6 +81,9 @@ export default function RestaurantMenu() {
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const totals = cart.totals(restaurant.menu);
+  // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
+  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
+  const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
   const isFavorite = favoriteIds.has(id);
 
   async function toggleFavorite() {
@@ -258,9 +261,9 @@ export default function RestaurantMenu() {
               )}
               <div className="line"><span>dont commission Fairide (10%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
-                <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, totals.total).toFixed(2)}€</span></div>
+                <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
               )}
-              <div className="line total"><span>Total</span><span>{Math.max(0, (fulfillmentType === 'delivery' ? totals.total : totals.rawSubtotal - totals.discountedItems.reduce((s, d) => s + d.discount, 0)) - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span></div>
+              <div className="line total"><span>Total</span><span>{estimatedTotal.toFixed(2)}€</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
@@ -329,7 +332,7 @@ export default function RestaurantMenu() {
             )}
           </div>
           <div className="cart-bar">
-            <span>{cart.count} article(s) · à partir de {Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span>
+            <span>{cart.count} article(s) · à partir de {estimatedTotal.toFixed(2)}€</span>
             <button className="btn-gold" disabled={placing} onClick={placeOrder}>
               {placing ? '...' : 'Commander'}
             </button>
