@@ -102,8 +102,9 @@ export default function DriverDashboard() {
   const delivered = mine.filter((o) => o.status === 'livre');
   const reviewByOrderId = {};
   (reviews?.reviews || []).forEach((r) => { if (r.orderId) reviewByOrderId[r.orderId] = r; });
+  const tippedOrders = delivered.filter((o) => o.tipPaid && o.tipAmount > 0);
   const totalDeliveryFees = delivered.reduce((a, o) => a + o.deliveryFee, 0);
-  const totalTips = delivered.reduce((a, o) => a + (o.tipAmount || 0), 0);
+  const totalTips = tippedOrders.reduce((a, o) => a + o.tipAmount, 0);
 
   return (
     <div>
@@ -129,16 +130,37 @@ export default function DriverDashboard() {
 
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
-        <div className="stat-card highlight"><div className="num">{delivered.reduce((a, o) => a + o.deliveryFee + (o.tipAmount || 0), 0).toFixed(2)}€</div><div className="label">Gains estimés (pourboires inclus)</div></div>
+        <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">Gains estimés (pourboires inclus)</div></div>
         <div className="stat-card">
           <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
           <div className="label">{reviews?.count > 0 ? `${reviews.avg.toFixed(1)} (${reviews.count} avis)` : 'Pas encore d\'avis'}</div>
         </div>
       </div>
 
+      <h2 className="section-title" style={{ marginTop: 0 }}>💛 Mes pourboires</h2>
+      {tippedOrders.length === 0 && <div className="empty">Pas encore de pourboire reçu.</div>}
+      {tippedOrders.length > 0 && (
+        <div className="card">
+          <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--cream-dim)' }}>
+            <b>Total reçu</b>
+            <b>{totalTips.toFixed(2)}€</b>
+          </div>
+          {tippedOrders.map((o) => (
+            <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+              <div>
+                <div style={{ fontSize: 13 }}>{o.restaurantName} → {o.clientName}</div>
+                <div className="small">{new Date(o.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+              </div>
+              <b style={{ color: 'var(--gold)' }}>{o.tipAmount.toFixed(2)}€</b>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <h2 className="section-title">⭐ Mes avis</h2>
+      {(!reviews || reviews.reviews.length === 0) && <div className="empty">Pas encore d'avis reçu.</div>}
       {reviews && reviews.reviews.length > 0 && (
         <div className="card">
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Avis sur mes livraisons</h3>
           {reviews.reviews.map((r, i) => (
             <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -168,7 +190,7 @@ export default function DriverDashboard() {
           {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
           <DeliveryTiming order={o} />
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small">Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</span>
+            <span className="small">Course : {o.deliveryFee.toFixed(2)}€</span>
             <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
           </div>
         </div>
@@ -187,7 +209,7 @@ export default function DriverDashboard() {
           <div className="small">🏁 Livraison : {o.address}</div>
           {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 4 }}>Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</div>
+          <div className="small" style={{ marginTop: 4 }}>Course : {o.deliveryFee.toFixed(2)}€</div>
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
             <div className="small" style={{ marginBottom: 2 }}>Code à donner au restaurant lors du retrait</div>
             <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.pickupCode}</div>
@@ -220,7 +242,7 @@ export default function DriverDashboard() {
             <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
           )}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 2 }}>Course : {o.deliveryFee.toFixed(2)}€{o.tipAmount > 0 ? ` + 💛 ${o.tipAmount.toFixed(2)}€ de pourboire` : ''}</div>
+          <div className="small" style={{ marginTop: 2 }}>Course : {o.deliveryFee.toFixed(2)}€</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
             <input
@@ -254,7 +276,7 @@ export default function DriverDashboard() {
             </div>
             <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
               <span className="small">{o.items.map(formatOrderItem).join(', ')}</span>
-              <span className="small" style={{ fontWeight: 600 }}>{(o.deliveryFee + (o.tipAmount || 0)).toFixed(2)}€</span>
+              <span className="small" style={{ fontWeight: 600 }}>{(o.deliveryFee + (o.tipPaid ? o.tipAmount : 0)).toFixed(2)}€</span>
             </div>
             {isOpen && (
               <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--cream-dim)' }}>
@@ -266,8 +288,8 @@ export default function DriverDashboard() {
                 )}
                 <div className="breakdown" style={{ marginTop: 8 }}>
                   <div className="line"><span>Frais de livraison</span><span>{o.deliveryFee.toFixed(2)}€</span></div>
-                  {o.tipAmount > 0 && <div className="line"><span>Pourboire 💛</span><span>{o.tipAmount.toFixed(2)}€</span></div>}
-                  <div className="line total"><span>Total gagné</span><span>{(o.deliveryFee + (o.tipAmount || 0)).toFixed(2)}€</span></div>
+                  {o.tipPaid && o.tipAmount > 0 && <div className="line"><span>Pourboire 💛</span><span>{o.tipAmount.toFixed(2)}€</span></div>}
+                  <div className="line total"><span>Total gagné</span><span>{(o.deliveryFee + (o.tipPaid ? o.tipAmount : 0)).toFixed(2)}€</span></div>
                 </div>
                 {review ? (
                   <div style={{ marginTop: 10 }}>

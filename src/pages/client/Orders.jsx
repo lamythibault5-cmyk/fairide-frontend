@@ -12,6 +12,8 @@ function ReviewForm({ order, token, toast, onDone }) {
   const [foodComment, setFoodComment] = useState('');
   const [deliveryRating, setDeliveryRating] = useState(order.driverName ? 5 : 0);
   const [deliveryComment, setDeliveryComment] = useState('');
+  const [tipChoice, setTipChoice] = useState(0);
+  const [tipInput, setTipInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   async function submit() {
@@ -25,6 +27,18 @@ function ReviewForm({ order, token, toast, onDone }) {
           deliveryComment: order.driverName ? deliveryComment.trim() : undefined
         }
       });
+      const tip = tipInput.trim() ? +Number(tipInput).toFixed(2) : tipChoice;
+      if (order.driverName && tip > 0) {
+        await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
+        const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
+        if (pay.simulated) {
+          toast('Merci pour ton avis et ton pourboire !');
+          onDone();
+        } else {
+          window.location.href = pay.checkoutUrl;
+        }
+        return;
+      }
       toast('Merci pour ton avis !');
       onDone();
     } catch (e) {
@@ -46,6 +60,33 @@ function ReviewForm({ order, token, toast, onDone }) {
           <div className="small" style={{ marginBottom: 4 }}>Note pour la livraison</div>
           <StarsInput value={deliveryRating} onChange={setDeliveryRating} />
           <input value={deliveryComment} onChange={(e) => setDeliveryComment(e.target.value)} placeholder="Un commentaire sur la livraison (optionnel)" style={{ marginTop: 6 }} />
+        </div>
+      )}
+      {order.driverName && (
+        <div style={{ marginBottom: 12 }}>
+          <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>💛 Un petit pourboire pour {order.driverName} ? (optionnel, 100% pour lui)</div>
+          <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+            {[0, 1, 2, 3].map((amount) => (
+              <button
+                key={amount}
+                type="button"
+                className={tipChoice === amount && !tipInput.trim() ? 'btn-gold' : 'btn-ghost'}
+                onClick={() => { setTipChoice(amount); setTipInput(''); }}
+                style={{ padding: '6px 12px', fontSize: 13 }}
+              >
+                {amount === 0 ? 'Aucun' : `${amount}€`}
+              </button>
+            ))}
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              placeholder="Autre montant"
+              value={tipInput}
+              onChange={(e) => setTipInput(e.target.value)}
+              style={{ width: 110, padding: '6px 10px', fontSize: 13 }}
+            />
+          </div>
         </div>
       )}
       <button className="btn-teal" disabled={saving} onClick={submit}>{saving ? '...' : 'Envoyer mon avis'}</button>

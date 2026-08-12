@@ -30,8 +30,6 @@ export default function RestaurantMenu() {
   const [pickerItem, setPickerItem] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
-  const [tipInput, setTipInput] = useState('');
-  const [settingTip, setSettingTip] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const cart = useCart();
   const toast = useToast();
@@ -82,19 +80,6 @@ export default function RestaurantMenu() {
     } catch (e) {
       toast(e.message);
       setPaying(false);
-    }
-  }
-
-  async function setTip(amount) {
-    setSettingTip(true);
-    try {
-      const updated = await api(`/orders/${pendingOrder.id}/tip`, { method: 'PATCH', token, body: { tip: amount } });
-      setPendingOrder(updated);
-      setTipInput('');
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setSettingTip(false);
     }
   }
 
@@ -305,45 +290,8 @@ export default function RestaurantMenu() {
             {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
             <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
             <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
-            {pendingOrder.tipAmount > 0 && <div className="line"><span>Pourboire pour le livreur</span><span>{pendingOrder.tipAmount.toFixed(2)}€</span></div>}
             {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
             <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
-          </div>
-
-          <div style={{ margin: '14px 0' }}>
-            <p className="small" style={{ margin: '0 0 6px', fontWeight: 600 }}>💛 Un petit pourboire pour ton livreur ? (optionnel, 100% pour lui)</p>
-            <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-              {[0, 1, 2, 3].map((amount) => (
-                <button
-                  key={amount}
-                  type="button"
-                  className={pendingOrder.tipAmount === amount ? 'btn-gold' : 'btn-ghost'}
-                  disabled={settingTip}
-                  onClick={() => setTip(amount)}
-                  style={{ padding: '6px 12px', fontSize: 13 }}
-                >
-                  {amount === 0 ? 'Aucun' : `${amount}€`}
-                </button>
-              ))}
-              <input
-                type="number"
-                min="0"
-                step="0.5"
-                placeholder="Autre montant"
-                value={tipInput}
-                onChange={(e) => setTipInput(e.target.value)}
-                style={{ width: 110, padding: '6px 10px', fontSize: 13 }}
-              />
-              <button
-                type="button"
-                className="btn-ghost"
-                disabled={settingTip || !tipInput.trim() || Number(tipInput) < 0}
-                onClick={() => setTip(+Number(tipInput).toFixed(2))}
-                style={{ padding: '6px 12px', fontSize: 13 }}
-              >
-                Valider
-              </button>
-            </div>
           </div>
 
           {!deliveryConfirmed && (
