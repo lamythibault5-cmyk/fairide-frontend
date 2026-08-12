@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
@@ -117,15 +117,20 @@ export default function Orders() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Mes commandes</h2>
       {orders.map((o) => (
-        <div className="card" key={o.id}>
+        <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status)}</span>
+            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType)}</span>
           </div>
-          <ProgressBar status={o.status} />
+          <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
+          <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          <div className="small">📍 {o.address}</div>
+          {o.orderType === 'pickup' ? (
+            <div className="small">🏠 À venir chercher chez {o.restaurantName}{o.restaurantAddress ? `, ${o.restaurantAddress}` : ''}</div>
+          ) : (
+            <div className="small">📍 {o.address}</div>
+          )}
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
           )}
@@ -146,7 +151,9 @@ export default function Orders() {
           )}
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
             <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '8px 0' }}>
-              <div className="small" style={{ marginBottom: 2 }}>Code à donner à ton livreur (envoyé aussi par email)</div>
+              <div className="small" style={{ marginBottom: 2 }}>
+                {o.orderType === 'pickup' ? 'Code à montrer au restaurant (envoyé aussi par email)' : 'Code à donner à ton livreur (envoyé aussi par email)'}
+              </div>
               <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.deliveryCode}</div>
             </div>
           )}

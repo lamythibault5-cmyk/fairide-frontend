@@ -11,6 +11,35 @@ import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 
+// Créneaux de 30 min proposés pour "programmer" une commande : au moins 45 min à l'avance, entre 9h et
+// 22h, sur aujourd'hui puis demain si la fenêtre du jour est dépassée.
+function generateTimeSlots() {
+  const slots = [];
+  const now = new Date();
+  const dayStart = 9, dayEnd = 22;
+  for (let day = 0; day < 2 && slots.length < 24; day++) {
+    let cursor;
+    if (day === 0) {
+      cursor = new Date(now.getTime() + 45 * 60000);
+      const minutes = cursor.getMinutes();
+      const roundedMinutes = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));
+      cursor.setMinutes(roundedMinutes, 0, 0);
+      if (cursor.getHours() < dayStart) cursor.setHours(dayStart, 0, 0, 0);
+    } else {
+      cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day, dayStart, 0, 0, 0);
+    }
+    const dayEndTime = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), dayEnd, 0, 0, 0);
+    while (cursor <= dayEndTime && slots.length < 24) {
+      slots.push({
+        value: cursor.toISOString(),
+        label: `${day === 0 ? "Aujourd'hui" : 'Demain'} ${cursor.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}`
+      });
+      cursor = new Date(cursor.getTime() + 30 * 60000);
+    }
+  }
+  return slots;
+}
+
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
@@ -26,6 +55,10 @@ export default function RestaurantMenu() {
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
+  const [fulfillmentType, setFulfillmentType] = useState('delivery');
+  const [scheduleEnabled, setScheduleEnabled] = useState(false);
+  const [scheduledFor, setScheduledFor] = useState('');
+  const [timeSlots] = useState(generateTimeSlots);
   const [placing, setPlacing] = useState(false);
   const [pickerItem, setPickerItem] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null);
@@ -92,8 +125,12 @@ export default function RestaurantMenu() {
   }
 
   async function placeOrder() {
-    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
+    if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
+      return;
+    }
+    if (scheduleEnabled && !scheduledFor) {
+      toast('Choisis une heure pour ta commande programmée.');
       return;
     }
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
@@ -104,10 +141,14 @@ export default function RestaurantMenu() {
       const order = await api('/orders', {
         method: 'POST', token,
         body: {
-          restaurantId: id, items,
-          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
-          addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
-          deliveryInstructions, deliveryNote: deliveryNote.trim(), useBalance
+          restaurantId: id, items, orderType: fulfillmentType,
+          scheduledFor: scheduleEnabled && scheduledFor ? scheduledFor : null,
+          ...(fulfillmentType === 'delivery' ? {
+            addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+            addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+            deliveryInstructions, deliveryNote: deliveryNote.trim()
+          } : {}),
+          useBalance
         }
       });
       cart.clear();
@@ -209,13 +250,17 @@ export default function RestaurantMenu() {
               {totals.discountedItems.map((d, i) => (
                 <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
-              <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
-              <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+              {fulfillmentType === 'delivery' && (
+                <>
+                  <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+                </>
+              )}
               <div className="line"><span>dont commission Fairide (10%)</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
                 <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, totals.total).toFixed(2)}€</span></div>
               )}
-              <div className="line total"><span>Total</span><span>{Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span></div>
+              <div className="line total"><span>Total</span><span>{Math.max(0, (fulfillmentType === 'delivery' ? totals.total : totals.rawSubtotal - totals.discountedItems.reduce((s, d) => s + d.discount, 0)) - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
@@ -225,32 +270,63 @@ export default function RestaurantMenu() {
             )}
           </div>
           <div className="field">
-            <label>Rue / Avenue</label>
-            <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label>Numéro</label>
-              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label>Code postal</label>
-              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+            <label>Comment récupérer ta commande ?</label>
+            <div className="row" style={{ gap: 8 }}>
+              <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('delivery')}>🛵 Livraison</button>
+              <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('pickup')}>🏠 À emporter</button>
             </div>
           </div>
+          {fulfillmentType === 'delivery' && (
+            <>
+              <div className="field">
+                <label>Rue / Avenue</label>
+                <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Numéro</label>
+                  <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Code postal</label>
+                  <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                </div>
+              </div>
+              <div className="field">
+                <label>Ville / Commune</label>
+                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+              </div>
+              <div className="field">
+                <label>À la livraison</label>
+                <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
+                  {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>Note pour le livreur (optionnel)</label>
+                <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
+              </div>
+            </>
+          )}
+          {fulfillmentType === 'pickup' && (
+            <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
+          )}
           <div className="field">
-            <label>Ville / Commune</label>
-            <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
-          </div>
-          <div className="field">
-            <label>À la livraison</label>
-            <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
-              {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </div>
-          <div className="field">
-            <label>Note pour le livreur (optionnel)</label>
-            <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
+            <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
+              <input
+                type="checkbox"
+                style={{ width: 'auto' }}
+                checked={scheduleEnabled}
+                onChange={(e) => { setScheduleEnabled(e.target.checked); if (!e.target.checked) setScheduledFor(''); }}
+              />
+              <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
+            </label>
+            {scheduleEnabled && (
+              <select value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} style={{ marginTop: 8 }}>
+                <option value="">Choisis une heure...</option>
+                {timeSlots.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+            )}
           </div>
           <div className="cart-bar">
             <span>{cart.count} article(s) · à partir de {Math.max(0, totals.total - (useBalance ? Math.min(user.balance || 0, totals.total) : 0)).toFixed(2)}€</span>
@@ -264,15 +340,33 @@ export default function RestaurantMenu() {
       {pendingOrder && (
         <div className="card">
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
+          {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
+            <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
+          )}
 
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
-            <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>📍 Vérifie tes informations de livraison</p>
-            <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
-            <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
-            {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
-            {pendingOrder.estimatedDeliveryAt && (
-              <p className="small" style={{ margin: '0 0 8px' }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+            {pendingOrder.orderType === 'delivery' ? (
+              <>
+                <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>📍 Vérifie tes informations de livraison</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
+                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
+                {pendingOrder.scheduledFor ? (
+                  <p className="small" style={{ margin: '0 0 8px' }}><b>📅 Livraison programmée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                ) : pendingOrder.estimatedDeliveryAt && (
+                  <p className="small" style={{ margin: '0 0 8px' }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>🏠 Vérifie les informations de retrait</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
+                {pendingOrder.scheduledFor ? (
+                  <p className="small" style={{ margin: '0 0 8px' }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                ) : pendingOrder.estimatedDeliveryAt && (
+                  <p className="small" style={{ margin: '0 0 8px' }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                )}
+              </>
             )}
             <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: 0 }}>
               <input
@@ -281,21 +375,29 @@ export default function RestaurantMenu() {
                 onChange={(e) => setDeliveryConfirmed(e.target.checked)}
                 style={{ marginTop: 2 }}
               />
-              <span className="small">Je confirme que ces informations de livraison sont correctes</span>
+              <span className="small">
+                {pendingOrder.orderType === 'delivery'
+                  ? 'Je confirme que ces informations de livraison sont correctes'
+                  : 'Je confirme vouloir venir chercher ma commande moi-même'}
+              </span>
             </label>
           </div>
 
           <div className="breakdown">
             <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
             {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
-            <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
-            <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+            {pendingOrder.orderType === 'delivery' && (
+              <>
+                <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+              </>
+            )}
             {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
             <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
           </div>
 
           {!deliveryConfirmed && (
-            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer tes informations de livraison avant de payer.</p>
+            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer avant de payer.</p>
           )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <button className="btn-gold" disabled={paying || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
