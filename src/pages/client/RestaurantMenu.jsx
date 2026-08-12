@@ -84,7 +84,7 @@ export default function RestaurantMenu() {
   // plutôt que de devoir chercher la carte de confirmation plus bas dans la page.
   useEffect(() => {
     if (pendingOrder && pendingOrderRef.current) {
-      pendingOrderRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      pendingOrderRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
   }, [pendingOrder]);
 
