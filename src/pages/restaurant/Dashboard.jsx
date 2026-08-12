@@ -553,6 +553,10 @@ export default function Dashboard() {
             <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
               Une fois créé, Fairide te propose de générer ton menu et ta photo de couverture automatiquement — tu n'as que le strict nécessaire à remplir ici.
             </p>
+            <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
+              À noter : ton abonnement Fairide (premier mois offert) ne pourra être activé qu'une fois ton compte validé par notre équipe —
+              le temps de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties.
+            </p>
 
             <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Identité</h4>
             <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
@@ -625,8 +629,9 @@ export default function Dashboard() {
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
               <p className="small" style={{ margin: 0 }}>
                 Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — mais pas besoin d'attendre pour continuer :
-                tu peux dès maintenant compléter ton menu et activer ton abonnement (premier mois offert). Dès que ton compte est validé,
-                ton restaurant devient visible immédiatement. C'est généralement rapide, repasse un peu plus tard.
+                tu peux dès maintenant compléter ton menu. Ton abonnement (premier mois offert) ne pourra être activé qu'une fois ton compte
+                validé — le temps pour Fairide de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties.
+                Dès que ton compte est validé, tu pourras t'abonner et ton restaurant deviendra visible immédiatement. C'est généralement rapide, repasse un peu plus tard.
               </p>
             </>
           )}
@@ -688,13 +693,20 @@ export default function Dashboard() {
                 Le premier mois est offert pour tout restaurant, dans tous les cas — et Fairide offre aussi 3 mois aux 50 premiers
                 restaurants inscrits sur la plateforme, puis 2 mois aux 100 suivants.
                 {restaurant.freeTrialMonths > 1
-                  ? ` Ton restaurant fait partie de ceux-là : tu profites de ${restaurant.freeTrialMonths} mois offerts au total, tu ne seras débité qu'au mois suivant.`
-                  : ' Tu ne seras débité qu\'au mois suivant.'}
+                  ? ` Ton restaurant fait partie de ceux-là : tu profites de ${restaurant.freeTrialMonths} mois offerts au total.`
+                  : ''}
+                {' '}Ton abonnement n'entre en vigueur qu'une fois ton compte validé par l'équipe Fairide — le temps de vérifier
+                la conformité de ton commerce et que le contrat soit accepté par les deux parties. Tu ne seras débité qu'au mois suivant l'activation.
               </p>
             </>
           )}
 
-          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && (
+          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
+            <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
+              🔒 Disponible après validation de ton compte par l'équipe Fairide.
+            </p>
+          )}
+          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
             <div>
               <div className="field" style={{ maxWidth: 260 }}>
                 <label>Code promo (optionnel)</label>
