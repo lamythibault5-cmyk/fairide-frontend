@@ -1214,7 +1214,81 @@ const ITEM_IMAGE_OVERRIDES = {
   'vol-au-vent maison': U('1756137949222-e36c028dfedf'),
   'carbonade flamande': U('1445979323117-80453f573b71'),
   'lapin à la bière': U('1596797038530-2c107229654b'),
-  'steak tartare préparé': U('1785517605613-e55a1470305d')
+  'steak tartare préparé': U('1785517605613-e55a1470305d'),
+
+  // --- Burgers / Fried Chicken (variantes qui partageaient toutes la même photo) ---
+  'spicy chicken burger': U('1610440042657-612c34d95e9f'),
+  'avocado chicken burger': U('1596649299486-4cdea56fd59d'),
+  'truffle burger': U('1609167830220-7164aa360951'),
+  'oklahoma onion burger': U('1611698529094-6a518c46a0de'),
+  'chicken burger menu': U('1609167830240-fc81e9cfd9bf'),
+
+  // --- Asiatique ---
+  'thai green curry chicken': U('1761315412830-2f59480377b0'),
+  'thai red curry beef': U('1761314037211-63fff18c5187'),
+  'beef fried rice': U('1578160112054-954a67602b88'),
+  'vegetable fried rice': U('1765872690457-2b1d2b8ca6d8'),
+
+  // --- Sushi ---
+  'salmon lovers': U('1607301406259-dfb186e15de8'),
+  'sushi deluxe': U('1737501844370-e59fb449880d'),
+  'veggie box': U('1568899466260-b6d4e061856f'),
+
+  // --- Mexicain ---
+  'beef burrito bowl': U('1582169296194-e4d644c48063'),
+  'vegan bowl': U('1666799529588-29608a22beb5'),
+  'spicy shrimp bowl': U('1726801869046-11ef5bb18adc'),
+  'nachos & guacamole': U('1680350681703-5879c3be90d3'),
+  'loaded nachos': U('1551020690-d3a2c9defc27'),
+
+  // --- Libanais ---
+  'beef shawarma': U('1665989215795-f67f4723087d'),
+  'kafta wrap': U('1653983194833-7a10838b12f4'),
+  'chicken shawarma plate': U('1670164745494-30747c120652'),
+  'beef shawarma plate': U('1736928634472-abd43ed645a9'),
+  'kafta plate': U('1670164745513-f4fd1684d780'),
+  'falafel wrap': U('1664455289851-e13c0f803cc0'),
+  'falafel plate': U('1670164747019-3b4d77128a71'),
+  'vegetarian mezze': U('1670165088604-5a39f5c1be51'),
+  'mixed mezze': U('1718801594068-a7b7c5aeccb4'),
+
+  // --- Healthy ---
+  'spicy salmon poke': U('1780805663865-c9ab052da2e4'),
+  'tofu poke': U('1771154141872-e5ad3905a385'),
+  'vegan poke': U('1606756790138-261d2b21cd75'),
+  'build your own poke': U('1661257711676-79a0fc533569'),
+  'mediterranean bowl': U('1579887829494-5b736888265a'),
+  'avocado quinoa bowl': U('1556040221-a1efce785fcc'),
+  'protein chicken bowl': U('1626204983652-f43427142ce1'),
+  'avocado side': U('1602292705803-518f65289bc8'),
+  'açai bowl': U('1565299572355-c129dd338fc5'),
+
+  // --- Italien ---
+  'linguine gamberi': U('1498579150354-977475b7ea0b'),
+  'truffle tagliatelle': U('1616299915952-04c803388e5f'),
+  'tagliatelle al ragù': U('1597131628347-c769fc631754'),
+  'lasagna bolognese': U('1633337474564-1d9478ca4e2e'),
+  'penne amatriciana': U('1599984615649-3307ec0ef478'),
+  'rigatoni alla vodka': U('1664214649080-52c879182270'),
+  'ravioli ricotta & spinach': U('1587206668283-c21d974993c3'),
+
+  // --- Fried Chicken ---
+  '5 crispy tenders': U('1605291581926-df4bf7ee3e89'),
+  '8 crispy tenders': U('1619019187211-adf2f6119afd'),
+  '5 tenders menu': U('1627662236973-4fd8358fa206'),
+  '10 hot wings': U('1771252399544-43dc3d11a21b'),
+  '15 hot wings': U('1517984055083-fd6e1e788e54'),
+  '8 wings menu': U('1663430218462-8024770c830e'),
+
+  // --- Belge ---
+  'fricadelle spéciale': U('1713517915303-ae3b3429f939'),
+  'mexicano': U('1785929163609-dfddfcb0e8c0'),
+  'viandelle': U('1738599935343-991708a2895b'),
+  'boulette': U('1760304396110-8dc2b644fd05'),
+
+  // --- Végétarien ---
+  'curry de pois chiches': U('1582576163090-09d3b6f8a969'),
+  'galettes de quinoa': U('1644946762933-8716dd20d0b1')
 };
 
 export function defaultItemImage(item) {
