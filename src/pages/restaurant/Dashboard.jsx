@@ -43,6 +43,13 @@ export default function Dashboard() {
   const [addressPostalCode, setAddressPostalCode] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [openingHours, setOpeningHours] = useState('');
+  const [deliveryModePref, setDeliveryModePref] = useState('fairide');
+
+  const [drivers, setDrivers] = useState([]);
+  const [driverEmailInput, setDriverEmailInput] = useState('');
+  const [linkingDriver, setLinkingDriver] = useState(false);
+  const [unlinkingDriverId, setUnlinkingDriverId] = useState(null);
+  const [switchingMode, setSwitchingMode] = useState(false);
 
   const [editOpen, setEditOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -114,14 +121,16 @@ export default function Dashboard() {
 
   async function loadDashboard(id) {
     try {
-      const [ordersData, restoData, reviewsData] = await Promise.all([
+      const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         api(`/restaurants/${id}`),
-        api(`/restaurants/${id}/reviews`)
+        api(`/restaurants/${id}/reviews`),
+        api(`/restaurants/${id}/drivers`, { token })
       ]);
       setOrders(ordersData);
       setRestaurant(restoData);
       setReviews(reviewsData);
+      setDrivers(driversData);
       setEditDesc(restoData.desc || '');
       const knownType = RESTAURANT_TYPES.some((t) => t.value === restoData.cuisine);
       setEditCuisine(knownType ? restoData.cuisine : 'Autre');
@@ -161,7 +170,7 @@ export default function Dashboard() {
         body: {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
-          coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim()
+          coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim(), deliveryMode: deliveryModePref
         }
       });
       setMyRestos((prev) => [...prev, r]);
@@ -169,7 +178,11 @@ export default function Dashboard() {
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
       pickResto(r.id);
-      toast('Restaurant créé !');
+      if (r.wantsOwnDriver) {
+        toast("Restaurant créé ! Ajoute maintenant l'email de ton livreur dans la section Livraison pour activer ton propre livreur.");
+      } else {
+        toast('Restaurant créé !');
+      }
     } catch (e) {
       toast(e.message);
     }
@@ -328,6 +341,47 @@ export default function Dashboard() {
       toast(e.message);
     } finally {
       setCancelingSub(false);
+    }
+  }
+
+  async function linkDriver() {
+    if (!driverEmailInput.trim()) { toast('Entre l\'email du livreur.'); return; }
+    setLinkingDriver(true);
+    try {
+      const driver = await api(`/restaurants/${restoId}/drivers`, { method: 'POST', token, body: { email: driverEmailInput.trim() } });
+      setDrivers((prev) => [...prev, driver]);
+      setDriverEmailInput('');
+      toast(`${driver.name} est maintenant ton livreur dédié.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setLinkingDriver(false);
+    }
+  }
+
+  async function unlinkDriver(driverId) {
+    setUnlinkingDriverId(driverId);
+    try {
+      await api(`/restaurants/${restoId}/drivers/${driverId}`, { method: 'DELETE', token });
+      setDrivers((prev) => prev.filter((d) => d.id !== driverId));
+      toast('Livreur retiré.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setUnlinkingDriverId(null);
+    }
+  }
+
+  async function switchDeliveryMode(mode) {
+    setSwitchingMode(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/delivery-mode`, { method: 'PATCH', token, body: { mode } });
+      setRestaurant(r);
+      toast(mode === 'own' ? 'Livraison interne activée — tes commandes ne sont proposées qu\'à ton/tes livreur(s) dédié(s).' : 'Retour au pool de livreurs Fairide.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSwitchingMode(false);
     }
   }
 
@@ -528,6 +582,21 @@ export default function Dashboard() {
             <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Une phrase pour présenter ton commerce" /></div>
             <div className="field"><label>Image de couverture (URL) — une photo par défaut est utilisée sinon</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
             <div className="field"><label>Horaires d'ouverture</label><input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
+
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Livraison</h4>
+            <div className="field">
+              <label>Qui livre tes commandes ?</label>
+              <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
+                <option value="fairide">Les livreurs Fairide (pool général)</option>
+                <option value="own">Mon/mes propre(s) livreur(s)</option>
+              </select>
+              {deliveryModePref === 'own' && (
+                <p className="small" style={{ margin: '6px 0 0' }}>
+                  Tu pourras lier l'email de ton livreur juste après la création (il doit avoir un compte livreur Fairide). Ton livreur suit exactement le même processus que les autres — retrait/livraison par code, position en direct.
+                </p>
+              )}
+            </div>
             <button className="btn-teal" onClick={createResto}>Créer mon restaurant</button>
           </div>
         )}
@@ -651,6 +720,53 @@ export default function Dashboard() {
                 <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
               </div>
             </div>
+          )}
+        </div>
+      )}
+
+      {restaurant && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🛵 Livraison</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            {restaurant.deliveryMode === 'own'
+              ? "Livraison interne activée — seuls tes livreurs dédiés voient et prennent tes commandes. Même processus que les autres livreurs Fairide (retrait/livraison par code, position en direct)."
+              : "Livraison via le pool de livreurs Fairide — n'importe quel livreur validé peut prendre tes commandes."}
+          </p>
+
+          {drivers.length === 0 && (
+            <p className="small" style={{ margin: '0 0 10px' }}>Aucun livreur dédié pour l'instant.</p>
+          )}
+          {drivers.map((d) => (
+            <div key={d.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+              <span>
+                {d.name} <span className="small">· {d.email}</span>
+                {d.adminStatus !== 'approved' && <span className="pill" style={{ marginLeft: 6 }}>{d.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente de validation Fairide'}</span>}
+              </span>
+              <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={unlinkingDriverId === d.id} onClick={() => unlinkDriver(d.id)}>
+                {unlinkingDriverId === d.id ? '...' : 'Retirer'}
+              </button>
+            </div>
+          ))}
+
+          <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <input
+              style={{ flex: 1, minWidth: 200 }}
+              value={driverEmailInput}
+              onChange={(e) => setDriverEmailInput(e.target.value)}
+              placeholder="Email du livreur (doit déjà avoir un compte livreur Fairide)"
+            />
+            <button className="btn-ghost" disabled={linkingDriver} onClick={linkDriver}>{linkingDriver ? '...' : '+ Lier ce livreur'}</button>
+          </div>
+
+          <div className="divider" />
+          {restaurant.deliveryMode === 'fairide' ? (
+            <button className="btn-teal" disabled={switchingMode || drivers.length === 0} onClick={() => switchDeliveryMode('own')} title={drivers.length === 0 ? 'Lie au moins un livreur pour activer ce mode' : ''}>
+              {switchingMode ? '...' : 'Passer en livraison interne (mon/mes livreur(s))'}
+            </button>
+          ) : (
+            <button className="btn-ghost" disabled={switchingMode} onClick={() => switchDeliveryMode('fairide')}>
+              {switchingMode ? '...' : 'Repasser au pool de livreurs Fairide'}
+            </button>
           )}
         </div>
       )}
