@@ -624,8 +624,9 @@ export default function Dashboard() {
             <>
               <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
               <p className="small" style={{ margin: 0 }}>
-                Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — même avec un abonnement actif.
-                C'est généralement rapide, repasse un peu plus tard.
+                Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — mais pas besoin d'attendre pour continuer :
+                tu peux dès maintenant compléter ton menu et activer ton abonnement (premier mois offert). Dès que ton compte est validé,
+                ton restaurant devient visible immédiatement. C'est généralement rapide, repasse un peu plus tard.
               </p>
             </>
           )}
