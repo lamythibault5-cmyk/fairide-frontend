@@ -195,6 +195,10 @@ export default function RestaurantMenu() {
     setPaying(true);
     try {
       const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
+      // Le panier n'est vidé qu'une fois le paiement confirmé, pas dès la création de la commande —
+      // sinon "Annuler" laisserait le client avec un panier vide, sans possibilité de reformuler son
+      // choix (livraison/à emporter, planification) sans tout rajouter au panier.
+      cart.clear();
       if (pay.simulated) {
         toast('Commande passée et payée (paiement simulé).');
         navigate('/orders');
@@ -257,7 +261,6 @@ export default function RestaurantMenu() {
           useBalance
         }
       });
-      cart.clear();
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
       setDeliveryConfirmed(false);
       setPendingOrder(order);
@@ -327,7 +330,7 @@ export default function RestaurantMenu() {
         })}
       </div>
 
-      {cart.count > 0 && (
+      {cart.count > 0 && !pendingOrder && (
         <>
           <div className="card">
             <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ton panier</h3>
