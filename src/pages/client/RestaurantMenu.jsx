@@ -83,6 +83,9 @@ export default function RestaurantMenu() {
   const [placing, setPlacing] = useState(false);
   const [pickerItem, setPickerItem] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null);
+  // Le choix "livraison/à emporter" + planification n'apparaît qu'après un premier clic sur
+  // "Commander" depuis le panier — rien n'est envoyé au serveur avant la confirmation finale.
+  const [reviewing, setReviewing] = useState(false);
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -359,7 +362,7 @@ export default function RestaurantMenu() {
               {totals.discountedItems.map((d, i) => (
                 <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
-              {fulfillmentType === 'delivery' && (
+              {reviewing && fulfillmentType === 'delivery' && (
                 <>
                   <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
                   <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
@@ -378,94 +381,101 @@ export default function RestaurantMenu() {
               </label>
             )}
           </div>
-          <div className="field">
-            <label>Comment récupérer ta commande ?</label>
-            <div className="row" style={{ gap: 8 }}>
-              <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('delivery')}>🛵 Livraison</button>
-              <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('pickup')}>🏠 À emporter</button>
-            </div>
-          </div>
-          {fulfillmentType === 'delivery' && (
+          {reviewing && (
             <>
               <div className="field">
-                <label>Rue / Avenue</label>
-                <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
-              </div>
-              <div className="row" style={{ gap: 8 }}>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>Numéro</label>
-                  <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
-                </div>
-                <div className="field" style={{ flex: 1 }}>
-                  <label>Code postal</label>
-                  <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                <label>Comment récupérer ta commande ?</label>
+                <div className="row" style={{ gap: 8 }}>
+                  <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('delivery')}>🛵 Livraison</button>
+                  <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('pickup')}>🏠 À emporter</button>
                 </div>
               </div>
+              {fulfillmentType === 'delivery' && (
+                <>
+                  <div className="field">
+                    <label>Rue / Avenue</label>
+                    <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <div className="field" style={{ flex: 1 }}>
+                      <label>Numéro</label>
+                      <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+                    </div>
+                    <div className="field" style={{ flex: 1 }}>
+                      <label>Code postal</label>
+                      <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                    </div>
+                  </div>
+                  <div className="field">
+                    <label>Ville / Commune</label>
+                    <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+                  </div>
+                  <div className="field">
+                    <label>À la livraison</label>
+                    <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
+                      {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label>Note pour le livreur (optionnel)</label>
+                    <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
+                  </div>
+                </>
+              )}
+              {fulfillmentType === 'pickup' && (
+                <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
+              )}
               <div className="field">
-                <label>Ville / Commune</label>
-                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
-              </div>
-              <div className="field">
-                <label>À la livraison</label>
-                <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
-                  {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                </select>
-              </div>
-              <div className="field">
-                <label>Note pour le livreur (optionnel)</label>
-                <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
+                <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: 'auto' }}
+                    checked={scheduleEnabled}
+                    onChange={(e) => {
+                      setScheduleEnabled(e.target.checked);
+                      if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
+                      else { setScheduleDate(''); setScheduleTime(''); }
+                    }}
+                  />
+                  <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
+                </label>
+                {scheduleEnabled && (
+                  <>
+                    <div className="row" style={{ gap: 8, marginTop: 8 }}>
+                      <select
+                        value={scheduleDate}
+                        onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
+                        style={{ flex: 1 }}
+                      >
+                        {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                      </select>
+                      <select
+                        value={scheduleTime}
+                        onChange={(e) => setScheduleTime(e.target.value)}
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Heure...</option>
+                        {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    {scheduleTimeOptions.length === 0 && (
+                      <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
+                    )}
+                    {scheduledPreview && (
+                      <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
+                    )}
+                  </>
+                )}
               </div>
             </>
           )}
-          {fulfillmentType === 'pickup' && (
-            <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
-          )}
-          <div className="field">
-            <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
-              <input
-                type="checkbox"
-                style={{ width: 'auto' }}
-                checked={scheduleEnabled}
-                onChange={(e) => {
-                  setScheduleEnabled(e.target.checked);
-                  if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
-                  else { setScheduleDate(''); setScheduleTime(''); }
-                }}
-              />
-              <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
-            </label>
-            {scheduleEnabled && (
-              <>
-                <div className="row" style={{ gap: 8, marginTop: 8 }}>
-                  <select
-                    value={scheduleDate}
-                    onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
-                    style={{ flex: 1 }}
-                  >
-                    {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                  </select>
-                  <select
-                    value={scheduleTime}
-                    onChange={(e) => setScheduleTime(e.target.value)}
-                    style={{ flex: 1 }}
-                  >
-                    <option value="">Heure...</option>
-                    {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                </div>
-                {scheduleTimeOptions.length === 0 && (
-                  <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
-                )}
-                {scheduledPreview && (
-                  <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
-                )}
-              </>
-            )}
-          </div>
           <div className="cart-bar">
+            {reviewing && (
+              <button type="button" className="btn-ghost" onClick={() => setReviewing(false)}>&larr; Retour</button>
+            )}
             <span>{cart.count} article(s) · à partir de {estimatedTotal.toFixed(2)}€</span>
-            <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-              {placing ? '...' : 'Commander'}
+            <button className="btn-gold" disabled={placing} onClick={reviewing ? placeOrder : () => setReviewing(true)}>
+              {reviewing ? (placing ? '...' : 'Confirmer la commande') : 'Commander'}
             </button>
           </div>
         </>
