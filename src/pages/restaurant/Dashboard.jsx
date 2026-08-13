@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -98,6 +98,9 @@ export default function Dashboard() {
   const [confirmCancelSub, setConfirmCancelSub] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [now, setNow] = useState(() => new Date());
+  // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
+  // (appelé de façon asynchrone, après coup) ne pourrait plus lire ce paramètre autrement.
+  const connectReturnRef = useRef(new URLSearchParams(window.location.search).get('connect'));
 
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 30000);
@@ -132,6 +135,12 @@ export default function Dashboard() {
 
   async function loadDashboard(id) {
     try {
+      // Retour de l'onboarding Stripe Connect : le statut n'est pas suivi par webhook pour ce type
+      // de compte, on le relit activement une fois avant de charger le reste du tableau de bord.
+      if (connectReturnRef.current) {
+        connectReturnRef.current = null;
+        await api(`/restaurants/${id}/connect/refresh`, { method: 'POST', token }).catch(() => {});
+      }
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         api(`/restaurants/${id}`),

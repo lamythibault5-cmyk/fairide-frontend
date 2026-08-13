@@ -23,7 +23,9 @@ export default function DriverDashboard() {
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast('Configuration des paiements en cours de validation (quelques secondes).');
       window.history.replaceState({}, '', '/driver');
-      refreshUser().catch(() => {});
+      // Le statut Stripe Connect n'est pas suivi par webhook pour ce type de compte (voir backend) —
+      // on le relit activement au retour de l'onboarding avant de rafraîchir l'utilisateur en contexte.
+      api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
