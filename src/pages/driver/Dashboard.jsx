@@ -7,7 +7,7 @@ import { StarsDisplay } from '../../components/Stars';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 
 export default function DriverDashboard() {
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   const toast = useToast();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
@@ -16,7 +16,28 @@ export default function DriverDashboard() {
   const [codeInputs, setCodeInputs] = useState({});
   const [sharingLocation, setSharingLocation] = useState(false);
   const [expandedDeliveryId, setExpandedDeliveryId] = useState(null);
+  const [connecting, setConnecting] = useState(false);
   const activeIdsRef = useRef([]);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('connect')) {
+      toast('Configuration des paiements en cours de validation (quelques secondes).');
+      window.history.replaceState({}, '', '/driver');
+      refreshUser().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function connectOnboard() {
+    setConnecting(true);
+    try {
+      const r = await api('/auth/me/connect/onboard', { method: 'POST', token });
+      window.location.href = r.url;
+    } catch (e) {
+      toast(e.message);
+      setConnecting(false);
+    }
+  }
 
   async function load() {
     try {
@@ -125,6 +146,29 @@ export default function DriverDashboard() {
               </p>
             </>
           )}
+        </div>
+      )}
+
+      {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
+        <div className="card" style={{ border: `2px solid ${user?.stripeConnectStatus === 'restricted' ? 'var(--red)' : 'var(--gold)'}` }}>
+          {user?.stripeConnectStatus === 'restricted' ? (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Informations de paiement à compléter</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Stripe a besoin d'informations supplémentaires pour pouvoir te verser tes paiements. Tant que ce n'est pas complété, tu ne peux pas prendre de nouvelles livraisons.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>💳 Configure tes paiements Fairide</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Pour recevoir tes frais de livraison et tes pourboires directement sur ton compte bancaire, configure tes informations de paiement via Stripe (rapide et sécurisé). Tant que ce n'est pas fait, tu ne peux pas prendre de livraisons.
+              </p>
+            </>
+          )}
+          <button className="btn-gold" disabled={connecting} onClick={connectOnboard}>
+            {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? 'Compléter mes informations' : 'Configurer mes paiements')}
+          </button>
         </div>
       )}
 

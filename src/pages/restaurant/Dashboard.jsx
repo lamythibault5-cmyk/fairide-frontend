@@ -96,6 +96,7 @@ export default function Dashboard() {
   const [resumingSub, setResumingSub] = useState(false);
   const [cancelingSub, setCancelingSub] = useState(false);
   const [confirmCancelSub, setConfirmCancelSub] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
@@ -113,6 +114,10 @@ export default function Dashboard() {
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
+      window.history.replaceState({}, '', '/dashboard');
+    }
+    if (new URLSearchParams(window.location.search).get('connect')) {
+      toast('Configuration des paiements en cours de validation (quelques secondes).');
       window.history.replaceState({}, '', '/dashboard');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -323,6 +328,17 @@ export default function Dashboard() {
     } catch (e) {
       toast(e.message);
       setSubscribing(false);
+    }
+  }
+
+  async function connectOnboard() {
+    setConnecting(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token });
+      window.location.href = r.url;
+    } catch (e) {
+      toast(e.message);
+      setConnecting(false);
     }
   }
 
@@ -762,6 +778,29 @@ export default function Dashboard() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {restaurant && restaurant.stripeConnectStatus !== 'active' && (
+        <div className="card" style={{ border: `2px solid ${restaurant.stripeConnectStatus === 'restricted' ? 'var(--red)' : 'var(--gold)'}` }}>
+          {restaurant.stripeConnectStatus === 'restricted' ? (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Informations de paiement à compléter</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Stripe a besoin d'informations supplémentaires pour pouvoir te verser tes paiements. Tant que ce n'est pas complété, tu ne peux pas recevoir de nouvelles commandes.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>💳 Configure tes paiements Fairide</h3>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Pour recevoir tes paiements directement sur ton compte bancaire à chaque commande, configure tes informations de paiement via Stripe (rapide et sécurisé). Tant que ce n'est pas fait, ton restaurant ne peut pas recevoir de commandes.
+              </p>
+            </>
+          )}
+          <button className="btn-gold" disabled={connecting} onClick={connectOnboard}>
+            {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? 'Compléter mes informations' : 'Configurer mes paiements')}
+          </button>
         </div>
       )}
 
