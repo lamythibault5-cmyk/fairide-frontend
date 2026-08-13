@@ -11,31 +11,51 @@ import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 
-// Créneaux de 30 min proposés pour "programmer" une commande : au moins 45 min à l'avance, entre 9h et
-// 22h, sur aujourd'hui puis demain si la fenêtre du jour est dépassée.
-function generateTimeSlots() {
-  const slots = [];
+function dateKey(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// Dates sélectionnables pour "programmer" une commande : aujourd'hui + les 7 prochains jours (même
+// fenêtre que la validation côté serveur).
+function getScheduleDateOptions() {
+  const now = new Date();
+  const opts = [];
+  for (let day = 0; day <= 7; day++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day);
+    let label;
+    if (day === 0) label = "Aujourd'hui";
+    else if (day === 1) label = 'Demain';
+    else label = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' });
+    opts.push({ value: dateKey(d), label });
+  }
+  return opts;
+}
+
+// Créneaux de 30 min entre 9h et 22h pour la date choisie — au moins 45 min à l'avance si c'est
+// aujourd'hui, sinon toute la plage horaire est proposée.
+function getScheduleTimeOptions(dateStr) {
+  if (!dateStr) return [];
   const now = new Date();
   const dayStart = 9, dayEnd = 22;
-  for (let day = 0; day < 2 && slots.length < 24; day++) {
-    let cursor;
-    if (day === 0) {
-      cursor = new Date(now.getTime() + 45 * 60000);
-      const minutes = cursor.getMinutes();
-      const roundedMinutes = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));
-      cursor.setMinutes(roundedMinutes, 0, 0);
-      if (cursor.getHours() < dayStart) cursor.setHours(dayStart, 0, 0, 0);
-    } else {
-      cursor = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day, dayStart, 0, 0, 0);
-    }
-    const dayEndTime = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate(), dayEnd, 0, 0, 0);
-    while (cursor <= dayEndTime && slots.length < 24) {
-      slots.push({
-        value: cursor.toISOString(),
-        label: `${day === 0 ? "Aujourd'hui" : 'Demain'} ${cursor.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}`
-      });
-      cursor = new Date(cursor.getTime() + 30 * 60000);
-    }
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const isToday = dateStr === dateKey(now);
+  let cursor;
+  if (isToday) {
+    cursor = new Date(now.getTime() + 45 * 60000);
+    const minutes = cursor.getMinutes();
+    const rounded = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));
+    cursor.setMinutes(rounded, 0, 0);
+    if (cursor.getHours() < dayStart) cursor.setHours(dayStart, 0, 0, 0);
+  } else {
+    cursor = new Date(y, m - 1, d, dayStart, 0, 0, 0);
+  }
+  const dayEndTime = new Date(y, m - 1, d, dayEnd, 0, 0, 0);
+  const slots = [];
+  while (cursor <= dayEndTime && slots.length < 30) {
+    const hh = String(cursor.getHours()).padStart(2, '0');
+    const mm = String(cursor.getMinutes()).padStart(2, '0');
+    slots.push(`${hh}:${mm}`);
+    cursor = new Date(cursor.getTime() + 30 * 60000);
   }
   return slots;
 }
@@ -57,8 +77,9 @@ export default function RestaurantMenu() {
   const [useBalance, setUseBalance] = useState(true);
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduledFor, setScheduledFor] = useState('');
-  const [timeSlots] = useState(generateTimeSlots);
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [dateOptions] = useState(getScheduleDateOptions);
   const [placing, setPlacing] = useState(false);
   const [pickerItem, setPickerItem] = useState(null);
   const [pendingOrder, setPendingOrder] = useState(null);
@@ -94,6 +115,10 @@ export default function RestaurantMenu() {
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
+  const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
+  const scheduledPreview = scheduleDate && scheduleTime
+    ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    : null;
   const isFavorite = favoriteIds.has(id);
 
   async function toggleFavorite() {
@@ -156,10 +181,11 @@ export default function RestaurantMenu() {
       toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
       return;
     }
-    if (scheduleEnabled && !scheduledFor) {
-      toast('Choisis une heure pour ta commande programmée.');
+    if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
+      toast('Choisis une date et une heure pour ta commande programmée.');
       return;
     }
+    const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     setPlacing(true);
     try {
@@ -169,7 +195,7 @@ export default function RestaurantMenu() {
         method: 'POST', token,
         body: {
           restaurantId: id, items, orderType: fulfillmentType,
-          scheduledFor: scheduleEnabled && scheduledFor ? scheduledFor : null,
+          scheduledFor: scheduledForISO,
           ...(fulfillmentType === 'delivery' ? {
             addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
             addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
@@ -344,15 +370,40 @@ export default function RestaurantMenu() {
                 type="checkbox"
                 style={{ width: 'auto' }}
                 checked={scheduleEnabled}
-                onChange={(e) => { setScheduleEnabled(e.target.checked); if (!e.target.checked) setScheduledFor(''); }}
+                onChange={(e) => {
+                  setScheduleEnabled(e.target.checked);
+                  if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
+                  else { setScheduleDate(''); setScheduleTime(''); }
+                }}
               />
               <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
             </label>
             {scheduleEnabled && (
-              <select value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} style={{ marginTop: 8 }}>
-                <option value="">Choisis une heure...</option>
-                {timeSlots.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              <>
+                <div className="row" style={{ gap: 8, marginTop: 8 }}>
+                  <select
+                    value={scheduleDate}
+                    onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
+                    style={{ flex: 1 }}
+                  >
+                    {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                  </select>
+                  <select
+                    value={scheduleTime}
+                    onChange={(e) => setScheduleTime(e.target.value)}
+                    style={{ flex: 1 }}
+                  >
+                    <option value="">Heure...</option>
+                    {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                {scheduleTimeOptions.length === 0 && (
+                  <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
+                )}
+                {scheduledPreview && (
+                  <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
+                )}
+              </>
             )}
           </div>
           <div className="cart-bar">
