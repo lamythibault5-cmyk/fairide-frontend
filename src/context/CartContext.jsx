@@ -1,18 +1,40 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
 const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const SYSTEM_FEE_RATE = 0.10;
 const COMMISSION_RATE = 0.10;
+const STORAGE_KEY = 'fairide_cart';
 
 function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
 }
 
+// Conservé dans sessionStorage pour survivre à un rafraîchissement de page (F5) sans persister
+// indéfiniment comme le ferait localStorage (le panier reste propre à cet onglet).
+function loadPersisted() {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return { restaurantId: null, lines: {} };
+    const parsed = JSON.parse(raw);
+    return { restaurantId: parsed.restaurantId ?? null, lines: parsed.lines ?? {} };
+  } catch {
+    return { restaurantId: null, lines: {} };
+  }
+}
+
 export function CartProvider({ children }) {
-  const [restaurantId, setRestaurantId] = useState(null);
+  const [restaurantId, setRestaurantId] = useState(() => loadPersisted().restaurantId);
   // lineKey -> { itemId, optionItemIds, optionsSnapshot, unitPrice, qty }
-  const [lines, setLines] = useState({});
+  const [lines, setLines] = useState(() => loadPersisted().lines);
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, lines }));
+    } catch {
+      // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
+    }
+  }, [restaurantId, lines]);
 
   function startOrder(newRestaurantId) {
     if (newRestaurantId !== restaurantId) {

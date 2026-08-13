@@ -90,9 +90,22 @@ export default function RestaurantMenu() {
   const toast = useToast();
   const navigate = useNavigate();
   const pendingOrderRef = useRef(null);
+  // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
+  // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
+  const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
+  const scrollRestoredRef = useRef(false);
+  // Capturé une seule fois au montage, avant que l'effet de suivi du scroll ci-dessous ne puisse
+  // écraser cette valeur (ex. suite à la restauration native du navigateur au rechargement).
+  const savedScrollRef = useRef(sessionStorage.getItem(`fairide_scroll_${id}`));
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    if (!isRefreshRef.current) {
+      // Vraie navigation vers un nouveau restaurant : on part du haut, et on oublie toute position de
+      // scroll sauvegardée pour cette page lors d'une visite précédente.
+      window.scrollTo(0, 0);
+      sessionStorage.removeItem(`fairide_scroll_${id}`);
+    }
+    sessionStorage.setItem('fairide_last_restaurant_viewed', id);
     cart.startOrder(id);
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
@@ -100,6 +113,46 @@ export default function RestaurantMenu() {
     api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
+
+  // Sauvegarde en continu la position de scroll pour pouvoir la restaurer après un rafraîchissement,
+  // puisque le contenu (menu, avis...) se charge de façon asynchrone et décale la hauteur de la page.
+  useEffect(() => {
+    const prevRestoration = 'scrollRestoration' in window.history ? window.history.scrollRestoration : null;
+    // Désactive la restauration native du navigateur au rechargement : elle déclenche ses propres
+    // événements "scroll" qui écraseraient notre position sauvegardée avant qu'on ait pu la restaurer.
+    if (prevRestoration) window.history.scrollRestoration = 'manual';
+    function saveScroll() {
+      sessionStorage.setItem(`fairide_scroll_${id}`, String(window.scrollY));
+    }
+    window.addEventListener('scroll', saveScroll, { passive: true });
+    window.addEventListener('beforeunload', saveScroll);
+    return () => {
+      saveScroll();
+      window.removeEventListener('scroll', saveScroll);
+      window.removeEventListener('beforeunload', saveScroll);
+      if (prevRestoration) window.history.scrollRestoration = prevRestoration;
+    };
+  }, [id]);
+
+  // Une fois le contenu du restaurant chargé, restaure la position sauvegardée si c'est un
+  // rafraîchissement (sinon la page reste en haut, déjà géré ci-dessus). On utilise la valeur capturée
+  // au montage (savedScrollRef) plutôt que de relire sessionStorage, qui a pu être écrasé entre-temps.
+  useEffect(() => {
+    if (restaurant && !scrollRestoredRef.current) {
+      scrollRestoredRef.current = true;
+      if (isRefreshRef.current) {
+        const savedY = savedScrollRef.current;
+        if (savedY) {
+          const targetY = Number(savedY);
+          // Réapplique la position à plusieurs reprises : les images du menu se chargent de façon
+          // asynchrone et augmentent la hauteur de la page après le premier rendu, ce qui peut faire
+          // "clamper" un scrollTo trop précoce à une position plus basse que la cible.
+          const timers = [0, 100, 300, 600, 1000].map((d) => setTimeout(() => window.scrollTo(0, targetY), d));
+          return () => timers.forEach(clearTimeout);
+        }
+      }
+    }
+  }, [restaurant, id]);
 
   // Le client attend qu'on l'amène directement au résumé de sa commande après avoir cliqué "Commander",
   // plutôt que de devoir chercher la carte de confirmation plus bas dans la page.
