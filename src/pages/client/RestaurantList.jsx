@@ -6,10 +6,23 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
-import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
+import { COMMUNES, RESTAURANT_TYPES, communeRingDistance } from '../../menuCategories';
+
+// Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
+// à l'inscription contre la liste officielle des 19 communes (comparaison insensible à la casse/aux accents).
+function normalizeCommune(s) {
+  return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+
+function matchCommune(addressCity) {
+  const target = normalizeCommune(addressCity);
+  if (!target) return null;
+  return COMMUNES.find((c) => normalizeCommune(c) === target) || null;
+}
 
 export default function RestaurantList() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const homeCommune = matchCommune(user?.addressCity);
   const [restaurants, setRestaurants] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -44,12 +57,20 @@ export default function RestaurantList() {
 
   const cuisineOptions = [{ value: '', emoji: '🍽️', label: 'Tous' }, ...RESTAURANT_TYPES.map((t) => ({ value: t.value, emoji: t.emoji, label: t.value }))];
 
-  const list = restaurants.filter((r) => {
-    if (commune && r.commune !== commune) return false;
-    if (cuisine && r.cuisine !== cuisine) return false;
-    if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
-    return true;
-  });
+  const list = restaurants
+    .filter((r) => {
+      if (commune && r.commune !== commune) return false;
+      if (cuisine && r.cuisine !== cuisine) return false;
+      if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
+      return true;
+    })
+    // Sans filtre de commune explicite : d'abord les commerces de la commune du client, puis ceux
+    // des communes limitrophes, de proche en proche. Sort étant stable, l'ordre existant (plus
+    // récent d'abord, envoyé par le serveur) reste la règle de départage au sein d'un même anneau.
+    .sort((a, b) => {
+      if (!homeCommune || commune) return 0;
+      return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
+    });
 
   return (
     <div>

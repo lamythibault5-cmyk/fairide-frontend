@@ -49,6 +49,54 @@ export const COMMUNES = [
   'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'
 ];
 
+// Communes limitrophes (les 19 communes de la Région de Bruxelles-Capitale) — sert à afficher
+// d'abord les commerces de la commune du client, puis ceux des communes voisines, de proche en
+// proche (voir communeRingDistance ci-dessous).
+export const COMMUNE_ADJACENCY = {
+  'Anderlecht': ['Molenbeek-Saint-Jean', 'Bruxelles', 'Saint-Gilles', 'Forest'],
+  'Auderghem': ['Watermael-Boitsfort', 'Woluwe-Saint-Pierre', 'Ixelles', 'Bruxelles', 'Etterbeek'],
+  'Berchem-Sainte-Agathe': ['Ganshoren', 'Koekelberg', 'Molenbeek-Saint-Jean', 'Jette'],
+  'Bruxelles': ['Schaerbeek', 'Evere', 'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre', 'Auderghem', 'Ixelles', 'Saint-Gilles', 'Anderlecht', 'Molenbeek-Saint-Jean', 'Jette', 'Ganshoren', 'Koekelberg', 'Etterbeek', 'Saint-Josse-ten-Noode'],
+  'Etterbeek': ['Bruxelles', 'Ixelles', 'Woluwe-Saint-Pierre', 'Auderghem', 'Saint-Josse-ten-Noode'],
+  'Evere': ['Bruxelles', 'Schaerbeek', 'Woluwe-Saint-Lambert'],
+  'Forest': ['Anderlecht', 'Saint-Gilles', 'Uccle'],
+  'Ganshoren': ['Berchem-Sainte-Agathe', 'Koekelberg', 'Jette', 'Bruxelles'],
+  'Ixelles': ['Bruxelles', 'Etterbeek', 'Auderghem', 'Watermael-Boitsfort', 'Uccle', 'Saint-Gilles'],
+  'Jette': ['Berchem-Sainte-Agathe', 'Ganshoren', 'Bruxelles', 'Molenbeek-Saint-Jean'],
+  'Koekelberg': ['Berchem-Sainte-Agathe', 'Ganshoren', 'Molenbeek-Saint-Jean', 'Bruxelles'],
+  'Molenbeek-Saint-Jean': ['Berchem-Sainte-Agathe', 'Koekelberg', 'Bruxelles', 'Anderlecht', 'Jette'],
+  'Saint-Gilles': ['Bruxelles', 'Anderlecht', 'Forest', 'Uccle', 'Ixelles'],
+  'Saint-Josse-ten-Noode': ['Bruxelles', 'Schaerbeek', 'Etterbeek'],
+  'Schaerbeek': ['Bruxelles', 'Evere', 'Saint-Josse-ten-Noode', 'Woluwe-Saint-Lambert'],
+  'Uccle': ['Forest', 'Saint-Gilles', 'Ixelles', 'Watermael-Boitsfort'],
+  'Watermael-Boitsfort': ['Auderghem', 'Ixelles', 'Uccle', 'Woluwe-Saint-Pierre'],
+  'Woluwe-Saint-Lambert': ['Bruxelles', 'Evere', 'Schaerbeek', 'Woluwe-Saint-Pierre'],
+  'Woluwe-Saint-Pierre': ['Bruxelles', 'Woluwe-Saint-Lambert', 'Auderghem', 'Etterbeek', 'Watermael-Boitsfort']
+};
+
+// Distance en "anneaux" entre deux communes via le graphe de voisinage (0 = même commune, 1 =
+// limitrophe, 2 = voisin d'un voisin, etc.) — recherche en largeur (BFS), le graphe est petit (19
+// nœuds) donc pas besoin de mémoïsation. Retourne Infinity si la commune est inconnue/non reliée.
+export function communeRingDistance(from, to) {
+  if (!from || !to) return Infinity;
+  if (from === to) return 0;
+  const visited = new Set([from]);
+  let frontier = [from];
+  let ring = 0;
+  while (frontier.length) {
+    ring += 1;
+    const next = [];
+    for (const c of frontier) {
+      for (const n of COMMUNE_ADJACENCY[c] || []) {
+        if (n === to) return ring;
+        if (!visited.has(n)) { visited.add(n); next.push(n); }
+      }
+    }
+    frontier = next;
+  }
+  return Infinity;
+}
+
 export const RESTAURANT_TYPES = [
   { value: 'Pizza', emoji: '🍕' },
   { value: 'Burgers', emoji: '🍔' },
