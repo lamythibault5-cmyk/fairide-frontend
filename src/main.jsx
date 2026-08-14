@@ -6,6 +6,7 @@ import App from './App.jsx';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
+import { LanguageProvider } from './context/LanguageContext';
 import './styles.css';
 
 if (import.meta.env.VITE_SENTRY_DSN) {
@@ -15,13 +16,15 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
-      <ToastProvider>
-        <AuthProvider>
-          <CartProvider>
-            <App />
-          </CartProvider>
-        </AuthProvider>
-      </ToastProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <CartProvider>
+              <App />
+            </CartProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
     </BrowserRouter>
   </StrictMode>
 );

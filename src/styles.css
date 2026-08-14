@@ -68,6 +68,13 @@ a { color: inherit; }
 }
 .role-nav a.active, .role-nav a:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
+.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; }
+.lang-switcher button {
+  background: transparent; border: none; color: var(--cream); opacity: .7;
+  font-size: 11px; font-weight: 700; padding: 5px 8px; border-radius: 6px;
+}
+.lang-switcher button.active { background: var(--gold); color: var(--ink); opacity: 1; }
+
 .card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; margin-bottom: 14px; box-shadow: var(--shadow); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--cream-dim); color: var(--ink-soft); font-weight: 600; }

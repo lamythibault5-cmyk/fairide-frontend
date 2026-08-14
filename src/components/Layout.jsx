@@ -1,12 +1,15 @@
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import AssistantWidget from './AssistantWidget';
+import LanguageSwitcher from './LanguageSwitcher';
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
+  const { t } = useLanguage();
   const location = useLocation();
 
   return (
@@ -21,40 +24,43 @@ export default function Layout() {
                 <span className="brand-slogan">Pay the meal, not the platform.</span>
               </div>
             </Link>
-            {user && (
-              <div className="userbar" style={{ padding: 0 }}>
-                <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
-                  {user.name}
-                </Link>
-                <button className="btn-ghost" style={{ color: 'var(--cream)' }} onClick={logout}>
-                  Se déconnecter
-                </button>
-              </div>
-            )}
-            {!user && (
-              <div className="row header-auth" style={{ gap: 10 }}>
-                <Link to="/login" className="header-auth-link">Connexion</Link>
-                <Link to="/login?audience=client" className="btn-gold" style={{ padding: '9px 18px', fontSize: 13 }}>Inscription</Link>
-              </div>
-            )}
+            <div className="row" style={{ gap: 12, alignItems: 'center' }}>
+              <LanguageSwitcher />
+              {user && (
+                <div className="userbar" style={{ padding: 0 }}>
+                  <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
+                    {user.name}
+                  </Link>
+                  <button className="btn-ghost" style={{ color: 'var(--cream)' }} onClick={logout}>
+                    {t('nav.logout')}
+                  </button>
+                </div>
+              )}
+              {!user && (
+                <div className="row header-auth" style={{ gap: 10 }}>
+                  <Link to="/login" className="header-auth-link">{t('nav.login')}</Link>
+                  <Link to="/login?audience=client" className="btn-gold" style={{ padding: '9px 18px', fontSize: 13 }}>{t('nav.register')}</Link>
+                </div>
+              )}
+            </div>
           </div>
           {user && (
             <nav className="role-nav">
               {role === 'client' && (
                 <>
-                  <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>Restaurants</NavLink>
-                  <NavLink to="/favorites" className={({ isActive }) => (isActive ? 'active' : '')}>Favoris</NavLink>
-                  <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>Mes commandes</NavLink>
+                  <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
+                  <NavLink to="/favorites" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.favorites')}</NavLink>
+                  <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.orders')}</NavLink>
                 </>
               )}
               {role === 'restaurant' && (
-                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>Mon commerce</NavLink>
+                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.myBusiness')}</NavLink>
               )}
               {role === 'driver' && (
-                <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>Livraisons</NavLink>
+                <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.deliveries')}</NavLink>
               )}
-              <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>Mon compte</NavLink>
-              {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>Admin</NavLink>}
+              <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.account')}</NavLink>
+              {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
             </nav>
           )}
         </div>

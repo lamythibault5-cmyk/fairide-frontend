@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 const STORAGE_KEY = 'fairide_cookie_consent';
 
 export default function CookieBanner() {
+  const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -22,9 +24,9 @@ export default function CookieBanner() {
       padding: '14px 18px', zIndex: 200, display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center'
     }}>
       <span className="small" style={{ color: 'var(--cream)' }}>
-        Fairide utilise uniquement des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Aucun tracking publicitaire.
+        {t('cookies.text')}
       </span>
-      <button className="btn-gold" style={{ padding: '8px 18px', fontSize: 13 }} onClick={accept}>J'ai compris</button>
+      <button className="btn-gold" style={{ padding: '8px 18px', fontSize: 13 }} onClick={accept}>{t('cookies.accept')}</button>
     </div>
   );
 }

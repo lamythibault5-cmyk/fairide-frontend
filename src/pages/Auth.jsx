@@ -2,24 +2,32 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const ROLES = [
-  { value: 'client', label: '🧑‍🍳 Client' },
-  { value: 'restaurant', label: '🏪 Commerce' },
-  { value: 'driver', label: '🛵 Livreur' }
-];
+function roles(t) {
+  return [
+    { value: 'client', label: t('auth.roleClient') },
+    { value: 'restaurant', label: t('auth.roleRestaurant') },
+    { value: 'driver', label: t('auth.roleDriver') }
+  ];
+}
 
-const GENDERS = [
-  { value: '', label: 'Genre (optionnel)' },
-  { value: 'Femme', label: 'Femme' },
-  { value: 'Homme', label: 'Homme' },
-  { value: 'Autre', label: 'Autre' },
-  { value: 'Préfère ne pas dire', label: 'Préfère ne pas dire' }
-];
+function genders(t) {
+  return [
+    { value: '', label: t('auth.genderPlaceholder') },
+    { value: 'Femme', label: t('auth.genderWoman') },
+    { value: 'Homme', label: t('auth.genderMan') },
+    { value: 'Autre', label: t('auth.genderOther') },
+    { value: 'Préfère ne pas dire', label: t('auth.genderPreferNot') }
+  ];
+}
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Auth() {
+  const { t } = useLanguage();
+  const ROLES = roles(t);
+  const GENDERS = genders(t);
   const [searchParams] = useSearchParams();
   const audience = searchParams.get('audience'); // 'client' | 'partner' | null
   const roleHint = searchParams.get('role'); // optional pre-pick within an audience, e.g. 'driver'
@@ -65,7 +73,7 @@ export default function Auth() {
   async function handleGoogleCredential(response) {
     const { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity } = stateRef.current;
     if (mode === 'register' && (!phone.trim() || !addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast('Renseigne ton téléphone et ton adresse complète avant de continuer avec Google.');
+      toast(t('auth.googleIncompleteProfile'));
       return;
     }
     setLoading(true);
@@ -75,12 +83,12 @@ export default function Auth() {
         addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
       });
-      toast(`Bienvenue, ${data.user.name} !`);
+      toast(t('auth.welcome', { name: data.user.name }));
       navigate('/');
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
         setMode('register');
-        toast('Complète ton profil (téléphone, adresse) puis reclique sur Continuer avec Google.');
+        toast(t('auth.googleCompleteProfile'));
       } else {
         toast(err.message);
       }
@@ -111,24 +119,24 @@ export default function Auth() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!email || !password) { toast('Email et mot de passe requis.'); return; }
+    if (!email || !password) { toast(t('auth.errEmailPassword')); return; }
     setLoading(true);
     try {
       if (mode === 'register') {
-        if (!firstName.trim() || !lastName.trim()) { toast('Ton prénom et ton nom sont requis.'); setLoading(false); return; }
-        if (!phone.trim()) { toast('Ton numéro de téléphone est requis.'); setLoading(false); return; }
+        if (!firstName.trim() || !lastName.trim()) { toast(t('auth.errNameRequired')); setLoading(false); return; }
+        if (!phone.trim()) { toast(t('auth.errPhoneRequired')); setLoading(false); return; }
         if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
-          toast('Ton adresse complète (rue, numéro, code postal, ville) est requise.');
+          toast(t('auth.errAddressRequired'));
           setLoading(false);
           return;
         }
         if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-          toast('Le mot de passe doit faire au moins 5 caractères et contenir une majuscule et une minuscule.');
+          toast(t('auth.errPasswordStrength'));
           setLoading(false);
           return;
         }
         if (password !== passwordConfirm) {
-          toast('Les deux mots de passe ne correspondent pas.');
+          toast(t('auth.errPasswordMismatch'));
           setLoading(false);
           return;
         }
@@ -146,17 +154,17 @@ export default function Auth() {
         });
         if (data.needsVerification) {
           setPendingEmail(data.email);
-          toast('Un code de vérification t\'a été envoyé par email.');
+          toast(t('auth.errVerificationSent'));
         }
       } else {
         const data = await login(email.trim(), password);
-        toast(`Bienvenue, ${data.user.name} !`);
+        toast(t('auth.welcome', { name: data.user.name }));
         navigate('/');
       }
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
         setPendingEmail(email.trim());
-        toast('Confirme d\'abord ton adresse email avec le code qu\'on t\'a envoyé.');
+        toast(t('auth.errEmailNotVerified'));
       } else {
         toast(err.message);
       }
@@ -167,11 +175,11 @@ export default function Auth() {
 
   async function submitCode(e) {
     e.preventDefault();
-    if (!code.trim()) { toast('Entre le code reçu par email.'); return; }
+    if (!code.trim()) { toast(t('auth.errCodeRequired')); return; }
     setLoading(true);
     try {
       const data = await verifyEmail(pendingEmail, code.trim());
-      toast(`Bienvenue, ${data.user.name} !`);
+      toast(t('auth.welcome', { name: data.user.name }));
       navigate('/');
     } catch (err) {
       toast(err.message);
@@ -182,7 +190,7 @@ export default function Auth() {
 
   async function submitForgotPassword(e) {
     e.preventDefault();
-    if (!forgotEmail.trim()) { toast('Entre ton adresse email.'); return; }
+    if (!forgotEmail.trim()) { toast(t('auth.errEmailRequired')); return; }
     setForgotLoading(true);
     try {
       await forgotPassword(forgotEmail.trim());
@@ -198,7 +206,7 @@ export default function Auth() {
     setResending(true);
     try {
       await resendCode(pendingEmail);
-      toast('Nouveau code envoyé.');
+      toast(t('auth.newCodeSent'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -215,32 +223,32 @@ export default function Auth() {
         <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Mot de passe oublié</h2>
+          <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
           {forgotSubmitted ? (
             <>
               <p className="small" style={{ marginBottom: 14 }}>
-                Si un compte existe avec l'adresse <b>{forgotEmail}</b>, un lien de réinitialisation vient de lui être envoyé par email. Il expire dans 1 heure.
+                {t('auth.forgotSubmittedText', { email: forgotEmail })}
               </p>
               <button className="btn-ghost" onClick={() => { setForgotMode(false); setForgotSubmitted(false); setForgotEmail(''); }}>
-                &larr; Retour à la connexion
+                {t('auth.backToLogin')}
               </button>
             </>
           ) : (
             <>
               <p className="small" style={{ marginBottom: 14 }}>
-                Entre ton adresse email, on t'enverra un lien pour choisir un nouveau mot de passe.
+                {t('auth.forgotText')}
               </p>
               <form onSubmit={submitForgotPassword}>
                 <div className="field">
-                  <label>Email</label>
+                  <label>{t('auth.email')}</label>
                   <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="toi@exemple.com" />
                 </div>
                 <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
-                  {forgotLoading ? '...' : 'Envoyer le lien'}
+                  {forgotLoading ? t('common.loading') : t('auth.sendLink')}
                 </button>
               </form>
               <button className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setForgotMode(false)}>
-                &larr; Retour à la connexion
+                {t('auth.backToLogin')}
               </button>
             </>
           )}
@@ -257,27 +265,27 @@ export default function Auth() {
         <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Confirme ton email</h2>
+          <h2 style={{ marginTop: 0 }}>{t('auth.verifyTitle')}</h2>
           <p className="small" style={{ marginBottom: 14 }}>
-            On a envoyé un code à 6 chiffres à <b>{pendingEmail}</b>. Entre-le ci-dessous pour activer ton compte.
+            {t('auth.verifyText', { email: pendingEmail })}
           </p>
           <form onSubmit={submitCode}>
             <div className="field">
-              <label>Code de vérification</label>
+              <label>{t('auth.verifyCodeLabel')}</label>
               <input
                 value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456"
                 maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
               />
             </div>
             <button type="submit" className="btn-gold btn-block" disabled={loading}>
-              {loading ? '...' : 'Confirmer'}
+              {loading ? t('common.loading') : t('auth.confirm')}
             </button>
           </form>
           <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending} onClick={handleResend}>
-            {resending ? '...' : 'Renvoyer le code'}
+            {resending ? t('common.loading') : t('auth.resendCode')}
           </button>
           <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setPendingEmail(''); setCode(''); }}>
-            &larr; Retour
+            {t('auth.back')}
           </button>
         </div>
         </div>
@@ -292,18 +300,18 @@ export default function Auth() {
       {audience && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
           <span className={`pill ${audience === 'client' ? 'gold' : 'teal'}`}>
-            {audience === 'client' ? '🛍️ Espace client' : '🏪 Espace partenaires'}
+            {audience === 'client' ? t('auth.clientSpace') : t('auth.partnerSpace')}
           </span>
           <h2 style={{ margin: '10px 0 0', fontSize: 22 }}>
-            {audience === 'client' ? 'Commande chez les commerces de ton quartier' : 'Rejoins Fairide comme commerce ou livreur'}
+            {audience === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
           </h2>
         </div>
       )}
       <div className="auth-box">
       <div className="card">
         <div className="auth-tabs">
-          <div className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>Se connecter</div>
-          <div className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>Créer un compte</div>
+          <div className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</div>
+          <div className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</div>
         </div>
 
         {mode === 'register' && (
@@ -320,62 +328,62 @@ export default function Auth() {
             {role === 'driver' && (
               <>
                 <p className="small" style={{ marginTop: -6, marginBottom: 8 }}>
-                  📍 En créant ton compte livreur, ton navigateur te demandera d'autoriser la géolocalisation — elle sert à partager ta position en direct avec les clients pendant tes livraisons. Tu peux la désactiver à tout moment dans les réglages de ton compte.
+                  {t('auth.driverGeoNotice')}
                 </p>
                 <p className="small" style={{ marginBottom: 12 }}>
-                  💶 Aucune commission Fairide sur tes livraisons. Des frais techniques peuvent s'appliquer pour couvrir notamment le traitement des paiements et les services de la plateforme.
+                  {t('auth.driverFeeNotice')}
                 </p>
               </>
             )}
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>Prénom</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Prénom" />
+                <label>{t('auth.firstName')}</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>Nom</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nom" />
+                <label>{t('auth.lastName')}</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>Genre</label>
+                <label>{t('auth.gender')}</label>
                 <select value={gender} onChange={(e) => setGender(e.target.value)}>
                   {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>Date de naissance (optionnel)</label>
+                <label>{t('auth.birthDate')}</label>
                 <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
               </div>
             </div>
             <div className="field">
-              <label>Téléphone</label>
+              <label>{t('auth.phone')}</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 2 }}>
-                <label>Rue / Avenue</label>
+                <label>{t('auth.street')}</label>
                 <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>Numéro</label>
+                <label>{t('auth.number')}</label>
                 <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>Code postal</label>
+                <label>{t('auth.postalCode')}</label>
                 <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
               </div>
               <div className="field" style={{ flex: 2 }}>
-                <label>Ville / Commune</label>
+                <label>{t('auth.city')}</label>
                 <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
               </div>
             </div>
             <div className="field">
-              <label>Code promo (optionnel)</label>
-              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder="Un code reçu ? Ajoute-le ici" />
+              <label>{t('auth.promoCode')}</label>
+              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
             </div>
           </>
         )}
@@ -387,7 +395,7 @@ export default function Auth() {
             </div>
             <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
               <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-              <span className="small">ou</span>
+              <span className="small">{t('auth.or')}</span>
               <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
             </div>
           </>
@@ -395,29 +403,29 @@ export default function Auth() {
 
         <form onSubmit={submit}>
           <div className="field">
-            <label>Email</label>
+            <label>{t('auth.email')}</label>
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
           </div>
           <div className="field">
-            <label>Mot de passe</label>
+            <label>{t('auth.password')}</label>
             <input
               type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === 'register' ? '5 caractères min., 1 majuscule, 1 minuscule' : 'Mot de passe'}
+              placeholder={mode === 'register' ? t('auth.passwordPlaceholderRegister') : t('auth.password')}
             />
           </div>
           {mode === 'login' && (
             <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
-              Mot de passe oublié ?
+              {t('auth.forgotPassword')}
             </button>
           )}
           {mode === 'register' && (
             <div className="field">
-              <label>Confirme ton mot de passe</label>
-              <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder="Retape le même mot de passe" />
+              <label>{t('auth.confirmPassword')}</label>
+              <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('auth.confirmPasswordPlaceholder')} />
             </div>
           )}
           <button type="submit" className="btn-gold btn-block" disabled={loading}>
-            {loading ? '...' : mode === 'register' ? 'Créer mon compte' : 'Se connecter'}
+            {loading ? t('common.loading') : mode === 'register' ? t('auth.createAccount') : t('auth.signIn')}
           </button>
         </form>
       </div>
