@@ -16,9 +16,9 @@ export function categoryImage(value) {
 // Sous-sections de la catégorie "Boissons", déduites du nom du produit — aucun champ supplémentaire
 // à gérer côté restaurateur, cohérent avec le reste du menu qui reste piloté par le seul champ "category".
 export const BOISSON_SUBCATEGORIES = [
+  { value: 'froide', label: 'Boissons froides' },
   { value: 'chaude', label: 'Boissons chaudes' },
-  { value: 'alcool', label: 'Alcool' },
-  { value: 'froide', label: 'Boissons froides' }
+  { value: 'alcool', label: 'Alcool' }
 ];
 
 // \b ne fonctionne pas de façon fiable autour des lettres accentuées en JS (ex: "café", "thé",
