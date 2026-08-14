@@ -11,6 +11,7 @@ import Terms from './pages/legal/Terms';
 import Privacy from './pages/legal/Privacy';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
+import Checkout from './pages/client/Checkout';
 import Favorites from './pages/client/Favorites';
 import Orders from './pages/client/Orders';
 import OrderResult from './pages/client/OrderResult';
@@ -27,6 +28,7 @@ export default function App() {
 
         <Route path="/restaurants" element={<ProtectedRoute role="client"><RestaurantList /></ProtectedRoute>} />
         <Route path="/restaurants/:id" element={<ProtectedRoute role="client"><RestaurantMenu /></ProtectedRoute>} />
+        <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />

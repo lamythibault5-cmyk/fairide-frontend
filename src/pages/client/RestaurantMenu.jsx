@@ -9,56 +9,6 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
-import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
-
-function dateKey(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-}
-
-// Dates sélectionnables pour "programmer" une commande : aujourd'hui + les 7 prochains jours (même
-// fenêtre que la validation côté serveur).
-function getScheduleDateOptions() {
-  const now = new Date();
-  const opts = [];
-  for (let day = 0; day <= 7; day++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day);
-    let label;
-    if (day === 0) label = "Aujourd'hui";
-    else if (day === 1) label = 'Demain';
-    else label = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' });
-    opts.push({ value: dateKey(d), label });
-  }
-  return opts;
-}
-
-// Créneaux de 30 min entre 9h et 22h pour la date choisie — au moins 45 min à l'avance si c'est
-// aujourd'hui, sinon toute la plage horaire est proposée.
-function getScheduleTimeOptions(dateStr) {
-  if (!dateStr) return [];
-  const now = new Date();
-  const dayStart = 9, dayEnd = 22;
-  const [y, m, d] = dateStr.split('-').map(Number);
-  const isToday = dateStr === dateKey(now);
-  let cursor;
-  if (isToday) {
-    cursor = new Date(now.getTime() + 45 * 60000);
-    const minutes = cursor.getMinutes();
-    const rounded = minutes % 30 === 0 ? minutes : minutes + (30 - (minutes % 30));
-    cursor.setMinutes(rounded, 0, 0);
-    if (cursor.getHours() < dayStart) cursor.setHours(dayStart, 0, 0, 0);
-  } else {
-    cursor = new Date(y, m - 1, d, dayStart, 0, 0, 0);
-  }
-  const dayEndTime = new Date(y, m - 1, d, dayEnd, 0, 0, 0);
-  const slots = [];
-  while (cursor <= dayEndTime && slots.length < 30) {
-    const hh = String(cursor.getHours()).padStart(2, '0');
-    const mm = String(cursor.getMinutes()).padStart(2, '0');
-    slots.push(`${hh}:${mm}`);
-    cursor = new Date(cursor.getTime() + 30 * 60000);
-  }
-  return slots;
-}
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -67,32 +17,11 @@ export default function RestaurantMenu() {
   const [discover, setDiscover] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [favoriteBusy, setFavoriteBusy] = useState(false);
-  const { token, user, refreshUser } = useAuth();
-  const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
-  const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
-  const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
-  const [addressCity, setAddressCity] = useState(user.addressCity || '');
-  const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
-  const [deliveryNote, setDeliveryNote] = useState('');
-  const [useBalance, setUseBalance] = useState(true);
-  const [fulfillmentType, setFulfillmentType] = useState('delivery');
-  const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleTime, setScheduleTime] = useState('');
-  const [dateOptions] = useState(getScheduleDateOptions);
-  const [placing, setPlacing] = useState(false);
+  const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
-  const [pendingOrder, setPendingOrder] = useState(null);
-  // Le choix "livraison/à emporter" + planification n'apparaît qu'après un premier clic sur
-  // "Commander" depuis le panier — rien n'est envoyé au serveur avant la confirmation finale.
-  const [reviewing, setReviewing] = useState(false);
-  const [paying, setPaying] = useState(false);
-  const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
-  const pendingOrderRef = useRef(null);
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -157,24 +86,9 @@ export default function RestaurantMenu() {
     }
   }, [restaurant, id]);
 
-  // Le client attend qu'on l'amène directement au résumé de sa commande après avoir cliqué "Commander",
-  // plutôt que de devoir chercher la carte de confirmation plus bas dans la page.
-  useEffect(() => {
-    if (pendingOrder && pendingOrderRef.current) {
-      pendingOrderRef.current.scrollIntoView({ behavior: 'auto', block: 'start' });
-    }
-  }, [pendingOrder]);
-
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const totals = cart.totals(restaurant.menu);
-  // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
-  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
-  const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
-  const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
-  const scheduledPreview = scheduleDate && scheduleTime
-    ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
-    : null;
   const isFavorite = favoriteIds.has(id);
 
   async function toggleFavorite() {
@@ -194,83 +108,11 @@ export default function RestaurantMenu() {
     }
   }
 
-  async function confirmAndPay() {
-    setPaying(true);
-    try {
-      const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
-      // Le panier n'est vidé qu'une fois le paiement confirmé, pas dès la création de la commande —
-      // sinon "Annuler" laisserait le client avec un panier vide, sans possibilité de reformuler son
-      // choix (livraison/à emporter, planification) sans tout rajouter au panier.
-      cart.clear();
-      if (pay.simulated) {
-        toast('Commande passée et payée (paiement simulé).');
-        navigate('/orders');
-      } else {
-        window.location.href = pay.checkoutUrl;
-      }
-    } catch (e) {
-      toast(e.message);
-      setPaying(false);
-    }
-  }
-
-  async function cancelOrder() {
-    setCancelling(true);
-    try {
-      await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
-      toast('Commande annulée.');
-      setPendingOrder(null);
-      if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setCancelling(false);
-    }
-  }
-
   function addToCart(item) {
     if (item.optionGroups?.length > 0) {
       setPickerItem(item);
     } else {
       cart.addOne(item.id, item.price);
-    }
-  }
-
-  async function placeOrder() {
-    if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
-      return;
-    }
-    if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
-      toast('Choisis une date et une heure pour ta commande programmée.');
-      return;
-    }
-    const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
-    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
-    setPlacing(true);
-    try {
-      // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
-      // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
-      const order = await api('/orders', {
-        method: 'POST', token,
-        body: {
-          restaurantId: id, items, orderType: fulfillmentType,
-          scheduledFor: scheduledForISO,
-          ...(fulfillmentType === 'delivery' ? {
-            addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
-            addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
-            deliveryInstructions, deliveryNote: deliveryNote.trim()
-          } : {}),
-          useBalance
-        }
-      });
-      if (order.balanceUsed > 0) refreshUser().catch(() => {});
-      setDeliveryConfirmed(false);
-      setPendingOrder(order);
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setPlacing(false);
     }
   }
 
@@ -333,217 +175,39 @@ export default function RestaurantMenu() {
         })}
       </div>
 
-      {cart.count > 0 && !pendingOrder && (
-        <>
-          <div className="card">
-            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ton panier</h3>
-            {Object.entries(cart.lines).map(([lineKey, line]) => {
-              const item = restaurant.menu.find((m) => m.id === line.itemId);
-              if (!item) return null;
-              return (
-                <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                  <span>
-                    {item.name}
-                    {line.optionsSnapshot?.length > 0 && (
-                      <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-                    )}
-                  </span>
-                  <div className="row" style={{ gap: 8 }}>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-                    <span>{line.qty}</span>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="divider" />
-            <div className="breakdown">
-              <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
-              {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
-              ))}
-              {reviewing && fulfillmentType === 'delivery' && (
-                <>
-                  <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
-                  <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
-                </>
-              )}
-              <div className="line"><span>dont commission Fairide (10%)</span><span>{totals.commission.toFixed(2)}€</span></div>
-              {useBalance && user.balance > 0 && (
-                <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
-              )}
-              <div className="line total"><span>Total</span><span>{estimatedTotal.toFixed(2)}€</span></div>
-            </div>
-            {user.balance > 0 && (
-              <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
-                <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
-                <span className="small">Utiliser mon solde Fairide ({Number(user.balance).toFixed(2)}€ disponible)</span>
-              </label>
-            )}
-          </div>
-          {reviewing && (
-            <>
-              <div className="field">
-                <label>Comment récupérer ta commande ?</label>
+      {cart.count > 0 && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ton panier</h3>
+          {Object.entries(cart.lines).map(([lineKey, line]) => {
+            const item = restaurant.menu.find((m) => m.id === line.itemId);
+            if (!item) return null;
+            return (
+              <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+                <span>
+                  {item.name}
+                  {line.optionsSnapshot?.length > 0 && (
+                    <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
+                  )}
+                </span>
                 <div className="row" style={{ gap: 8 }}>
-                  <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('delivery')}>🛵 Livraison</button>
-                  <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('pickup')}>🏠 À emporter</button>
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
+                  <span>{line.qty}</span>
+                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
                 </div>
               </div>
-              {fulfillmentType === 'delivery' && (
-                <>
-                  <div className="field">
-                    <label>Rue / Avenue</label>
-                    <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
-                  </div>
-                  <div className="row" style={{ gap: 8 }}>
-                    <div className="field" style={{ flex: 1 }}>
-                      <label>Numéro</label>
-                      <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
-                    </div>
-                    <div className="field" style={{ flex: 1 }}>
-                      <label>Code postal</label>
-                      <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
-                    </div>
-                  </div>
-                  <div className="field">
-                    <label>Ville / Commune</label>
-                    <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
-                  </div>
-                  <div className="field">
-                    <label>À la livraison</label>
-                    <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
-                      {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label>Note pour le livreur (optionnel)</label>
-                    <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
-                  </div>
-                </>
-              )}
-              {fulfillmentType === 'pickup' && (
-                <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
-              )}
-              <div className="field">
-                <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    style={{ width: 'auto' }}
-                    checked={scheduleEnabled}
-                    onChange={(e) => {
-                      setScheduleEnabled(e.target.checked);
-                      if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
-                      else { setScheduleDate(''); setScheduleTime(''); }
-                    }}
-                  />
-                  <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
-                </label>
-                {scheduleEnabled && (
-                  <>
-                    <div className="row" style={{ gap: 8, marginTop: 8 }}>
-                      <select
-                        value={scheduleDate}
-                        onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
-                        style={{ flex: 1 }}
-                      >
-                        {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                      </select>
-                      <select
-                        value={scheduleTime}
-                        onChange={(e) => setScheduleTime(e.target.value)}
-                        style={{ flex: 1 }}
-                      >
-                        <option value="">Heure...</option>
-                        {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
-                      </select>
-                    </div>
-                    {scheduleTimeOptions.length === 0 && (
-                      <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
-                    )}
-                    {scheduledPreview && (
-                      <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
-                    )}
-                  </>
-                )}
-              </div>
-            </>
-          )}
-          <div className="cart-bar">
-            {reviewing && (
-              <button type="button" className="btn-ghost" onClick={() => setReviewing(false)}>&larr; Retour</button>
-            )}
-            <span>{cart.count} article(s) · à partir de {estimatedTotal.toFixed(2)}€</span>
-            <button className="btn-gold" disabled={placing} onClick={reviewing ? placeOrder : () => setReviewing(true)}>
-              {reviewing ? (placing ? '...' : 'Confirmer la commande') : 'Commander'}
-            </button>
-          </div>
-        </>
-      )}
-
-      {pendingOrder && (
-        <div className="card" ref={pendingOrderRef}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
-          {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
-            <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
-          )}
-
-          <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
-            <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 8px' }}>
-              <input
-                type="checkbox"
-                checked={deliveryConfirmed}
-                onChange={(e) => setDeliveryConfirmed(e.target.checked)}
-                style={{ marginTop: 2 }}
-              />
-              <span className="small" style={{ fontWeight: 600 }}>
-                {pendingOrder.orderType === 'delivery'
-                  ? '📍 Je confirme que mes informations de livraison sont correctes'
-                  : "🏠 Je confirme vouloir venir chercher ma commande moi-même"}
-              </span>
-            </label>
-            {pendingOrder.orderType === 'delivery' ? (
-              <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
-                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
-                {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>📅 Livraison programmée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
-                )}
-              </>
-            ) : (
-              <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
-                {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
-                )}
-              </>
-            )}
-          </div>
-
+            );
+          })}
+          <div className="divider" />
           <div className="breakdown">
-            <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
-            {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
-            {pendingOrder.orderType === 'delivery' && (
-              <>
-                <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
-                <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
-              </>
-            )}
-            {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
-            <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+            <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
+            {totals.discountedItems.map((d, i) => (
+              <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
+            ))}
+            <div className="line total"><span>Sous-total</span><span>{totals.subtotal.toFixed(2)}€</span></div>
           </div>
-
-          {!deliveryConfirmed && (
-            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer avant de payer.</p>
-          )}
-          <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
-            <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : 'Annuler'}</button>
+          <div className="cart-bar">
+            <span>{cart.count} article(s)</span>
+            <button className="btn-gold" onClick={() => navigate('/checkout')}>Commander</button>
           </div>
         </div>
       )}
