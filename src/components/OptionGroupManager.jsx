@@ -8,6 +8,7 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
   const [name, setName] = useState(initial?.name || '');
   const [type, setType] = useState(initial?.type || 'multiple');
   const [required, setRequired] = useState(initial?.required || false);
+  const [maxSelections, setMaxSelections] = useState(initial?.maxSelections ? String(initial.maxSelections) : '');
   const [items, setItems] = useState(
     initial?.items?.length ? initial.items.map((i) => ({ name: i.name, priceDelta: String(i.priceDelta) })) : [emptyItem()]
   );
@@ -29,7 +30,8 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
       .filter((it) => it.name.trim())
       .map((it) => ({ name: it.name.trim(), priceDelta: parseFloat(it.priceDelta) || 0 }));
     if (!name.trim() || !cleanItems.length) return;
-    onSave({ name: name.trim(), type, required, items: cleanItems });
+    const maxSel = type === 'multiple' ? parseInt(maxSelections, 10) || null : null;
+    onSave({ name: name.trim(), type, required, maxSelections: maxSel, items: cleanItems });
   }
 
   return (
@@ -46,6 +48,12 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
         <input type="checkbox" style={{ width: 'auto' }} checked={required} onChange={(e) => setRequired(e.target.checked)} />
         <span className="small">Le client doit obligatoirement choisir une option ici</span>
       </label>
+      {type === 'multiple' && (
+        <div className="field">
+          <label>Nombre maximum de choix (optionnel)</label>
+          <input type="number" min="1" step="1" value={maxSelections} onChange={(e) => setMaxSelections(e.target.value)} placeholder="Illimité par défaut" />
+        </div>
+      )}
       <label className="small" style={{ display: 'block', marginBottom: 6 }}>Options</label>
       {items.map((it, idx) => (
         <div className="row" key={idx} style={{ gap: 8, marginBottom: 6 }}>
@@ -109,7 +117,7 @@ export default function OptionGroupManager({ groups, onCreate, onUpdate, onDelet
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <span>
                 <b>{g.name}</b>{' '}
-                <span className="small">({g.type === 'single' ? 'un seul choix' : 'plusieurs choix'}{g.required ? ', obligatoire' : ''})</span>
+                <span className="small">({g.type === 'single' ? 'un seul choix' : g.maxSelections ? `max ${g.maxSelections} choix` : 'plusieurs choix'}{g.required ? ', obligatoire' : ''})</span>
               </span>
               <div className="row" style={{ gap: 6 }}>
                 <button className="btn-ghost" onClick={() => setEditingId(g.id)}>✏️</button>
