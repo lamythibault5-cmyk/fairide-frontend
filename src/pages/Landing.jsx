@@ -1,5 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { COMMUNES } from '../menuCategories';
+import ContactSection from '../components/ContactSection';
 
 const JOIN_CARDS = [
   {
@@ -119,6 +120,9 @@ export default function Landing() {
       <div className="commune-pills">
         {COMMUNES.map((c) => <span key={c} className="pill teal">{c}</span>)}
       </div>
+
+      <h2 className="section-title" style={{ textAlign: 'center' }}>Contact</h2>
+      <ContactSection />
 
       <div className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
         <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>Prêt à soutenir ton quartier ?</h2>

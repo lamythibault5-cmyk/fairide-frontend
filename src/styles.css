@@ -284,6 +284,12 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .step-card { text-align: center; padding: 10px; }
 .step-num { width: 32px; height: 32px; border-radius: 50%; background: var(--gold); color: var(--ink); font-family: 'Fraunces', serif; font-weight: 700; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
 
+.contact-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; align-items: start; margin-bottom: 36px; }
+.contact-info-col { display: flex; flex-direction: column; gap: 14px; }
+.contact-info-card { display: flex; gap: 12px; align-items: center; margin-bottom: 0; }
+.contact-info-icon { font-size: 20px; background: var(--cream-dim); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+@media (max-width: 720px) { .contact-grid { grid-template-columns: 1fr; } }
+
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
