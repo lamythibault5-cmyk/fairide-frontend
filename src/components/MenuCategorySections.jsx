@@ -26,7 +26,7 @@ export default function MenuCategorySections({ menu, onAdd }) {
         const items = menu.filter((i) => (i.category || 'plat') === cat.value);
         if (!items.length) return null;
         return (
-          <div key={cat.value}>
+          <div key={cat.value} id={`menu-cat-${cat.value}`}>
             <div className="category-header">
               {cat.image && <img src={cat.image} alt={cat.label} />}
               <span>{cat.label}</span>

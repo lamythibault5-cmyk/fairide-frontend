@@ -9,6 +9,8 @@ import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
+import CategoryQuickNav from '../../components/CategoryQuickNav';
+import { CATEGORIES } from '../../menuCategories';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -90,6 +92,7 @@ export default function RestaurantMenu() {
 
   const totals = cart.totals(restaurant.menu);
   const isFavorite = favoriteIds.has(id);
+  const presentCategories = CATEGORIES.filter((cat) => restaurant.menu.some((i) => (i.category || 'plat') === cat.value));
 
   async function toggleFavorite() {
     setFavoriteBusy(true);
@@ -118,6 +121,7 @@ export default function RestaurantMenu() {
 
   return (
     <div>
+      <CategoryQuickNav categories={presentCategories} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; Tous les restaurants</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
