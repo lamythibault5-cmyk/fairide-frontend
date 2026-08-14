@@ -2,6 +2,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
+import PartnersMarquee from '../components/PartnersMarquee';
 
 function joinCards(t) {
   return [
@@ -118,6 +119,8 @@ export default function Landing() {
 
       <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.contactTitle')}</h2>
       <ContactSection />
+
+      <PartnersMarquee />
 
       <div className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
         <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>{t('landing.ctaTitle')}</h2>
