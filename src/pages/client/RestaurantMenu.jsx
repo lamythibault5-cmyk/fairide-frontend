@@ -4,11 +4,11 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
-import { CATEGORIES, defaultItemImage } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
+import MenuCategorySections from '../../components/MenuCategorySections';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -147,32 +147,7 @@ export default function RestaurantMenu() {
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
-        {CATEGORIES.map((cat) => {
-          const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
-          if (!items.length) return null;
-          return (
-            <div key={cat.value}>
-              <div className="category-header">
-                {cat.image && <img src={cat.image} alt={cat.label} />}
-                <span>{cat.label}</span>
-              </div>
-              <div className="menu-grid">
-                {items.map((item) => (
-                  <div className="menu-item-card" key={item.id} style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
-                    {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
-                    <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
-                    <div className="name">{item.name}</div>
-                    <div className="small desc">{item.available === false ? 'Indisponible pour le moment' : (item.desc || '')}</div>
-                    <div className="bottom-row">
-                      <span className="price">{item.price.toFixed(2)}€</span>
-                      <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => addToCart(item)}>+</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
+        <MenuCategorySections menu={restaurant.menu} onAdd={addToCart} />
       </div>
 
       {cart.count > 0 && (

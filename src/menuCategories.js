@@ -13,6 +13,35 @@ export function categoryImage(value) {
   return CATEGORIES.find((c) => c.value === value)?.image || '';
 }
 
+// Sous-sections de la catégorie "Boissons", déduites du nom du produit — aucun champ supplémentaire
+// à gérer côté restaurateur, cohérent avec le reste du menu qui reste piloté par le seul champ "category".
+export const BOISSON_SUBCATEGORIES = [
+  { value: 'chaude', label: 'Boissons chaudes' },
+  { value: 'alcool', label: 'Alcool' },
+  { value: 'froide', label: 'Boissons froides' }
+];
+
+// \b ne fonctionne pas de façon fiable autour des lettres accentuées en JS (ex: "café", "thé",
+// "saké" ne matchaient pas \bcafé\b) — on utilise donc des frontières explicites basées sur \p{L}.
+function wordRegex(words) {
+  return new RegExp(`(?<![\\p{L}])(?:${words.join('|')})(?![\\p{L}])`, 'iu');
+}
+
+const NON_ALCOHOL_HINT_REGEX = /sans alcool/i;
+const ALCOHOL_REGEX = wordRegex(['bière', 'biere', 'vin', 'vins', 'cava', 'prosecco', 'chianti', 'cidre', 'rhum', 'vodka', 'whisky', 'whiskey', 'gin', 'tequila', 'limoncello', 'cocktail', 'trappiste', 'saké', 'sake', 'champagne', 'porto', 'pastis', 'mojito', 'sangria', 'liqueur']);
+const COLD_HINT_REGEX = /(glacé|glace|iced|ice\b|froid|cold|fuze|smoothie|frappé|frappe|slush)/i;
+const HOT_WORD_REGEX = /chaud/i;
+const HOT_KEYWORDS_REGEX = new RegExp(wordRegex(['café', 'expresso', 'espresso', 'cappuccino', 'latte', 'macchiato', 'mocha', 'chai', 'thé', 'the', 'americano', 'infusion']).source + '|flat white', 'iu');
+
+export function boissonSubcategory(name) {
+  const n = name || '';
+  if (!NON_ALCOHOL_HINT_REGEX.test(n) && ALCOHOL_REGEX.test(n)) return 'alcool';
+  if (HOT_WORD_REGEX.test(n) && !COLD_HINT_REGEX.test(n)) return 'chaude';
+  if (COLD_HINT_REGEX.test(n)) return 'froide';
+  if (HOT_KEYWORDS_REGEX.test(n)) return 'chaude';
+  return 'froide';
+}
+
 export const COMMUNES = [
   'Anderlecht', 'Auderghem', 'Berchem-Sainte-Agathe', 'Bruxelles', 'Etterbeek', 'Evere',
   'Forest', 'Ganshoren', 'Ixelles', 'Jette', 'Koekelberg', 'Molenbeek-Saint-Jean',
