@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -10,6 +10,7 @@ import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
+import FloatingCart from '../../components/FloatingCart';
 import { CATEGORIES } from '../../menuCategories';
 
 export default function RestaurantMenu() {
@@ -23,7 +24,6 @@ export default function RestaurantMenu() {
   const [pickerItem, setPickerItem] = useState(null);
   const cart = useCart();
   const toast = useToast();
-  const navigate = useNavigate();
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -90,7 +90,6 @@ export default function RestaurantMenu() {
 
   if (!restaurant) return <SkeletonCards count={3} />;
 
-  const totals = cart.totals(restaurant.menu);
   const isFavorite = favoriteIds.has(id);
   const presentCategories = CATEGORIES.filter((cat) => restaurant.menu.some((i) => (i.category || 'plat') === cat.value));
 
@@ -122,6 +121,7 @@ export default function RestaurantMenu() {
   return (
     <div>
       <CategoryQuickNav categories={presentCategories} />
+      <FloatingCart menu={restaurant.menu} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; Tous les restaurants</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
@@ -153,43 +153,6 @@ export default function RestaurantMenu() {
         {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
         <MenuCategorySections menu={restaurant.menu} onAdd={addToCart} />
       </div>
-
-      {cart.count > 0 && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ton panier</h3>
-          {Object.entries(cart.lines).map(([lineKey, line]) => {
-            const item = restaurant.menu.find((m) => m.id === line.itemId);
-            if (!item) return null;
-            return (
-              <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                <span>
-                  {item.name}
-                  {line.optionsSnapshot?.length > 0 && (
-                    <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-                  )}
-                </span>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-                  <span>{line.qty}</span>
-                  <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-                </div>
-              </div>
-            );
-          })}
-          <div className="divider" />
-          <div className="breakdown">
-            <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
-            {totals.discountedItems.map((d, i) => (
-              <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
-            ))}
-            <div className="line total"><span>Sous-total</span><span>{totals.subtotal.toFixed(2)}€</span></div>
-          </div>
-          <div className="cart-bar">
-            <span>{cart.count} article(s)</span>
-            <button className="btn-gold" onClick={() => navigate('/checkout')}>Commander</button>
-          </div>
-        </div>
-      )}
 
       {reviews && reviews.reviews.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>

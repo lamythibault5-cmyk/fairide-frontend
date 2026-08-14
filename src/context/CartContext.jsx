@@ -64,6 +64,24 @@ export function CartProvider({ children }) {
     });
   }
 
+  // Retire entièrement une ligne du panier en un seul geste, quelle que soit sa quantité (plus direct
+  // que de décrémenter le stepper jusqu'à zéro).
+  function removeLine(lineKey) {
+    setLines((prev) => {
+      if (!prev[lineKey]) return prev;
+      const next = { ...prev };
+      delete next[lineKey];
+      return next;
+    });
+  }
+
+  // Vide le panier tout en restant sur le même restaurant (ex: bouton "Vider" pendant qu'on parcourt
+  // encore le menu) — contrairement à clear(), ne réinitialise pas restaurantId, sinon un ajout
+  // ultérieur sans rechargement de page laisserait le panier orphelin de tout restaurant.
+  function clearLines() {
+    setLines({});
+  }
+
   function clear() {
     setLines({});
     setRestaurantId(null);
@@ -98,7 +116,7 @@ export function CartProvider({ children }) {
   }
 
   return (
-    <CartContext.Provider value={{ restaurantId, lines, count, startOrder, addOne, changeLineQty, clear, totals }}>
+    <CartContext.Provider value={{ restaurantId, lines, count, startOrder, addOne, changeLineQty, removeLine, clear, clearLines, totals }}>
       {children}
     </CartContext.Provider>
   );
