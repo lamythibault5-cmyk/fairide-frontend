@@ -19,6 +19,15 @@
 
 * { box-sizing: border-box; }
 
+/* Empêche tout débordement horizontal (blobs décoratifs, bandeaux défilants) de créer une barre de
+   défilement horizontale. Posé sur html (élément racine, propriétaire naturel du scroll de la
+   fenêtre) plutôt que sur body ou un div interne : à ce niveau, un overflow-x seul qui force
+   overflow-y à 'auto' (règle CSS) ne crée pas de scrollbar imbriquée, puisqu'il n'y a rien
+   au-dessus de html pour la contenir — c'est simplement le scroll normal de la page.  */
+html {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--cream);
@@ -293,7 +302,7 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
 
-.decor-page { position: relative; overflow-x: hidden; }
+.decor-page { position: relative; }
 .decor-page > *:not(.decor-blob) { position: relative; z-index: 1; }
 .decor-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; pointer-events: none; z-index: 0; }
 .decor-blob.teal { background: var(--teal); }
