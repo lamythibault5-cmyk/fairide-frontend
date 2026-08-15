@@ -115,6 +115,7 @@ export const RESTAURANT_TYPES = [
   { value: 'Kebab & Grill', emoji: '🥙' },
   { value: 'Mexicain', emoji: '🌮' },
   { value: 'Libanais', emoji: '🧆' },
+  { value: 'Espagnol', emoji: '🥘' },
   { value: 'Fried Chicken', emoji: '🍗' },
   { value: 'Coffee Shop', emoji: '☕' },
   { value: 'Boulangerie', emoji: '🥐' },
@@ -150,48 +151,39 @@ const GENERIC_TEMPLATE = {
 };
 
 const TYPE_TEMPLATES = {
+  // Suppléments (menu frites+boisson, sweet potato fries, steak/fromage/bacon en plus) gérés via le
+  // groupe d'options "Suppléments burger" (voir ensureBurgerGroups dans routes/restaurants.js).
   Burgers: {
     plat: [
-      { name: 'Classic Cheeseburger', price: 9.9, desc: '' },
-      { name: 'Double Cheeseburger', price: 12.9, desc: '' },
-      { name: 'Bacon Burger', price: 12.5, desc: '' },
-      { name: 'BBQ Bacon Burger', price: 13.5, desc: '' },
-      { name: 'Crispy Chicken Burger', price: 11.5, desc: '' },
-      { name: 'Spicy Chicken Burger', price: 11.9, desc: '' },
-      { name: 'Avocado Chicken Burger', price: 12.9, desc: '' },
-      { name: 'Blue Cheese Burger', price: 13.5, desc: '' },
-      { name: 'Truffle Burger', price: 14.9, desc: '' },
-      { name: 'Veggie Burger', price: 10.9, desc: '' },
-      { name: 'Double Smash Burger', price: 13.9, desc: '' },
-      { name: 'Oklahoma Onion Burger', price: 12.5, desc: '' }
+      { name: 'Classic', price: 11.5, desc: 'Bœuf 150g, cheddar, salade, tomate, oignon, pain brioché' },
+      { name: 'Bacon cheese', price: 13, desc: 'Bœuf 150g, bacon, cheddar, pain brioché' },
+      { name: 'Double', price: 15.5, desc: 'Double bœuf 150g, cheddar, pain brioché' },
+      { name: 'Blue cheese', price: 13.5, desc: 'Bœuf 150g, blue cheese, oignons caramélisés' },
+      { name: 'BBQ', price: 13.5, desc: 'Bœuf 150g, bacon, onion rings, sauce BBQ' },
+      { name: 'Truffe', price: 14.5, desc: 'Bœuf 150g, parmesan, roquette, mayo truffe' },
+      { name: 'Chicken crispy', price: 12, desc: 'Poulet croustillant, pain brioché' },
+      { name: 'Chicken hot honey', price: 12.5, desc: 'Poulet croustillant, sauce hot honey' },
+      { name: 'Veggie', price: 11.5, desc: 'Galette de légumes, pain brioché' },
+      { name: 'Vegan', price: 12.5, desc: 'Steak végétal, pain brioché' },
+      { name: 'Burger du mois', price: 14, desc: '' },
+      { name: 'Mini burger + frites + jus', price: 8.5, desc: 'Menu enfant' }
     ],
     entree: [
-      { name: 'French Fries', price: 3.5, desc: '' },
-      { name: 'Sweet Potato Fries', price: 4.5, desc: '' },
-      { name: 'Loaded Cheese Fries', price: 6.5, desc: '' },
-      { name: 'Bacon & Cheese Fries', price: 7, desc: '' },
-      { name: 'Onion Rings', price: 4.5, desc: '' },
-      { name: 'Chicken Nuggets', price: 6.5, desc: '' },
-      { name: 'Chicken Wings', price: 7.9, desc: '' },
-      { name: 'Coleslaw', price: 3.5, desc: '' }
+      { name: 'Frites', price: 3.5, desc: '' },
+      { name: 'Frites cheddar bacon', price: 6, desc: '' },
+      { name: 'Onion rings', price: 4.5, desc: '' },
+      { name: 'Nuggets (6 pcs)', price: 5, desc: '' },
+      { name: 'Coleslaw', price: 3, desc: '' }
     ],
     dessert: [
-      { name: 'Chocolate Brownie', price: 4.5, desc: '' },
-      { name: 'New York Cheesecake', price: 5.5, desc: '' },
-      { name: 'Chocolate Chip Cookie', price: 3, desc: '' }
+      { name: 'Milkshake', price: 5.5, desc: 'Vanille, fraise, chocolat ou Oreo — au choix' },
+      { name: 'Brownie', price: 4.5, desc: '' },
+      { name: 'Cookie', price: 3, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Fanta', price: 2.8, desc: '' },
-      { name: 'Homemade Lemonade', price: 4, desc: '' },
-      { name: 'Root Beer', price: 3.2, desc: '' },
-      { name: 'Oreo Milkshake', price: 5.9, desc: '' },
-      { name: 'Vanilla Milkshake', price: 5.5, desc: '' },
-      { name: 'Iced Tea', price: 3, desc: '' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Limonade maison', price: 3.5, desc: '' },
+      { name: 'Bière artisanale', price: 4.5, desc: '' }
     ]
   },
   // Carte type pizzeria italienne (pâte fine 30cm, options taille/pâte/suppléments gérées via les
@@ -307,49 +299,49 @@ const TYPE_TEMPLATES = {
   },
   Sushi: {
     plat: [
-      { name: 'Salmon Nigiri ×2', price: 5.5, desc: '' },
-      { name: 'Tuna Nigiri ×2', price: 6, desc: '' },
-      { name: 'Avocado Maki ×6', price: 5, desc: '' },
-      { name: 'Cucumber Maki ×6', price: 4.5, desc: '' },
-      { name: 'Salmon Maki ×6', price: 5.5, desc: '' },
-      { name: 'Tuna Maki ×6', price: 6, desc: '' },
-      { name: 'California Roll ×8', price: 8.5, desc: '' },
-      { name: 'Spicy Salmon Roll ×8', price: 9, desc: '' },
-      { name: 'Spicy Tuna Roll ×8', price: 9.5, desc: '' },
-      { name: 'Salmon Avocado Roll ×8', price: 9, desc: '' },
-      { name: 'Crispy Chicken Roll ×8', price: 9.5, desc: '' },
-      { name: 'Shrimp Tempura Roll ×8', price: 10.5, desc: '' },
-      { name: 'Salmon Box', price: 17.9, desc: '' },
-      { name: 'California Box', price: 18.9, desc: '' },
-      { name: 'Sushi Mix', price: 21.9, desc: '' },
-      { name: 'Salmon Lovers', price: 23.9, desc: '' },
-      { name: 'Sushi Deluxe', price: 27.5, desc: '' },
-      { name: 'Veggie Box', price: 16.5, desc: '' }
+      { name: 'Sushi Saumon ×2', price: 4.5, desc: '' },
+      { name: 'Sushi Thon ×2', price: 5.5, desc: '' },
+      { name: 'Sushi Crevette ×2', price: 4.5, desc: '' },
+      { name: 'Sushi Daurade ×2', price: 5, desc: '' },
+      { name: 'Sushi Anguille ×2', price: 6, desc: '' },
+      { name: 'Sashimi Saumon ×6', price: 9.5, desc: '' },
+      { name: 'Sashimi Thon ×6', price: 12, desc: '' },
+      { name: 'Sashimi Mixte ×6', price: 11, desc: '' },
+      { name: 'Maki Saumon ×6', price: 5, desc: '' },
+      { name: 'Maki Thon ×6', price: 6, desc: '' },
+      { name: 'Maki Concombre ×6', price: 4, desc: '' },
+      { name: 'Maki Avocat ×6', price: 4, desc: '' },
+      { name: 'Maki Saumon Avocat ×6', price: 5.5, desc: '' },
+      { name: 'California Roll Saumon Avocat ×8', price: 9.5, desc: '' },
+      { name: 'California Roll Crevette Tempura ×8', price: 10.5, desc: '' },
+      { name: 'California Roll Poulet Croustillant ×8', price: 9.5, desc: '' },
+      { name: 'California Roll Végétarien ×8', price: 8.5, desc: '' },
+      { name: 'Spring Rolls Saumon Avocat Cheese ×6', price: 8.5, desc: '' },
+      { name: 'Spring Rolls Thon Mangue ×6', price: 9.5, desc: '' },
+      { name: 'Poke Bowl Saumon', price: 14.5, desc: '' },
+      { name: 'Poke Bowl Thon', price: 15.5, desc: '' },
+      { name: 'Chirashi Saumon', price: 16, desc: '' },
+      { name: 'Poulet Teriyaki Riz', price: 13.5, desc: '' },
+      { name: 'Plateau Solo (16 pcs)', price: 18.5, desc: '' },
+      { name: 'Plateau Duo (32 pcs)', price: 34, desc: '' },
+      { name: 'Plateau Family (54 pcs)', price: 58, desc: '' }
     ],
     entree: [
-      { name: 'Edamame', price: 5, desc: '' },
-      { name: 'Gyoza Chicken', price: 6.5, desc: '' },
-      { name: 'Gyoza Vegetable', price: 6, desc: '' },
-      { name: 'Wakame Salad', price: 5.5, desc: '' },
-      { name: 'Miso Soup', price: 4.5, desc: '' },
-      { name: 'Shrimp Tempura', price: 8.5, desc: '' }
+      { name: 'Edamame', price: 4.5, desc: '' },
+      { name: 'Soupe miso', price: 4, desc: '' },
+      { name: 'Gyoza poulet (5 pcs)', price: 6.5, desc: '' },
+      { name: 'Salade wakame', price: 5.5, desc: '' },
+      { name: 'Tempura crevettes (4 pcs)', price: 8.5, desc: '' }
     ],
     dessert: [
-      { name: 'Mochi Mango', price: 5.5, desc: '' },
-      { name: 'Mochi Coconut', price: 5.5, desc: '' },
-      { name: 'Matcha Cheesecake', price: 6.5, desc: '' }
+      { name: 'Mochi (2 pcs)', price: 4.5, desc: '' },
+      { name: 'Perles de coco', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Ramune Original', price: 3.9, desc: '' },
-      { name: 'Ramune Lychee', price: 3.9, desc: '' },
-      { name: 'Japanese Green Tea', price: 3.5, desc: '' },
-      { name: 'Matcha Latte', price: 4, desc: '' },
-      { name: 'Bubble Tea', price: 4.5, desc: '' }
+      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Thé vert', price: 2.5, desc: '' },
+      { name: 'Bière Asahi', price: 4, desc: '' },
+      { name: 'Saké', price: 6, desc: '' }
     ]
   },
   Mexicain: {
@@ -398,95 +390,87 @@ const TYPE_TEMPLATES = {
       { name: 'Horchata', price: 4, desc: '' }
     ]
   },
+  // Carte type levantine (Liban/Syrie) — mezzés, sandwichs, grillades.
   Libanais: {
     entree: [
-      { name: 'Hummus', price: 6.5, desc: '' },
-      { name: 'Hummus Beiruti', price: 7, desc: '' },
-      { name: 'Moutabal', price: 6.5, desc: '' },
-      { name: 'Baba Ganoush', price: 7, desc: '' },
-      { name: 'Labneh', price: 6, desc: '' },
-      { name: 'Tabbouleh', price: 7.5, desc: '' },
-      { name: 'Fattoush', price: 7.5, desc: '' },
-      { name: 'Falafel ×4', price: 6.5, desc: '' },
-      { name: 'Kebbeh ×3', price: 7.5, desc: '' },
-      { name: 'Halloumi Grillé', price: 8, desc: '' }
+      { name: 'Houmous', price: 5.5, desc: '' },
+      { name: 'Moutabbal', price: 6, desc: '' },
+      { name: 'Taboulé', price: 6, desc: '' },
+      { name: 'Fattouch', price: 6.5, desc: '' },
+      { name: 'Falafel (6 pcs)', price: 6, desc: '' },
+      { name: 'Kibbeh (3 pcs)', price: 7.5, desc: '' },
+      { name: 'Sambousek fromage (4 pcs)', price: 6.5, desc: '' },
+      { name: 'Warak enab (feuilles de vigne)', price: 6.5, desc: '' },
+      { name: 'Mouhammara', price: 6.5, desc: '' },
+      { name: 'Mezzé végétarien (6 pièces)', price: 22, desc: 'À partager' },
+      { name: 'Mezzé royal (10 pièces)', price: 38, desc: 'À partager' }
     ],
     plat: [
-      { name: 'Chicken Shawarma', price: 9.5, desc: '' },
-      { name: 'Beef Shawarma', price: 10.5, desc: '' },
-      { name: 'Falafel Wrap', price: 8.5, desc: '' },
-      { name: 'Halloumi Wrap', price: 9.5, desc: '' },
-      { name: 'Kafta Wrap', price: 10, desc: '' },
-      { name: 'Chicken Shawarma Plate', price: 15.5, desc: '' },
-      { name: 'Beef Shawarma Plate', price: 16.5, desc: '' },
-      { name: 'Mixed Grill', price: 19.5, desc: '' },
-      { name: 'Kafta Plate', price: 16, desc: '' },
-      { name: 'Falafel Plate', price: 13.5, desc: '' },
-      { name: 'Vegetarian Mezze', price: 17.5, desc: '' },
-      { name: 'Mixed Mezze', price: 19.5, desc: '' }
+      { name: 'Sandwich falafel', price: 6.5, desc: '' },
+      { name: 'Sandwich shawarma poulet', price: 7.5, desc: '' },
+      { name: 'Sandwich shawarma viande', price: 8, desc: '' },
+      { name: 'Sandwich kafta', price: 8, desc: '' },
+      { name: 'Sandwich halloumi grillé', price: 7.5, desc: '' },
+      { name: 'Assiette shawarma poulet', price: 14.5, desc: '' },
+      { name: 'Assiette shawarma viande', price: 15.5, desc: '' },
+      { name: 'Kafta grillée', price: 15.5, desc: '' },
+      { name: 'Chich taouk', price: 15, desc: '' },
+      { name: 'Grillades mixtes', price: 18.5, desc: '' },
+      { name: 'Fatteh poulet', price: 13.5, desc: '' },
+      { name: 'Assiette végétarienne', price: 13, desc: '' }
     ],
     dessert: [
-      { name: 'Baklava', price: 5.5, desc: '' },
-      { name: 'Mouhalabieh', price: 5.5, desc: '' },
-      { name: 'Lebanese Kunafa', price: 6.5, desc: '' },
-      { name: 'Dates & Nuts', price: 5, desc: '' }
+      { name: 'Baklava (4 pcs)', price: 5, desc: '' },
+      { name: 'Halawet el jibn', price: 5.5, desc: '' },
+      { name: 'Namoura', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Ayran', price: 3, desc: '' },
-      { name: 'Homemade Lemon Mint', price: 4.5, desc: '' },
-      { name: 'Thé à la menthe', price: 2.8, desc: '' },
-      { name: 'Jallab', price: 4, desc: '' },
-      { name: 'Tamarind Juice', price: 4, desc: '' }
+      { name: 'Ayran', price: 2.5, desc: '' },
+      { name: 'Jus de grenade', price: 4, desc: '' },
+      { name: 'Thé à la menthe', price: 2.5, desc: '' },
+      { name: 'Café arabe', price: 2.5, desc: '' },
+      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
   },
+  // Bowls : base (quinoa/riz complet/salade) au choix + suppléments (protéine/avocat/œuf) gérés via
+  // les groupes d'options "Base du bowl"/"Suppléments healthy" (voir ensureHealthyGroups).
   Healthy: {
     plat: [
-      { name: 'Salmon Poke', price: 14.5, desc: '' },
-      { name: 'Spicy Salmon Poke', price: 15, desc: '' },
-      { name: 'Tuna Poke', price: 15.5, desc: '' },
-      { name: 'Spicy Tuna Poke', price: 16, desc: '' },
-      { name: 'Teriyaki Chicken Poke', price: 13.5, desc: '' },
-      { name: 'Crispy Chicken Poke', price: 13.9, desc: '' },
-      { name: 'Shrimp Poke', price: 14.9, desc: '' },
-      { name: 'Tofu Poke', price: 12.5, desc: '' },
-      { name: 'Vegan Poke', price: 12.5, desc: '' },
-      { name: 'Build Your Own Poke', price: 13.5, desc: '' },
-      { name: 'Caesar Chicken Bowl', price: 13.5, desc: '' },
-      { name: 'Mediterranean Bowl', price: 12.9, desc: '' },
-      { name: 'Avocado Quinoa Bowl', price: 12.5, desc: '' },
-      { name: 'Protein Chicken Bowl', price: 14.5, desc: '' },
-      { name: 'Falafel Bowl', price: 12.9, desc: '' }
+      { name: 'Bowl poulet grillé avocat', price: 13.5, desc: '' },
+      { name: 'Bowl saumon teriyaki', price: 15, desc: '' },
+      { name: 'Bowl falafel houmous', price: 12.5, desc: '' },
+      { name: 'Bowl tofu curry', price: 12.5, desc: '' },
+      { name: 'Bowl bœuf sésame', price: 14.5, desc: '' },
+      { name: 'Buddha bowl', price: 12.5, desc: '' },
+      { name: 'Salade César light', price: 11.5, desc: '' },
+      { name: 'Salade chèvre chaud noix miel', price: 12, desc: '' },
+      { name: 'Salade halloumi grenade', price: 12.5, desc: '' },
+      { name: 'Salade poulet mangue', price: 12.5, desc: '' },
+      { name: 'Wrap poulet avocat', price: 9.5, desc: '' },
+      { name: 'Wrap végétarien', price: 8.5, desc: '' },
+      { name: 'Wrap saumon fumé', price: 10.5, desc: '' },
+      { name: 'Curry de légumes riz', price: 12, desc: '' },
+      { name: 'Dahl de lentilles', price: 11, desc: '' }
     ],
     entree: [
-      { name: 'Edamame', price: 4.5, desc: '' },
-      { name: 'Avocado Side', price: 3.5, desc: '' },
-      { name: 'Wakame', price: 4.5, desc: '' },
-      { name: 'Sweet Potato Fries', price: 4.5, desc: '' },
-      { name: 'Miso Soup', price: 4, desc: '' },
-      { name: 'Hummus & Veggies', price: 5.5, desc: '' }
+      { name: 'Soupe du jour', price: 5.5, desc: '' },
+      { name: 'Porridge fruits', price: 6.5, desc: '' },
+      { name: 'Chia pudding', price: 6, desc: '' },
+      { name: 'Açaí bowl', price: 9.5, desc: '' },
+      { name: 'Yaourt granola', price: 6.5, desc: '' }
     ],
     dessert: [
-      { name: 'Açai Bowl', price: 7.5, desc: '' },
-      { name: 'Chia Pudding', price: 5.5, desc: '' },
-      { name: 'Banana Bread', price: 4.5, desc: '' },
-      { name: 'Protein Chocolate Brownie', price: 4.5, desc: '' }
+      { name: 'Energy balls (3 pcs)', price: 3.5, desc: '' },
+      { name: 'Banana bread', price: 4, desc: '' },
+      { name: 'Cookie protéiné', price: 3.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Ginger Shot', price: 3, desc: '' },
-      { name: 'Green Smoothie', price: 5.5, desc: '' },
-      { name: 'Mango Smoothie', price: 5.5, desc: '' },
+      { name: 'Jus pressé', price: 4.5, desc: '' },
+      { name: 'Smoothie', price: 6, desc: '' },
       { name: 'Kombucha', price: 4.5, desc: '' },
-      { name: 'Coconut Water', price: 3.9, desc: '' }
+      { name: 'Eau infusée', price: 2.5, desc: '' },
+      { name: 'Café', price: 2.8, desc: '' },
+      { name: 'Matcha latte', price: 5, desc: '' }
     ]
   },
   Italien: {
@@ -534,99 +518,88 @@ const TYPE_TEMPLATES = {
       { name: 'Espresso', price: 2, desc: '' }
     ]
   },
+  // Wings vendues avec un choix de sauce obligatoire (nature/BBQ/buffalo/hot honey) géré via le groupe
+  // d'options "Choix de sauce wings" (voir ensureChickenGroups dans routes/restaurants.js).
   'Fried Chicken': {
     plat: [
-      { name: '3 Crispy Tenders', price: 7.5, desc: '' },
-      { name: '5 Crispy Tenders', price: 10.5, desc: '' },
-      { name: '8 Crispy Tenders', price: 14.5, desc: '' },
-      { name: '6 Hot Wings', price: 8.5, desc: '' },
-      { name: '10 Hot Wings', price: 12.5, desc: '' },
-      { name: '15 Hot Wings', price: 17.5, desc: '' },
-      { name: 'Original Chicken Burger', price: 10.5, desc: '' },
-      { name: 'Spicy Chicken Burger', price: 11, desc: '' },
-      { name: 'Honey BBQ Chicken Burger', price: 11.5, desc: '' },
-      { name: 'Double Chicken Burger', price: 13.5, desc: '' },
-      { name: 'Chicken Burger Menu', price: 14.5, desc: '' },
-      { name: 'Spicy Burger Menu', price: 15, desc: '' },
-      { name: '5 Tenders Menu', price: 14.5, desc: '' },
-      { name: '8 Wings Menu', price: 14.5, desc: '' },
-      { name: 'Chicken Bucket', price: 22.9, desc: '' }
+      { name: 'Poulet frit 3 pcs', price: 7.5, desc: '' },
+      { name: 'Poulet frit 6 pcs', price: 13, desc: '' },
+      { name: 'Poulet frit 12 pcs', price: 24, desc: '' },
+      { name: 'Poulet frit Bucket 20 pcs', price: 36, desc: '' },
+      { name: 'Tenders 4 pcs', price: 7, desc: '' },
+      { name: 'Tenders 8 pcs', price: 12.5, desc: '' },
+      { name: 'Tenders Bucket 16 pcs', price: 22, desc: '' },
+      { name: 'Wings 6 pcs', price: 7.5, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
+      { name: 'Wings 12 pcs', price: 13.5, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
+      { name: 'Wings 24 pcs', price: 24, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
+      { name: 'Burger Chicken Crispy', price: 9.5, desc: '' },
+      { name: 'Burger Spicy Chicken', price: 10, desc: '' },
+      { name: 'Burger Double Crispy', price: 12.5, desc: '' },
+      { name: 'Burger Chicken Hot Honey', price: 10.5, desc: '' },
+      { name: 'Wrap Tenders', price: 8.5, desc: '' },
+      { name: 'Wrap Spicy', price: 9, desc: '' },
+      { name: 'Bowl poulet riz coleslaw', price: 12, desc: '' },
+      { name: 'Menu Burger + frites + boisson', price: 14, desc: '' },
+      { name: 'Menu Tenders 4 pcs + frites + boisson', price: 12, desc: '' },
+      { name: 'Menu famille (12 pcs + 2 grandes frites + 1,5L)', price: 39, desc: '' }
     ],
     entree: [
-      { name: 'French Fries', price: 3.5, desc: '' },
-      { name: 'Cajun Fries', price: 4, desc: '' },
-      { name: 'Sweet Potato Fries', price: 4.5, desc: '' },
-      { name: 'Mac & Cheese', price: 5, desc: '' },
-      { name: 'Coleslaw', price: 3.5, desc: '' },
-      { name: 'Onion Rings', price: 4.5, desc: '' },
-      { name: 'Corn on the Cob', price: 3.5, desc: '' }
+      { name: 'Frites', price: 3.5, desc: '' },
+      { name: 'Coleslaw', price: 3, desc: '' },
+      { name: 'Corn on the cob', price: 3.5, desc: '' },
+      { name: 'Mac & cheese', price: 5, desc: '' },
+      { name: 'Onion rings', price: 4.5, desc: '' },
+      { name: 'Sauces', price: 0.8, desc: '' }
     ],
     dessert: [
-      { name: 'Chocolate Brownie', price: 4.5, desc: '' },
       { name: 'Cookie', price: 3, desc: '' },
-      { name: 'Cheesecake', price: 5.5, desc: '' },
-      { name: 'Churros', price: 5, desc: '' }
+      { name: 'Milkshake', price: 5.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Fanta', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Homemade Iced Tea', price: 3.5, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Root Beer', price: 3.2, desc: '' },
-      { name: 'Vanilla Milkshake', price: 5.5, desc: '' },
-      { name: 'Homemade Lemonade', price: 4, desc: '' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau', price: 2, desc: '' }
     ]
   },
+  // Taverne belge traditionnelle. Le "Steak frites, sauce au choix" a un groupe d'options "Choix de
+  // sauce" (voir ensureTaverneGroups dans routes/restaurants.js).
   Belge: {
     entree: [
-      { name: 'Petite Frite', price: 3, desc: '' },
-      { name: 'Grande Frite', price: 4, desc: '' },
-      { name: 'Frites Cheddar', price: 5.5, desc: '' },
-      { name: 'Frites Cheddar Bacon', price: 6.5, desc: '' },
-      { name: 'Frites Sauce Andalouse & Oignons', price: 5, desc: '' },
-      { name: 'Mayonnaise', price: 1, desc: '' },
-      { name: 'Andalouse', price: 1, desc: '' },
-      { name: 'Samouraï', price: 1, desc: '' },
-      { name: 'Brazil', price: 1, desc: '' },
-      { name: 'Tartare', price: 1, desc: '' },
-      { name: 'Ketchup', price: 1, desc: '' }
+      { name: 'Croquettes de fromage (2 pcs)', price: 9.5, desc: '' },
+      { name: 'Croquettes de crevettes grises (2 pcs)', price: 14, desc: '' },
+      { name: 'Tomate crevettes', price: 16, desc: '' },
+      { name: 'Toast cannibale', price: 12.5, desc: '' },
+      { name: 'Soupe du jour', price: 6.5, desc: '' }
     ],
     plat: [
-      { name: 'Fricadelle', price: 3, desc: '' },
-      { name: 'Fricadelle Spéciale', price: 4, desc: '' },
-      { name: 'Mexicano', price: 3.5, desc: '' },
-      { name: 'Poulycroc', price: 3.5, desc: '' },
-      { name: 'Viandelle', price: 3.5, desc: '' },
-      { name: 'Boulette', price: 3.5, desc: '' },
-      { name: 'Croquette de fromage', price: 3, desc: '' },
-      { name: 'Croquette de crevettes', price: 5, desc: '' },
-      { name: 'Nuggets ×6', price: 5.5, desc: '' },
-      { name: 'Hamburger', price: 6.5, desc: '' },
-      { name: 'Cheeseburger', price: 7, desc: '' },
-      { name: 'Bacon Cheeseburger', price: 8, desc: '' },
-      { name: 'Double Cheeseburger', price: 9.5, desc: '' },
-      { name: 'Chicken Burger', price: 7.5, desc: '' },
-      { name: 'Bicky Burger', price: 6.5, desc: '' }
+      { name: 'Boulets sauce lapin, frites', price: 15.5, desc: '' },
+      { name: 'Vol-au-vent, frites', price: 16.5, desc: '' },
+      { name: 'Carbonnades flamandes, frites', price: 17.5, desc: '' },
+      { name: 'Stoemp saucisses', price: 15, desc: '' },
+      { name: 'Filet américain préparé, frites', price: 16.5, desc: '' },
+      { name: 'Chicons au gratin', price: 15.5, desc: '' },
+      { name: 'Waterzooi de poulet', price: 17, desc: '' },
+      { name: 'Moules marinière, frites', price: 24, desc: '' },
+      { name: 'Steak frites', price: 21, desc: 'Sauce au choix' },
+      { name: 'Lapin à la kriek', price: 18.5, desc: '' },
+      { name: 'Spaghetti bolognaise', price: 13.5, desc: '' },
+      { name: 'Croque-monsieur', price: 9.5, desc: '' },
+      { name: 'Croque-madame', price: 10.5, desc: '' },
+      { name: 'Plat du jour (midi, semaine)', price: 14, desc: '' }
     ],
     dessert: [
-      { name: 'Gaufre de Liège', price: 4, desc: '' },
-      { name: 'Mousse au chocolat', price: 4.5, desc: '' },
-      { name: 'Tarte au sucre', price: 4.5, desc: '' }
+      { name: 'Dame blanche', price: 7.5, desc: '' },
+      { name: 'Gaufre de Bruxelles chantilly', price: 6.5, desc: '' },
+      { name: 'Mousse au chocolat', price: 6.5, desc: '' },
+      { name: 'Tarte du jour', price: 5.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
-      { name: 'Sprite', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2.2, desc: '' },
-      { name: 'Spa Reine', price: 2.2, desc: '' },
-      { name: 'Fanta', price: 2.5, desc: '' },
-      { name: 'Ice Tea', price: 2.5, desc: '' },
-      { name: 'Bière Jupiler', price: 3, desc: '' },
-      { name: 'Vin rouge', price: 5, desc: '' },
-      { name: 'Chocolat chaud', price: 3, desc: '' }
+      { name: 'Jupiler 25cl', price: 3, desc: '' },
+      { name: 'Duvel', price: 4.8, desc: '' },
+      { name: 'Chimay', price: 5, desc: '' },
+      { name: 'Kriek', price: 4.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Café', price: 2.8, desc: '' },
+      { name: 'Vin au verre', price: 5, desc: '' }
     ]
   },
   'Végétarien': {
@@ -744,94 +717,88 @@ const TYPE_TEMPLATES = {
       { name: 'Café', price: 2, desc: '' }
     ]
   },
+  // Lait végétal (avoine/amande, +0,50€) géré via le groupe d'options "Lait" attaché aux boissons à
+  // base de lait (voir ensureCafeGroups dans routes/restaurants.js).
   'Coffee Shop': {
     entree: [
-      { name: 'Granola Bowl', price: 5.5, desc: 'Yaourt, fruits frais, miel' },
-      { name: 'Yaourt Grec & Miel', price: 4.5, desc: '' },
-      { name: 'Salade de Fruits Frais', price: 4.8, desc: '' },
-      { name: 'Energy Balls (3)', price: 3.5, desc: '' }
+      { name: 'Cookie', price: 3.5, desc: '' },
+      { name: 'Banana bread', price: 4, desc: '' },
+      { name: 'Cinnamon roll', price: 4.5, desc: '' },
+      { name: 'Carrot cake', price: 5, desc: '' },
+      { name: 'Croissant', price: 2.5, desc: '' }
     ],
     plat: [
-      { name: 'Avocado Toast', price: 7.5, desc: '' },
-      { name: 'Bagel Saumon', price: 8.5, desc: '' },
-      { name: 'Club Sandwich', price: 7.9, desc: '' },
-      { name: 'Panini Poulet Pesto', price: 6.9, desc: '' },
-      { name: 'Wrap Poulet Curry', price: 6.5, desc: '' },
-      { name: 'Quiche du jour', price: 5.5, desc: '' }
+      { name: 'Avocado toast', price: 9.5, desc: '' },
+      { name: 'Granola bowl', price: 8.5, desc: '' },
+      { name: 'Toast burrata tomates', price: 10.5, desc: '' },
+      { name: 'Croque', price: 8.5, desc: '' },
+      { name: 'Bagel saumon', price: 10.5, desc: '' },
+      { name: 'Formule brunch (week-end)', price: 22, desc: 'Plat salé + sucré + boisson' }
     ],
-    dessert: [
-      { name: 'Croissant', price: 1.8, desc: '' },
-      { name: 'Pain au chocolat', price: 1.9, desc: '' },
-      { name: 'Muffin myrtille', price: 3.2, desc: '' },
-      { name: 'Cookie pépites', price: 2.8, desc: '' },
-      { name: 'Carrot Cake', price: 4.5, desc: '' },
-      { name: 'New York Cheesecake', price: 4.8, desc: '' },
-      { name: 'Cinnamon Roll', price: 3.9, desc: '' },
-      { name: 'Banana Bread', price: 3.5, desc: '' }
-    ],
+    dessert: [],
     boisson: [
-      { name: 'Espresso', price: 2.2, desc: '' },
-      { name: 'Americano', price: 2.8, desc: '' },
-      { name: 'Cappuccino', price: 3.5, desc: '' },
-      { name: 'Café Latte', price: 3.8, desc: '' },
-      { name: 'Flat White', price: 3.9, desc: '' },
-      { name: 'Caramel Macchiato', price: 4.5, desc: '' },
-      { name: 'Mocha', price: 4.5, desc: '' },
-      { name: 'Cold Brew', price: 4.2, desc: '' },
-      { name: 'Iced Latte', price: 4.2, desc: '' },
-      { name: 'Matcha Latte', price: 4.5, desc: '' },
-      { name: 'Iced Matcha Latte', price: 4.8, desc: '' },
-      { name: 'Chai Latte', price: 4.2, desc: '' },
-      { name: 'Thé Earl Grey', price: 2.8, desc: '' },
-      { name: 'Chocolat chaud', price: 3.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2.2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2.2, desc: '' }
+      { name: 'Espresso', price: 2.5, desc: '' },
+      { name: 'Americano', price: 3, desc: '' },
+      { name: 'Cappuccino', price: 3.8, desc: '' },
+      { name: 'Flat White', price: 4, desc: '' },
+      { name: 'Latte', price: 4.2, desc: '' },
+      { name: 'Iced Latte', price: 4.5, desc: '' },
+      { name: 'Cold Brew', price: 4.5, desc: '' },
+      { name: 'Matcha Latte', price: 5, desc: '' },
+      { name: 'Iced Matcha Latte', price: 5.5, desc: '' },
+      { name: 'Strawberry Matcha', price: 6, desc: '' },
+      { name: 'Hojicha Latte', price: 5, desc: '' },
+      { name: 'Chai Latte', price: 4.5, desc: '' },
+      { name: 'Golden Latte', price: 4.8, desc: '' },
+      { name: 'Chocolat chaud', price: 4.2, desc: '' },
+      { name: 'Thé en feuilles', price: 3.5, desc: 'Vert, noir ou infusion — au choix' },
+      { name: 'Limonade maison', price: 4, desc: '' },
+      { name: 'Jus pressé', price: 4.5, desc: '' },
+      { name: 'Kombucha', price: 4.5, desc: '' },
+      { name: 'Smoothie', price: 6, desc: '' }
     ]
   },
   Boulangerie: {
     entree: [
-      { name: 'Sandwich jambon-fromage', price: 4.5, desc: '' },
-      { name: 'Sandwich poulet-crudités', price: 5, desc: '' },
-      { name: 'Sandwich thon-crudités', price: 4.5, desc: '' },
-      { name: 'Sandwich végétarien', price: 4.5, desc: '' },
-      { name: 'Sandwich saumon-fromage frais', price: 5.5, desc: '' },
-      { name: 'Wrap poulet curry', price: 5, desc: '' }
+      { name: 'Sandwich jambon fromage', price: 4.5, desc: '' },
+      { name: 'Sandwich poulet curry', price: 5, desc: '' },
+      { name: 'Sandwich américain préparé', price: 5, desc: '' },
+      { name: 'Sandwich thon mayonnaise', price: 4.8, desc: '' },
+      { name: 'Club poulet crudités', price: 5.5, desc: '' },
+      { name: 'Sandwich végétarien', price: 4.8, desc: '' }
     ],
     plat: [
-      { name: 'Quiche lorraine', price: 4, desc: 'La part' },
-      { name: 'Tarte salée aux légumes', price: 4, desc: 'La part' },
-      { name: 'Quiche saumon-épinards', price: 4.2, desc: '' },
-      { name: 'Croque-monsieur', price: 5, desc: '' },
-      { name: 'Tarte flamiche', price: 4.2, desc: '' },
-      { name: 'Panini poulet', price: 5, desc: '' },
-      { name: 'Formule Sandwich + Boisson', price: 6.5, desc: '' },
-      { name: 'Formule Quiche + Salade', price: 7.5, desc: '' }
+      { name: 'Baguette', price: 1.3, desc: '' },
+      { name: 'Baguette tradition', price: 1.6, desc: '' },
+      { name: 'Pain blanc / gris 800g', price: 3.2, desc: '' },
+      { name: 'Pain de campagne', price: 4.2, desc: '' },
+      { name: 'Pain aux céréales', price: 4.5, desc: '' },
+      { name: "Pain d'épeautre", price: 5, desc: '' },
+      { name: 'Pistolet (pièce)', price: 0.6, desc: '' }
     ],
     dessert: [
-      { name: 'Croissant', price: 1.5, desc: '' },
-      { name: 'Pain au chocolat', price: 1.6, desc: '' },
-      { name: 'Éclair au chocolat', price: 3, desc: '' },
-      { name: 'Pain aux raisins', price: 1.8, desc: '' },
-      { name: 'Chausson aux pommes', price: 2.2, desc: '' },
-      { name: 'Muffin myrtille', price: 2.8, desc: '' },
-      { name: 'Cookie pépites', price: 2, desc: '' },
-      { name: 'Financier amande', price: 2, desc: '' },
-      { name: 'Cannelé', price: 2.2, desc: '' },
-      { name: 'Tarte citron meringuée', price: 3.5, desc: '' },
-      { name: 'Baguette tradition', price: 1.4, desc: '' },
-      { name: 'Tarte aux pommes', price: 3, desc: 'La part' }
+      { name: 'Croissant', price: 1.6, desc: '' },
+      { name: 'Pain au chocolat', price: 1.8, desc: '' },
+      { name: 'Couque aux raisins', price: 2, desc: '' },
+      { name: 'Couque suisse', price: 2.2, desc: '' },
+      { name: 'Chausson aux pommes', price: 2.3, desc: '' },
+      { name: 'Cramique (tranche)', price: 1.5, desc: '' },
+      { name: 'Craquelin', price: 2.5, desc: '' },
+      { name: 'Éclair', price: 3.2, desc: '' },
+      { name: 'Tarte au riz (part)', price: 3, desc: '' },
+      { name: 'Merveilleux', price: 3.8, desc: '' },
+      { name: 'Tarte aux fruits (part)', price: 3.8, desc: '' },
+      { name: 'Boule de Berlin', price: 2.2, desc: '' },
+      { name: 'Gaufre de Liège', price: 2.5, desc: '' },
+      { name: 'Cookie', price: 2, desc: '' },
+      { name: 'Tarte au riz entière (6-8 pers.)', price: 16, desc: '' },
+      { name: 'Tarte aux pommes entière (6-8 pers.)', price: 18, desc: '' },
+      { name: 'Tarte aux fraises entière (6-8 pers.)', price: 24, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
-      { name: 'Sprite', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
-      { name: 'Café', price: 2, desc: '' },
-      { name: 'Jus d\'orange 25cl', price: 2.5, desc: '' },
-      { name: 'Chocolat chaud', price: 3, desc: '' },
-      { name: 'Thé Earl Grey', price: 2.2, desc: '' },
-      { name: 'Café Latte', price: 3, desc: '' }
+      { name: 'Café à emporter', price: 2.2, desc: '' },
+      { name: "Jus d'orange pressé", price: 3.5, desc: '' },
+      { name: 'Softs', price: 2.2, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
   },
   'Supermarché': {
@@ -962,50 +929,81 @@ const TYPE_TEMPLATES = {
   },
   Boucherie: {
     entree: [
-      { name: "Jambon d'Ardenne", price: 4.5, desc: 'La tranche' },
-      { name: 'Pâté de campagne', price: 4, desc: 'Les 150g' },
-      { name: 'Terrine de canard', price: 5.5, desc: 'Les 150g' },
-      { name: 'Rillettes de porc', price: 4, desc: 'Les 150g' },
-      { name: 'Salade de museau', price: 4.5, desc: 'Les 200g' },
-      { name: 'Fromage de tête', price: 4.5, desc: 'Les 150g' },
-      { name: 'Saucisson sec', price: 4, desc: '' },
-      { name: 'Boudin blanc', price: 5, desc: 'Les 2 pièces' }
+      { name: 'Jambon cuit (100g)', price: 2.2, desc: '' },
+      { name: "Jambon d'Ardenne (100g)", price: 3.5, desc: '' },
+      { name: 'Salami (100g)', price: 2, desc: '' },
+      { name: 'Pâté de campagne (100g)', price: 1.8, desc: '' },
+      { name: 'Boudin blanc / noir (pièce)', price: 2, desc: '' },
+      { name: 'Sauce maison (pot)', price: 3.5, desc: '' },
+      { name: 'Frites fraîches (kg)', price: 3, desc: '' },
+      { name: 'Œufs (6)', price: 2.5, desc: '' }
     ],
     plat: [
-      { name: 'Entrecôte de bœuf', price: 9.5, desc: 'Prix au kilo' },
-      { name: 'Filet pur de bœuf', price: 14.5, desc: 'Prix au kilo' },
-      { name: "Côte à l'os", price: 12.5, desc: 'Prix au kilo' },
-      { name: 'Steak haché pur bœuf', price: 6, desc: 'Les 2 pièces' },
-      { name: 'Escalope de poulet fermier', price: 7, desc: 'Prix au kilo' },
-      { name: 'Cuisse de poulet fermier', price: 5, desc: 'Prix au kilo' },
-      { name: 'Filet de porc', price: 6.5, desc: 'Prix au kilo' },
-      { name: "Côtelettes d'agneau", price: 11.5, desc: 'Prix au kilo' },
-      { name: 'Saucisses de Toulouse', price: 5.5, desc: 'Les 4 pièces' },
-      { name: 'Merguez', price: 5.5, desc: 'Les 6 pièces' },
-      { name: 'Boudin noir', price: 4.5, desc: 'Les 2 pièces' },
-      { name: 'Chipolatas', price: 5, desc: 'Les 6 pièces' },
-      { name: 'Vol-au-vent maison', price: 8.5, desc: 'Prêt à réchauffer' },
-      { name: 'Carbonade flamande', price: 9, desc: 'Prête à réchauffer' },
-      { name: 'Lapin à la bière', price: 10.5, desc: 'Prêt à réchauffer' },
-      { name: 'Steak tartare préparé', price: 9.5, desc: '' }
+      { name: 'Haché porc et veau (kg)', price: 12.9, desc: '' },
+      { name: 'Haché de bœuf (kg)', price: 15.9, desc: '' },
+      { name: 'Steak de bœuf (kg)', price: 24.9, desc: '' },
+      { name: 'Entrecôte (kg)', price: 32.9, desc: '' },
+      { name: 'Filet pur de porc (kg)', price: 16.9, desc: '' },
+      { name: 'Côtes de porc (kg)', price: 11.9, desc: '' },
+      { name: 'Filet de poulet (kg)', price: 13.9, desc: '' },
+      { name: 'Cuisses de poulet (kg)', price: 7.9, desc: '' },
+      { name: "Gigot d'agneau (kg)", price: 22.9, desc: '' },
+      { name: 'Rôti de bœuf (kg)', price: 24.9, desc: '' },
+      { name: 'Filet américain préparé (100g)', price: 2.2, desc: '' },
+      { name: 'Saucisses maison (pièce)', price: 1.5, desc: '' },
+      { name: 'Merguez (pièce)', price: 1.3, desc: '' },
+      { name: 'Boulettes (pièce)', price: 1.2, desc: '' },
+      { name: 'Brochettes marinées (pièce)', price: 3.5, desc: '' },
+      { name: 'Cordon bleu (pièce)', price: 3.8, desc: '' },
+      { name: 'Oiseaux sans tête (pièce)', price: 3.5, desc: '' },
+      { name: 'Vol-au-vent (portion)', price: 8.5, desc: '' },
+      { name: 'Boulets sauce tomate (portion)', price: 8, desc: '' },
+      { name: 'Lasagne (portion)', price: 8.5, desc: '' },
+      { name: 'Carbonnades (portion)', price: 9.5, desc: '' },
+      { name: 'Stoemp carottes (portion)', price: 6, desc: '' },
+      { name: 'Salade de pâtes (portion)', price: 5, desc: '' }
+    ],
+    dessert: [],
+    boisson: []
+  },
+  // Bar à tapas espagnol.
+  Espagnol: {
+    entree: [
+      { name: 'Pan con tomate', price: 4.5, desc: '' },
+      { name: 'Jamón ibérico (50g)', price: 12, desc: '' },
+      { name: 'Manchego', price: 7.5, desc: '' },
+      { name: 'Olives marinées', price: 3.5, desc: '' },
+      { name: 'Boquerones', price: 6.5, desc: '' },
+      { name: 'Salmorejo', price: 6, desc: '' },
+      { name: 'Patatas bravas', price: 6, desc: '' },
+      { name: 'Tortilla', price: 6.5, desc: '' },
+      { name: 'Croquetas jamón (4 pcs)', price: 7, desc: '' },
+      { name: 'Gambas al ajillo', price: 11, desc: '' },
+      { name: 'Chorizo al vino', price: 7.5, desc: '' },
+      { name: 'Calamares a la romana', price: 9.5, desc: '' },
+      { name: 'Pimientos de padrón', price: 6.5, desc: '' },
+      { name: 'Albóndigas', price: 8, desc: '' },
+      { name: 'Pulpo a la gallega', price: 14, desc: '' }
+    ],
+    plat: [
+      { name: 'Paella valenciana (par pers., min. 2 pers.)', price: 18, desc: '' },
+      { name: 'Paella marisco (par pers.)', price: 21, desc: '' },
+      { name: 'Fideuá (par pers.)', price: 18, desc: '' },
+      { name: 'Secreto ibérico', price: 22, desc: '' },
+      { name: 'Sélection 6 tapas', price: 32, desc: '' },
+      { name: 'Sélection 10 tapas', price: 52, desc: '' }
     ],
     dessert: [
-      { name: 'Tarte au riz', price: 3.5, desc: 'La part' },
-      { name: 'Mousse au chocolat', price: 3.5, desc: '' },
-      { name: 'Panna Cotta', price: 3.5, desc: '' },
-      { name: 'Tiramisu', price: 4, desc: '' }
+      { name: 'Crema catalana', price: 6, desc: '' },
+      { name: 'Churros con chocolate', price: 6.5, desc: '' },
+      { name: 'Tarta de Santiago', price: 6, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
-      { name: 'Sprite', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
-      { name: 'Vin rouge', price: 8, desc: 'La bouteille' },
-      { name: 'Vin blanc', price: 8, desc: 'La bouteille' },
-      { name: 'Bière trappiste', price: 3, desc: '' },
-      { name: 'Jus de pomme', price: 2.5, desc: '' },
-      { name: 'Jus d\'orange', price: 2.5, desc: '' }
+      { name: 'Sangria 50cl', price: 12, desc: '' },
+      { name: 'Tinto de verano', price: 5, desc: '' },
+      { name: 'Bière 33cl', price: 3.5, desc: 'Estrella ou Mahou — au choix' },
+      { name: 'Vin Rioja (verre)', price: 5.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
   }
 };
@@ -1682,7 +1680,15 @@ const ITEM_IMAGE_OVERRIDES = {
   'kebab (pizza)': U('1600028068383-ea11a7a101f3'),
   'poulet curry (pizza)': U('1571407970349-bc81e7e96d47'),
   'calzone nutella': U('1673551490812-eaee2e9bf0ef'),
-  "pain à l'ail": U('1573140401552-3fab0b24306f')
+  "pain à l'ail": U('1573140401552-3fab0b24306f'),
+
+  // --- Nouvelles cartes sushi/healthy/chicken/belge/burgers/boulangerie/boucherie/café/libanais/
+  // espagnol : plateaux sushi sans photo dédiée + "vino" collision avec le mot-clé "vin" ---
+  'plateau solo (16 pcs)': U('1553621042-f6e147245754'),
+  'plateau duo (32 pcs)': U('1553621042-f6e147245754'),
+  'plateau family (54 pcs)': U('1553621042-f6e147245754'),
+  'chich taouk': U('1629450748686-c86699b710ac'),
+  'chorizo al vino': categoryImage('entree')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats

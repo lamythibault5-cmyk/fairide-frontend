@@ -84,7 +84,7 @@ export const translations = {
       cuisine: {
         Pizza: 'Pizza', Burgers: 'Burgers', Sushi: 'Sushi', Italien: 'Italien', Belge: 'Belge',
         Asiatique: 'Asiatique', Healthy: 'Healthy', 'Végétarien': 'Végétarien', 'Kebab & Grill': 'Kebab & Grill',
-        Mexicain: 'Mexicain', Libanais: 'Libanais', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
+        Mexicain: 'Mexicain', Libanais: 'Libanais', Espagnol: 'Espagnol', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Boulangerie', Boucherie: 'Boucherie', 'Supermarché': 'Supermarché', 'Night Shop': 'Night Shop',
         Autre: 'Autre'
       },
@@ -530,7 +530,7 @@ export const translations = {
       cuisine: {
         Pizza: 'Pizza', Burgers: 'Burgers', Sushi: 'Sushi', Italien: 'Italian', Belge: 'Belgian',
         Asiatique: 'Asian', Healthy: 'Healthy', 'Végétarien': 'Vegetarian', 'Kebab & Grill': 'Kebab & Grill',
-        Mexicain: 'Mexican', Libanais: 'Lebanese', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
+        Mexicain: 'Mexican', Libanais: 'Lebanese', Espagnol: 'Spanish', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Bakery', Boucherie: 'Butcher', 'Supermarché': 'Supermarket', 'Night Shop': 'Night Shop',
         Autre: 'Other'
       },
@@ -976,7 +976,7 @@ export const translations = {
       cuisine: {
         Pizza: 'Pizza', Burgers: 'Burgers', Sushi: 'Sushi', Italien: 'Italiaans', Belge: 'Belgisch',
         Asiatique: 'Aziatisch', Healthy: 'Gezond', 'Végétarien': 'Vegetarisch', 'Kebab & Grill': 'Kebab & Grill',
-        Mexicain: 'Mexicaans', Libanais: 'Libanees', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
+        Mexicain: 'Mexicaans', Libanais: 'Libanees', Espagnol: 'Spaans', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Bakkerij', Boucherie: 'Slagerij', 'Supermarché': 'Supermarkt', 'Night Shop': 'Night Shop',
         Autre: 'Andere'
       },
