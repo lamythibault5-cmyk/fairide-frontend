@@ -5,10 +5,11 @@ import { categoryLabel } from '../menuCategories';
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...) — fixée
 // sur le côté, surtout utile en mobile où le menu est long et scindé en plusieurs colonnes. Met en
 // évidence la section actuellement visible (scroll-spy) et fait défiler jusqu'au début d'une section
-// au clic. Repose sur les ids `menu-cat-<value>` posés par MenuCategorySections.
+// au clic. Repose sur les ids `menu-cat-<id>` (id de section) posés par MenuCategorySections.
+// `categories` attend des objets { id, name } (une section de restaurant.sections).
 export default function CategoryQuickNav({ categories }) {
   const { t } = useLanguage();
-  const [active, setActive] = useState(categories[0]?.value);
+  const [active, setActive] = useState(categories[0]?.id);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
 
@@ -19,23 +20,23 @@ export default function CategoryQuickNav({ categories }) {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(entry.target.dataset.catValue);
+          if (entry.isIntersecting) setActive(entry.target.dataset.catId);
         });
       },
       { rootMargin: '-88px 0px -70% 0px', threshold: 0 }
     );
     categoriesRef.current.forEach((c) => {
-      const el = document.getElementById(`menu-cat-${c.value}`);
+      const el = document.getElementById(`menu-cat-${c.id}`);
       if (el) {
-        el.dataset.catValue = c.value;
+        el.dataset.catId = c.id;
         observer.observe(el);
       }
     });
     return () => observer.disconnect();
   }, [categories]);
 
-  function jumpTo(value) {
-    const el = document.getElementById(`menu-cat-${value}`);
+  function jumpTo(id) {
+    const el = document.getElementById(`menu-cat-${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
@@ -45,12 +46,12 @@ export default function CategoryQuickNav({ categories }) {
     <div className="category-quicknav">
       {categories.map((c) => (
         <button
-          key={c.value}
+          key={c.id}
           type="button"
-          className={active === c.value ? 'active' : ''}
-          onClick={() => jumpTo(c.value)}
+          className={active === c.id ? 'active' : ''}
+          onClick={() => jumpTo(c.id)}
         >
-          {categoryLabel(c.value, t)}
+          {categoryLabel(c.name, t)}
         </button>
       ))}
     </div>

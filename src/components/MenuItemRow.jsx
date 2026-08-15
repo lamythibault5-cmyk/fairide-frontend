@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { CATEGORIES, defaultItemImage } from '../menuCategories';
+import { CATEGORIES, categoryLabel, defaultItemImage } from '../menuCategories';
+import { useLanguage } from '../context/LanguageContext';
 
-export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo, allOptionGroups = [], onSetOptionGroups }) {
+export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo, allOptionGroups = [], onSetOptionGroups, sections = [] }) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
   const [desc, setDesc] = useState(item.desc || '');
@@ -57,7 +59,9 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
         <div className="field">
           <label>Catégorie</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+            {(sections.length ? sections.map((s) => s.name) : CATEGORIES.map((c) => c.value)).map((name) => (
+              <option key={name} value={name}>{categoryLabel(name, t)}</option>
+            ))}
           </select>
         </div>
         <div className="field">

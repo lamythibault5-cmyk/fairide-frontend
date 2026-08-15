@@ -5,8 +5,12 @@ export const CATEGORIES = [
   { value: 'boisson', label: 'Boissons', image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=200&q=80' }
 ];
 
+// Ne traduit que les 4 catégories par défaut (clés internes stables) — une section personnalisée
+// tapée par le restaurateur (ex. "Nos spécialités") est stockée telle quelle et doit s'afficher
+// telle quelle, pas comme une clé i18n cassée (menuCategories.category.Nos spécialités).
 export function categoryLabel(value, t) {
-  if (t) return t(`menuCategories.category.${value}`);
+  const isDefault = CATEGORIES.some((c) => c.value === value);
+  if (t && isDefault) return t(`menuCategories.category.${value}`);
   return CATEGORIES.find((c) => c.value === value)?.label || value;
 }
 

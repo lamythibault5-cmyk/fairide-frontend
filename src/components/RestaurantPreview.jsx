@@ -69,7 +69,7 @@ export default function RestaurantPreview({ restaurant }) {
           </div>
         )}
         {restaurant.menu.length === 0 && <div className="empty">Ton menu est encore vide — tes clients ne verront rien tant que tu n'as pas ajouté de plats.</div>}
-        <MenuCategorySections menu={restaurant.menu} onAdd={addToCart} />
+        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
       </div>
 
       {count > 0 && (

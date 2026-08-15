@@ -11,7 +11,6 @@ import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FloatingCart from '../../components/FloatingCart';
-import { CATEGORIES } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function RestaurantMenu() {
@@ -94,7 +93,7 @@ export default function RestaurantMenu() {
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
-  const presentCategories = CATEGORIES.filter((cat) => restaurant.menu.some((i) => (i.category || 'plat') === cat.value));
+  const presentSections = (restaurant.sections || []).filter((s) => restaurant.menu.some((i) => (i.category || 'plat') === s.name));
 
   async function toggleFavorite() {
     setFavoriteBusy(true);
@@ -123,7 +122,7 @@ export default function RestaurantMenu() {
 
   return (
     <div>
-      <CategoryQuickNav categories={presentCategories} />
+      <CategoryQuickNav categories={presentSections} />
       <FloatingCart menu={restaurant.menu} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
       <div className="card">
@@ -161,7 +160,7 @@ export default function RestaurantMenu() {
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
-        <MenuCategorySections menu={restaurant.menu} onAdd={addToCart} />
+        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
       </div>
 
       {reviews && reviews.reviews.length > 0 && (

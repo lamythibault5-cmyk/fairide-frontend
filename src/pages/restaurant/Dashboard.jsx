@@ -3,15 +3,17 @@ import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import {
-  CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, getStarterTemplate,
+  CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, categoryLabel, getStarterTemplate,
   fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage
 } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
+import SectionManager from '../../components/SectionManager';
 import RestaurantPreview from '../../components/RestaurantPreview';
 
 const RESTO_DELETION_REASONS = [
@@ -26,6 +28,7 @@ const RESTO_DELETION_REASONS = [
 export default function Dashboard() {
   const { token } = useAuth();
   const toast = useToast();
+  const { t } = useLanguage();
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -469,6 +472,40 @@ export default function Dashboard() {
       await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
       toast('Groupe d\'options supprimé.');
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
+  async function createSection(name) {
+    try {
+      await api(`/restaurants/${restoId}/sections`, { method: 'POST', token, body: { name } });
+      await loadDashboard(restoId);
+      toast('Section créée.');
+    } catch (e) {
+      toast(e.message);
+      throw e;
+    }
+  }
+
+  async function renameSection(sectionId, name) {
+    try {
+      await api(`/restaurants/${restoId}/sections/${sectionId}`, { method: 'PATCH', token, body: { name } });
+      await loadDashboard(restoId);
+      toast('Section renommée.');
+    } catch (e) {
+      toast(e.message);
+      throw e;
+    }
+  }
+
+  async function deleteSection(section) {
+    const count = restaurant.menu.filter((i) => (i.category || 'plat') === section.name).length;
+    if (count > 0 && !window.confirm(`Cette section contient ${count} plat(s). Les supprimer aussi et retirer la section "${section.name}" ?`)) return;
+    try {
+      await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
+      await loadDashboard(restoId);
+      toast('Section supprimée.');
     } catch (e) {
       toast(e.message);
     }
@@ -1083,22 +1120,32 @@ export default function Dashboard() {
                 </div>
               )}
 
+              <SectionManager
+                sections={restaurant.sections || []}
+                itemCounts={restaurant.menu.reduce((acc, i) => { const c = i.category || 'plat'; acc[c] = (acc[c] || 0) + 1; return acc; }, {})}
+                onCreate={createSection}
+                onRename={renameSection}
+                onDelete={deleteSection}
+              />
+
               <div className="card">
                 {restaurant.menu.length === 0 && startChoiceMade && <div className="small">Pas encore de plat au menu.</div>}
-                {CATEGORIES.map((cat) => {
-                  const items = restaurant.menu.filter((i) => (i.category || 'plat') === cat.value);
+                {(restaurant.sections || []).map((section) => {
+                  const items = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
                   if (!items.length) return null;
+                  const image = categoryImage(section.name);
                   return (
-                    <div key={cat.value} style={{ marginBottom: 10 }}>
+                    <div key={section.id} style={{ marginBottom: 10 }}>
                       <div className="category-header">
-                        {cat.image && <img src={cat.image} alt={cat.label} />}
-                        <span>{cat.label}</span>
+                        {image && <img src={image} alt={section.name} />}
+                        <span>{categoryLabel(section.name, t)}</span>
                       </div>
                       {items.map((item) => (
                         <MenuItemRow
                           key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
                           onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
                           allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                          sections={restaurant.sections || []}
                         />
                       ))}
                     </div>
@@ -1156,7 +1203,9 @@ export default function Dashboard() {
                 <div className="field">
                   <label>Catégorie</label>
                   <select value={itemCategory} onChange={(e) => setItemCategory(e.target.value)}>
-                    {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    {(restaurant.sections?.length ? restaurant.sections.map((s) => s.name) : CATEGORIES.map((c) => c.value)).map((name) => (
+                      <option key={name} value={name}>{categoryLabel(name, t)}</option>
+                    ))}
                   </select>
                 </div>
                 <div className="field">

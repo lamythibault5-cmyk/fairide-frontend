@@ -1,4 +1,4 @@
-import { CATEGORIES, BOISSON_SUBCATEGORIES, boissonSubcategory, boissonSubcategoryLabel, categoryLabel, defaultItemImage } from '../menuCategories';
+import { categoryImage, BOISSON_SUBCATEGORIES, boissonSubcategory, boissonSubcategoryLabel, categoryLabel, defaultItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
 function ItemCard({ item, onAdd, t }) {
@@ -16,24 +16,28 @@ function ItemCard({ item, onAdd, t }) {
   );
 }
 
-// Rendu du menu groupé par catégorie — la catégorie "Boissons" est en plus subdivisée
-// (chaudes/alcool/froides) déduites du nom du produit, sans champ supplémentaire à gérer par le
-// restaurateur. Partagé entre la page client (RestaurantMenu) et l'aperçu restaurateur (RestaurantPreview)
-// pour que les deux restent strictement identiques.
-export default function MenuCategorySections({ menu, onAdd }) {
+// Rendu du menu groupé par section — les sections sont définies par le restaurateur (nom + ordre,
+// voir restaurant.sections / restaurant_sections en base), plus les 4 par défaut Entrées/Plats/
+// Desserts/Boissons créées automatiquement à l'usage. La section "boisson" (clé par défaut, non
+// renommée) est en plus subdivisée (chaudes/alcool/froides) déduites du nom du produit, sans champ
+// supplémentaire à gérer par le restaurateur. Partagé entre la page client (RestaurantMenu) et
+// l'aperçu restaurateur (RestaurantPreview) pour que les deux restent strictement identiques.
+export default function MenuCategorySections({ menu, sections, onAdd }) {
   const { t } = useLanguage();
   return (
     <>
-      {CATEGORIES.map((cat) => {
-        const items = menu.filter((i) => (i.category || 'plat') === cat.value);
+      {sections.map((section) => {
+        const items = menu.filter((i) => (i.category || 'plat') === section.name);
         if (!items.length) return null;
+        const label = categoryLabel(section.name, t);
+        const image = categoryImage(section.name);
         return (
-          <div key={cat.value} id={`menu-cat-${cat.value}`}>
+          <div key={section.id} id={`menu-cat-${section.id}`}>
             <div className="category-header">
-              {cat.image && <img src={cat.image} alt={categoryLabel(cat.value, t)} />}
-              <span>{categoryLabel(cat.value, t)}</span>
+              {image && <img src={image} alt={label} />}
+              <span>{label}</span>
             </div>
-            {cat.value === 'boisson' ? (
+            {section.name === 'boisson' ? (
               BOISSON_SUBCATEGORIES.map((sub) => {
                 const subItems = items.filter((i) => boissonSubcategory(i.name) === sub.value);
                 if (!subItems.length) return null;
