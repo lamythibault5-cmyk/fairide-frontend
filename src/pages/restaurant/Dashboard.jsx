@@ -1232,14 +1232,16 @@ export default function Dashboard() {
                         {image && <img src={image} alt={section.name} />}
                         <span>{categoryLabel(section.name, t)}</span>
                       </div>
-                      {items.map((item) => (
-                        <MenuItemRow
-                          key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                          onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
-                          allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                          sections={restaurant.sections || []}
-                        />
-                      ))}
+                      <div className="menu-grid">
+                        {items.map((item) => (
+                          <MenuItemRow
+                            key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                            onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
+                            allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                            sections={restaurant.sections || []}
+                          />
+                        ))}
+                      </div>
                     </div>
                   );
                 })}

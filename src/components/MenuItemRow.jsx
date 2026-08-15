@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { CATEGORIES, categoryLabel, defaultItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
+// La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
+// dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
+// la même chose que ses clients, pas une liste administrative séparée.
 export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo, allOptionGroups = [], onSetOptionGroups, sections = [] }) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
@@ -25,6 +28,8 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
   const [promoType, setPromoType] = useState('percent');
   const [promoValue, setPromoValue] = useState('15');
   const [savingPromo, setSavingPromo] = useState(false);
+  const [togglingAvailable, setTogglingAvailable] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -34,6 +39,24 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
       setEditing(false);
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function toggleAvailable() {
+    setTogglingAvailable(true);
+    try {
+      await onSave(item.id, { available: item.available === false });
+    } finally {
+      setTogglingAvailable(false);
+    }
+  }
+
+  async function remove() {
+    setDeleting(true);
+    try {
+      await onDelete(item.id);
+    } catch {
+      setDeleting(false);
     }
   }
 
@@ -52,7 +75,7 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
 
   if (editing) {
     return (
-      <div className="card" style={{ marginBottom: 10 }}>
+      <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
         <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ingrédients, préparation..." /></div>
         <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
@@ -82,60 +105,61 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
             ))}
           </div>
         )}
-        <div className="row" style={{ gap: 8 }}>
+
+        <div className="divider" />
+
+        {item.activePromo ? (
+          <div className="row" style={{ gap: 8, marginBottom: 12, justifyContent: 'space-between' }}>
+            <span className="pill teal">🏷️ {item.activePromo.label}</span>
+            <button className="btn-danger-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => onClearPromo(item.activePromo.id)}>Retirer la promo</button>
+          </div>
+        ) : !promoOpen ? (
+          <button type="button" className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px', marginBottom: 12 }} onClick={() => setPromoOpen(true)}>🏷️ Ajouter une promo</button>
+        ) : (
+          <div className="row" style={{ gap: 6, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            <select style={{ width: 'auto' }} value={promoType} onChange={(e) => setPromoType(e.target.value)}>
+              <option value="percent">Réduction %</option>
+              <option value="bogo">1 acheté = 1 offert</option>
+            </select>
+            {promoType === 'percent' && (
+              <select style={{ width: 'auto' }} value={promoValue} onChange={(e) => setPromoValue(e.target.value)}>
+                {[10, 15, 20, 25, 30].map((v) => <option key={v} value={v}>{v}%</option>)}
+              </select>
+            )}
+            <button className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} disabled={savingPromo} onClick={applyPromo}>{savingPromo ? '...' : 'Activer'}</button>
+            <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setPromoOpen(false)}>Annuler</button>
+          </div>
+        )}
+
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : 'Enregistrer'}</button>
-          <button className="btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
+          <button className="btn-ghost" disabled={togglingAvailable} onClick={toggleAvailable}>
+            {togglingAvailable ? '...' : item.available === false ? '✅ Rendre disponible' : '🚫 Marquer indisponible'}
+          </button>
+          <button className="btn-danger-ghost" disabled={deleting} onClick={remove}>{deleting ? '...' : 'Supprimer'}</button>
+          <button className="btn-ghost" onClick={() => setEditing(false)}>Fermer</button>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ borderBottom: '1px solid var(--cream-dim)', padding: '10px 0' }}>
-      <div className="menu-item" style={{ padding: 0, border: 'none', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
-        <div className="row" style={{ gap: 10 }}>
-          <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb" />
-          <span>
-            {item.name}{item.available === false ? ' (indisponible)' : ''}
-            {item.optionGroups?.length > 0 && <span className="small" style={{ marginLeft: 6 }}>· {item.optionGroups.map((g) => g.name).join(', ')}</span>}
-          </span>
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          <span className="price">{item.price.toFixed(2)}€</span>
-          <button className="btn-ghost" onClick={() => onSave(item.id, { available: item.available === false })} title={item.available === false ? 'Rendre disponible' : 'Marquer indisponible'}>
-            {item.available === false ? '🚫' : '✅'}
-          </button>
-          <button className="btn-ghost" onClick={() => setEditing(true)}>✏️</button>
-          <button className="btn-danger-ghost" onClick={() => onDelete(item.id)}>Supprimer</button>
-        </div>
+    <div
+      className="menu-item-card"
+      style={{ cursor: 'pointer', position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}
+      onClick={() => setEditing(true)}
+      title="Cliquer pour modifier"
+    >
+      {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
+      <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
+      <div className="name">{item.name}</div>
+      <div className="small desc">
+        {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
       </div>
-
-      {item.activePromo && (
-        <div className="row" style={{ gap: 8, marginTop: 6, justifyContent: 'flex-end' }}>
-          <span className="pill teal">🏷️ {item.activePromo.label}</span>
-          <button className="btn-danger-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => onClearPromo(item.activePromo.id)}>Retirer</button>
-        </div>
-      )}
-      {!item.activePromo && !promoOpen && (
-        <div className="row" style={{ justifyContent: 'flex-end', marginTop: 6 }}>
-          <button className="btn-ghost" style={{ fontSize: 12, padding: '2px 8px' }} onClick={() => setPromoOpen(true)}>🏷️ Ajouter une promo</button>
-        </div>
-      )}
-      {promoOpen && (
-        <div className="row" style={{ gap: 6, marginTop: 6, justifyContent: 'flex-end', alignItems: 'center' }}>
-          <select style={{ width: 'auto' }} value={promoType} onChange={(e) => setPromoType(e.target.value)}>
-            <option value="percent">Réduction %</option>
-            <option value="bogo">1 acheté = 1 offert</option>
-          </select>
-          {promoType === 'percent' && (
-            <select style={{ width: 'auto' }} value={promoValue} onChange={(e) => setPromoValue(e.target.value)}>
-              {[10, 15, 20, 25, 30].map((v) => <option key={v} value={v}>{v}%</option>)}
-            </select>
-          )}
-          <button className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} disabled={savingPromo} onClick={applyPromo}>{savingPromo ? '...' : 'Activer'}</button>
-          <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setPromoOpen(false)}>Annuler</button>
-        </div>
-      )}
+      <div className="bottom-row">
+        <span className="price">{item.price.toFixed(2)}€</span>
+        <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>
+      </div>
     </div>
   );
 }
