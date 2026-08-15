@@ -1941,7 +1941,10 @@ const ITEM_IMAGE_OVERRIDES = {
   'gin 70cl': U('1587920710219-f6f9804dc10d'),
   'rhum 70cl': U('1587920710219-f6f9804dc10d'),
   'jägermeister 70cl': U('1587920710219-f6f9804dc10d'),
-  'mignonnettes': U('1587920710219-f6f9804dc10d')
+  'mignonnettes': U('1587920710219-f6f9804dc10d'),
+
+  // --- City Burger : condiment sans mot-clé dédié, retombait sur la photo générique "Entrées" ---
+  'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
