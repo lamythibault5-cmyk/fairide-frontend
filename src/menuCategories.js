@@ -247,22 +247,15 @@ const TYPE_TEMPLATES = {
       { name: 'Calzone Nutella', price: 7, desc: '' },
       { name: 'Glace 2 boules', price: 4, desc: '' }
     ],
+    // Variantes au même prix regroupées en un seul item + choix via option (voir ensurePizzaDrinkGroups
+    // dans routes/restaurants.js) plutôt qu'une ligne de menu par saveur.
     boisson: [
-      { name: 'Coca-Cola 33cl', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero 33cl', price: 2.5, desc: '' },
-      { name: 'Fanta 33cl', price: 2.5, desc: '' },
-      { name: 'Sprite 33cl', price: 2.5, desc: '' },
-      { name: 'Ice Tea 33cl', price: 2.5, desc: '' },
-      { name: 'San Pellegrino Aranciata', price: 2.5, desc: '' },
-      { name: 'San Pellegrino Limonata', price: 2.5, desc: '' },
+      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite, Ice Tea, San Pellegrino Aranciata ou Limonata — au choix' },
       { name: 'Eau 50cl', price: 2, desc: '' },
       { name: 'Bouteille 1,5L', price: 4, desc: '' },
-      { name: 'Bière Peroni', price: 3, desc: '' },
-      { name: 'Bière Jupiler', price: 3, desc: '' },
-      { name: 'Vin rouge 25cl', price: 5.5, desc: '' },
-      { name: 'Vin blanc 25cl', price: 5.5, desc: '' },
-      { name: 'Espresso', price: 2, desc: '' },
-      { name: 'Café', price: 2, desc: '' }
+      { name: 'Bière 33cl', price: 3, desc: 'Peroni ou Jupiler — au choix' },
+      { name: 'Vin 25cl', price: 5.5, desc: 'Rouge ou blanc — au choix' },
+      { name: 'Café', price: 2, desc: 'Espresso ou café allongé — au choix' }
     ]
   },
   Asiatique: {
@@ -739,14 +732,11 @@ const TYPE_TEMPLATES = {
       { name: 'Sütlaç (riz au lait)', price: 3, desc: '' },
       { name: 'Künefe', price: 5, desc: '' }
     ],
+    // Variantes au même prix regroupées en un seul item + choix via option (voir ensureSnackDrinkGroups
+    // dans routes/restaurants.js) plutôt qu'une ligne de menu par saveur.
     boisson: [
-      { name: 'Coca-Cola 33cl', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero 33cl', price: 2.5, desc: '' },
-      { name: 'Fanta 33cl', price: 2.5, desc: '' },
-      { name: 'Sprite 33cl', price: 2.5, desc: '' },
-      { name: 'Ice Tea 33cl', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
+      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau 50cl', price: 2, desc: 'Plate ou pétillante — au choix' },
       { name: 'Ayran', price: 2, desc: '' },
       { name: 'Uludağ', price: 2.5, desc: '' },
       { name: 'Red Bull', price: 3, desc: '' },
