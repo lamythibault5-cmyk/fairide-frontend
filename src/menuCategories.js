@@ -194,49 +194,75 @@ const TYPE_TEMPLATES = {
       { name: 'Iced Tea', price: 3, desc: '' }
     ]
   },
+  // Carte type pizzeria italienne (pâte fine 30cm, options taille/pâte/suppléments gérées via les
+  // groupes d'options "Taille"/"Suppléments pizza", pas comme des lignes de menu séparées).
   Pizza: {
     plat: [
-      { name: 'Margherita', price: 10.5, desc: '' },
-      { name: 'Marinara', price: 9.5, desc: '' },
-      { name: 'Prosciutto', price: 12.5, desc: '' },
-      { name: 'Prosciutto e Funghi', price: 13.5, desc: '' },
-      { name: 'Diavola', price: 13.5, desc: '' },
-      { name: 'Quattro Formaggi', price: 14, desc: '' },
-      { name: 'Quattro Stagioni', price: 14.5, desc: '' },
-      { name: 'Capricciosa', price: 14.5, desc: '' },
-      { name: 'Parma', price: 15.5, desc: '' },
-      { name: 'Burrata (pizza)', price: 15.9, desc: '' },
-      { name: 'Tartufata', price: 16.5, desc: '' },
-      { name: 'Vegetariana', price: 13.5, desc: '' },
-      { name: 'Napoli', price: 12.9, desc: '' },
-      { name: 'Calzone', price: 14.5, desc: '' },
-      { name: 'Mortadella & Pistacchio', price: 16.5, desc: '' }
+      { name: 'Margherita', price: 9.5, desc: 'Base tomate, mozzarella, pâte fine' },
+      { name: 'Napoletana', price: 11, desc: 'Base tomate, mozzarella, anchois, câpres, olives' },
+      { name: 'Prosciutto', price: 11.5, desc: 'Base tomate, mozzarella, jambon' },
+      { name: 'Funghi', price: 11, desc: 'Base tomate, mozzarella, champignons' },
+      { name: 'Prosciutto e funghi', price: 12, desc: 'Base tomate, mozzarella, jambon, champignons' },
+      { name: 'Diavola', price: 12, desc: 'Base tomate, mozzarella, salami piquant' },
+      { name: 'Hawaï', price: 11.5, desc: 'Base tomate, mozzarella, jambon, ananas' },
+      { name: 'Végétarienne', price: 12, desc: 'Base tomate, mozzarella, poivrons, champignons, oignons, olives, courgettes' },
+      { name: 'Tonno', price: 12, desc: 'Base tomate, mozzarella, thon, oignons rouges, olives' },
+      { name: 'Capricciosa', price: 12.5, desc: 'Base tomate, mozzarella, jambon, champignons, artichauts, olives' },
+      { name: 'Quattro stagioni', price: 12.5, desc: 'Base tomate, mozzarella' },
+      { name: 'Quattro formaggi', price: 13, desc: 'Base tomate, mozzarella, gorgonzola, parmesan, chèvre' },
+      { name: 'Calzone', price: 12.5, desc: 'Jambon, champignons, œuf' },
+      { name: 'Bufalina', price: 14, desc: 'Mozzarella di bufala, tomates cerises, basilic' },
+      { name: 'Parma', price: 14.5, desc: 'Roquette, jambon de Parme, copeaux de parmesan' },
+      { name: 'Bolognese (pizza)', price: 12.5, desc: 'Sauce bolognaise, oignons' },
+      { name: 'Kebab (pizza)', price: 13, desc: "Viande kebab, oignons, sauce à l'ail" },
+      { name: 'Poulet curry (pizza)', price: 13, desc: 'Poulet, ananas, sauce curry' },
+      { name: 'Tartufo', price: 15, desc: 'Crème, champignons, huile de truffe' },
+      { name: 'Chèvre-miel', price: 13.5, desc: 'Crème, chèvre, miel, noix' },
+      { name: 'Frutti di mare', price: 15, desc: 'Crevettes, calamars, moules' },
+      { name: 'Merguez', price: 13, desc: 'Merguez, poivrons, harissa' },
+      { name: 'Fromages et jambon fumé', price: 14, desc: 'Scamorza, speck' },
+      { name: 'Spaghetti bolognese', price: 11.5, desc: 'Portion généreuse, parmesan' },
+      { name: 'Penne arrabbiata', price: 10.5, desc: 'Portion généreuse, parmesan' },
+      { name: 'Tagliatelle carbonara', price: 12.5, desc: 'Portion généreuse, parmesan' },
+      { name: 'Penne quatre fromages', price: 12, desc: 'Portion généreuse, parmesan' },
+      { name: 'Lasagne maison', price: 12.5, desc: 'Portion généreuse, parmesan' },
+      { name: 'Penne poulet-champignons', price: 12.5, desc: 'Portion généreuse, parmesan' },
+      { name: 'Ravioli ricotta-épinards', price: 13, desc: 'Portion généreuse, parmesan' },
+      { name: 'Menu solo', price: 12.5, desc: '1 pizza classique + 1 boisson 33cl' },
+      { name: 'Menu duo', price: 24, desc: '2 pizzas classiques + 2 boissons 33cl' },
+      { name: 'Menu famille', price: 39, desc: '2 pizzas 40cm + 1 bouteille 1,5L' }
     ],
     entree: [
-      { name: 'Focaccia', price: 5.5, desc: '' },
-      { name: 'Garlic Bread', price: 5, desc: '' },
-      { name: 'Burrata', price: 8.9, desc: '' },
-      { name: 'Bruschetta al Pomodoro', price: 7.5, desc: '' },
-      { name: 'Antipasti Italiani', price: 11.9, desc: '' },
-      { name: 'Arancini', price: 7.5, desc: '' }
+      { name: 'Bruschetta (3 pcs)', price: 6, desc: '' },
+      { name: "Pain à l'ail", price: 4.5, desc: '' },
+      { name: 'Focaccia romarin', price: 5, desc: '' },
+      { name: 'Mozzarella sticks (6 pcs)', price: 6, desc: '' },
+      { name: 'Salade César', price: 11, desc: '' },
+      { name: 'Salade caprese', price: 10, desc: '' },
+      { name: 'Salade chèvre chaud', price: 11.5, desc: '' }
     ],
     dessert: [
-      { name: 'Tiramisù', price: 6.5, desc: '' },
-      { name: 'Panna Cotta', price: 6, desc: '' },
-      { name: 'Cannoli Siciliani', price: 6.5, desc: '' },
-      { name: 'Torta al Cioccolato', price: 6.5, desc: '' }
+      { name: 'Tiramisu maison', price: 5.5, desc: '' },
+      { name: 'Panna cotta', price: 5, desc: '' },
+      { name: 'Calzone Nutella', price: 7, desc: '' },
+      { name: 'Glace 2 boules', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'San Pellegrino', price: 3, desc: '' },
-      { name: 'Acqua Panna', price: 3, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Aranciata San Pellegrino', price: 3.5, desc: '' },
-      { name: 'Limonata San Pellegrino', price: 3.5, desc: '' },
-      { name: 'Italian Lemon Iced Tea', price: 3.5, desc: '' },
-      { name: 'Peach Iced Tea', price: 3.5, desc: '' },
-      { name: 'Chinotto', price: 3, desc: '' }
+      { name: 'Coca-Cola 33cl', price: 2.5, desc: '' },
+      { name: 'Coca-Cola Zero 33cl', price: 2.5, desc: '' },
+      { name: 'Fanta 33cl', price: 2.5, desc: '' },
+      { name: 'Sprite 33cl', price: 2.5, desc: '' },
+      { name: 'Ice Tea 33cl', price: 2.5, desc: '' },
+      { name: 'San Pellegrino Aranciata', price: 2.5, desc: '' },
+      { name: 'San Pellegrino Limonata', price: 2.5, desc: '' },
+      { name: 'Eau 50cl', price: 2, desc: '' },
+      { name: 'Bouteille 1,5L', price: 4, desc: '' },
+      { name: 'Bière Peroni', price: 3, desc: '' },
+      { name: 'Bière Jupiler', price: 3, desc: '' },
+      { name: 'Vin rouge 25cl', price: 5.5, desc: '' },
+      { name: 'Vin blanc 25cl', price: 5.5, desc: '' },
+      { name: 'Espresso', price: 2, desc: '' },
+      { name: 'Café', price: 2, desc: '' }
     ]
   },
   Asiatique: {
@@ -1657,7 +1683,16 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Nouvelle carte snack turc (dürüms/pitas/mitraillettes/tacos) ---
   'bucket poulet 12 pcs': U('1652957392622-17e7c96f1369'),
   'bucket poulet 20 pcs': U('1652957392622-17e7c96f1369'),
-  'red bull': U('1622543925917-763c34d1a86e')
+  'red bull': U('1622543925917-763c34d1a86e'),
+
+  // --- Nouvelle carte pizzeria : plats dont le nom matche par erreur un tout autre type de plat
+  // ("Bolognese"/"Kebab"/"Poulet curry" sont des PIZZAS, pas des pâtes/kebabs/currys ; "Calzone
+  // Nutella" est un DESSERT, pas une pizza salée) ---
+  'bolognese (pizza)': U('1600028068383-ea11a7a101f3'),
+  'kebab (pizza)': U('1600028068383-ea11a7a101f3'),
+  'poulet curry (pizza)': U('1571407970349-bc81e7e96d47'),
+  'calzone nutella': U('1673551490812-eaee2e9bf0ef'),
+  "pain à l'ail": U('1573140401552-3fab0b24306f')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
