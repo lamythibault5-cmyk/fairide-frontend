@@ -129,7 +129,7 @@ export default function RestaurantList() {
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
             <button
               onClick={(e) => toggleFavorite(e, r.id)}
-              style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: 16, cursor: 'pointer' }}
+              className="rest-card-fav"
               title={t('restaurantList.addFavorite')}
             >
               {favoriteIds.has(r.id) ? '❤️' : '🤍'}
@@ -140,13 +140,13 @@ export default function RestaurantList() {
               <span className="pill teal">{r.commune}</span>
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
             </div>
-            <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
-            <div className="row" style={{ gap: 6, margin: '2px 0' }}>
+            <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>
+            <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
               <StarsDisplay value={r.rating} />
-              <span className="small">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
+              <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
             </div>
-            <p className="small">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
-            <span className="small">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
+            <p className="small rest-card-desc">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
+            <span className="small rest-card-dishes">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
           </Link>
         ))}
       </div>
