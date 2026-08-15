@@ -141,9 +141,13 @@ export default function Orders() {
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          {o.orderType === 'pickup' ? (
+          {o.orderType === 'pickup' && (
             <div className="small">🏠 À venir chercher chez {o.restaurantName}{o.restaurantAddress ? `, ${o.restaurantAddress}` : ''}</div>
-          ) : (
+          )}
+          {o.orderType === 'dine_in' && (
+            <div className="small">🍽️ Table chez {o.restaurantName}{o.restaurantAddress ? `, ${o.restaurantAddress}` : ''} — {o.partySize} pers., au nom de {o.reservationName}</div>
+          )}
+          {o.orderType === 'delivery' && (
             <div className="small">📍 {o.address}</div>
           )}
           {o.deliveryInstructions && (
@@ -167,7 +171,9 @@ export default function Orders() {
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
             <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '8px 0' }}>
               <div className="small" style={{ marginBottom: 2 }}>
-                {o.orderType === 'pickup' ? 'Code à montrer au restaurant (envoyé aussi par email)' : 'Code à donner à ton livreur (envoyé aussi par email)'}
+                {o.orderType === 'pickup' && 'Code à montrer au restaurant (envoyé aussi par email)'}
+                {o.orderType === 'dine_in' && 'Code à montrer en arrivant au restaurant (envoyé aussi par email)'}
+                {o.orderType === 'delivery' && 'Code à donner à ton livreur (envoyé aussi par email)'}
               </div>
               <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.deliveryCode}</div>
             </div>

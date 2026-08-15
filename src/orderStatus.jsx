@@ -17,12 +17,14 @@ export function formatOrderItem(i) {
 
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
 const LABELS = ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'];
-// Une commande à emporter n'a pas de trajet "en route" — le client vient la chercher lui-même.
+// Une commande à emporter/sur place n'a pas de trajet "en route" — le client vient lui-même.
 const PICKUP_STEPS = ['nouveau', 'preparation', 'pret', 'livre'];
 const PICKUP_LABELS = ['Envoyée', 'Préparation', 'Prête', 'Récupérée'];
+const DINE_IN_LABELS = ['Envoyée', 'Préparation', 'Prête', 'Terminée'];
 
 export function statusLabel(status, orderType) {
   if (status === 'livre' && orderType === 'pickup') return 'Récupérée';
+  if (status === 'livre' && orderType === 'dine_in') return 'Terminée';
   return {
     nouveau: 'Nouvelle',
     preparation: 'En préparation',
@@ -35,14 +37,16 @@ export function statusLabel(status, orderType) {
 }
 
 // Couleur associée au type de commande, pour que le restaurant repère chaque commande d'un coup d'œil :
-// jaune = livraison classique, bleu = à emporter, orange = heure programmée (prioritaire sur le type).
+// jaune = livraison classique, bleu = à emporter, violet = sur place, orange = heure programmée (prioritaire sur le type).
 export function orderTypeColor(order) {
   if (order.scheduledFor) return 'orange';
-  return order.orderType === 'pickup' ? 'blue' : 'yellow';
+  if (order.orderType === 'pickup') return 'blue';
+  if (order.orderType === 'dine_in') return 'purple';
+  return 'yellow';
 }
 
 export function orderTypeLabel(order) {
-  const base = order.orderType === 'pickup' ? '🏠 À emporter' : '🛵 Livraison';
+  const base = order.orderType === 'pickup' ? '🏠 À emporter' : order.orderType === 'dine_in' ? '🍽️ Sur place' : '🛵 Livraison';
   if (order.scheduledFor) return `${base} · 🕐 ${formatDateTime(order.scheduledFor)}`;
   return base;
 }
@@ -62,9 +66,10 @@ export function DeliveryTiming({ order }) {
   const { createdAt, estimatedDeliveryAt, status, orderType, scheduledFor } = order;
   if (status === 'refuse' || status === 'annule') return null;
 
+  const isDineIn = orderType === 'dine_in';
   const isPickup = orderType === 'pickup';
   const doneStatus = 'livre';
-  const doneLabel = isPickup ? 'Récupérée' : 'Livrée';
+  const doneLabel = isDineIn ? 'Terminée' : isPickup ? 'Récupérée' : 'Livrée';
 
   if (status === doneStatus) {
     return <div className="small">🕐 Commandée à {formatTime(createdAt)} · {doneLabel}</div>;
@@ -75,14 +80,15 @@ export function DeliveryTiming({ order }) {
   }
 
   if (scheduledFor) {
+    const label = isDineIn ? 'Réservée pour' : 'Programmée pour';
     return (
       <div className="small">
-        🕐 Commandée à {formatTime(createdAt)} · Programmée pour <b>{formatDateTime(scheduledFor)}</b>
+        🕐 Commandée à {formatTime(createdAt)} · {label} <b>{formatDateTime(scheduledFor)}</b>
       </div>
     );
   }
 
-  const readyLabel = isPickup ? 'Retrait estimé à' : 'Livraison estimée à';
+  const readyLabel = isDineIn ? 'Table prête à' : isPickup ? 'Retrait estimé à' : 'Livraison estimée à';
   const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
   return (
     <div className="small">
@@ -99,8 +105,9 @@ export function ProgressBar({ status, orderType }) {
   if (status === 'annule') {
     return <p className="small" style={{ color: 'var(--red)' }}>Commande annulée.</p>;
   }
-  const steps = orderType === 'pickup' ? PICKUP_STEPS : STEPS;
-  const labels = orderType === 'pickup' ? PICKUP_LABELS : LABELS;
+  const isDelivery = orderType === 'delivery';
+  const steps = isDelivery ? STEPS : PICKUP_STEPS;
+  const labels = isDelivery ? LABELS : orderType === 'dine_in' ? DINE_IN_LABELS : PICKUP_LABELS;
   const idx = steps.indexOf(status);
   return (
     <>

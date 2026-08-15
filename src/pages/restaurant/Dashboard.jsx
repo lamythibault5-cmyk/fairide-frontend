@@ -1013,6 +1013,7 @@ export default function Dashboard() {
                   <DeliveryTiming order={o} />
                   <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
                   {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
+                  {o.orderType === 'dine_in' && <div className="small">🍽️ {o.partySize} pers. — au nom de {o.reservationName}</div>}
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
                   {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
                     <div className="small" style={{ fontWeight: 600 }}>🛵 Livreur assigné : {o.driverName}</div>
@@ -1028,7 +1029,7 @@ export default function Dashboard() {
                       <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>Marquer prêt</button>
                     )}
                   </div>
-                  {o.status === 'pret' && o.orderType === 'pickup' && (
+                  {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
                     <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
                       <input
                         placeholder="Code du client"
@@ -1037,7 +1038,7 @@ export default function Dashboard() {
                         onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
                       />
                       <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o.id)}>
-                        {confirmingPickup === o.id ? '...' : 'Valider la commande'}
+                        {confirmingPickup === o.id ? '...' : o.orderType === 'dine_in' ? 'Valider l\'arrivée' : 'Valider la commande'}
                       </button>
                     </div>
                   )}
@@ -1205,14 +1206,17 @@ export default function Dashboard() {
               <div className="line total"><span>Total payé</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
             </div>
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? 'À emporter' : 'Livraison'}</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? 'À emporter' : selectedOrder.orderType === 'dine_in' ? 'Sur place' : 'Livraison'}</h4>
             {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}
             {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>🏠 Le client vient chercher sa commande sur place.</p>}
+            {selectedOrder.orderType === 'dine_in' && (
+              <p className="small" style={{ margin: '4px 0' }}>🍽️ Table pour {selectedOrder.partySize} personne{selectedOrder.partySize > 1 ? 's' : ''}, réservée au nom de <b>{selectedOrder.reservationName}</b>.</p>
+            )}
             {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
             {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
             {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>🛵 Livreur : {selectedOrder.driverName}{selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : ''}</p>}
-            {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
+            {selectedOrder.status === 'pret' && (selectedOrder.orderType === 'pickup' || selectedOrder.orderType === 'dine_in') && (
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
                 <input
                   placeholder="Code du client"
@@ -1221,7 +1225,7 @@ export default function Dashboard() {
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
                 />
                 <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder.id)}>
-                  {confirmingPickup === selectedOrder.id ? '...' : 'Valider la commande'}
+                  {confirmingPickup === selectedOrder.id ? '...' : selectedOrder.orderType === 'dine_in' ? "Valider l'arrivée" : 'Valider la commande'}
                 </button>
               </div>
             )}

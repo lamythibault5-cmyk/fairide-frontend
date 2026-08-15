@@ -30,6 +30,8 @@ export default function Checkout() {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   const [dateOptions] = useState(getScheduleDateOptions);
+  const [partySize, setPartySize] = useState(2);
+  const [reservationName, setReservationName] = useState(user.name || '');
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
@@ -66,16 +68,44 @@ export default function Checkout() {
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
 
+  function selectFulfillment(type) {
+    setFulfillmentType(type);
+    if (type === 'dine_in') {
+      setScheduleEnabled(false);
+      if (!scheduleDate) setScheduleDate(dateOptions[0].value);
+      setScheduleTime('');
+    } else {
+      setScheduleEnabled(false);
+      setScheduleDate('');
+      setScheduleTime('');
+    }
+  }
+
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
       return;
     }
+    if (fulfillmentType === 'dine_in') {
+      if (!scheduleDate || !scheduleTime) {
+        toast('Choisis une date et une heure pour ta réservation.');
+        return;
+      }
+      if (!partySize || partySize < 1) {
+        toast('Indique un nombre de personnes valide.');
+        return;
+      }
+      if (!reservationName.trim()) {
+        toast('Indique un nom de réservation.');
+        return;
+      }
+    }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
       toast('Choisis une date et une heure pour ta commande programmée.');
       return;
     }
-    const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
+    const isScheduled = fulfillmentType === 'dine_in' || scheduleEnabled;
+    const scheduledForISO = isScheduled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     setPlacing(true);
     try {
@@ -91,6 +121,7 @@ export default function Checkout() {
             addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
             deliveryInstructions, deliveryNote: deliveryNote.trim()
           } : {}),
+          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim() } : {}),
           useBalance
         }
       });
@@ -195,8 +226,9 @@ export default function Checkout() {
             <div className="field">
               <label>Comment récupérer ta commande ?</label>
               <div className="row" style={{ gap: 8 }}>
-                <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('delivery')}>🛵 Livraison</button>
-                <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => setFulfillmentType('pickup')}>🏠 À emporter</button>
+                <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>🛵 Livraison</button>
+                <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>🏠 À emporter</button>
+                <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>🍽️ Sur place</button>
               </div>
             </div>
             {fulfillmentType === 'delivery' && (
@@ -234,23 +266,12 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
             )}
-            <div className="field">
-              <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
-                <input
-                  type="checkbox"
-                  style={{ width: 'auto' }}
-                  checked={scheduleEnabled}
-                  onChange={(e) => {
-                    setScheduleEnabled(e.target.checked);
-                    if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
-                    else { setScheduleDate(''); setScheduleTime(''); }
-                  }}
-                />
-                <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
-              </label>
-              {scheduleEnabled && (
-                <>
-                  <div className="row" style={{ gap: 8, marginTop: 8 }}>
+            {fulfillmentType === 'dine_in' && (
+              <>
+                <p className="small" style={{ margin: '0 0 10px' }}>🍽️ Tu mangeras sur place chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
+                <div className="field">
+                  <label>Date et heure de la réservation</label>
+                  <div className="row" style={{ gap: 8 }}>
                     <select
                       value={scheduleDate}
                       onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
@@ -271,11 +292,69 @@ export default function Checkout() {
                     <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
                   )}
                   {scheduledPreview && (
-                    <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
+                    <p className="small" style={{ margin: '6px 0 0' }}>🕐 Réservation pour : <b>{scheduledPreview}</b></p>
                   )}
-                </>
-              )}
-            </div>
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Nombre de personnes</label>
+                    <input
+                      type="number" min="1" max="30"
+                      value={partySize}
+                      onChange={(e) => setPartySize(e.target.value === '' ? '' : Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="field" style={{ flex: 2 }}>
+                    <label>Nom de la réservation</label>
+                    <input value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder="Ex: Dupont" />
+                  </div>
+                </div>
+              </>
+            )}
+            {fulfillmentType !== 'dine_in' && (
+              <div className="field">
+                <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: 'auto' }}
+                    checked={scheduleEnabled}
+                    onChange={(e) => {
+                      setScheduleEnabled(e.target.checked);
+                      if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
+                      else { setScheduleDate(''); setScheduleTime(''); }
+                    }}
+                  />
+                  <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
+                </label>
+                {scheduleEnabled && (
+                  <>
+                    <div className="row" style={{ gap: 8, marginTop: 8 }}>
+                      <select
+                        value={scheduleDate}
+                        onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
+                        style={{ flex: 1 }}
+                      >
+                        {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                      </select>
+                      <select
+                        value={scheduleTime}
+                        onChange={(e) => setScheduleTime(e.target.value)}
+                        style={{ flex: 1 }}
+                      >
+                        <option value="">Heure...</option>
+                        {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                      </select>
+                    </div>
+                    {scheduleTimeOptions.length === 0 && (
+                      <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
+                    )}
+                    {scheduledPreview && (
+                      <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="cart-bar">
@@ -302,12 +381,12 @@ export default function Checkout() {
                 style={{ marginTop: 2 }}
               />
               <span className="small" style={{ fontWeight: 600 }}>
-                {pendingOrder.orderType === 'delivery'
-                  ? '📍 Je confirme que mes informations de livraison sont correctes'
-                  : "🏠 Je confirme vouloir venir chercher ma commande moi-même"}
+                {pendingOrder.orderType === 'delivery' && '📍 Je confirme que mes informations de livraison sont correctes'}
+                {pendingOrder.orderType === 'pickup' && "🏠 Je confirme vouloir venir chercher ma commande moi-même"}
+                {pendingOrder.orderType === 'dine_in' && '🍽️ Je confirme ma réservation'}
               </span>
             </label>
-            {pendingOrder.orderType === 'delivery' ? (
+            {pendingOrder.orderType === 'delivery' && (
               <>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
@@ -318,13 +397,24 @@ export default function Checkout() {
                   <p className="small" style={{ margin: 0 }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
-            ) : (
+            )}
+            {pendingOrder.orderType === 'pickup' && (
               <>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
                 {pendingOrder.scheduledFor ? (
                   <p className="small" style={{ margin: 0 }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 ) : pendingOrder.estimatedDeliveryAt && (
                   <p className="small" style={{ margin: 0 }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                )}
+              </>
+            )}
+            {pendingOrder.orderType === 'dine_in' && (
+              <>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>Table chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>Réservation au nom de :</b> {pendingOrder.reservationName}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>Nombre de personnes :</b> {pendingOrder.partySize}</p>
+                {pendingOrder.scheduledFor && (
+                  <p className="small" style={{ margin: 0 }}><b>📅 Réservée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}

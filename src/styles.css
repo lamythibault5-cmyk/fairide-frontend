@@ -13,6 +13,7 @@
   --red: #B5482E;
   --blue: #3B6FA0;
   --orange: #C8722E;
+  --purple: #7A4FA0;
   --radius: 14px;
   --shadow: 0 6px 24px rgba(22, 35, 58, 0.08);
 }
@@ -258,13 +259,15 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .status-annule { background: rgba(181,72,46,0.12); color: var(--red); }
 
 /* Couleur du type de commande, pour repérer d'un coup d'œil : jaune = livraison, bleu = à emporter,
-   orange = heure programmée (prioritaire sur le type). Voir orderTypeColor() dans orderStatus.jsx. */
+   violet = sur place, orange = heure programmée (prioritaire sur le type). Voir orderTypeColor() dans orderStatus.jsx. */
 .order-type-yellow { border-left: 4px solid var(--gold); }
 .order-type-blue { border-left: 4px solid var(--blue); }
+.order-type-purple { border-left: 4px solid var(--purple); }
 .order-type-orange { border-left: 4px solid var(--orange); }
 .order-type-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; margin: 4px 0; }
 .order-type-badge-yellow { background: rgba(217,164,65,0.18); color: var(--gold-deep); }
 .order-type-badge-blue { background: rgba(59,111,160,0.14); color: var(--blue); }
+.order-type-badge-purple { background: rgba(122,79,160,0.14); color: var(--purple); }
 .order-type-badge-orange { background: rgba(200,114,46,0.16); color: var(--orange); }
 
 .two-col { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
