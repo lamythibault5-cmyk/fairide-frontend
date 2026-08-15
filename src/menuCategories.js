@@ -1612,7 +1612,23 @@ const ITEM_IMAGE_OVERRIDES = {
   'chinotto': U('1554866585-cd94860890b7'),
   'boza': U('1619158403521-ed9795026d47'),
   'horchata': U('1619158403521-ed9795026d47'),
-  'box à partager': U('1608039755401-742074f0548d')
+  'box à partager': U('1608039755401-742074f0548d'),
+
+  // --- Corrections de doublons/incohérences détectées par audit (mots-clés qui matchaient un plat
+  // sans rapport : "Chianti" → chia pudding, "Vinaigrette" → vin, "grillé" végé/poulet → photo kebab,
+  // "beignet de banane" → poulet, "tarte salée" → dessert, "frites & boisson" → frites au lieu de falafel) ---
+  'chianti (verre)': U('1587920710219-f6f9804dc10d'),
+  'vinaigrette miel-moutarde': categoryImage('entree'),
+  'menu falafel wrap (frites & boisson)': U('1593001872095-7d5b3868fb1d'),
+  'cacahuètes grillées': U('1599490659213-e2b9527bd087'),
+  'tofu grillé légumes': U('1512621776951-a57141f2eefd'),
+  'bowl tofu grillé': U('1512621776951-a57141f2eefd'),
+  'assiette végétarienne grillée': U('1512621776951-a57141f2eefd'),
+  'poulet grillé légumes vapeur': U('1517686469429-8bdb88b9f907'),
+  'beignets de banane': U('1570727624862-3008fe67a6be'),
+  'petit milkshake chocolat': U('1619158403521-ed9795026d47'),
+  'tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
+  'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b')
 };
 
 export function defaultItemImage(item) {
