@@ -1634,10 +1634,18 @@ const ITEM_IMAGE_OVERRIDES = {
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
 // différents dans le même groupe générique (ex: "kebab"/"durum") affichent donc des photos différentes,
 // mais un même nom de plat garde toujours la même photo (y compris d'un resto à l'autre, comportement voulu).
+// Le multiplicateur 31 seul dégénère en simple somme de caractères pour un modulo comme 3 (31 % 3 === 1),
+// ce qui donnait une très mauvaise répartition sur les petits pools — l'étape de mixage final (type
+// Murmur) corrige cette dégénérescence.
 function hashSeed(str) {
   let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-  return h;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x45d9f3b);
+  h ^= h >>> 16;
+  return h >>> 0;
 }
 
 export function defaultItemImage(item) {
