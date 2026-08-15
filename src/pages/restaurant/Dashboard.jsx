@@ -1011,7 +1011,7 @@ export default function Dashboard() {
                   <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
                   <ProgressBar status={o.status} orderType={o.orderType} />
                   <DeliveryTiming order={o} />
-                  <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+                  <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : '🍽️ Réservation sans commande — le client commandera sur place'}</div>
                   {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
                   {o.orderType === 'dine_in' && <div className="small">🍽️ {o.partySize} pers. — au nom de {o.reservationName}</div>}
                   {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}

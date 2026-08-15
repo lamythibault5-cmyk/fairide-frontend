@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -24,6 +24,7 @@ export default function RestaurantMenu() {
   const [pickerItem, setPickerItem] = useState(null);
   const cart = useCart();
   const toast = useToast();
+  const navigate = useNavigate();
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -147,6 +148,13 @@ export default function RestaurantMenu() {
             🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
           </div>
         )}
+        <button
+          type="button"
+          className="btn-outline btn-block"
+          onClick={() => navigate('/checkout', { state: { reservationOnly: true } })}
+        >
+          🍽️ Réserver une table (sans commander maintenant)
+        </button>
       </div>
 
       <div className="card">

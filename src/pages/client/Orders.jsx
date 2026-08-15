@@ -140,7 +140,7 @@ export default function Orders() {
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : '🍽️ Réservation sans commande — commande sur place'}</div>
           {o.orderType === 'pickup' && (
             <div className="small">🏠 À venir chercher chez {o.restaurantName}{o.restaurantAddress ? `, ${o.restaurantAddress}` : ''}</div>
           )}

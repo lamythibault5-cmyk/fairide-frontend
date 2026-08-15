@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -15,6 +15,10 @@ export default function Checkout() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Arrivée via "Réserver une table" depuis la page du restaurant : réservation seule, sans articles
+  // au panier — le client valide juste ses infos de réservation, envoyées au restaurant sans paiement.
+  const reservationOnly = !!location.state?.reservationOnly;
 
   const [restaurant, setRestaurant] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -25,9 +29,9 @@ export default function Checkout() {
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
-  const [fulfillmentType, setFulfillmentType] = useState('delivery');
+  const [fulfillmentType, setFulfillmentType] = useState(reservationOnly ? 'dine_in' : 'delivery');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions()[0].value : '');
   const [scheduleTime, setScheduleTime] = useState('');
   const [dateOptions] = useState(getScheduleDateOptions);
   const [partySize, setPartySize] = useState(2);
@@ -42,7 +46,7 @@ export default function Checkout() {
   const restaurantId = cart.restaurantId;
 
   useEffect(() => {
-    if (!restaurantId || cart.count === 0) {
+    if (!restaurantId || (cart.count === 0 && !reservationOnly)) {
       navigate('/restaurants');
       return;
     }
@@ -67,6 +71,7 @@ export default function Checkout() {
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
+  const isPureReservation = pendingOrder?.orderType === 'dine_in' && pendingOrder.items.length === 0;
 
   function selectFulfillment(type) {
     setFulfillmentType(type);
@@ -144,7 +149,7 @@ export default function Checkout() {
       // choix (livraison/à emporter, planification) sans tout rajouter au panier.
       cart.clear();
       if (pay.simulated) {
-        toast('Commande passée et payée (paiement simulé).');
+        toast(isPureReservation ? 'Réservation envoyée au restaurant !' : 'Commande passée et payée (paiement simulé).');
         navigate('/orders');
       } else {
         window.location.href = pay.checkoutUrl;
@@ -175,6 +180,7 @@ export default function Checkout() {
 
       {!pendingOrder && (
         <>
+          {cart.count > 0 && (
           <div className="card">
             <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ta commande</h3>
             {Object.entries(cart.lines).map(([lineKey, line]) => {
@@ -221,14 +227,19 @@ export default function Checkout() {
               </label>
             )}
           </div>
+          )}
 
           <div className="card">
             <div className="field">
-              <label>Comment récupérer ta commande ?</label>
+              <label>{cart.count === 0 ? 'Ta réservation' : 'Comment récupérer ta commande ?'}</label>
               <div className="row" style={{ gap: 8 }}>
-                <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>🛵 Livraison</button>
-                <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>🏠 À emporter</button>
                 <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>🍽️ Sur place</button>
+                {cart.count > 0 && (
+                  <>
+                    <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>🛵 Livraison</button>
+                    <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>🏠 À emporter</button>
+                  </>
+                )}
               </div>
             </div>
             {fulfillmentType === 'delivery' && (
@@ -359,15 +370,17 @@ export default function Checkout() {
 
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">&larr; Ajouter un plat</Link>
-            <span>{cart.count} article(s) · à partir de {estimatedTotal.toFixed(2)}€</span>
-            <button className="btn-gold" disabled={placing} onClick={placeOrder}>{placing ? '...' : 'Valider mes informations'}</button>
+            <span>{cart.count > 0 ? `${cart.count} article(s) · à partir de ${estimatedTotal.toFixed(2)}€` : 'Réservation sans commande'}</span>
+            <button className="btn-gold" disabled={placing} onClick={placeOrder}>
+              {placing ? '...' : cart.count === 0 ? 'Envoyer la réservation' : 'Valider mes informations'}
+            </button>
           </div>
         </>
       )}
 
       {pendingOrder && (
         <div className="card" ref={pendingOrderRef}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Confirme ta commande</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{isPureReservation ? 'Confirme ta réservation' : 'Confirme ta commande'}</h3>
           {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
             <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
           )}
@@ -420,24 +433,28 @@ export default function Checkout() {
             )}
           </div>
 
-          <div className="breakdown">
-            <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
-            {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
-            {pendingOrder.orderType === 'delivery' && (
-              <>
-                <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
-                <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
-              </>
-            )}
-            {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
-            <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
-          </div>
+          {!isPureReservation && (
+            <div className="breakdown">
+              <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
+              {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
+              {pendingOrder.orderType === 'delivery' && (
+                <>
+                  <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+                </>
+              )}
+              {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
+              <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+            </div>
+          )}
 
           {!deliveryConfirmed && (
-            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer avant de payer.</p>
+            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer.</p>
           )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>{paying ? '...' : 'Confirmer et payer'}</button>
+            <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
+              {paying ? '...' : isPureReservation ? 'Envoyer la réservation' : 'Confirmer et payer'}
+            </button>
             <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : 'Annuler'}</button>
           </div>
         </div>
