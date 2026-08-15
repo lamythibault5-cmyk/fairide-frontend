@@ -250,51 +250,50 @@ const TYPE_TEMPLATES = {
       { name: 'Café', price: 2, desc: 'Espresso ou café allongé — au choix' }
     ]
   },
+  // Carte type traiteur asiatique (wok/thaï-viet-chinois), prix réalistes 2026. Le "Bière 33cl" est
+  // un choix de marque au même prix (pas un vrai groupe d'options), comme "Softs" ailleurs dans ce fichier.
   Asiatique: {
     entree: [
-      { name: 'Vegetable Spring Rolls', price: 5.5, desc: '' },
-      { name: 'Chicken Spring Rolls', price: 6, desc: '' },
-      { name: 'Chicken Gyoza', price: 6.5, desc: '' },
-      { name: 'Vegetable Gyoza', price: 6, desc: '' },
-      { name: 'Shrimp Tempura', price: 8.5, desc: '' },
-      { name: 'Edamame', price: 5, desc: '' },
-      { name: 'Spicy Edamame', price: 5.5, desc: '' },
-      { name: 'Chicken Satay', price: 7.5, desc: '' }
+      { name: 'Nems poulet (4 pcs)', price: 6.5, desc: '' },
+      { name: 'Rouleaux de printemps (2 pcs)', price: 6, desc: '' },
+      { name: 'Gyoza (5 pcs)', price: 6.5, desc: '' },
+      { name: 'Samoussas (3 pcs)', price: 6, desc: '' },
+      { name: 'Beignets de crevettes (4 pcs)', price: 7, desc: '' },
+      { name: 'Soupe tom yum', price: 7.5, desc: '' },
+      { name: 'Soupe miso', price: 4.5, desc: '' },
+      { name: 'Salade de papaye verte', price: 8, desc: '' }
     ],
     plat: [
-      { name: 'Chicken Pad Thai', price: 13.5, desc: '' },
-      { name: 'Shrimp Pad Thai', price: 15, desc: '' },
-      { name: 'Vegetable Pad Thai', price: 12.5, desc: '' },
-      { name: 'Chicken Fried Rice', price: 12.9, desc: '' },
-      { name: 'Beef Fried Rice', price: 13.9, desc: '' },
-      { name: 'Vegetable Fried Rice', price: 11.9, desc: '' },
-      { name: 'Chicken Teriyaki Noodles', price: 13.5, desc: '' },
-      { name: 'Beef Teriyaki Noodles', price: 14.5, desc: '' },
-      { name: 'Spicy Chicken Noodles', price: 13.9, desc: '' },
-      { name: 'Singapore Noodles', price: 14.5, desc: '' },
-      { name: 'Chicken Teriyaki', price: 14.5, desc: '' },
-      { name: 'Beef Teriyaki', price: 15.5, desc: '' },
-      { name: 'Sweet & Sour Chicken', price: 13.9, desc: '' },
-      { name: 'Thai Green Curry Chicken', price: 14.5, desc: '' },
-      { name: 'Thai Red Curry Beef', price: 15.5, desc: '' },
-      { name: 'Vegetable Curry', price: 12.9, desc: '' }
+      { name: 'Phở bœuf', price: 14.5, desc: '' },
+      { name: 'Phở poulet', price: 13.5, desc: '' },
+      { name: 'Bo bun (bœuf, nems)', price: 14.5, desc: '' },
+      { name: 'Ramen poulet', price: 14, desc: '' },
+      { name: 'Poulet légumes sauce soja', price: 13.5, desc: '' },
+      { name: 'Bœuf aux oignons', price: 15, desc: '' },
+      { name: 'Crevettes basilic thaï', price: 16, desc: '' },
+      { name: 'Canard laqué', price: 16.5, desc: '' },
+      { name: 'Tofu légumes', price: 12.5, desc: '' },
+      { name: 'Pad thaï poulet', price: 14, desc: '' },
+      { name: 'Pad thaï crevettes', price: 15.5, desc: '' },
+      { name: 'Curry vert poulet', price: 14.5, desc: '' },
+      { name: 'Curry rouge crevettes', price: 16, desc: '' },
+      { name: 'Curry massaman bœuf', price: 15.5, desc: '' },
+      { name: 'Riz cantonnais', price: 11.5, desc: '' },
+      { name: 'Riz sauté crevettes', price: 13.5, desc: '' },
+      { name: 'Nouilles sautées poulet', price: 12.5, desc: '' },
+      { name: 'Menu midi (entrée + plat)', price: 15.5, desc: '' },
+      { name: 'Menu duo (2 entrées + 2 plats + riz)', price: 42, desc: 'À partager, 2 personnes' }
     ],
     dessert: [
-      { name: 'Mango Sticky Rice', price: 6.5, desc: '' },
-      { name: 'Mochi Ice Cream', price: 5.9, desc: '' },
-      { name: 'Coconut Tapioca', price: 5.5, desc: '' }
+      { name: 'Perles de coco (2 pcs)', price: 4.5, desc: '' },
+      { name: 'Banane frite au miel', price: 5, desc: '' },
+      { name: 'Mango sticky rice', price: 6.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Japanese Green Tea', price: 3.5, desc: '' },
-      { name: 'Lychee Drink', price: 3.5, desc: '' },
-      { name: 'Mango Drink', price: 3.5, desc: '' },
-      { name: 'Thai Iced Tea', price: 3.5, desc: '' },
-      { name: 'Bubble Tea', price: 4.5, desc: '' }
+      { name: 'Thé jasmin', price: 2.5, desc: '' },
+      { name: 'Bubble tea', price: 5.5, desc: '' },
+      { name: 'Bière 33cl', price: 4, desc: 'Singha ou Tsingtao — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
   },
   Sushi: {
@@ -344,50 +343,49 @@ const TYPE_TEMPLATES = {
       { name: 'Saké', price: 6, desc: '' }
     ]
   },
+  // Les suppléments tacos/burritos (guacamole/fromage/jalapeños) sont gérés via le groupe d'options
+  // "Suppléments" (voir migration de seed — attaché aux tacos et burritos, pas aux fajitas/enchiladas).
   Mexicain: {
     plat: [
-      { name: 'Chicken Burrito', price: 12.5, desc: '' },
-      { name: 'Beef Burrito', price: 13.5, desc: '' },
-      { name: 'Pulled Pork Burrito', price: 13.5, desc: '' },
-      { name: 'Spicy Chicken Burrito', price: 12.9, desc: '' },
-      { name: 'Veggie Burrito', price: 11.5, desc: '' },
-      { name: 'Vegan Burrito', price: 11.9, desc: '' },
-      { name: 'Chicken Tacos ×3', price: 11.5, desc: '' },
-      { name: 'Beef Tacos ×3', price: 12.5, desc: '' },
-      { name: 'Pulled Pork Tacos ×3', price: 12.5, desc: '' },
-      { name: 'Shrimp Tacos ×3', price: 14, desc: '' },
-      { name: 'Veggie Tacos ×3', price: 10.9, desc: '' },
-      { name: 'Chicken Burrito Bowl', price: 12.5, desc: '' },
-      { name: 'Beef Burrito Bowl', price: 13.5, desc: '' },
-      { name: 'Vegan Bowl', price: 11.9, desc: '' },
-      { name: 'Spicy Shrimp Bowl', price: 14.5, desc: '' }
+      { name: 'Tacos Poulet mariné', price: 11.5, desc: '' },
+      { name: 'Tacos Carnitas (porc confit)', price: 12.5, desc: '' },
+      { name: 'Tacos Barbacoa (bœuf)', price: 13, desc: '' },
+      { name: 'Tacos Crevettes', price: 14, desc: '' },
+      { name: 'Tacos Champignons-haricots noirs', price: 10.5, desc: '' },
+      { name: 'Tacos Pastor (porc ananas)', price: 12.5, desc: '' },
+      { name: 'Burrito Poulet', price: 12.5, desc: '' },
+      { name: 'Burrito Bœuf', price: 13.5, desc: '' },
+      { name: 'Burrito Végétarien', price: 11.5, desc: '' },
+      { name: 'Burrito Bowl (sans tortilla)', price: 12.5, desc: '' },
+      { name: 'Fajitas poulet (à composer)', price: 17.5, desc: '' },
+      { name: 'Fajitas bœuf', price: 19, desc: '' },
+      { name: 'Fajitas crevettes', price: 19.5, desc: '' },
+      { name: 'Enchiladas poulet', price: 15.5, desc: '' },
+      { name: 'Chili con carne riz', price: 14, desc: '' },
+      { name: 'Menu midi (2 tacos + boisson)', price: 13.5, desc: '' }
     ],
     entree: [
-      { name: 'Nachos', price: 5.5, desc: '' },
-      { name: 'Nachos & Guacamole', price: 7.5, desc: '' },
-      { name: 'Loaded Nachos', price: 9.5, desc: '' },
-      { name: 'Guacamole & Tortilla Chips', price: 6.5, desc: '' },
-      { name: 'Mexican Rice', price: 4, desc: '' },
-      { name: 'Black Beans', price: 4, desc: '' },
-      { name: 'Quesadilla Chicken', price: 8.5, desc: '' },
-      { name: 'Quesadilla Cheese', price: 7, desc: '' }
+      { name: 'Guacamole & totopos', price: 8.5, desc: '' },
+      { name: 'Nachos supreme (fromage, jalapeños, pico de gallo)', price: 10.5, desc: '' },
+      { name: 'Nachos pulled pork', price: 12.5, desc: '' },
+      { name: 'Quesadilla fromage', price: 8, desc: '' },
+      { name: 'Quesadilla poulet', price: 10, desc: '' },
+      { name: 'Elote (maïs grillé)', price: 5.5, desc: '' }
     ],
     dessert: [
-      { name: 'Churros', price: 5.5, desc: '' },
-      { name: 'Churros & Chocolate', price: 6.5, desc: '' },
-      { name: 'Tres Leches Cake', price: 6, desc: '' }
+      { name: 'Churros dulce de leche', price: 6.5, desc: '' },
+      { name: 'Tres leches', price: 6, desc: '' },
+      { name: 'Flan mexicain', price: 5.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Still Water', price: 2.5, desc: '' },
-      { name: 'Sparkling Water', price: 2.5, desc: '' },
-      { name: 'Jarritos Lime', price: 3.9, desc: '' },
-      { name: 'Jarritos Mango', price: 3.9, desc: '' },
-      { name: 'Jarritos Guava', price: 3.9, desc: '' },
-      { name: 'Homemade Limeade', price: 4, desc: '' },
-      { name: 'Horchata', price: 4, desc: '' }
+      { name: 'Margarita', price: 9, desc: '' },
+      { name: 'Margarita fruits', price: 9.5, desc: '' },
+      { name: 'Mojito', price: 8.5, desc: '' },
+      { name: 'Bière 33cl', price: 4, desc: 'Corona ou Modelo — au choix' },
+      { name: 'Jarritos', price: 3.5, desc: '' },
+      { name: 'Agua fresca', price: 4, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Tequila / mezcal (shot)', price: 5, desc: '' }
     ]
   },
   // Carte type levantine (Liban/Syrie) — mezzés, sandwichs, grillades.
@@ -473,49 +471,52 @@ const TYPE_TEMPLATES = {
       { name: 'Matcha latte', price: 5, desc: '' }
     ]
   },
+  // Carte type trattoria, prix réalistes 2026.
   Italien: {
-    plat: [
-      { name: 'Spaghetti Carbonara', price: 13.5, desc: '' },
-      { name: 'Spaghetti Bolognese', price: 13.5, desc: '' },
-      { name: 'Penne Arrabbiata', price: 12, desc: '' },
-      { name: 'Penne Amatriciana', price: 13, desc: '' },
-      { name: 'Tagliatelle al Ragù', price: 14.5, desc: '' },
-      { name: 'Linguine Pesto', price: 13, desc: '' },
-      { name: 'Linguine Gamberi', price: 16.5, desc: '' },
-      { name: 'Truffle Tagliatelle', price: 17.5, desc: '' },
-      { name: 'Rigatoni alla Vodka', price: 14.5, desc: '' },
-      { name: 'Lasagna Bolognese', price: 14.5, desc: '' },
-      { name: 'Gnocchi Gorgonzola', price: 14, desc: '' },
-      { name: 'Ravioli Ricotta & Spinach', price: 15, desc: '' }
-    ],
     entree: [
-      { name: 'Burrata', price: 8.9, desc: '' },
-      { name: 'Bruschetta', price: 7, desc: '' },
-      { name: 'Focaccia', price: 5.5, desc: '' },
-      { name: 'Carpaccio', price: 11.5, desc: '' },
-      { name: 'Arancini', price: 7.5, desc: '' },
-      { name: 'Caprese', price: 8.5, desc: '' },
-      { name: 'Antipasti', price: 12.5, desc: '' }
+      { name: 'Burrata tomates cerises', price: 12.5, desc: '' },
+      { name: 'Carpaccio de bœuf', price: 13.5, desc: '' },
+      { name: 'Vitello tonnato', price: 13, desc: '' },
+      { name: 'Bruschetta (3 pcs)', price: 7.5, desc: '' },
+      { name: 'Arancini (3 pcs)', price: 8.5, desc: '' },
+      { name: 'Planche antipasti misti (2 pers.)', price: 19, desc: '' },
+      { name: 'Légumes grillés', price: 5.5, desc: '' },
+      { name: 'Roquette parmesan', price: 5, desc: '' },
+      { name: 'Frites', price: 4, desc: '' }
+    ],
+    plat: [
+      { name: 'Spaghetti carbonara (guanciale, pecorino)', price: 14.5, desc: '' },
+      { name: 'Tagliatelle bolognese', price: 14, desc: '' },
+      { name: 'Penne arrabbiata', price: 12.5, desc: '' },
+      { name: 'Linguine vongole', price: 17.5, desc: '' },
+      { name: 'Gnocchi gorgonzola', price: 14.5, desc: '' },
+      { name: 'Ravioli ricotta épinards, beurre sauge', price: 15, desc: '' },
+      { name: 'Tagliatelle scampis', price: 17, desc: '' },
+      { name: 'Risotto champignons', price: 15.5, desc: '' },
+      { name: 'Risotto scampis', price: 18, desc: '' },
+      { name: 'Lasagne maison', price: 14.5, desc: '' },
+      { name: 'Pâtes à la truffe', price: 19, desc: '' },
+      { name: 'Saltimbocca alla romana', price: 21, desc: '' },
+      { name: 'Escalope milanaise', price: 19.5, desc: '' },
+      { name: 'Osso buco', price: 23, desc: '' },
+      { name: 'Filet de bar grillé', price: 22, desc: '' },
+      { name: 'Tagliata de bœuf, roquette, parmesan', price: 24.5, desc: '' },
+      { name: 'Menu midi (entrée + plat, semaine)', price: 19.5, desc: '' }
     ],
     dessert: [
-      { name: 'Tiramisù Classico', price: 6.5, desc: '' },
-      { name: 'Tiramisù Pistachio', price: 7, desc: '' },
-      { name: 'Panna Cotta', price: 6, desc: '' },
-      { name: 'Cannoli', price: 6.5, desc: '' },
-      { name: 'Chocolate Fondant', price: 6.5, desc: '' },
-      { name: 'Lemon Cake', price: 5.5, desc: '' }
+      { name: 'Tiramisu maison', price: 6.5, desc: '' },
+      { name: 'Panna cotta', price: 6, desc: '' },
+      { name: 'Affogato', price: 5.5, desc: '' },
+      { name: 'Cannoli (2 pcs)', price: 6, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.8, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.8, desc: '' },
-      { name: 'San Pellegrino', price: 3, desc: '' },
-      { name: 'Acqua Panna', price: 3, desc: '' },
-      { name: 'Sprite', price: 2.8, desc: '' },
-      { name: 'Limonata', price: 3.5, desc: '' },
-      { name: 'Aranciata', price: 3.5, desc: '' },
-      { name: 'Peach Iced Tea', price: 3.5, desc: '' },
-      { name: 'Chinotto', price: 3, desc: '' },
-      { name: 'Espresso', price: 2, desc: '' }
+      { name: 'Vin au verre', price: 5.5, desc: '' },
+      { name: 'Bouteille de vin maison (75cl)', price: 22, desc: '' },
+      { name: 'Peroni 33cl', price: 3.5, desc: '' },
+      { name: 'Aperol Spritz', price: 8.5, desc: '' },
+      { name: 'Limoncello', price: 4.5, desc: '' },
+      { name: 'Espresso', price: 2.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
   },
   // Wings vendues avec un choix de sauce obligatoire (nature/BBQ/buffalo/hot honey) géré via le groupe
@@ -602,51 +603,45 @@ const TYPE_TEMPLATES = {
       { name: 'Vin au verre', price: 5, desc: '' }
     ]
   },
+  // Les suppléments (halloumi/œuf poché/avocat) sont gérés via le groupe d'options "Suppléments"
+  // (voir migration de seed — attaché aux bowls/curry/burgers/tarte). Le "Café" a un groupe "Lait"
+  // (Avoine/Amande, +0,50€), même logique que le "Softs" desc-only ailleurs mais avec supplément payant.
   'Végétarien': {
     entree: [
-      { name: 'Houmous & pain pita', price: 5.5, desc: '' },
-      { name: 'Soupe miso vegan', price: 4.5, desc: '' },
-      { name: 'Rouleaux de printemps tofu', price: 5, desc: '' },
-      { name: 'Chips de patate douce', price: 4, desc: '' },
-      { name: 'Salade de betteraves', price: 5, desc: '' },
-      { name: 'Edamame', price: 4.5, desc: '' },
-      { name: 'Bruschetta tomate-basilic', price: 5, desc: '' },
-      { name: 'Nems tofu croustillant', price: 5.5, desc: '' }
+      { name: 'Soupe du jour', price: 6, desc: '' },
+      { name: 'Houmous pain plat', price: 7, desc: '' },
+      { name: 'Burrata rôtie aux légumes', price: 11.5, desc: '' },
+      { name: 'Croquettes de champignons (2 pcs)', price: 9, desc: '' },
+      { name: 'Tempura de légumes', price: 8.5, desc: '' }
     ],
     plat: [
-      { name: 'Curry de légumes', price: 10.5, desc: '' },
-      { name: 'Falafel bowl', price: 10, desc: '' },
-      { name: 'Burger végétarien', price: 11, desc: '' },
-      { name: 'Curry de pois chiches', price: 10, desc: '' },
-      { name: 'Risotto champignons vegan', price: 11.5, desc: '' },
-      { name: 'Buddha bowl vegan', price: 11, desc: '' },
-      { name: 'Wrap houmous légumes', price: 8.5, desc: '' },
-      { name: 'Chili sin carne', price: 10, desc: '' },
-      { name: 'Pâtes vegan au pesto', price: 10.5, desc: '' },
-      { name: 'Lasagne végétarienne', price: 11.5, desc: '' },
-      { name: 'Galettes de quinoa', price: 10, desc: '' },
-      { name: 'Curry vert thaï vegan', price: 11, desc: '' },
-      { name: 'Menu Burger Végétarien (frites & boisson)', price: 14.5, desc: '' },
-      { name: 'Menu Falafel Wrap (frites & boisson)', price: 13.5, desc: '' }
+      { name: 'Buddha bowl (quinoa, avocat, falafel, houmous)', price: 14, desc: '' },
+      { name: 'Curry de légumes, lait de coco, riz', price: 14.5, desc: '' },
+      { name: 'Dahl de lentilles, naan', price: 13.5, desc: '' },
+      { name: 'Risotto aux champignons', price: 15.5, desc: '' },
+      { name: 'Lasagne végétarienne', price: 14, desc: '' },
+      { name: 'Burger végétarien (galette maison, frites)', price: 14.5, desc: '' },
+      { name: 'Burger vegan (steak végétal, frites)', price: 15, desc: '' },
+      { name: 'Chili sin carne, riz', price: 13, desc: '' },
+      { name: 'Gnocchis épinards gorgonzola', price: 14.5, desc: '' },
+      { name: 'Assiette mezze végétarien', price: 15, desc: '' },
+      { name: 'Tarte du jour, salade', price: 12.5, desc: '' },
+      { name: 'Menu midi (plat du jour + soupe)', price: 16, desc: '' }
     ],
     dessert: [
-      { name: 'Brownie vegan', price: 4.5, desc: '' },
-      { name: 'Cookie vegan', price: 3, desc: '' },
-      { name: 'Cheesecake vegan citron', price: 5, desc: '' },
-      { name: 'Muffin vegan', price: 3.5, desc: '' },
-      { name: 'Tarte crumble pommes vegan', price: 4.5, desc: '' }
+      { name: 'Cheesecake vegan', price: 6, desc: '' },
+      { name: 'Moelleux chocolat', price: 6.5, desc: '' },
+      { name: 'Crumble aux pommes', price: 5.5, desc: '' },
+      { name: 'Energy balls (3 pcs)', price: 3.5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola', price: 2.5, desc: '' },
-      { name: 'Coca-Cola Zero', price: 2.5, desc: '' },
-      { name: 'Sprite', price: 2.5, desc: '' },
-      { name: 'Eau plate 50cl', price: 2, desc: '' },
-      { name: 'Eau pétillante 50cl', price: 2, desc: '' },
-      { name: 'Jus pressé pomme', price: 4, desc: '' },
-      { name: 'Lait d\'amande chaud', price: 3.5, desc: '' },
-      { name: 'Kombucha', price: 4, desc: '' },
-      { name: 'Jus vert détox', price: 4.5, desc: '' },
-      { name: 'Smoothie mangue', price: 5, desc: '' }
+      { name: 'Jus pressé', price: 4.5, desc: '' },
+      { name: 'Smoothie', price: 6, desc: '' },
+      { name: 'Kombucha', price: 4.5, desc: '' },
+      { name: 'Vin bio au verre', price: 5.5, desc: '' },
+      { name: 'Bière bio', price: 4, desc: '' },
+      { name: 'Café', price: 2.8, desc: '' },
+      { name: 'Matcha latte', price: 5, desc: '' }
     ]
   },
   // Carte type snack turc bruxellois (dürüms, pitas, mitraillettes, assiettes, tacos, burgers),
@@ -1710,7 +1705,26 @@ const ITEM_IMAGE_OVERRIDES = {
   'leffe 33cl': U('1618183479302-1e0aa382c36b'),
   'desperados 33cl': U('1618183479302-1e0aa382c36b'),
   'corona 35,5cl': U('1618183479302-1e0aa382c36b'),
-  'pack jupiler 6 × 33cl': U('1618183479302-1e0aa382c36b')
+  'pack jupiler 6 × 33cl': U('1618183479302-1e0aa382c36b'),
+
+  // --- Italien (trattoria) : "grillé" retombe sur le mot-clé générique kebab/grill, "peroni" ne
+  // contient pas "bière" donc ne matche aucun mot-clé ---
+  'filet de bar grillé': U('1641898378716-1f38ec04bb0f'),
+  'légumes grillés': U('1650844010413-3f24dc1c182b'),
+  'peroni 33cl': U('1618183479302-1e0aa382c36b'),
+
+  // --- Asiatique (wok) : accent sur "phở"/"pad thaï" empêche le match des mots-clés (sans accent) ---
+  'phở bœuf': U('1555126634-323283e090fa'),
+  'phở poulet': U('1555126634-323283e090fa'),
+  'pad thaï poulet': U('1555126634-323283e090fa'),
+  'pad thaï crevettes': U('1555126634-323283e090fa'),
+  'banane frite au miel': U('1570727624862-3008fe67a6be'),
+
+  // --- Végétarien : "tarte" seul retombe sur la photo générique de dessert (gâteau au chocolat) ---
+  'tarte du jour, salade': U('1650844010413-3f24dc1c182b'),
+
+  // --- Mexicain : "grillé" (maïs) retombe sur le mot-clé générique kebab/grill ---
+  'elote (maïs grillé)': U('1653886764193-db9e5a93d215')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
