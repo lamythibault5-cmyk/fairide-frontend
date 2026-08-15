@@ -1048,7 +1048,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['nuggets'], image: 'https://images.unsplash.com/photo-1619881590738-a111d176d906?w=300&q=80' },
   { keywords: ['wings', 'ailes'], image: 'https://images.unsplash.com/photo-1608039755401-742074f0548d?w=300&q=80' },
   { keywords: ['coleslaw'], image: 'https://images.unsplash.com/photo-1573403707491-38a4ea19edc1?w=300&q=80' },
-  { keywords: ['frite', 'french fries', 'fries'], image: 'https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&q=80' },
+  { keywords: ['frite', 'french fries', 'fries'], images: ['https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=300&q=80', 'https://images.unsplash.com/photo-1652209911920-2700fcbd5011?w=300&q=80', 'https://images.unsplash.com/photo-1666304752980-678d5c35c911?w=300&q=80'] },
 
   // --- Pizzas (par variante) ---
   { keywords: ['margherita', 'marinara', 'napoli', 'napoletana'], image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=300&q=80' },
@@ -1066,7 +1066,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['gnocchi'], image: 'https://images.unsplash.com/photo-1616170687881-32188ae1b6d7?w=300&q=80' },
   { keywords: ['ravioli'], image: 'https://images.unsplash.com/photo-1628885363743-fbf9c98d4196?w=300&q=80' },
   { keywords: ['lasagne', 'lasagna'], image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=300&q=80' },
-  { keywords: ['pâtes', 'pate', 'pasta', 'tagliatelle', 'linguine', 'rigatoni', 'fettuccine', 'penne', 'spaghetti'], image: 'https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=300&q=80' },
+  { keywords: ['pâtes', 'pate', 'pasta', 'tagliatelle', 'linguine', 'rigatoni', 'fettuccine', 'penne', 'spaghetti'], images: ['https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=300&q=80', 'https://images.unsplash.com/photo-1628885363743-fbf9c98d4196?w=300&q=80', 'https://images.unsplash.com/photo-1608897013039-887f21d8c804?w=300&q=80'] },
   { keywords: ['risotto'], image: 'https://images.unsplash.com/photo-1682428617976-f25633ed8469?w=300&q=80' },
 
   // --- Entrées italiennes ---
@@ -1106,7 +1106,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['teriyaki'], image: 'https://images.unsplash.com/photo-1609183480237-ccbb2d7c5772?w=300&q=80' },
   { keywords: ['sweet & sour', 'general tao', 'bœuf aux oignons', 'boeuf aux oignons'], image: 'https://images.unsplash.com/photo-1664138788119-bd4f073259d5?w=300&q=80' },
   { keywords: ['thai green curry', 'thai red curry', 'curry vert', 'curry rouge'], image: 'https://images.unsplash.com/photo-1716959669858-11d415bdead6?w=300&q=80' },
-  { keywords: ['singapore noodles', 'noodles', 'bo bun', 'nouilles'], image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80' },
+  { keywords: ['singapore noodles', 'noodles', 'bo bun', 'nouilles'], images: ['https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80', 'https://images.unsplash.com/photo-1609183480237-ccbb2d7c5772?w=300&q=80', 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80'] },
   { keywords: ['mango sticky rice'], image: 'https://images.unsplash.com/photo-1711161988375-da7eff032e45?w=300&q=80' },
   { keywords: ['coconut tapioca'], image: 'https://images.unsplash.com/photo-1601654847092-712aff26313c?w=300&q=80' },
   { keywords: ['lychee'], image: 'https://images.unsplash.com/photo-1597975371270-cf80e4f54921?w=300&q=80' },
@@ -1216,10 +1216,10 @@ const KEYWORD_IMAGES = [
   { keywords: ['moules'], image: 'https://images.unsplash.com/photo-1600265721436-734abbfe2137?w=300&q=80' },
 
   // --- Génériques (fallback) ---
-  { keywords: ['kebab', 'durum', 'chawarma', 'grillades', 'grill'], image: 'https://images.unsplash.com/photo-1532636875304-0c89119d9b4d?w=300&q=80' },
-  { keywords: ['sandwich', 'panini', 'wrap', 'croque'], image: 'https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=300&q=80' },
+  { keywords: ['kebab', 'durum', 'chawarma', 'grillades', 'grill'], images: ['https://images.unsplash.com/photo-1532636875304-0c89119d9b4d?w=300&q=80', 'https://images.unsplash.com/photo-1719282431565-3b30bb7d2658?w=300&q=80', 'https://images.unsplash.com/photo-1743674453093-592bed88018e?w=300&q=80'] },
+  { keywords: ['sandwich', 'panini', 'wrap', 'croque'], images: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=300&q=80', 'https://images.unsplash.com/photo-1612392061787-2d078b3e573c?w=300&q=80', 'https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=300&q=80'] },
   { keywords: ['hot-dog', 'hot dog'], image: 'https://images.unsplash.com/photo-1612392061787-2d078b3e573c?w=300&q=80' },
-  { keywords: ['glace', 'mochi', 'sorbet', 'sundae', 'cornet'], image: 'https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&q=80' },
+  { keywords: ['glace', 'mochi', 'sorbet', 'sundae', 'cornet'], images: ['https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&q=80', 'https://images.unsplash.com/photo-1572837663132-76c0ccd9cb6f?w=300&q=80'] },
   { keywords: ['cheesecake'], image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=300&q=80' },
   { keywords: ['fondant au chocolat', 'chocolate fondant', 'fondant chocolat'], image: 'https://images.unsplash.com/photo-1673551490812-eaee2e9bf0ef?w=300&q=80' },
   { keywords: ['crème brûlée', 'creme brulee'], image: 'https://images.unsplash.com/photo-1676300184943-09b2a08319a3?w=300&q=80' },
@@ -1229,7 +1229,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['tiramisu', 'tiramisù'], image: 'https://images.unsplash.com/photo-1571877227200-a0d98ea607e9?w=300&q=80' },
   { keywords: ['panna cotta', 'cannoli'], image: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?w=300&q=80' },
   { keywords: ['chocolat chaud', 'hot chocolate'], image: 'https://images.unsplash.com/photo-1517578239113-b03992dcdd25?w=300&q=80' },
-  { keywords: ['chocolat', 'cioccolato', 'cookie', 'biscuit', 'gâteau', 'gateau', 'cake', 'tarte', 'baklava', 'fondant'], image: 'https://images.unsplash.com/photo-1517427294546-5aa121f68e8a?w=300&q=80' },
+  { keywords: ['chocolat', 'cioccolato', 'cookie', 'biscuit', 'gâteau', 'gateau', 'cake', 'tarte', 'baklava', 'fondant'], images: ['https://images.unsplash.com/photo-1517427294546-5aa121f68e8a?w=300&q=80', 'https://images.unsplash.com/photo-1643910509872-78bc24a2bc53?w=300&q=80', 'https://images.unsplash.com/photo-1676300184943-09b2a08319a3?w=300&q=80'] },
   { keywords: ['milkshake'], image: 'https://images.unsplash.com/photo-1619158403521-ed9795026d47?w=300&q=80' },
   { keywords: ['fanta'], image: 'https://images.unsplash.com/photo-1624517452488-04869289c4ca?w=300&q=80' },
   { keywords: ['sprite'], image: 'https://images.unsplash.com/photo-1621330716555-5cad596c4562?w=300&q=80' },
@@ -1253,13 +1253,13 @@ const KEYWORD_IMAGES = [
   { keywords: ['thé', 'the', 'tea'], image: 'https://images.unsplash.com/photo-1573784540576-21ddeff9479b?w=300&q=80' },
   { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair', 'cramique', 'financier', 'cannelé', 'canele', 'muffin', 'baguette', 'chausson'], image: 'https://images.unsplash.com/photo-1623334044303-241021148842?w=300&q=80' },
   { keywords: ['poulet', 'chicken', 'beignet'], image: 'https://images.unsplash.com/photo-1517686469429-8bdb88b9f907?w=300&q=80' },
-  { keywords: ['riz', 'curry', 'cantonais'], image: 'https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80' },
+  { keywords: ['riz', 'curry', 'cantonais'], images: ['https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80', 'https://images.unsplash.com/photo-1716959669858-11d415bdead6?w=300&q=80', 'https://images.unsplash.com/photo-1682428617976-f25633ed8469?w=300&q=80'] },
   { keywords: ['saumon', 'salmon', 'poisson', 'thon', 'tuna', 'shrimp', 'crevette'], image: 'https://images.unsplash.com/photo-1641898378716-1f38ec04bb0f?w=300&q=80' },
   { keywords: ['chips', 'cacahuète', 'cacahuete', 'bretzel', 'apéro', 'apero', 'olives', 'biltong', 'saucisson', 'fruits secs'], image: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=300&q=80' },
   { keywords: ['légume', 'legume', 'quiche'], image: 'https://images.unsplash.com/photo-1650844010413-3f24dc1c182b?w=300&q=80' },
   { keywords: ['œufs', 'oeufs', 'eggs'], image: 'https://images.unsplash.com/photo-1518569656558-1f25e69d93d7?w=300&q=80' },
   { keywords: ['salade de fruits', 'fruit salad', 'pommes'], image: 'https://images.unsplash.com/photo-1519996529931-28324d5a630e?w=300&q=80' },
-  { keywords: ['salade', 'bowl', 'buddha'], image: 'https://images.unsplash.com/photo-1600335895229-6e75511892c8?w=300&q=80' },
+  { keywords: ['salade', 'bowl', 'buddha'], images: ['https://images.unsplash.com/photo-1600335895229-6e75511892c8?w=300&q=80', 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=300&q=80', 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?w=300&q=80'] },
   { keywords: ['soupe', 'soup', 'velouté', 'veloute'], image: 'https://images.unsplash.com/photo-1578861256505-d3be7cb037d3?w=300&q=80' }
 ];
 
@@ -1631,11 +1631,23 @@ const ITEM_IMAGE_OVERRIDES = {
   'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b')
 };
 
+// Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
+// différents dans le même groupe générique (ex: "kebab"/"durum") affichent donc des photos différentes,
+// mais un même nom de plat garde toujours la même photo (y compris d'un resto à l'autre, comportement voulu).
+function hashSeed(str) {
+  let h = 0;
+  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return h;
+}
+
 export function defaultItemImage(item) {
   const name = (item?.name || '').toLowerCase().trim();
   if (ITEM_IMAGE_OVERRIDES[name]) return ITEM_IMAGE_OVERRIDES[name];
   for (const entry of KEYWORD_IMAGES) {
-    if (entry.keywords.some((k) => name.includes(k))) return entry.image;
+    if (entry.keywords.some((k) => name.includes(k))) {
+      if (entry.images) return entry.images[hashSeed(name) % entry.images.length];
+      return entry.image;
+    }
   }
   return categoryImage(item?.category) || '';
 }
