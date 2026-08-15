@@ -657,51 +657,75 @@ const TYPE_TEMPLATES = {
       { name: 'Smoothie mangue', price: 5, desc: '' }
     ]
   },
+  // Carte type snack turc bruxellois (dürüms, pitas, mitraillettes, assiettes, tacos, burgers),
+  // prix réalistes zone Woluwe 2026. Les crudités/sauces au choix sont gérées via les groupes
+  // d'options "Crudités"/"Sauces" (voir ensureCondimentGroupsForItem dans routes/restaurants.js),
+  // pas comme des lignes de menu séparées.
   'Kebab & Grill': {
     entree: [
-      { name: 'Frites maison', price: 4, desc: '' },
-      { name: 'Falafel (6 pièces)', price: 5, desc: '' },
-      { name: 'Böreks fromage (3pcs)', price: 5.5, desc: '' },
-      { name: 'Houmous & pita', price: 5, desc: '' },
-      { name: 'Taboulé', price: 4.5, desc: '' },
-      { name: 'Salade turque', price: 5, desc: '' },
-      { name: 'Cigares au fromage (5pcs)', price: 5.5, desc: '' }
+      { name: 'Petite frite', price: 3, desc: '' },
+      { name: 'Grande frite', price: 3.8, desc: '' },
+      { name: 'Fricadelle', price: 2.5, desc: '' },
+      { name: 'Cervelas', price: 2.5, desc: '' },
+      { name: 'Boulet', price: 3, desc: '' },
+      { name: 'Mexicano', price: 3, desc: '' },
+      { name: 'Chicken nuggets (6 pcs)', price: 4.5, desc: '' },
+      { name: 'Bucket poulet 12 pcs', price: 12, desc: '' },
+      { name: 'Bucket poulet 20 pcs', price: 18, desc: '' },
+      { name: 'Portion falafel (6 pcs)', price: 4.5, desc: '' }
     ],
     plat: [
-      { name: 'Kebab poulet', price: 8.5, desc: '' },
-      { name: 'Assiette mixte grillades', price: 13, desc: '' },
-      { name: 'Chawarma bœuf', price: 9, desc: '' },
-      { name: 'Iskender kebab', price: 13, desc: '' },
-      { name: 'Adana kebab', price: 12.5, desc: '' },
-      { name: 'Lahmacun', price: 6, desc: '' },
-      { name: 'Pide au fromage', price: 9, desc: '' },
-      { name: 'Shish taouk', price: 11.5, desc: '' },
-      { name: 'Durum végétarien', price: 8, desc: '' },
-      { name: 'Durum poulet', price: 9, desc: '' },
-      { name: 'Beyti kebab', price: 12, desc: '' },
-      { name: 'Kofte grillé', price: 10.5, desc: '' },
-      { name: 'Menu Kebab Poulet (frites & boisson)', price: 12.5, desc: '' },
-      { name: 'Menu Durum Bœuf (frites & boisson)', price: 13, desc: '' },
-      { name: 'Menu Mixed Grill (frites & boisson)', price: 17, desc: '' },
-      { name: 'Menu Adana (frites & boisson)', price: 16, desc: '' }
+      { name: 'Dürüm poulet', price: 8.5, desc: 'Galette, viande au choix, crudités, sauce · suppl. fromage +1€, avec frites +1,50€' },
+      { name: 'Dürüm kebab (agneau/veau)', price: 8.5, desc: 'Galette, viande au choix, crudités, sauce · suppl. fromage +1€, avec frites +1,50€' },
+      { name: 'Dürüm mixte', price: 9, desc: 'Galette, viande au choix, crudités, sauce · suppl. fromage +1€, avec frites +1,50€' },
+      { name: 'Dürüm adana', price: 9.5, desc: 'Galette, viande au choix, crudités, sauce · suppl. fromage +1€, avec frites +1,50€' },
+      { name: 'Dürüm falafel', price: 8, desc: 'Galette, crudités, sauce · suppl. fromage +1€, avec frites +1,50€' },
+      { name: 'Pita poulet', price: 7, desc: 'Pain pita, viande, crudités, sauce · suppl. fromage +1€' },
+      { name: 'Pita kebab', price: 7, desc: 'Pain pita, viande, crudités, sauce · suppl. fromage +1€' },
+      { name: 'Pita mixte', price: 7.5, desc: 'Pain pita, viande, crudités, sauce · suppl. fromage +1€' },
+      { name: 'Pita falafel', price: 6.5, desc: 'Pain pita, crudités, sauce · suppl. fromage +1€' },
+      { name: 'Mitraillette fricadelle', price: 7.5, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Mitraillette poulet', price: 8.5, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Mitraillette kebab', price: 8.5, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Mitraillette boulette', price: 8, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Mitraillette hamburger', price: 8, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Mitraillette mixte', price: 9.5, desc: 'Demi-baguette, frites, viande, sauce' },
+      { name: 'Assiette poulet', price: 13.5, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette kebab', price: 13.5, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette adana', price: 14.5, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette köfte', price: 14, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette brochette poulet', price: 14.5, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette mixte', price: 15.5, desc: "Viande, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Assiette falafel', price: 12.5, desc: "Falafel, frites ou riz, salade, sauce à l'ail, pain" },
+      { name: 'Tacos M (1 viande)', price: 9.5, desc: 'Galette pressée, frites, viande, sauce fromagère · suppl. viande +1,50€' },
+      { name: 'Tacos L (2 viandes)', price: 11.5, desc: 'Galette pressée, frites, viande, sauce fromagère · suppl. viande +1,50€' },
+      { name: 'Tacos XL (3 viandes)', price: 13.5, desc: 'Galette pressée, frites, viande, sauce fromagère · suppl. viande +1,50€' },
+      { name: 'Cheeseburger', price: 6.5, desc: '' },
+      { name: 'Double cheeseburger', price: 8.5, desc: '' },
+      { name: 'Burger poulet crispy', price: 7.5, desc: '' },
+      { name: 'Burger Bodrum (steak, cheddar, oignons grillés)', price: 9, desc: '' },
+      { name: 'Menu dürüm + frites + boisson (11h30-15h)', price: 12, desc: '' },
+      { name: 'Menu pita + frites + boisson (11h30-15h)', price: 10.5, desc: '' },
+      { name: 'Menu tacos M + boisson (11h30-15h)', price: 11.5, desc: '' }
     ],
     dessert: [
-      { name: 'Baklava (2 pièces)', price: 3.5, desc: '' },
-      { name: 'Künefe', price: 5.5, desc: '' },
-      { name: 'Loukoum assortiment', price: 3.5, desc: '' },
-      { name: 'Sütlaç (riz au lait turc)', price: 4, desc: '' }
+      { name: 'Baklava (3 pièces)', price: 3.5, desc: '' },
+      { name: 'Sütlaç (riz au lait)', price: 3, desc: '' },
+      { name: 'Künefe', price: 5, desc: '' }
     ],
     boisson: [
-      { name: 'Coca-Cola 33cl', price: 3, desc: '' },
-      { name: 'Coca-Cola Zero', price: 3, desc: '' },
-      { name: 'Sprite', price: 3, desc: '' },
+      { name: 'Coca-Cola 33cl', price: 2.5, desc: '' },
+      { name: 'Coca-Cola Zero 33cl', price: 2.5, desc: '' },
+      { name: 'Fanta 33cl', price: 2.5, desc: '' },
+      { name: 'Sprite 33cl', price: 2.5, desc: '' },
+      { name: 'Ice Tea 33cl', price: 2.5, desc: '' },
       { name: 'Eau plate 50cl', price: 2, desc: '' },
       { name: 'Eau pétillante 50cl', price: 2, desc: '' },
-      { name: 'Ayran', price: 2.5, desc: '' },
-      { name: 'Salgam', price: 3, desc: '' },
-      { name: 'Thé turc', price: 2.5, desc: '' },
-      { name: 'Citronnade', price: 3.5, desc: '' },
-      { name: 'Boza', price: 3.5, desc: '' }
+      { name: 'Ayran', price: 2, desc: '' },
+      { name: 'Uludağ', price: 2.5, desc: '' },
+      { name: 'Red Bull', price: 3, desc: '' },
+      { name: 'Thé turc', price: 1.5, desc: '' },
+      { name: 'Café', price: 2, desc: '' }
     ]
   },
   'Coffee Shop': {
@@ -1628,7 +1652,12 @@ const ITEM_IMAGE_OVERRIDES = {
   'beignets de banane': U('1570727624862-3008fe67a6be'),
   'petit milkshake chocolat': U('1619158403521-ed9795026d47'),
   'tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
-  'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b')
+  'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
+
+  // --- Nouvelle carte snack turc (dürüms/pitas/mitraillettes/tacos) ---
+  'bucket poulet 12 pcs': U('1652957392622-17e7c96f1369'),
+  'bucket poulet 20 pcs': U('1652957392622-17e7c96f1369'),
+  'red bull': U('1622543925917-763c34d1a86e')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
