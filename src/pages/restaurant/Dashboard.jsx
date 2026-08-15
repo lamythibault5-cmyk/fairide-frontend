@@ -258,6 +258,7 @@ export default function Dashboard() {
   }
 
   async function confirmCuisineChange() {
+    if (changingCuisine) return; // évite un double-clic qui rejouerait tout le flux (wipe + réinsertion)
     if (!cuisineCode) { toast('Entre le code reçu par email.'); return; }
     const finalCuisine = newCuisine === 'Autre' ? newCustomCuisine.trim() || 'Autre' : newCuisine;
     setChangingCuisine(true);
