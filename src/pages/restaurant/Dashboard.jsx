@@ -6,14 +6,13 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import {
-  CATEGORIES, COMMUNES, RESTAURANT_TYPES, categoryImage, categoryLabel, getStarterTemplate,
+  COMMUNES, RESTAURANT_TYPES, categoryImage, categoryLabel, getStarterTemplate,
   fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage
 } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
-import SectionManager from '../../components/SectionManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import RestaurantPreview from '../../components/RestaurantPreview';
 
@@ -88,6 +87,12 @@ export default function Dashboard() {
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategory, setItemCategory] = useState('plat');
   const [itemImageUrl, setItemImageUrl] = useState('');
+  const [addSectionId, setAddSectionId] = useState(null);
+
+  const [editingSectionId, setEditingSectionId] = useState(null);
+  const [editSectionName, setEditSectionName] = useState('');
+  const [creatingSection, setCreatingSection] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
 
   const [templateOpen, setTemplateOpen] = useState(false);
   const [addingTemplate, setAddingTemplate] = useState(false);
@@ -548,6 +553,35 @@ export default function Dashboard() {
       toast(e.message);
       throw e;
     }
+  }
+
+  async function handleSectionRename(id) {
+    if (!editSectionName.trim()) return;
+    try {
+      await renameSection(id, editSectionName.trim());
+      setEditingSectionId(null);
+    } catch {
+      // toast déjà affiché par renameSection
+    }
+  }
+
+  async function handleSectionCreate() {
+    if (!newSectionName.trim()) return;
+    try {
+      await createSection(newSectionName.trim());
+      setNewSectionName('');
+      setCreatingSection(false);
+    } catch {
+      // toast déjà affiché par createSection
+    }
+  }
+
+  function openAddItemTile(section) {
+    setAddSectionId(section.id);
+    setItemCategory(section.name);
+    setItemName('');
+    setItemPrice('');
+    setItemImageUrl('');
   }
 
   async function deleteSection(section) {
@@ -1182,70 +1216,6 @@ export default function Dashboard() {
                   )}
                 </div>
               ))}
-            </div>
-            <div>
-              <h2 className="section-title" style={{ marginTop: 0 }}>Menu</h2>
-
-              {restaurant.menu.length === 0 && !startChoiceMade && (
-                <div className="card" style={{ border: '2px solid var(--teal)' }}>
-                  <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
-                  <p className="small" style={{ margin: '0 0 12px' }}>
-                    Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite,
-                    avec photos incluses automatiquement — choisissez plat par plat ce que vous gardez, section par section.
-                  </p>
-                  {!starterPickerOpen ? (
-                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                      <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
-                        🍽 Choisir mes plats de départ ({fullTemplateItems(restaurant.cuisine).length} suggestions)
-                      </button>
-                      <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
-                    </div>
-                  ) : (
-                    <TemplatePicker
-                      template={getStarterTemplate(restaurant.cuisine)}
-                      quickItems={quickTemplateItems(restaurant.cuisine)}
-                      submitting={applyingStarter}
-                      onSubmit={applyStarterItems}
-                      onCancel={() => setStarterPickerOpen(false)}
-                    />
-                  )}
-                </div>
-              )}
-
-              <SectionManager
-                sections={restaurant.sections || []}
-                itemCounts={restaurant.menu.reduce((acc, i) => { const c = i.category || 'plat'; acc[c] = (acc[c] || 0) + 1; return acc; }, {})}
-                onCreate={createSection}
-                onRename={renameSection}
-                onDelete={deleteSection}
-              />
-
-              <div className="card">
-                {restaurant.menu.length === 0 && startChoiceMade && <div className="small">Pas encore de plat au menu.</div>}
-                {(restaurant.sections || []).map((section) => {
-                  const items = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
-                  if (!items.length) return null;
-                  const image = categoryImage(section.name);
-                  return (
-                    <div key={section.id} style={{ marginBottom: 10 }}>
-                      <div className="category-header">
-                        {image && <img src={image} alt={section.name} />}
-                        <span>{categoryLabel(section.name, t)}</span>
-                      </div>
-                      <div className="menu-grid">
-                        {items.map((item) => (
-                          <MenuItemRow
-                            key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                            onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
-                            allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                            sections={restaurant.sections || []}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
 
               <OptionGroupManager
                 groups={restaurant.optionGroups || []}
@@ -1283,29 +1253,114 @@ export default function Dashboard() {
                   )}
                 </>
               )}
+            </div>
+            <div>
+              <h2 className="section-title" style={{ marginTop: 0 }}>Menu</h2>
+
+              {restaurant.menu.length === 0 && !startChoiceMade && (
+                <div className="card" style={{ border: '2px solid var(--teal)' }}>
+                  <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
+                  <p className="small" style={{ margin: '0 0 12px' }}>
+                    Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite,
+                    avec photos incluses automatiquement — choisissez plat par plat ce que vous gardez, section par section.
+                  </p>
+                  {!starterPickerOpen ? (
+                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                      <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
+                        🍽 Choisir mes plats de départ ({fullTemplateItems(restaurant.cuisine).length} suggestions)
+                      </button>
+                      <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
+                    </div>
+                  ) : (
+                    <TemplatePicker
+                      template={getStarterTemplate(restaurant.cuisine)}
+                      quickItems={quickTemplateItems(restaurant.cuisine)}
+                      submitting={applyingStarter}
+                      onSubmit={applyStarterItems}
+                      onCancel={() => setStarterPickerOpen(false)}
+                    />
+                  )}
+                </div>
+              )}
 
               <div className="card">
-                <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Ajouter un plat</h3>
-                <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
-                <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
-                <div className="field">
-                  <label>Catégorie</label>
-                  <select value={itemCategory} onChange={(e) => setItemCategory(e.target.value)}>
-                    {(restaurant.sections?.length ? restaurant.sections.map((s) => s.name) : CATEGORIES.map((c) => c.value)).map((name) => (
-                      <option key={name} value={name}>{categoryLabel(name, t)}</option>
-                    ))}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
-                  <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                    {itemName.trim() && (
-                      <img src={itemImageUrl || defaultItemImage({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
-                    )}
-                    <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+                <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
+                <p className="small" style={{ margin: '0 0 12px' }}>
+                  Exactement ce que voient tes clients. Clique sur un plat pour le modifier, sur ✏️ pour renommer une section, et ajoute une section pour tes formules, menus enfants, etc.
+                </p>
+                {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
+                  <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
+                )}
+                {(restaurant.sections || []).map((section) => {
+                  const items = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
+                  const image = categoryImage(section.name);
+                  return (
+                    <div key={section.id} style={{ marginBottom: 16 }}>
+                      <div className="category-header" style={{ justifyContent: 'space-between' }}>
+                        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                          {image && <img src={image} alt={section.name} />}
+                          {editingSectionId === section.id ? (
+                            <div className="row" style={{ gap: 6 }}>
+                              <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />
+                              <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={() => handleSectionRename(section.id)}>OK</button>
+                              <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setEditingSectionId(null)}>Annuler</button>
+                            </div>
+                          ) : (
+                            <span>{categoryLabel(section.name, t)}</span>
+                          )}
+                        </div>
+                        {editingSectionId !== section.id && (
+                          <div className="row" style={{ gap: 4 }}>
+                            <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
+                            <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
+                          </div>
+                        )}
+                      </div>
+                      <div className="menu-grid dashboard-menu-grid">
+                        {items.map((item) => (
+                          <MenuItemRow
+                            key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                            onSetPromo={setItemPromo} onClearPromo={clearItemPromo}
+                            allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                            sections={restaurant.sections || []}
+                          />
+                        ))}
+                        {addSectionId === section.id ? (
+                          <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                            <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
+                            <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                            <div className="field">
+                              <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
+                              <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                                {itemName.trim() && (
+                                  <img src={itemImageUrl || defaultItemImage({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                                )}
+                                <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+                              </div>
+                            </div>
+                            <div className="row" style={{ gap: 8 }}>
+                              <button className="btn-teal" onClick={addMenuItem}>Ajouter</button>
+                              <button className="btn-ghost" onClick={() => setAddSectionId(null)}>Fermer</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
+                            + Ajouter un plat
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                {creatingSection ? (
+                  <div className="row" style={{ gap: 8 }}>
+                    <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder="Menu enfants, Formules midi..." />
+                    <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>Créer</button>
+                    <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setCreatingSection(false)}>Annuler</button>
                   </div>
-                </div>
-                <button className="btn-teal" onClick={addMenuItem}>Ajouter au menu</button>
+                ) : (
+                  <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>+ Nouvelle section</button>
+                )}
               </div>
             </div>
           </div>
