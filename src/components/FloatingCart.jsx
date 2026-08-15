@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Panier flottant, toujours visible dès qu'un article est ajouté — plus besoin de faire défiler la
 // page pour le voir, l'ajuster ou le vider. Remplace l'ancien récap "Ton panier" qui n'apparaissait
@@ -7,6 +8,7 @@ import { useCart } from '../context/CartContext';
 export default function FloatingCart({ menu }) {
   const cart = useCart();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   if (cart.count === 0) return null;
 
@@ -15,8 +17,8 @@ export default function FloatingCart({ menu }) {
   return (
     <div className="floating-cart">
       <div className="floating-cart-header">
-        <b>🛒 Ton panier</b>
-        <span className="small">{cart.count} article{cart.count > 1 ? 's' : ''}</span>
+        <b>{t('floatingCart.title')}</b>
+        <span className="small">{t('floatingCart.itemCount', { count: cart.count })}</span>
       </div>
       <div className="floating-cart-lines">
         {Object.entries(cart.lines).map(([lineKey, line]) => {
@@ -34,7 +36,7 @@ export default function FloatingCart({ menu }) {
                 <button className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
                 <span>{line.qty}</span>
                 <button className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-                <button className="floating-cart-remove" title="Retirer ce produit" onClick={() => cart.removeLine(lineKey)}>✕</button>
+                <button className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>✕</button>
               </div>
             </div>
           );
@@ -47,11 +49,11 @@ export default function FloatingCart({ menu }) {
           </div>
         ))}
         <div className="row" style={{ justifyContent: 'space-between', fontWeight: 700, marginBottom: 10 }}>
-          <span>Sous-total</span><span>{totals.subtotal.toFixed(2)}€</span>
+          <span>{t('common.subtotal')}</span><span>{totals.subtotal.toFixed(2)}€</span>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn-gold" style={{ flex: 1 }} onClick={() => navigate('/checkout')}>Commander</button>
-          <button className="btn-danger-ghost" onClick={() => cart.clearLines()}>Vider</button>
+          <button className="btn-gold" style={{ flex: 1 }} onClick={() => navigate('/checkout')}>{t('floatingCart.order')}</button>
+          <button className="btn-danger-ghost" onClick={() => cart.clearLines()}>{t('floatingCart.clear')}</button>
         </div>
       </div>
     </div>

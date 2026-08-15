@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { RESTAURANT_TYPES } from '../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
 import { StarsDisplay } from './Stars';
+import { useLanguage } from '../context/LanguageContext';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -37,6 +38,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
   const markersRef = useRef([]);
   const homeMarkerRef = useRef(null);
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [selected, setSelected] = useState(null);
 
   useEffect(() => {
@@ -76,7 +78,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     if (userLocation?.lat && userLocation?.lng) {
       homeMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: homeIcon(), zIndexOffset: 1000 })
         .addTo(mapRef.current)
-        .bindPopup(`<b>🏠 Chez toi</b>${userLocation.address ? '<br/>' + userLocation.address : ''}`);
+        .bindPopup(`<b>🏠 ${t('map.home')}</b>${userLocation.address ? '<br/>' + userLocation.address : ''}`);
       points.push([userLocation.lat, userLocation.lng]);
     }
 
@@ -86,7 +88,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       mapRef.current.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, selected, userLocation]);
+  }, [restaurants, selected, userLocation, t]);
 
   useEffect(() => {
     if (selected && !(restaurants || []).some((r) => r.id === selected.id)) setSelected(null);
@@ -98,27 +100,27 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
       {selected && (
         <div className="map-detail-card">
-          <button className="map-detail-close" onClick={() => setSelected(null)} aria-label="Retour à la carte">✕</button>
+          <button className="map-detail-close" onClick={() => setSelected(null)} aria-label={t('map.backToMapAria')}>✕</button>
           {selected.coverImageUrl && <img src={selected.coverImageUrl} alt={selected.name} className="map-detail-cover" />}
           <div className="map-detail-body">
             {selected.hasPromo && <span className="promo-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 6 }}>🏷️ Promo</span>}
             <div className="pill-row">
-              <span className="pill teal">{cuisineEmoji(selected.cuisine)} {selected.cuisine}</span>
+              <span className="pill teal">{cuisineEmoji(selected.cuisine)} {restaurantTypeLabel(selected.cuisine, t)}</span>
               <span className="pill gold">{selected.commune}{selected.neighborhood ? ' · ' + selected.neighborhood : ''}</span>
             </div>
             <h3 style={{ margin: '4px 0' }}>{selected.name}</h3>
             <div className="row" style={{ gap: 6, margin: '2px 0' }}>
               <StarsDisplay value={selected.rating} />
-              <span className="small">{selected.reviewCount > 0 ? `(${selected.reviewCount} avis)` : 'Nouveau'}</span>
+              <span className="small">{selected.reviewCount > 0 ? t('map.reviewsCount', { count: selected.reviewCount }) : t('restaurantList.newBadge')}</span>
             </div>
             {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}
             <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}>📍 {selected.address}</p>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
               <button className="btn-teal" style={{ flex: 1 }} onClick={() => navigate(`/restaurants/${selected.id}`)}>
-                Voir le restaurant →
+                {t('map.viewRestaurant')}
               </button>
               <button className="btn-outline" onClick={() => setSelected(null)}>
-                ← Retour à la carte
+                {t('map.backToMap')}
               </button>
             </div>
           </div>

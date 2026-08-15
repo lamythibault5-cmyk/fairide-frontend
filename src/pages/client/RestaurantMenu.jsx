@@ -12,6 +12,7 @@ import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FloatingCart from '../../components/FloatingCart';
 import { CATEGORIES } from '../../menuCategories';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -25,6 +26,7 @@ export default function RestaurantMenu() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -123,18 +125,18 @@ export default function RestaurantMenu() {
     <div>
       <CategoryQuickNav categories={presentCategories} />
       <FloatingCart menu={restaurant.menu} />
-      <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; Tous les restaurants</Link>
+      <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
-          <button className="btn-ghost" style={{ padding: '6px 10px', fontSize: 18 }} disabled={favoriteBusy} onClick={toggleFavorite} title="Ajouter aux favoris">
+          <button className="btn-ghost" style={{ padding: '6px 10px', fontSize: 18 }} disabled={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')}>
             {isFavorite ? '❤️' : '🤍'}
           </button>
         </div>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>
           <StarsDisplay value={restaurant.rating} />
-          <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Nouveau'}</span>
+          <span className="small">{restaurant.reviewCount > 0 ? t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restaurantList.newBadge')}</span>
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
@@ -145,7 +147,7 @@ export default function RestaurantMenu() {
         )}
         {restaurant.hasPromo && (
           <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
+            {t('restaurantMenu.promoBanner')}
           </div>
         )}
         <button
@@ -153,18 +155,18 @@ export default function RestaurantMenu() {
           className="btn-outline btn-block"
           onClick={() => navigate('/checkout', { state: { reservationOnly: true } })}
         >
-          🍽️ Réserver une table (sans commander maintenant)
+          {t('restaurantMenu.reserveTable')}
         </button>
       </div>
 
       <div className="card">
-        {restaurant.menu.length === 0 && <div className="empty">Ce restaurant n'a pas encore de plat au menu.</div>}
+        {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
         <MenuCategorySections menu={restaurant.menu} onAdd={addToCart} />
       </div>
 
       {reviews && reviews.reviews.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Avis clients</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restaurantMenu.reviewsTitle')}</h3>
           {reviews.reviews.map((r, i) => (
             <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--cream-dim)' }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -177,7 +179,7 @@ export default function RestaurantMenu() {
         </div>
       )}
 
-      {discover.length > 0 && <DiscoverSection restaurants={discover} />}
+      {discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />}
 
       {pickerItem && (
         <OptionsPickerModal
@@ -193,12 +195,12 @@ export default function RestaurantMenu() {
   );
 }
 
-function DiscoverSection({ restaurants }) {
+function DiscoverSection({ restaurants, t }) {
   const canLoop = restaurants.length >= 3;
   const items = canLoop ? [...restaurants, ...restaurants] : restaurants;
   return (
     <div style={{ marginTop: 18, marginBottom: 18 }}>
-      <h3 className="section-title" style={{ fontSize: 16 }}>Découvrir aussi</h3>
+      <h3 className="section-title" style={{ fontSize: 16 }}>{t('restaurantMenu.discoverTitle')}</h3>
       <div className="discover-marquee">
         <div
           className={`discover-track${canLoop ? ' animate' : ''}`}

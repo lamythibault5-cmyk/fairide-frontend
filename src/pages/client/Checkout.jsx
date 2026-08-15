@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
@@ -16,6 +17,7 @@ export default function Checkout() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   // Arrivée via "Réserver une table" depuis la page du restaurant : réservation seule, sans articles
   // au panier — le client valide juste ses infos de réservation, envoyées au restaurant sans paiement.
   const reservationOnly = !!location.state?.reservationOnly;
@@ -60,7 +62,7 @@ export default function Checkout() {
     }
   }, [pendingOrder]);
 
-  if (notFound) return <div className="empty">Ce restaurant n'est plus disponible.</div>;
+  if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
   const totals = cart.totals(restaurant.menu);
@@ -88,25 +90,25 @@ export default function Checkout() {
 
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast('Complète ton adresse de livraison (rue, numéro, code postal, ville).');
+      toast(t('checkout.toastAddressRequired'));
       return;
     }
     if (fulfillmentType === 'dine_in') {
       if (!scheduleDate || !scheduleTime) {
-        toast('Choisis une date et une heure pour ta réservation.');
+        toast(t('checkout.toastReservationDateTimeRequired'));
         return;
       }
       if (!partySize || partySize < 1) {
-        toast('Indique un nombre de personnes valide.');
+        toast(t('checkout.toastPartySizeRequired'));
         return;
       }
       if (!reservationName.trim()) {
-        toast('Indique un nom de réservation.');
+        toast(t('checkout.toastReservationNameRequired'));
         return;
       }
     }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
-      toast('Choisis une date et une heure pour ta commande programmée.');
+      toast(t('checkout.toastScheduledDateTimeRequired'));
       return;
     }
     const isScheduled = fulfillmentType === 'dine_in' || scheduleEnabled;
@@ -149,7 +151,7 @@ export default function Checkout() {
       // choix (livraison/à emporter, planification) sans tout rajouter au panier.
       cart.clear();
       if (pay.simulated) {
-        toast(isPureReservation ? 'Réservation envoyée au restaurant !' : 'Commande passée et payée (paiement simulé).');
+        toast(isPureReservation ? t('checkout.toastReservationSent') : t('checkout.toastOrderPaid'));
         navigate('/orders');
       } else {
         window.location.href = pay.checkoutUrl;
@@ -164,7 +166,7 @@ export default function Checkout() {
     setCancelling(true);
     try {
       await api(`/orders/${pendingOrder.id}/cancel`, { method: 'PATCH', token });
-      toast('Commande annulée.');
+      toast(t('checkout.toastOrderCancelled'));
       setPendingOrder(null);
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
@@ -182,7 +184,7 @@ export default function Checkout() {
         <>
           {cart.count > 0 && (
           <div className="card">
-            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Ta commande</h3>
+            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('checkout.yourOrder')}</h3>
             {Object.entries(cart.lines).map(([lineKey, line]) => {
               const item = restaurant.menu.find((m) => m.id === line.itemId);
               if (!item) return null;
@@ -204,26 +206,26 @@ export default function Checkout() {
             })}
             <div className="divider" />
             <div className="breakdown">
-              <div className="line"><span>Sous-total</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('common.subtotal')}</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
               {totals.discountedItems.map((d, i) => (
                 <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
-                  <div className="line"><span>Livraison (à partir de)</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
-                  <div className="line"><span>Frais de système (à partir de)</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
-              <div className="line"><span>dont commission Fairide (10%)</span><span>{totals.commission.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('checkout.commissionLine')}</span><span>{totals.commission.toFixed(2)}€</span></div>
               {useBalance && user.balance > 0 && (
-                <div className="line"><span>Solde Fairide utilisé</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
+                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
               )}
-              <div className="line total"><span>Total estimé</span><span>{estimatedTotal.toFixed(2)}€</span></div>
+              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{estimatedTotal.toFixed(2)}€</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
-                <span className="small">Utiliser mon solde Fairide ({Number(user.balance).toFixed(2)}€ disponible)</span>
+                <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
               </label>
             )}
           </div>
@@ -231,13 +233,13 @@ export default function Checkout() {
 
           <div className="card">
             <div className="field">
-              <label>{cart.count === 0 ? 'Ta réservation' : 'Comment récupérer ta commande ?'}</label>
+              <label>{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
               <div className="row" style={{ gap: 8 }}>
-                <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>🍽️ Sur place</button>
+                <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>{t('orderStatus.orderType.dineIn')}</button>
                 {cart.count > 0 && (
                   <>
-                    <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>🛵 Livraison</button>
-                    <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>🏠 À emporter</button>
+                    <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>{t('orderStatus.orderType.delivery')}</button>
+                    <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>{t('orderStatus.orderType.pickup')}</button>
                   </>
                 )}
               </div>
@@ -245,43 +247,43 @@ export default function Checkout() {
             {fulfillmentType === 'delivery' && (
               <>
                 <div className="field">
-                  <label>Rue / Avenue</label>
-                  <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+                  <label>{t('auth.street')}</label>
+                  <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Numéro</label>
-                    <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+                    <label>{t('auth.number')}</label>
+                    <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Code postal</label>
-                    <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                    <label>{t('auth.postalCode')}</label>
+                    <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Ville / Commune</label>
-                  <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+                  <label>{t('auth.city')}</label>
+                  <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
                 </div>
                 <div className="field">
-                  <label>À la livraison</label>
+                  <label>{t('checkout.atDelivery')}</label>
                   <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
-                    {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{deliveryInstructionLabel(o.value, t)}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label>Note pour le livreur (optionnel)</label>
-                  <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder="Ex: Code d'entrée 1234, 3ème étage..." />
+                  <label>{t('checkout.driverNote')}</label>
+                  <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
                 </div>
               </>
             )}
             {fulfillmentType === 'pickup' && (
-              <p className="small" style={{ margin: '0 0 10px' }}>🏠 Tu viendras chercher ta commande toi-même chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
+              <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
             {fulfillmentType === 'dine_in' && (
               <>
-                <p className="small" style={{ margin: '0 0 10px' }}>🍽️ Tu mangeras sur place chez <b>{restaurant.name}</b>{restaurant.address ? `, ${restaurant.address}` : ''}.</p>
+                <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.dineInHere', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
                 <div className="field">
-                  <label>Date et heure de la réservation</label>
+                  <label>{t('checkout.reservationDateTime')}</label>
                   <div className="row" style={{ gap: 8 }}>
                     <select
                       value={scheduleDate}
@@ -295,20 +297,20 @@ export default function Checkout() {
                       onChange={(e) => setScheduleTime(e.target.value)}
                       style={{ flex: 1 }}
                     >
-                      <option value="">Heure...</option>
-                      {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                      <option value="">{t('checkout.timePlaceholder')}</option>
+                      {scheduleTimeOptions.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
                     </select>
                   </div>
                   {scheduleTimeOptions.length === 0 && (
-                    <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
+                    <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
                   )}
                   {scheduledPreview && (
-                    <p className="small" style={{ margin: '6px 0 0' }}>🕐 Réservation pour : <b>{scheduledPreview}</b></p>
+                    <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.reservationForPreview', { preview: scheduledPreview })}</p>
                   )}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Nombre de personnes</label>
+                    <label>{t('checkout.partySize')}</label>
                     <input
                       type="number" min="1" max="30"
                       value={partySize}
@@ -316,8 +318,8 @@ export default function Checkout() {
                     />
                   </div>
                   <div className="field" style={{ flex: 2 }}>
-                    <label>Nom de la réservation</label>
-                    <input value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder="Ex: Dupont" />
+                    <label>{t('checkout.reservationName')}</label>
+                    <input value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
                   </div>
                 </div>
               </>
@@ -335,7 +337,7 @@ export default function Checkout() {
                       else { setScheduleDate(''); setScheduleTime(''); }
                     }}
                   />
-                  <span>🕐 Programmer pour plus tard (au lieu du plus vite possible)</span>
+                  <span>{t('checkout.scheduleLater')}</span>
                 </label>
                 {scheduleEnabled && (
                   <>
@@ -352,15 +354,15 @@ export default function Checkout() {
                         onChange={(e) => setScheduleTime(e.target.value)}
                         style={{ flex: 1 }}
                       >
-                        <option value="">Heure...</option>
-                        {scheduleTimeOptions.map((t) => <option key={t} value={t}>{t}</option>)}
+                        <option value="">{t('checkout.timePlaceholder')}</option>
+                        {scheduleTimeOptions.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
                       </select>
                     </div>
                     {scheduleTimeOptions.length === 0 && (
-                      <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>Plus aucun créneau disponible pour ce jour.</p>
+                      <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
                     )}
                     {scheduledPreview && (
-                      <p className="small" style={{ margin: '6px 0 0' }}>🕐 Commande programmée pour : <b>{scheduledPreview}</b></p>
+                      <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.scheduledPreview', { preview: scheduledPreview })}</p>
                     )}
                   </>
                 )}
@@ -369,10 +371,10 @@ export default function Checkout() {
           </div>
 
           <div className="cart-bar">
-            <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">&larr; Ajouter un plat</Link>
-            <span>{cart.count > 0 ? `${cart.count} article(s) · à partir de ${estimatedTotal.toFixed(2)}€` : 'Réservation sans commande'}</span>
+            <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
+            <span>{cart.count > 0 ? t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
             <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-              {placing ? '...' : cart.count === 0 ? 'Envoyer la réservation' : 'Valider mes informations'}
+              {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
             </button>
           </div>
         </>
@@ -380,9 +382,9 @@ export default function Checkout() {
 
       {pendingOrder && (
         <div className="card" ref={pendingOrderRef}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{isPureReservation ? 'Confirme ta réservation' : 'Confirme ta commande'}</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{isPureReservation ? t('checkout.confirmReservationTitle') : t('checkout.confirmOrderTitle')}</h3>
           {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
-            <p className="small" style={{ margin: '0 0 10px' }}>Les frais de livraison sont calculés selon la distance réelle jusqu'à ton adresse.</p>
+            <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.deliveryFeeNote')}</p>
           )}
 
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '12px 14px', margin: '0 0 14px' }}>
@@ -394,40 +396,40 @@ export default function Checkout() {
                 style={{ marginTop: 2 }}
               />
               <span className="small" style={{ fontWeight: 600 }}>
-                {pendingOrder.orderType === 'delivery' && '📍 Je confirme que mes informations de livraison sont correctes'}
-                {pendingOrder.orderType === 'pickup' && "🏠 Je confirme vouloir venir chercher ma commande moi-même"}
-                {pendingOrder.orderType === 'dine_in' && '🍽️ Je confirme ma réservation'}
+                {pendingOrder.orderType === 'delivery' && t('checkout.confirmDeliveryInfo')}
+                {pendingOrder.orderType === 'pickup' && t('checkout.confirmPickupSelf')}
+                {pendingOrder.orderType === 'dine_in' && t('checkout.confirmReservation')}
               </span>
             </label>
             {pendingOrder.orderType === 'delivery' && (
               <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Adresse :</b> {pendingOrder.address}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À la livraison :</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions)}</p>
-                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>Note pour le livreur :</b> {pendingOrder.deliveryNote}</p>}
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.addressLabel')}</b> {pendingOrder.address}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.atDeliveryColon')}</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions, t)}</p>
+                {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.driverNoteColon')}</b> {pendingOrder.deliveryNote}</p>}
                 {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>📅 Livraison programmée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.scheduledDeliveryFor')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>Arrivée estimée :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.estimatedArrival')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}
             {pendingOrder.orderType === 'pickup' && (
               <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>À venir chercher chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.pickupAtColon')}</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
                 {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>📅 Prête pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.readyForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>Retrait estimé :</b> vers {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.pickupEstimateColon')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}
             {pendingOrder.orderType === 'dine_in' && (
               <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Table chez :</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Réservation au nom de :</b> {pendingOrder.reservationName}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>Nombre de personnes :</b> {pendingOrder.partySize}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.tableAtColon')}</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.reservedNameOfColon')}</b> {pendingOrder.reservationName}</p>
+                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.partySizeColon')}</b> {pendingOrder.partySize}</p>
                 {pendingOrder.scheduledFor && (
-                  <p className="small" style={{ margin: 0 }}><b>📅 Réservée pour :</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}
@@ -435,27 +437,27 @@ export default function Checkout() {
 
           {!isPureReservation && (
             <div className="breakdown">
-              <div className="line"><span>Sous-total</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
-              {pendingOrder.promoDiscount > 0 && <div className="line"><span>Promo {pendingOrder.promoLabel}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
+              <div className="line"><span>{t('common.subtotal')}</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
+              {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>
-                  <div className="line"><span>Livraison</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
-                  <div className="line"><span>Frais de système</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
-              {pendingOrder.balanceUsed > 0 && <div className="line"><span>Solde Fairide utilisé</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
-              <div className="line total"><span>Total à payer</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+              {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
+              <div className="line total"><span>{t('checkout.totalToPay')}</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
             </div>
           )}
 
           {!deliveryConfirmed && (
-            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>⚠️ Coche la case ci-dessus pour confirmer.</p>
+            <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>{t('checkout.confirmCheckboxWarning')}</p>
           )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
-              {paying ? '...' : isPureReservation ? 'Envoyer la réservation' : 'Confirmer et payer'}
+              {paying ? '...' : isPureReservation ? t('checkout.sendReservation') : t('checkout.confirmAndPay')}
             </button>
-            <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : 'Annuler'}</button>
+            <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : t('common.cancel')}</button>
           </div>
         </div>
       )}

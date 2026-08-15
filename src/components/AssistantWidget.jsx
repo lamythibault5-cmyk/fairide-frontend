@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
+import { useLanguage } from '../context/LanguageContext';
 
-const GREETING = "Bonjour ! Je suis l'assistant Fairide 🤖 Pose-moi tes questions sur les commandes, les livraisons, les commissions ou comment devenir partenaire !";
 const SEEN_KEY = 'fairide_assistant_seen';
 
 export default function AssistantWidget() {
+  const { t, language } = useLanguage();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([{ role: 'assistant', content: GREETING }]);
+  const [messages, setMessages] = useState([{ role: 'assistant', content: t('assistant.greeting') }]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -55,10 +56,10 @@ export default function AssistantWidget() {
     setInput('');
     setLoading(true);
     try {
-      const data = await api('/assistant/chat', { method: 'POST', body: { messages: nextMessages } });
+      const data = await api('/assistant/chat', { method: 'POST', body: { messages: nextMessages, language } });
       setMessages((prev) => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (err) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: "Désolé, une erreur est survenue. Réessaie dans un instant !" }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: t('assistant.errorFallback') }]);
     } finally {
       setLoading(false);
     }
@@ -69,7 +70,7 @@ export default function AssistantWidget() {
       {open && (
         <div className="assistant-panel">
           <div className="assistant-header">
-            <span>🤖 Assistant Fairide</span>
+            <span>{t('assistant.header')}</span>
             <button className="assistant-close" onClick={() => setOpen(false)}>✕</button>
           </div>
           <div className="assistant-messages" ref={listRef}>
@@ -82,20 +83,20 @@ export default function AssistantWidget() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Écris ta question..."
+              placeholder={t('assistant.inputPlaceholder')}
               disabled={loading}
             />
-            <button type="submit" className="btn-teal" disabled={loading || !input.trim()}>Envoyer</button>
+            <button type="submit" className="btn-teal" disabled={loading || !input.trim()}>{t('assistant.send')}</button>
           </form>
         </div>
       )}
       {!open && showTooltip && (
         <div className="assistant-tooltip">
-          <button className="assistant-tooltip-close" onClick={dismissTooltip} aria-label="Fermer">✕</button>
-          <span>👋 Une question sur Fairide ? Je suis là pour t'aider !</span>
+          <button className="assistant-tooltip-close" onClick={dismissTooltip} aria-label={t('assistant.closeAria')}>✕</button>
+          <span>{t('assistant.tooltipText')}</span>
         </div>
       )}
-      <button className={`assistant-toggle${pulse ? ' pulse' : ''}`} onClick={toggleOpen} aria-label="Ouvrir l'assistant Fairide">
+      <button className={`assistant-toggle${pulse ? ' pulse' : ''}`} onClick={toggleOpen} aria-label={t('assistant.openAria')}>
         {open ? '✕' : '💬'}
       </button>
     </div>

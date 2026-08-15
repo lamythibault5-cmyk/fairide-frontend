@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import { categoryLabel } from '../menuCategories';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...) — fixée
 // sur le côté, surtout utile en mobile où le menu est long et scindé en plusieurs colonnes. Met en
 // évidence la section actuellement visible (scroll-spy) et fait défiler jusqu'au début d'une section
 // au clic. Repose sur les ids `menu-cat-<value>` posés par MenuCategorySections.
 export default function CategoryQuickNav({ categories }) {
+  const { t } = useLanguage();
   const [active, setActive] = useState(categories[0]?.value);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
@@ -47,7 +50,7 @@ export default function CategoryQuickNav({ categories }) {
           className={active === c.value ? 'active' : ''}
           onClick={() => jumpTo(c.value)}
         >
-          {c.label}
+          {categoryLabel(c.value, t)}
         </button>
       ))}
     </div>

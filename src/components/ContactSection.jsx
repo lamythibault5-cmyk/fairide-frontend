@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { api } from '../api';
-
-const INFO_CARDS = [
-  { icon: '✉️', title: 'Email', lines: ['fairide.entreprise@gmail.com'] },
-  { icon: '📍', title: 'Localisation', lines: ['Belgique — Bruxelles (19 communes)'] },
-  { icon: '📞', title: 'Téléphone & Rendez-vous', lines: ['+32 474 20 07 13'] }
-];
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ContactSection() {
+  const { t } = useLanguage();
+  const INFO_CARDS = [
+    { icon: '✉️', title: t('contact.emailLabel'), lines: ['fairide.entreprise@gmail.com'] },
+    { icon: '📍', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
+    { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
+  ];
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -20,7 +21,7 @@ export default function ContactSection() {
     e.preventDefault();
     setError('');
     if (!name.trim() || !email.trim() || !message.trim()) {
-      setError('Nom, email et message sont requis.');
+      setError(t('contact.errorRequired'));
       return;
     }
     setSending(true);
@@ -38,31 +39,31 @@ export default function ContactSection() {
   return (
     <div className="contact-grid">
       <div className="card">
-        <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>Envoyez-nous un message</h2>
-        <p className="small" style={{ margin: '0 0 16px' }}>Remplissez le formulaire ci-dessous et nous vous répondrons rapidement.</p>
+        <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>{t('contact.formTitle')}</h2>
+        <p className="small" style={{ margin: '0 0 16px' }}>{t('contact.formSubtitle')}</p>
         {sent ? (
-          <div className="pill teal" style={{ display: 'inline-block' }}>✅ Message envoyé, merci ! On te répond très vite.</div>
+          <div className="pill teal" style={{ display: 'inline-block' }}>{t('contact.sentMessage')}</div>
         ) : (
           <form onSubmit={submit}>
             <div className="field">
-              <label>Nom complet</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jean Dupont" />
+              <label>{t('contact.fullName')}</label>
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} />
             </div>
             <div className="field">
-              <label>Email</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jean.dupont@example.com" />
+              <label>{t('contact.emailLabel')}</label>
+              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('contact.emailPlaceholder')} />
             </div>
             <div className="field">
-              <label>Téléphone</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 XXX XX XX XX" />
+              <label>{t('contact.phone')}</label>
+              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} />
             </div>
             <div className="field">
-              <label>Message</label>
-              <textarea rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Décrivez votre demande..." />
+              <label>{t('contact.message')}</label>
+              <textarea rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} />
             </div>
             {error && <p className="small" style={{ color: 'var(--red)', margin: '0 0 10px' }}>{error}</p>}
             <button className="btn-gold" type="submit" disabled={sending} style={{ width: '100%' }}>
-              {sending ? '...' : 'Envoyer le message'}
+              {sending ? '...' : t('contact.send')}
             </button>
           </form>
         )}

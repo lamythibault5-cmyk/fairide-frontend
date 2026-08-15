@@ -21,7 +21,7 @@ export default function Layout() {
               <BrandMark size={64} />
               <div className="brand-text">
                 <h1>Fairide</h1>
-                <span className="brand-slogan">Pay the meal, not the platform.</span>
+                <span className="brand-slogan">{t('common.slogan')}</span>
               </div>
             </Link>
             <div className="row" style={{ gap: 12, alignItems: 'center' }}>

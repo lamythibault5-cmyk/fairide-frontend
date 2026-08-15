@@ -4,12 +4,15 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { useLanguage } from '../../context/LanguageContext';
+import { restaurantTypeLabel } from '../../menuCategories';
 
 export default function Favorites() {
   const { token } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { t } = useLanguage();
 
   useEffect(() => {
     api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
@@ -18,10 +21,10 @@ export default function Favorites() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Mes favoris</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('favorites.title')}</h2>
       {loading && <SkeletonCards count={4} />}
       {!loading && restaurants.length === 0 && (
-        <div className="empty">Pas encore de favori. Ajoute un restaurant avec le cœur 🤍 sur sa page.</div>
+        <div className="empty">{t('favorites.empty')}</div>
       )}
       <div className="rest-grid">
         {!loading && restaurants.map((r) => (
@@ -32,8 +35,8 @@ export default function Favorites() {
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
             </div>
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
-            <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>
-            <span className="small">{r.menu.length} plats</span>
+            <p className="small">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
+            <span className="small">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
           </Link>
         ))}
       </div>

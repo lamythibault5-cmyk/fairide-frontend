@@ -1,12 +1,13 @@
-import { CATEGORIES, BOISSON_SUBCATEGORIES, boissonSubcategory, defaultItemImage } from '../menuCategories';
+import { CATEGORIES, BOISSON_SUBCATEGORIES, boissonSubcategory, boissonSubcategoryLabel, categoryLabel, defaultItemImage } from '../menuCategories';
+import { useLanguage } from '../context/LanguageContext';
 
-function ItemCard({ item, onAdd }) {
+function ItemCard({ item, onAdd, t }) {
   return (
     <div className="menu-item-card" style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
       <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
       <div className="name">{item.name}</div>
-      <div className="small desc">{item.available === false ? 'Indisponible pour le moment' : (item.desc || '')}</div>
+      <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : (item.desc || '')}</div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>
         <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => onAdd(item)}>+</button>
@@ -20,6 +21,7 @@ function ItemCard({ item, onAdd }) {
 // restaurateur. Partagé entre la page client (RestaurantMenu) et l'aperçu restaurateur (RestaurantPreview)
 // pour que les deux restent strictement identiques.
 export default function MenuCategorySections({ menu, onAdd }) {
+  const { t } = useLanguage();
   return (
     <>
       {CATEGORIES.map((cat) => {
@@ -28,8 +30,8 @@ export default function MenuCategorySections({ menu, onAdd }) {
         return (
           <div key={cat.value} id={`menu-cat-${cat.value}`}>
             <div className="category-header">
-              {cat.image && <img src={cat.image} alt={cat.label} />}
-              <span>{cat.label}</span>
+              {cat.image && <img src={cat.image} alt={categoryLabel(cat.value, t)} />}
+              <span>{categoryLabel(cat.value, t)}</span>
             </div>
             {cat.value === 'boisson' ? (
               BOISSON_SUBCATEGORIES.map((sub) => {
@@ -37,16 +39,16 @@ export default function MenuCategorySections({ menu, onAdd }) {
                 if (!subItems.length) return null;
                 return (
                   <div key={sub.value}>
-                    <div className="sub-category-header"><span>{sub.label}</span></div>
+                    <div className="sub-category-header"><span>{boissonSubcategoryLabel(sub.value, t)}</span></div>
                     <div className="menu-grid">
-                      {subItems.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} />)}
+                      {subItems.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} t={t} />)}
                     </div>
                   </div>
                 );
               })
             ) : (
               <div className="menu-grid">
-                {items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} />)}
+                {items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} t={t} />)}
               </div>
             )}
           </div>

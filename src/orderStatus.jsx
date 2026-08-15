@@ -1,3 +1,5 @@
+import { useLanguage } from './context/LanguageContext';
+
 export const DELIVERY_INSTRUCTION_OPTIONS = [
   { value: 'sonner', label: '🔔 Sonner et attendre', icon: '🔔' },
   { value: 'deposer', label: '🚪 Déposer devant la porte', icon: '🚪' },
@@ -5,7 +7,8 @@ export const DELIVERY_INSTRUCTION_OPTIONS = [
   { value: 'appeler', label: "📞 M'appeler à l'arrivée", icon: '📞' }
 ];
 
-export function deliveryInstructionLabel(value) {
+export function deliveryInstructionLabel(value, t) {
+  if (t) return t(`orderStatus.deliveryInstruction.${value}`);
   return DELIVERY_INSTRUCTION_OPTIONS.find((o) => o.value === value)?.label || value;
 }
 
@@ -16,24 +19,19 @@ export function formatOrderItem(i) {
 }
 
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
-const LABELS = ['Envoyée', 'Préparation', 'Prête', 'En route', 'Livrée'];
 // Une commande à emporter/sur place n'a pas de trajet "en route" — le client vient lui-même.
 const PICKUP_STEPS = ['nouveau', 'preparation', 'pret', 'livre'];
-const PICKUP_LABELS = ['Envoyée', 'Préparation', 'Prête', 'Récupérée'];
-const DINE_IN_LABELS = ['Envoyée', 'Préparation', 'Prête', 'Terminée'];
 
-export function statusLabel(status, orderType) {
-  if (status === 'livre' && orderType === 'pickup') return 'Récupérée';
-  if (status === 'livre' && orderType === 'dine_in') return 'Terminée';
-  return {
-    nouveau: 'Nouvelle',
-    preparation: 'En préparation',
-    pret: 'Prête',
-    livraison: 'En livraison',
-    livre: 'Livrée',
-    refuse: 'Refusée',
-    annule: 'Annulée'
-  }[status] || status;
+const STATUS_LABELS_FR = {
+  nouveau: 'Nouvelle', preparation: 'En préparation', pret: 'Prête', livraison: 'En livraison',
+  livre: 'Livrée', refuse: 'Refusée', annule: 'Annulée'
+};
+
+export function statusLabel(status, orderType, t) {
+  if (status === 'livre' && orderType === 'pickup') return t ? t('orderStatus.status.livrePickup') : 'Récupérée';
+  if (status === 'livre' && orderType === 'dine_in') return t ? t('orderStatus.status.livreDineIn') : 'Terminée';
+  if (t) return t(`orderStatus.status.${status}`);
+  return STATUS_LABELS_FR[status] || status;
 }
 
 // Couleur associée au type de commande, pour que le restaurant repère chaque commande d'un coup d'œil :
@@ -45,8 +43,10 @@ export function orderTypeColor(order) {
   return 'yellow';
 }
 
-export function orderTypeLabel(order) {
-  const base = order.orderType === 'pickup' ? '🏠 À emporter' : order.orderType === 'dine_in' ? '🍽️ Sur place' : '🛵 Livraison';
+export function orderTypeLabel(order, t) {
+  const base = t
+    ? (order.orderType === 'pickup' ? t('orderStatus.orderType.pickup') : order.orderType === 'dine_in' ? t('orderStatus.orderType.dineIn') : t('orderStatus.orderType.delivery'))
+    : (order.orderType === 'pickup' ? '🏠 À emporter' : order.orderType === 'dine_in' ? '🍽️ Sur place' : '🛵 Livraison');
   if (order.scheduledFor) return `${base} · 🕐 ${formatDateTime(order.scheduledFor)}`;
   return base;
 }
@@ -63,51 +63,57 @@ function formatDateTime(ms) {
 }
 
 export function DeliveryTiming({ order }) {
+  const { t } = useLanguage();
   const { createdAt, estimatedDeliveryAt, status, orderType, scheduledFor } = order;
   if (status === 'refuse' || status === 'annule') return null;
 
   const isDineIn = orderType === 'dine_in';
   const isPickup = orderType === 'pickup';
   const doneStatus = 'livre';
-  const doneLabel = isDineIn ? 'Terminée' : isPickup ? 'Récupérée' : 'Livrée';
+  const doneLabel = isDineIn ? t('orderStatus.status.livreDineIn') : isPickup ? t('orderStatus.status.livrePickup') : t('orderStatus.status.livre');
+  const orderedAt = t('orderStatus.timing.orderedAt', { time: formatTime(createdAt) });
 
   if (status === doneStatus) {
-    return <div className="small">🕐 Commandée à {formatTime(createdAt)} · {doneLabel}</div>;
+    return <div className="small">{orderedAt} · {doneLabel}</div>;
   }
 
   if (!estimatedDeliveryAt) {
-    return <div className="small">🕐 Commandée à {formatTime(createdAt)}</div>;
+    return <div className="small">{orderedAt}</div>;
   }
 
   if (scheduledFor) {
-    const label = isDineIn ? 'Réservée pour' : 'Programmée pour';
+    const label = isDineIn ? t('orderStatus.timing.reservedFor') : t('orderStatus.timing.scheduledFor');
     return (
       <div className="small">
-        🕐 Commandée à {formatTime(createdAt)} · {label} <b>{formatDateTime(scheduledFor)}</b>
+        {orderedAt} · {label} <b>{formatDateTime(scheduledFor)}</b>
       </div>
     );
   }
 
-  const readyLabel = isDineIn ? 'Table prête à' : isPickup ? 'Retrait estimé à' : 'Livraison estimée à';
+  const readyLabel = isDineIn ? t('orderStatus.timing.tableReadyAt') : isPickup ? t('orderStatus.timing.pickupEstimate') : t('orderStatus.timing.deliveryEstimate');
   const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
   return (
     <div className="small">
-      🕐 Commandée à {formatTime(createdAt)} · {readyLabel} <b>{formatTime(estimatedDeliveryAt)}</b>
-      {minutesLeft > 0 ? ` (~${minutesLeft} min)` : ' (imminente)'}
+      {orderedAt} · {readyLabel} <b>{formatTime(estimatedDeliveryAt)}</b>
+      {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : t('orderStatus.timing.imminent')}
     </div>
   );
 }
 
 export function ProgressBar({ status, orderType }) {
+  const { t } = useLanguage();
   if (status === 'refuse') {
-    return <p className="small" style={{ color: 'var(--red)' }}>Commande refusée par le restaurant.</p>;
+    return <p className="small" style={{ color: 'var(--red)' }}>{t('orderStatus.progress.refused')}</p>;
   }
   if (status === 'annule') {
-    return <p className="small" style={{ color: 'var(--red)' }}>Commande annulée.</p>;
+    return <p className="small" style={{ color: 'var(--red)' }}>{t('orderStatus.progress.cancelled')}</p>;
   }
   const isDelivery = orderType === 'delivery';
   const steps = isDelivery ? STEPS : PICKUP_STEPS;
-  const labels = isDelivery ? LABELS : orderType === 'dine_in' ? DINE_IN_LABELS : PICKUP_LABELS;
+  const lastLabel = isDelivery ? t('orderStatus.progress.delivered') : orderType === 'dine_in' ? t('orderStatus.progress.dineInDone') : t('orderStatus.progress.pickedUp');
+  const labels = isDelivery
+    ? [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), t('orderStatus.progress.onTheWay'), lastLabel]
+    : [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), lastLabel];
   const idx = steps.indexOf(status);
   return (
     <>
@@ -118,7 +124,7 @@ export function ProgressBar({ status, orderType }) {
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ink-soft)', marginBottom: 8 }}>
         {labels.map((l, i) => (
-          <span key={l} style={i === idx ? { color: 'var(--ink)', fontWeight: 600 } : undefined}>{l}</span>
+          <span key={i} style={i === idx ? { color: 'var(--ink)', fontWeight: 600 } : undefined}>{l}</span>
         ))}
       </div>
     </>

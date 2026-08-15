@@ -1,25 +1,25 @@
 import { Link, useSearchParams } from 'react-router-dom';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function OrderResult({ success }) {
   const [params] = useSearchParams();
   const orderId = params.get('order');
+  const { t } = useLanguage();
 
   return (
     <div className="center-page">
       <div style={{ fontSize: 40 }}>{success ? '🎉' : '😕'}</div>
-      <h2>{success ? 'Merci pour ta commande !' : 'Paiement annulé'}</h2>
+      <h2>{success ? t('orderResult.successTitle') : t('orderResult.cancelTitle')}</h2>
       <p className="small">
-        {success
-          ? 'Ton paiement a bien été reçu et ta commande est en route vers le restaurant. Tu vas recevoir un email avec le récapitulatif et ton code de livraison.'
-          : "Le paiement n'a pas été finalisé — ta commande reste en attente."}
-        {orderId && <><br />Commande n°{orderId.slice(0, 8)}</>}
+        {success ? t('orderResult.successText') : t('orderResult.cancelText')}
+        {orderId && <><br />{t('orderResult.orderNumber', { id: orderId.slice(0, 8) })}</>}
       </p>
       <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
         <Link to="/orders" className="btn-primary" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          Voir mes commandes
+          {t('orderResult.viewOrders')}
         </Link>
         <Link to="/restaurants" className="btn-outline" style={{ textDecoration: 'none', display: 'inline-block' }}>
-          ← Retour aux restaurants
+          {t('orderResult.backToRestaurants')}
         </Link>
       </div>
     </div>

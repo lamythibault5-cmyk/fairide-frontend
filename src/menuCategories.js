@@ -5,7 +5,8 @@ export const CATEGORIES = [
   { value: 'boisson', label: 'Boissons', image: 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=200&q=80' }
 ];
 
-export function categoryLabel(value) {
+export function categoryLabel(value, t) {
+  if (t) return t(`menuCategories.category.${value}`);
   return CATEGORIES.find((c) => c.value === value)?.label || value;
 }
 
@@ -20,6 +21,11 @@ export const BOISSON_SUBCATEGORIES = [
   { value: 'chaude', label: 'Boissons chaudes' },
   { value: 'alcool', label: 'Alcool' }
 ];
+
+export function boissonSubcategoryLabel(value, t) {
+  if (t) return t(`menuCategories.boisson.${value}`);
+  return BOISSON_SUBCATEGORIES.find((s) => s.value === value)?.label || value;
+}
 
 // \b ne fonctionne pas de façon fiable autour des lettres accentuées en JS (ex: "café", "thé",
 // "saké" ne matchaient pas \bcafé\b) — on utilise donc des frontières explicites basées sur \p{L}.
@@ -117,6 +123,11 @@ export const RESTAURANT_TYPES = [
   { value: 'Night Shop', emoji: '🌙' },
   { value: 'Autre', emoji: '🍽️' }
 ];
+
+export function restaurantTypeLabel(value, t) {
+  if (t) return t(`menuCategories.cuisine.${value}`);
+  return value;
+}
 
 const GENERIC_TEMPLATE = {
   entree: [

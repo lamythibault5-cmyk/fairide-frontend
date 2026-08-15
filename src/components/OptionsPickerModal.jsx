@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function OptionsPickerModal({ item, onConfirm, onCancel }) {
+  const { t } = useLanguage();
   const groups = item.optionGroups || [];
   const [selections, setSelections] = useState(() => {
     const init = {};
@@ -51,10 +53,10 @@ export default function OptionsPickerModal({ item, onConfirm, onCancel }) {
           <div key={g.id} style={{ marginBottom: 14 }}>
             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 6 }}>
               <b style={{ fontSize: 14 }}>{g.name}</b>
-              {g.required && <span className="small" style={{ color: 'var(--red)' }}>Obligatoire</span>}
+              {g.required && <span className="small" style={{ color: 'var(--red)' }}>{t('optionsPicker.required')}</span>}
             </div>
             {g.type === 'multiple' && g.maxSelections && (
-              <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>Choisis jusqu'à {g.maxSelections} option{g.maxSelections > 1 ? 's' : ''}.</p>
+              <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>{t('optionsPicker.maxChoices', { max: g.maxSelections, plural: g.maxSelections > 1 ? 's' : '' })}</p>
             )}
             {g.items.map((i) => {
               const atMax = g.type === 'multiple' && g.maxSelections && selections[g.id].size >= g.maxSelections && !selections[g.id].has(i.id);
@@ -79,14 +81,14 @@ export default function OptionsPickerModal({ item, onConfirm, onCancel }) {
         ))}
         <div className="divider" />
         <div className="row" style={{ justifyContent: 'space-between', marginBottom: 12 }}>
-          <span>Prix</span>
+          <span>{t('optionsPicker.price')}</span>
           <b>{unitPrice.toFixed(2)}€</b>
         </div>
         <div className="row" style={{ gap: 8 }}>
           <button className="btn-gold" disabled={missingRequired.length > 0} onClick={() => onConfirm(optionItemIds, snapshot, unitPrice)}>
-            Ajouter au panier
+            {t('optionsPicker.addToCart')}
           </button>
-          <button className="btn-ghost" onClick={onCancel}>Annuler</button>
+          <button className="btn-ghost" onClick={onCancel}>{t('common.cancel')}</button>
         </div>
       </div>
     </div>,

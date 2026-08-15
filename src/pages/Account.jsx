@@ -2,37 +2,46 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 import { StarsDisplay } from '../components/Stars';
 import { deliveryInstructionLabel, formatOrderItem } from '../orderStatus';
 
-const ROLE_LABEL = { client: 'Client', restaurant: 'Commerce', driver: 'Livreur' };
+// Les valeurs restent en français (stockées telles quelles côté backend) — seul le libellé affiché
+// est traduit, même principe que ROLES/GENDERS dans Auth.jsx.
+function deletionReasons(t) {
+  return [
+    { value: "Je n'utilise plus le service", label: t('account.deletionReasons.notUsing') },
+    { value: 'Prix ou frais trop élevés', label: t('account.deletionReasons.tooExpensive') },
+    { value: 'Mauvaise expérience avec une commande', label: t('account.deletionReasons.badExperience') },
+    { value: 'Problème avec un restaurant ou un livreur', label: t('account.deletionReasons.restaurantDriverIssue') },
+    { value: 'Je préfère une autre application', label: t('account.deletionReasons.otherApp') },
+    { value: 'Problème de confidentialité ou de sécurité', label: t('account.deletionReasons.privacySecurity') },
+    { value: 'Autre raison', label: t('account.deletionReasons.other') }
+  ];
+}
 
-const DELETION_REASONS = [
-  'Je n\'utilise plus le service',
-  'Prix ou frais trop élevés',
-  'Mauvaise expérience avec une commande',
-  'Problème avec un restaurant ou un livreur',
-  'Je préfère une autre application',
-  'Problème de confidentialité ou de sécurité',
-  'Autre raison'
-];
-
-const GENDERS = [
-  { value: '', label: 'Genre (optionnel)' },
-  { value: 'Femme', label: 'Femme' },
-  { value: 'Homme', label: 'Homme' },
-  { value: 'Autre', label: 'Autre' },
-  { value: 'Préfère ne pas dire', label: 'Préfère ne pas dire' }
-];
+function genders(t) {
+  return [
+    { value: '', label: t('auth.genderPlaceholder') },
+    { value: 'Femme', label: t('auth.genderWoman') },
+    { value: 'Homme', label: t('auth.genderMan') },
+    { value: 'Autre', label: t('auth.genderOther') },
+    { value: 'Préfère ne pas dire', label: t('auth.genderPreferNot') }
+  ];
+}
 
 export default function Account() {
   const { user, role, token, updateProfile, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
+  const { t } = useLanguage();
+  const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
+  const DELETION_REASONS = deletionReasons(t);
+  const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [driverReviews, setDriverReviews] = useState(null);
   const [expandedDeliveryId, setExpandedDeliveryId] = useState(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-  const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0]);
+  const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0].value);
   const [deleteComment, setDeleteComment] = useState('');
   const [deleteCodeSent, setDeleteCodeSent] = useState(false);
   const [sendingCode, setSendingCode] = useState(false);
@@ -77,7 +86,7 @@ export default function Account() {
     setSavingPayout(true);
     try {
       await updateProfile({ payoutIban: payoutIban.trim(), payoutAccountHolder: payoutAccountHolder.trim() });
-      toast('Infos de paiement enregistrées.');
+      toast(t('account.toastPayoutSaved'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -91,7 +100,7 @@ export default function Account() {
     setSavingLocationSharing(true);
     try {
       await updateProfile({ locationSharingEnabled: next });
-      toast(next ? 'Partage de position en direct activé.' : 'Partage de position en direct désactivé.');
+      toast(next ? t('account.toastGeoOn') : t('account.toastGeoOff'));
     } catch (err) {
       setLocationSharingEnabled(!next);
       toast(err.message);
@@ -110,7 +119,7 @@ export default function Account() {
         addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
       });
-      toast('Infos mises à jour.');
+      toast(t('account.toastInfoUpdated'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -123,7 +132,7 @@ export default function Account() {
     try {
       await requestDeletionCode();
       setDeleteCodeSent(true);
-      toast('Code envoyé par email.');
+      toast(t('account.toastDeleteCodeSent'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -132,11 +141,11 @@ export default function Account() {
   }
 
   async function handleDeleteAccount() {
-    if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
+    if (!deleteCode) { toast(t('account.toastDeleteCodeRequired')); return; }
     setDeleting(true);
     try {
       const result = await deleteAccount({ code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
-      toast(result.anonymized ? 'Compte supprimé. Ton historique de commandes reste visible pour les autres, sans tes données personnelles.' : 'Compte supprimé.');
+      toast(result.anonymized ? t('account.toastAccountDeletedAnon') : t('account.toastAccountDeleted'));
     } catch (err) {
       toast(err.message);
       setDeleting(false);
@@ -145,13 +154,13 @@ export default function Account() {
 
   async function savePassword(e) {
     e.preventDefault();
-    if (newPassword.length < 8) { toast('Le nouveau mot de passe doit faire au moins 8 caractères.'); return; }
+    if (newPassword.length < 8) { toast(t('account.toastPasswordTooShort')); return; }
     setSavingPassword(true);
     try {
       await updateProfile({ currentPassword, newPassword });
       setCurrentPassword('');
       setNewPassword('');
-      toast('Mot de passe changé.');
+      toast(t('account.toastPasswordChanged'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -161,7 +170,7 @@ export default function Account() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Mon compte</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('account.title')}</h2>
 
       <div className="card">
         <div className="row" style={{ justifyContent: 'space-between', marginBottom: 10 }}>
@@ -172,140 +181,139 @@ export default function Account() {
         {role === 'client' && (
           <div className="stat-card highlight" style={{ marginBottom: 14 }}>
             <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
-            <div className="label">Ton solde Fairide</div>
+            <div className="label">{t('account.balance')}</div>
           </div>
         )}
 
         <form onSubmit={saveInfo}>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Prénom</label>
+              <label>{t('auth.firstName')}</label>
               <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Nom</label>
+              <label>{t('auth.lastName')}</label>
               <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
             </div>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Genre</label>
+              <label>{t('auth.gender')}</label>
               <select value={gender} onChange={(e) => setGender(e.target.value)}>
                 {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
               </select>
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Date de naissance</label>
+              <label>{t('account.birthDate')}</label>
               <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
             </div>
           </div>
           <div className="field">
-            <label>Téléphone</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+            <label>{t('auth.phone')}</label>
+            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('account.phonePlaceholder')} />
           </div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 2 }}>
-              <label>Rue / Avenue</label>
+              <label>{t('auth.street')}</label>
               <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Numéro</label>
+              <label>{t('auth.number')}</label>
               <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
             </div>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Code postal</label>
+              <label>{t('auth.postalCode')}</label>
               <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
             </div>
             <div className="field" style={{ flex: 2 }}>
-              <label>Ville / Commune</label>
+              <label>{t('auth.city')}</label>
               <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
             </div>
           </div>
-          <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : 'Enregistrer'}</button>
+          <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
         </form>
       </div>
 
       {(role === 'restaurant' || role === 'driver') && (
         <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Coordonnées de paiement</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.payoutTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>
-            Renseigne où tu souhaites recevoir tes paiements Fairide. Le versement automatique arrive bientôt — en attendant, ces infos servent à Fairide pour te payer manuellement.
+            {t('account.payoutExplain')}
           </p>
           <form onSubmit={savePayout}>
             <div className="field">
-              <label>Titulaire du compte</label>
-              <input value={payoutAccountHolder} onChange={(e) => setPayoutAccountHolder(e.target.value)} placeholder="Nom complet ou raison sociale" />
+              <label>{t('account.accountHolder')}</label>
+              <input value={payoutAccountHolder} onChange={(e) => setPayoutAccountHolder(e.target.value)} placeholder={t('account.accountHolderPlaceholder')} />
             </div>
             <div className="field">
-              <label>IBAN</label>
-              <input value={payoutIban} onChange={(e) => setPayoutIban(e.target.value)} placeholder="BE00 0000 0000 0000" />
+              <label>{t('account.iban')}</label>
+              <input value={payoutIban} onChange={(e) => setPayoutIban(e.target.value)} placeholder={t('account.ibanPlaceholder')} />
             </div>
-            <button type="submit" className="btn-teal" disabled={savingPayout}>{savingPayout ? '...' : 'Enregistrer'}</button>
+            <button type="submit" className="btn-teal" disabled={savingPayout}>{savingPayout ? '...' : t('common.save')}</button>
           </form>
         </div>
       )}
 
       {role === 'driver' && (
         <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Géolocalisation</h3>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.geoTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>
-            Quand c'est activé, ta position est partagée en direct avec le client pendant tes livraisons, pour qu'il puisse te suivre sur la carte.
+            {t('account.geoExplain')}
           </p>
           <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
-            <span className="small">Partager ma position en direct pendant les livraisons</span>
+            <span className="small">{t('account.geoToggleLabel')}</span>
           </label>
         </div>
       )}
 
-      {role === 'driver' && <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} expandedDeliveryId={expandedDeliveryId} setExpandedDeliveryId={setExpandedDeliveryId} />}
+      {role === 'driver' && <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} expandedDeliveryId={expandedDeliveryId} setExpandedDeliveryId={setExpandedDeliveryId} t={t} />}
 
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Changer de mot de passe</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('account.passwordTitle')}</h3>
         <form onSubmit={savePassword}>
           <div className="field">
-            <label>Mot de passe actuel</label>
+            <label>{t('account.currentPassword')}</label>
             <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
           </div>
           <div className="field">
-            <label>Nouveau mot de passe</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="8 caractères minimum" />
+            <label>{t('account.newPassword')}</label>
+            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
           </div>
-          <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : 'Changer le mot de passe'}</button>
+          <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
         </form>
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--red)' }}>Supprimer mon compte</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--red)' }}>{t('account.deleteTitle')}</h3>
         {!confirmDeleteOpen && (
-          <button className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>🗑️ Supprimer mon compte</button>
+          <button className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>{t('account.deleteButton')}</button>
         )}
         {confirmDeleteOpen && (
           <div>
             <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>
-              Cette action est irréversible. Si tu as déjà des commandes, tes données personnelles seront effacées
-              mais ton historique de commandes restera visible (anonymisé) pour les commerces/livreurs concernés.
+              {t('account.deleteWarning')}
             </p>
 
             {!deleteCodeSent && (
               <>
                 <div className="field">
-                  <label>Pourquoi souhaites-tu nous quitter ?</label>
+                  <label>{t('account.deleteWhy')}</label>
                   <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
-                    {DELETION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                    {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label>Un commentaire (optionnel)</label>
-                  <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
+                  <label>{t('account.deleteComment')}</label>
+                  <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
-                    {sendingCode ? '...' : 'Recevoir un code de validation de suppression'}
+                    {sendingCode ? '...' : t('account.deleteRequestCode')}
                   </button>
-                  <button className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>Annuler</button>
+                  <button className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>{t('common.cancel')}</button>
                 </div>
               </>
             )}
@@ -313,18 +321,18 @@ export default function Account() {
             {deleteCodeSent && (
               <>
                 <p className="small" style={{ marginBottom: 10 }}>
-                  Un code de validation de suppression vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
+                  {t('account.deleteCodeSentText')}
                 </p>
                 <div className="field">
-                  <label>Code reçu par email</label>
+                  <label>{t('account.deleteCodeLabel')}</label>
                   <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
-                    {deleting ? '...' : 'Oui, supprimer définitivement'}
+                    {deleting ? '...' : t('account.deleteConfirmFinal')}
                   </button>
-                  <button className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>Renvoyer le code</button>
-                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>Annuler</button>
+                  <button className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>{t('auth.resendCode')}</button>
+                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('common.cancel')}</button>
                 </div>
               </>
             )}
@@ -332,7 +340,7 @@ export default function Account() {
         )}
       </div>
 
-      <button className="btn-danger-ghost" onClick={logout}>Se déconnecter</button>
+      <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
     </div>
   );
 }
@@ -340,7 +348,7 @@ export default function Account() {
 // Regroupe l'activité du livreur (gains, avis, historique) sur la page Mon compte plutôt que sur
 // l'écran des livraisons — celui-ci ne garde que ce qui est actionnable dans l'instant (courses
 // disponibles / en cours), le reste (performance, historique) se consulte ici.
-function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDeliveryId }) {
+function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDeliveryId, t }) {
   if (!deliveries) return null;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');
@@ -352,22 +360,22 @@ function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDe
 
   return (
     <>
-      <h2 className="section-title">Mon activité de livreur</h2>
+      <h2 className="section-title">{t('account.driverActivityTitle')}</h2>
       <div className="stat-grid">
-        <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livraisons faites</div></div>
-        <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">Gains estimés (pourboires inclus)</div></div>
+        <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('account.deliveriesDone')}</div></div>
+        <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">{t('account.estimatedEarnings')}</div></div>
         <div className="stat-card">
           <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
-          <div className="label">{reviews?.count > 0 ? `${reviews.avg.toFixed(1)} (${reviews.count} avis)` : 'Pas encore d\'avis'}</div>
+          <div className="label">{reviews?.count > 0 ? t('restaurantMenu.ratingReviews', { rating: reviews.avg.toFixed(1), count: reviews.count }) : t('account.noReviewsYet')}</div>
         </div>
       </div>
 
-      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>💛 Mes pourboires</h3>
-      {tippedOrders.length === 0 && <div className="empty">Pas encore de pourboire reçu.</div>}
+      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>{t('account.tipsTitle')}</h3>
+      {tippedOrders.length === 0 && <div className="empty">{t('account.noTipsYet')}</div>}
       {tippedOrders.length > 0 && (
         <div className="card">
           <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8, paddingBottom: 8, borderBottom: '1px solid var(--cream-dim)' }}>
-            <b>Total reçu</b>
+            <b>{t('account.totalReceived')}</b>
             <b>{totalTips.toFixed(2)}€</b>
           </div>
           {tippedOrders.map((o) => (
@@ -382,8 +390,8 @@ function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDe
         </div>
       )}
 
-      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>⭐ Mes avis</h3>
-      {(!reviews || reviews.reviews.length === 0) && <div className="empty">Pas encore d'avis reçu.</div>}
+      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>{t('account.reviewsTitle')}</h3>
+      {(!reviews || reviews.reviews.length === 0) && <div className="empty">{t('account.noReviewsReceivedYet')}</div>}
       {reviews && reviews.reviews.length > 0 && (
         <div className="card">
           {reviews.reviews.map((r, i) => (
@@ -398,8 +406,8 @@ function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDe
         </div>
       )}
 
-      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>📦 Historique de mes livraisons</h3>
-      {delivered.length === 0 && <div className="empty">Pas encore de livraison terminée.</div>}
+      <h3 style={{ margin: '18px 0 6px', fontSize: 15 }}>{t('account.historyTitle')}</h3>
+      {delivered.length === 0 && <div className="empty">{t('account.noDeliveriesYet')}</div>}
       {delivered.map((o) => {
         const isOpen = expandedDeliveryId === o.id;
         const review = reviewByOrderId[o.id];
@@ -415,27 +423,27 @@ function DriverActivity({ deliveries, reviews, expandedDeliveryId, setExpandedDe
             </div>
             {isOpen && (
               <div onClick={(e) => e.stopPropagation()} style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--cream-dim)' }}>
-                {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
-                <div className="small">🏁 Livraison : {o.address}</div>
-                {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
+                {o.restaurantAddress && <div className="small">{t('account.pickupAt')} {o.restaurantAddress}</div>}
+                <div className="small">{t('account.deliveryAt')} {o.address}</div>
+                {o.travelMinutes && <div className="small">{t('account.travelTime', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
                 {o.deliveryInstructions && (
-                  <div className="small" style={{ fontWeight: 600, marginTop: 2 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
+                  <div className="small" style={{ fontWeight: 600, marginTop: 2 }}>{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
                 )}
                 <div className="breakdown" style={{ marginTop: 8 }}>
-                  <div className="line"><span>Frais de livraison</span><span>{o.deliveryFee.toFixed(2)}€</span></div>
-                  {o.tipPaid && o.tipAmount > 0 && <div className="line"><span>Pourboire 💛</span><span>{o.tipAmount.toFixed(2)}€</span></div>}
-                  <div className="line total"><span>Total gagné</span><span>{(o.deliveryFee + (o.tipPaid ? o.tipAmount : 0)).toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('account.deliveryFee')}</span><span>{o.deliveryFee.toFixed(2)}€</span></div>
+                  {o.tipPaid && o.tipAmount > 0 && <div className="line"><span>{t('account.tip')}</span><span>{o.tipAmount.toFixed(2)}€</span></div>}
+                  <div className="line total"><span>{t('account.totalEarned')}</span><span>{(o.deliveryFee + (o.tipPaid ? o.tipAmount : 0)).toFixed(2)}€</span></div>
                 </div>
                 {review ? (
                   <div style={{ marginTop: 10 }}>
                     <div className="row" style={{ gap: 6 }}>
-                      <span className="small" style={{ fontWeight: 600 }}>Note du client :</span>
+                      <span className="small" style={{ fontWeight: 600 }}>{t('account.clientRating')}</span>
                       <StarsDisplay value={review.deliveryRating} />
                     </div>
                     {review.deliveryComment && <p className="small" style={{ margin: '4px 0 0' }}>{review.deliveryComment}</p>}
                   </div>
                 ) : (
-                  <p className="small" style={{ marginTop: 10, opacity: 0.6 }}>Pas encore de note laissée par le client pour cette livraison.</p>
+                  <p className="small" style={{ marginTop: 10, opacity: 0.6 }}>{t('account.noRatingYet')}</p>
                 )}
               </div>
             )}

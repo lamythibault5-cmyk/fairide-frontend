@@ -6,7 +6,8 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
-import { COMMUNES, RESTAURANT_TYPES, communeRingDistance } from '../../menuCategories';
+import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, restaurantTypeLabel } from '../../menuCategories';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
 // à l'inscription contre la liste officielle des 19 communes (comparaison insensible à la casse/aux accents).
@@ -22,6 +23,7 @@ function matchCommune(addressCity) {
 
 export default function RestaurantList() {
   const { token, user } = useAuth();
+  const { t } = useLanguage();
   const homeCommune = matchCommune(user?.addressCity);
   const [restaurants, setRestaurants] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
@@ -55,7 +57,7 @@ export default function RestaurantList() {
     }
   }
 
-  const cuisineOptions = [{ value: '', emoji: '🍽️', label: 'Tous' }, ...RESTAURANT_TYPES.map((t) => ({ value: t.value, emoji: t.emoji, label: t.value }))];
+  const cuisineOptions = [{ value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') }, ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))];
 
   const list = restaurants
     .filter((r) => {
@@ -76,42 +78,42 @@ export default function RestaurantList() {
     <div>
       <div className="cuisine-scroll">
         <div className="cuisine-track">
-          {cuisineOptions.map((t) => (
+          {cuisineOptions.map((opt) => (
             <div
-              key={`a-${t.value}`}
-              className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
-              onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
+              key={`a-${opt.value}`}
+              className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
+              onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
             >
-              <span className="emoji">{t.emoji}</span>
-              <span>{t.label}</span>
+              <span className="emoji">{opt.emoji}</span>
+              <span>{opt.label}</span>
             </div>
           ))}
-          {cuisineOptions.map((t) => (
+          {cuisineOptions.map((opt) => (
             <div
-              key={`b-${t.value}`}
+              key={`b-${opt.value}`}
               aria-hidden="true"
               tabIndex={-1}
-              className={`cuisine-chip${cuisine === t.value ? ' active' : ''}`}
-              onClick={() => setCuisine(cuisine === t.value ? '' : t.value)}
+              className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
+              onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
             >
-              <span className="emoji">{t.emoji}</span>
-              <span>{t.label}</span>
+              <span className="emoji">{opt.emoji}</span>
+              <span>{opt.label}</span>
             </div>
           ))}
         </div>
       </div>
       <div className="row" style={{ marginBottom: 14 }}>
-        <input placeholder="Chercher un restaurant ou un plat" style={{ flex: 2, minWidth: 160 }} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input placeholder={t('restaurantList.searchPlaceholder')} style={{ flex: 2, minWidth: 160 }} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select style={{ flex: 1, minWidth: 130 }} value={commune} onChange={(e) => setCommune(e.target.value)}>
-          <option value="">Toutes les communes</option>
+          <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
       </div>
       <div className="role-pick" style={{ marginBottom: 14 }}>
-        <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>📋 Liste</div>
-        <div className={`chip${view === 'map' ? ' active' : ''}`} onClick={() => setView('map')}>🗺️ Carte</div>
+        <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>{t('restaurantList.viewList')}</div>
+        <div className={`chip${view === 'map' ? ' active' : ''}`} onClick={() => setView('map')}>{t('restaurantList.viewMap')}</div>
       </div>
-      {!loading && <div className="small" style={{ marginBottom: 14 }}>{list.length} restaurant(s)</div>}
+      {!loading && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
       {loading && <SkeletonCards count={4} />}
       {!loading && view === 'map' && (
         <div className="card">
@@ -128,7 +130,7 @@ export default function RestaurantList() {
             <button
               onClick={(e) => toggleFavorite(e, r.id)}
               style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(255,255,255,0.9)', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: 16, cursor: 'pointer' }}
-              title="Ajouter aux favoris"
+              title={t('restaurantList.addFavorite')}
             >
               {favoriteIds.has(r.id) ? '❤️' : '🤍'}
             </button>
@@ -141,16 +143,16 @@ export default function RestaurantList() {
             <h3 style={{ margin: '8px 0 4px' }}>{r.name}</h3>
             <div className="row" style={{ gap: 6, margin: '2px 0' }}>
               <StarsDisplay value={r.rating} />
-              <span className="small">{r.reviewCount > 0 ? `(${r.reviewCount})` : 'Nouveau'}</span>
+              <span className="small">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
             </div>
-            <p className="small">{r.desc || ''} {r.cuisine ? `· ${r.cuisine}` : ''}</p>
-            <span className="small">{r.menu.length} plats</span>
+            <p className="small">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
+            <span className="small">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
           </Link>
         ))}
       </div>
       )}
       {!loading && list.length === 0 && (
-        <div className="empty">Aucun restaurant pour le moment.</div>
+        <div className="empty">{t('restaurantList.empty')}</div>
       )}
     </div>
   );
