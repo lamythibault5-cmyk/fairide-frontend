@@ -1724,7 +1724,71 @@ const ITEM_IMAGE_OVERRIDES = {
   'tarte du jour, salade': U('1650844010413-3f24dc1c182b'),
 
   // --- Mexicain : "grillé" (maïs) retombe sur le mot-clé générique kebab/grill ---
-  'elote (maïs grillé)': U('1653886764193-db9e5a93d215')
+  'elote (maïs grillé)': U('1653886764193-db9e5a93d215'),
+
+  // --- Charcuterie : aucun mot-clé ne matchait, retombait sur la photo générique "Entrées" (une
+  // soupe verte) — signalé par le restaurateur sur "Jambon d'Ardenne". ---
+  'jambon cuit (100g)': U('1754572058122-771d8cb264d2'),
+  "jambon d'ardenne (100g)": U('1754572058122-771d8cb264d2'),
+  'salami (100g)': U('1754572058122-771d8cb264d2'),
+  'pâté de campagne (100g)': U('1754572058122-771d8cb264d2'),
+  'boudin blanc / noir (pièce)': U('1754572058122-771d8cb264d2'),
+  'jamón ibérico (50g)': U('1754572058122-771d8cb264d2'),
+  'chorizo al vino': U('1754572058122-771d8cb264d2'),
+
+  // --- Autres entrées Boucherie / Fried Chicken retombant sur la même photo générique "Entrées" ---
+  'sauce maison (pot)': U('1518013431117-eb1465fa5752'),
+  'sauces': U('1518013431117-eb1465fa5752'),
+  'roquette parmesan': U('1650844010413-3f24dc1c182b'),
+  'toast cannibale': U('1727243866425-3bf2cbf7480a'),
+  'samoussas (3 pcs)': U('1572098873382-f8e4bf925781'),
+  'cervelas': U('1612392061787-2d078b3e573c'),
+  'boulet': U('1529042410759-befb1204b468'),
+
+  // --- Libanais : orthographes qui ne matchent pas les mots-clés existants (accents/variantes),
+  // + quelques mezzés sans mot-clé dédié ---
+  'moutabbal': U('1627308595127-d9acf19107ce'),
+  'mouhammara': U('1627308595127-d9acf19107ce'),
+  'fattouch': U('1594040815645-5442fb6d48f6'),
+  'kibbeh (3 pcs)': U('1663004940335-8e7d8f1a093c'),
+  'sambousek fromage (4 pcs)': U('1767124559112-088d7d1cc000'),
+  'warak enab (feuilles de vigne)': U('1743674453093-592bed88018e'),
+  'mezzé végétarien (6 pièces)': U('1743674453093-592bed88018e'),
+  'mezzé royal (10 pièces)': U('1743674453093-592bed88018e'),
+
+  // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
+  'pan con tomate': U('1656423521731-9665583f100c'),
+  'manchego': U('1623855244697-5d8fbe9c7892'),
+  'boquerones': U('1641898378716-1f38ec04bb0f'),
+  'salmorejo': U('1578861256505-d3be7cb037d3'),
+  'patatas bravas': U('1573080496219-bb080dd4f877'),
+  'tortilla': U('1518569656558-1f25e69d93d7'),
+  'gambas al ajillo': U('1641898378716-1f38ec04bb0f'),
+  'calamares a la romana': U('1652209911920-2700fcbd5011'),
+  'pimientos de padrón': U('1650844010413-3f24dc1c182b'),
+  'albóndigas': U('1529042410759-befb1204b468'),
+  'pulpo a la gallega': U('1641898378716-1f38ec04bb0f'),
+
+  // --- Night Shop : snacks/hygiène/gadgets sans mot-clé dédié ---
+  'pringles': U('1599490659213-e2b9527bd087'),
+  'doritos': U('1599490659213-e2b9527bd087'),
+  'tuc': U('1599490659213-e2b9527bd087'),
+  'beef jerky': U('1599490659213-e2b9527bd087'),
+  'papier toilette (4 rouleaux)': U('1584556812952-905ffd0c611a'),
+  'mouchoirs': U('1550985543-f1ea83691cd8'),
+  'dentifrice': U('1550985543-f1ea83691cd8'),
+  'brosse à dents': U('1550985543-f1ea83691cd8'),
+  'déodorant': U('1550985543-f1ea83691cd8'),
+  'gel douche': U('1550985543-f1ea83691cd8'),
+  'serviettes hygiéniques / tampons': U('1550985543-f1ea83691cd8'),
+  'préservatifs (3)': U('1550985543-f1ea83691cd8'),
+  'briquet': U('1492107376256-4026437926cd'),
+  'chargeur usb': U('1492107376256-4026437926cd'),
+  'câble téléphone': U('1492107376256-4026437926cd'),
+  'piles aa (4)': U('1492107376256-4026437926cd'),
+
+  // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" ---
+  'porridge fruits': U('1571212515416-fef01fc43637')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
