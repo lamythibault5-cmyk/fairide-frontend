@@ -1,21 +1,32 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
-import markerIcon from 'leaflet/dist/images/marker-icon.png';
-import markerShadow from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({ iconRetinaUrl: markerIcon2x, iconUrl: markerIcon, shadowUrl: markerShadow });
+import { RESTAURANT_TYPES } from '../menuCategories';
+import { StarsDisplay } from './Stars';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
+
+function cuisineEmoji(cuisine) {
+  return RESTAURANT_TYPES.find((t) => t.value === cuisine)?.emoji || '🍽️';
+}
+
+function pinIcon(cuisine, active) {
+  return L.divIcon({
+    className: 'map-pin-wrap',
+    html: `<div class="map-pin${active ? ' active' : ''}"><span class="map-pin-emoji">${cuisineEmoji(cuisine)}</span></div>`,
+    iconSize: [34, 34],
+    iconAnchor: [17, 32],
+    popupAnchor: [0, -30]
+  });
+}
 
 export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const navigate = useNavigate();
+  const [selected, setSelected] = useState(null);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -24,6 +35,9 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(mapRef.current);
+    if (!singleMarker) {
+      mapRef.current.on('click', () => setSelected(null));
+    }
     return () => {
       mapRef.current?.remove();
       mapRef.current = null;
@@ -38,17 +52,9 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
 
     const withCoords = (restaurants || []).filter((r) => r.lat && r.lng);
     withCoords.forEach((r) => {
-      const marker = L.marker([r.lat, r.lng]).addTo(mapRef.current);
-      marker.bindPopup(`
-        <b>${r.name}</b><br/>
-        ${r.commune}${r.neighborhood ? ' · ' + r.neighborhood : ''}<br/>
-        ${!singleMarker ? '<a href="#" data-id="' + r.id + '" class="map-popup-link">Voir le menu →</a>' : ''}
-      `);
+      const marker = L.marker([r.lat, r.lng], { icon: pinIcon(r.cuisine, selected?.id === r.id) }).addTo(mapRef.current);
       if (!singleMarker) {
-        marker.on('popupopen', () => {
-          const link = document.querySelector(`.map-popup-link[data-id="${r.id}"]`);
-          if (link) link.onclick = (e) => { e.preventDefault(); navigate(`/restaurants/${r.id}`); };
-        });
+        marker.on('click', () => setSelected(r));
       }
       markersRef.current.push(marker);
     });
@@ -60,7 +66,44 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       mapRef.current.fitBounds(bounds, { padding: [30, 30] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurants, selected]);
+
+  useEffect(() => {
+    if (selected && !(restaurants || []).some((r) => r.id === selected.id)) setSelected(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurants]);
 
-  return <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />;
+  return (
+    <div style={{ position: 'relative' }}>
+      <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
+      {selected && (
+        <div className="map-detail-card">
+          <button className="map-detail-close" onClick={() => setSelected(null)} aria-label="Retour à la carte">✕</button>
+          {selected.coverImageUrl && <img src={selected.coverImageUrl} alt={selected.name} className="map-detail-cover" />}
+          <div className="map-detail-body">
+            {selected.hasPromo && <span className="promo-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 6 }}>🏷️ Promo</span>}
+            <div className="pill-row">
+              <span className="pill teal">{cuisineEmoji(selected.cuisine)} {selected.cuisine}</span>
+              <span className="pill gold">{selected.commune}{selected.neighborhood ? ' · ' + selected.neighborhood : ''}</span>
+            </div>
+            <h3 style={{ margin: '4px 0' }}>{selected.name}</h3>
+            <div className="row" style={{ gap: 6, margin: '2px 0' }}>
+              <StarsDisplay value={selected.rating} />
+              <span className="small">{selected.reviewCount > 0 ? `(${selected.reviewCount} avis)` : 'Nouveau'}</span>
+            </div>
+            {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}
+            <p className="small" style={{ margin: '6px 0', color: 'var(--ink-soft)' }}>📍 {selected.address}</p>
+            <div className="row" style={{ gap: 8, marginTop: 10 }}>
+              <button className="btn-teal" style={{ flex: 1 }} onClick={() => navigate(`/restaurants/${selected.id}`)}>
+                Voir le restaurant →
+              </button>
+              <button className="btn-outline" onClick={() => setSelected(null)}>
+                ← Retour à la carte
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
