@@ -115,7 +115,10 @@ export default function RestaurantList() {
       {loading && <SkeletonCards count={4} />}
       {!loading && view === 'map' && (
         <div className="card">
-          <RestaurantsMap restaurants={list} />
+          <RestaurantsMap
+            restaurants={list}
+            userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
+          />
         </div>
       )}
       {!loading && view === 'list' && (

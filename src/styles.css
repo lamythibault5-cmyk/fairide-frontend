@@ -456,6 +456,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   display: flex; align-items: center; justify-content: center; transition: transform .15s, background .15s;
 }
 .map-pin.active { background: var(--gold); transform: rotate(-45deg) scale(1.15); z-index: 2; }
+.map-pin.map-pin-home { background: var(--ink); }
 .map-pin-emoji { transform: rotate(45deg); font-size: 16px; line-height: 1; }
 .map-detail-card {
   position: absolute; left: 10px; right: 10px; bottom: 10px; max-width: 360px;

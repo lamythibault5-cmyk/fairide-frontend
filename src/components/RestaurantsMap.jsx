@@ -21,10 +21,21 @@ function pinIcon(cuisine, active) {
   });
 }
 
-export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false }) {
+function homeIcon() {
+  return L.divIcon({
+    className: 'map-pin-wrap',
+    html: '<div class="map-pin map-pin-home"><span class="map-pin-emoji">🏠</span></div>',
+    iconSize: [34, 34],
+    iconAnchor: [17, 32],
+    popupAnchor: [0, -30]
+  });
+}
+
+export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false, userLocation = null }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
+  const homeMarkerRef = useRef(null);
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
 
@@ -49,6 +60,8 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     if (!mapRef.current) return;
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
+    homeMarkerRef.current?.remove();
+    homeMarkerRef.current = null;
 
     const withCoords = (restaurants || []).filter((r) => r.lat && r.lng);
     withCoords.forEach((r) => {
@@ -59,14 +72,21 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       markersRef.current.push(marker);
     });
 
-    if (withCoords.length === 1) {
-      mapRef.current.setView([withCoords[0].lat, withCoords[0].lng], 15);
-    } else if (withCoords.length > 1) {
-      const bounds = L.latLngBounds(withCoords.map((r) => [r.lat, r.lng]));
-      mapRef.current.fitBounds(bounds, { padding: [30, 30] });
+    const points = withCoords.map((r) => [r.lat, r.lng]);
+    if (userLocation?.lat && userLocation?.lng) {
+      homeMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: homeIcon(), zIndexOffset: 1000 })
+        .addTo(mapRef.current)
+        .bindPopup(`<b>🏠 Chez toi</b>${userLocation.address ? '<br/>' + userLocation.address : ''}`);
+      points.push([userLocation.lat, userLocation.lng]);
+    }
+
+    if (points.length === 1) {
+      mapRef.current.setView(points[0], 15);
+    } else if (points.length > 1) {
+      mapRef.current.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, selected]);
+  }, [restaurants, selected, userLocation]);
 
   useEffect(() => {
     if (selected && !(restaurants || []).some((r) => r.id === selected.id)) setSelected(null);
