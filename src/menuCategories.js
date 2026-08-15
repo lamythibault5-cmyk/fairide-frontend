@@ -1597,7 +1597,11 @@ const ITEM_IMAGE_OVERRIDES = {
   'cava': U('1613477581402-306fa9dc6b95'),
   'whisky': U('1615887023544-3a566f29d822'),
   'vodka': U('1591704951890-0862b2e98acb'),
-  'rhum': U('1652284917571-e6475a979ea5')
+  'rhum': U('1652284917571-e6475a979ea5'),
+  'chinotto': U('1554866585-cd94860890b7'),
+  'boza': U('1619158403521-ed9795026d47'),
+  'horchata': U('1619158403521-ed9795026d47'),
+  'box à partager': U('1608039755401-742074f0548d')
 };
 
 export function defaultItemImage(item) {
