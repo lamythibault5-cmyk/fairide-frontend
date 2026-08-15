@@ -14,6 +14,7 @@ import { StarsDisplay } from '../../components/Stars';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import SectionManager from '../../components/SectionManager';
+import TemplatePicker from '../../components/TemplatePicker';
 import RestaurantPreview from '../../components/RestaurantPreview';
 
 const RESTO_DELETION_REASONS = [
@@ -89,9 +90,9 @@ export default function Dashboard() {
   const [itemImageUrl, setItemImageUrl] = useState('');
 
   const [templateOpen, setTemplateOpen] = useState(false);
-  const [templatePicked, setTemplatePicked] = useState(() => new Set());
   const [addingTemplate, setAddingTemplate] = useState(false);
   const [startChoiceMade, setStartChoiceMade] = useState(false);
+  const [starterPickerOpen, setStarterPickerOpen] = useState(false);
   const [applyingStarter, setApplyingStarter] = useState(false);
   const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
@@ -560,25 +561,11 @@ export default function Dashboard() {
     }
   }
 
-  function toggleTemplateCategory(cat) {
-    setTemplatePicked((prev) => {
-      const next = new Set(prev);
-      if (next.has(cat)) next.delete(cat); else next.add(cat);
-      return next;
-    });
-  }
-
-  async function addStarterTemplate() {
-    const template = getStarterTemplate(restaurant.cuisine);
-    const items = [];
-    templatePicked.forEach((cat) => {
-      template[cat].forEach((it) => items.push({ ...it, category: cat }));
-    });
-    if (!items.length) { toast('Choisis au moins une catégorie.'); return; }
+  async function addStarterTemplateItems(items) {
+    if (!items.length) { toast('Choisis au moins un plat.'); return; }
     setAddingTemplate(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
-      setTemplatePicked(new Set());
       setTemplateOpen(false);
       loadDashboard(restoId);
       toast(`${items.length} plat(s) ajouté(s) au menu.`);
@@ -589,12 +576,13 @@ export default function Dashboard() {
     }
   }
 
-  async function applyStarter(size) {
-    const items = size === 'complet' ? fullTemplateItems(restaurant.cuisine) : quickTemplateItems(restaurant.cuisine);
+  async function applyStarterItems(items) {
+    if (!items.length) { toast('Choisis au moins un plat.'); return; }
     setApplyingStarter(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       setStartChoiceMade(true);
+      setStarterPickerOpen(false);
       loadDashboard(restoId);
       toast(`${items.length} plat(s) ajouté(s) — modifie ou supprime ce dont tu n'as pas besoin.`);
     } catch (e) {
@@ -1202,17 +1190,24 @@ export default function Dashboard() {
                   <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
                   <p className="small" style={{ margin: '0 0 12px' }}>
                     Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite,
-                    avec photos incluses automatiquement — vous n'aurez plus qu'à ajuster les prix et supprimer ce que vous ne vendez pas.
+                    avec photos incluses automatiquement — choisissez plat par plat ce que vous gardez, section par section.
                   </p>
-                  <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                    <button className="btn-teal" disabled={applyingStarter} onClick={() => applyStarter('rapide')}>
-                      {applyingStarter ? '...' : `⚡ Menu rapide (${quickTemplateItems(restaurant.cuisine).length} produits)`}
-                    </button>
-                    <button className="btn-gold" disabled={applyingStarter} onClick={() => applyStarter('complet')}>
-                      {applyingStarter ? '...' : `🍽 Menu complet (${fullTemplateItems(restaurant.cuisine).length} produits)`}
-                    </button>
-                    <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
-                  </div>
+                  {!starterPickerOpen ? (
+                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                      <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
+                        🍽 Choisir mes plats de départ ({fullTemplateItems(restaurant.cuisine).length} suggestions)
+                      </button>
+                      <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
+                    </div>
+                  ) : (
+                    <TemplatePicker
+                      template={getStarterTemplate(restaurant.cuisine)}
+                      quickItems={quickTemplateItems(restaurant.cuisine)}
+                      submitting={applyingStarter}
+                      onSubmit={applyStarterItems}
+                      onCancel={() => setStarterPickerOpen(false)}
+                    />
+                  )}
                 </div>
               )}
 
@@ -1273,20 +1268,14 @@ export default function Dashboard() {
                   {templateOpen && (
                     <div className="card">
                       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Plats types — {restaurant.cuisine}</h3>
-                      <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne des catégories pour ajouter d'autres plats types (avec photos automatiques) adaptés à ton type de restaurant — tu pourras ensuite les modifier ou les supprimer.</p>
-                      {CATEGORIES.map((cat) => (
-                        <label key={cat.value} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
-                          <input type="checkbox" style={{ width: 'auto' }} checked={templatePicked.has(cat.value)} onChange={() => toggleTemplateCategory(cat.value)} />
-                          <span>{cat.label}</span>
-                          <span className="small">({getStarterTemplate(restaurant.cuisine)[cat.value].map((i) => i.name).join(', ')})</span>
-                        </label>
-                      ))}
-                      <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                        <button className="btn-teal" disabled={addingTemplate} onClick={addStarterTemplate}>
-                          {addingTemplate ? '...' : 'Ajouter la sélection'}
-                        </button>
-                        <button className="btn-ghost" onClick={() => setTemplateOpen(false)}>Annuler</button>
-                      </div>
+                      <p className="small" style={{ margin: '0 0 10px' }}>Coche les plats à ajouter à ton menu (avec photos automatiques) — tu pourras ensuite les modifier ou les supprimer.</p>
+                      <TemplatePicker
+                        template={getStarterTemplate(restaurant.cuisine)}
+                        submitting={addingTemplate}
+                        submitLabel="Ajouter la sélection"
+                        onSubmit={addStarterTemplateItems}
+                        onCancel={() => setTemplateOpen(false)}
+                      />
                     </div>
                   )}
                 </>
