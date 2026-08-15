@@ -501,7 +501,7 @@ export default function Dashboard() {
 
   async function deleteSection(section) {
     const count = restaurant.menu.filter((i) => (i.category || 'plat') === section.name).length;
-    if (count > 0 && !window.confirm(`Cette section contient ${count} plat(s). Les supprimer aussi et retirer la section "${section.name}" ?`)) return;
+    if (count > 0 && !window.confirm(`Cette section contient ${count} plat(s). Les supprimer aussi et retirer la section "${categoryLabel(section.name, t)}" ?`)) return;
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
