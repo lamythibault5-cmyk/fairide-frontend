@@ -57,8 +57,6 @@ export default function Dashboard() {
   const [editOpen, setEditOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [editDesc, setEditDesc] = useState('');
-  const [editCuisine, setEditCuisine] = useState('');
-  const [editCustomCuisine, setEditCustomCuisine] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
   const [editAddressStreet, setEditAddressStreet] = useState('');
@@ -75,6 +73,15 @@ export default function Dashboard() {
   const [deleteCodeSent, setDeleteCodeSent] = useState(false);
   const [sendingDeleteCode, setSendingDeleteCode] = useState(false);
   const [deleteCode, setDeleteCode] = useState('');
+
+  const [cuisineChangeOpen, setCuisineChangeOpen] = useState(false);
+  const [newCuisine, setNewCuisine] = useState('');
+  const [newCustomCuisine, setNewCustomCuisine] = useState('');
+  const [cuisineCode, setCuisineCode] = useState('');
+  const [cuisineCodeSent, setCuisineCodeSent] = useState(false);
+  const [sendingCuisineCode, setSendingCuisineCode] = useState(false);
+  const [replaceMenuChoice, setReplaceMenuChoice] = useState('keep');
+  const [changingCuisine, setChangingCuisine] = useState(false);
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -155,9 +162,6 @@ export default function Dashboard() {
       setReviews(reviewsData);
       setDrivers(driversData);
       setEditDesc(restoData.desc || '');
-      const knownType = RESTAURANT_TYPES.some((t) => t.value === restoData.cuisine);
-      setEditCuisine(knownType ? restoData.cuisine : 'Autre');
-      setEditCustomCuisine(knownType ? '' : (restoData.cuisine || ''));
       setEditCommune(restoData.commune || COMMUNES[0]);
       setEditNeighborhood(restoData.neighborhood || '');
       setEditAddressStreet(restoData.addressStreet || '');
@@ -213,12 +217,11 @@ export default function Dashboard() {
 
   async function saveRestoInfo() {
     setSavingResto(true);
-    const finalCuisine = editCuisine === 'Autre' ? editCustomCuisine.trim() || 'Autre' : editCuisine;
     try {
       const r = await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
         body: {
-          desc: editDesc.trim(), cuisine: finalCuisine, commune: editCommune, neighborhood: editNeighborhood.trim(),
+          desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag
         }
@@ -230,6 +233,52 @@ export default function Dashboard() {
       toast(e.message);
     } finally {
       setSavingResto(false);
+    }
+  }
+
+  function openCuisineChange() {
+    const knownType = RESTAURANT_TYPES.some((t) => t.value === restaurant.cuisine);
+    setNewCuisine(knownType ? restaurant.cuisine : 'Autre');
+    setNewCustomCuisine(knownType ? '' : (restaurant.cuisine || ''));
+    setCuisineChangeOpen(true);
+  }
+
+  async function sendCuisineCode() {
+    setSendingCuisineCode(true);
+    try {
+      await api(`/restaurants/${restoId}/request-cuisine-change`, { method: 'POST', token });
+      setCuisineCodeSent(true);
+      toast('Code envoyé par email.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSendingCuisineCode(false);
+    }
+  }
+
+  async function confirmCuisineChange() {
+    if (!cuisineCode) { toast('Entre le code reçu par email.'); return; }
+    const finalCuisine = newCuisine === 'Autre' ? newCustomCuisine.trim() || 'Autre' : newCuisine;
+    setChangingCuisine(true);
+    try {
+      await api(`/restaurants/${restoId}/cuisine`, {
+        method: 'PATCH', token,
+        body: { cuisine: finalCuisine, code: cuisineCode, wipeMenu: replaceMenuChoice === 'replace' }
+      });
+      if (replaceMenuChoice === 'replace') {
+        const items = fullTemplateItems(finalCuisine);
+        if (items.length) await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      }
+      await loadDashboard(restoId);
+      setCuisineChangeOpen(false);
+      setCuisineCode('');
+      setCuisineCodeSent(false);
+      setReplaceMenuChoice('keep');
+      toast('Type de commerce mis à jour.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setChangingCuisine(false);
     }
   }
 
@@ -950,15 +999,6 @@ export default function Dashboard() {
                   <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
                 </div>
               </div>
-              <div className="field">
-                <label>Type de restaurant</label>
-                <select value={editCuisine} onChange={(e) => setEditCuisine(e.target.value)}>
-                  {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
-                </select>
-              </div>
-              {editCuisine === 'Autre' && (
-                <div className="field"><label>Précise le type</label><input value={editCustomCuisine} onChange={(e) => setEditCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
-              )}
               <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
               <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
               <div className="field"><label>Horaires d'ouverture (optionnel)</label><input value={editOpeningHours} onChange={(e) => setEditOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
@@ -970,6 +1010,62 @@ export default function Dashboard() {
                 <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
                 <button className="btn-ghost" onClick={() => setEditOpen(false)}>Fermer</button>
               </div>
+
+              <div className="divider" />
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: cuisineChangeOpen ? 10 : 0 }}>
+                <span className="small">Type de commerce : <b>{restaurant.cuisine}</b></span>
+                {!cuisineChangeOpen && <button className="btn-ghost" onClick={openCuisineChange}>Changer de type</button>}
+              </div>
+              {cuisineChangeOpen && (
+                <div>
+                  <p className="small" style={{ marginBottom: 8 }}>
+                    Changer de type demande une confirmation par email (fonctionne aussi pour les comptes connectés via Google).
+                  </p>
+                  <div className="field">
+                    <label>Nouveau type</label>
+                    <select value={newCuisine} onChange={(e) => setNewCuisine(e.target.value)}>
+                      {RESTAURANT_TYPES.map((t) => <option key={t.value} value={t.value}>{t.emoji} {t.value}</option>)}
+                    </select>
+                  </div>
+                  {newCuisine === 'Autre' && (
+                    <div className="field"><label>Précise le type</label><input value={newCustomCuisine} onChange={(e) => setNewCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+                  )}
+                  <div className="field">
+                    <label>Que faire de ton menu actuel ?</label>
+                    <select value={replaceMenuChoice} onChange={(e) => setReplaceMenuChoice(e.target.value)}>
+                      <option value="keep">Garder mes plats actuels tels quels</option>
+                      <option value="replace">Remplacer par les plats types du nouveau type</option>
+                    </select>
+                  </div>
+                  {!cuisineCodeSent && (
+                    <div className="row" style={{ gap: 8 }}>
+                      <button className="btn-outline" disabled={sendingCuisineCode} onClick={sendCuisineCode}>
+                        {sendingCuisineCode ? '...' : 'Recevoir un code de confirmation'}
+                      </button>
+                      <button className="btn-ghost" onClick={() => setCuisineChangeOpen(false)}>Annuler</button>
+                    </div>
+                  )}
+                  {cuisineCodeSent && (
+                    <>
+                      <p className="small" style={{ margin: '10px 0' }}>
+                        Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser le changement.
+                      </p>
+                      <div className="field">
+                        <label>Code reçu par email</label>
+                        <input value={cuisineCode} onChange={(e) => setCuisineCode(e.target.value)} placeholder="123456" maxLength={6} />
+                      </div>
+                      <div className="row" style={{ gap: 8 }}>
+                        <button className="btn-teal" disabled={changingCuisine} onClick={confirmCuisineChange}>
+                          {changingCuisine ? '...' : 'Confirmer le changement'}
+                        </button>
+                        <button className="btn-ghost" disabled={sendingCuisineCode} onClick={sendCuisineCode}>Renvoyer le code</button>
+                        <button className="btn-ghost" onClick={() => { setCuisineChangeOpen(false); setCuisineCodeSent(false); setCuisineCode(''); }}>Annuler</button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+
               <div className="divider" />
               {!confirmDelete && (
                 <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>🗑️ Supprimer ce restaurant</button>
