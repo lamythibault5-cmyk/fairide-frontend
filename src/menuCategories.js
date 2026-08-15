@@ -1282,6 +1282,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['root beer'], image: 'https://images.unsplash.com/photo-1581636625402-29b2a704ef13?w=300&q=80' },
   { keywords: ['coca-cola zero', 'coca zero', 'coke zero'], image: 'https://images.unsplash.com/photo-1543253687-c931c8e01820?w=300&q=80' },
   { keywords: ['coca', 'soda cola'], image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=300&q=80' },
+  { keywords: ['softs'], image: 'https://images.unsplash.com/photo-1554866585-cd94860890b7?w=300&q=80' },
   { keywords: ['eau pétillante', 'eau petillante', 'eau gazeuse', 'sparkling water', "san pellegrino", 'acqua panna', 'spa reine'], image: 'https://images.unsplash.com/photo-1548839140-29a749e1cf4d?w=300&q=80' },
   { keywords: ['eau plate', 'still water', 'eau citronnée'], image: 'https://images.unsplash.com/photo-1534616042650-80f5c9b61f09?w=300&q=80' },
   { keywords: ['latte matcha', 'matcha latte'], image: 'https://images.unsplash.com/photo-1536256263959-770b48d82b0a?w=300&q=80' },
@@ -1692,7 +1693,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'plateau duo (32 pcs)': U('1553621042-f6e147245754'),
   'plateau family (54 pcs)': U('1553621042-f6e147245754'),
   'chich taouk': U('1629450748686-c86699b710ac'),
-  'chorizo al vino': categoryImage('entree'),
 
   // --- Night shop : marques de bière qui ne contiennent pas le mot "bière" donc ne matchent aucun
   // mot-clé (retombaient sur une photo générique de boisson) ---
@@ -1788,7 +1788,156 @@ const ITEM_IMAGE_OVERRIDES = {
   'piles aa (4)': U('1492107376256-4026437926cd'),
 
   // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" ---
-  'porridge fruits': U('1571212515416-fef01fc43637')
+  'porridge fruits': U('1571212515416-fef01fc43637'),
+
+  // ===== Deuxième passe : mêmes incohérences que ci-dessus, mais pour les catégories Plats/
+  // Desserts/Boissons (ex. "Filet américain préparé" affichait un poke bowl — photo générique "Plats"). =====
+
+  // --- Pizza : variantes nommées sans le mot "pizza", ne matchaient aucun mot-clé ---
+  'funghi': U('1600028068383-ea11a7a101f3'),
+  'hawaï': U('1571407970349-bc81e7e96d47'),
+  'végétarienne': U('1613564834361-9436948817d1'),
+  'tonno': U('1571407970349-bc81e7e96d47'),
+  'bufalina': U('1548369937-47519962c11a'),
+  'tartufo': U('1548369937-47519962c11a'),
+  'chèvre-miel': U('1571066811602-716837d681de'),
+  'frutti di mare': U('1600028068383-ea11a7a101f3'),
+  'fromages et jambon fumé': U('1571407970349-bc81e7e96d47'),
+  'menu solo': U('1600028068383-ea11a7a101f3'),
+  'menu duo': U('1600028068383-ea11a7a101f3'),
+  'menu famille': U('1600028068383-ea11a7a101f3'),
+  'eau 50cl': U('1534616042650-80f5c9b61f09'),
+  'bouteille 1,5l': U('1534616042650-80f5c9b61f09'),
+
+  // --- Burgers : variantes nommées sans le mot "burger" ---
+  'classic': U('1571091718767-18b5b1457add'),
+  'bacon cheese': U('1586190848861-99aa4a171e90'),
+  'double': U('1550317138-10000687a72b'),
+  'blue cheese': U('1610440042657-612c34d95e9f'),
+  'bbq': U('1610614819513-58e34989848b'),
+  'truffe': U('1610440042657-612c34d95e9f'),
+  'veggie': U('1520072959219-c595dc870360'),
+  'vegan': U('1520072959219-c595dc870360'),
+
+  // --- Italien (plats sans mot-clé) ---
+  'escalope milanaise': U('1773417325310-cc9c9bef75e7'),
+  'tagliata de bœuf, roquette, parmesan': U('1773417325310-cc9c9bef75e7'),
+  'menu midi (entrée + plat, semaine)': U('1551183053-bf91a1d81141'),
+
+  // --- Belge : plats + bières sans mot-clé dédié ---
+  'stoemp saucisses': U('1650844010413-3f24dc1c182b'),
+  'chicons au gratin': U('1650844010413-3f24dc1c182b'),
+  'lapin à la kriek': U('1773417325310-cc9c9bef75e7'),
+  'plat du jour (midi, semaine)': U('1543353071-873f17a7a088'),
+  'dame blanche': U('1541014741259-de529411b96a'),
+  'jupiler 25cl': U('1618183479302-1e0aa382c36b'),
+  'duvel': U('1618183479302-1e0aa382c36b'),
+  'chimay': U('1618183479302-1e0aa382c36b'),
+  'kriek': U('1618183479302-1e0aa382c36b'),
+
+  // --- Asiatique / Healthy / Végétarien ---
+  'menu midi (entrée + plat)': U('1543353071-873f17a7a088'),
+  'dahl de lentilles': U('1716959669858-11d415bdead6'),
+  'eau infusée': U('1534616042650-80f5c9b61f09'),
+  'dahl de lentilles, naan': U('1716959669858-11d415bdead6'),
+
+  // --- Kebab & Grill : variantes "mixte" sans viande précisée dans le nom ---
+  'dürüm mixte': U('1532636875304-0c89119d9b4d'),
+  'pita mixte': U('1532636875304-0c89119d9b4d'),
+  'mitraillette mixte': U('1532636875304-0c89119d9b4d'),
+  'assiette mixte': U('1532636875304-0c89119d9b4d'),
+  'uludağ': U('1622597467821-df79dcb4f94d'),
+
+  // --- Mexicain : cocktails/plats sans mot-clé dédié ---
+  'fajitas bœuf': U('1664138788119-bd4f073259d5'),
+  'flan mexicain': U('1676300184943-09b2a08319a3'),
+  'margarita': U('1516684163977-84cc7de8c7c8'),
+  'margarita fruits': U('1516684163977-84cc7de8c7c8'),
+  'mojito': U('1516684163977-84cc7de8c7c8'),
+  'agua fresca': U('1622597467821-df79dcb4f94d'),
+  'tequila / mezcal (shot)': U('1587920710219-f6f9804dc10d'),
+
+  // --- Libanais : plat + desserts sans mot-clé dédié ---
+  'assiette végétarienne': U('1593001872095-7d5b3868fb1d'),
+  'halawet el jibn': U('1643910509872-78bc24a2bc53'),
+  'namoura': U('1643910509872-78bc24a2bc53'),
+
+  // --- Espagnol : cuisine entière sans mot-clé, suite (plats/desserts/boissons) ---
+  'paella valenciana (par pers., min. 2 pers.)': U('1694685367640-05d6624e57f1'),
+  'paella marisco (par pers.)': U('1694685367640-05d6624e57f1'),
+  'fideuá (par pers.)': U('1694685367640-05d6624e57f1'),
+  'secreto ibérico': U('1532636875304-0c89119d9b4d'),
+  'sélection 6 tapas': U('1656423521731-9665583f100c'),
+  'sélection 10 tapas': U('1656423521731-9665583f100c'),
+  'crema catalana': U('1676300184943-09b2a08319a3'),
+  'tarta de santiago': U('1517427294546-5aa121f68e8a'),
+  'sangria 50cl': U('1587920710219-f6f9804dc10d'),
+  'tinto de verano': U('1587920710219-f6f9804dc10d'),
+
+  // --- Fried Chicken ---
+  'eau': U('1534616042650-80f5c9b61f09'),
+
+  // --- Coffee Shop : boissons spécialité sans mot-clé exact ---
+  'formule brunch (week-end)': U('1603046891726-36bfd957e0bf'),
+  'latte': U('1509042239860-f550ce710b93'),
+  'strawberry matcha': U('1536256263959-770b48d82b0a'),
+  'hojicha latte': U('1536256263959-770b48d82b0a'),
+  'golden latte': U('1536256263959-770b48d82b0a'),
+
+  // --- Boulangerie : viennoiseries sans mot-clé dédié ---
+  'pistolet (pièce)': U('1623334044303-241021148842'),
+  'couque aux raisins': U('1623334044303-241021148842'),
+  'couque suisse': U('1623334044303-241021148842'),
+  'craquelin': U('1623334044303-241021148842'),
+  'merveilleux': U('1623334044303-241021148842'),
+  'boule de berlin': U('1623334044303-241021148842'),
+
+  // --- Boucherie (plats) : viandes crues au poids + préparations, signalé par le restaurateur sur
+  // "Filet américain préparé" qui affichait un poke bowl (photo générique "Plats") ---
+  'haché porc et veau (kg)': U('1690983321402-35ff91692b56'),
+  'haché de bœuf (kg)': U('1690983321402-35ff91692b56'),
+  'entrecôte (kg)': U('1690983321402-35ff91692b56'),
+  'filet pur de porc (kg)': U('1690983321402-35ff91692b56'),
+  'côtes de porc (kg)': U('1690983321402-35ff91692b56'),
+  "gigot d'agneau (kg)": U('1690983321402-35ff91692b56'),
+  'rôti de bœuf (kg)': U('1690983321402-35ff91692b56'),
+  'filet américain préparé (100g)': U('1785517605613-e55a1470305d'),
+  'saucisses maison (pièce)': U('1612392061787-2d078b3e573c'),
+  'merguez (pièce)': U('1612392061787-2d078b3e573c'),
+  'cordon bleu (pièce)': U('1626645738196-c2a7c87a8f58'),
+  'oiseaux sans tête (pièce)': U('1690983321402-35ff91692b56'),
+  'vol-au-vent (portion)': U('1716959669858-11d415bdead6'),
+  'boulets sauce tomate (portion)': U('1529042410759-befb1204b468'),
+  'carbonnades (portion)': U('1716959669858-11d415bdead6'),
+  'stoemp carottes (portion)': U('1650844010413-3f24dc1c182b'),
+
+  // --- Supermarché / Autre ---
+  'plat préparé du jour': U('1543353071-873f17a7a088'),
+  'plat du jour': U('1543353071-873f17a7a088'),
+
+  // --- Night Shop : épicerie/snacks/boissons sans mot-clé dédié ---
+  'beurre': U('1623334044303-241021148842'),
+  'fromage tranches': U('1623855244697-5d8fbe9c7892'),
+  'jambon': U('1754572058122-771d8cb264d2'),
+  'sauce tomate': U('1518013431117-eb1465fa5752'),
+  'nutella 400g': U('1517427294546-5aa121f68e8a'),
+  'céréales': U('1571212515416-fef01fc43637'),
+  'sucre / farine': U('1623334044303-241021148842'),
+  'huile 1l': U('1518013431117-eb1465fa5752'),
+  'barres choco (mars, snickers, kinder bueno)': U('1517427294546-5aa121f68e8a'),
+  "tablette côte d'or": U('1517427294546-5aa121f68e8a'),
+  'haribo': U('1582058091505-f87a2e55a40f'),
+  "m&m's pochon": U('1582058091505-f87a2e55a40f'),
+  'magnum (pièce)': U('1541014741259-de529411b96a'),
+  'red bull 25cl': U('1622543925917-763c34d1a86e'),
+  'monster 50cl': U('1622543925917-763c34d1a86e'),
+  'eau 1,5l': U('1534616042650-80f5c9b61f09'),
+  'capri-sun': U('1622597467821-df79dcb4f94d'),
+  'whisky 70cl': U('1587920710219-f6f9804dc10d'),
+  'gin 70cl': U('1587920710219-f6f9804dc10d'),
+  'rhum 70cl': U('1587920710219-f6f9804dc10d'),
+  'jägermeister 70cl': U('1587920710219-f6f9804dc10d'),
+  'mignonnettes': U('1587920710219-f6f9804dc10d')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
