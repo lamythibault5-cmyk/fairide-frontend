@@ -22,6 +22,7 @@ import RestaurantOrdersPage from './pages/restaurant/OrdersPage';
 import RestaurantPreviewPage from './pages/restaurant/PreviewPage';
 import RestaurantEditPage from './pages/restaurant/EditPage';
 import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
+import RestaurantMapPage from './pages/restaurant/MapPage';
 import DriverDashboard from './pages/driver/Dashboard';
 
 export default function App() {
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="preview" element={<RestaurantPreviewPage />} />
           <Route path="edit" element={<RestaurantEditPage />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
+          <Route path="map" element={<RestaurantMapPage />} />
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />

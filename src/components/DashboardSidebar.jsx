@@ -23,6 +23,7 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
+      { to: '/dashboard/map', icon: '🗺️', label: 'Carte' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
