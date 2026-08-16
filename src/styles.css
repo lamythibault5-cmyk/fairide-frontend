@@ -246,7 +246,13 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .menu-item-card .desc { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .dish-thumb-lg { height: 92px; margin-bottom: 6px; }
   .price { font-size: 12.5px; margin-left: 6px; }
-  .dashboard-menu-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .dashboard-menu-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .dashboard-menu-grid .menu-item-card { padding: 8px; }
+  .dashboard-menu-grid .menu-item-card .name { font-size: 12.5px; }
+  .dashboard-menu-grid .menu-item-card .desc { font-size: 11px; }
+  .dashboard-menu-grid .dish-thumb-lg { height: 92px; margin-bottom: 6px; }
+  .dashboard-menu-grid .price { font-size: 12.5px; }
+  .dashboard-menu-grid .menu-item-card-add { min-height: 92px; font-size: 12px; }
 }
 
 .discover-marquee { overflow: hidden; padding-bottom: 6px; }
