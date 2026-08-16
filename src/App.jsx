@@ -16,6 +16,7 @@ import Checkout from './pages/client/Checkout';
 import Favorites from './pages/client/Favorites';
 import Orders from './pages/client/Orders';
 import OrderResult from './pages/client/OrderResult';
+import ClientMapPage from './pages/client/MapPage';
 import RestaurantDashboardLayout from './pages/restaurant/DashboardLayout';
 import RestaurantMenuPage from './pages/restaurant/MenuPage';
 import RestaurantOrdersPage from './pages/restaurant/OrdersPage';
@@ -24,6 +25,7 @@ import RestaurantEditPage from './pages/restaurant/EditPage';
 import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
 import RestaurantMapPage from './pages/restaurant/MapPage';
 import DriverDashboard from './pages/driver/Dashboard';
+import DriverMapPage from './pages/driver/MapPage';
 
 export default function App() {
   return (
@@ -39,6 +41,7 @@ export default function App() {
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
+        <Route path="/map" element={<ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
 
@@ -51,6 +54,7 @@ export default function App() {
           <Route path="map" element={<RestaurantMapPage />} />
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
+        <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />
 

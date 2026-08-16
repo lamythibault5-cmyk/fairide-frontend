@@ -13,6 +13,7 @@ function navItemsForRole(role, t) {
       { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants') },
       { to: '/favorites', icon: '❤️', label: t('nav.favorites') },
       { to: '/orders', icon: '📦', label: t('nav.orders') },
+      { to: '/map', icon: '🗺️', label: 'Carte' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -29,7 +30,8 @@ function navItemsForRole(role, t) {
   }
   if (role === 'driver') {
     return [
-      { to: '/driver', icon: '🛵', label: t('nav.deliveries') },
+      { to: '/driver', end: true, icon: '🛵', label: t('nav.deliveries') },
+      { to: '/driver/map', icon: '🗺️', label: 'Carte' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
