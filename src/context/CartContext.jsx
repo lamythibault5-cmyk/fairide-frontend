@@ -89,7 +89,7 @@ export function CartProvider({ children }) {
 
   const count = useMemo(() => Object.values(lines).reduce((a, l) => a + l.qty, 0), [lines]);
 
-  function totals(menu) {
+  function totals(menu, cartPromo) {
     let rawSubtotal = 0;
     let promoDiscount = 0;
     const discountedItems = [];
@@ -101,18 +101,28 @@ export function CartProvider({ children }) {
       let discount = 0;
       if (promo) {
         if (promo.type === 'percent') discount = item.price * line.qty * (promo.value / 100);
-        else if (promo.type === 'bogo') discount = Math.floor(line.qty / 2) * item.price;
+        // value = N, le nombre d'articles achetés pour en obtenir 1 offert (défaut 1 = "1 acheté = 1 offert").
+        else if (promo.type === 'bogo') discount = Math.floor(line.qty / ((promo.value || 1) + 1)) * item.price;
       }
       if (discount > 0) {
         promoDiscount += discount;
         discountedItems.push({ name: item.name, label: promo.label, discount });
       }
     });
-    const subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
+    let subtotal = +(rawSubtotal - promoDiscount).toFixed(2);
+    // Promo panier (pas liée à un plat) : "X€ offerts dès Y€ de commande", appliquée sur le sous-total
+    // déjà net des remises par plat — même règle que le calcul serveur à la commande.
+    if (cartPromo && subtotal >= cartPromo.minCartTotal) {
+      const cartDiscount = +Math.min(cartPromo.value, subtotal).toFixed(2);
+      promoDiscount += cartDiscount;
+      subtotal = +(subtotal - cartDiscount).toFixed(2);
+      discountedItems.push({ name: null, label: cartPromo.label, discount: cartDiscount });
+    }
+    promoDiscount = +promoDiscount.toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
     const serviceFee = +(DELIVERY_FEE * SYSTEM_FEE_RATE).toFixed(2);
     const total = +(subtotal + DELIVERY_FEE + serviceFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount: +promoDiscount.toFixed(2), discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee, commission, total };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee, commission, total };
   }
 
   return (

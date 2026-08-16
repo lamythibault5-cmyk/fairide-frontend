@@ -5,14 +5,14 @@ import { useLanguage } from '../context/LanguageContext';
 // Panier flottant, toujours visible dès qu'un article est ajouté — plus besoin de faire défiler la
 // page pour le voir, l'ajuster ou le vider. Remplace l'ancien récap "Ton panier" qui n'apparaissait
 // qu'après le menu, potentiellement très bas sur la page.
-export default function FloatingCart({ menu }) {
+export default function FloatingCart({ menu, cartPromo }) {
   const cart = useCart();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   if (cart.count === 0) return null;
 
-  const totals = cart.totals(menu);
+  const totals = cart.totals(menu, cartPromo);
 
   return (
     <div className="floating-cart">
@@ -45,7 +45,7 @@ export default function FloatingCart({ menu }) {
       <div className="floating-cart-footer">
         {totals.discountedItems.map((d, i) => (
           <div className="row" style={{ justifyContent: 'space-between' }} key={i}>
-            <span className="small">🏷️ {d.name}</span><span className="small">-{d.discount.toFixed(2)}€</span>
+            <span className="small">🏷️ {d.name || d.label}</span><span className="small">-{d.discount.toFixed(2)}€</span>
           </div>
         ))}
         <div className="row" style={{ justifyContent: 'space-between', fontWeight: 700, marginBottom: 10 }}>

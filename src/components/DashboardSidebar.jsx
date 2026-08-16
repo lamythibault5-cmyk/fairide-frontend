@@ -18,7 +18,11 @@ function navItemsForRole(role, t) {
   }
   if (role === 'restaurant') {
     return [
-      { to: '/dashboard', icon: '🏪', label: t('nav.myBusiness') },
+      { to: '/dashboard', end: true, icon: '🏪', label: t('nav.myBusiness') },
+      { to: '/dashboard/orders', icon: '📦', label: t('nav.orders') },
+      { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
+      { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
+      { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -46,7 +50,7 @@ export default function DashboardSidebar() {
       </Link>
       <nav className="dashboard-nav">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+          <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
             <span className="dashboard-nav-icon">{item.icon}</span>
             <span>{item.label}</span>
           </NavLink>

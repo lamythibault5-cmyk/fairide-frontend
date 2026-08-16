@@ -16,7 +16,12 @@ import Checkout from './pages/client/Checkout';
 import Favorites from './pages/client/Favorites';
 import Orders from './pages/client/Orders';
 import OrderResult from './pages/client/OrderResult';
-import RestaurantDashboard from './pages/restaurant/Dashboard';
+import RestaurantDashboardLayout from './pages/restaurant/DashboardLayout';
+import RestaurantMenuPage from './pages/restaurant/MenuPage';
+import RestaurantOrdersPage from './pages/restaurant/OrdersPage';
+import RestaurantPreviewPage from './pages/restaurant/PreviewPage';
+import RestaurantEditPage from './pages/restaurant/EditPage';
+import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
 import DriverDashboard from './pages/driver/Dashboard';
 
 export default function App() {
@@ -36,7 +41,13 @@ export default function App() {
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
 
-        <Route path="/dashboard" element={<ProtectedRoute role="restaurant"><RestaurantDashboard /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute role="restaurant"><RestaurantDashboardLayout /></ProtectedRoute>}>
+          <Route index element={<RestaurantMenuPage />} />
+          <Route path="orders" element={<RestaurantOrdersPage />} />
+          <Route path="preview" element={<RestaurantPreviewPage />} />
+          <Route path="edit" element={<RestaurantEditPage />} />
+          <Route path="promotions" element={<RestaurantPromotionsPage />} />
+        </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />

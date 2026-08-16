@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClearPromo, allOptionGroups = [], onSetOptionGroups, sections = [] }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [] }) {
   const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
@@ -24,10 +24,6 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
     });
   }
 
-  const [promoOpen, setPromoOpen] = useState(false);
-  const [promoType, setPromoType] = useState('percent');
-  const [promoValue, setPromoValue] = useState('15');
-  const [savingPromo, setSavingPromo] = useState(false);
   const [togglingAvailable, setTogglingAvailable] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
@@ -57,19 +53,6 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
       await onDelete(item.id);
     } catch {
       setDeleting(false);
-    }
-  }
-
-  async function applyPromo() {
-    setSavingPromo(true);
-    try {
-      const body = promoType === 'percent' ? { type: 'percent', value: Number(promoValue) } : { type: 'bogo' };
-      await onSetPromo(item.id, body);
-      setPromoOpen(false);
-    } catch {
-      // toast already shown by parent
-    } finally {
-      setSavingPromo(false);
     }
   }
 
@@ -108,26 +91,10 @@ export default function MenuItemRow({ item, onSave, onDelete, onSetPromo, onClea
 
         <div className="divider" />
 
-        {item.activePromo ? (
-          <div className="row" style={{ gap: 8, marginBottom: 12, justifyContent: 'space-between' }}>
+        {item.activePromo && (
+          <div className="row" style={{ gap: 8, marginBottom: 12 }}>
             <span className="pill teal">🏷️ {item.activePromo.label}</span>
-            <button className="btn-danger-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => onClearPromo(item.activePromo.id)}>Retirer la promo</button>
-          </div>
-        ) : !promoOpen ? (
-          <button type="button" className="btn-ghost" style={{ fontSize: 12, padding: '4px 10px', marginBottom: 12 }} onClick={() => setPromoOpen(true)}>🏷️ Ajouter une promo</button>
-        ) : (
-          <div className="row" style={{ gap: 6, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select style={{ width: 'auto' }} value={promoType} onChange={(e) => setPromoType(e.target.value)}>
-              <option value="percent">Réduction %</option>
-              <option value="bogo">1 acheté = 1 offert</option>
-            </select>
-            {promoType === 'percent' && (
-              <select style={{ width: 'auto' }} value={promoValue} onChange={(e) => setPromoValue(e.target.value)}>
-                {[10, 15, 20, 25, 30].map((v) => <option key={v} value={v}>{v}%</option>)}
-              </select>
-            )}
-            <button className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} disabled={savingPromo} onClick={applyPromo}>{savingPromo ? '...' : 'Activer'}</button>
-            <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setPromoOpen(false)}>Annuler</button>
+            <span className="small">— gère les promotions depuis la page "Promotions"</span>
           </div>
         )}
 

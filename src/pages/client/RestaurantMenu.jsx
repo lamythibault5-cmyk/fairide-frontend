@@ -123,7 +123,7 @@ export default function RestaurantMenu() {
   return (
     <div>
       <CategoryQuickNav categories={presentSections} />
-      <FloatingCart menu={restaurant.menu} />
+      <FloatingCart menu={restaurant.menu} cartPromo={restaurant.activeCartPromo} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}

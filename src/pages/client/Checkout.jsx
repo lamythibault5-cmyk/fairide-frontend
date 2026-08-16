@@ -65,7 +65,7 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
-  const totals = cart.totals(restaurant.menu);
+  const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo);
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
@@ -208,7 +208,7 @@ export default function Checkout() {
             <div className="breakdown">
               <div className="line"><span>{t('common.subtotal')}</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
               {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span>🏷️ {d.name} ({d.label})</span><span>-{d.discount.toFixed(2)}€</span></div>
+                <div className="line" key={i}><span>🏷️ {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{d.discount.toFixed(2)}€</span></div>
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
