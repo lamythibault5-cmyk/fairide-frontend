@@ -86,6 +86,9 @@ export const translations = {
         Asiatique: 'Asiatique', Healthy: 'Healthy', 'Végétarien': 'Végétarien', 'Kebab & Grill': 'Kebab & Grill',
         Mexicain: 'Mexicain', Libanais: 'Libanais', Espagnol: 'Espagnol', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Boulangerie', Boucherie: 'Boucherie', 'Supermarché': 'Supermarché', 'Night Shop': 'Night Shop',
+        'Poke Bowl': 'Poke Bowl', 'Thaïlandais': 'Thaïlandais', Indien: 'Indien', Vietnamien: 'Vietnamien', Chinois: 'Chinois',
+        'Desserts & Glaces': 'Desserts & Glaces', 'Petit-déjeuner & Brunch': 'Petit-déjeuner & Brunch',
+        'Sandwichs & Salades': 'Sandwichs & Salades', Africain: 'Africain', 'Poisson & Fruits de mer': 'Poisson & Fruits de mer',
         Autre: 'Autre'
       },
       unavailable: 'Indisponible pour le moment'
@@ -541,6 +544,9 @@ export const translations = {
         Asiatique: 'Asian', Healthy: 'Healthy', 'Végétarien': 'Vegetarian', 'Kebab & Grill': 'Kebab & Grill',
         Mexicain: 'Mexican', Libanais: 'Lebanese', Espagnol: 'Spanish', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Bakery', Boucherie: 'Butcher', 'Supermarché': 'Supermarket', 'Night Shop': 'Night Shop',
+        'Poke Bowl': 'Poke Bowl', 'Thaïlandais': 'Thai', Indien: 'Indian', Vietnamien: 'Vietnamese', Chinois: 'Chinese',
+        'Desserts & Glaces': 'Desserts & Ice Cream', 'Petit-déjeuner & Brunch': 'Breakfast & Brunch',
+        'Sandwichs & Salades': 'Sandwiches & Salads', Africain: 'African', 'Poisson & Fruits de mer': 'Fish & Seafood',
         Autre: 'Other'
       },
       unavailable: 'Currently unavailable'
@@ -996,6 +1002,9 @@ export const translations = {
         Asiatique: 'Aziatisch', Healthy: 'Gezond', 'Végétarien': 'Vegetarisch', 'Kebab & Grill': 'Kebab & Grill',
         Mexicain: 'Mexicaans', Libanais: 'Libanees', Espagnol: 'Spaans', 'Fried Chicken': 'Fried Chicken', 'Coffee Shop': 'Coffee Shop',
         Boulangerie: 'Bakkerij', Boucherie: 'Slagerij', 'Supermarché': 'Supermarkt', 'Night Shop': 'Night Shop',
+        'Poke Bowl': 'Poke Bowl', 'Thaïlandais': 'Thais', Indien: 'Indiaas', Vietnamien: 'Vietnamees', Chinois: 'Chinees',
+        'Desserts & Glaces': 'Desserts & IJs', 'Petit-déjeuner & Brunch': 'Ontbijt & Brunch',
+        'Sandwichs & Salades': 'Sandwiches & Salades', Africain: 'Afrikaans', 'Poisson & Fruits de mer': 'Vis & Zeevruchten',
         Autre: 'Andere'
       },
       unavailable: 'Momenteel niet beschikbaar'
