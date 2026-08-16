@@ -34,7 +34,18 @@ export default function MapPage() {
         Suis en direct ta livraison en cours : la position de ton livreur (vélo, scooter...) et le trajet jusque chez toi.
       </p>
       {inDelivery.length === 0 ? (
-        <div className="empty">Aucune livraison en cours pour le moment.</div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="empty" style={{ marginBottom: 10 }}>Aucune livraison en cours pour le moment — mais le jeu reste jouable !</div>
+          <div className="tracking-with-game" style={{ margin: '10px 0' }}>
+            <div className="tracking-map-col">
+              <DeliveryTrackingMap height={260} />
+              <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
+                Dès qu'une livraison démarre, ton livreur apparaît ici en direct.
+              </div>
+            </div>
+            <FoodCatchGame />
+          </div>
+        </div>
       ) : (
         inDelivery.map((o) => (
           <div className="card" key={o.id} style={{ marginBottom: 16 }}>
