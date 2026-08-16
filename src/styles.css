@@ -554,8 +554,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* Coquille "app connectée" (client/livreur/restaurateur) : barre latérale + colonne centrale +
    colonne de droite optionnelle. Remplace la nav du haut (.hero/.role-nav) sur les pages
    authentifiées seulement — les pages publiques gardent .hero tel quel (voir Layout.jsx). */
-.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; align-items: start; }
-.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; }
+.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main"; min-height: 100vh; align-items: start; }
+.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right"; }
+.dashboard-shell .dashboard-sidebar { grid-area: sidebar; }
+.dashboard-shell .dashboard-main { grid-area: main; }
+.dashboard-shell .dashboard-right { grid-area: right; }
 
 .dashboard-sidebar {
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
@@ -588,14 +591,24 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-footer-links a { font-size: 12px; color: var(--ink-soft); text-decoration: none; }
 .dashboard-footer-links a:hover { text-decoration: underline; }
 
+/* Sous 900px : la sidebar reste verticale à gauche (comme sur desktop), juste rétrécie en rail
+   d'icônes — jamais transformée en barre horizontale en haut, sur aucun rôle (client/restaurateur/
+   livreur). La colonne "right" optionnelle (carte "Aujourd'hui" du dashboard restaurateur/livreur)
+   passe en pleine largeur sous le contenu principal plutôt que d'essayer de tenir sur une 3e colonne. */
 @media (max-width: 900px) {
-  .dashboard-shell, .dashboard-shell.has-right { grid-template-columns: 1fr; }
-  .dashboard-sidebar { position: static; height: auto; flex-direction: row; align-items: center; padding: 10px 12px; overflow-x: auto; }
-  .dashboard-sidebar-brand { margin-bottom: 0; margin-right: 10px; }
-  .dashboard-nav { flex-direction: row; flex: none; }
+  .dashboard-shell, .dashboard-shell.has-right {
+    grid-template-columns: 64px 1fr;
+    grid-template-areas: "sidebar main" "sidebar right";
+  }
+  .dashboard-sidebar { padding: 14px 8px; }
+  .dashboard-sidebar-brand { justify-content: center; margin-bottom: 18px; padding: 0; }
+  .dashboard-sidebar-brand span { display: none; }
+  .dashboard-nav-link { justify-content: center; padding: 10px 4px; }
   .dashboard-nav-link span:last-child { display: none; }
-  .dashboard-profile-card { border-top: none; margin-top: 0; padding-top: 0; margin-left: auto; }
+  .dashboard-profile-card { flex-direction: column; align-items: center; gap: 8px; padding: 14px 0 0; }
   .dashboard-profile-name, .dashboard-profile-role { display: none; }
+  .dashboard-profile-logout { font-size: 0; text-decoration: none; }
+  .dashboard-profile-logout::before { content: '🚪'; font-size: 16px; }
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
 }
