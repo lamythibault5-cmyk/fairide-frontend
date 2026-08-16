@@ -8,6 +8,7 @@ import CookieBanner from './CookieBanner';
 import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
+import FloatingCart from './FloatingCart';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur) au lieu de la
 // nav du haut classique. /admin en est volontairement exclu (hors périmètre de cette passe).
@@ -40,6 +41,7 @@ export default function Layout() {
           {rightSlot && <aside className="dashboard-right">{rightSlot}</aside>}
         </div>
         <CookieBanner />
+        {role === 'client' && <FloatingCart />}
         <AssistantWidget />
       </>
     );
@@ -105,6 +107,7 @@ export default function Layout() {
         <Footer />
       </div>
       <CookieBanner />
+      {role === 'client' && <FloatingCart />}
       <AssistantWidget />
     </>
   );

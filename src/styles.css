@@ -195,9 +195,24 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .floating-cart-line-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
 .floating-cart-remove { background: transparent; border: none; color: var(--red); font-size: 13px; padding: 3px 5px; line-height: 1; }
 .floating-cart-footer { padding: 12px 14px; border-top: 1px solid var(--cream-dim); flex-shrink: 0; }
+.floating-cart-collapse { background: transparent; border: none; font-size: 14px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 2px 4px; }
 /* Sur mobile, le widget assistant flottant occupe déjà le coin bas-droit (54px, right/bottom 12px) —
    la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. */
 @media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; bottom: 82px; max-height: min(55vh, 400px); } }
+
+/* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
+   déploie le récap complet ci-dessus plutôt que de l'imposer en permanence sur toutes les pages. */
+.floating-cart-bubble {
+  position: fixed; left: 12px; bottom: 12px; z-index: 46;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--teal); color: #fff; border: none; border-radius: 999px;
+  padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer;
+  box-shadow: 0 10px 30px rgba(22,35,58,.25);
+  animation: fadeInUp .25s ease both;
+}
+.floating-cart-bubble:hover { filter: brightness(1.05); }
+.floating-cart-bubble-count { background: rgba(255,255,255,.25); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+@media (max-width: 480px) { .floating-cart-bubble { left: 8px; bottom: 82px; } }
 
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(22, 35, 58, 0.5);

@@ -10,7 +10,6 @@ import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
-import FloatingCart from '../../components/FloatingCart';
 import { useLanguage } from '../../context/LanguageContext';
 
 export default function RestaurantMenu() {
@@ -22,6 +21,9 @@ export default function RestaurantMenu() {
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
+  // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
+  // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
+  const [conflictItem, setConflictItem] = useState(null);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -42,7 +44,6 @@ export default function RestaurantMenu() {
       sessionStorage.removeItem(`fairide_scroll_${id}`);
     }
     sessionStorage.setItem('fairide_last_restaurant_viewed', id);
-    cart.startOrder(id);
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
@@ -113,17 +114,34 @@ export default function RestaurantMenu() {
   }
 
   function addToCart(item) {
+    if (cart.hasConflict(id)) {
+      setConflictItem(item);
+      return;
+    }
     if (item.optionGroups?.length > 0) {
       setPickerItem(item);
     } else {
-      cart.addOne(item.id, item.price);
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
+    }
+  }
+
+  // L'utilisateur a confirmé vouloir vider son panier (d'un autre commerce) pour continuer ici —
+  // on relance alors l'action initialement bloquée par le conflit (ouvrir le sélecteur d'options,
+  // ou ajouter directement le plat).
+  function confirmSwitchRestaurant() {
+    cart.switchRestaurant(id, restaurant.name);
+    const item = conflictItem;
+    setConflictItem(null);
+    if (item.optionGroups?.length > 0) {
+      setPickerItem(item);
+    } else {
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
     }
   }
 
   return (
     <div>
       <CategoryQuickNav categories={presentSections} />
-      <FloatingCart menu={restaurant.menu} cartPromo={restaurant.activeCartPromo} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
       <div className="card">
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
@@ -185,10 +203,25 @@ export default function RestaurantMenu() {
           item={pickerItem}
           onCancel={() => setPickerItem(null)}
           onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            cart.addOne(pickerItem.id, unitPrice, optionItemIds, snapshot);
+            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
             setPickerItem(null);
           }}
         />
+      )}
+
+      {conflictItem && (
+        <div className="modal-overlay" onClick={() => setConflictItem(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
+            <p className="small" style={{ margin: '0 0 16px' }}>
+              {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
+              <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

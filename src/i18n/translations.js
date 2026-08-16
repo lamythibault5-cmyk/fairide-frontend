@@ -127,7 +127,12 @@ export const translations = {
       itemCount: '{count} article(s)',
       removeItem: 'Retirer ce produit',
       order: 'Commander',
-      clear: 'Vider'
+      clear: 'Vider',
+      collapse: 'Réduire le panier',
+      conflictTitle: 'Panier d\'un autre commerce',
+      conflictMessage: 'Ton panier contient déjà des articles de {restaurant}. Un panier ne peut contenir que des produits d\'un même commerce — le vider pour commander ici à la place ?',
+      conflictConfirm: 'Vider et continuer',
+      conflictCancel: 'Annuler'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -577,7 +582,12 @@ export const translations = {
       itemCount: '{count} item(s)',
       removeItem: 'Remove this item',
       order: 'Order',
-      clear: 'Clear'
+      clear: 'Clear',
+      collapse: 'Collapse cart',
+      conflictTitle: 'Cart from another shop',
+      conflictMessage: 'Your cart already has items from {restaurant}. A cart can only hold products from one shop at a time — clear it to order here instead?',
+      conflictConfirm: 'Clear and continue',
+      conflictCancel: 'Cancel'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -1027,7 +1037,12 @@ export const translations = {
       itemCount: '{count} artikel(en)',
       removeItem: 'Dit product verwijderen',
       order: 'Bestellen',
-      clear: 'Leegmaken'
+      clear: 'Leegmaken',
+      collapse: 'Winkelmandje inklappen',
+      conflictTitle: 'Winkelmandje van een andere zaak',
+      conflictMessage: 'Je winkelmandje bevat al artikelen van {restaurant}. Een winkelmandje kan maar producten van één zaak tegelijk bevatten — leegmaken om hier te bestellen?',
+      conflictConfirm: 'Leegmaken en verdergaan',
+      conflictCancel: 'Annuleren'
     },
     orderStatus: {
       deliveryInstruction: {
