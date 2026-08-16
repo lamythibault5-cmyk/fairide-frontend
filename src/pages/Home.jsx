@@ -7,5 +7,5 @@ export default function Home() {
   if (!user) return <Landing />;
   if (role === 'restaurant') return <Navigate to="/dashboard" replace />;
   if (role === 'driver') return <Navigate to="/driver" replace />;
-  return <Navigate to="/restaurants" replace />;
+  return <Navigate to="/home" replace />;
 }

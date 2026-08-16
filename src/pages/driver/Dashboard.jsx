@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -8,6 +9,7 @@ import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../..
 export default function DriverDashboard() {
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
+  const { setRightSlot } = useOutletContext();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -112,6 +114,30 @@ export default function DriverDashboard() {
       toast(e.message);
     }
   }
+
+  useEffect(() => {
+    const awaitingPickupCount = mine.filter((o) => ['preparation', 'pret'].includes(o.status)).length;
+    const activeCount = mine.filter((o) => o.status === 'livraison').length;
+    const statusText = activeCount === 0
+      ? null
+      : user?.locationSharingEnabled === false
+        ? '📍 Partage de position désactivé.'
+        : sharingLocation
+          ? '📍 Position partagée en direct.'
+          : '📍 En attente de l\'autorisation de géolocalisation...';
+    setRightSlot(
+      <div className="card">
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Aujourd'hui</h3>
+        <div className="stat-grid">
+          <div className="stat-card"><div className="num">{available.length}</div><div className="label">Disponibles</div></div>
+          <div className="stat-card"><div className="num">{awaitingPickupCount}</div><div className="label">À récupérer</div></div>
+          <div className="stat-card highlight"><div className="num">{activeCount}</div><div className="label">En livraison</div></div>
+        </div>
+        {statusText && <p className="small" style={{ margin: '10px 0 0' }}>{statusText}</p>}
+      </div>
+    );
+    return () => setRightSlot(null);
+  }, [available, mine, sharingLocation, user?.locationSharingEnabled, setRightSlot]);
 
   if (loading) return <SkeletonCards count={3} />;
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -29,10 +30,35 @@ export default function Dashboard() {
   const { token } = useAuth();
   const toast = useToast();
   const { t } = useLanguage();
+  const { setRightSlot } = useOutletContext();
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    if (!restaurant) return undefined;
+    const delivered = orders.filter((o) => o.status === 'livre');
+    const revenue = orders.reduce((a, o) => a + o.subtotal, 0);
+    const commissionPaid = orders.reduce((a, o) => a + o.commission, 0);
+    const saved = revenue * 0.30 - commissionPaid;
+    setRightSlot(
+      <div className="card">
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Aujourd'hui</h3>
+        <div className="row" style={{ gap: 6, marginBottom: 10 }}>
+          <StarsDisplay value={restaurant.rating} size={16} />
+          <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Pas encore d\'avis'}</span>
+        </div>
+        <div className="stat-grid">
+          <div className="stat-card"><div className="num">{orders.length}</div><div className="label">Commandes</div></div>
+          <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livrées</div></div>
+          <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">CA plats</div></div>
+          <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs les grandes plateformes</div></div>
+        </div>
+      </div>
+    );
+    return () => setRightSlot(null);
+  }, [restaurant, orders, setRightSlot]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
   const [name, setName] = useState('');
@@ -673,11 +699,6 @@ export default function Dashboard() {
 
   if (!myRestos) return <SkeletonCards count={2} />;
 
-  const delivered = orders.filter((o) => o.status === 'livre');
-  const revenue = orders.reduce((a, o) => a + o.subtotal, 0);
-  const commissionPaid = orders.reduce((a, o) => a + o.commission, 0);
-  const saved = revenue * 0.30 - commissionPaid;
-
   return (
     <div>
       {myRestos.length === 1 ? (
@@ -973,18 +994,6 @@ export default function Dashboard() {
         <>
           {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner" />}
 
-          <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-            <StarsDisplay value={restaurant.rating} size={16} />
-            <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Pas encore d\'avis'}</span>
-          </div>
-
-          <div className="stat-grid">
-            <div className="stat-card"><div className="num">{orders.length}</div><div className="label">Commandes</div></div>
-            <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livrées</div></div>
-            <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">CA plats</div></div>
-            <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs les grandes plateformes</div></div>
-          </div>
-
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 14 }}>
             {!editOpen && (
               <button type="button" className="btn-ghost" onClick={() => setEditOpen(true)}>✏️ Modifier les infos du restaurant</button>
@@ -1154,9 +1163,7 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="two-col">
-            <div>
-              <h2 className="section-title" style={{ marginTop: 0 }}>Commandes entrantes</h2>
+          <h2 className="section-title" style={{ marginTop: 0 }}>Commandes entrantes</h2>
               {orders.length === 0 && <div className="empty">Pas encore de commande.</div>}
               {orders.map((o) => (
                 <div className={`card order-card-clickable order-type-${orderTypeColor(o)}`} key={o.id} onClick={() => setSelectedOrder(o)}>
@@ -1253,8 +1260,7 @@ export default function Dashboard() {
                   )}
                 </>
               )}
-            </div>
-            <div>
+
               <h2 className="section-title" style={{ marginTop: 0 }}>Menu</h2>
 
               {restaurant.menu.length === 0 && !startChoiceMade && (
@@ -1362,8 +1368,6 @@ export default function Dashboard() {
                   <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>+ Nouvelle section</button>
                 )}
               </div>
-            </div>
-          </div>
         </>
       )}
 

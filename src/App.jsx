@@ -9,6 +9,7 @@ import Admin from './pages/Admin';
 import LegalNotice from './pages/legal/LegalNotice';
 import Terms from './pages/legal/Terms';
 import Privacy from './pages/legal/Privacy';
+import ClientHome from './pages/client/Home';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
 import Checkout from './pages/client/Checkout';
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
+        <Route path="/home" element={<ProtectedRoute role="client"><ClientHome /></ProtectedRoute>} />
         <Route path="/restaurants" element={<ProtectedRoute role="client"><RestaurantList /></ProtectedRoute>} />
         <Route path="/restaurants/:id" element={<ProtectedRoute role="client"><RestaurantMenu /></ProtectedRoute>} />
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
