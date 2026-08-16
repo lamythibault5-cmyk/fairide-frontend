@@ -16,7 +16,20 @@ export default function DriverDashboard() {
   const [codeInputs, setCodeInputs] = useState({});
   const [sharingLocation, setSharingLocation] = useState(false);
   const [connecting, setConnecting] = useState(false);
+  const [togglingPause, setTogglingPause] = useState(false);
   const activeIdsRef = useRef([]);
+
+  async function togglePause() {
+    setTogglingPause(true);
+    try {
+      await api('/auth/me', { method: 'PATCH', token, body: { driverPaused: !user?.driverPaused } });
+      await refreshUser();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setTogglingPause(false);
+    }
+  }
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('connect')) {
@@ -189,28 +202,59 @@ export default function DriverDashboard() {
         </div>
       )}
 
-      <h2 className="section-title" style={{ marginTop: 0 }}>Commandes disponibles</h2>
-      {available.length === 0 && <div className="empty">Aucune commande disponible pour l'instant.</div>}
-      {available.map((o) => (
-        <div className="card" key={o.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{o.restaurantName}</b>
-            <span className="pill teal">{o.commune}</span>
-          </div>
-          <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
-            {o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}
-          </span>
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
-          <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
-          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
-          <DeliveryTiming order={o} />
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small">Course : {o.deliveryFee.toFixed(2)}€</span>
-            <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
+      {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
+        <div className="card" style={{ border: `2px solid ${user?.driverPaused ? 'var(--gold)' : 'var(--teal)'}` }}>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>
+                {user?.driverPaused ? '⏸️ Compte en pause' : '✅ Compte validé, tu peux commencer à livrer'}
+              </h3>
+              <p className="small" style={{ margin: 0 }}>
+                {user?.driverPaused
+                  ? "Tu ne vois plus les commandes disponibles et ne peux pas en prendre. Réactive-toi quand tu es prêt à reprendre."
+                  : 'Mets ton compte en pause à tout moment si tu arrêtes de livrer temporairement — tes livraisons en cours ne sont pas affectées.'}
+              </p>
+            </div>
+            <button
+              className={user?.driverPaused ? 'btn-teal' : 'btn-outline'}
+              style={{ padding: '8px 14px', fontSize: 13, flexShrink: 0 }}
+              disabled={togglingPause}
+              onClick={togglePause}
+            >
+              {togglingPause ? '...' : user?.driverPaused ? '▶️ Reprendre' : '⏸️ Mettre en pause'}
+            </button>
           </div>
         </div>
-      ))}
+      )}
+
+      {user?.driverPaused ? (
+        <div className="empty">Ton compte est en pause — pas de nouvelles commandes tant que tu n'as pas repris.</div>
+      ) : (
+        <>
+          <h2 className="section-title" style={{ marginTop: 0 }}>Commandes disponibles</h2>
+          {available.length === 0 && <div className="empty">Aucune commande disponible pour l'instant.</div>}
+          {available.map((o) => (
+            <div className="card" key={o.id}>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <b>{o.restaurantName}</b>
+                <span className="pill teal">{o.commune}</span>
+              </div>
+              <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
+                {o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}
+              </span>
+              <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+              {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
+              <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
+              {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
+              <DeliveryTiming order={o} />
+              <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+                <span className="small">Course : {o.deliveryFee.toFixed(2)}€</span>
+                <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
+              </div>
+            </div>
+          ))}
+        </>
+      )}
 
       <h2 className="section-title">En attente de retrait</h2>
       {awaitingPickup.length === 0 && <div className="empty">Pas de commande à récupérer pour l'instant.</div>}

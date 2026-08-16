@@ -30,8 +30,10 @@ function navItemsForRole(role, t) {
   }
   if (role === 'driver') {
     return [
-      { to: '/driver', end: true, icon: '🛵', label: t('nav.deliveries') },
+      { to: '/driver', end: true, icon: '📦', label: 'Mes commandes' },
       { to: '/driver/map', icon: '🗺️', label: 'Carte' },
+      { to: '/driver/reviews', icon: '⭐', label: 'Avis' },
+      { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }

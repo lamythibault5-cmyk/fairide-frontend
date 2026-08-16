@@ -26,6 +26,8 @@ import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
 import RestaurantMapPage from './pages/restaurant/MapPage';
 import DriverDashboard from './pages/driver/Dashboard';
 import DriverMapPage from './pages/driver/MapPage';
+import DriverReviewsPage from './pages/driver/ReviewsPage';
+import DriverTipsPage from './pages/driver/TipsPage';
 
 export default function App() {
   return (
@@ -55,6 +57,8 @@ export default function App() {
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
+        <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
+        <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />
 
