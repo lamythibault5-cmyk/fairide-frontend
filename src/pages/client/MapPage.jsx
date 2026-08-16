@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
-import FoodCatchGame from '../../components/FoodCatchGame';
+import GameSwitcher from '../../components/GameSwitcher';
 
 // Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
 // accessible en permanence depuis la nav plutôt que caché dans le détail d'une commande.
@@ -43,7 +43,7 @@ export default function MapPage() {
                 Dès qu'une livraison démarre, ton livreur apparaît ici en direct.
               </div>
             </div>
-            <FoodCatchGame />
+            <GameSwitcher />
           </div>
         </div>
       ) : (
@@ -66,7 +66,7 @@ export default function MapPage() {
                   {o.driverLat ? 'Position du livreur en direct' : 'En attente de la position du livreur'}
                 </div>
               </div>
-              <FoodCatchGame />
+              <GameSwitcher />
             </div>
           </div>
         ))

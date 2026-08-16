@@ -654,3 +654,10 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .food-catch-start, .food-catch-overlay-buttons button { padding: 7px 10px; font-size: 11px; background: var(--gold); color: var(--ink); white-space: nowrap; }
 .food-catch-controls { display: flex; gap: 8px; }
 .food-catch-controls button { padding: 6px 10px; font-size: 14px; background: var(--cream-dim); color: var(--ink); }
+
+/* Cible cliquable du jeu réflexe (ReactionGame) — utilise .food-catch-field/.food-catch-item etc.
+   ci-dessus, communes aux 4 mini-jeux (voir GameSwitcher.jsx). */
+.reaction-target { position: absolute; font-size: 20px; padding: 0; background: none; border: none; line-height: 1; cursor: pointer; }
+
+.game-switcher { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
+.game-switcher-btn { padding: 5px 8px; font-size: 10px; background: var(--teal); color: #fff; white-space: nowrap; }
