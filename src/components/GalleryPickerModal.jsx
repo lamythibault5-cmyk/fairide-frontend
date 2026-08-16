@@ -7,12 +7,17 @@ import { useToast } from '../context/ToastContext';
 // Galerie personnelle du restaurant : upload depuis la pellicule/galerie du téléphone ou le disque de
 // l'ordi/tablette (comportement natif de <input type="file" accept="image/*">, rien à coder de plus
 // pour couvrir les deux cas), puis réutilisable sur n'importe quel plat sans re-uploader.
-export default function GalleryPickerModal({ restoId, onSelect, onCancel }) {
+// currentImageUrl : photo actuellement utilisée par le plat qu'on est en train de modifier (si vide,
+// rien à proposer de garder). Si elle n'est pas déjà dans la galerie, on propose de l'y archiver avant
+// de basculer sur la nouvelle photo choisie, pour ne pas la perdre.
+export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect, onCancel }) {
   const { token } = useAuth();
   const toast = useToast();
   const [images, setImages] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [pendingUrl, setPendingUrl] = useState(null);
+  const [keeping, setKeeping] = useState(false);
   const fileInputRef = useRef(null);
 
   function loadGallery() {
@@ -39,6 +44,31 @@ export default function GalleryPickerModal({ restoId, onSelect, onCancel }) {
     }
   }
 
+  function chooseImage(url) {
+    const old = (currentImageUrl || '').trim();
+    if (old && old !== url && !images?.some((img) => img.imageUrl === old)) {
+      setPendingUrl(url);
+      return;
+    }
+    onSelect(url);
+  }
+
+  async function keepOldAndSwitch() {
+    setKeeping(true);
+    try {
+      await api(`/restaurants/${restoId}/gallery/from-url`, { method: 'POST', token, body: { imageUrl: currentImageUrl } });
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setKeeping(false);
+    }
+    onSelect(pendingUrl);
+  }
+
+  function discardOldAndSwitch() {
+    onSelect(pendingUrl);
+  }
+
   async function handleDelete(imageId) {
     setDeletingId(imageId);
     try {
@@ -49,6 +79,31 @@ export default function GalleryPickerModal({ restoId, onSelect, onCancel }) {
     } finally {
       setDeletingId(null);
     }
+  }
+
+  if (pendingUrl) {
+    return createPortal(
+      <div className="modal-overlay" onClick={onCancel}>
+        <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Garder l'ancienne photo ?</h3>
+          <p className="small" style={{ margin: '0 0 14px' }}>
+            Tu es sur le point de remplacer la photo actuelle de ce plat. Veux-tu la garder dans ta galerie pour pouvoir la réutiliser plus tard ?
+          </p>
+          <div className="row" style={{ gap: 14, alignItems: 'center', marginBottom: 16 }}>
+            <img src={currentImageUrl} alt="Photo actuelle" className="dish-thumb" />
+            <span style={{ fontSize: 20 }}>→</span>
+            <img src={pendingUrl} alt="Nouvelle photo" className="dish-thumb" />
+          </div>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-teal" disabled={keeping} onClick={keepOldAndSwitch}>
+              {keeping ? '...' : '✅ Oui, la garder dans ma galerie'}
+            </button>
+            <button type="button" className="btn-ghost" disabled={keeping} onClick={discardOldAndSwitch}>Non merci</button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
   }
 
   return createPortal(
@@ -77,7 +132,7 @@ export default function GalleryPickerModal({ restoId, onSelect, onCancel }) {
           <div className="gallery-picker-grid">
             {images.map((img) => (
               <div key={img.id} className="gallery-picker-tile">
-                <button type="button" className="gallery-picker-image-btn" onClick={() => onSelect(img.imageUrl)} title="Utiliser cette photo">
+                <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(img.imageUrl)} title="Utiliser cette photo">
                   <img src={img.imageUrl} alt="" />
                 </button>
                 <button

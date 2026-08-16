@@ -93,6 +93,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {galleryOpen && (
           <GalleryPickerModal
             restoId={restoId}
+            currentImageUrl={imageUrl}
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}
           />
