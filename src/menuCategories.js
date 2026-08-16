@@ -1148,7 +1148,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['edamame'], image: 'https://images.unsplash.com/photo-1649257171206-37625b1f3b2f?w=300&q=80' },
   { keywords: ['satay'], image: 'https://images.unsplash.com/photo-1772855386828-a18ff9a12584?w=300&q=80' },
   { keywords: ['pad thai'], image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80' },
-  { keywords: ['fried rice', 'riz cantonais', 'riz sauté', 'riz gras'], image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80' },
+  { keywords: ['fried rice', 'riz cantonais', 'riz sauté'], image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80' },
   { keywords: ['teriyaki'], image: 'https://images.unsplash.com/photo-1609183480237-ccbb2d7c5772?w=300&q=80' },
   { keywords: ['sweet & sour', 'general tao', 'bœuf aux oignons', 'boeuf aux oignons'], image: 'https://images.unsplash.com/photo-1664138788119-bd4f073259d5?w=300&q=80' },
   { keywords: ['thai green curry', 'thai red curry', 'curry vert', 'curry rouge'], image: 'https://images.unsplash.com/photo-1716959669858-11d415bdead6?w=300&q=80' },
@@ -1175,7 +1175,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['quesadilla'], image: 'https://images.unsplash.com/photo-1618040996337-56904b7850b9?w=300&q=80' },
   { keywords: ['churros'], image: 'https://images.unsplash.com/photo-1624371414361-e670edf4898d?w=300&q=80' },
   { keywords: ['tres leches'], image: 'https://images.unsplash.com/photo-1557925923-33b27f891f88?w=300&q=80' },
-  { keywords: ['jarritos', 'limeade'], image: 'https://images.unsplash.com/photo-1632852521784-d85d5b62dd62?w=300&q=80' },
+  { keywords: ['jarritos'], image: 'https://images.unsplash.com/photo-1632852521784-d85d5b62dd62?w=300&q=80' },
 
   // --- Libanais / Méditerranéen ---
   { keywords: ['hummus beiruti', 'hummus', 'houmous'], image: 'https://images.unsplash.com/photo-1673960854897-749f9d9ebafc?w=300&q=80' },
@@ -1244,7 +1244,6 @@ const KEYWORD_IMAGES = [
   { keywords: ['chicken bucket'], image: 'https://images.unsplash.com/photo-1652957392622-17e7c96f1369?w=300&q=80' },
   { keywords: ['mac & cheese', 'mac and cheese'], image: 'https://images.unsplash.com/photo-1667499989723-c4ab9549d63c?w=300&q=80' },
   { keywords: ['mozzarella sticks', 'jalapeño poppers', 'jalapeno poppers'], image: 'https://images.unsplash.com/photo-1548340748-6d2b7d7da280?w=300&q=80' },
-  { keywords: ['apple pie'], image: 'https://images.unsplash.com/photo-1621743478914-cc8a86d7e7b5?w=300&q=80' },
   { keywords: ['donut'], image: 'https://images.unsplash.com/photo-1570727624862-3008fe67a6be?w=300&q=80' },
   { keywords: ['chili sin carne', 'chili con carne'], image: 'https://images.unsplash.com/photo-1666819632298-fe15dc7d4c34?w=300&q=80' },
   { keywords: ['popcorn'], image: 'https://images.unsplash.com/photo-1585647347483-22b66260dfff?w=300&q=80' },
@@ -1665,7 +1664,6 @@ const ITEM_IMAGE_OVERRIDES = {
   // sans rapport : "Chianti" → chia pudding, "Vinaigrette" → vin, "grillé" végé/poulet → photo kebab,
   // "beignet de banane" → poulet, "tarte salée" → dessert, "frites & boisson" → frites au lieu de falafel) ---
   'chianti (verre)': U('1587920710219-f6f9804dc10d'),
-  'vinaigrette miel-moutarde': categoryImage('entree'),
   'menu falafel wrap (frites & boisson)': U('1593001872095-7d5b3868fb1d'),
   'cacahuètes grillées': U('1599490659213-e2b9527bd087'),
   'tofu grillé légumes': U('1512621776951-a57141f2eefd'),
@@ -1937,9 +1935,10 @@ const ITEM_IMAGE_OVERRIDES = {
   'monster 50cl': U('1622543925917-763c34d1a86e'),
   'eau 1,5l': U('1534616042650-80f5c9b61f09'),
   'capri-sun': U('1622597467821-df79dcb4f94d'),
-  'whisky 70cl': U('1587920710219-f6f9804dc10d'),
+  'whisky 70cl': U('1615887023544-3a566f29d822'),
   'gin 70cl': U('1587920710219-f6f9804dc10d'),
-  'rhum 70cl': U('1587920710219-f6f9804dc10d'),
+  'rhum 70cl': U('1652284917571-e6475a979ea5'),
+  'vodka 70cl': U('1591704951890-0862b2e98acb'),
   'jägermeister 70cl': U('1587920710219-f6f9804dc10d'),
   'mignonnettes': U('1587920710219-f6f9804dc10d'),
 
