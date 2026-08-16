@@ -3,11 +3,12 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryLabel, defaultItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
+import GalleryPickerModal from './GalleryPickerModal';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId }) {
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
@@ -32,6 +33,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
 
   const [togglingAvailable, setTogglingAvailable] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
 
   async function save() {
     setSaving(true);
@@ -82,7 +84,19 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             <img src={imageUrl || defaultItemImage({ name, category })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
           </div>
+          {restoId && (
+            <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setGalleryOpen(true)}>
+              📷 Depuis ma galerie
+            </button>
+          )}
         </div>
+        {galleryOpen && (
+          <GalleryPickerModal
+            restoId={restoId}
+            onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
+            onCancel={() => setGalleryOpen(false)}
+          />
+        )}
         {allOptionGroups.length > 0 && (
           <div className="field">
             <label>Groupes d'options</label>

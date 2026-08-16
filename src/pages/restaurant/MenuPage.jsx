@@ -13,6 +13,7 @@ import {
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
+import GalleryPickerModal from '../../components/GalleryPickerModal';
 
 export default function MenuPage() {
   const { token } = useAuth();
@@ -38,6 +39,7 @@ export default function MenuPage() {
   const [applyingStarter, setApplyingStarter] = useState(false);
   const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
+  const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
 
   const [reorderMode, setReorderMode] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
@@ -337,7 +339,7 @@ export default function MenuPage() {
                       <MenuItemRow
                         key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
                         allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                        sections={restaurant.sections || []} reorderMode={reorderMode}
+                        sections={restaurant.sections || []} reorderMode={reorderMode} restoId={restoId}
                       />
                     ))}
                   </SortableContext>
@@ -354,11 +356,21 @@ export default function MenuPage() {
                         )}
                         <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
                       </div>
+                      <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setAddItemGalleryOpen(true)}>
+                        📷 Depuis ma galerie
+                      </button>
                     </div>
                     <div className="row" style={{ gap: 8 }}>
                       <button className="btn-teal" onClick={addMenuItem}>Ajouter</button>
                       <button className="btn-ghost" onClick={() => setAddSectionId(null)}>Fermer</button>
                     </div>
+                    {addItemGalleryOpen && (
+                      <GalleryPickerModal
+                        restoId={restoId}
+                        onSelect={(url) => { setItemImageUrl(url); setAddItemGalleryOpen(false); }}
+                        onCancel={() => setAddItemGalleryOpen(false)}
+                      />
+                    )}
                   </div>
                 ) : (
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
