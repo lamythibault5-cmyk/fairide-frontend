@@ -374,7 +374,7 @@ export default function MenuPage() {
                   </div>
                 ) : (
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
-                    + Ajouter un plat
+                    + Ajouter un élément
                   </button>
                 ))}
               </div>
