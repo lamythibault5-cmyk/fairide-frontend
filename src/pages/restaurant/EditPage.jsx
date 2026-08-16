@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES, fullTemplateItems } from '../../menuCategories';
+import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
@@ -26,7 +27,7 @@ export default function EditPage() {
   const [editAddressNumber, setEditAddressNumber] = useState('');
   const [editAddressPostalCode, setEditAddressPostalCode] = useState('');
   const [editCover, setEditCover] = useState('');
-  const [editOpeningHours, setEditOpeningHours] = useState('');
+  const [editHours, setEditHours] = useState(null);
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
 
@@ -61,11 +62,15 @@ export default function EditPage() {
     setEditAddressNumber(restaurant.addressNumber || '');
     setEditAddressPostalCode(restaurant.addressPostalCode || '');
     setEditCover(restaurant.coverImageUrl || '');
-    setEditOpeningHours(restaurant.openingHours || '');
+    setEditHours(restaurant.hours || null);
     setEditOpenFlag(restaurant.open);
   }, [restaurant]);
 
   async function saveRestoInfo() {
+    if (!editHours || !Object.values(editHours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
+      toast('Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.');
+      return;
+    }
     setSavingResto(true);
     try {
       await api(`/restaurants/${restoId}`, {
@@ -73,7 +78,7 @@ export default function EditPage() {
         body: {
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
-          coverImageUrl: editCover.trim(), openingHours: editOpeningHours.trim(), open: editOpenFlag
+          coverImageUrl: editCover.trim(), hours: editHours, open: editOpenFlag
         }
       });
       await loadDashboard(restoId);
@@ -225,7 +230,8 @@ export default function EditPage() {
         </div>
         <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
         <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
-        <div className="field"><label>Horaires d'ouverture (optionnel)</label><input value={editOpeningHours} onChange={(e) => setEditOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
+        <label>Horaires d'ouverture</label>
+        <OpeningHoursEditor value={editHours} onChange={setEditHours} />
         <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
           <span className="small">Restaurant ouvert (visible aux clients)</span>

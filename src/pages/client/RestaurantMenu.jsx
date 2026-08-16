@@ -11,6 +11,7 @@ import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import { useLanguage } from '../../context/LanguageContext';
+import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, DAY_LABELS_FR } from '../../openingHours';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -28,6 +29,11 @@ export default function RestaurantMenu() {
   const toast = useToast();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const clock = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(clock);
+  }, []);
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -94,6 +100,7 @@ export default function RestaurantMenu() {
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
+  const openStatus = getOpenStatus(restaurant.hours, now);
   const presentSections = (restaurant.sections || []).filter((s) => restaurant.menu.some((i) => (i.category || 'plat') === s.name));
 
   async function toggleFavorite() {
@@ -114,6 +121,10 @@ export default function RestaurantMenu() {
   }
 
   function addToCart(item) {
+    if (!getOpenStatus(restaurant.hours, now).isOpen) {
+      toast('Ce commerce est actuellement fermé.');
+      return;
+    }
     if (cart.hasConflict(id)) {
       setConflictItem(item);
       return;
@@ -159,7 +170,25 @@ export default function RestaurantMenu() {
           <span className="small">{restaurant.reviewCount > 0 ? t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restaurantList.newBadge')}</span>
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
-        <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
+        {restaurant.hours && (
+          openStatus.isOpen ? (
+            <p className="small" style={{ margin: '0 0 10px' }}>🕐 Ouvert maintenant · {formatDaySchedule(restaurant.hours, openStatus.todayKey)}</p>
+          ) : (
+            <div className="closed-banner">
+              <div className="closed-banner-title">🔒 Actuellement fermé</div>
+              {openStatus.opensToday ? (
+                <p className="small" style={{ margin: 0 }}>Ouvre dans {formatCountdown(openStatus.opensAt - now)} (à {openStatus.opensAt.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })})</p>
+              ) : (
+                <p className="small" style={{ margin: 0 }}>
+                  Prochaine ouverture : {DAY_LABELS_FR[openStatus.opensDayKey]}, {formatDaySchedule(restaurant.hours, openStatus.opensDayKey)}
+                </p>
+              )}
+              <div className="closed-banner-schedule">
+                {formatFullSchedule(restaurant.hours).map((line) => <span key={line}>{line}</span>)}
+              </div>
+            </div>
+          )
+        )}
         {restaurant.lat && restaurant.lng && (
           <div style={{ marginBottom: 14 }}>
             <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />

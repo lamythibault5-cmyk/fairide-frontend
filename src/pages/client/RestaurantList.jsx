@@ -8,6 +8,7 @@ import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
+import { getOpenStatus } from '../../openingHours';
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -37,6 +38,7 @@ function offerLabelFor(r) {
 
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const offerLabel = offerLabelFor(r);
+  const isClosed = r.hours && !getOpenStatus(r.hours).isOpen;
   return (
     <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
       <button onClick={(e) => onToggleFavorite(e, r.id)} className="rest-card-fav" title={t('restaurantList.addFavorite')}>
@@ -47,6 +49,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       <div className="pill-row">
         <span className="pill teal">{r.commune}</span>
         {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
+        {isClosed && <span className="pill closed-pill">🔒 Fermé</span>}
       </div>
       <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>
       <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>

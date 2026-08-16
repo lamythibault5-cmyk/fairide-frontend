@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
+import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux 5 sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -33,7 +34,7 @@ export default function DashboardLayout() {
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState('');
   const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [openingHours, setOpeningHours] = useState('');
+  const [hours, setHours] = useState(null);
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
 
   const [subscribing, setSubscribing] = useState(false);
@@ -137,6 +138,10 @@ export default function DashboardLayout() {
       toast("Donne l'adresse complète du restaurant (rue, numéro, code postal) pour les livreurs et la carte.");
       return;
     }
+    if (!hours || !Object.values(hours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
+      toast('Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.');
+      return;
+    }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
     try {
       const r = await api('/restaurants', {
@@ -144,13 +149,13 @@ export default function DashboardLayout() {
         body: {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
-          coverImageUrl: coverImageUrl.trim(), openingHours: openingHours.trim(), deliveryMode: deliveryModePref
+          coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref
         }
       });
       setMyRestos((prev) => [...prev, r]);
       setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
-      setCoverImageUrl(''); setOpeningHours(''); setNewRestoOpen(false);
+      setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
       pickResto(r.id);
       if (r.wantsOwnDriver) {
         toast("Restaurant créé ! Ajoute maintenant l'email de ton livreur dans la section Livraison pour activer ton propre livreur.");
@@ -290,10 +295,14 @@ export default function DashboardLayout() {
           <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
 
           <div className="divider" />
+          <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Horaires d'ouverture</h4>
+          <p className="small" style={{ margin: '0 0 10px' }}>Obligatoire : ton commerce ne sera visible et accessible aux clients que pendant ces horaires.</p>
+          <OpeningHoursEditor value={hours} onChange={setHours} />
+
+          <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Présentation (tout est optionnel)</h4>
           <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Une phrase pour présenter ton commerce" /></div>
           <div className="field"><label>Image de couverture (URL) — une photo par défaut est utilisée sinon</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
-          <div className="field"><label>Horaires d'ouverture</label><input value={openingHours} onChange={(e) => setOpeningHours(e.target.value)} placeholder="Ex: Lun-Ven 11h-22h, Sam-Dim 12h-23h" /></div>
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Livraison</h4>
