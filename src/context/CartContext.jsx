@@ -58,18 +58,24 @@ export function CartProvider({ children }) {
   }
 
   // Ajoute une unité d'un plat (avec ses options éventuelles) au panier — crée la ligne si elle n'existe
-  // pas encore. Retourne 'conflict' sans rien modifier si le panier contient déjà un autre commerce (à
-  // l'appelant de proposer de vider le panier via switchRestaurant avant de réessayer).
-  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [] }) {
-    if (hasConflict(newRestaurantId)) return 'conflict';
-    if (restaurantId !== newRestaurantId) {
+  // pas encore. Retourne 'conflict' sans rien modifier si le panier contient déjà un autre commerce, sauf
+  // avec force=true (utilisé juste après que l'utilisateur a confirmé le remplacement, voir
+  // RestaurantMenu.jsx) : switchRestaurant() + addOne() ne peuvent PAS être appelés séparément dans ce
+  // cas, le second lirait encore l'ancien restaurantId/count via la closure du même rendu (React ne
+  // rejoue le composant qu'après la fin du handler) et redéclencherait donc un faux conflit — d'où le
+  // switch et l'ajout regroupés en une seule mise à jour atomique ici.
+  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [], force = false }) {
+    if (!force && hasConflict(newRestaurantId)) return 'conflict';
+    const switching = restaurantId !== newRestaurantId;
+    if (switching) {
       setRestaurantId(newRestaurantId);
       setRestaurantName(newRestaurantName || '');
     }
     const key = lineKeyFor(itemId, optionItemIds);
     setLines((prev) => {
-      const existing = prev[key];
-      return { ...prev, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty: (existing?.qty || 0) + 1 } };
+      const base = switching ? {} : prev;
+      const existing = base[key];
+      return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty: (existing?.qty || 0) + 1 } };
     });
     return 'ok';
   }

@@ -127,15 +127,18 @@ export default function RestaurantMenu() {
 
   // L'utilisateur a confirmé vouloir vider son panier (d'un autre commerce) pour continuer ici —
   // on relance alors l'action initialement bloquée par le conflit (ouvrir le sélecteur d'options,
-  // ou ajouter directement le plat).
+  // ou ajouter directement le plat). Cas simple : switch + ajout regroupés via force=true (voir le
+  // commentaire d'addOne dans CartContext.jsx — deux appels séparés ici rejoueraient un faux conflit).
   function confirmSwitchRestaurant() {
-    cart.switchRestaurant(id, restaurant.name);
     const item = conflictItem;
     setConflictItem(null);
     if (item.optionGroups?.length > 0) {
+      // Ici l'ajout réel n'a lieu qu'après un second aller-retour (choix des options dans la modale),
+      // donc pas de risque de closure périmée — le switch peut être appliqué séparément dès maintenant.
+      cart.switchRestaurant(id, restaurant.name);
       setPickerItem(item);
     } else {
-      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price, force: true });
     }
   }
 
