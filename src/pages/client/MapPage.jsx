@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
+import FoodCatchGame from '../../components/FoodCatchGame';
 
 // Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
 // accessible en permanence depuis la nav plutôt que caché dans le détail d'une commande.
@@ -42,15 +43,19 @@ export default function MapPage() {
               {o.driverName && <span className="small">🛵 {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</span>}
             </div>
             <div className="small" style={{ margin: '4px 0' }}>📍 {o.address}</div>
-            <div style={{ margin: '10px 0' }}>
-              <DeliveryTrackingMap
-                restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
-                deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
-                driverLat={o.driverLat} driverLng={o.driverLng}
-              />
-              <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-                {o.driverLat ? 'Position du livreur en direct' : 'En attente de la position du livreur'}
+            <div className="tracking-with-game" style={{ margin: '10px 0' }}>
+              <div className="tracking-map-col">
+                <DeliveryTrackingMap
+                  restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
+                  deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
+                  driverLat={o.driverLat} driverLng={o.driverLng}
+                  height={260}
+                />
+                <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
+                  {o.driverLat ? 'Position du livreur en direct' : 'En attente de la position du livreur'}
+                </div>
               </div>
+              <FoodCatchGame />
             </div>
           </div>
         ))
