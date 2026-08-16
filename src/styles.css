@@ -220,6 +220,15 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .menu-item-card-add { align-items: center; justify-content: center; min-height: 120px; border: 2px dashed var(--line); background: none; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--ink-soft); }
 .menu-item-card-add:hover { border-color: var(--gold); color: var(--ink); box-shadow: none; }
 
+/* Mode réorganisation des plats (drag & drop souris + tactile, voir MenuItemRow/MenuPage) */
+.menu-item-card-reordering { border-color: var(--teal); box-shadow: none; }
+.menu-item-drag-handle {
+  position: absolute; top: 6px; right: 6px; width: 30px; height: 30px; border-radius: 8px;
+  background: var(--teal); color: #fff; border: none; font-size: 18px; line-height: 1;
+  display: flex; align-items: center; justify-content: center; cursor: grab; z-index: 2;
+}
+.menu-item-drag-handle:active { cursor: grabbing; }
+
 /* Le dashboard restaurateur gère son propre menu dans une colonne plus étroite que la vue client
    (grille .two-col) — 4 cartes compactes par ligne au lieu de l'auto-fill large côté client. */
 .dashboard-menu-grid { grid-template-columns: repeat(4, 1fr); gap: 8px; }

@@ -1,12 +1,18 @@
 import { useState } from 'react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryLabel, defaultItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [] }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false }) {
   const { t } = useLanguage();
+  // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
+  // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: !reorderMode });
+  const sortableStyle = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 1 : undefined };
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(item.name);
   const [desc, setDesc] = useState(item.desc || '');
@@ -56,7 +62,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     }
   }
 
-  if (editing) {
+  if (editing && !reorderMode) {
     return (
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
         <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -112,11 +118,29 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
 
   return (
     <div
-      className="menu-item-card"
-      style={{ cursor: 'pointer', position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}
-      onClick={() => setEditing(true)}
-      title="Cliquer pour modifier"
+      ref={setNodeRef}
+      className={`menu-item-card${reorderMode ? ' menu-item-card-reordering' : ''}`}
+      style={{
+        cursor: reorderMode ? 'default' : 'pointer',
+        position: 'relative',
+        ...sortableStyle,
+        ...(item.available === false ? { opacity: 0.5 } : {})
+      }}
+      onClick={reorderMode ? undefined : () => setEditing(true)}
+      title={reorderMode ? '' : 'Cliquer pour modifier'}
     >
+      {reorderMode && (
+        <button
+          type="button"
+          className="menu-item-drag-handle"
+          style={{ touchAction: 'none' }}
+          aria-label="Déplacer ce plat"
+          {...attributes}
+          {...listeners}
+        >
+          ⠿
+        </button>
+      )}
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
       <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
       <div className="name">{item.name}</div>
@@ -125,7 +149,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       </div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>
-        <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>
+        {!reorderMode && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
       </div>
     </div>
   );

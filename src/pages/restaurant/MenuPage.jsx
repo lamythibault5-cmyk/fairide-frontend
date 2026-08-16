@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -36,6 +38,39 @@ export default function MenuPage() {
   const [applyingStarter, setApplyingStarter] = useState(false);
   const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
+
+  const [reorderMode, setReorderMode] = useState(false);
+  // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
+  // l'aller-retour visible (retour à l'ancien ordre puis saut au nouveau) entre le lâcher et le rechargement.
+  const [localOrder, setLocalOrder] = useState({});
+  // distance/delay d'activation : un simple tap (souris ou tactile) ouvre encore le bouton "modifier" ou
+  // fait défiler la page normalement, seul un vrai geste de glisser déclenche le drag.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+  );
+
+  function toggleReorderMode() {
+    setReorderMode((prev) => !prev);
+    setLocalOrder({});
+  }
+
+  async function handleDragEnd(section, items, event) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = items.map((i) => i.id);
+    const oldIndex = ids.indexOf(active.id);
+    const newIndex = ids.indexOf(over.id);
+    const newIds = arrayMove(ids, oldIndex, newIndex);
+    setLocalOrder((prev) => ({ ...prev, [section.id]: newIds }));
+    try {
+      await api(`/restaurants/${restoId}/menu/reorder`, { method: 'PATCH', token, body: { category: section.name, itemIds: newIds } });
+      await loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+      setLocalOrder((prev) => ({ ...prev, [section.id]: undefined }));
+    }
+  }
 
   async function addMenuItem() {
     const price = parseFloat(itemPrice);
@@ -250,15 +285,28 @@ export default function MenuPage() {
       )}
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
+          {restaurant.menu.length > 0 && (
+            reorderMode ? (
+              <button type="button" className="btn-teal" style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleReorderMode}>✅ Terminé</button>
+            ) : (
+              <button type="button" className="btn-ghost" style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleReorderMode}>↕️ Déplacer les items</button>
+            )
+          )}
+        </div>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Exactement ce que voient tes clients. Clique sur un plat pour le modifier, sur ✏️ pour renommer une section, et ajoute une section pour tes formules, menus enfants, etc.
+          {reorderMode
+            ? 'Glisse un plat par sa poignée ⠿ (souris ou doigt) pour changer son ordre dans sa section, puis clique sur "Terminé".'
+            : 'Exactement ce que voient tes clients. Clique sur un plat pour le modifier, sur ✏️ pour renommer une section, et ajoute une section pour tes formules, menus enfants, etc.'}
         </p>
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
         )}
         {(restaurant.sections || []).map((section) => {
-          const items = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
+          const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
+          const order = localOrder[section.id];
+          const items = order ? order.map((id) => rawItems.find((i) => i.id === id)).filter(Boolean) : rawItems;
           const image = categoryImage(section.name);
           return (
             <div key={section.id} style={{ marginBottom: 16 }}>
@@ -275,7 +323,7 @@ export default function MenuPage() {
                     <span>{categoryLabel(section.name, t)}</span>
                   )}
                 </div>
-                {editingSectionId !== section.id && (
+                {editingSectionId !== section.id && !reorderMode && (
                   <div className="row" style={{ gap: 4 }}>
                     <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
                     <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
@@ -283,14 +331,18 @@ export default function MenuPage() {
                 )}
               </div>
               <div className="menu-grid dashboard-menu-grid">
-                {items.map((item) => (
-                  <MenuItemRow
-                    key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                    allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                    sections={restaurant.sections || []}
-                  />
-                ))}
-                {addSectionId === section.id ? (
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(section, items, e)}>
+                  <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
+                    {items.map((item) => (
+                      <MenuItemRow
+                        key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                        allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                        sections={restaurant.sections || []} reorderMode={reorderMode}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+                {!reorderMode && (addSectionId === section.id ? (
                   <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
                     <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
@@ -312,12 +364,12 @@ export default function MenuPage() {
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
                     + Ajouter un plat
                   </button>
-                )}
+                ))}
               </div>
             </div>
           );
         })}
-        {creatingSection ? (
+        {!reorderMode && (creatingSection ? (
           <div className="row" style={{ gap: 8 }}>
             <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder="Menu enfants, Formules midi..." />
             <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>Créer</button>
@@ -325,7 +377,7 @@ export default function MenuPage() {
           </div>
         ) : (
           <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>+ Nouvelle section</button>
-        )}
+        ))}
       </div>
 
       <OptionGroupManager
