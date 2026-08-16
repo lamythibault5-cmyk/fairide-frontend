@@ -136,6 +136,16 @@ export const RESTAURANT_TYPES = [
   { value: 'Boucherie', emoji: '🥩' },
   { value: 'Supermarché', emoji: '🛒' },
   { value: 'Night Shop', emoji: '🌙' },
+  { value: 'Poke Bowl', emoji: '🥣' },
+  { value: 'Thaïlandais', emoji: '🌶️' },
+  { value: 'Indien', emoji: '🍛' },
+  { value: 'Vietnamien', emoji: '🍜' },
+  { value: 'Chinois', emoji: '🥟' },
+  { value: 'Desserts & Glaces', emoji: '🍨' },
+  { value: 'Petit-déjeuner & Brunch', emoji: '🥞' },
+  { value: 'Sandwichs & Salades', emoji: '🥪' },
+  { value: 'Africain', emoji: '🍲' },
+  { value: 'Poisson & Fruits de mer', emoji: '🐟' },
   { value: 'Autre', emoji: '🍽️' }
 ];
 
@@ -1023,6 +1033,330 @@ const TYPE_TEMPLATES = {
       { name: 'Vin Rioja (verre)', price: 5.5, desc: '' },
       { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
     ]
+  },
+  'Poke Bowl': {
+    plat: [
+      { name: 'Poke bowl saumon', price: 13.5, desc: '' },
+      { name: 'Poke bowl thon', price: 14, desc: '' },
+      { name: 'Poke bowl crevettes', price: 13, desc: '' },
+      { name: 'Poke bowl saumon avocat mangue', price: 14.5, desc: '' },
+      { name: 'Poke bowl poulet teriyaki', price: 12.5, desc: '' },
+      { name: 'Poke bowl bœuf épicé', price: 14.5, desc: '' },
+      { name: 'Poke bowl tofu edamame', price: 11.5, desc: '' },
+      { name: 'Poke bowl végétarien', price: 11, desc: '' },
+      { name: 'Poke bowl double saumon', price: 16.5, desc: '' }
+    ],
+    entree: [
+      { name: 'Edamame', price: 4.5, desc: '' },
+      { name: 'Salade de wakame', price: 5, desc: '' },
+      { name: 'Soupe miso', price: 4, desc: '' },
+      { name: 'Gyoza légumes (4 pcs)', price: 5.5, desc: '' },
+      { name: 'Gyoza poulet (4 pcs)', price: 6, desc: '' }
+    ],
+    dessert: [
+      { name: 'Mochi (3 pcs)', price: 4.5, desc: '' },
+      { name: 'Cheesecake matcha', price: 5, desc: '' },
+      { name: 'Salade de fruits frais', price: 4.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Thé glacé maison', price: 3.5, desc: '' },
+      { name: 'Eau de coco', price: 4, desc: '' },
+      { name: 'Limonade au yuzu', price: 4, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+    ]
+  },
+  Thaïlandais: {
+    entree: [
+      { name: 'Nems poulet (4 pcs)', price: 6, desc: '' },
+      { name: 'Rouleaux de printemps frais (2 pcs)', price: 5.5, desc: '' },
+      { name: 'Salade de papaye verte (som tam)', price: 7, desc: '' },
+      { name: 'Soupe tom yum crevettes', price: 7.5, desc: '' },
+      { name: 'Beignets de crevettes (5 pcs)', price: 6.5, desc: '' },
+      { name: 'Satay de poulet (4 brochettes)', price: 7, desc: 'Sauce cacahuète' }
+    ],
+    plat: [
+      { name: 'Pad thaï poulet', price: 13.5, desc: '' },
+      { name: 'Pad thaï crevettes', price: 15, desc: '' },
+      { name: 'Pad thaï tofu', price: 12.5, desc: '' },
+      { name: 'Curry vert poulet', price: 14, desc: '' },
+      { name: 'Curry rouge bœuf', price: 15.5, desc: '' },
+      { name: 'Curry massaman agneau', price: 16, desc: '' },
+      { name: 'Riz sauté au basilic, poulet (pad kra pao)', price: 13, desc: '' },
+      { name: 'Nouilles sautées aux légumes', price: 11.5, desc: '' },
+      { name: 'Canard laqué au curry rouge', price: 17, desc: '' },
+      { name: "Bœuf sauté à l'ail et poivre", price: 15, desc: '' }
+    ],
+    dessert: [
+      { name: 'Riz gluant à la mangue', price: 6.5, desc: '' },
+      { name: 'Beignets de banane', price: 4.5, desc: '' },
+      { name: 'Glace au coco', price: 4.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Thé thaï glacé', price: 4, desc: '' },
+      { name: 'Eau de coco', price: 4, desc: '' },
+      { name: 'Bière Singha', price: 4.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+    ]
+  },
+  Indien: {
+    entree: [
+      { name: 'Samoussas légumes (3 pcs)', price: 5.5, desc: '' },
+      { name: 'Samoussas agneau (3 pcs)', price: 6.5, desc: '' },
+      { name: 'Pakoras de légumes', price: 5.5, desc: '' },
+      { name: 'Papadums (assortiment)', price: 3.5, desc: '' },
+      { name: 'Soupe mulligatawny', price: 5.5, desc: '' },
+      { name: 'Naan nature', price: 3, desc: '' },
+      { name: "Naan à l'ail", price: 3.5, desc: '' },
+      { name: 'Naan au fromage', price: 4, desc: '' }
+    ],
+    plat: [
+      { name: 'Butter chicken', price: 15, desc: '' },
+      { name: 'Tikka masala poulet', price: 15, desc: '' },
+      { name: "Curry d'agneau", price: 17, desc: '' },
+      { name: 'Aloo gobi (curry pommes de terre chou-fleur)', price: 12.5, desc: '' },
+      { name: 'Biryani poulet', price: 15.5, desc: '' },
+      { name: 'Biryani agneau', price: 17.5, desc: '' },
+      { name: 'Dahl de lentilles', price: 11.5, desc: '' },
+      { name: 'Saag paneer', price: 13, desc: '' },
+      { name: 'Vindaloo poulet', price: 15, desc: 'Épicé' },
+      { name: 'Korma agneau', price: 17, desc: '' },
+      { name: 'Riz basmati', price: 3.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Gulab jamun (2 pcs)', price: 4.5, desc: '' },
+      { name: 'Kulfi (glace indienne)', price: 5, desc: '' },
+      { name: 'Riz au lait à la cardamome', price: 4.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Lassi mangue', price: 4.5, desc: '' },
+      { name: 'Lassi salé', price: 4, desc: '' },
+      { name: 'Chai latte', price: 4, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+    ]
+  },
+  Vietnamien: {
+    entree: [
+      { name: 'Nems (rouleaux impériaux, 4 pcs)', price: 6, desc: '' },
+      { name: 'Rouleaux de printemps frais (2 pcs)', price: 5.5, desc: '' },
+      { name: 'Salade de papaye verte au bœuf séché', price: 7.5, desc: '' },
+      { name: 'Soupe won ton', price: 6.5, desc: '' },
+      { name: 'Beignets de crevettes (5 pcs)', price: 6.5, desc: '' }
+    ],
+    plat: [
+      { name: 'Phở bœuf', price: 13.5, desc: '' },
+      { name: 'Phở poulet', price: 12.5, desc: '' },
+      { name: 'Bún bò Huế', price: 14, desc: 'Soupe épicée au bœuf' },
+      { name: 'Bo bun bœuf grillé', price: 13.5, desc: '' },
+      { name: 'Bo bun nems', price: 12.5, desc: '' },
+      { name: 'Bánh mì poulet', price: 8, desc: '' },
+      { name: 'Bánh mì porc grillé', price: 8.5, desc: '' },
+      { name: 'Bánh mì tofu', price: 7.5, desc: '' },
+      { name: 'Cơm tấm (porc grillé, riz brisé)', price: 13, desc: '' },
+      { name: 'Riz sauté au porc', price: 11.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Chè (dessert coco et haricots)', price: 4.5, desc: '' },
+      { name: 'Beignets de banane', price: 4.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Café vietnamien glacé (cà phê sữa đá)', price: 4, desc: '' },
+      { name: 'Thé glacé', price: 3.5, desc: '' },
+      { name: 'Eau de coco', price: 4, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+    ]
+  },
+  Chinois: {
+    entree: [
+      { name: 'Dim sum vapeur mixte (6 pcs)', price: 8, desc: '' },
+      { name: 'Raviolis vapeur au porc (6 pcs)', price: 7, desc: '' },
+      { name: 'Nems poulet (4 pcs)', price: 6, desc: '' },
+      { name: 'Rouleaux de printemps (4 pcs)', price: 5.5, desc: '' },
+      { name: 'Soupe wonton', price: 6, desc: '' },
+      { name: 'Soupe aigre-piquante', price: 6, desc: '' }
+    ],
+    plat: [
+      { name: 'Canard laqué (portion)', price: 16.5, desc: '' },
+      { name: 'Poulet General Tao', price: 13.5, desc: '' },
+      { name: 'Bœuf aux oignons sauce noire', price: 14.5, desc: '' },
+      { name: 'Porc aigre-doux', price: 12.5, desc: '' },
+      { name: 'Nouilles sautées cantonaises', price: 11.5, desc: '' },
+      { name: 'Riz cantonais', price: 9.5, desc: '' },
+      { name: 'Crevettes sauce piquante', price: 15, desc: '' },
+      { name: 'Tofu mapo', price: 11, desc: 'Épicé' },
+      { name: 'Chow mein légumes', price: 10.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Beignets à la banane', price: 4.5, desc: '' },
+      { name: 'Glace au litchi', price: 4.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Thé au jasmin', price: 3, desc: '' },
+      { name: 'Thé oolong', price: 3, desc: '' },
+      { name: 'Bière Tsingtao', price: 4.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+    ]
+  },
+  'Desserts & Glaces': {
+    dessert: [
+      { name: 'Glace boule (1 parfum)', price: 2.8, desc: '' },
+      { name: 'Glace boule (2 parfums)', price: 4.5, desc: '' },
+      { name: 'Glace boule (3 parfums)', price: 5.8, desc: '' },
+      { name: 'Coupe glacée gourmande', price: 7.5, desc: '' },
+      { name: 'Cookie', price: 3, desc: '' },
+      { name: 'Cookie double chocolat', price: 3.5, desc: '' },
+      { name: 'Donut glaçage classique', price: 3.2, desc: '' },
+      { name: 'Donut garni (Nutella, caramel...)', price: 4, desc: '' },
+      { name: 'Gaufre de Liège nature', price: 3.5, desc: '' },
+      { name: 'Gaufre de Liège chocolat', price: 4.5, desc: '' },
+      { name: 'Gaufre de Bruxelles sucre', price: 4, desc: '' },
+      { name: 'Crêpe sucre', price: 3, desc: '' },
+      { name: 'Crêpe Nutella', price: 4.5, desc: '' },
+      { name: 'Crêpe Nutella banane chantilly', price: 5.5, desc: '' },
+      { name: 'Milkshake vanille', price: 5.5, desc: '' },
+      { name: 'Milkshake chocolat', price: 5.5, desc: '' },
+      { name: 'Milkshake fraise', price: 5.5, desc: '' },
+      { name: 'Part de cheesecake', price: 5, desc: '' },
+      { name: 'Part de tarte aux fruits', price: 4.5, desc: '' },
+      { name: 'Fondant au chocolat', price: 5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Chocolat chaud', price: 4, desc: '' },
+      { name: 'Chocolat chaud chantilly', price: 4.8, desc: '' },
+      { name: 'Café', price: 2.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' }
+    ]
+  },
+  'Petit-déjeuner & Brunch': {
+    entree: [
+      { name: 'Viennoiserie au choix', price: 2.5, desc: 'Croissant, pain au chocolat ou pain aux raisins' },
+      { name: 'Granola yaourt fruits', price: 6.5, desc: '' },
+      { name: 'Porridge fruits rouges', price: 6.5, desc: '' },
+      { name: 'Toast avocat', price: 8.5, desc: '' },
+      { name: 'Toast avocat œuf poché', price: 10, desc: '' }
+    ],
+    plat: [
+      { name: 'Pancakes nature (3 pcs)', price: 8, desc: '' },
+      { name: "Pancakes sirop d'érable fruits rouges", price: 10, desc: '' },
+      { name: 'Œufs brouillés bacon', price: 10.5, desc: '' },
+      { name: 'Œufs Bénédicte', price: 12.5, desc: '' },
+      { name: 'Œufs au plat toast', price: 9, desc: '' },
+      { name: 'Omelette fromage jambon', price: 10, desc: '' },
+      { name: 'Bagel saumon fumé', price: 11.5, desc: '' },
+      { name: 'Croque-monsieur', price: 8.5, desc: '' },
+      { name: 'Formule brunch complète', price: 22, desc: 'Salé + sucré + boisson chaude + jus' }
+    ],
+    dessert: [
+      { name: 'Waffle sucre', price: 4, desc: '' },
+      { name: 'Salade de fruits frais', price: 5, desc: '' },
+      { name: 'Yaourt maison miel granola', price: 5.5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Café', price: 2.8, desc: '' },
+      { name: 'Cappuccino', price: 3.8, desc: '' },
+      { name: 'Thé', price: 3, desc: '' },
+      { name: "Jus d'orange pressé", price: 4.5, desc: '' },
+      { name: 'Smoothie fruits', price: 6, desc: '' },
+      { name: 'Chocolat chaud', price: 4, desc: '' }
+    ]
+  },
+  'Sandwichs & Salades': {
+    entree: [
+      { name: 'Soupe du jour', price: 5, desc: '' },
+      { name: 'Salade verte', price: 4, desc: '' },
+      { name: 'Salade de tomates mozzarella', price: 6.5, desc: '' }
+    ],
+    plat: [
+      { name: 'Sandwich jambon fromage', price: 5.5, desc: '' },
+      { name: 'Sandwich poulet crudités', price: 6.5, desc: '' },
+      { name: 'Sandwich thon mayonnaise', price: 6, desc: '' },
+      { name: 'Sandwich végétarien', price: 5.5, desc: '' },
+      { name: 'Sandwich saumon fumé', price: 7.5, desc: '' },
+      { name: 'Club sandwich', price: 8.5, desc: '' },
+      { name: 'Wrap poulet César', price: 7.5, desc: '' },
+      { name: 'Wrap falafel houmous', price: 7, desc: '' },
+      { name: 'Wrap thon', price: 7, desc: '' },
+      { name: 'Salade César poulet', price: 11.5, desc: '' },
+      { name: 'Salade grecque', price: 10.5, desc: '' },
+      { name: 'Salade niçoise', price: 11.5, desc: '' },
+      { name: 'Salade chèvre chaud', price: 11.5, desc: '' },
+      { name: 'Salade quinoa avocat', price: 11, desc: '' },
+      { name: 'Bagel saumon fromage frais', price: 9.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Cookie', price: 2.5, desc: '' },
+      { name: 'Muffin', price: 3, desc: '' },
+      { name: 'Salade de fruits', price: 4, desc: '' }
+    ],
+    boisson: [
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' },
+      { name: 'Jus pressé', price: 4, desc: '' },
+      { name: 'Café', price: 2.5, desc: '' }
+    ]
+  },
+  Africain: {
+    entree: [
+      { name: 'Accras de morue (5 pcs)', price: 6.5, desc: '' },
+      { name: 'Beignets de crevettes (pastels, 5 pcs)', price: 6.5, desc: '' },
+      { name: 'Salade avocat mangue', price: 6, desc: '' },
+      { name: "Soupe à l'arachide", price: 6, desc: '' }
+    ],
+    plat: [
+      { name: 'Mafé poulet', price: 14.5, desc: 'Sauce arachide, riz' },
+      { name: 'Mafé bœuf', price: 15.5, desc: 'Sauce arachide, riz' },
+      { name: 'Thiéboudienne (riz au poisson)', price: 15, desc: '' },
+      { name: 'Yassa poulet', price: 14, desc: 'Sauce oignons citron, riz' },
+      { name: 'Alloco (bananes plantains frites)', price: 6.5, desc: '' },
+      { name: 'Attiéké poisson braisé', price: 15.5, desc: '' },
+      { name: 'Poulet braisé (poulet DG)', price: 16, desc: 'Bananes plantains, légumes' },
+      { name: 'Riz gras', price: 13.5, desc: 'Riz au gras, sauce tomate, viande' },
+      { name: 'Sauce graine riz', price: 14.5, desc: '' },
+      { name: 'Kedjenou de poulet', price: 15, desc: 'Mijoté aux légumes' },
+      { name: 'Foutou sauce claire', price: 14.5, desc: '' }
+    ],
+    dessert: [
+      { name: "Gâteau à l'ananas", price: 4.5, desc: '' },
+      { name: 'Beignets sucrés', price: 4, desc: '' }
+    ],
+    boisson: [
+      { name: 'Bissap (hibiscus)', price: 3.5, desc: '' },
+      { name: 'Gingembre maison', price: 3.5, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' }
+    ]
+  },
+  'Poisson & Fruits de mer': {
+    entree: [
+      { name: 'Soupe de poisson', price: 7.5, desc: '' },
+      { name: 'Croquettes de crevettes grises (2 pcs)', price: 8, desc: '' },
+      { name: 'Carpaccio de saumon', price: 10.5, desc: '' },
+      { name: 'Calamars frits', price: 9.5, desc: '' },
+      { name: 'Plateau de moules marinière (mise en bouche)', price: 8, desc: '' }
+    ],
+    plat: [
+      { name: 'Fish & chips (cabillaud)', price: 15.5, desc: '' },
+      { name: 'Moules marinière frites', price: 19.5, desc: '' },
+      { name: 'Moules à la crème frites', price: 20.5, desc: '' },
+      { name: 'Cabillaud grillé légumes', price: 18.5, desc: '' },
+      { name: 'Saumon grillé légumes', price: 19, desc: '' },
+      { name: 'Sole meunière', price: 24, desc: '' },
+      { name: 'Waterzooi de poisson', price: 19.5, desc: '' },
+      { name: 'Plateau de fruits de mer (1 pers.)', price: 32, desc: '' },
+      { name: 'Paella de fruits de mer', price: 19.5, desc: '' },
+      { name: "Scampis à l'ail", price: 21, desc: '' },
+      { name: 'Croquettes de crevettes grises, frites', price: 16.5, desc: '' }
+    ],
+    dessert: [
+      { name: 'Tarte au riz', price: 3.5, desc: '' },
+      { name: 'Mousse au chocolat', price: 5, desc: '' }
+    ],
+    boisson: [
+      { name: 'Vin blanc (verre)', price: 5.5, desc: '' },
+      { name: 'Bière blanche', price: 4, desc: '' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Eau plate 50cl', price: 2, desc: '' }
+    ]
   }
 };
 
@@ -1157,7 +1491,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['shrimp tempura', 'tempura crevette', 'tempura'], image: 'https://images.unsplash.com/photo-1579887829114-282b4fa31072?w=300&q=80' },
   { keywords: ['edamame'], image: 'https://images.unsplash.com/photo-1649257171206-37625b1f3b2f?w=300&q=80' },
   { keywords: ['satay'], image: 'https://images.unsplash.com/photo-1772855386828-a18ff9a12584?w=300&q=80' },
-  { keywords: ['pad thai'], image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80' },
+  { keywords: ['pad thai', 'pad thaï'], image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80' },
   { keywords: ['fried rice', 'riz cantonais', 'riz sauté'], image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80' },
   { keywords: ['teriyaki'], image: 'https://images.unsplash.com/photo-1609183480237-ccbb2d7c5772?w=300&q=80' },
   { keywords: ['sweet & sour', 'general tao', 'bœuf aux oignons', 'boeuf aux oignons'], image: 'https://images.unsplash.com/photo-1664138788119-bd4f073259d5?w=300&q=80' },
@@ -1681,6 +2015,7 @@ const ITEM_IMAGE_OVERRIDES = {
   'assiette végétarienne grillée': U('1512621776951-a57141f2eefd'),
   'poulet grillé légumes vapeur': U('1517686469429-8bdb88b9f907'),
   'beignets de banane': U('1570727624862-3008fe67a6be'),
+  'beignets sucrés': U('1570727624862-3008fe67a6be'),
   'petit milkshake chocolat': U('1619158403521-ed9795026d47'),
   'tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
   'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
