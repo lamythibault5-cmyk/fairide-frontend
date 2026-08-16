@@ -638,9 +638,15 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .food-catch-best { font-weight: 700; font-size: 11px; color: var(--gold-deep); }
 .food-catch-score { font-weight: 700; font-size: 12px; color: var(--ink); }
 .food-catch-level { font-weight: 600; color: var(--ink-soft); }
-.food-catch-field { position: relative; background: var(--cream-dim); border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+.food-catch-field {
+  position: relative; background: var(--cream-dim); border-radius: 10px; overflow: hidden; border: 1px solid var(--line);
+  touch-action: none; cursor: pointer;
+}
 .food-catch-item { position: absolute; font-size: 20px; line-height: 1; user-select: none; }
-.food-catch-basket { position: absolute; bottom: 4px; font-size: 24px; line-height: 1; text-align: center; user-select: none; }
+.food-catch-basket {
+  position: absolute; bottom: 4px; font-size: 24px; line-height: 1; text-align: center; user-select: none;
+  transition: left .08s linear; will-change: left;
+}
 .food-catch-lost {
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   background: rgba(22,35,58,0.72); color: #fff; font-weight: 700; font-size: 13px; text-align: center; line-height: 1.5;

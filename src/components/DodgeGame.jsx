@@ -40,6 +40,7 @@ export default function DodgeGame() {
   const nextIdRef = useRef(0);
   const ticksSinceSpawnRef = useRef(0);
   const lostMsgTimeoutRef = useRef(null);
+  const fieldRef = useRef(null);
 
   function loseRound() {
     if (scoreRef.current > bestScoreRef.current) {
@@ -97,12 +98,12 @@ export default function DodgeGame() {
     if (lostMsgTimeoutRef.current) clearTimeout(lostMsgTimeoutRef.current);
   }, []);
 
-  function move(dir) {
-    setRiderX((x) => {
-      const next = Math.max(0, Math.min(WIDTH - RIDER_WIDTH, x + dir * 16));
-      riderXRef.current = next;
-      return next;
-    });
+  function followPointer(e) {
+    if (status !== 'playing' || !fieldRef.current) return;
+    const rect = fieldRef.current.getBoundingClientRect();
+    const next = Math.max(0, Math.min(WIDTH - RIDER_WIDTH, e.clientX - rect.left - RIDER_WIDTH / 2));
+    riderXRef.current = next;
+    setRiderX(next);
   }
 
   function startGame() {
@@ -122,7 +123,13 @@ export default function DodgeGame() {
     <div className="food-catch-game">
       <div className="food-catch-best">🥇 Meilleur : {bestScore}</div>
       <div className="food-catch-score">🏆 {score} <span className="food-catch-level">· Niv. {levelForScore(score) + 1}</span></div>
-      <div className="food-catch-field" style={{ width: WIDTH, height: HEIGHT }}>
+      <div
+        ref={fieldRef}
+        className="food-catch-field"
+        style={{ width: WIDTH, height: HEIGHT }}
+        onPointerDown={followPointer}
+        onPointerMove={followPointer}
+      >
         {items.map((it) => (
           <span key={it.id} className="food-catch-item" style={{ left: it.x, top: it.y }}>{it.emoji}</span>
         ))}
@@ -145,11 +152,7 @@ export default function DodgeGame() {
       </div>
       <div className="food-catch-controls">
         {status === 'playing' && (
-          <>
-            <button type="button" onClick={() => move(-1)} aria-label="Déplacer à gauche">◀️</button>
-            <button type="button" onClick={pauseGame} aria-label="Mettre en pause">⏸️</button>
-            <button type="button" onClick={() => move(1)} aria-label="Déplacer à droite">▶️</button>
-          </>
+          <button type="button" onClick={pauseGame} aria-label="Mettre en pause">⏸️ Pause</button>
         )}
       </div>
     </div>
