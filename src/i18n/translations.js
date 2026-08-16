@@ -100,7 +100,11 @@ export const translations = {
       empty: 'Aucun restaurant pour le moment.',
       newBadge: 'Nouveau',
       dishesCount: '{count} plats',
-      addFavorite: 'Ajouter aux favoris'
+      addFavorite: 'Ajouter aux favoris',
+      sectionNearby: 'Autour de vous',
+      sectionOffers: 'Offres',
+      sectionDiscover: 'À découvrir',
+      sectionGrocery: 'Supermarchés'
     },
     map: {
       home: 'Chez toi',
@@ -546,7 +550,11 @@ export const translations = {
       empty: 'No restaurants for now.',
       newBadge: 'New',
       dishesCount: '{count} dishes',
-      addFavorite: 'Add to favorites'
+      addFavorite: 'Add to favorites',
+      sectionNearby: 'Near you',
+      sectionOffers: 'Offers',
+      sectionDiscover: 'Discover',
+      sectionGrocery: 'Grocery stores'
     },
     map: {
       home: 'Your home',
@@ -992,7 +1000,11 @@ export const translations = {
       empty: 'Nog geen restaurants.',
       newBadge: 'Nieuw',
       dishesCount: '{count} gerechten',
-      addFavorite: 'Toevoegen aan favorieten'
+      addFavorite: 'Toevoegen aan favorieten',
+      sectionNearby: 'Bij jou in de buurt',
+      sectionOffers: 'Aanbiedingen',
+      sectionDiscover: 'Ontdekken',
+      sectionGrocery: 'Supermarkten'
     },
     map: {
       home: 'Bij jou thuis',

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -6,8 +6,14 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
-import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, restaurantTypeLabel } from '../../menuCategories';
+import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
+
+// Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
+// (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
+const GROCERY_TYPES = ['Supermarché', 'Night Shop', 'Boulangerie', 'Boucherie'];
+const DISCOVER_RADIUS_KM = 10;
+const DISCOVER_MAX = 8;
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
 // à l'inscription contre la liste officielle des 19 communes (comparaison insensible à la casse/aux accents).
@@ -21,12 +27,59 @@ function matchCommune(addressCity) {
   return COMMUNES.find((c) => normalizeCommune(c) === target) || null;
 }
 
+// Priorité : la promo panier (toute la commande) si active, sinon la première promo trouvée sur un
+// plat du menu — juste pour donner un aperçu concret de l'offre directement sur la carte du commerce.
+function offerLabelFor(r) {
+  if (r.activeCartPromo?.label) return r.activeCartPromo.label;
+  const itemPromo = (r.menu || []).find((i) => i.activePromo)?.activePromo;
+  return itemPromo?.label || null;
+}
+
+function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
+  const offerLabel = offerLabelFor(r);
+  return (
+    <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
+      <button onClick={(e) => onToggleFavorite(e, r.id)} className="rest-card-fav" title={t('restaurantList.addFavorite')}>
+        {isFavorite ? '❤️' : '🤍'}
+      </button>
+      {offerLabel && <span className="promo-badge">🏷️ {offerLabel}</span>}
+      {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
+      <div className="pill-row">
+        <span className="pill teal">{r.commune}</span>
+        {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
+      </div>
+      <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>
+      <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
+        <StarsDisplay value={r.rating} />
+        <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
+      </div>
+      <p className="small rest-card-desc">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
+      <span className="small rest-card-dishes">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
+    </Link>
+  );
+}
+
+function Section({ title, icon, list, favoriteIds, onToggleFavorite, t }) {
+  if (list.length === 0) return null;
+  return (
+    <div style={{ marginBottom: 24 }}>
+      <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
+      <div className="rest-grid">
+        {list.map((r) => (
+          <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function RestaurantList() {
   const { token, user } = useAuth();
   const { t } = useLanguage();
   const homeCommune = matchCommune(user?.addressCity);
   const [restaurants, setRestaurants] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
+  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [commune, setCommune] = useState('');
@@ -37,6 +90,7 @@ export default function RestaurantList() {
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
     api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+    api('/orders/mine', { token }).then((orders) => setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId)))).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -59,6 +113,8 @@ export default function RestaurantList() {
 
   const cuisineOptions = [{ value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') }, ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))];
 
+  const hasActiveFilter = !!(search || cuisine || commune);
+
   const list = restaurants
     .filter((r) => {
       if (commune && r.commune !== commune) return false;
@@ -73,6 +129,22 @@ export default function RestaurantList() {
       if (!homeCommune || commune) return 0;
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
     });
+
+  // Page d'accueil "par sections" (façon Uber Eats/Deliveroo) affichée uniquement sans filtre actif —
+  // dès qu'on cherche/filtre, on retombe sur la liste plate ci-dessus, plus adaptée à une recherche.
+  const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
+  const groceryList = restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine));
+  const nearbyList = homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : [];
+  const offersList = restaurants.filter((r) => r.hasPromo);
+  const discoverList = useMemo(() => {
+    if (!user?.lat || !user?.lng) return [];
+    const eligible = nonGrocery.filter((r) => (
+      !orderedRestaurantIds.has(r.id) && r.lat && r.lng &&
+      haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM
+    ));
+    return [...eligible].sort(() => Math.random() - 0.5).slice(0, DISCOVER_MAX);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurants, orderedRestaurantIds, user?.lat, user?.lng]);
 
   return (
     <div>
@@ -113,45 +185,38 @@ export default function RestaurantList() {
         <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>{t('restaurantList.viewList')}</div>
         <div className={`chip${view === 'map' ? ' active' : ''}`} onClick={() => setView('map')}>{t('restaurantList.viewMap')}</div>
       </div>
-      {!loading && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
+      {!loading && hasActiveFilter && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
       {loading && <SkeletonCards count={4} />}
       {!loading && view === 'map' && (
         <div className="card">
           <RestaurantsMap
-            restaurants={list}
+            restaurants={hasActiveFilter ? list : restaurants}
             userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
           />
         </div>
       )}
-      {!loading && view === 'list' && (
-      <div className="rest-grid">
-        {list.map((r) => (
-          <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
-            <button
-              onClick={(e) => toggleFavorite(e, r.id)}
-              className="rest-card-fav"
-              title={t('restaurantList.addFavorite')}
-            >
-              {favoriteIds.has(r.id) ? '❤️' : '🤍'}
-            </button>
-            {r.hasPromo && <span className="promo-badge">🏷️ Promo</span>}
-            {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
-            <div className="pill-row">
-              <span className="pill teal">{r.commune}</span>
-              {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
-            </div>
-            <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>
-            <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
-              <StarsDisplay value={r.rating} />
-              <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
-            </div>
-            <p className="small rest-card-desc">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
-            <span className="small rest-card-dishes">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
-          </Link>
-        ))}
-      </div>
+      {!loading && view === 'list' && hasActiveFilter && (
+        <div className="rest-grid">
+          {list.map((r) => (
+            <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
+          ))}
+        </div>
       )}
-      {!loading && list.length === 0 && (
+      {!loading && view === 'list' && !hasActiveFilter && (
+        <>
+          <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
+            <div className="empty">{t('restaurantList.empty')}</div>
+          )}
+        </>
+      )}
+      {!loading && hasActiveFilter && list.length === 0 && (
+        <div className="empty">{t('restaurantList.empty')}</div>
+      )}
+      {!loading && restaurants.length === 0 && (
         <div className="empty">{t('restaurantList.empty')}</div>
       )}
     </div>
