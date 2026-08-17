@@ -13,7 +13,7 @@ import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 // commun à toutes les sous-pages : formulaire de création, bannières (validation/abonnement/Stripe),
 // et la carte "Aujourd'hui" de la colonne de droite.
 export default function DashboardLayout() {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
   const [myRestos, setMyRestos] = useState(null);
@@ -25,6 +25,13 @@ export default function DashboardLayout() {
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
   const [name, setName] = useState('');
+  const [legalName, setLegalName] = useState('');
+  const [companyNumber, setCompanyNumber] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  // Pré-rempli avec le titulaire du compte (cas le plus fréquent) — modifiable si le responsable légal
+  // du commerce est quelqu'un d'autre (ex. un employé crée le compte pour le compte du gérant), pour
+  // ne pas reposer une question dont on connaît déjà la réponse dans l'immense majorité des cas.
+  const [responsibleName, setResponsibleName] = useState('');
   const [commune, setCommune] = useState(COMMUNES[0]);
   const [neighborhood, setNeighborhood] = useState('');
   const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
@@ -77,6 +84,10 @@ export default function DashboardLayout() {
     const clock = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(clock);
   }, []);
+
+  useEffect(() => {
+    if (user?.name) setResponsibleName((prev) => prev || user.name);
+  }, [user]);
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then((list) => {
@@ -134,6 +145,10 @@ export default function DashboardLayout() {
 
   async function createResto() {
     if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
+    if (!legalName.trim() || !companyNumber.trim() || !vatNumber.trim() || !responsibleName.trim()) {
+      toast("Donne les informations légales de ton commerce (nom légal, n° d'entreprise, n° TVA, responsable) — obligatoires pour la vérification de conformité.");
+      return;
+    }
     if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim()) {
       toast("Donne l'adresse complète du restaurant (rue, numéro, code postal) pour les livreurs et la carte.");
       return;
@@ -147,13 +162,15 @@ export default function DashboardLayout() {
       const r = await api('/restaurants', {
         method: 'POST', token,
         body: {
-          name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
+          name: name.trim(), legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(),
+          commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref
         }
       });
       setMyRestos((prev) => [...prev, r]);
-      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
+      setName(''); setLegalName(''); setCompanyNumber(''); setVatNumber('');
+      setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
       pickResto(r.id);
@@ -262,7 +279,7 @@ export default function DashboardLayout() {
           </p>
 
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Identité</h4>
-          <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
+          <div className="field"><label>Nom du commerce</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
           <div className="field">
             <label>Type de commerce</label>
             <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
@@ -272,6 +289,22 @@ export default function DashboardLayout() {
           {cuisine === 'Autre' && (
             <div className="field"><label>Précise le type</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
           )}
+
+          <div className="divider" />
+          <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales</h4>
+          <p className="small" style={{ margin: '0 0 10px' }}>Obligatoire pour la vérification de conformité de ton commerce.</p>
+          <div className="field"><label>Nom légal / entreprise</label><input value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" /></div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label>N° d'entreprise (BCE)</label>
+              <input value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label>N° TVA</label>
+              <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+            </div>
+          </div>
+          <div className="field"><label>Responsable</label><input value={responsibleName} onChange={(e) => setResponsibleName(e.target.value)} placeholder="Nom du responsable légal" /></div>
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Adresse (pour les livreurs et la carte)</h4>

@@ -20,6 +20,10 @@ export default function EditPage() {
   const toast = useToast();
   const { restaurant, drivers, restoId, loadDashboard } = useOutletContext();
 
+  const [editLegalName, setEditLegalName] = useState('');
+  const [editCompanyNumber, setEditCompanyNumber] = useState('');
+  const [editVatNumber, setEditVatNumber] = useState('');
+  const [editResponsibleName, setEditResponsibleName] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
@@ -55,6 +59,10 @@ export default function EditPage() {
 
   useEffect(() => {
     if (!restaurant) return;
+    setEditLegalName(restaurant.legalName || '');
+    setEditCompanyNumber(restaurant.companyNumber || '');
+    setEditVatNumber(restaurant.vatNumber || '');
+    setEditResponsibleName(restaurant.responsibleName || '');
     setEditDesc(restaurant.desc || '');
     setEditCommune(restaurant.commune || COMMUNES[0]);
     setEditNeighborhood(restaurant.neighborhood || '');
@@ -67,6 +75,10 @@ export default function EditPage() {
   }, [restaurant]);
 
   async function saveRestoInfo() {
+    if (!editLegalName.trim() || !editCompanyNumber.trim() || !editVatNumber.trim() || !editResponsibleName.trim()) {
+      toast("Les informations légales du commerce sont requises (nom légal, n° d'entreprise, n° TVA, responsable).");
+      return;
+    }
     if (!editHours || !Object.values(editHours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
       toast('Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.');
       return;
@@ -76,6 +88,7 @@ export default function EditPage() {
       await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
         body: {
+          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(),
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), hours: editHours, open: editOpenFlag
@@ -210,6 +223,22 @@ export default function EditPage() {
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
+        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales</h4>
+        <div className="field"><label>Nom légal / entreprise</label><input value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" /></div>
+        <div className="row" style={{ gap: 8 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label>N° d'entreprise (BCE)</label>
+            <input value={editCompanyNumber} onChange={(e) => setEditCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label>N° TVA</label>
+            <input value={editVatNumber} onChange={(e) => setEditVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+          </div>
+        </div>
+        <div className="field"><label>Responsable</label><input value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder="Nom du responsable légal" /></div>
+
+        <div className="divider" />
+        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Adresse</h4>
         <div className="field">
           <label>Commune</label>
           <select value={editCommune} onChange={(e) => setEditCommune(e.target.value)}>
