@@ -7,10 +7,12 @@ import { useToast } from '../context/ToastContext';
 // Galerie personnelle du restaurant : upload depuis la pellicule/galerie du téléphone ou le disque de
 // l'ordi/tablette (comportement natif de <input type="file" accept="image/*">, rien à coder de plus
 // pour couvrir les deux cas), puis réutilisable sur n'importe quel plat sans re-uploader.
-// currentImageUrl : photo actuellement utilisée par le plat qu'on est en train de modifier (si vide,
-// rien à proposer de garder). Si elle n'est pas déjà dans la galerie, on propose de l'y archiver avant
-// de basculer sur la nouvelle photo choisie, pour ne pas la perdre.
-export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect, onCancel }) {
+// currentImageUrl : photo actuellement utilisée par le plat (ou la photo d'accueil) qu'on est en train de
+// modifier (si vide, rien à proposer de garder). Si elle n'est pas déjà dans la galerie, on propose de l'y
+// archiver avant de basculer sur la nouvelle photo choisie, pour ne pas la perdre.
+// suggestions : pool de photos pré-sélectionnées (ex: par type de commerce pour la photo d'accueil) affiché
+// dans une section à part au-dessus de la galerie perso — pas de suppression possible sur ces vignettes.
+export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect, onCancel, suggestions = [], title = 'Ma galerie photos', suggestionsTitle = 'Suggestions' }) {
   const { token } = useAuth();
   const toast = useToast();
   const [images, setImages] = useState(null);
@@ -109,9 +111,26 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
   return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Ma galerie photos</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{title}</h3>
+
+        {suggestions.length > 0 && (
+          <>
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{suggestionsTitle}</h4>
+            <div className="gallery-picker-grid" style={{ marginBottom: 16 }}>
+              {suggestions.map((url) => (
+                <div key={url} className="gallery-picker-tile">
+                  <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(url)} title="Utiliser cette photo">
+                    <img src={url} alt="" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="divider" />
+          </>
+        )}
+
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Ajoute des photos depuis ton téléphone (pellicule ou appareil photo) ou ton ordinateur, puis choisis-en une pour ce plat.
+          Ajoute des photos depuis ton téléphone (pellicule ou appareil photo) ou ton ordinateur, puis choisis-en une.
         </p>
 
         <input

@@ -48,6 +48,9 @@ export default function MenuPage() {
   const importFileRef = useRef(null);
 
   const [reorderMode, setReorderMode] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
   // l'aller-retour visible (retour à l'ancien ordre puis saut au nouveau) entre le lâcher et le rechargement.
   const [localOrder, setLocalOrder] = useState({});
@@ -61,6 +64,36 @@ export default function MenuPage() {
   function toggleReorderMode() {
     setReorderMode((prev) => !prev);
     setLocalOrder({});
+  }
+
+  function toggleSelectMode() {
+    setSelectMode((prev) => !prev);
+    setSelectedIds(new Set());
+  }
+
+  function toggleItemSelected(itemId) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      return next;
+    });
+  }
+
+  async function bulkDeleteSelected() {
+    if (!selectedIds.size) return;
+    if (!window.confirm(`Supprimer ${selectedIds.size} plat(s) sélectionné(s) ? Cette action est irréversible.`)) return;
+    setBulkDeleting(true);
+    try {
+      await api(`/restaurants/${restoId}/menu/bulk-delete`, { method: 'POST', token, body: { itemIds: Array.from(selectedIds) } });
+      toast(`${selectedIds.size} plat(s) supprimé(s).`);
+      setSelectedIds(new Set());
+      setSelectMode(false);
+      loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setBulkDeleting(false);
+    }
   }
 
   async function handleDragEnd(section, items, event) {
@@ -351,21 +384,42 @@ export default function MenuPage() {
       )}
 
       <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
           {restaurant.menu.length > 0 && (
-            reorderMode ? (
-              <button type="button" className="btn-teal" style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleReorderMode}>✅ Terminé</button>
-            ) : (
-              <button type="button" className="btn-ghost" style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleReorderMode}>↕️ Déplacer les items</button>
-            )
+            <div className="row" style={{ gap: 6, flexShrink: 0 }}>
+              {selectMode ? (
+                <button type="button" className="btn-teal" style={{ padding: '4px 12px', fontSize: 12 }} onClick={toggleSelectMode}>✅ Terminé</button>
+              ) : (
+                !reorderMode && (
+                  <button type="button" className="btn-ghost" style={{ padding: '4px 12px', fontSize: 12 }} onClick={toggleSelectMode}>☑️ Sélectionner</button>
+                )
+              )}
+              {reorderMode ? (
+                <button type="button" className="btn-teal" style={{ padding: '4px 12px', fontSize: 12 }} onClick={toggleReorderMode}>✅ Terminé</button>
+              ) : (
+                !selectMode && (
+                  <button type="button" className="btn-ghost" style={{ padding: '4px 12px', fontSize: 12 }} onClick={toggleReorderMode}>↕️ Déplacer les items</button>
+                )
+              )}
+            </div>
           )}
         </div>
         <p className="small" style={{ margin: '0 0 12px' }}>
           {reorderMode
             ? 'Glisse un plat par sa poignée ⠿ (souris ou doigt) pour changer son ordre dans sa section, puis clique sur "Terminé".'
+            : selectMode
+            ? 'Clique sur les plats à sélectionner, puis supprime-les en une fois.'
             : 'Exactement ce que voient tes clients. Clique sur un plat pour le modifier, sur ✏️ pour renommer une section, et ajoute une section pour tes formules, menus enfants, etc.'}
         </p>
+        {selectMode && (
+          <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
+            <span className="small">{selectedIds.size} plat(s) sélectionné(s)</span>
+            <button type="button" className="btn-danger-ghost" disabled={!selectedIds.size || bulkDeleting} onClick={bulkDeleteSelected}>
+              {bulkDeleting ? '...' : '🗑️ Supprimer la sélection'}
+            </button>
+          </div>
+        )}
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
         )}
@@ -389,7 +443,7 @@ export default function MenuPage() {
                     <span>{categoryLabel(section.name, t)}</span>
                   )}
                 </div>
-                {editingSectionId !== section.id && !reorderMode && (
+                {editingSectionId !== section.id && !reorderMode && !selectMode && (
                   <div className="row" style={{ gap: 4 }}>
                     <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
                     <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
@@ -404,11 +458,12 @@ export default function MenuPage() {
                         key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
                         allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
                         sections={restaurant.sections || []} reorderMode={reorderMode} restoId={restoId}
+                        selectMode={selectMode} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
                       />
                     ))}
                   </SortableContext>
                 </DndContext>
-                {!reorderMode && (addSectionId === section.id ? (
+                {!reorderMode && !selectMode && (addSectionId === section.id ? (
                   <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
                     <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
@@ -445,7 +500,7 @@ export default function MenuPage() {
             </div>
           );
         })}
-        {!reorderMode && (creatingSection ? (
+        {!reorderMode && !selectMode && (creatingSection ? (
           <div className="row" style={{ gap: 8 }}>
             <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder="Menu enfants, Formules midi..." />
             <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>Créer</button>

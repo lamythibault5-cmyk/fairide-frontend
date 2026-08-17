@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES, fullTemplateItems } from '../../menuCategories';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
+import GalleryPickerModal from '../../components/GalleryPickerModal';
 
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
@@ -32,6 +33,8 @@ export default function EditPage() {
   const [editAddressNumber, setEditAddressNumber] = useState('');
   const [editAddressPostalCode, setEditAddressPostalCode] = useState('');
   const [editCover, setEditCover] = useState('');
+  const [coverPickerOpen, setCoverPickerOpen] = useState(false);
+  const [coverSuggestions, setCoverSuggestions] = useState([]);
   const [editHours, setEditHours] = useState(null);
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
@@ -108,6 +111,16 @@ export default function EditPage() {
     } finally {
       setSavingResto(false);
     }
+  }
+
+  async function openCoverPicker() {
+    try {
+      const r = await api(`/restaurants/${restoId}/cover-suggestions`, { token });
+      setCoverSuggestions(r.images || []);
+    } catch {
+      setCoverSuggestions([]);
+    }
+    setCoverPickerOpen(true);
   }
 
   function openCuisineChange() {
@@ -268,7 +281,24 @@ export default function EditPage() {
           </div>
         </div>
         <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
-        <div className="field"><label>Image de couverture (URL)</label><input value={editCover} onChange={(e) => setEditCover(e.target.value)} placeholder="https://..." /></div>
+        <div className="field">
+          <label>Photo d'accueil (visible dans la liste et en haut de ta page)</label>
+          <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            {editCover && <img src={editCover} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />}
+            <button type="button" className="btn-ghost" onClick={openCoverPicker}>📷 Choisir une photo</button>
+          </div>
+        </div>
+        {coverPickerOpen && (
+          <GalleryPickerModal
+            restoId={restoId}
+            currentImageUrl={editCover}
+            suggestions={coverSuggestions}
+            title="Photo d'accueil"
+            suggestionsTitle={`Suggestions pour ${restaurant.cuisine}`}
+            onSelect={(url) => { setEditCover(url); setCoverPickerOpen(false); }}
+            onCancel={() => setCoverPickerOpen(false)}
+          />
+        )}
         <label>Horaires d'ouverture</label>
         <OpeningHoursEditor value={editHours} onChange={setEditHours} />
         <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
