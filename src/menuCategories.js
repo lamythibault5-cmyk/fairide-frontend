@@ -2295,7 +2295,40 @@ const ITEM_IMAGE_OVERRIDES = {
   'mignonnettes': U('1587920710219-f6f9804dc10d'),
 
   // --- City Burger : condiment sans mot-clé dédié, retombait sur la photo générique "Entrées" ---
-  'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752')
+  'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752'),
+
+  // --- Plats retombant sur la photo générique de catégorie faute de mot-clé dédié — chaque photo
+  // vérifiée individuellement (téléchargée puis inspectée) pour confirmer qu'elle représente bien
+  // le plat précis, pas juste "un plat" de la même cuisine. Quatre plats n'ont pas trouvé de photo
+  // fiable malgré la recherche (naan au fromage, chè, crêpe sucre nature, foutou sauce claire,
+  // bún bò huế) — laissés sur le générique plutôt que d'afficher une photo trompeuse. ---
+  "bœuf sauté à l'ail et poivre": U('1715963301679-993721387552'),
+  'samoussas agneau (3 pcs)': U('1714799263348-41c7245cd714'),
+  'papadums (assortiment)': U('1760047536700-0868c9525b0f'),
+  'naan nature': U('1640625314547-aee9a7696589'),
+  "naan à l'ail": U('1756821752957-00bfcadc3748'),
+  'biryani agneau': U('1631515243349-e0cb75fb8d3a'),
+  'saag paneer': U('1767114915936-745dd372f1d8'),
+  'korma agneau': U('1603894584373-5ac82b2ae398'),
+  'gulab jamun (2 pcs)': U('1593701461250-d7b22dfd3a77'),
+  'lassi mangue': U('1623065422902-30a2d299bbe4'),
+  'lassi salé': U('1630409346699-79481a79db52'),
+  'bánh mì tofu': U('1710532774170-9844f837ae54'),
+  'dim sum vapeur mixte (6 pcs)': U('1641928944645-0435da9e6e9d'),
+  'porc aigre-doux': U('1775039983749-aa6003c8ecf9'),
+  'tofu mapo': U('1769065647078-f067eb768035'),
+  'coupe glacée gourmande': U('1635491231222-8e524584da52'),
+  'crêpe nutella': U('1515467837915-15c4777ba46a'),
+  'crêpe nutella banane chantilly': U('1734056650036-7002ede7b8f8'),
+  'porridge fruits rouges': U('1686344234276-dc3ac6f284ff'),
+  'omelette fromage jambon': U('1630684789447-2484443c6c1b'),
+  'formule brunch complète': U('1716667282961-057120e35183'),
+  'waffle sucre': U('1562376552-0d160a2f238d'),
+  'gingembre maison': U('1631029098074-be99eb2b425c'),
+  'calamars frits': U('1763467940825-d067fb3baf22'),
+  'sole meunière': U('1763867641066-cd26a5f11105'),
+  'paella de fruits de mer': U('1779119390078-16f56e4c35bc'),
+  "scampis à l'ail": U('1758972572427-fc3d4193bbd2')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats

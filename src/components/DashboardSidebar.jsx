@@ -13,6 +13,7 @@ function navItemsForRole(role, t) {
       { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants') },
       { to: '/favorites', icon: '❤️', label: t('nav.favorites') },
       { to: '/orders', icon: '📦', label: t('nav.orders') },
+      { to: '/invoices', icon: '📄', label: 'Factures' },
       { to: '/map', icon: '🗺️', label: 'Carte' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
@@ -25,6 +26,7 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
       { to: '/dashboard/map', icon: '🗺️', label: 'Carte' },
+      { to: '/dashboard/invoices', icon: '📄', label: 'Factures' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -34,6 +36,7 @@ function navItemsForRole(role, t) {
       { to: '/driver/map', icon: '🗺️', label: 'Carte' },
       { to: '/driver/reviews', icon: '⭐', label: 'Avis' },
       { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
+      { to: '/driver/invoices', icon: '📄', label: 'Factures' },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
