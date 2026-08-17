@@ -20,6 +20,7 @@ export default function EditPage() {
   const toast = useToast();
   const { restaurant, drivers, restoId, loadDashboard } = useOutletContext();
 
+  const [editName, setEditName] = useState('');
   const [editLegalName, setEditLegalName] = useState('');
   const [editCompanyNumber, setEditCompanyNumber] = useState('');
   const [editVatNumber, setEditVatNumber] = useState('');
@@ -59,6 +60,7 @@ export default function EditPage() {
 
   useEffect(() => {
     if (!restaurant) return;
+    setEditName(restaurant.name || '');
     setEditLegalName(restaurant.legalName || '');
     setEditCompanyNumber(restaurant.companyNumber || '');
     setEditVatNumber(restaurant.vatNumber || '');
@@ -75,6 +77,10 @@ export default function EditPage() {
   }, [restaurant]);
 
   async function saveRestoInfo() {
+    if (!editName.trim()) {
+      toast('Le nom du restaurant est requis.');
+      return;
+    }
     if (!editLegalName.trim() || !editCompanyNumber.trim() || !editVatNumber.trim() || !editResponsibleName.trim()) {
       toast("Les informations légales du commerce sont requises (nom légal, n° d'entreprise, n° TVA, responsable).");
       return;
@@ -88,6 +94,7 @@ export default function EditPage() {
       await api(`/restaurants/${restoId}`, {
         method: 'PATCH', token,
         body: {
+          name: editName.trim(),
           legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(),
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
@@ -223,6 +230,9 @@ export default function EditPage() {
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
+        <div className="field"><label>Nom du restaurant (affiché aux clients)</label><input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
+
+        <div className="divider" />
         <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales</h4>
         <div className="field"><label>Nom légal / entreprise</label><input value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" /></div>
         <div className="row" style={{ gap: 8 }}>
