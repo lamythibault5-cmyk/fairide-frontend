@@ -51,7 +51,15 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     if (!singleMarker) {
       mapRef.current.on('click', () => setSelected(null));
     }
+    // Leaflet mesure la taille de son conteneur au moment de l'init — si celle-ci change ensuite
+    // (police qui finit de charger, image de couverture qui pousse la mise en page, carte affichée
+    // dans un onglet/section pas encore visible...), les tuiles restent calées sur l'ancienne largeur
+    // et une bande grise apparaît. Un ResizeObserver + invalidateSize() corrige ça à chaque changement
+    // réel de taille, plutôt qu'un seul recalcul au montage qui rate les cas ci-dessus.
+    const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    resizeObserver.observe(containerRef.current);
     return () => {
+      resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
     };

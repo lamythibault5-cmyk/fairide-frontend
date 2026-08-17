@@ -47,7 +47,12 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       maxZoom: 19
     }).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+    // Voir RestaurantsMap.jsx : corrige la bande grise Leaflet quand le conteneur change de taille
+    // après l'initialisation (police, image, mise en page).
+    const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    resizeObserver.observe(containerRef.current);
     return () => {
+      resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
     };
