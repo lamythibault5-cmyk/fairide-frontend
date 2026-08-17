@@ -67,10 +67,10 @@ export default function DashboardSidebar() {
       <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
-          <span className="dashboard-profile-name">{user?.name}</span>
+          <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
           <span className="dashboard-profile-role">{role}</span>
+          <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
-        <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
       </div>
     </aside>
   );

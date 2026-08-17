@@ -580,10 +580,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--cream);
   display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0;
 }
-.dashboard-profile-info { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+/* Le lien de déconnexion vit maintenant dans cette colonne (pas à côté du nom) : le nom a toute la
+   largeur disponible face au seul avatar, au lieu de se faire écraser par un bouton texte de largeur
+   fixe sur la même ligne — c'est ce qui causait la troncature ("Thib…" pour "Thibault") à la largeur
+   de la sidebar (240px). */
+.dashboard-profile-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
 .dashboard-profile-name { font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dashboard-profile-role { font-size: 11px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .03em; }
-.dashboard-profile-logout { background: none; border: none; color: var(--ink-soft); font-size: 12px; font-weight: 600; cursor: pointer; padding: 4px; text-decoration: underline; flex-shrink: 0; }
+.dashboard-profile-logout { background: none; border: none; color: var(--ink-soft); font-size: 12px; font-weight: 600; cursor: pointer; padding: 3px 0 0; text-decoration: underline; align-self: flex-start; }
 
 .dashboard-main { padding: 24px 28px 40px; min-width: 0; }
 .dashboard-right { padding: 24px 20px 40px 0; }
@@ -606,8 +610,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-nav-link { justify-content: center; padding: 10px 4px; }
   .dashboard-nav-link span:last-child { display: none; }
   .dashboard-profile-card { flex-direction: column; align-items: center; gap: 8px; padding: 14px 0 0; }
+  .dashboard-profile-info { align-items: center; }
   .dashboard-profile-name, .dashboard-profile-role { display: none; }
-  .dashboard-profile-logout { font-size: 0; text-decoration: none; }
+  .dashboard-profile-logout { font-size: 0; text-decoration: none; align-self: center; }
   .dashboard-profile-logout::before { content: '🚪'; font-size: 16px; }
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
