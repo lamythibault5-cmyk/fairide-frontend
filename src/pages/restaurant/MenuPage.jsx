@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { api } from '../../api';
+import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -14,6 +14,7 @@ import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
+import MenuImportReview from '../../components/MenuImportReview';
 
 export default function MenuPage() {
   const { token } = useAuth();
@@ -40,6 +41,11 @@ export default function MenuPage() {
   const [addingClassicDrinks, setAddingClassicDrinks] = useState(false);
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
+
+  const [importing, setImporting] = useState(false);
+  const [importedItems, setImportedItems] = useState(null);
+  const [submittingImport, setSubmittingImport] = useState(false);
+  const importFileRef = useRef(null);
 
   const [reorderMode, setReorderMode] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
@@ -243,6 +249,37 @@ export default function MenuPage() {
     }
   }
 
+  async function handleImportFile(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setImporting(true);
+    setImportedItems(null);
+    try {
+      const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { file, token, fieldName: 'file' });
+      setImportedItems(r.items);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setImporting(false);
+    }
+  }
+
+  async function submitImportedItems(items) {
+    if (!items.length) { toast('Choisis au moins un plat.'); return; }
+    setSubmittingImport(true);
+    try {
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      setImportedItems(null);
+      loadDashboard(restoId);
+      toast(`${items.length} plat(s) ajouté(s) au menu depuis le document importé.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSubmittingImport(false);
+    }
+  }
+
   async function addClassics(list, category, setBusy) {
     const items = missingClassicItems(restaurant.menu, list).map((it) => ({ ...it, category }));
     if (!items.length) { toast('Déjà tous présents dans ton menu.'); return; }
@@ -260,6 +297,33 @@ export default function MenuPage() {
 
   return (
     <div>
+      <div className="card">
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Importer un menu (PDF ou photo)</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>
+          Envoie une carte existante — Fairide la lit et propose les plats à ajouter. Tu relis et corriges avant que rien ne soit ajouté à ton menu.
+        </p>
+        <input
+          ref={importFileRef}
+          type="file"
+          accept="application/pdf,image/*"
+          style={{ display: 'none' }}
+          onChange={handleImportFile}
+        />
+        {!importedItems && (
+          <button type="button" className="btn-teal" disabled={importing} onClick={() => importFileRef.current?.click()}>
+            {importing ? 'Lecture du menu en cours...' : '+ Choisir un fichier'}
+          </button>
+        )}
+        {importedItems && (
+          <MenuImportReview
+            items={importedItems}
+            submitting={submittingImport}
+            onSubmit={submitImportedItems}
+            onCancel={() => setImportedItems(null)}
+          />
+        )}
+      </div>
+
       {restaurant.menu.length === 0 && !startChoiceMade && (
         <div className="card" style={{ border: '2px solid var(--teal)' }}>
           <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
