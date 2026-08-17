@@ -34,6 +34,66 @@ export function statusLabel(status, orderType, t) {
   return STATUS_LABELS_FR[status] || status;
 }
 
+// Étape opérationnelle d'une commande, du point de vue du restaurateur — distincte du statut brut
+// (qui a plus de valeurs) et du type de commande (livraison/emporter/sur place) : ce qui compte ici
+// c'est "qu'est-ce que je dois faire, là, maintenant ?". "attenteLivreur" (prête mais personne pour
+// la récupérer) est isolée de "enLivraison" (prise en charge) car ce sont deux situations très
+// différentes à l'œil — la première mérite d'être surveillée, la seconde est déjà réglée.
+export const ORDER_STAGES = [
+  { key: 'nouveau', label: 'Nouvelle — à traiter', icon: '🆕', defaultColor: '#B5482E' },
+  { key: 'preparation', label: 'En préparation', icon: '👨‍🍳', defaultColor: '#D9A441' },
+  { key: 'attenteLivreur', label: 'Prête — en attente d\'un livreur', icon: '⏳', defaultColor: '#C8722E' },
+  { key: 'pretClient', label: 'Prête — en attente du client', icon: '⏳', defaultColor: '#C8722E' },
+  { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#3B6FA0' },
+  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#2F6F5E' },
+  { key: 'annulee', label: 'Refusée / annulée', icon: '🚫', defaultColor: '#8A8A8A' }
+];
+
+export function orderStageKey(order) {
+  if (order.status === 'refuse' || order.status === 'annule') return 'annulee';
+  if (order.status === 'livre') return 'terminee';
+  if (order.status === 'livraison') return 'enLivraison';
+  if (order.status === 'pret') {
+    if (order.orderType === 'delivery') return order.driverId ? 'enLivraison' : 'attenteLivreur';
+    return 'pretClient';
+  }
+  if (order.status === 'preparation') return 'preparation';
+  return 'nouveau';
+}
+
+// Priorité d'affichage : ce qui demande une action ou une surveillance du restaurateur en premier,
+// ce qui est déjà réglé (terminé/annulé) en dernier — pour qu'il n'ait jamais à chercher dans la liste
+// ce qui compte maintenant, réduisant le risque d'en oublier une.
+const STAGE_PRIORITY = ['nouveau', 'attenteLivreur', 'preparation', 'pretClient', 'enLivraison', 'terminee', 'annulee'];
+export function orderStagePriority(order) {
+  const idx = STAGE_PRIORITY.indexOf(orderStageKey(order));
+  return idx === -1 ? STAGE_PRIORITY.length : idx;
+}
+
+const DEFAULT_STAGE_COLORS = Object.fromEntries(ORDER_STAGES.map((s) => [s.key, s.defaultColor]));
+
+function stageColorsKey(restoId) {
+  return `fairide_order_stage_colors_${restoId}`;
+}
+
+export function loadStageColors(restoId) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(stageColorsKey(restoId)) || '{}');
+    return { ...DEFAULT_STAGE_COLORS, ...saved };
+  } catch {
+    return { ...DEFAULT_STAGE_COLORS };
+  }
+}
+
+export function saveStageColors(restoId, colors) {
+  localStorage.setItem(stageColorsKey(restoId), JSON.stringify(colors));
+}
+
+export function resetStageColors(restoId) {
+  localStorage.removeItem(stageColorsKey(restoId));
+  return { ...DEFAULT_STAGE_COLORS };
+}
+
 // Couleur associée au type de commande, pour que le restaurant repère chaque commande d'un coup d'œil :
 // jaune = livraison classique, bleu = à emporter, violet = sur place, orange = heure programmée (prioritaire sur le type).
 export function orderTypeColor(order) {
