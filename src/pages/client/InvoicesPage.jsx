@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { api } from '../../api';
+import { useEffect, useMemo, useState } from 'react';
+import { api, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -8,28 +8,106 @@ import { SkeletonCards } from '../../components/Skeleton';
 // paiement, voir invoice_creation dans routes/payments.js) — rien à générer/héberger nous-mêmes.
 // Les commandes réglées par solde uniquement (aucun passage par Stripe) n'ont pas de facture Stripe :
 // leur ticket détaillé reste dans l'email de confirmation.
+function isInPeriod(order, period) {
+  const now = new Date();
+  const d = new Date(order.createdAt);
+  if (period === 'week') {
+    const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
+    return d >= weekAgo && d <= now;
+  }
+  if (period === 'month') return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  if (period === 'year') return d.getFullYear() === now.getFullYear();
+  return false;
+}
+
 export default function InvoicesPage() {
   const { token } = useAuth();
   const toast = useToast();
   const [orders, setOrders] = useState(null);
+  const [selected, setSelected] = useState(() => new Set());
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const downloadable = useMemo(() => (orders || []).filter((o) => o.invoiceUrl), [orders]);
+
+  function toggle(id) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectPeriod(period) {
+    setSelected(new Set(downloadable.filter((o) => isInPeriod(o, period)).map((o) => o.id)));
+  }
+
+  async function downloadSelected() {
+    if (selected.size === 0) { toast('Sélectionne au moins une facture.'); return; }
+    setDownloading(true);
+    try {
+      const res = await fetch(`${API_BASE}/orders/invoices/download`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ orderIds: [...selected] })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Échec du téléchargement.');
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'factures-fairide.zip';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   if (!orders) return <SkeletonCards count={3} />;
 
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Mes factures</h2>
+
+      {downloadable.length > 0 && (
+        <div className="card" style={{ marginBottom: 14 }}>
+          <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne une période ou coche des factures individuellement, puis télécharge-les groupées dans un seul fichier.</p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('week')}>Cette semaine</button>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('month')}>Ce mois-ci</button>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('year')}>Cette année</button>
+            <button type="button" className="btn-ghost" onClick={() => setSelected(new Set())}>Tout désélectionner</button>
+          </div>
+          <button type="button" className="btn-teal" disabled={selected.size === 0 || downloading} onClick={downloadSelected}>
+            {downloading ? '...' : `⬇️ Télécharger la sélection (${selected.size})`}
+          </button>
+        </div>
+      )}
+
       {orders.length === 0 && <div className="empty">Aucune commande payée pour l'instant.</div>}
       {orders.map((o) => (
         <div key={o.id} className="card" style={{ marginBottom: 10 }}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <div>
-              <div style={{ fontWeight: 700 }}>{o.restaurantName}</div>
-              <div className="small">{new Date(o.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</div>
+            <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+              {o.invoiceUrl && (
+                <input type="checkbox" style={{ width: 'auto' }} checked={selected.has(o.id)} onChange={() => toggle(o.id)} />
+              )}
+              <div>
+                <div style={{ fontWeight: 700 }}>{o.restaurantName}</div>
+                <div className="small">{new Date(o.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</div>
+              </div>
             </div>
             {o.invoiceUrl ? (
               <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">📄 Voir la facture</a>
