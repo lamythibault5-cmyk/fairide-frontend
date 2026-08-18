@@ -69,8 +69,13 @@ export default function DriverDashboard() {
   }
 
   useEffect(() => {
+    // refreshUser() en plus de load() : contrairement au dashboard restaurateur (qui recharge tout
+    // l'objet restaurant, adminStatus inclus, à chaque poll), le statut d'approbation du livreur vit
+    // sur l'objet user mis en cache depuis la connexion — sans ce refresh périodique, une approbation
+    // admin ne se refléterait ici qu'après une reconnexion manuelle.
     load();
-    const interval = setInterval(load, 15000);
+    refreshUser().catch(() => {});
+    const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
