@@ -26,6 +26,7 @@ import RestaurantPreviewPage from './pages/restaurant/PreviewPage';
 import RestaurantEditPage from './pages/restaurant/EditPage';
 import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
 import RestaurantSubscriptionPage from './pages/restaurant/SubscriptionPage';
+import RestaurantReviewsPage from './pages/restaurant/ReviewsPage';
 import RestaurantMapPage from './pages/restaurant/MapPage';
 import RestaurantInvoicesPage from './pages/restaurant/InvoicesPage';
 import DriverDashboard from './pages/driver/Dashboard';
@@ -62,6 +63,7 @@ export default function App() {
           <Route path="edit" element={<RestaurantEditPage />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
           <Route path="subscription" element={<RestaurantSubscriptionPage />} />
+          <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="map" element={<RestaurantMapPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
         </Route>

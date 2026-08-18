@@ -3,17 +3,13 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { StarsDisplay } from '../../components/Stars';
-import { ORDER_STAGES, loadStageColors, saveStageColors, resetStageColors } from '../../orderStatus';
 
-// Regroupe ce qui concerne le compte plutôt que l'activité du jour : statut d'abonnement (et ses
-// actions), avis clients, et personnalisation des couleurs de commandes — auparavant éparpillé sur
-// toutes les pages (bannière commune) et en haut de "Mes commandes", qui ne devait garder que les
-// commandes elles-mêmes.
+// Statut d'abonnement (et ses actions) — sorti de la bannière commune à toutes les sous-pages pour
+// vivre dans sa propre section, avec sa propre entrée de sidebar.
 export default function SubscriptionPage() {
   const { token } = useAuth();
   const toast = useToast();
-  const { restaurant, reviews, restoId, loadDashboard } = useOutletContext();
+  const { restaurant, restoId, loadDashboard } = useOutletContext();
 
   const [now, setNow] = useState(() => new Date());
   const [subscribing, setSubscribing] = useState(false);
@@ -23,27 +19,10 @@ export default function SubscriptionPage() {
   const [cancelingSub, setCancelingSub] = useState(false);
   const [confirmCancelSub, setConfirmCancelSub] = useState(false);
 
-  const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
-  const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
-
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(clock);
   }, []);
-
-  useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
-
-  function setStageColor(key, color) {
-    setStageColors((prev) => {
-      const next = { ...prev, [key]: color };
-      saveStageColors(restoId, next);
-      return next;
-    });
-  }
-
-  function resetColors() {
-    setStageColors(resetStageColors(restoId));
-  }
 
   async function subscribeNow() {
     setSubscribing(true);
@@ -203,49 +182,6 @@ export default function SubscriptionPage() {
               </button>
               <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
             </div>
-          </div>
-        )}
-      </div>
-
-      {reviews && reviews.reviews.length > 0 && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Avis clients</h3>
-          {reviews.reviews.map((r, i) => (
-            <div key={i} style={{ padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b style={{ fontSize: 13 }}>{r.clientName}</b>
-                <StarsDisplay value={r.foodRating} />
-              </div>
-              {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="card no-print">
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>🎨 Couleurs des commandes</h3>
-          <button type="button" className="btn-ghost" onClick={() => setColorSettingsOpen((v) => !v)}>
-            {colorSettingsOpen ? 'Fermer' : 'Personnaliser'}
-          </button>
-        </div>
-        {colorSettingsOpen && (
-          <div style={{ marginTop: 10 }}>
-            <p className="small" style={{ margin: '0 0 10px' }}>
-              Chaque commande est colorée selon où elle en est — ajuste les couleurs à ta convenance, ça reste enregistré sur cet appareil.
-            </p>
-            {ORDER_STAGES.map((s) => (
-              <div key={s.key} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
-                <span className="small">{s.icon} {s.label}</span>
-                <input
-                  type="color"
-                  value={stageColors[s.key]}
-                  onChange={(e) => setStageColor(s.key, e.target.value)}
-                  style={{ width: 36, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-                />
-              </div>
-            ))}
-            <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={resetColors}>Réinitialiser les couleurs par défaut</button>
           </div>
         )}
       </div>

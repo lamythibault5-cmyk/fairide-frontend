@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import {
   DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
-  ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors
+  ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
 } from '../../orderStatus';
 
 export default function OrdersPage() {
@@ -18,8 +18,21 @@ export default function OrdersPage() {
   const [pickupCodeInputs, setPickupCodeInputs] = useState({});
   const [confirmingPickup, setConfirmingPickup] = useState(null);
   const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
+  const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
 
   useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
+
+  function setStageColor(key, color) {
+    setStageColors((prev) => {
+      const next = { ...prev, [key]: color };
+      saveStageColors(restoId, next);
+      return next;
+    });
+  }
+
+  function resetColors() {
+    setStageColors(resetStageColors(restoId));
+  }
 
   // Ce qui demande une action ou une surveillance en premier, ce qui est déjà réglé en dernier —
   // pour que le restaurateur voie toujours ce qui compte sans avoir à chercher dans la liste.
@@ -68,6 +81,34 @@ export default function OrdersPage() {
 
   return (
     <div>
+      <div className="card no-print">
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ margin: 0, fontSize: 15 }}>🎨 Couleurs des commandes</h3>
+          <button type="button" className="btn-ghost" onClick={() => setColorSettingsOpen((v) => !v)}>
+            {colorSettingsOpen ? 'Fermer' : 'Personnaliser'}
+          </button>
+        </div>
+        {colorSettingsOpen && (
+          <div style={{ marginTop: 10 }}>
+            <p className="small" style={{ margin: '0 0 10px' }}>
+              Chaque commande est colorée selon où elle en est — ajuste les couleurs à ta convenance, ça reste enregistré sur cet appareil.
+            </p>
+            {ORDER_STAGES.map((s) => (
+              <div key={s.key} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
+                <span className="small">{s.icon} {s.label}</span>
+                <input
+                  type="color"
+                  value={stageColors[s.key]}
+                  onChange={(e) => setStageColor(s.key, e.target.value)}
+                  style={{ width: 36, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+                />
+              </div>
+            ))}
+            <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={resetColors}>Réinitialiser les couleurs par défaut</button>
+          </div>
+        )}
+      </div>
+
       <h2 className="section-title" style={{ marginTop: 0 }}>Commandes entrantes</h2>
       {orders.length === 0 && <div className="empty">Pas encore de commande.</div>}
       {sortedOrders.map((o) => {
