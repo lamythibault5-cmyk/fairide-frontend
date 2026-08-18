@@ -371,6 +371,7 @@ export const translations = {
       openAria: "Ouvrir l'assistant Fairide"
     },
     contact: {
+      eyebrow: 'Une question ?',
       emailLabel: 'Email',
       locationLabel: 'Localisation',
       locationValue: 'Belgique — Bruxelles (19 communes)',
@@ -378,6 +379,11 @@ export const translations = {
       formTitle: 'Envoyez-nous un message',
       formSubtitle: 'Remplissez le formulaire ci-dessous et nous vous répondrons rapidement.',
       sentMessage: '✅ Message envoyé, merci ! On te répond très vite.',
+      roleLabel: 'Vous êtes...',
+      roleClient: '🛍️ Client',
+      roleDriver: '🛵 Livreur',
+      roleRestaurant: '🏪 Commerçant',
+      roleOther: '💬 Autre',
       fullName: 'Nom complet',
       fullNamePlaceholder: 'Jean Dupont',
       emailPlaceholder: 'jean.dupont@example.com',
@@ -386,7 +392,7 @@ export const translations = {
       message: 'Message',
       messagePlaceholder: 'Décrivez votre demande...',
       send: 'Envoyer le message',
-      errorRequired: 'Nom, email et message sont requis.'
+      errorRequired: 'Merci de préciser qui tu es, ton nom, ton email et ton message.'
     },
     orderResult: {
       successTitle: 'Merci pour ta commande !',
@@ -829,6 +835,7 @@ export const translations = {
       openAria: 'Open the Fairide assistant'
     },
     contact: {
+      eyebrow: 'Got a question?',
       emailLabel: 'Email',
       locationLabel: 'Location',
       locationValue: 'Belgium — Brussels (19 communes)',
@@ -836,6 +843,11 @@ export const translations = {
       formTitle: 'Send us a message',
       formSubtitle: "Fill in the form below and we'll get back to you quickly.",
       sentMessage: '✅ Message sent, thank you! We\'ll reply very soon.',
+      roleLabel: 'You are...',
+      roleClient: '🛍️ Client',
+      roleDriver: '🛵 Driver',
+      roleRestaurant: '🏪 Merchant',
+      roleOther: '💬 Other',
       fullName: 'Full name',
       fullNamePlaceholder: 'John Smith',
       emailPlaceholder: 'john.smith@example.com',
@@ -844,7 +856,7 @@ export const translations = {
       message: 'Message',
       messagePlaceholder: 'Describe your request...',
       send: 'Send message',
-      errorRequired: 'Name, email and message are required.'
+      errorRequired: 'Please tell us who you are, your name, email and message.'
     },
     orderResult: {
       successTitle: 'Thanks for your order!',
@@ -1287,6 +1299,7 @@ export const translations = {
       openAria: 'De Fairide-assistent openen'
     },
     contact: {
+      eyebrow: 'Een vraag?',
       emailLabel: 'E-mail',
       locationLabel: 'Locatie',
       locationValue: 'België — Brussel (19 gemeenten)',
@@ -1294,6 +1307,11 @@ export const translations = {
       formTitle: 'Stuur ons een bericht',
       formSubtitle: 'Vul onderstaand formulier in en we antwoorden je snel.',
       sentMessage: '✅ Bericht verstuurd, bedankt! We antwoorden je snel.',
+      roleLabel: 'Je bent...',
+      roleClient: '🛍️ Klant',
+      roleDriver: '🛵 Bezorger',
+      roleRestaurant: '🏪 Handelaar',
+      roleOther: '💬 Anders',
       fullName: 'Volledige naam',
       fullNamePlaceholder: 'Jan Janssens',
       emailPlaceholder: 'jan.janssens@example.com',
@@ -1302,7 +1320,7 @@ export const translations = {
       message: 'Bericht',
       messagePlaceholder: 'Beschrijf je vraag...',
       send: 'Bericht versturen',
-      errorRequired: 'Naam, e-mail en bericht zijn vereist.'
+      errorRequired: 'Laat ons weten wie je bent, en vul je naam, e-mail en bericht in.'
     },
     orderResult: {
       successTitle: 'Bedankt voor je bestelling!',

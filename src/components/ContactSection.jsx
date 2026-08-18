@@ -9,6 +9,13 @@ export default function ContactSection() {
     { icon: '📍', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
     { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
   ];
+  const ROLES = [
+    { value: 'client', label: t('contact.roleClient') },
+    { value: 'driver', label: t('contact.roleDriver') },
+    { value: 'restaurant', label: t('contact.roleRestaurant') },
+    { value: 'other', label: t('contact.roleOther') }
+  ];
+  const [senderRole, setSenderRole] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -20,15 +27,15 @@ export default function ContactSection() {
   async function submit(e) {
     e.preventDefault();
     setError('');
-    if (!name.trim() || !email.trim() || !message.trim()) {
+    if (!senderRole || !name.trim() || !email.trim() || !message.trim()) {
       setError(t('contact.errorRequired'));
       return;
     }
     setSending(true);
     try {
-      await api('/contact', { method: 'POST', body: { name: name.trim(), email: email.trim(), phone: phone.trim(), message: message.trim() } });
+      await api('/contact', { method: 'POST', body: { role: senderRole, name: name.trim(), email: email.trim(), phone: phone.trim(), message: message.trim() } });
       setSent(true);
-      setName(''); setEmail(''); setPhone(''); setMessage('');
+      setSenderRole(''); setName(''); setEmail(''); setPhone(''); setMessage('');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -39,12 +46,23 @@ export default function ContactSection() {
   return (
     <div className="contact-grid">
       <div className="card">
+        <p className="small" style={{ margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.4, fontWeight: 700, color: 'var(--teal)' }}>{t('contact.eyebrow')}</p>
         <h2 style={{ margin: '0 0 4px', fontSize: 20 }}>{t('contact.formTitle')}</h2>
         <p className="small" style={{ margin: '0 0 16px' }}>{t('contact.formSubtitle')}</p>
         {sent ? (
           <div className="pill teal" style={{ display: 'inline-block' }}>{t('contact.sentMessage')}</div>
         ) : (
           <form onSubmit={submit}>
+            <div className="field">
+              <label>{t('contact.roleLabel')}</label>
+              <div className="role-pick" style={{ marginBottom: 0 }}>
+                {ROLES.map((r) => (
+                  <div key={r.value} className={`chip${senderRole === r.value ? ' active' : ''}`} onClick={() => setSenderRole(r.value)}>
+                    {r.label}
+                  </div>
+                ))}
+              </div>
+            </div>
             <div className="field">
               <label>{t('contact.fullName')}</label>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} />
