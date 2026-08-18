@@ -442,10 +442,12 @@ export default function Auth() {
                 <div className="divider" />
               </>
             )}
-            <div className="field">
-              <label>{t('auth.promoCode')}</label>
-              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-            </div>
+            {role === 'client' && (
+              <div className="field">
+                <label>{t('auth.promoCode')}</label>
+                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+              </div>
+            )}
           </>
         )}
 

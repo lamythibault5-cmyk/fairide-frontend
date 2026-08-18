@@ -1,5 +1,6 @@
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
+import ScrollRestorer from './components/ScrollRestorer';
 import ProtectedRoute from './components/ProtectedRoute';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
@@ -34,7 +35,9 @@ import DriverInvoicesPage from './pages/driver/InvoicesPage';
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <ScrollRestorer />
+      <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Auth />} />
@@ -72,6 +75,7 @@ export default function App() {
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
       </Route>
-    </Routes>
+      </Routes>
+    </>
   );
 }
