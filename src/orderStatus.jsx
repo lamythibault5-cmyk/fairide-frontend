@@ -36,13 +36,18 @@ export function statusLabel(status, orderType, t) {
 
 // Étape opérationnelle d'une commande, du point de vue du restaurateur — distincte du statut brut
 // (qui a plus de valeurs) et du type de commande (livraison/emporter/sur place) : ce qui compte ici
-// c'est "qu'est-ce que je dois faire, là, maintenant ?". "attenteLivreur" (prête mais personne pour
-// la récupérer) est isolée de "enLivraison" (prise en charge) car ce sont deux situations très
-// différentes à l'œil — la première mérite d'être surveillée, la seconde est déjà réglée.
+// c'est "qu'est-ce que je dois faire, là, maintenant ?". Deux étapes distinctes impliquent un livreur
+// pas encore là, à ne pas confondre : "attenteConfirmationLivreur" (avant même de cuisiner — aucun
+// livreur n'a encore pris la commande, voir GET /orders/available qui l'expose dès le statut
+// "preparation") et "attenteLivreur" (le plat est prêt, on attend que ce livreur arrive physiquement
+// le récupérer). La première est isolée et placée avant "En préparation" car l'idée est de s'assurer
+// qu'un livreur sera bien disponible avant de lancer la cuisson ; la seconde reste isolée de
+// "enLivraison" (déjà pris en charge, donc déjà réglé) pour la même raison qu'avant.
 export const ORDER_STAGES = [
   { key: 'nouveau', label: 'Nouvelle — à traiter', icon: '🆕', defaultColor: '#B5482E' },
+  { key: 'attenteConfirmationLivreur', label: 'En attente de la confirmation d\'un livreur', icon: '📣', defaultColor: '#8E5FC7' },
   { key: 'preparation', label: 'En préparation', icon: '👨‍🍳', defaultColor: '#D9A441' },
-  { key: 'attenteLivreur', label: 'Prête — en attente d\'un livreur', icon: '⏳', defaultColor: '#C8722E' },
+  { key: 'attenteLivreur', label: 'Prête — en attente de l\'arrivée du livreur', icon: '⏳', defaultColor: '#C8722E' },
   { key: 'pretClient', label: 'Prête — en attente du client', icon: '⏳', defaultColor: '#C8722E' },
   { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#3B6FA0' },
   { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#2F6F5E' },
@@ -57,14 +62,17 @@ export function orderStageKey(order) {
     if (order.orderType === 'delivery') return order.driverId ? 'enLivraison' : 'attenteLivreur';
     return 'pretClient';
   }
-  if (order.status === 'preparation') return 'preparation';
+  if (order.status === 'preparation') {
+    if (order.orderType === 'delivery' && !order.driverId) return 'attenteConfirmationLivreur';
+    return 'preparation';
+  }
   return 'nouveau';
 }
 
 // Priorité d'affichage : ce qui demande une action ou une surveillance du restaurateur en premier,
 // ce qui est déjà réglé (terminé/annulé) en dernier — pour qu'il n'ait jamais à chercher dans la liste
 // ce qui compte maintenant, réduisant le risque d'en oublier une.
-const STAGE_PRIORITY = ['nouveau', 'attenteLivreur', 'preparation', 'pretClient', 'enLivraison', 'terminee', 'annulee'];
+const STAGE_PRIORITY = ['nouveau', 'attenteConfirmationLivreur', 'attenteLivreur', 'preparation', 'pretClient', 'enLivraison', 'terminee', 'annulee'];
 export function orderStagePriority(order) {
   const idx = STAGE_PRIORITY.indexOf(orderStageKey(order));
   return idx === -1 ? STAGE_PRIORITY.length : idx;
