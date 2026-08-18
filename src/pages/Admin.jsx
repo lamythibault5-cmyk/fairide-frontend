@@ -5,7 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from '../components/Skeleton';
 
-const TABS = ['Stats', 'Clients', 'Livreurs', 'Restaurants', 'Commandes', 'Avis', 'Codes promo'];
+const TABS = ['Stats', 'Utilisateurs', 'Clients', 'Livreurs', 'Restaurants', 'Commandes', 'Avis', 'Codes promo'];
+
+const USER_TYPE_LABELS = { client: 'Clients', restaurant: 'Commerçants', driver: 'Livreurs' };
+const USER_TYPE_ORDER = ['client', 'restaurant', 'driver'];
 
 const PROMO_TYPES = [
   { value: 'client_balance', label: 'Solde client (€)' },
@@ -17,6 +20,7 @@ export default function Admin() {
   const toast = useToast();
   const [tab, setTab] = useState('Stats');
   const [stats, setStats] = useState(null);
+  const [usersOverview, setUsersOverview] = useState(null);
   const [users, setUsers] = useState(null);
   const [userSearch, setUserSearch] = useState('');
   const [orders, setOrders] = useState(null);
@@ -45,6 +49,7 @@ export default function Admin() {
   }
 
   useEffect(() => {
+    if (tab === 'Utilisateurs' && usersOverview === null) api('/admin/users/overview', { token }).then(setUsersOverview).catch((e) => toast(e.message));
     if (tab === 'Clients' && users === null) loadUsers();
     if (tab === 'Commandes' && orders === null) api('/admin/orders', { token }).then(setOrders).catch((e) => toast(e.message));
     if (tab === 'Avis' && reviews === null) api('/admin/reviews', { token }).then(setReviews).catch((e) => toast(e.message));
@@ -159,6 +164,27 @@ export default function Admin() {
             <div className="stat-card"><div className="num">{stats.restaurantCount}</div><div className="label">Restaurants</div></div>
             <div className="stat-card"><div className="num">{stats.paidOrderCount}</div><div className="label">Commandes payées</div></div>
             <div className="stat-card highlight"><div className="num">{stats.totalCommission.toFixed(2)}€</div><div className="label">Commission totale Fairide</div></div>
+          </div>
+        )
+      )}
+
+      {tab === 'Utilisateurs' && (
+        !usersOverview ? <SkeletonCards count={2} /> : (
+          <div>
+            <UsersSubsection
+              title="🆕 Nouveaux inscrits"
+              subtitle="Comptes créés au cours des 30 derniers jours."
+              groups={usersOverview.new}
+              emptyText="Aucun nouvel inscrit sur cette période."
+            />
+            <div className="divider" />
+            <UsersSubsection
+              title="🚪 Comptes partis"
+              subtitle="Comptes supprimés (clients/livreurs) et commerces supprimés (restaurateurs)."
+              groups={usersOverview.departed}
+              departed
+              emptyText="Personne n'est parti pour l'instant."
+            />
           </div>
         )
       )}
@@ -416,6 +442,59 @@ export default function Admin() {
         </div>,
         document.body
       )}
+    </div>
+  );
+}
+
+// Une sous-section (Nouveaux / Partis) de l'onglet "Utilisateurs" : un groupe par type de compte
+// (client, commerçant, livreur), chacun listé et numéroté séparément — voir USER_TYPE_ORDER.
+function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
+  const totalCount = USER_TYPE_ORDER.reduce((sum, type) => sum + (groups[type]?.length || 0), 0);
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>
+        {title} <span className="pill teal" style={{ marginLeft: 6 }}>{totalCount}</span>
+      </h3>
+      <p className="small" style={{ margin: '0 0 12px' }}>{subtitle}</p>
+      {totalCount === 0 && <div className="empty">{emptyText}</div>}
+      {USER_TYPE_ORDER.map((type) => {
+        const items = groups[type] || [];
+        if (!items.length) return null;
+        return (
+          <div key={type} style={{ marginBottom: 14 }}>
+            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>
+              {USER_TYPE_LABELS[type]} <span className="pill" style={{ marginLeft: 6 }}>{items.length}</span>
+            </h4>
+            <div className="card">
+              {items.map((it, i) => (
+                <div
+                  key={it.id}
+                  className="row"
+                  style={{ justifyContent: 'space-between', gap: 10, padding: '6px 0', borderBottom: i < items.length - 1 ? '1px solid var(--cream-dim)' : 'none' }}
+                >
+                  <div>
+                    <span className="small" style={{ fontWeight: 700, marginRight: 8 }}>#{i + 1}</span>
+                    {departed ? (
+                      <>
+                        <b>{it.email}</b>
+                        {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
+                        {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
+                      </>
+                    ) : (
+                      <>
+                        <b>{it.name}</b> <span className="small">{it.email}</span>
+                      </>
+                    )}
+                  </div>
+                  <span className="small" style={{ flexShrink: 0 }}>
+                    {new Date(it.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
