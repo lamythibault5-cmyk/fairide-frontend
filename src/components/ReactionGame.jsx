@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Variante "réflexe" du mini-jeu à côté de la carte : une cible apparaît à un endroit aléatoire du
-// cadre, il faut taper dessus avant qu'elle disparaisse. Une cible manquée (temps écoulé sans clic) fait
-// recommencer la partie à zéro. Réutilise les mêmes classes CSS .food-catch-* que FoodCatchGame.jsx.
+// cadre, il faut taper dessus avant qu'elle disparaisse. Une cible manquée (temps écoulé sans clic)
+// termine la partie — jamais de reprise automatique, toujours le joueur qui relance via "Rejouer".
+// Réutilise les mêmes classes CSS .food-catch-* que FoodCatchGame.jsx.
 const WIDTH = 110;
 const HEIGHT = 260;
 const TARGET_SIZE = 34;
@@ -31,35 +32,26 @@ export default function ReactionGame() {
   const [target, setTarget] = useState(null);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem(BEST_SCORE_KEY)) || 0);
-  const [justLost, setJustLost] = useState(false);
+  const [isNewBest, setIsNewBest] = useState(false);
   const statusRef = useRef(status);
   const scoreRef = useRef(0);
   const bestScoreRef = useRef(bestScore);
   const timeoutRef = useRef(null);
-  const lostMsgTimeoutRef = useRef(null);
 
   useEffect(() => {
     statusRef.current = status;
   }, [status]);
 
   function loseRound() {
-    if (scoreRef.current > bestScoreRef.current) {
+    const beatBest = scoreRef.current > bestScoreRef.current;
+    if (beatBest) {
       bestScoreRef.current = scoreRef.current;
       setBestScore(scoreRef.current);
       localStorage.setItem(BEST_SCORE_KEY, String(scoreRef.current));
     }
-    scoreRef.current = 0;
-    setScore(0);
+    setIsNewBest(beatBest);
     setTarget(null);
-    setJustLost(true);
-    if (lostMsgTimeoutRef.current) clearTimeout(lostMsgTimeoutRef.current);
-    // Le pause peut arriver pendant ce délai d'1.2s — on ne relance la cible que si la partie est
-    // toujours en cours à ce moment-là, sinon une nouvelle cible/minuteur tournerait en arrière-plan
-    // pendant la pause et ferait perdre à nouveau avant même que le joueur ait repris.
-    lostMsgTimeoutRef.current = setTimeout(() => {
-      setJustLost(false);
-      if (statusRef.current === 'playing') spawnTarget();
-    }, 1200);
+    setStatus('lost');
   }
 
   function spawnTarget() {
@@ -84,7 +76,6 @@ export default function ReactionGame() {
   }, [status]);
 
   useEffect(() => () => {
-    if (lostMsgTimeoutRef.current) clearTimeout(lostMsgTimeoutRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
   }, []);
 
@@ -98,7 +89,7 @@ export default function ReactionGame() {
   function startGame() {
     scoreRef.current = 0;
     setScore(0);
-    setJustLost(false);
+    setIsNewBest(false);
     setStatus('playing');
   }
 
@@ -120,18 +111,31 @@ export default function ReactionGame() {
             aria-label="Cible"
           >🎯</button>
         )}
-        {justLost && <div className="food-catch-lost">⏱️ Trop lent !<br />On recommence</div>}
-        {status === 'idle' && !justLost && (
+        {status === 'idle' && (
           <div className="food-catch-overlay">
-            <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-overlay-title">🎯 Tape la cible !</span>
+              <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
+            </div>
           </div>
         )}
         {status === 'paused' && (
           <div className="food-catch-overlay">
-            <span className="food-catch-paused-label">⏸️ En pause</span>
-            <div className="food-catch-overlay-buttons">
-              <button type="button" onClick={resumeGame}>▶️ Continuer</button>
-              <button type="button" onClick={restartGame}>🔄 Recommencer</button>
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-paused-label">⏸️ En pause</span>
+              <div className="food-catch-overlay-buttons">
+                <button type="button" onClick={resumeGame}>▶️ Continuer</button>
+                <button type="button" className="food-catch-btn-ghost" onClick={restartGame}>🔄 Recommencer</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {status === 'lost' && (
+          <div className="food-catch-overlay">
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-lost-title">⏱️ Trop lent !</span>
+              <span className="food-catch-lost-score">Score : {score}{isNewBest ? ' — 🎉 nouveau record !' : ''}</span>
+              <button type="button" className="food-catch-start" onClick={restartGame}>🔄 Rejouer</button>
             </div>
           </div>
         )}

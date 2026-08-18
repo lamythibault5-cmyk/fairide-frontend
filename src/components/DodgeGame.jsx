@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 
 // Variante "évite les obstacles" du mini-jeu à côté de la carte : déplace le livreur pour ne pas se
-// faire toucher par les obstacles qui tombent. Toucher un obstacle fait recommencer la partie à zéro.
+// faire toucher par les obstacles qui tombent. Toucher un obstacle termine la partie — jamais de reprise
+// automatique, c'est toujours le joueur qui relance via le bouton "Rejouer" (voir status === 'lost').
 // Réutilise les mêmes classes CSS .food-catch-* que FoodCatchGame.jsx (structure visuelle partagée par
-// tous les mini-jeux : score, meilleur score, cadre, overlays début/pause).
+// tous les mini-jeux : score, meilleur score, cadre, overlays début/pause/perdu).
 const OBSTACLES = ['🚧', '🪨', '🕳️', '🔥', '💥'];
 const WIDTH = 110;
 const HEIGHT = 260;
@@ -33,26 +34,23 @@ export default function DodgeGame() {
   const [riderX, setRiderX] = useState(WIDTH / 2 - RIDER_WIDTH / 2);
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(() => Number(localStorage.getItem(BEST_SCORE_KEY)) || 0);
-  const [justLost, setJustLost] = useState(false);
+  const [isNewBest, setIsNewBest] = useState(false);
   const riderXRef = useRef(riderX);
   const scoreRef = useRef(0);
   const bestScoreRef = useRef(bestScore);
   const nextIdRef = useRef(0);
   const ticksSinceSpawnRef = useRef(0);
-  const lostMsgTimeoutRef = useRef(null);
   const fieldRef = useRef(null);
 
   function loseRound() {
-    if (scoreRef.current > bestScoreRef.current) {
+    const beatBest = scoreRef.current > bestScoreRef.current;
+    if (beatBest) {
       bestScoreRef.current = scoreRef.current;
       setBestScore(scoreRef.current);
       localStorage.setItem(BEST_SCORE_KEY, String(scoreRef.current));
     }
-    scoreRef.current = 0;
-    setScore(0);
-    setJustLost(true);
-    if (lostMsgTimeoutRef.current) clearTimeout(lostMsgTimeoutRef.current);
-    lostMsgTimeoutRef.current = setTimeout(() => setJustLost(false), 1200);
+    setIsNewBest(beatBest);
+    setStatus('lost');
   }
 
   useEffect(() => {
@@ -94,10 +92,6 @@ export default function DodgeGame() {
     return () => clearInterval(interval);
   }, [status]);
 
-  useEffect(() => () => {
-    if (lostMsgTimeoutRef.current) clearTimeout(lostMsgTimeoutRef.current);
-  }, []);
-
   function followPointer(e) {
     if (status !== 'playing' || !fieldRef.current) return;
     const rect = fieldRef.current.getBoundingClientRect();
@@ -111,7 +105,7 @@ export default function DodgeGame() {
     ticksSinceSpawnRef.current = 0;
     setScore(0);
     setItems([]);
-    setJustLost(false);
+    setIsNewBest(false);
     setStatus('playing');
   }
 
@@ -134,18 +128,31 @@ export default function DodgeGame() {
           <span key={it.id} className="food-catch-item" style={{ left: it.x, top: it.y }}>{it.emoji}</span>
         ))}
         <div className="food-catch-basket" style={{ left: riderX, width: RIDER_WIDTH }}>🛵</div>
-        {justLost && <div className="food-catch-lost">💥 Touché !<br />On recommence</div>}
-        {status === 'idle' && !justLost && (
+        {status === 'idle' && (
           <div className="food-catch-overlay">
-            <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-overlay-title">🚧 Évite les obstacles !</span>
+              <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
+            </div>
           </div>
         )}
         {status === 'paused' && (
           <div className="food-catch-overlay">
-            <span className="food-catch-paused-label">⏸️ En pause</span>
-            <div className="food-catch-overlay-buttons">
-              <button type="button" onClick={resumeGame}>▶️ Continuer</button>
-              <button type="button" onClick={restartGame}>🔄 Recommencer</button>
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-paused-label">⏸️ En pause</span>
+              <div className="food-catch-overlay-buttons">
+                <button type="button" onClick={resumeGame}>▶️ Continuer</button>
+                <button type="button" className="food-catch-btn-ghost" onClick={restartGame}>🔄 Recommencer</button>
+              </div>
+            </div>
+          </div>
+        )}
+        {status === 'lost' && (
+          <div className="food-catch-overlay">
+            <div className="food-catch-overlay-card">
+              <span className="food-catch-lost-title">💥 Touché !</span>
+              <span className="food-catch-lost-score">Score : {score}{isNewBest ? ' — 🎉 nouveau record !' : ''}</span>
+              <button type="button" className="food-catch-start" onClick={restartGame}>🔄 Rejouer</button>
             </div>
           </div>
         )}

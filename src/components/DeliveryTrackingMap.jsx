@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -35,6 +35,10 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const driverMarkerRef = useRef(null);
   const lineRef = useRef(null);
   const animRef = useRef(null);
+  // Dernier périmètre ajusté (droite puis, une fois reçu, le vrai trajet routier) — permet au bouton
+  // "Recentrer" de revenir dessus si l'utilisateur a zoomé/déplacé la carte pour explorer.
+  const boundsRef = useRef(null);
+  const [showRecenter, setShowRecenter] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -83,7 +87,10 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       } else {
         lineRef.current.setLatLngs(straightLine);
       }
-      mapRef.current.fitBounds(L.latLngBounds(straightLine), { padding: [40, 40] });
+      const straightBounds = L.latLngBounds(straightLine);
+      boundsRef.current = straightBounds;
+      mapRef.current.fitBounds(straightBounds, { padding: [40, 40] });
+      setShowRecenter(true);
 
       let cancelled = false;
       fetchStreetRoute(restaurantLat, restaurantLng, deliveryLat, deliveryLng)
@@ -91,12 +98,16 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
           if (cancelled || !lineRef.current) return;
           lineRef.current.setLatLngs(routeLatLngs);
           lineRef.current.setStyle({ dashArray: null, opacity: 0.8 });
-          mapRef.current.fitBounds(L.latLngBounds(routeLatLngs), { padding: [40, 40] });
+          const routeBounds = L.latLngBounds(routeLatLngs);
+          boundsRef.current = routeBounds;
+          mapRef.current.fitBounds(routeBounds, { padding: [40, 40] });
         })
         .catch(() => {
           // OSRM indisponible : on garde la ligne droite en secours
         });
       return () => { cancelled = true; };
+    } else {
+      setShowRecenter(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantLat, restaurantLng, deliveryLat, deliveryLng]);
@@ -128,5 +139,23 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     };
   }, [driverLat, driverLng]);
 
-  return <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />;
+  function recenter() {
+    if (mapRef.current && boundsRef.current) {
+      mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
+    }
+  }
+
+  return (
+    <div className="tracking-map-wrap">
+      <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
+      {showRecenter && (
+        <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Recentrer</button>
+      )}
+      <div className="tracking-map-legend">
+        <span><span className="tracking-map-legend-icon" style={{ background: '#2F6F5E' }}>🏪</span> Restaurant</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#16233A' }}>🛵</span> Livreur</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#D9A441' }}>🏠</span> Toi</span>
+      </div>
+    </div>
+  );
 }
