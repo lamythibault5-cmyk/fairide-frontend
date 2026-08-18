@@ -56,10 +56,6 @@ export default function Account() {
   const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [savingInfo, setSavingInfo] = useState(false);
 
-  const [payoutIban, setPayoutIban] = useState(user.payoutIban || '');
-  const [payoutAccountHolder, setPayoutAccountHolder] = useState(user.payoutAccountHolder || '');
-  const [savingPayout, setSavingPayout] = useState(false);
-
   const [locationSharingEnabled, setLocationSharingEnabled] = useState(user.locationSharingEnabled !== false);
   const [savingLocationSharing, setSavingLocationSharing] = useState(false);
 
@@ -78,19 +74,6 @@ export default function Account() {
     }).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
-
-  async function savePayout(e) {
-    e.preventDefault();
-    setSavingPayout(true);
-    try {
-      await updateProfile({ payoutIban: payoutIban.trim(), payoutAccountHolder: payoutAccountHolder.trim() });
-      toast(t('account.toastPayoutSaved'));
-    } catch (err) {
-      toast(err.message);
-    } finally {
-      setSavingPayout(false);
-    }
-  }
 
   async function toggleLocationSharing(e) {
     const next = e.target.checked;
@@ -233,26 +216,6 @@ export default function Account() {
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
         </form>
       </div>
-
-      {(role === 'restaurant' || role === 'driver') && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.payoutTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>
-            {t('account.payoutExplain')}
-          </p>
-          <form onSubmit={savePayout}>
-            <div className="field">
-              <label>{t('account.accountHolder')}</label>
-              <input value={payoutAccountHolder} onChange={(e) => setPayoutAccountHolder(e.target.value)} placeholder={t('account.accountHolderPlaceholder')} />
-            </div>
-            <div className="field">
-              <label>{t('account.iban')}</label>
-              <input value={payoutIban} onChange={(e) => setPayoutIban(e.target.value)} placeholder={t('account.ibanPlaceholder')} />
-            </div>
-            <button type="submit" className="btn-teal" disabled={savingPayout}>{savingPayout ? '...' : t('common.save')}</button>
-          </form>
-        </div>
-      )}
 
       {role === 'driver' && (
         <div className="card">
