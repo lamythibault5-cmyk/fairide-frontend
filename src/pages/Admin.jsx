@@ -447,7 +447,7 @@ export default function Admin() {
 }
 
 // Une sous-section (Nouveaux / Partis) de l'onglet "Utilisateurs" : un groupe par type de compte
-// (client, commerçant, livreur), chacun listé et numéroté séparément — voir USER_TYPE_ORDER.
+// (client, commerçant, livreur), chacun listé, numéroté et cherchable séparément — voir USER_TYPE_ORDER.
 function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
   const totalCount = USER_TYPE_ORDER.reduce((sum, type) => sum + (groups[type]?.length || 0), 0);
   return (
@@ -460,41 +460,78 @@ function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
       {USER_TYPE_ORDER.map((type) => {
         const items = groups[type] || [];
         if (!items.length) return null;
-        return (
-          <div key={type} style={{ marginBottom: 14 }}>
-            <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>
-              {USER_TYPE_LABELS[type]} <span className="pill" style={{ marginLeft: 6 }}>{items.length}</span>
-            </h4>
-            <div className="card">
-              {items.map((it, i) => (
-                <div
-                  key={it.id}
-                  className="row"
-                  style={{ justifyContent: 'space-between', gap: 10, padding: '6px 0', borderBottom: i < items.length - 1 ? '1px solid var(--cream-dim)' : 'none' }}
-                >
-                  <div>
-                    <span className="small" style={{ fontWeight: 700, marginRight: 8 }}>#{i + 1}</span>
-                    {departed ? (
-                      <>
-                        <b>{it.email}</b>
-                        {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
-                        {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
-                      </>
-                    ) : (
-                      <>
-                        <b>{it.name}</b> <span className="small">{it.email}</span>
-                      </>
-                    )}
-                  </div>
-                  <span className="small" style={{ flexShrink: 0 }}>
-                    {new Date(it.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        );
+        return <UserTypeGroup key={type} type={type} items={items} departed={departed} />;
       })}
+    </div>
+  );
+}
+
+function statusPill(status) {
+  if (status === 'approved') return <span className="pill teal">✅ Validé</span>;
+  if (status === 'blocked') return <span className="pill" style={{ color: 'var(--red)' }}>🚫 Bloqué</span>;
+  return <span className="pill">🕐 En attente</span>;
+}
+
+// Une seule liste "type de compte" (ex: Clients) au sein d'une sous-section — garde sa propre recherche
+// locale, indépendante des autres groupes et de l'autre sous-section (Nouveaux vs Partis).
+function UserTypeGroup({ type, items, departed }) {
+  const [search, setSearch] = useState('');
+  const q = search.trim().toLowerCase();
+  const filtered = q
+    ? items.filter((it) => [it.name, it.email, it.restaurantName, it.reason, it.comment].some((v) => v && v.toLowerCase().includes(q)))
+    : items;
+  return (
+    <div style={{ marginBottom: 14 }}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h4 style={{ margin: 0, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>
+          {USER_TYPE_LABELS[type]} <span className="pill" style={{ marginLeft: 6 }}>{items.length}</span>
+        </h4>
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={`Chercher un(e) ${USER_TYPE_LABELS[type].toLowerCase()}...`}
+          style={{ maxWidth: 260, flex: '1 1 200px' }}
+        />
+      </div>
+      {filtered.length === 0 && <div className="empty">Aucun résultat pour "{search}".</div>}
+      {filtered.length > 0 && (
+        <div className="card">
+          {filtered.map((it, i) => (
+            <div
+              key={it.id}
+              className="row"
+              style={{ justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < filtered.length - 1 ? '1px solid var(--cream-dim)' : 'none', flexWrap: 'wrap' }}
+            >
+              <div>
+                <span className="small" style={{ fontWeight: 700, marginRight: 8 }}>#{i + 1}</span>
+                {departed ? (
+                  <>
+                    <b>{it.email}</b>
+                    {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
+                    {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
+                  </>
+                ) : (
+                  <>
+                    <b>{it.name}</b> <span className="small">{it.email}</span>
+                    {it.phone && <div className="small">📞 {it.phone}</div>}
+                    <div className="row" style={{ gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                      {type === 'driver' && statusPill(it.adminStatus)}
+                      {type === 'restaurant' && (
+                        it.restaurantName
+                          ? <>🏪 {it.restaurantName} {statusPill(it.restaurantAdminStatus)}</>
+                          : <span className="small" style={{ opacity: 0.6 }}>Pas encore de restaurant créé</span>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              <span className="small" style={{ flexShrink: 0 }}>
+                {new Date(it.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
