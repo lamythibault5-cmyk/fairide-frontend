@@ -1517,7 +1517,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['shrimp tempura', 'tempura crevette', 'tempura'], image: 'https://images.unsplash.com/photo-1579887829114-282b4fa31072?w=300&q=80' },
   { keywords: ['edamame'], image: 'https://images.unsplash.com/photo-1649257171206-37625b1f3b2f?w=300&q=80' },
   { keywords: ['satay'], image: 'https://images.unsplash.com/photo-1772855386828-a18ff9a12584?w=300&q=80' },
-  { keywords: ['pad thai', 'pad thaï'], image: 'https://images.unsplash.com/photo-1555126634-323283e090fa?w=300&q=80' },
+  { keywords: ['pad thai', 'pad thaï'], image: 'https://images.unsplash.com/photo-1746973645769-c11eb0a81025?w=300&q=80' },
   { keywords: ['fried rice', 'riz cantonais', 'riz sauté'], image: 'https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=300&q=80' },
   { keywords: ['teriyaki'], image: 'https://images.unsplash.com/photo-1609183480237-ccbb2d7c5772?w=300&q=80' },
   { keywords: ['sweet & sour', 'general tao', 'bœuf aux oignons', 'boeuf aux oignons'], image: 'https://images.unsplash.com/photo-1664138788119-bd4f073259d5?w=300&q=80' },
@@ -2091,8 +2091,8 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Asiatique (wok) : accent sur "phở"/"pad thaï" empêche le match des mots-clés (sans accent) ---
   'phở bœuf': U('1555126634-323283e090fa'),
   'phở poulet': U('1555126634-323283e090fa'),
-  'pad thaï poulet': U('1555126634-323283e090fa'),
-  'pad thaï crevettes': U('1555126634-323283e090fa'),
+  'pad thaï poulet': U('1746973645769-c11eb0a81025'),
+  'pad thaï crevettes': U('1746973645769-c11eb0a81025'),
   'banane frite au miel': U('1570727624862-3008fe67a6be'),
 
   // --- Végétarien : "tarte" seul retombe sur la photo générique de dessert (gâteau au chocolat) ---
@@ -2142,7 +2142,7 @@ const ITEM_IMAGE_OVERRIDES = {
   'calamares a la romana': U('1652209911920-2700fcbd5011'),
   'pimientos de padrón': U('1650844010413-3f24dc1c182b'),
   'albóndigas': U('1529042410759-befb1204b468'),
-  'pulpo a la gallega': U('1641898378716-1f38ec04bb0f'),
+  'pulpo a la gallega': U('1535980156496-87fc2cfcb832'),
 
   // --- Night Shop : snacks/hygiène/gadgets sans mot-clé dédié ---
   'pringles': U('1599490659213-e2b9527bd087'),
@@ -2296,16 +2296,26 @@ const ITEM_IMAGE_OVERRIDES = {
   'plat du jour': U('1543353071-873f17a7a088'),
 
   // --- Night Shop : épicerie/snacks/boissons sans mot-clé dédié ---
-  'beurre': U('1623334044303-241021148842'),
-  'fromage tranches': U('1623855244697-5d8fbe9c7892'),
+  // "pain de mie" contient "pain" et retombait sinon sur le seau de viennoiseries du mot-clé générique
+  // (KEYWORD_IMAGES) — pain de mie tranché ≠ croissant, d'où cet override dédié.
+  'pain de mie': U('1598373182133-52452f7691ef'),
+  'beurre': U('1603596311044-f19158b61f28'),
+  'fromage tranches': U('1589985270826-4b7bb135bc9d'),
   'jambon': U('1754572058122-771d8cb264d2'),
   'sauce tomate': U('1715733593146-93c3461765b8'),
-  'nutella 400g': U('1517427294546-5aa121f68e8a'),
-  'céréales': U('1571212515416-fef01fc43637'),
-  'sucre / farine': U('1623334044303-241021148842'),
+  'nutella 400g': U('1641538207883-712b6f77b42d'),
+  'céréales': U('1521483451569-e33803c0330c'),
+  // "riz" (produit brut en épicerie) contournait le mot-clé générique riz/curry/cantonais (plat cuisiné) —
+  // override dédié pour un vrai visuel de riz cru en épicerie plutôt qu'un plat en sauce.
+  'riz': U('1586201375761-83865001e31c'),
+  // "sucre / farine" partageait par erreur la photo de croissants ci-dessus (via 'beurre').
+  'sucre / farine': U('1761222191837-4448599c09fc'),
   'huile 1l': U('1518013431117-eb1465fa5752'),
-  'barres choco (mars, snickers, kinder bueno)': U('1517427294546-5aa121f68e8a'),
-  "tablette côte d'or": U('1517427294546-5aa121f68e8a'),
+  // "conserves (thon, maïs)" contenait "thon" et retombait sur la photo générique poisson/saumon —
+  // override dédié pour un vrai visuel de boîtes de conserve.
+  'conserves (thon, maïs)': U('1653174577821-9ab410d92d44'),
+  'barres choco (mars, snickers, kinder bueno)': U('1621939514649-280e2ee25f60'),
+  "tablette côte d'or": U('1627647227768-705244233b56'),
   'haribo': U('1582058091505-f87a2e55a40f'),
   "m&m's pochon": U('1582058091505-f87a2e55a40f'),
   'magnum (pièce)': U('1541014741259-de529411b96a'),
