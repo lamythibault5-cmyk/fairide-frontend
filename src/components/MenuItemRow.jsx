@@ -8,7 +8,7 @@ import GalleryPickerModal from './GalleryPickerModal';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [] }) {
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
@@ -19,6 +19,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [desc, setDesc] = useState(item.desc || '');
   const [price, setPrice] = useState(String(item.price));
   const [category, setCategory] = useState(item.category || 'plat');
+  const [subsection, setSubsection] = useState(item.subsection || '');
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
@@ -38,7 +39,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, imageUrl: imageUrl.trim() });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim() });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       setEditing(false);
     } finally {
@@ -77,6 +78,20 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
               <option key={name} value={name}>{categoryLabel(name, t)}</option>
             ))}
           </select>
+        </div>
+        <div className="field">
+          <label>Sous-section (optionnel — ex: "Boissons froides" dans "Boissons")</label>
+          <input
+            value={subsection}
+            onChange={(e) => setSubsection(e.target.value)}
+            placeholder="Laisser vide pour ne pas sous-grouper ce plat"
+            list="subsection-suggestions"
+          />
+          {existingSubsections.length > 0 && (
+            <datalist id="subsection-suggestions">
+              {existingSubsections.map((s) => <option key={s} value={s} />)}
+            </datalist>
+          )}
         </div>
         <div className="field">
           <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>

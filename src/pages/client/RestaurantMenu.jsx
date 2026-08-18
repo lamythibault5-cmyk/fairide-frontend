@@ -10,6 +10,7 @@ import RestaurantsMap from '../../components/RestaurantsMap';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
+import FavoriteHeart from '../../components/FavoriteHeart';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, DAY_LABELS_FR } from '../../openingHours';
 
@@ -161,9 +162,7 @@ export default function RestaurantMenu() {
         {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
-          <button className="btn-ghost" style={{ padding: '6px 10px', fontSize: 18 }} disabled={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')}>
-            {isFavorite ? '❤️' : '🤍'}
-          </button>
+          <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />
         </div>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>
           <StarsDisplay value={restaurant.rating} />

@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
+import FavoriteHeart from '../../components/FavoriteHeart';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -41,9 +42,12 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const isClosed = r.hours && !getOpenStatus(r.hours).isOpen;
   return (
     <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
-      <button onClick={(e) => onToggleFavorite(e, r.id)} className="rest-card-fav" title={t('restaurantList.addFavorite')}>
-        {isFavorite ? '❤️' : '🤍'}
-      </button>
+      <FavoriteHeart
+        active={isFavorite}
+        onClick={(e) => onToggleFavorite(e, r.id)}
+        title={t('restaurantList.addFavorite')}
+        className="rest-card-fav"
+      />
       {offerLabel && <span className="promo-badge">🏷️ {offerLabel}</span>}
       {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
       <div className="pill-row">

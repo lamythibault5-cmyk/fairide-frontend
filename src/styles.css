@@ -14,6 +14,7 @@
   --blue: #3B6FA0;
   --orange: #C8722E;
   --purple: #7A4FA0;
+  --heart: #FF3B5C;
   --radius: 14px;
   --shadow: 0 6px 24px rgba(22, 35, 58, 0.08);
 }
@@ -124,7 +125,16 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 .rest-card { cursor: pointer; transition: border-color .15s; display: block; text-decoration: none; color: inherit; min-width: 0; }
 .rest-card:hover { border-color: var(--gold); }
-.rest-card-fav { position: absolute; top: 10px; right: 10px; background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 32px; height: 32px; font-size: 16px; cursor: pointer; }
+.favorite-heart { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; padding: 0; cursor: pointer; line-height: 0; }
+.favorite-heart svg { display: block; transition: transform .15s ease; }
+.favorite-heart svg path { fill: rgba(255,255,255,0.9); stroke: rgba(22,35,58,0.35); stroke-width: 1.2; transition: fill .2s ease, stroke .2s ease; }
+.favorite-heart:active svg { transform: scale(0.85); }
+.favorite-heart.is-active svg path { fill: var(--heart); stroke: var(--heart); }
+.favorite-heart.is-active svg { animation: heart-pop .32s ease; }
+@keyframes heart-pop { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.favorite-heart.rest-card-fav { position: absolute; top: 10px; right: 10px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45)); }
+.favorite-heart.favorite-heart-inline svg path { fill: rgba(22,35,58,0.08); stroke: rgba(22,35,58,0.5); }
+.favorite-heart.favorite-heart-inline.is-active svg path { fill: var(--heart); stroke: var(--heart); }
 
 /* Mobile : grille 2 colonnes (au lieu d'1 seule avec le minmax(220px) ci-dessus) — 3 colonnes rendait
    les cartes trop étroites (texte tronqué, débordement visible sur certains navigateurs mobiles) ; 2
@@ -140,7 +150,8 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .rest-grid .rest-card-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 10.5px; margin: 2px 0; }
   .rest-grid .rest-card-dishes,
   .rest-grid .rest-card-reviews { display: none; }
-  .rest-grid .rest-card-fav { width: 24px; height: 24px; font-size: 12px; top: 5px; right: 5px; }
+  .rest-grid .rest-card-fav { top: 5px; right: 5px; }
+  .rest-grid .rest-card-fav svg { width: 18px; height: 18px; }
   .rest-grid .promo-badge { font-size: 8.5px; padding: 2px 6px; top: 5px; left: 5px; }
 }
 .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--cream-dim); }

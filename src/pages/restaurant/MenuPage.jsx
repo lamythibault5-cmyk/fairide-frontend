@@ -8,7 +8,8 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
   categoryImage, categoryLabel, getStarterTemplate,
-  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage
+  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage,
+  groupBySubsection
 } from '../../menuCategories';
 import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
@@ -402,6 +403,9 @@ export default function MenuPage() {
           const order = localOrder[section.id];
           const items = order ? order.map((id) => rawItems.find((i) => i.id === id)).filter(Boolean) : rawItems;
           const image = categoryImage(section.name);
+          const sectionSubsections = [...new Set(rawItems.map((i) => i.subsection).filter(Boolean))];
+          const inReorder = reorderSectionId === section.id;
+          const subsectionGroups = inReorder ? null : groupBySubsection(items, section.name, t);
           return (
             <div key={section.id} style={{ marginBottom: 16 }}>
               <div className="category-header" style={{ justifyContent: 'space-between' }}>
@@ -445,19 +449,40 @@ export default function MenuPage() {
               {reorderSectionId === section.id && (
                 <p className="small" style={{ margin: '2px 0 10px' }}>Glisse un plat par sa poignée ⠿ (souris ou doigt) pour changer son ordre, puis clique sur "Terminé".</p>
               )}
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(section, items, e)}>
+                <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
+                  {inReorder ? (
+                    <div className="menu-grid dashboard-menu-grid">
+                      {items.map((item) => (
+                        <MenuItemRow
+                          key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                          allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                          sections={restaurant.sections || []} reorderMode restoId={restoId}
+                          existingSubsections={sectionSubsections}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    subsectionGroups.map((group) => (
+                      <div key={group.key || '__none'} style={{ marginBottom: 10 }}>
+                        {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
+                        <div className="menu-grid dashboard-menu-grid">
+                          {group.items.map((item) => (
+                            <MenuItemRow
+                              key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
+                              allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                              sections={restaurant.sections || []} reorderMode={false} restoId={restoId}
+                              selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
+                              existingSubsections={sectionSubsections}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </SortableContext>
+              </DndContext>
               <div className="menu-grid dashboard-menu-grid">
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(section, items, e)}>
-                  <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
-                    {items.map((item) => (
-                      <MenuItemRow
-                        key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                        allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                        sections={restaurant.sections || []} reorderMode={reorderSectionId === section.id} restoId={restoId}
-                        selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
-                      />
-                    ))}
-                  </SortableContext>
-                </DndContext>
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
                   <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>

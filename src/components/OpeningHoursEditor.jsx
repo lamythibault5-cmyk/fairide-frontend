@@ -1,9 +1,12 @@
 import { DAY_ORDER, DAY_LABELS_FR } from '../openingHours';
 
-// Éditeur d'horaires structurés : une ligne par jour, fermé par défaut, jusqu'à 2 services (créneaux)
-// par jour ouvert — couvre le cas classique midi/soir de la restauration sans complexifier le format
-// au-delà de ce qui est utile. `value` est l'objet horaires ({mon: [{open,close}], ...} — jour absent ou
-// tableau vide = fermé), `onChange` reçoit le nouvel objet complet à chaque modification.
+const MAX_SHIFTS_PER_DAY = 5;
+
+// Éditeur d'horaires structurés : une ligne par jour, fermé par défaut, jusqu'à MAX_SHIFTS_PER_DAY
+// services (créneaux) par jour ouvert — au-delà du classique midi/soir, couvre aussi les commerces avec
+// plus de coupures dans la journée (ex: boulangerie fermée l'après-midi, night shop avec pause).
+// `value` est l'objet horaires ({mon: [{open,close}], ...} — jour absent ou tableau vide = fermé),
+// `onChange` reçoit le nouvel objet complet à chaque modification.
 export default function OpeningHoursEditor({ value, onChange }) {
   const hours = value || {};
 
@@ -70,7 +73,7 @@ export default function OpeningHoursEditor({ value, onChange }) {
                     )}
                   </div>
                 ))}
-                {shifts.length < 2 && (
+                {shifts.length < MAX_SHIFTS_PER_DAY && (
                   <button type="button" className="btn-ghost opening-hours-add-shift" onClick={() => addShift(day)}>+ Ajouter un service</button>
                 )}
               </div>

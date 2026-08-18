@@ -52,6 +52,32 @@ export function boissonSubcategory(name) {
   return 'froide';
 }
 
+// Regroupe les plats d'une section par sous-section (item.subsection, texte libre saisi par le
+// restaurateur — ex: "Boissons froides" au sein de la section "Boissons") : les plats sans sous-section
+// restent groupés ensemble sans en-tête (affichage à plat, comme avant cette fonctionnalité). Pour la
+// section "boisson" par défaut spécifiquement, un plat sans sous-section manuelle retombe sur l'ancienne
+// classification automatique par mot-clé (boissonSubcategory) pour ne pas perdre ce regroupement déjà
+// utile sur les menus existants qui n'ont jamais rempli ce nouveau champ.
+export function groupBySubsection(items, sectionName, t) {
+  const groups = [];
+  const indexByKey = {};
+  items.forEach((item) => {
+    let key = (item.subsection || '').trim();
+    let label = key;
+    if (!key && sectionName === 'boisson') {
+      const inferred = boissonSubcategory(item.name);
+      key = `__boisson_${inferred}`;
+      label = boissonSubcategoryLabel(inferred, t);
+    }
+    if (indexByKey[key] === undefined) {
+      indexByKey[key] = groups.length;
+      groups.push({ key, label, items: [] });
+    }
+    groups[indexByKey[key]].items.push(item);
+  });
+  return groups;
+}
+
 export const COMMUNES = [
   'Anderlecht', 'Auderghem', 'Berchem-Sainte-Agathe', 'Bruxelles', 'Etterbeek', 'Evere',
   'Forest', 'Ganshoren', 'Ixelles', 'Jette', 'Koekelberg', 'Molenbeek-Saint-Jean',
