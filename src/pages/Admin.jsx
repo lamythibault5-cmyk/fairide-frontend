@@ -10,6 +10,16 @@ const TABS = ['Stats', 'Utilisateurs', 'Clients', 'Livreurs', 'Restaurants', 'Co
 const USER_TYPE_LABELS = { client: 'Clients', restaurant: 'Commerçants', driver: 'Livreurs' };
 const USER_TYPE_ORDER = ['client', 'restaurant', 'driver'];
 
+// Filtre instantané côté client (aucun aller-retour serveur) — utilisé pour les recherches des onglets
+// Clients/Restaurants/Livreurs, une fois la liste complète déjà chargée. `list` peut être null (pas
+// encore chargé) : renvoyé tel quel pour ne pas casser les affichages "Chargement...".
+function filterBySearch(list, search, getFields) {
+  if (!list) return list;
+  const q = search.trim().toLowerCase();
+  if (!q) return list;
+  return list.filter((item) => getFields(item).some((v) => v && String(v).toLowerCase().includes(q)));
+}
+
 const PROMO_TYPES = [
   { value: 'client_balance', label: 'Solde client (€)' },
   { value: 'restaurant_trial_months', label: 'Mois d\'essai restaurateur' }
@@ -26,7 +36,9 @@ export default function Admin() {
   const [orders, setOrders] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [restaurants, setRestaurants] = useState(null);
+  const [restaurantSearch, setRestaurantSearch] = useState('');
   const [drivers, setDrivers] = useState(null);
+  const [driverSearch, setDriverSearch] = useState('');
   const [balanceInputs, setBalanceInputs] = useState({});
   const [promoCodes, setPromoCodes] = useState(null);
   const [newPromoCode, setNewPromoCode] = useState('');
@@ -40,12 +52,17 @@ export default function Admin() {
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [restaurantDetail, setRestaurantDetail] = useState(null);
   const [restaurantOrders, setRestaurantOrders] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [clientOrders, setClientOrders] = useState(null);
 
   useEffect(() => { api('/admin/stats', { token }).then(setStats).catch((e) => toast(e.message)); }, []); // eslint-disable-line
 
+  // Tab "Clients" : toujours filtré côté serveur sur role=client (le nom de l'onglet le promet), la
+  // recherche elle-même reste ensuite instantanée côté client comme pour Restaurants/Livreurs — voir
+  // filteredUsers ci-dessous — plutôt qu'un aller-retour serveur à chaque frappe.
   function loadUsers() {
     setUsers(null);
-    api(`/admin/users${userSearch ? `?search=${encodeURIComponent(userSearch)}` : ''}`, { token }).then(setUsers).catch((e) => toast(e.message));
+    api('/admin/users?role=client', { token }).then(setUsers).catch((e) => toast(e.message));
   }
 
   useEffect(() => {
@@ -100,6 +117,12 @@ export default function Admin() {
     api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then(setRestaurantOrders).catch((e) => toast(e.message));
   }
 
+  function openClient(u) {
+    setSelectedClient(u);
+    setClientOrders(null);
+    api(`/admin/orders?clientId=${u.id}&limit=20`, { token }).then(setClientOrders).catch((e) => toast(e.message));
+  }
+
   async function creditBalance(userId) {
     const raw = balanceInputs[userId];
     const delta = Number(raw);
@@ -145,6 +168,10 @@ export default function Admin() {
       toast(e.message);
     }
   }
+
+  const filteredUsers = filterBySearch(users, userSearch, (u) => [u.name, u.email, u.phone]);
+  const filteredRestaurants = filterBySearch(restaurants, restaurantSearch, (r) => [r.name, r.commune, r.cuisine, r.ownerEmail]);
+  const filteredDrivers = filterBySearch(drivers, driverSearch, (d) => [d.name, d.email, d.phone]);
 
   return (
     <div>
@@ -192,34 +219,27 @@ export default function Admin() {
       {tab === 'Clients' && (
         <div>
           <div className="row" style={{ marginBottom: 14 }}>
-            <input placeholder="Chercher par nom ou email" value={userSearch} onChange={(e) => setUserSearch(e.target.value)} style={{ flex: 1 }} />
-            <button className="btn-teal" onClick={loadUsers}>Chercher</button>
+            <input placeholder="Chercher un(e) client(e)..." value={userSearch} onChange={(e) => setUserSearch(e.target.value)} style={{ flex: 1 }} />
           </div>
           {!users && <SkeletonCards count={3} />}
-          {users && users.map((u) => (
-            <div className="card" key={u.id}>
+          {users && filteredUsers.length === 0 && <div className="empty">Aucun résultat pour "{userSearch}".</div>}
+          {filteredUsers && filteredUsers.map((u) => (
+            <div className="card order-card-clickable" key={u.id} onClick={() => openClient(u)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <div>
-                  <b>{u.name}</b> <span className="pill teal" style={{ marginLeft: 6 }}>{u.role}</span>
+                  <b>{u.name}</b>
                   {!u.emailVerified && <span className="pill" style={{ marginLeft: 6, color: 'var(--red)' }}>Email non vérifié</span>}
                   <div className="small">{u.email}{u.phone ? ` · ${u.phone}` : ''}</div>
                 </div>
-                {u.role === 'client' && <div className="small">Solde : <b>{u.balance.toFixed(2)}€</b></div>}
+                <div className="small">Solde : <b>{u.balance.toFixed(2)}€</b></div>
               </div>
-              {u.role === 'client' && (
-                <div className="row" style={{ gap: 8, marginTop: 8 }}>
-                  <input
-                    type="number" step="1" placeholder="Montant (ex: 50 ou -10)" style={{ maxWidth: 180 }}
-                    value={balanceInputs[u.id] || ''} onChange={(e) => setBalanceInputs((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                  />
-                  <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => creditBalance(u.id)}>Ajuster le solde</button>
-                </div>
-              )}
-              {(u.role === 'restaurant' || u.role === 'driver') && (u.payoutIban || u.payoutAccountHolder) && (
-                <div className="small" style={{ marginTop: 6 }}>
-                  💳 {u.payoutAccountHolder || '(titulaire non renseigné)'} — {u.payoutIban || '(IBAN non renseigné)'}
-                </div>
-              )}
+              <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="number" step="1" placeholder="Montant (ex: 50 ou -10)" style={{ maxWidth: 180 }}
+                  value={balanceInputs[u.id] || ''} onChange={(e) => setBalanceInputs((prev) => ({ ...prev, [u.id]: e.target.value }))}
+                />
+                <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => creditBalance(u.id)}>Ajuster le solde</button>
+              </div>
             </div>
           ))}
         </div>
@@ -263,8 +283,12 @@ export default function Admin() {
 
       {tab === 'Restaurants' && (
         <div>
+          <div className="row" style={{ marginBottom: 14 }}>
+            <input placeholder="Chercher un restaurant..." value={restaurantSearch} onChange={(e) => setRestaurantSearch(e.target.value)} style={{ flex: 1 }} />
+          </div>
           {!restaurants && <SkeletonCards count={3} />}
-          {restaurants && restaurants.map((r) => (
+          {restaurants && filteredRestaurants.length === 0 && <div className="empty">Aucun résultat pour "{restaurantSearch}".</div>}
+          {filteredRestaurants && filteredRestaurants.map((r) => (
             <div className="card order-card-clickable" key={r.id} onClick={() => openRestaurant(r)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{r.name}</b>
@@ -293,9 +317,13 @@ export default function Admin() {
 
       {tab === 'Livreurs' && (
         <div>
+          <div className="row" style={{ marginBottom: 14 }}>
+            <input placeholder="Chercher un(e) livreur..." value={driverSearch} onChange={(e) => setDriverSearch(e.target.value)} style={{ flex: 1 }} />
+          </div>
           {!drivers && <SkeletonCards count={3} />}
           {drivers && drivers.length === 0 && <div className="empty">Aucun livreur inscrit.</div>}
-          {drivers && drivers.map((d) => (
+          {drivers && drivers.length > 0 && filteredDrivers.length === 0 && <div className="empty">Aucun résultat pour "{driverSearch}".</div>}
+          {filteredDrivers && filteredDrivers.map((d) => (
             <div className="card order-card-clickable" key={d.id} onClick={() => openDriver(d)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{d.name}</b>
@@ -411,7 +439,12 @@ export default function Admin() {
       {selectedRestaurant && createPortal(
         <div className="modal-overlay" onClick={() => setSelectedRestaurant(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 8px' }}>{selectedRestaurant.name}</h3>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <h3 style={{ margin: '0 0 8px' }}>{selectedRestaurant.name}</h3>
+              <a href={`/restaurants/${selectedRestaurant.id}`} target="_blank" rel="noreferrer" className="small" style={{ whiteSpace: 'nowrap' }}>
+                Voir la page ↗
+              </a>
+            </div>
             <p className="small" style={{ margin: '2px 0' }}>{selectedRestaurant.commune} · {selectedRestaurant.cuisine} · {selectedRestaurant.rating.toFixed(1)}★</p>
             <p className="small" style={{ margin: '2px 0' }}>Propriétaire : {selectedRestaurant.ownerEmail}{selectedRestaurant.ownerPhone ? ` · ${selectedRestaurant.ownerPhone}` : ''}</p>
             <p className="small" style={{ margin: '2px 0' }}>{selectedRestaurant.orderCount} commande(s) payée(s) · {selectedRestaurant.revenue.toFixed(2)}€ de CA plats</p>
@@ -438,6 +471,33 @@ export default function Admin() {
               </div>
             ))}
             <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedRestaurant(null)}>Fermer</button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {selectedClient && createPortal(
+        <div className="modal-overlay" onClick={() => setSelectedClient(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 8px' }}>{selectedClient.name}</h3>
+            <p className="small" style={{ margin: '2px 0' }}>{selectedClient.email}{selectedClient.phone ? ` · ${selectedClient.phone}` : ''}</p>
+            <p className="small" style={{ margin: '2px 0' }}>
+              {selectedClient.emailVerified ? '✅ Email vérifié' : '⚠️ Email non vérifié'} · Solde : <b>{selectedClient.balance.toFixed(2)}€</b>
+            </p>
+            <p className="small" style={{ margin: '2px 0' }}>
+              Inscrit(e) le {new Date(selectedClient.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Commandes récentes</h4>
+            {!clientOrders && <div className="small">Chargement...</div>}
+            {clientOrders && clientOrders.length === 0 && <div className="small">Aucune commande pour l'instant.</div>}
+            {clientOrders && clientOrders.map((o) => (
+              <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
+                <span className="small">{o.restaurantName}{o.driverName ? ` · livré par ${o.driverName}` : ''}</span>
+                <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>
+            ))}
+            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedClient(null)}>Fermer</button>
           </div>
         </div>,
         document.body
