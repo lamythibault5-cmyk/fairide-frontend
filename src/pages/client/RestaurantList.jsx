@@ -39,7 +39,7 @@ function offerLabelFor(r) {
 
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const offerLabel = offerLabelFor(r);
-  const isClosed = r.hours && !getOpenStatus(r.hours).isOpen;
+  const isClosed = r.hours && !getOpenStatus(r.hours, new Date(), r.closures).isOpen;
   return (
     <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
       <FavoriteHeart

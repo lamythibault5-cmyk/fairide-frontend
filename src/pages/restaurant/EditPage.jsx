@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES, fullTemplateItems } from '../../menuCategories';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
+import { formatDateFr } from '../../openingHours';
 
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
@@ -61,6 +62,12 @@ export default function EditPage() {
   const [unlinkingDriverId, setUnlinkingDriverId] = useState(null);
   const [switchingMode, setSwitchingMode] = useState(false);
 
+  const [newClosureStart, setNewClosureStart] = useState('');
+  const [newClosureEnd, setNewClosureEnd] = useState('');
+  const [newClosureReason, setNewClosureReason] = useState('');
+  const [addingClosure, setAddingClosure] = useState(false);
+  const [deletingClosureId, setDeletingClosureId] = useState(null);
+
   useEffect(() => {
     if (!restaurant) return;
     setEditName(restaurant.name || '');
@@ -110,6 +117,39 @@ export default function EditPage() {
       toast(e.message);
     } finally {
       setSavingResto(false);
+    }
+  }
+
+  async function addClosure() {
+    if (!newClosureStart) { toast('Indique une date de début.'); return; }
+    if (newClosureEnd && newClosureEnd < newClosureStart) { toast('La date de fin doit être après la date de début.'); return; }
+    setAddingClosure(true);
+    try {
+      await api(`/restaurants/${restoId}/closures`, {
+        method: 'POST', token,
+        body: { startDate: newClosureStart, endDate: newClosureEnd || null, reason: newClosureReason.trim() }
+      });
+      await loadDashboard(restoId);
+      setNewClosureStart('');
+      setNewClosureEnd('');
+      setNewClosureReason('');
+      toast('Fermeture ajoutée à ton agenda.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setAddingClosure(false);
+    }
+  }
+
+  async function deleteClosure(closureId) {
+    setDeletingClosureId(closureId);
+    try {
+      await api(`/restaurants/${restoId}/closures/${closureId}`, { method: 'DELETE', token });
+      await loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setDeletingClosureId(null);
     }
   }
 
@@ -306,6 +346,44 @@ export default function EditPage() {
           <span className="small">Restaurant ouvert (visible aux clients)</span>
         </label>
         <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
+
+        <div className="divider" />
+        <label>Fermetures exceptionnelles (vacances, travaux...)</label>
+        <p className="small" style={{ margin: '0 0 10px' }}>
+          En dehors de tes horaires habituels ci-dessus — le commerce apparaît fermé aux clients pendant toute la période, avec le motif que tu indiques.
+        </p>
+        {(restaurant.closures || []).length > 0 && (
+          <div style={{ marginBottom: 12 }}>
+            {restaurant.closures.map((c) => (
+              <div key={c.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+                <div>
+                  <div className="small" style={{ fontWeight: 600 }}>
+                    {formatDateFr(c.startDate)}{c.endDate ? ` → ${formatDateFr(c.endDate)}` : ' → date de reprise indéterminée'}
+                  </div>
+                  {c.reason && <div className="small">{c.reason}</div>}
+                </div>
+                <button type="button" className="btn-danger-ghost" disabled={deletingClosureId === c.id} onClick={() => deleteClosure(c.id)}>
+                  {deletingClosureId === c.id ? '...' : 'Supprimer'}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>Du</label>
+            <input type="date" value={newClosureStart} onChange={(e) => setNewClosureStart(e.target.value)} />
+          </div>
+          <div className="field" style={{ marginBottom: 0 }}>
+            <label>Au (optionnel)</label>
+            <input type="date" value={newClosureEnd} onChange={(e) => setNewClosureEnd(e.target.value)} />
+          </div>
+          <div className="field" style={{ marginBottom: 0, flex: 1, minWidth: 200 }}>
+            <label>Motif (visible par les clients)</label>
+            <input value={newClosureReason} onChange={(e) => setNewClosureReason(e.target.value)} placeholder="Ex : Congés annuels, travaux..." />
+          </div>
+          <button className="btn-teal" disabled={addingClosure} onClick={addClosure}>{addingClosure ? '...' : '+ Ajouter'}</button>
+        </div>
 
         <div className="divider" />
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: cuisineChangeOpen ? 10 : 0 }}>

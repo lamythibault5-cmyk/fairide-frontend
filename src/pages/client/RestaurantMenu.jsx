@@ -12,7 +12,7 @@ import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import { useLanguage } from '../../context/LanguageContext';
-import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, DAY_LABELS_FR } from '../../openingHours';
+import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -21,6 +21,7 @@ export default function RestaurantMenu() {
   const [discover, setDiscover] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [favoriteBusy, setFavoriteBusy] = useState(false);
+  const [hoursExpanded, setHoursExpanded] = useState(false);
   const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
@@ -101,7 +102,7 @@ export default function RestaurantMenu() {
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
-  const openStatus = getOpenStatus(restaurant.hours, now);
+  const openStatus = getOpenStatus(restaurant.hours, now, restaurant.closures);
   const presentSections = (restaurant.sections || []).filter((s) => restaurant.menu.some((i) => (i.category || 'plat') === s.name));
 
   async function toggleFavorite() {
@@ -122,7 +123,7 @@ export default function RestaurantMenu() {
   }
 
   function addToCart(item) {
-    if (!getOpenStatus(restaurant.hours, now).isOpen) {
+    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
       toast('Ce commerce est actuellement fermé.');
       return;
     }
@@ -170,8 +171,26 @@ export default function RestaurantMenu() {
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         {restaurant.hours && (
-          openStatus.isOpen ? (
-            <p className="small" style={{ margin: '0 0 10px' }}>🕐 Ouvert maintenant · {formatDaySchedule(restaurant.hours, openStatus.todayKey)}</p>
+          openStatus.isExceptionalClosure ? (
+            <div className="closed-banner">
+              <div className="closed-banner-title">🏖️ Fermeture exceptionnelle</div>
+              {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                {openStatus.reopensDate ? `Réouverture prévue le ${formatDateFr(openStatus.reopensDate)}` : 'Date de réouverture pas encore communiquée'}
+              </p>
+            </div>
+          ) : openStatus.isOpen ? (
+            <div style={{ margin: '0 0 10px' }}>
+              <p className="small" style={{ margin: 0 }}>🕐 Ouvert maintenant · {formatDaySchedule(restaurant.hours, openStatus.todayKey)}</p>
+              <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => setHoursExpanded((v) => !v)}>
+                {hoursExpanded ? 'Masquer les horaires' : 'Voir tous les horaires'}
+              </button>
+              {hoursExpanded && (
+                <div className="closed-banner-schedule">
+                  {formatFullSchedule(restaurant.hours).map((line) => <span key={line}>{line}</span>)}
+                </div>
+              )}
+            </div>
           ) : (
             <div className="closed-banner">
               <div className="closed-banner-title">🔒 Actuellement fermé</div>

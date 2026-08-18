@@ -35,10 +35,42 @@ function brusselsMinutesToDate(now, dayOffset, minutesFromMidnight) {
   return new Date(approx.getTime() + diffMinutes * 60000);
 }
 
-// Renvoie { isOpen, opensToday, opensAt (Date|null), opensDayKey, todayKey }. `todayKey` (jour courant en
-// heure de Bruxelles) est toujours présent, y compris quand isOpen=true, pour afficher l'horaire du jour.
-export function getOpenStatus(hours, now = new Date()) {
+function brusselsDateStr(date) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(date);
+}
+
+// Une fermeture couvre la date donnée si startDate <= date <= endDate (endDate null = pas de fin connue).
+function activeClosureFor(closures, dateStr) {
+  if (!Array.isArray(closures)) return null;
+  return closures.find((c) => c.startDate <= dateStr && (!c.endDate || c.endDate >= dateStr)) || null;
+}
+
+// "DD/MM/YYYY" à partir d'un "YYYY-MM-DD" — pas de conversion de fuseau, c'est une date pure (pas un instant).
+export function formatDateFr(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Renvoie { isOpen, opensToday, opensAt (Date|null), opensDayKey, todayKey, isExceptionalClosure,
+// closedReason, reopensDate }. `todayKey` (jour courant en heure de Bruxelles) est toujours présent, y
+// compris quand isOpen=true, pour afficher l'horaire du jour. `closures` (optionnel) = fermetures
+// exceptionnelles en cours, qui priment sur l'horaire hebdomadaire habituel — même logique que côté
+// backend (voir openingHours.js), dupliquée ici pour l'affichage instantané sans aller-retour serveur.
+export function getOpenStatus(hours, now = new Date(), closures = []) {
   const { dayKey: todayKey, minutes: nowMinutes } = brusselsParts(now);
+  const closure = activeClosureFor(closures, brusselsDateStr(now));
+  if (closure) {
+    return {
+      isOpen: false, opensToday: false, opensAt: null, todayKey,
+      isExceptionalClosure: true, closedReason: closure.reason || '', reopensDate: closure.endDate || null
+    };
+  }
+  const base = getRegularOpenStatus(hours, now, todayKey, nowMinutes);
+  return { ...base, isExceptionalClosure: false, closedReason: null, reopensDate: null };
+}
+
+function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
   if (!hours || typeof hours !== 'object') return { isOpen: true, opensToday: false, opensAt: null, todayKey };
   const todayShifts = Array.isArray(hours[todayKey]) ? hours[todayKey] : [];
   for (const shift of todayShifts) {
