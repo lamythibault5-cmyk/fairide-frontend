@@ -10,9 +10,9 @@ import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 
-// Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur) au lieu de la
-// nav du haut classique. /admin en est volontairement exclu (hors périmètre de cette passe).
-const DASHBOARD_PATHS = ['/home', '/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver'];
+// Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
+// la nav du haut classique.
+const DASHBOARD_PATHS = ['/home', '/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
