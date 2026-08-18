@@ -1604,7 +1604,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['banana bread'], image: 'https://images.unsplash.com/photo-1569762404472-026308ba6b64?w=300&q=80' },
   { keywords: ['ginger shot'], image: 'https://images.unsplash.com/photo-1678890565859-a2dadf52a48f?w=300&q=80' },
   { keywords: ['green smoothie', 'mango smoothie', 'smoothie'], image: 'https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=300&q=80' },
-  { keywords: ['kombucha'], image: 'https://images.unsplash.com/photo-1651495079340-fb4cf8bae955?w=300&q=80' },
+  { keywords: ['kombucha'], image: 'https://images.unsplash.com/photo-1783099993801-c31173919b72?w=300&q=80' },
   { keywords: ['coconut water'], image: 'https://images.unsplash.com/photo-1588413336019-dd5d3beddf55?w=300&q=80' },
   { keywords: ['toast avocat', 'avocado'], image: 'https://images.unsplash.com/photo-1603046891726-36bfd957e0bf?w=300&q=80' },
 
@@ -1632,7 +1632,11 @@ const KEYWORD_IMAGES = [
 
   // --- Génériques (fallback) ---
   { keywords: ['kebab', 'durum', 'chawarma', 'grillades', 'grill'], images: ['https://images.unsplash.com/photo-1532636875304-0c89119d9b4d?w=300&q=80', 'https://images.unsplash.com/photo-1719282431565-3b30bb7d2658?w=300&q=80', 'https://images.unsplash.com/photo-1743674453093-592bed88018e?w=300&q=80'] },
-  { keywords: ['sandwich', 'panini', 'wrap', 'croque'], images: ['https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=300&q=80', 'https://images.unsplash.com/photo-1612392061787-2d078b3e573c?w=300&q=80', 'https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=300&q=80'] },
+  // "wrap" séparé de "sandwich/panini/croque" : forme et photo totalement différentes (galette roulée
+  // vs pain tranché) — une des 3 photos de l'ancien pool commun (1553979459) s'est avérée être un
+  // burger empilé, pas un sandwich, et faussait "Wrap poulet avocat"/"Wrap végétarien".
+  { keywords: ['wrap'], image: 'https://images.unsplash.com/photo-1752095809096-f09d22c466c5?w=300&q=80' },
+  { keywords: ['sandwich', 'panini', 'croque'], images: ['https://images.unsplash.com/photo-1612392061787-2d078b3e573c?w=300&q=80', 'https://images.unsplash.com/photo-1559054663-e8d23213f55c?w=300&q=80'] },
   { keywords: ['hot-dog', 'hot dog'], image: 'https://images.unsplash.com/photo-1612392061787-2d078b3e573c?w=300&q=80' },
   { keywords: ['glace', 'mochi', 'sorbet', 'sundae', 'cornet'], images: ['https://images.unsplash.com/photo-1541014741259-de529411b96a?w=300&q=80', 'https://images.unsplash.com/photo-1572837663132-76c0ccd9cb6f?w=300&q=80'] },
   { keywords: ['cheesecake'], image: 'https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=300&q=80' },
@@ -1668,7 +1672,7 @@ const KEYWORD_IMAGES = [
   { keywords: ['jus', 'aranciata', 'lemonata', 'mango drink', 'pack sodas', 'pack de sodas'], image: 'https://images.unsplash.com/photo-1622597467821-df79dcb4f94d?w=300&q=80' },
   { keywords: ['thé', 'the', 'tea'], image: 'https://images.unsplash.com/photo-1573784540576-21ddeff9479b?w=300&q=80' },
   { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair', 'cramique', 'financier', 'cannelé', 'canele', 'muffin', 'baguette', 'chausson'], image: 'https://images.unsplash.com/photo-1623334044303-241021148842?w=300&q=80' },
-  { keywords: ['poulet', 'chicken'], image: 'https://images.unsplash.com/photo-1642497394469-188b0f4bcae6?w=300&q=80' },
+  { keywords: ['poulet', 'chicken'], image: 'https://images.unsplash.com/photo-1763219802762-1d34ee0907c5?w=300&q=80' },
   { keywords: ['beignet'], image: 'https://images.unsplash.com/photo-1570727624862-3008fe67a6be?w=300&q=80' },
   { keywords: ['riz', 'curry', 'cantonais'], images: ['https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80', 'https://images.unsplash.com/photo-1716959669858-11d415bdead6?w=300&q=80', 'https://images.unsplash.com/photo-1682428617976-f25633ed8469?w=300&q=80'] },
   { keywords: ['saumon', 'salmon', 'poisson', 'thon', 'tuna', 'shrimp', 'crevette'], image: 'https://images.unsplash.com/photo-1641898378716-1f38ec04bb0f?w=300&q=80' },
@@ -2051,7 +2055,7 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Nouvelle carte snack turc (dürüms/pitas/mitraillettes/tacos) ---
   'bucket poulet 12 pcs': U('1652957392622-17e7c96f1369'),
   'bucket poulet 20 pcs': U('1652957392622-17e7c96f1369'),
-  'red bull': U('1622543925917-763c34d1a86e'),
+  'red bull': U('1570526427001-9d80d114054d'),
 
   // --- Nouvelle carte pizzeria : plats dont le nom matche par erreur un tout autre type de plat
   // ("Bolognese"/"Kebab"/"Poulet curry" sont des PIZZAS, pas des pâtes/kebabs/currys ; "Calzone
@@ -2068,19 +2072,32 @@ const ITEM_IMAGE_OVERRIDES = {
   'plateau duo (32 pcs)': U('1553621042-f6e147245754'),
   'plateau family (54 pcs)': U('1553621042-f6e147245754'),
   'chich taouk': U('1629450748686-c86699b710ac'),
+  // --- Sushi à la pièce (×2/×6) : retombaient tous sur la même photo de plateau géant (via le mot-clé
+  // générique "sushi"), trompeur pour une commande de 2 pièces — chaque poisson a maintenant sa
+  // propre photo de nigiri/sashimi (doublon signalé par le restaurateur, 2026-08). ---
+  'sushi saumon ×2': U('1744360515510-db7bf0f6def8'),
+  'sushi thon ×2': U('1779298177750-b9d3f20d4350'),
+  'sushi crevette ×2': U('1569945393177-ffe6dc868c0d'),
+  'sushi daurade ×2': U('1621590183062-bca4b1667268'),
+  'sushi anguille ×2': U('1763627719044-5d1d6a6b809c'),
+  'sashimi saumon ×6': U('1641898378716-1f38ec04bb0f'),
 
   // --- Night shop : marques de bière qui ne contiennent pas le mot "bière" donc ne matchent aucun
-  // mot-clé (retombaient sur une photo générique de boisson) ---
+  // mot-clé (retombaient sur une photo générique de boisson) — les 9 marques partageaient ensuite
+  // toutes la même photo de verre (doublon signalé par le restaurateur, 2026-08) : rotation sur 4
+  // photos vérifiées (bouteille/verre) pour qu'aucune paire consécutive ne soit identique. ---
   'jupiler 33cl': U('1618183479302-1e0aa382c36b'),
-  'jupiler 50cl': U('1618183479302-1e0aa382c36b'),
-  'cara pils 50cl': U('1618183479302-1e0aa382c36b'),
-  'duvel 33cl': U('1618183479302-1e0aa382c36b'),
+  'jupiler 50cl': U('1703564803611-36f9358b5b03'),
+  'cara pils 50cl': U('1691419775322-1864f752dbac'),
+  'duvel 33cl': U('1703564803569-2a9063d5cf06'),
   'chimay bleue 33cl': U('1618183479302-1e0aa382c36b'),
-  'kriek / chouffe 33cl': U('1618183479302-1e0aa382c36b'),
-  'leffe 33cl': U('1618183479302-1e0aa382c36b'),
-  'desperados 33cl': U('1618183479302-1e0aa382c36b'),
+  'kriek / chouffe 33cl': U('1703564803611-36f9358b5b03'),
+  'leffe 33cl': U('1691419775322-1864f752dbac'),
+  'desperados 33cl': U('1703564803569-2a9063d5cf06'),
   'corona 35,5cl': U('1618183479302-1e0aa382c36b'),
-  'pack jupiler 6 × 33cl': U('1618183479302-1e0aa382c36b'),
+  'pack jupiler 6 × 33cl': U('1703564803611-36f9358b5b03'),
+  // "Prosecco" partageait la photo de vin rouge (verres) — remplacé par une vraie bouteille de mousseux.
+  'prosecco': U('1761757225438-711aa1bbf8d9'),
 
   // --- Italien (trattoria) : "grillé" retombe sur le mot-clé générique kebab/grill, "peroni" ne
   // contient pas "bière" donc ne matche aucun mot-clé ---
@@ -2102,13 +2119,15 @@ const ITEM_IMAGE_OVERRIDES = {
   'elote (maïs grillé)': U('1653886764193-db9e5a93d215'),
 
   // --- Charcuterie : aucun mot-clé ne matchait, retombait sur la photo générique "Entrées" (une
-  // soupe verte) — signalé par le restaurateur sur "Jambon d'Ardenne". ---
-  'jambon cuit (100g)': U('1754572058122-771d8cb264d2'),
-  "jambon d'ardenne (100g)": U('1754572058122-771d8cb264d2'),
-  'salami (100g)': U('1754572058122-771d8cb264d2'),
-  'pâté de campagne (100g)': U('1754572058122-771d8cb264d2'),
-  'boudin blanc / noir (pièce)': U('1754572058122-771d8cb264d2'),
-  'jamón ibérico (50g)': U('1754572058122-771d8cb264d2'),
+  // soupe verte) — signalé par le restaurateur sur "Jambon d'Ardenne". Les 5 produits partageaient
+  // ensuite tous la même photo de plateau charcuterie/fromage (doublon signalé par le restaurateur,
+  // 2026-08) — chacun a maintenant sa propre photo distincte, vérifiée visuellement. ---
+  'jambon cuit (100g)': U('1607756794535-ba48a526b73a'),
+  "jambon d'ardenne (100g)": U('1524438418049-ab2acb7aa48f'),
+  'salami (100g)': U('1768758922609-fd805f703507'),
+  'pâté de campagne (100g)': U('1750874694155-0cb4cec1d196'),
+  'boudin blanc / noir (pièce)': U('1624772398061-bbfa87ec6b5a'),
+  'jamón ibérico (50g)': U('1524438418049-ab2acb7aa48f'),
   'chorizo al vino': U('1754572058122-771d8cb264d2'),
 
   // --- Autres entrées Boucherie / Fried Chicken retombant sur la même photo générique "Entrées" ---
@@ -2144,23 +2163,29 @@ const ITEM_IMAGE_OVERRIDES = {
   'albóndigas': U('1529042410759-befb1204b468'),
   'pulpo a la gallega': U('1535980156496-87fc2cfcb832'),
 
-  // --- Night Shop : snacks/hygiène/gadgets sans mot-clé dédié ---
+  // --- Night Shop : snacks/hygiène/gadgets sans mot-clé dédié — 7 snacks partageaient la même photo
+  // de chips (Doritos/Tuc/Cacahuètes/Beef jerky n'ont pourtant pas la forme de chips) et 7 produits
+  // d'hygiène partageaient tous une photo de brosse à dents (Déodorant/Gel douche/Serviettes/
+  // Préservatifs n'y ressemblent pas) — chaque produit a maintenant sa propre photo vérifiée
+  // (doublons + incohérences signalés par le restaurateur, 2026-08). ---
   'pringles': U('1599490659213-e2b9527bd087'),
-  'doritos': U('1599490659213-e2b9527bd087'),
-  'tuc': U('1599490659213-e2b9527bd087'),
-  'beef jerky': U('1599490659213-e2b9527bd087'),
+  "chips lay's 175-250g": U('1621447504864-d8686e12698c'),
+  'doritos': U('1754088605508-4148fefd8a43'),
+  'tuc': U('1781820222136-894190cc3fdb'),
+  'cacahuètes / mix apéro': U('1742524252643-d1f3fddd8cca'),
+  'beef jerky': U('1652209695374-7a91c243f12f'),
   'papier toilette (4 rouleaux)': U('1584556812952-905ffd0c611a'),
-  'mouchoirs': U('1550985543-f1ea83691cd8'),
+  'mouchoirs': U('1609840112990-4265448268d1'),
   'dentifrice': U('1550985543-f1ea83691cd8'),
   'brosse à dents': U('1550985543-f1ea83691cd8'),
-  'déodorant': U('1550985543-f1ea83691cd8'),
-  'gel douche': U('1550985543-f1ea83691cd8'),
-  'serviettes hygiéniques / tampons': U('1550985543-f1ea83691cd8'),
-  'préservatifs (3)': U('1550985543-f1ea83691cd8'),
-  'briquet': U('1492107376256-4026437926cd'),
+  'déodorant': U('1700225195176-39ebd9cd5550'),
+  'gel douche': U('1673847401561-fcd75a7888c5'),
+  'serviettes hygiéniques / tampons': U('1764312270936-adb508140a6d'),
+  'préservatifs (3)': U('1698376621004-70ce754157d1'),
+  'briquet': U('1575908539629-62b3f98d7b3a'),
   'chargeur usb': U('1492107376256-4026437926cd'),
   'câble téléphone': U('1492107376256-4026437926cd'),
-  'piles aa (4)': U('1492107376256-4026437926cd'),
+  'piles aa (4)': U('1576834975354-ee694be1f0d1'),
 
   // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" ---
   'porridge fruits': U('1571212515416-fef01fc43637'),
@@ -2206,15 +2231,39 @@ const ITEM_IMAGE_OVERRIDES = {
   'plat du jour (midi, semaine)': U('1543353071-873f17a7a088'),
   'dame blanche': U('1541014741259-de529411b96a'),
   'jupiler 25cl': U('1618183479302-1e0aa382c36b'),
-  'duvel': U('1618183479302-1e0aa382c36b'),
-  'chimay': U('1618183479302-1e0aa382c36b'),
-  'kriek': U('1618183479302-1e0aa382c36b'),
+  'duvel': U('1703564803611-36f9358b5b03'),
+  'chimay': U('1691419775322-1864f752dbac'),
+  'kriek': U('1703564803569-2a9063d5cf06'),
 
   // --- Asiatique / Healthy / Végétarien ---
   'menu midi (entrée + plat)': U('1543353071-873f17a7a088'),
   'dahl de lentilles': U('1716959669858-11d415bdead6'),
   'eau infusée': U('1534616042650-80f5c9b61f09'),
   'dahl de lentilles, naan': U('1716959669858-11d415bdead6'),
+  // "Riz cantonnais"/"Riz cantonais" (Asiatique a une coquille avec un double n, Chinois l'orthographe
+  // correcte — les deux gardées) retombaient sur le pool générique riz/curry (soupe ou risotto selon le
+  // hash) au lieu d'un vrai riz sauté — override dédié vers une vraie photo de riz cantonais.
+  'riz cantonnais': U('1603133872878-684f208fb84b'),
+  'riz cantonais': U('1603133872878-684f208fb84b'),
+  // "Nouilles sautées poulet" pouvait retomber sur une photo de riz frit (pool "nouilles"/"bo bun")
+  // au lieu de nouilles — override dédié.
+  'nouilles sautées poulet': U('1609183480237-ccbb2d7c5772'),
+  // "Curry massaman bœuf" partageait la même photo de soupe verte que "Curry rouge crevettes" — les
+  // deux affichaient un doublon identique côte à côte.
+  'curry massaman bœuf': U('1560963859-6f618d786177'),
+  // "Bo bun (bœuf, nems)"/"Bo bun nems" contiennent "nems" qui matchait par erreur le mot-clé
+  // "rouleaux de printemps/nems" avant d'atteindre le mot-clé "bo bun" plus bas dans la liste —
+  // affichait des rouleaux de printemps au lieu d'un bol de bo bun.
+  'bo bun (bœuf, nems)': U('1605311572312-a926afe51604'),
+  'bo bun nems': U('1605311572312-a926afe51604'),
+  // "Thé jasmin" utilisait une photo authentique mais quasi entièrement noire (mise en scène très
+  // sombre) — illisible à la taille d'une vignette de menu, remplacée par une photo claire.
+  'thé jasmin': U('1611162458324-aae1eb4129a4'),
+  // "Wrap poulet avocat"/"Wrap végétarien" : l'une des 3 photos du pool générique sandwich/wrap
+  // était en réalité un burger empilé — chaque wrap a maintenant sa propre vraie photo de wrap roulé.
+  'wrap poulet avocat': U('1752095809096-f09d22c466c5'),
+  'wrap végétarien': U('1626700051175-6818013e1d4f'),
+  'wrap saumon fumé': U('1559054663-e8d23213f55c'),
 
   // --- Kebab & Grill : variantes "mixte" sans viande précisée dans le nom ---
   'dürüm mixte': U('1532636875304-0c89119d9b4d'),
@@ -2230,7 +2279,7 @@ const ITEM_IMAGE_OVERRIDES = {
   'margarita fruits': U('1516684163977-84cc7de8c7c8'),
   'mojito': U('1516684163977-84cc7de8c7c8'),
   'agua fresca': U('1622597467821-df79dcb4f94d'),
-  'tequila / mezcal (shot)': U('1587920710219-f6f9804dc10d'),
+  'tequila / mezcal (shot)': U('1516684163977-84cc7de8c7c8'),
 
   // --- Libanais : plat + desserts sans mot-clé dédié ---
   'assiette végétarienne': U('1593001872095-7d5b3868fb1d'),
@@ -2251,13 +2300,22 @@ const ITEM_IMAGE_OVERRIDES = {
 
   // --- Fried Chicken ---
   'eau': U('1534616042650-80f5c9b61f09'),
+  // "Poulet frit" (3/6/12 pcs + Bucket) contient "poulet" et retombait sur la photo générique
+  // poulet/chicken — qui montrait (avant fix ci-dessus) une poitrine de poulet CRUE, absurde pour un
+  // produit frit. Override dédié vers une vraie photo de poulet frit doré.
+  'poulet frit 3 pcs': U('1742936401708-dd1b132f06db'),
+  'poulet frit 6 pcs': U('1742936401708-dd1b132f06db'),
+  'poulet frit 12 pcs': U('1426869981800-95ebf51ce900'),
+  'poulet frit bucket 20 pcs': U('1426869981800-95ebf51ce900'),
 
-  // --- Coffee Shop : boissons spécialité sans mot-clé exact ---
+  // --- Coffee Shop : boissons spécialité sans mot-clé exact — "Golden Latte"/"Strawberry Matcha"/
+  // "Hojicha Latte" partageaient tous la même photo de matcha vert (doublon + couleur trompeuse : le
+  // golden latte doit être doré/curcuma, le strawberry matcha rose, le hojicha brun torréfié) ---
   'formule brunch (week-end)': U('1603046891726-36bfd957e0bf'),
   'latte': U('1509042239860-f550ce710b93'),
-  'strawberry matcha': U('1536256263959-770b48d82b0a'),
-  'hojicha latte': U('1536256263959-770b48d82b0a'),
-  'golden latte': U('1536256263959-770b48d82b0a'),
+  'strawberry matcha': U('1744920666512-506c732c20f3'),
+  'hojicha latte': U('1506372023823-741c83b836fe'),
+  'golden latte': U('1778449303540-3274878cdc85'),
 
   // --- Boulangerie : viennoiseries sans mot-clé dédié ---
   'pistolet (pièce)': U('1623334044303-241021148842'),
@@ -2319,16 +2377,18 @@ const ITEM_IMAGE_OVERRIDES = {
   'haribo': U('1582058091505-f87a2e55a40f'),
   "m&m's pochon": U('1582058091505-f87a2e55a40f'),
   'magnum (pièce)': U('1541014741259-de529411b96a'),
-  'red bull 25cl': U('1622543925917-763c34d1a86e'),
+  'red bull 25cl': U('1570526427001-9d80d114054d'),
   'monster 50cl': U('1622543925917-763c34d1a86e'),
   'eau 1,5l': U('1534616042650-80f5c9b61f09'),
   'capri-sun': U('1622597467821-df79dcb4f94d'),
   'whisky 70cl': U('1615887023544-3a566f29d822'),
-  'gin 70cl': U('1587920710219-f6f9804dc10d'),
+  // "Gin"/"Jägermeister"/"Mignonnettes" partageaient tous la photo de verres de vin rouge — des
+  // spiritueux qui n'ont rien à voir visuellement, chacun a maintenant sa propre bouteille.
+  'gin 70cl': U('1735416031163-863c7cf824bb'),
   'rhum 70cl': U('1652284917571-e6475a979ea5'),
   'vodka 70cl': U('1591704951890-0862b2e98acb'),
-  'jägermeister 70cl': U('1587920710219-f6f9804dc10d'),
-  'mignonnettes': U('1587920710219-f6f9804dc10d'),
+  'jägermeister 70cl': U('1615887023544-3a566f29d822'),
+  'mignonnettes': U('1591704951890-0862b2e98acb'),
 
   // --- City Burger : condiment sans mot-clé dédié, retombait sur la photo générique "Entrées" ---
   'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752'),
@@ -2364,7 +2424,48 @@ const ITEM_IMAGE_OVERRIDES = {
   'calamars frits': U('1763467940825-d067fb3baf22'),
   'sole meunière': U('1763867641066-cd26a5f11105'),
   'paella de fruits de mer': U('1779119390078-16f56e4c35bc'),
-  "scampis à l'ail": U('1758972572427-fc3d4193bbd2')
+  "scampis à l'ail": U('1758972572427-fc3d4193bbd2'),
+
+  // --- Deuxième audit diversité (2026-08) : plusieurs plats différents au sein d'une même carte
+  // affichaient la même photo 3 à 6 fois d'affilée. Réutilise des photos déjà vérifiées ailleurs dans
+  // ce fichier pour les mêmes types de plats (variantes anglaises du menu City Burger/générique),
+  // plutôt que de dupliquer une recherche déjà faite. ---
+  // Sushi : 5 makis différents (saumon/thon/concombre/avocat/saumon-avocat) partageaient tous la photo
+  // générique "maki".
+  'maki saumon ×6': U('1617196034738-26c5f7c977ce'),
+  'maki thon ×6': U('1712725214706-e564b8dd1bbe'),
+  'maki concombre ×6': U('1728691190534-e1e8c564014e'),
+  'maki saumon avocat ×6': U('1646196603168-ed92068477c3'),
+  // 4 California rolls différents partageaient tous la même photo.
+  'california roll saumon avocat ×8': U('1646196603168-ed92068477c3'),
+  'california roll crevette tempura ×8': U('1580822184713-fc5400e7fe10'),
+  'california roll poulet croustillant ×8': U('1625668742946-4ade4980c01e'),
+  'california roll végétarien ×8': U('1564489563601-c53cfc451e93'),
+  // Mexicain : 6 tacos différents (poulet/carnitas/barbacoa/crevettes/champignons/pastor) partageaient
+  // tous la même photo générique "tacos".
+  'tacos carnitas (porc confit)': U('1746648858213-c7b5d2e34265'),
+  'tacos barbacoa (bœuf)': U('1768716575089-7ba787da9afb'),
+  'tacos crevettes': U('1768716697811-75b2ce9c5b54'),
+  'tacos champignons-haricots noirs': U('1768716575003-2f7450b1344a'),
+  // 3 burritos différents (poulet/bœuf/végétarien) partageaient tous la même photo générique "burrito".
+  'burrito poulet': U('1731090389457-7e62135a657f'),
+  'burrito bœuf': U('1671572579845-52270341950f'),
+  'burrito végétarien': U('1731090389462-351421240be9'),
+  // Poke Bowl : 4 poke bowls différents (saumon/thon/crevettes/saumon avocat mangue) partageaient tous
+  // la même photo générique "poke".
+  'poke bowl saumon': U('1604259596863-57153177d40b'),
+  'poke bowl thon': U('1597958792579-bd3517df6399'),
+  'poke bowl crevettes': U('1780805663576-48cdd496138d'),
+  'poke bowl saumon avocat mangue': U('1780805663865-c9ab052da2e4'),
+  // Fried Chicken : 4 burgers au poulet (Crispy/Spicy/Double Crispy/Hot Honey) retombaient sur la
+  // photo générique "burger" (bœuf) au lieu d'un vrai burger au poulet.
+  'burger chicken crispy': U('1607013251379-e6eecfffe234'),
+  'burger spicy chicken': U('1705131186176-1c7cdb830815'),
+  'burger double crispy': U('1637710847214-f91d99669e18'),
+  'burger chicken hot honey': U('1609167830240-fc81e9cfd9bf'),
+  // Thaïlandais : "Curry massaman agneau" partageait la même photo de soupe verte que "Curry vert
+  // poulet"/"Curry rouge bœuf" juste au-dessus.
+  'curry massaman agneau': U('1560963859-6f618d786177')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
