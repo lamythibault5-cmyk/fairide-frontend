@@ -392,7 +392,7 @@ export default function EditPage() {
             {deleteCodeSent && (
               <>
                 <p className="small" style={{ marginBottom: 10 }}>
-                  Un code de validation de suppression vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.
+                  Ta demande a été transmise à l'équipe Fairide. Elle va te recontacter par email avec ton code de confirmation — entre-le ci-dessous dès que tu l'as reçu pour finaliser la suppression.
                 </p>
                 <div className="field">
                   <label>Code reçu par email</label>

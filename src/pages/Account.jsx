@@ -321,7 +321,7 @@ export default function Account() {
             {deleteCodeSent && (
               <>
                 <p className="small" style={{ marginBottom: 10 }}>
-                  {t('account.deleteCodeSentText')}
+                  {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
                 </p>
                 <div className="field">
                   <label>{t('account.deleteCodeLabel')}</label>

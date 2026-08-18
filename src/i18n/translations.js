@@ -313,6 +313,7 @@ export const translations = {
       deleteCommentPlaceholder: 'Aide-nous à nous améliorer...',
       deleteRequestCode: 'Recevoir un code de validation de suppression',
       deleteCodeSentText: "Un code de validation de suppression vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser la suppression.",
+      deleteCodeSentTextAdmin: "Ta demande a été transmise à l'équipe Fairide. Elle va te recontacter par email avec ton code de confirmation — entre-le ci-dessous dès que tu l'as reçu pour finaliser la suppression.",
       deleteCodeLabel: 'Code reçu par email',
       deleteConfirmFinal: 'Oui, supprimer définitivement',
       deletionReasons: {
@@ -777,6 +778,7 @@ export const translations = {
       deleteCommentPlaceholder: 'Help us improve...',
       deleteRequestCode: 'Receive a deletion confirmation code',
       deleteCodeSentText: 'A deletion confirmation code has just been sent to you by email. Enter it below to finalise the deletion.',
+      deleteCodeSentTextAdmin: "Your request has been forwarded to the Fairide team. They'll get back to you by email with your confirmation code — enter it below once you've received it to finalise the deletion.",
       deleteCodeLabel: 'Code received by email',
       deleteConfirmFinal: 'Yes, delete permanently',
       deletionReasons: {
@@ -1241,6 +1243,7 @@ export const translations = {
       deleteCommentPlaceholder: 'Help ons verbeteren...',
       deleteRequestCode: 'Een verwijderingscode ontvangen',
       deleteCodeSentText: 'Er is zojuist een verwijderingscode naar je e-mail gestuurd. Voer hem hieronder in om de verwijdering af te ronden.',
+      deleteCodeSentTextAdmin: 'Je aanvraag is doorgestuurd naar het Fairide-team. Ze nemen per e-mail contact met je op met je bevestigingscode — voer die hieronder in zodra je ze hebt ontvangen om de verwijdering af te ronden.',
       deleteCodeLabel: 'Code ontvangen per e-mail',
       deleteConfirmFinal: 'Ja, definitief verwijderen',
       deletionReasons: {
