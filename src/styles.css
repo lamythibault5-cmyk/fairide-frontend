@@ -38,6 +38,13 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Retire le flash gris par défaut au tap sur mobile (Chrome/Safari Android/iOS) — sur les boutons et
+   liens on a déjà notre propre retour visuel (:active { transform: scale }), le flash natif du
+   navigateur par-dessus rendait l'interaction moins "smooth". */
+a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
 h1, h2, h3 { font-family: 'Fraunces', serif; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
 
 a { color: inherit; }
@@ -98,6 +105,10 @@ a { color: inherit; }
 input, select, textarea {
   font-family: inherit; font-size: 14px; padding: 10px 12px;
   border: 1px solid var(--line); border-radius: 9px; background: #fff; color: var(--ink); width: 100%;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(47,111,94,0.15);
 }
 label { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: block; margin-bottom: 5px; }
 .field { margin-bottom: 12px; }
@@ -123,8 +134,9 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .btn-block { width: 100%; }
 
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
-.rest-card { cursor: pointer; transition: border-color .15s; display: block; text-decoration: none; color: inherit; min-width: 0; }
+.rest-card { cursor: pointer; transition: border-color .15s, transform .12s ease, box-shadow .15s ease; display: block; text-decoration: none; color: inherit; min-width: 0; }
 .rest-card:hover { border-color: var(--gold); }
+.rest-card:active { transform: scale(.98); box-shadow: 0 2px 10px rgba(22,35,58,.1); }
 .favorite-heart { display: inline-flex; align-items: center; justify-content: center; background: none; border: none; padding: 0; cursor: pointer; line-height: 0; }
 .favorite-heart svg { display: block; transition: transform .15s ease; }
 .favorite-heart svg path { fill: rgba(255,255,255,0.9); stroke: rgba(22,35,58,0.35); stroke-width: 1.2; transition: fill .2s ease, stroke .2s ease; }
@@ -186,6 +198,26 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    droit au lieu de rester plaquée contre le bord de la fenêtre, très loin du menu sur un large écran. */
 @media (min-width: 1108px) { .category-quicknav { right: calc((100vw - 960px) / 2 - 74px); } }
 
+/* Sous 760px, la barre verticale flottante (centrée à mi-hauteur d'écran) chevauchait la carte
+   resto/carte/bouton réservation en dessous d'elle, quelle que soit la position de scroll — bug
+   signalé par le restaurateur. Devient une barre horizontale défilante collée en haut de page (sticky),
+   qui suit le scroll au lieu de rester plaquée au milieu de l'écran. */
+@media (max-width: 760px) {
+  .category-quicknav {
+    position: sticky; top: 0; right: auto; left: 0; transform: none; z-index: 40;
+    flex-direction: row; align-items: center; justify-content: flex-start;
+    gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    padding: 8px 2px 10px; margin: 0 0 8px;
+    background: linear-gradient(to bottom, var(--cream) 78%, rgba(251,248,242,0));
+  }
+  .category-quicknav::-webkit-scrollbar { display: none; }
+  .category-quicknav button {
+    flex: 0 0 auto; padding: 7px 13px; font-size: 12px; min-height: 34px;
+    box-shadow: 0 2px 8px rgba(22,35,58,.08);
+  }
+  .category-quicknav button.active { transform: none; }
+}
+
 .floating-cart {
   position: fixed; left: 12px; bottom: 12px; z-index: 46;
   width: min(300px, calc(100vw - 24px));
@@ -210,6 +242,14 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 /* Sur mobile, le widget assistant flottant occupe déjà le coin bas-droit (54px, right/bottom 12px) —
    la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. */
 @media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; bottom: 82px; max-height: min(55vh, 400px); } }
+/* Sous 900px, .dashboard-shell devient un rail d'icônes de 64px plaqué au bord gauche de la fenêtre
+   (voir règles .dashboard-shell ci-dessus) — le panier flottant (frère de .dashboard-shell dans le DOM,
+   monté une fois dans Layout.jsx) se retrouvait affiché par-dessus ce rail à left:8px. Décalé pour
+   se placer juste à côté au lieu de le chevaucher, uniquement quand la sidebar est présente. */
+@media (max-width: 900px) {
+  .dashboard-shell ~ .floating-cart { left: 72px; }
+  .dashboard-shell ~ .floating-cart-bubble { left: 72px; }
+}
 
 /* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
    déploie le récap complet ci-dessus plutôt que de l'imposer en permanence sur toutes les pages. */
@@ -380,9 +420,30 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
+.restaurant-search-row { display: flex; gap: 10px; margin-bottom: 14px; }
+.restaurant-search-row input { flex: 2; min-width: 160px; }
+.restaurant-search-row select { flex: 1; min-width: 130px; }
+/* Sous 560px les deux champs se retrouvaient trop serrés (texte tronqué illisible) — chacun prend
+   toute la largeur sur sa propre ligne à la place. */
+@media (max-width: 560px) {
+  .restaurant-search-row { flex-direction: column; gap: 8px; }
+  .restaurant-search-row input, .restaurant-search-row select { flex: none; min-width: 0; width: 100%; }
+}
+
 .cuisine-scroll { overflow: hidden; padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .cuisine-track { display: flex; gap: 8px; width: max-content; animation: cuisineMarquee 34s linear infinite; }
 .cuisine-scroll:hover .cuisine-track { animation-play-state: paused; }
+/* Sur un écran tactile (pas de souris = pas de hover), la bande défile en continu sans jamais se
+   mettre en pause et overflow:hidden empêche tout défilement manuel — impossible de viser un chip
+   précis pendant qu'il défile. On désactive le défilement auto et on rend la liste balayable au doigt. */
+@media (hover: none) and (pointer: coarse) {
+  .cuisine-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .cuisine-scroll::-webkit-scrollbar { display: none; }
+  .cuisine-track { animation: none; width: auto; }
+  /* Le second jeu de chips (dupliqué pour la boucle du défilement auto) est marqué aria-hidden — on
+     le masque ici puisque sans animation il n'a plus lieu d'être affiché deux fois de suite. */
+  .cuisine-track [aria-hidden="true"] { display: none; }
+}
 @keyframes cuisineMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 20px; line-height: 1; }
@@ -659,6 +720,12 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 .tracking-with-game { display: flex; gap: 10px; align-items: flex-start; }
 .tracking-with-game > .tracking-map-col { flex: 1; min-width: 0; }
+/* En dessous de 560px, la carte (flex:1) et le mini-jeu (largeur fixe) se retrouvaient serrés côte à
+   côte sur la même ligne, trop étroit pour les deux — empile la carte au-dessus du jeu à la place. */
+@media (max-width: 560px) {
+  .tracking-with-game { flex-direction: column; align-items: center; }
+  .tracking-with-game > .tracking-map-col { width: 100%; }
+}
 
 .tracking-map-wrap { position: relative; }
 .tracking-map-recenter {

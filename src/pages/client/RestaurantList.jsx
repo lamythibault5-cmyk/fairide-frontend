@@ -181,9 +181,9 @@ export default function RestaurantList() {
           ))}
         </div>
       </div>
-      <div className="row" style={{ marginBottom: 14 }}>
-        <input placeholder={t('restaurantList.searchPlaceholder')} style={{ flex: 2, minWidth: 160 }} value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select style={{ flex: 1, minWidth: 130 }} value={commune} onChange={(e) => setCommune(e.target.value)}>
+      <div className="restaurant-search-row">
+        <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <select value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
