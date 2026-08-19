@@ -242,13 +242,12 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 /* Sur mobile, le widget assistant flottant occupe déjà le coin bas-droit (54px, right/bottom 12px) —
    la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. */
 @media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; bottom: 82px; max-height: min(55vh, 400px); } }
-/* Sous 900px, .dashboard-shell devient un rail d'icônes de 64px plaqué au bord gauche de la fenêtre
-   (voir règles .dashboard-shell ci-dessus) — le panier flottant (frère de .dashboard-shell dans le DOM,
-   monté une fois dans Layout.jsx) se retrouvait affiché par-dessus ce rail à left:8px. Décalé pour
-   se placer juste à côté au lieu de le chevaucher, uniquement quand la sidebar est présente. */
+/* Sous 900px, .dashboard-shell devient une barre d'onglets fixée en bas (voir règles .dashboard-shell
+   ci-dessus) — le widget assistant (frère de .dashboard-shell dans le DOM, monté une fois dans
+   Layout.jsx) se retrouvait affiché par-dessus cette barre à bottom:12px. Remonté pour se placer
+   juste au-dessus au lieu de la chevaucher, uniquement quand la barre est présente. */
 @media (max-width: 900px) {
-  .dashboard-shell ~ .floating-cart { left: 72px; }
-  .dashboard-shell ~ .floating-cart-bubble { left: 72px; }
+  .dashboard-shell ~ .assistant-widget { bottom: 70px; }
 }
 
 /* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
@@ -374,6 +373,20 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .cover-banner { width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius); margin-bottom: 14px; background: var(--cream-dim); }
 .cover-banner-sm { width: 100%; height: 110px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 10px; width: calc(100% + 36px); }
 .cover-banner-detail { height: 190px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 14px; width: calc(100% + 36px); }
+
+/* Enveloppe la photo d'accueil pour pouvoir y superposer le logo (badge rond à cheval sur le bas de
+   la photo, façon page pro Facebook/Uber Eats) — reprend le débordement de .cover-banner-detail sur
+   le wrapper et neutralise celui de l'image elle-même pour ne pas le cumuler deux fois. */
+.restaurant-header-media { position: relative; margin: -18px -18px 28px; width: calc(100% + 36px); }
+.restaurant-header-media .cover-banner-detail { margin: 0; width: 100%; }
+.restaurant-logo-badge {
+  position: absolute; left: 18px; bottom: -24px; width: 76px; height: 76px; border-radius: 50%;
+  object-fit: cover; background: #fff; border: 4px solid #fff; box-shadow: 0 4px 14px rgba(22,35,58,.2);
+}
+/* Sans photo d'accueil, le logo n'a rien à chevaucher : redevient un élément normal du flux, en haut
+   à gauche de la carte, au lieu de rester en position absolue avec rien en dessous. */
+.restaurant-header-media.no-cover { position: static; margin: 0 0 12px; width: auto; }
+.restaurant-header-media.no-cover .restaurant-logo-badge { position: static; width: 60px; height: 60px; box-shadow: 0 2px 8px rgba(22,35,58,.15); }
 .menu-item:last-child { border-bottom: none; }
 .price { font-weight: 700; color: var(--teal-deep); white-space: nowrap; margin-left: 12px; }
 
@@ -676,27 +689,36 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-footer-links a { font-size: 12px; color: var(--ink-soft); text-decoration: none; }
 .dashboard-footer-links a:hover { text-decoration: underline; }
 
-/* Sous 900px : la sidebar reste verticale à gauche (comme sur desktop), juste rétrécie en rail
-   d'icônes — jamais transformée en barre horizontale en haut, sur aucun rôle (client/restaurateur/
-   livreur). La colonne "right" optionnelle (carte "Aujourd'hui" du dashboard restaurateur/livreur)
-   passe en pleine largeur sous le contenu principal plutôt que d'essayer de tenir sur une 3e colonne. */
+/* Sous 900px : la sidebar passe d'une colonne verticale à gauche à une barre d'onglets fixée en bas de
+   l'écran, comme sur les autres plateformes de livraison (Uber Eats, Deliveroo...) — demandé par le
+   restaurateur pour rendre toute la largeur de l'écran au contenu plutôt que de garder une colonne
+   d'icônes plaquée sur le côté. Le logo/marque et la carte profil (nom, rôle, déconnexion) disparaissent
+   de la barre — la déconnexion reste accessible via l'onglet "Compte"/"Mon compte". La colonne "right"
+   optionnelle (carte "Aujourd'hui" du dashboard restaurateur/livreur) passe en pleine largeur sous le
+   contenu principal plutôt que d'essayer de tenir sur une 3e colonne. */
 @media (max-width: 900px) {
   .dashboard-shell, .dashboard-shell.has-right {
-    grid-template-columns: 64px 1fr;
-    grid-template-areas: "sidebar main" "sidebar right";
+    grid-template-columns: 1fr;
+    grid-template-areas: "main" "right";
   }
-  .dashboard-sidebar { padding: 14px 8px; }
-  .dashboard-sidebar-brand { justify-content: center; margin-bottom: 18px; padding: 0; }
-  .dashboard-sidebar-brand span { display: none; }
-  .dashboard-nav-link { justify-content: center; padding: 10px 4px; }
-  .dashboard-nav-link span:last-child { display: none; }
-  .dashboard-profile-card { flex-direction: column; align-items: center; gap: 8px; padding: 14px 0 0; }
-  .dashboard-profile-info { align-items: center; }
-  .dashboard-profile-name, .dashboard-profile-role { display: none; }
-  .dashboard-profile-logout { font-size: 0; text-decoration: none; align-self: center; }
-  .dashboard-profile-logout::before { content: '🚪'; font-size: 16px; }
-  .dashboard-main { padding: 18px 16px 30px; }
-  .dashboard-right { padding: 0 16px 24px; }
+  .dashboard-sidebar {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: auto; width: 100%;
+    flex-direction: row; align-items: stretch; padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+    border-right: none; border-top: 1px solid var(--line);
+    box-shadow: 0 -6px 20px rgba(22,35,58,.08); z-index: 50;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .dashboard-sidebar::-webkit-scrollbar { display: none; }
+  .dashboard-sidebar-brand, .dashboard-profile-card { display: none; }
+  .dashboard-nav { flex-direction: row; gap: 2px; width: 100%; }
+  .dashboard-nav-link {
+    flex-direction: column; gap: 2px; justify-content: center; align-items: center;
+    padding: 6px 4px; flex: 1; min-width: 60px; border-radius: 10px;
+  }
+  .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
+  .dashboard-nav-icon { font-size: 20px; width: auto; }
+  .dashboard-main { padding: 18px 16px calc(30px + 66px); }
+  .dashboard-right { padding: 0 16px calc(24px + 66px); }
 }
 
 .opening-hours-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }

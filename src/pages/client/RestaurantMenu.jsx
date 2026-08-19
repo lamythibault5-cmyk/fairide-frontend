@@ -160,7 +160,12 @@ export default function RestaurantMenu() {
       <CategoryQuickNav categories={presentSections} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
       <div className="card">
-        {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
+        {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
+          <div className={`restaurant-header-media${restaurant.coverImageUrl ? '' : ' no-cover'}`}>
+            {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
+            {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" className="restaurant-logo-badge" />}
+          </div>
+        )}
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
           <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />

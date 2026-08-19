@@ -55,7 +55,12 @@ export default function RestaurantPreview({ restaurant }) {
       </div>
 
       <div className="card">
-        {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
+        {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
+          <div className={`restaurant-header-media${restaurant.coverImageUrl ? '' : ' no-cover'}`}>
+            {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
+            {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" className="restaurant-logo-badge" />}
+          </div>
+        )}
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>
           <StarsDisplay value={restaurant.rating} />

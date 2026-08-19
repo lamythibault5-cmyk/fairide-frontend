@@ -36,6 +36,8 @@ export default function EditPage() {
   const [editCover, setEditCover] = useState('');
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [coverSuggestions, setCoverSuggestions] = useState([]);
+  const [editLogo, setEditLogo] = useState('');
+  const [logoPickerOpen, setLogoPickerOpen] = useState(false);
   const [editHours, setEditHours] = useState(null);
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
@@ -82,6 +84,7 @@ export default function EditPage() {
     setEditAddressNumber(restaurant.addressNumber || '');
     setEditAddressPostalCode(restaurant.addressPostalCode || '');
     setEditCover(restaurant.coverImageUrl || '');
+    setEditLogo(restaurant.logoImageUrl || '');
     setEditHours(restaurant.hours || null);
     setEditOpenFlag(restaurant.open);
   }, [restaurant]);
@@ -108,7 +111,7 @@ export default function EditPage() {
           legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(),
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
-          coverImageUrl: editCover.trim(), hours: editHours, open: editOpenFlag
+          coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours, open: editOpenFlag
         }
       });
       await loadDashboard(restoId);
@@ -337,6 +340,23 @@ export default function EditPage() {
             suggestionsTitle={`Suggestions pour ${restaurant.cuisine}`}
             onSelect={(url) => { setEditCover(url); setCoverPickerOpen(false); }}
             onCancel={() => setCoverPickerOpen(false)}
+          />
+        )}
+        <div className="field">
+          <label>Logo (affiché sur ta page, par-dessus la photo d'accueil)</label>
+          <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            {editLogo && <img src={editLogo} alt="" className="dish-thumb" style={{ flexShrink: 0, borderRadius: '50%' }} />}
+            <button type="button" className="btn-ghost" onClick={() => setLogoPickerOpen(true)}>🖼️ Choisir un logo</button>
+            {editLogo && <button type="button" className="btn-danger-ghost" onClick={() => setEditLogo('')}>Retirer</button>}
+          </div>
+        </div>
+        {logoPickerOpen && (
+          <GalleryPickerModal
+            restoId={restoId}
+            currentImageUrl={editLogo}
+            title="Logo du restaurant"
+            onSelect={(url) => { setEditLogo(url); setLogoPickerOpen(false); }}
+            onCancel={() => setLogoPickerOpen(false)}
           />
         )}
         <label>Horaires d'ouverture</label>
