@@ -15,6 +15,9 @@ import { getOpenStatus } from '../../openingHours';
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
 const GROCERY_TYPES = ['Supermarché', 'Night Shop', 'Boulangerie', 'Boucherie'];
 const DISCOVER_RADIUS_KM = 10;
+
+// Bandeau décoratif (aucune fonction de filtre, juste visuel) — voir .food-marquee dans styles.css.
+const FOOD_EMOJIS = ['🍕', '🍔', '🍣', '🌮', '🥗', '🍜', '🥐', '🍰', '☕', '🥙', '🍱', '🥟', '🌯', '🍩', '🥪', '🍤', '🍝', '🧁'];
 const DISCOVER_MAX = 8;
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
@@ -82,7 +85,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t }) {
   return (
     <div style={{ marginBottom: 24 }}>
       <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
-      <div className="rest-grid">
+      <div className="rest-grid rest-grid-scroll">
         {list.map((r) => (
           <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
         ))}
@@ -154,11 +157,16 @@ export default function RestaurantList() {
   const groceryList = restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine));
   const nearbyList = homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : [];
   const offersList = restaurants.filter((r) => r.hasPromo);
+  // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
+  // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
+  // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
+  // repli sur une sélection aléatoire parmi tous (hors déjà commandés), pour que la section s'affiche
+  // toujours immédiatement dès que la liste des restos est chargée.
   const discoverList = useMemo(() => {
-    if (!user?.lat || !user?.lng) return [];
+    const hasLocation = user?.lat && user?.lng;
     const eligible = nonGrocery.filter((r) => (
-      !orderedRestaurantIds.has(r.id) && r.lat && r.lng &&
-      haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM
+      !orderedRestaurantIds.has(r.id) &&
+      (!hasLocation || (r.lat && r.lng && haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM))
     ));
     return [...eligible].sort(() => Math.random() - 0.5).slice(0, DISCOVER_MAX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -166,6 +174,13 @@ export default function RestaurantList() {
 
   return (
     <div>
+      <div className="food-marquee" aria-hidden="true">
+        <div className="food-marquee-track">
+          {[...FOOD_EMOJIS, ...FOOD_EMOJIS].map((emoji, i) => (
+            <span key={i} className="food-marquee-item">{emoji}</span>
+          ))}
+        </div>
+      </div>
       <div className="cuisine-scroll">
         <div className="cuisine-track">
           {cuisineOptions.map((opt) => (
