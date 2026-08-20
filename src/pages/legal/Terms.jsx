@@ -1,4 +1,7 @@
+import usePageMeta from '../../hooks/usePageMeta';
+
 export default function Terms() {
+  usePageMeta({ title: 'Conditions générales — Fairide', path: '/cgv' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>

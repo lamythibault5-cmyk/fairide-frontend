@@ -1,4 +1,7 @@
+import usePageMeta from '../../hooks/usePageMeta';
+
 export default function LegalNotice() {
+  usePageMeta({ title: 'Mentions légales — Fairide', path: '/mentions-legales' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>

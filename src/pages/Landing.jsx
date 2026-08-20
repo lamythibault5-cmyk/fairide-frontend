@@ -3,6 +3,7 @@ import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
+import usePageMeta from '../hooks/usePageMeta';
 
 function joinCards(t) {
   return [
@@ -49,6 +50,7 @@ function steps(t) {
 export default function Landing() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  usePageMeta({ path: '/' });
 
   return (
     <div className="decor-page">
