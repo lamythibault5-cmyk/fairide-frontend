@@ -445,36 +445,11 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .cuisine-scroll { overflow: hidden; padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .cuisine-track { display: flex; gap: 8px; width: max-content; animation: cuisineMarquee 34s linear infinite; }
 .cuisine-scroll:hover .cuisine-track { animation-play-state: paused; }
-/* Sur un écran tactile (pas de souris = pas de hover), la bande défile en continu sans jamais se
-   mettre en pause et overflow:hidden empêche tout défilement manuel — impossible de viser un chip
-   précis pendant qu'il défile. On désactive le défilement auto et on rend la liste balayable au doigt. */
-@media (hover: none) and (pointer: coarse) {
-  .cuisine-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .cuisine-scroll::-webkit-scrollbar { display: none; }
-  .cuisine-track { animation: none; width: auto; }
-  /* Le second jeu de chips (dupliqué pour la boucle du défilement auto) est marqué aria-hidden — on
-     le masque ici puisque sans animation il n'a plus lieu d'être affiché deux fois de suite. */
-  .cuisine-track [aria-hidden="true"] { display: none; }
-}
 @keyframes cuisineMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 20px; line-height: 1; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 .cuisine-chip:hover { border-color: var(--teal); }
-
-/* Bandeau décoratif d'emojis nourriture qui défile en continu, façon ticker — purement visuel (aucun
-   clic), demandé pour rendre la page liste des restaurants plus vivante/sympa. Même mécanique que
-   .cuisine-track juste au-dessus (contenu dupliqué + translateX(-50%) pour une boucle sans coupure). */
-.food-marquee {
-  overflow: hidden; margin-bottom: 14px; padding: 10px 0;
-  background: var(--cream-dim); border-radius: 999px;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-.food-marquee-track { display: flex; gap: 34px; width: max-content; animation: cuisineMarquee 28s linear infinite; }
-.food-marquee-item { font-size: 26px; line-height: 1; flex: 0 0 auto; filter: drop-shadow(0 2px 3px rgba(22,35,58,.12)); }
-@media (max-width: 520px) { .food-marquee-item { font-size: 22px; } .food-marquee-track { gap: 24px; } }
-@media (prefers-reduced-motion: reduce) { .food-marquee-track { animation: none; } }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .stat-card { background: var(--cream-dim); border-radius: 12px; padding: 14px; }

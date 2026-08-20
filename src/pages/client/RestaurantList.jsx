@@ -15,9 +15,6 @@ import { getOpenStatus } from '../../openingHours';
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
 const GROCERY_TYPES = ['Supermarché', 'Night Shop', 'Boulangerie', 'Boucherie'];
 const DISCOVER_RADIUS_KM = 10;
-
-// Bandeau décoratif (aucune fonction de filtre, juste visuel) — voir .food-marquee dans styles.css.
-const FOOD_EMOJIS = ['🍕', '🍔', '🍣', '🌮', '🥗', '🍜', '🥐', '🍰', '☕', '🥙', '🍱', '🥟', '🌯', '🍩', '🥪', '🍤', '🍝', '🧁'];
 const DISCOVER_MAX = 8;
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
@@ -174,13 +171,6 @@ export default function RestaurantList() {
 
   return (
     <div>
-      <div className="food-marquee" aria-hidden="true">
-        <div className="food-marquee-track">
-          {[...FOOD_EMOJIS, ...FOOD_EMOJIS].map((emoji, i) => (
-            <span key={i} className="food-marquee-item">{emoji}</span>
-          ))}
-        </div>
-      </div>
       <div className="cuisine-scroll">
         <div className="cuisine-track">
           {cuisineOptions.map((opt) => (
