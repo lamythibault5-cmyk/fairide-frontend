@@ -30,7 +30,7 @@ function genders(t) {
 }
 
 export default function Account() {
-  const { user, role, token, updateProfile, requestDeletionCode, deleteAccount, logout } = useAuth();
+  const { user, role, token, updateProfile, refreshUser, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
   const { t } = useLanguage();
   const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
@@ -39,6 +39,11 @@ export default function Account() {
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [driverReviews, setDriverReviews] = useState(null);
   const [referralStats, setReferralStats] = useState(null);
+  const [redeemCode, setRedeemCode] = useState('');
+  const [redeeming, setRedeeming] = useState(false);
+  const [convertAmount, setConvertAmount] = useState('');
+  const [converting, setConverting] = useState(false);
+  const [generatedCodes, setGeneratedCodes] = useState(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0].value);
   const [deleteComment, setDeleteComment] = useState('');
@@ -81,11 +86,51 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    if (role !== 'restaurant' && role !== 'driver') return;
+    api('/auth/balance/codes/mine', { token }).then(setGeneratedCodes).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
   function copyReferralCode() {
     if (!referralStats?.code) return;
     navigator.clipboard.writeText(referralStats.code).then(() => {
       toast(t('account.referral.toastCopied'));
     }).catch(() => {});
+  }
+
+  async function handleRedeemCode(e) {
+    e.preventDefault();
+    if (!redeemCode.trim()) return;
+    setRedeeming(true);
+    try {
+      const result = await api('/auth/balance/redeem', { method: 'POST', token, body: { code: redeemCode.trim() } });
+      toast(t('account.redeemSuccess', { amount: Number(result.amount).toFixed(2) }));
+      setRedeemCode('');
+      await refreshUser();
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setRedeeming(false);
+    }
+  }
+
+  async function handleConvert(e) {
+    e.preventDefault();
+    const amount = Number(convertAmount);
+    if (!amount || amount <= 0) return;
+    setConverting(true);
+    try {
+      const result = await api('/auth/balance/convert', { method: 'POST', token, body: { amount } });
+      toast(t('account.convert.toastSuccess', { code: result.code }));
+      setConvertAmount('');
+      setGeneratedCodes((prev) => [{ code: result.code, amount: Number(result.amount), used: false, createdAt: new Date().toISOString() }, ...(prev || [])]);
+      await refreshUser();
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setConverting(false);
+    }
   }
 
   async function toggleLocationSharing(e) {
@@ -173,10 +218,18 @@ export default function Account() {
         </div>
 
         {role === 'client' && (
-          <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-            <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
-            <div className="label">{t('account.balance')}</div>
-          </div>
+          <>
+            <div className="stat-card highlight" style={{ marginBottom: 14 }}>
+              <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
+              <div className="label">{t('account.balance')}</div>
+            </div>
+            <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8, marginBottom: 14 }}>
+              <div className="field" style={{ flex: 1, margin: 0 }}>
+                <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')} />
+              </div>
+              <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
+            </form>
+          </>
         )}
 
         <form onSubmit={saveInfo}>
@@ -273,6 +326,35 @@ export default function Account() {
           </>
         )}
       </div>
+
+      {(role === 'restaurant' || role === 'driver') && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.convert.title')}</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
+          <div className="stat-card highlight" style={{ marginBottom: 14 }}>
+            <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
+            <div className="label">{t('account.convert.balanceLabel')}</div>
+          </div>
+          <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
+            <div className="field" style={{ flex: 1, margin: 0 }}>
+              <input type="number" step="0.01" min="5" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')} />
+            </div>
+            <button type="submit" className="btn-teal" disabled={converting}>{converting ? '...' : t('account.convert.button')}</button>
+          </form>
+          {generatedCodes && generatedCodes.length > 0 && (
+            <div>
+              <div className="small" style={{ margin: '4px 0 6px', fontWeight: 600 }}>{t('account.convert.myCodes')}</div>
+              {generatedCodes.map((c) => (
+                <div key={c.code} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+                  <span style={{ fontWeight: 700, letterSpacing: 1 }}>{c.code}</span>
+                  <span className="small">{c.amount.toFixed(2)}€</span>
+                  <span className={`pill ${c.used ? '' : 'teal'}`}>{c.used ? t('account.convert.used') : t('account.convert.unused')}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('account.passwordTitle')}</h3>
