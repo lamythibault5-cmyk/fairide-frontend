@@ -14,8 +14,25 @@ export function categoryLabel(value, t) {
   return CATEGORIES.find((c) => c.value === value)?.label || value;
 }
 
+// Sections personnalisées (tapées par le restaurateur, ou — surtout — issues de la lecture automatique
+// d'une carte importée : voir menuImport.js côté backend, dont le prompt reprend explicitement le nom
+// de section tel qu'écrit sur le document, ex. "Pizzas", "Nos Burgers", "Vins") : aucune correspondance
+// exacte avec les 4 catégories internes, mais on peut souvent deviner le bon type de photo à partir du
+// nom plutôt que de renvoyer '' — sans ça, defaultItemImage() ci-dessous finissait sur une image cassée
+// (<img src="">, sans garde contrairement à l'icône d'en-tête de section) pour tout plat importé dont
+// le nom ne matchait aucun mot-clé, un bug concret sur les menus importés signalé par le restaurateur.
+const CATEGORY_HINT_DESSERT = /dessert|sucr|glace|pâtisserie|patisserie|gâteau|gateau/iu;
+const CATEGORY_HINT_DRINK = /boisson|breuvage|soft|vin\b|vins\b|bière|biere|cocktail|café|the\b|thé|jus\b|eau\b|cave/iu;
+const CATEGORY_HINT_ENTREE = /entrée|entree|apéritif|aperitif|salade|starter|mise en bouche/iu;
+
 export function categoryImage(value) {
-  return CATEGORIES.find((c) => c.value === value)?.image || '';
+  const known = CATEGORIES.find((c) => c.value === value)?.image;
+  if (known) return known;
+  const v = (value || '').toLowerCase();
+  if (CATEGORY_HINT_DESSERT.test(v)) return CATEGORIES.find((c) => c.value === 'dessert').image;
+  if (CATEGORY_HINT_DRINK.test(v)) return CATEGORIES.find((c) => c.value === 'boisson').image;
+  if (CATEGORY_HINT_ENTREE.test(v)) return CATEGORIES.find((c) => c.value === 'entree').image;
+  return CATEGORIES.find((c) => c.value === 'plat').image;
 }
 
 // Sous-sections de la catégorie "Boissons", déduites du nom du produit — aucun champ supplémentaire
@@ -2494,5 +2511,7 @@ export function defaultItemImage(item) {
       return entry.image;
     }
   }
-  return categoryImage(item?.category) || '';
+  // categoryImage() ci-dessus renvoie toujours une image non vide désormais (dernier repli sur
+  // 'plat') — jamais de <img src=""> cassée, même pour un plat importé sans mot-clé reconnu.
+  return categoryImage(item?.category);
 }
