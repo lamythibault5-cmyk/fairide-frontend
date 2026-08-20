@@ -38,6 +38,7 @@ export default function EditPage() {
   const [coverSuggestions, setCoverSuggestions] = useState([]);
   const [editLogo, setEditLogo] = useState('');
   const [logoPickerOpen, setLogoPickerOpen] = useState(false);
+  const [logoSuggestions, setLogoSuggestions] = useState([]);
   const [editHours, setEditHours] = useState(null);
   const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
@@ -164,6 +165,16 @@ export default function EditPage() {
       setCoverSuggestions([]);
     }
     setCoverPickerOpen(true);
+  }
+
+  async function openLogoPicker() {
+    try {
+      const r = await api(`/restaurants/${restoId}/logo-suggestions`, { token });
+      setLogoSuggestions(r.images || []);
+    } catch {
+      setLogoSuggestions([]);
+    }
+    setLogoPickerOpen(true);
   }
 
   function openCuisineChange() {
@@ -346,7 +357,7 @@ export default function EditPage() {
           <label>Logo (affiché sur ta page, par-dessus la photo d'accueil)</label>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {editLogo && <img src={editLogo} alt="" className="dish-thumb" style={{ flexShrink: 0, borderRadius: '50%' }} />}
-            <button type="button" className="btn-ghost" onClick={() => setLogoPickerOpen(true)}>🖼️ Choisir un logo</button>
+            <button type="button" className="btn-ghost" onClick={openLogoPicker}>🖼️ Choisir un logo</button>
             {editLogo && <button type="button" className="btn-danger-ghost" onClick={() => setEditLogo('')}>Retirer</button>}
           </div>
         </div>
@@ -354,7 +365,9 @@ export default function EditPage() {
           <GalleryPickerModal
             restoId={restoId}
             currentImageUrl={editLogo}
+            suggestions={logoSuggestions}
             title="Logo du restaurant"
+            suggestionsTitle={`Suggestions pour ${restaurant.cuisine}`}
             onSelect={(url) => { setEditLogo(url); setLogoPickerOpen(false); }}
             onCancel={() => setLogoPickerOpen(false)}
           />
