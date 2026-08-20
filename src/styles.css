@@ -475,11 +475,36 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
 
-.decor-page { position: relative; }
+/* Fond de la page d'accueil : la page entière n'avait que 3 taches décoratives regroupées tout en
+   haut, laissant le reste (features, étapes, rejoindre, communes, contact...) sur un fond crème plat —
+   demandé "plus dynamique, plus sympa" par le restaurateur. Le halo radial ci-dessous donne une
+   respiration de fond sur toute la hauteur même entre deux taches, et .decor-blob-field répartit
+   maintenant 9 taches sur toute la hauteur réelle du contenu (positions en %, pas en px — la page
+   change beaucoup de hauteur entre desktop et mobile empilé, un % de la hauteur du conteneur reste
+   juste dans les deux cas). Une légère dérive anime chaque tache en boucle pour une impression vivante,
+   coupée sous prefers-reduced-motion. */
+.decor-page {
+  position: relative;
+  background-image: radial-gradient(circle at 1px 1px, rgba(22,35,58,0.05) 1px, transparent 0);
+  background-size: 26px 26px;
+}
 .decor-page > *:not(.decor-blob) { position: relative; z-index: 1; }
-.decor-blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; pointer-events: none; z-index: 0; }
+.decor-blob {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; pointer-events: none; z-index: 0;
+  animation: blobDrift 22s ease-in-out infinite alternate;
+}
 .decor-blob.teal { background: var(--teal); }
 .decor-blob.gold { background: var(--gold); }
+.decor-blob.red { background: var(--red); opacity: 0.16; }
+.decor-blob:nth-of-type(3n) { animation-duration: 26s; }
+.decor-blob:nth-of-type(3n+1) { animation-duration: 19s; animation-direction: alternate-reverse; }
+@keyframes blobDrift {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(22px, -26px) scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .decor-blob { animation: none; }
+}
 
 .landing-hero {
   text-align: center; max-width: 720px; margin: 0 auto 40px; display: flex; flex-direction: column; align-items: center;
