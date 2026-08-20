@@ -54,18 +54,15 @@ export default function Landing() {
 
   return (
     <div className="decor-page">
-      {/* Réparties en % de la hauteur de .decor-page (pas en px) pour rester bien réparties que la
-          page soit courte (desktop) ou très longue (mobile, sections empilées) — voir le calque de
-          points + l'animation de dérive dans styles.css. */}
-      <div className="decor-blob teal" style={{ width: 380, height: 380, top: '-6%', left: '-9%' }} />
-      <div className="decor-blob gold" style={{ width: 220, height: 220, top: '9%', right: '18%' }} />
-      <div className="decor-blob gold" style={{ width: 300, height: 300, top: '16%', right: '-8%' }} />
-      <div className="decor-blob teal" style={{ width: 260, height: 260, top: '32%', left: '40%' }} />
-      <div className="decor-blob gold" style={{ width: 220, height: 220, top: '42%', left: '-7%' }} />
-      <div className="decor-blob teal" style={{ width: 340, height: 340, top: '52%', right: '-9%' }} />
-      <div className="decor-blob red" style={{ width: 200, height: 200, top: '64%', left: '5%' }} />
-      <div className="decor-blob gold" style={{ width: 280, height: 280, top: '76%', right: '0%' }} />
-      <div className="decor-blob teal" style={{ width: 320, height: 320, bottom: '-5%', left: '28%' }} />
+      {/* 4 halos espacés à intervalles réguliers (~25% de la hauteur de page chacun), tous ancrés en
+          "top" (pas de mélange top/bottom qui avait fini par recoller deux halos près du bas) — un
+          seul visible à la fois selon le défilement, jamais deux couleurs assez proches pour se
+          mélanger (voir le commentaire dans styles.css). Rien près du tout-haut : la bannière hero a
+          déjà sa propre photo, un halo juste au-dessus l'aurait juste rendue plus sale. */}
+      <div className="decor-blob teal" style={{ width: 420, height: 420, top: '14%', left: '-13%' }} />
+      <div className="decor-blob gold" style={{ width: 400, height: 400, top: '40%', right: '-12%' }} />
+      <div className="decor-blob teal" style={{ width: 440, height: 440, top: '64%', left: '-13%' }} />
+      <div className="decor-blob gold" style={{ width: 400, height: 400, top: '90%', right: '-12%' }} />
 
       <div className="landing-hero">
         <div className="be-flag" title="Fièrement belge">

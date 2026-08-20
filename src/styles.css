@@ -462,35 +462,26 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
 
-/* Fond de la page d'accueil : la page entière n'avait que 3 taches décoratives regroupées tout en
-   haut, laissant le reste (features, étapes, rejoindre, communes, contact...) sur un fond crème plat —
-   demandé "plus dynamique, plus sympa" par le restaurateur. Le halo radial ci-dessous donne une
-   respiration de fond sur toute la hauteur même entre deux taches, et .decor-blob-field répartit
-   maintenant 9 taches sur toute la hauteur réelle du contenu (positions en %, pas en px — la page
-   change beaucoup de hauteur entre desktop et mobile empilé, un % de la hauteur du conteneur reste
-   juste dans les deux cas). Une légère dérive anime chaque tache en boucle pour une impression vivante,
-   coupée sous prefers-reduced-motion. */
-.decor-page {
-  position: relative;
-  background-image: radial-gradient(circle at 1px 1px, rgba(22,35,58,0.1) 1.3px, transparent 0);
-  background-size: 24px 24px;
-}
+/* Fond de la page d'accueil. Deux essais précédents ratés : le premier (3 taches minuscules, fond
+   quasi blanc) était invisible ; le second (9 taches, opacité doublée, calque de points) faisait
+   "amateur" — plusieurs taches de couleurs différentes se chevauchaient près du haut de page et se
+   mélangeaient en une bande trouble vert-jaune sale, en plus du calque de points qui surchargeait tout
+   le reste. Cette version-ci n'a que 5 grands halos, TOUS séparés d'au moins leur propre diamètre pour
+   qu'ils ne se touchent jamais (une seule teinte visible à la fois selon où on a scrollé, jamais un
+   mélange), sans calque de points. Positions en % de la hauteur de .decor-page (pas en px) pour rester
+   bien réparties aussi bien en desktop qu'en mobile (page bien plus longue, sections empilées). */
+.decor-page { position: relative; }
 .decor-page > *:not(.decor-blob) { position: relative; z-index: 1; }
-/* Premier jet trop discret (blur 80px + opacity 0.28 sur fond quasi blanc se fond dans le décor,
-   signalé par le restaurateur "je ne vois pas de différence") — flou réduit pour garder la couleur
-   concentrée au lieu de la diluer sur toute sa zone, opacité proche du double pour un vrai contraste. */
 .decor-blob {
-  position: absolute; border-radius: 50%; filter: blur(55px); opacity: 0.5; pointer-events: none; z-index: 0;
-  animation: blobDrift 22s ease-in-out infinite alternate;
+  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.32; pointer-events: none; z-index: 0;
+  animation: blobDrift 26s ease-in-out infinite alternate;
 }
 .decor-blob.teal { background: var(--teal); }
-.decor-blob.gold { background: var(--gold); }
-.decor-blob.red { background: var(--red); opacity: 0.32; }
-.decor-blob:nth-of-type(3n) { animation-duration: 26s; }
-.decor-blob:nth-of-type(3n+1) { animation-duration: 19s; animation-direction: alternate-reverse; }
+.decor-blob.gold { background: var(--gold); opacity: 0.34; }
+.decor-blob:nth-of-type(even) { animation-duration: 32s; animation-direction: alternate-reverse; }
 @keyframes blobDrift {
-  from { transform: translate(0, 0) scale(1); }
-  to { transform: translate(22px, -26px) scale(1.06); }
+  from { transform: translate(0, 0); }
+  to { transform: translate(18px, -20px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .decor-blob { animation: none; }
