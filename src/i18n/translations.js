@@ -123,6 +123,7 @@ export const translations = {
       reserveTable: '🍽️ Réserver une table (sans commander maintenant)',
       noMenuYet: "Ce restaurant n'a pas encore de plat au menu.",
       reviewsTitle: 'Avis clients',
+      reviewReplyFrom: 'Réponse de {name}',
       discoverTitle: 'Découvrir aussi'
     },
     floatingCart: {
@@ -617,6 +618,7 @@ export const translations = {
       reserveTable: '🍽️ Reserve a table (without ordering now)',
       noMenuYet: "This restaurant doesn't have any dishes on its menu yet.",
       reviewsTitle: 'Customer reviews',
+      reviewReplyFrom: 'Reply from {name}',
       discoverTitle: 'Discover more'
     },
     floatingCart: {
@@ -1111,6 +1113,7 @@ export const translations = {
       reserveTable: '🍽️ Een tafel reserveren (zonder nu te bestellen)',
       noMenuYet: 'Dit restaurant heeft nog geen gerechten op zijn menu.',
       reviewsTitle: 'Klantbeoordelingen',
+      reviewReplyFrom: 'Reactie van {name}',
       discoverTitle: 'Ontdek ook'
     },
     floatingCart: {

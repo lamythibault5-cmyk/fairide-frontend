@@ -251,6 +251,12 @@ export default function RestaurantMenu() {
                 <StarsDisplay value={r.foodRating} />
               </div>
               {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
+              {r.restaurantReply && (
+                <div style={{ marginTop: 6, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
+                  <div className="small" style={{ fontWeight: 700 }}>{t('restaurantMenu.reviewReplyFrom', { name: restaurant.name })}</div>
+                  <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
+                </div>
+              )}
             </div>
           ))}
         </div>

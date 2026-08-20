@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -17,11 +18,6 @@ function deletionReasons(t) {
     { value: 'Problème de confidentialité ou de sécurité', label: t('account.deletionReasons.privacySecurity') },
     { value: 'Autre raison', label: t('account.deletionReasons.other') }
   ];
-}
-
-function lastDayOfMonth(month) {
-  const [y, m] = month.split('-').map(Number);
-  return new Date(y, m, 0).getDate();
 }
 
 function genders(t) {
@@ -45,7 +41,6 @@ export default function Account() {
   const [driverReviews, setDriverReviews] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
-  const [restaurantReviews, setRestaurantReviews] = useState(null);
   const [now, setNow] = useState(() => new Date());
   const [subscribing, setSubscribing] = useState(false);
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -53,14 +48,6 @@ export default function Account() {
   const [resumingSub, setResumingSub] = useState(false);
   const [cancelingSub, setCancelingSub] = useState(false);
   const [confirmCancelSub, setConfirmCancelSub] = useState(false);
-  const [invoiceMonth, setInvoiceMonth] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-  });
-  const [invoice, setInvoice] = useState(null);
-  const [loadingInvoice, setLoadingInvoice] = useState(true);
-  const [generatingInvoice, setGeneratingInvoice] = useState(false);
-  const [openingPortal, setOpeningPortal] = useState(false);
   const [referralStats, setReferralStats] = useState(null);
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
@@ -124,7 +111,6 @@ export default function Account() {
   useEffect(() => {
     if (!restoId) return;
     refreshRestaurant();
-    api(`/restaurants/${restoId}/reviews`).then(setRestaurantReviews).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
 
@@ -133,16 +119,6 @@ export default function Account() {
     const clock = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(clock);
   }, [role]);
-
-  useEffect(() => {
-    if (!restoId) return;
-    setLoadingInvoice(true);
-    api(`/restaurants/${restoId}/commission-invoice?month=${invoiceMonth}`, { token })
-      .then(setInvoice)
-      .catch((e) => toast(e.message))
-      .finally(() => setLoadingInvoice(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [invoiceMonth, restoId]);
 
   function refreshRestaurant() {
     if (!restoId) return;
@@ -197,30 +173,6 @@ export default function Account() {
       toast(e.message);
     } finally {
       setCancelingSub(false);
-    }
-  }
-
-  async function openInvoicePortal() {
-    setOpeningPortal(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/subscription/portal`, { method: 'POST', token });
-      window.location.href = r.url;
-    } catch (e) {
-      toast(e.message);
-      setOpeningPortal(false);
-    }
-  }
-
-  async function generateInvoice() {
-    setGeneratingInvoice(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/commission-invoice`, { method: 'POST', token, body: { month: invoiceMonth } });
-      setInvoice((prev) => ({ ...prev, ...r }));
-      toast(`Facture ${r.invoiceNumber} émise.`);
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      setGeneratingInvoice(false);
     }
   }
 
@@ -535,136 +487,28 @@ export default function Account() {
 
       {role === 'restaurant' && restaurant && (
         <div className="card">
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>⭐ Avis clients</h3>
-          <div className="row" style={{ gap: 6, marginBottom: 14 }}>
-            <StarsDisplay value={restaurant.rating} />
-            <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : "Pas encore d'avis"}</span>
-          </div>
-          {(!restaurantReviews || restaurantReviews.reviews.length === 0) && <div className="empty">Pas encore d'avis client.</div>}
-          {restaurantReviews && restaurantReviews.reviews.length > 0 && (
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              {restaurantReviews.reviews.map((r, i) => (
-                <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
-                  <div className="row" style={{ justifyContent: 'space-between' }}>
-                    <b style={{ fontSize: 13 }}>{r.clientName}</b>
-                    <StarsDisplay value={r.foodRating} />
-                  </div>
-                  {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
-                </div>
-              ))}
+              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>⭐ Avis clients</h3>
+              <div className="row" style={{ gap: 6 }}>
+                <StarsDisplay value={restaurant.rating} />
+                <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : "Pas encore d'avis"}</span>
+              </div>
             </div>
-          )}
+            <Link to="/dashboard/reviews" className="btn-ghost">Voir tous les avis →</Link>
+          </div>
         </div>
       )}
 
       {role === 'restaurant' && restaurant && (
         <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Factures</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            Consulte et télécharge tes factures d'abonnement (20€/mois) via le portail sécurisé Stripe.
-          </p>
-          <button className="btn-ghost" disabled={openingPortal} onClick={openInvoicePortal} style={{ marginBottom: 16 }}>
-            {openingPortal ? '...' : '📄 Voir mes factures d\'abonnement'}
-          </button>
-
-          <h4 style={{ margin: '0 0 6px', fontSize: 14 }}>Facture de commission</h4>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            Facture de la commission Fairide prélevée sur tes commandes pour un mois donné. Une fois émise, elle ne peut plus être modifiée.
-          </p>
-          <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14 }}>
-            <input type="month" value={invoiceMonth} onChange={(e) => setInvoiceMonth(e.target.value)} style={{ maxWidth: 180 }} />
-            {invoice?.items?.length > 0 && <button className="btn-teal no-print" onClick={() => window.print()}>🖨️ Imprimer</button>}
-          </div>
-
-          {loadingInvoice && <p className="small">Chargement...</p>}
-
-          {!loadingInvoice && invoice?.fairide && !invoice.fairide.configured && (
-            <p className="small" style={{ color: 'var(--red)' }}>⚠️ Configuration incomplète côté Fairide — impossible de générer une facture pour le moment.</p>
-          )}
-
-          {!loadingInvoice && invoice && (
-            <div id="commission-recap">
-              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-                <div>
-                  <h4 style={{ margin: '0 0 4px', fontSize: 18 }}>FACTURE</h4>
-                  {invoice.issued ? (
-                    <div className="small">N° <b>{invoice.invoiceNumber}</b> · émise le {new Date(invoice.issuedAt).toLocaleDateString('fr-BE')}</div>
-                  ) : (
-                    <div className="small" style={{ fontStyle: 'italic' }}>Aperçu — pas encore émise</div>
-                  )}
-                  <div className="small">Période : 01/{invoiceMonth.split('-')[1]}/{invoiceMonth.split('-')[0]} — {lastDayOfMonth(invoiceMonth)}/{invoiceMonth.split('-')[1]}/{invoiceMonth.split('-')[0]}</div>
-                </div>
-                {!invoice.issued && !generatingInvoice && invoice.items?.length > 0 && invoice.fairide?.configured && (
-                  <button className="btn-gold no-print" onClick={generateInvoice}>Générer la facture</button>
-                )}
-                {generatingInvoice && <span className="small">Génération...</span>}
-              </div>
-
-              <div className="row" style={{ gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div className="small" style={{ textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Émetteur</div>
-                  {invoice.fairide?.configured ? (
-                    <>
-                      <div style={{ fontWeight: 700 }}>{invoice.fairide.legalName}</div>
-                      <div className="small">{invoice.fairide.address}</div>
-                      <div className="small">N° d'entreprise / TVA : {invoice.fairide.vatNumber}</div>
-                      <div className="small">{invoice.fairide.rpm}</div>
-                      <div className="small">IBAN : {invoice.fairide.iban}</div>
-                    </>
-                  ) : (
-                    <div className="small" style={{ opacity: 0.6 }}>Non configuré</div>
-                  )}
-                </div>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div className="small" style={{ textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Client</div>
-                  <div style={{ fontWeight: 700 }}>{restaurant.legalName || restaurant.name}</div>
-                  <div className="small">{restaurant.address}</div>
-                  {restaurant.companyNumber && <div className="small">N° d'entreprise : {restaurant.companyNumber}</div>}
-                  {restaurant.vatNumber && <div className="small">TVA : {restaurant.vatNumber}</div>}
-                </div>
-              </div>
-
-              {(!invoice.items || invoice.items.length === 0) && <div className="empty">Aucune commande payée ce mois-ci.</div>}
-              {invoice.items?.length > 0 && (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-                    <thead>
-                      <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
-                        <th style={{ padding: '6px 4px' }}>Date</th>
-                        <th style={{ padding: '6px 4px' }}>Description</th>
-                        <th style={{ padding: '6px 4px', textAlign: 'right' }}>Prix HTVA</th>
-                        <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoice.items.map((o) => (
-                        <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
-                          <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString('fr-BE')}</td>
-                          <td style={{ padding: '6px 4px' }}>Commission de service (10%) — commande #{o.id.slice(0, 8)}</td>
-                          <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.commission.toFixed(2)}€</td>
-                          <td style={{ padding: '6px 4px', textAlign: 'right' }}>21%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot>
-                      <tr style={{ borderTop: '2px solid var(--line)' }}>
-                        <td style={{ padding: '8px 4px' }} colSpan={2}>Total HTVA</td>
-                        <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.subtotalHt.toFixed(2)}€</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: '4px' }} colSpan={2}>TVA (21%)</td>
-                        <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{invoice.vatAmount.toFixed(2)}€</td>
-                      </tr>
-                      <tr style={{ fontWeight: 700 }}>
-                        <td style={{ padding: '8px 4px' }} colSpan={2}>Total TTC</td>
-                        <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.totalTtc.toFixed(2)}€</td>
-                      </tr>
-                    </tfoot>
-                  </table>
-                </div>
-              )}
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>📄 Factures</h3>
+              <p className="small" style={{ margin: 0 }}>Factures d'abonnement et de commission, par mois et par année.</p>
             </div>
-          )}
+            <Link to="/dashboard/invoices" className="btn-ghost">Voir mes factures →</Link>
+          </div>
         </div>
       )}
 
