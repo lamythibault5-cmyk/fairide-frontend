@@ -25,10 +25,7 @@ import RestaurantOrdersPage from './pages/restaurant/OrdersPage';
 import RestaurantPreviewPage from './pages/restaurant/PreviewPage';
 import RestaurantEditPage from './pages/restaurant/EditPage';
 import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
-import RestaurantSubscriptionPage from './pages/restaurant/SubscriptionPage';
-import RestaurantReviewsPage from './pages/restaurant/ReviewsPage';
 import RestaurantMapPage from './pages/restaurant/MapPage';
-import RestaurantInvoicesPage from './pages/restaurant/InvoicesPage';
 import DriverDashboard from './pages/driver/Dashboard';
 import DriverMapPage from './pages/driver/MapPage';
 import DriverReviewsPage from './pages/driver/ReviewsPage';
@@ -62,10 +59,7 @@ export default function App() {
           <Route path="preview" element={<RestaurantPreviewPage />} />
           <Route path="edit" element={<RestaurantEditPage />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
-          <Route path="subscription" element={<RestaurantSubscriptionPage />} />
-          <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="map" element={<RestaurantMapPage />} />
-          <Route path="invoices" element={<RestaurantInvoicesPage />} />
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />

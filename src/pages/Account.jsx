@@ -19,6 +19,11 @@ function deletionReasons(t) {
   ];
 }
 
+function lastDayOfMonth(month) {
+  const [y, m] = month.split('-').map(Number);
+  return new Date(y, m, 0).getDate();
+}
+
 function genders(t) {
   return [
     { value: '', label: t('auth.genderPlaceholder') },
@@ -38,6 +43,24 @@ export default function Account() {
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [driverReviews, setDriverReviews] = useState(null);
+  const [restoId, setRestoId] = useState(null);
+  const [restaurant, setRestaurant] = useState(null);
+  const [restaurantReviews, setRestaurantReviews] = useState(null);
+  const [now, setNow] = useState(() => new Date());
+  const [subscribing, setSubscribing] = useState(false);
+  const [promoCodeInput, setPromoCodeInput] = useState('');
+  const [pausingSub, setPausingSub] = useState(false);
+  const [resumingSub, setResumingSub] = useState(false);
+  const [cancelingSub, setCancelingSub] = useState(false);
+  const [confirmCancelSub, setConfirmCancelSub] = useState(false);
+  const [invoiceMonth, setInvoiceMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  });
+  const [invoice, setInvoice] = useState(null);
+  const [loadingInvoice, setLoadingInvoice] = useState(true);
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
+  const [openingPortal, setOpeningPortal] = useState(false);
   const [referralStats, setReferralStats] = useState(null);
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
@@ -85,6 +108,121 @@ export default function Account() {
     api('/auth/referral/mine', { token }).then(setReferralStats).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    api('/restaurants/mine/dashboard', { token }).then((list) => {
+      if (list[0]) setRestoId(list[0].id);
+    }).catch((e) => toast(e.message));
+    if (new URLSearchParams(window.location.search).get('subscribed')) {
+      toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
+      window.history.replaceState({}, '', '/account');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
+
+  useEffect(() => {
+    if (!restoId) return;
+    refreshRestaurant();
+    api(`/restaurants/${restoId}/reviews`).then(setRestaurantReviews).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoId]);
+
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    const clock = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(clock);
+  }, [role]);
+
+  useEffect(() => {
+    if (!restoId) return;
+    setLoadingInvoice(true);
+    api(`/restaurants/${restoId}/commission-invoice?month=${invoiceMonth}`, { token })
+      .then(setInvoice)
+      .catch((e) => toast(e.message))
+      .finally(() => setLoadingInvoice(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [invoiceMonth, restoId]);
+
+  function refreshRestaurant() {
+    if (!restoId) return;
+    api(`/restaurants/${restoId}`).then(setRestaurant).catch((e) => toast(e.message));
+  }
+
+  async function subscribeNow() {
+    setSubscribing(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token, body: { promoCode: promoCodeInput.trim() || undefined } });
+      window.location.href = r.checkoutUrl;
+    } catch (e) {
+      toast(e.message);
+      setSubscribing(false);
+    }
+  }
+
+  async function pauseSubscription() {
+    setPausingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/pause`, { method: 'POST', token });
+      refreshRestaurant();
+      toast('Abonnement mis en pause — ton restaurant n\'est plus visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setPausingSub(false);
+    }
+  }
+
+  async function resumeSubscription() {
+    setResumingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/resume`, { method: 'POST', token });
+      refreshRestaurant();
+      toast('Abonnement repris — ton restaurant est de nouveau visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setResumingSub(false);
+    }
+  }
+
+  async function cancelSubscription() {
+    setCancelingSub(true);
+    try {
+      await api(`/restaurants/${restoId}/subscription/cancel`, { method: 'POST', token });
+      refreshRestaurant();
+      setConfirmCancelSub(false);
+      toast('Abonnement résilié — ton restaurant n\'est plus visible aux clients.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCancelingSub(false);
+    }
+  }
+
+  async function openInvoicePortal() {
+    setOpeningPortal(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/subscription/portal`, { method: 'POST', token });
+      window.location.href = r.url;
+    } catch (e) {
+      toast(e.message);
+      setOpeningPortal(false);
+    }
+  }
+
+  async function generateInvoice() {
+    setGeneratingInvoice(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/commission-invoice`, { method: 'POST', token, body: { month: invoiceMonth } });
+      setInvoice((prev) => ({ ...prev, ...r }));
+      toast(`Facture ${r.invoiceNumber} émise.`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setGeneratingInvoice(false);
+    }
+  }
 
   useEffect(() => {
     if (role !== 'restaurant' && role !== 'driver') return;
@@ -282,6 +420,253 @@ export default function Account() {
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
         </form>
       </div>
+
+      {role === 'restaurant' && restaurant && (
+        <div className="card" style={{ border: `2px solid ${['active', 'trialing'].includes(restaurant.subscriptionStatus) ? 'var(--teal)' : 'var(--red)'}` }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>💳 Abonnement</h3>
+          <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
+            {now.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
+          </p>
+
+          {restaurant.subscriptionStatus === 'trialing' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>✅ Essai gratuit en cours</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Ton restaurant est visible aux clients. Le premier mois est offert pour tout restaurant, dans tous les cas
+                {restaurant.freeTrialMonths > 1 ? ` — et comme ton restaurant fait partie des premiers inscrits sur Fairide, tu profites en réalité de ${restaurant.freeTrialMonths} mois offerts au total` : ''}
+                {restaurant.subscriptionCurrentPeriodEnd ? ` (premier prélèvement de 20€ le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}).` : '.'}
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'active' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>✅ Abonnement actif</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Ton restaurant est visible aux clients.
+                {restaurant.subscriptionCurrentPeriodEnd ? ` Prochain prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'past_due' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>⚠️ Paiement de l'abonnement échoué</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n'est plus visible aux clients tant que ce n'est pas régularisé.
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'paused' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>⏸️ Abonnement en pause</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Ton restaurant n'est plus visible aux clients et ne reçoit plus de commandes. Aucun prélèvement tant qu'il reste en pause.
+              </p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'canceled' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>❌ Abonnement résilié</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>Ton restaurant n'est plus visible aux clients.</p>
+            </>
+          )}
+          {restaurant.subscriptionStatus === 'inactive' && (
+            <>
+              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>🔒 Restaurant pas encore visible aux clients</h4>
+              <p className="small" style={{ margin: '0 0 12px' }}>
+                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
+                Le premier mois est offert pour tout restaurant, dans tous les cas — et Fairide offre aussi 3 mois aux 50 premiers
+                restaurants inscrits sur la plateforme, puis 2 mois aux 100 suivants.
+                {restaurant.freeTrialMonths > 1
+                  ? ` Ton restaurant fait partie de ceux-là : tu profites de ${restaurant.freeTrialMonths} mois offerts au total.`
+                  : ''}
+                {' '}Ton abonnement n'entre en vigueur qu'une fois ton compte validé par l'équipe Fairide — le temps de vérifier
+                la conformité de ton commerce et que le contrat soit accepté par les deux parties. Tu ne seras débité qu'au mois suivant l'activation.
+              </p>
+            </>
+          )}
+
+          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
+            <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
+              🔒 Disponible après validation de ton compte par l'équipe Fairide.
+            </p>
+          )}
+          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
+            <div>
+              <div className="field" style={{ maxWidth: 260 }}>
+                <label>{t('auth.promoCode')}</label>
+                <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+              </div>
+              <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
+                {subscribing ? '...' : `S'abonner — 20€/mois (${restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : '1er mois offert'})`}
+              </button>
+            </div>
+          )}
+          {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : '⏸️ Mettre en pause'}</button>
+              {!confirmCancelSub && (
+                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+              )}
+            </div>
+          )}
+          {restaurant.subscriptionStatus === 'paused' && (
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
+              {!confirmCancelSub && (
+                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+              )}
+            </div>
+          )}
+          {confirmCancelSub && (
+            <div style={{ marginTop: 10 }}>
+              <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
+                Es-tu sûr ? Ton restaurant disparaîtra immédiatement des résultats clients. Il faudra un nouvel abonnement pour redevenir visible.
+              </p>
+              <div className="row" style={{ gap: 8 }}>
+                <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
+                  {cancelingSub ? '...' : 'Oui, résilier'}
+                </button>
+                <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {role === 'restaurant' && restaurant && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>⭐ Avis clients</h3>
+          <div className="row" style={{ gap: 6, marginBottom: 14 }}>
+            <StarsDisplay value={restaurant.rating} />
+            <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : "Pas encore d'avis"}</span>
+          </div>
+          {(!restaurantReviews || restaurantReviews.reviews.length === 0) && <div className="empty">Pas encore d'avis client.</div>}
+          {restaurantReviews && restaurantReviews.reviews.length > 0 && (
+            <div>
+              {restaurantReviews.reviews.map((r, i) => (
+                <div key={i} style={{ padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
+                  <div className="row" style={{ justifyContent: 'space-between' }}>
+                    <b style={{ fontSize: 13 }}>{r.clientName}</b>
+                    <StarsDisplay value={r.foodRating} />
+                  </div>
+                  {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {role === 'restaurant' && restaurant && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Factures</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            Consulte et télécharge tes factures d'abonnement (20€/mois) via le portail sécurisé Stripe.
+          </p>
+          <button className="btn-ghost" disabled={openingPortal} onClick={openInvoicePortal} style={{ marginBottom: 16 }}>
+            {openingPortal ? '...' : '📄 Voir mes factures d\'abonnement'}
+          </button>
+
+          <h4 style={{ margin: '0 0 6px', fontSize: 14 }}>Facture de commission</h4>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            Facture de la commission Fairide prélevée sur tes commandes pour un mois donné. Une fois émise, elle ne peut plus être modifiée.
+          </p>
+          <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14 }}>
+            <input type="month" value={invoiceMonth} onChange={(e) => setInvoiceMonth(e.target.value)} style={{ maxWidth: 180 }} />
+            {invoice?.items?.length > 0 && <button className="btn-teal no-print" onClick={() => window.print()}>🖨️ Imprimer</button>}
+          </div>
+
+          {loadingInvoice && <p className="small">Chargement...</p>}
+
+          {!loadingInvoice && invoice?.fairide && !invoice.fairide.configured && (
+            <p className="small" style={{ color: 'var(--red)' }}>⚠️ Configuration incomplète côté Fairide — impossible de générer une facture pour le moment.</p>
+          )}
+
+          {!loadingInvoice && invoice && (
+            <div id="commission-recap">
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h4 style={{ margin: '0 0 4px', fontSize: 18 }}>FACTURE</h4>
+                  {invoice.issued ? (
+                    <div className="small">N° <b>{invoice.invoiceNumber}</b> · émise le {new Date(invoice.issuedAt).toLocaleDateString('fr-BE')}</div>
+                  ) : (
+                    <div className="small" style={{ fontStyle: 'italic' }}>Aperçu — pas encore émise</div>
+                  )}
+                  <div className="small">Période : 01/{invoiceMonth.split('-')[1]}/{invoiceMonth.split('-')[0]} — {lastDayOfMonth(invoiceMonth)}/{invoiceMonth.split('-')[1]}/{invoiceMonth.split('-')[0]}</div>
+                </div>
+                {!invoice.issued && !generatingInvoice && invoice.items?.length > 0 && invoice.fairide?.configured && (
+                  <button className="btn-gold no-print" onClick={generateInvoice}>Générer la facture</button>
+                )}
+                {generatingInvoice && <span className="small">Génération...</span>}
+              </div>
+
+              <div className="row" style={{ gap: 24, flexWrap: 'wrap', marginBottom: 16 }}>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div className="small" style={{ textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Émetteur</div>
+                  {invoice.fairide?.configured ? (
+                    <>
+                      <div style={{ fontWeight: 700 }}>{invoice.fairide.legalName}</div>
+                      <div className="small">{invoice.fairide.address}</div>
+                      <div className="small">N° d'entreprise / TVA : {invoice.fairide.vatNumber}</div>
+                      <div className="small">{invoice.fairide.rpm}</div>
+                      <div className="small">IBAN : {invoice.fairide.iban}</div>
+                    </>
+                  ) : (
+                    <div className="small" style={{ opacity: 0.6 }}>Non configuré</div>
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div className="small" style={{ textTransform: 'uppercase', opacity: 0.6, marginBottom: 4 }}>Client</div>
+                  <div style={{ fontWeight: 700 }}>{restaurant.legalName || restaurant.name}</div>
+                  <div className="small">{restaurant.address}</div>
+                  {restaurant.companyNumber && <div className="small">N° d'entreprise : {restaurant.companyNumber}</div>}
+                  {restaurant.vatNumber && <div className="small">TVA : {restaurant.vatNumber}</div>}
+                </div>
+              </div>
+
+              {(!invoice.items || invoice.items.length === 0) && <div className="empty">Aucune commande payée ce mois-ci.</div>}
+              {invoice.items?.length > 0 && (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
+                        <th style={{ padding: '6px 4px' }}>Date</th>
+                        <th style={{ padding: '6px 4px' }}>Description</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'right' }}>Prix HTVA</th>
+                        <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoice.items.map((o) => (
+                        <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
+                          <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString('fr-BE')}</td>
+                          <td style={{ padding: '6px 4px' }}>Commission de service (10%) — commande #{o.id.slice(0, 8)}</td>
+                          <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.commission.toFixed(2)}€</td>
+                          <td style={{ padding: '6px 4px', textAlign: 'right' }}>21%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr style={{ borderTop: '2px solid var(--line)' }}>
+                        <td style={{ padding: '8px 4px' }} colSpan={2}>Total HTVA</td>
+                        <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.subtotalHt.toFixed(2)}€</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '4px' }} colSpan={2}>TVA (21%)</td>
+                        <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{invoice.vatAmount.toFixed(2)}€</td>
+                      </tr>
+                      <tr style={{ fontWeight: 700 }}>
+                        <td style={{ padding: '8px 4px' }} colSpan={2}>Total TTC</td>
+                        <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.totalTtc.toFixed(2)}€</td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {role === 'driver' && (
         <div className="card">

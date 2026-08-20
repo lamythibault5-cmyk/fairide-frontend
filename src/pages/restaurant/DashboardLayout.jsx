@@ -8,7 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 
-// Charge une seule fois restaurant/orders/reviews/drivers et les partage aux 5 sous-pages via
+// Charge une seule fois restaurant/orders/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : formulaire de création, bannières (validation/abonnement/Stripe),
 // et la carte "Aujourd'hui" de la colonne de droite.
@@ -20,7 +20,6 @@ export default function DashboardLayout() {
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
   const [orders, setOrders] = useState([]);
-  const [reviews, setReviews] = useState(null);
   const [drivers, setDrivers] = useState([]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
@@ -74,10 +73,6 @@ export default function DashboardLayout() {
       // Pas encore de restaurant -> on ouvre directement le formulaire de création, pas besoin de cliquer.
       else if (list.length === 0) setNewRestoOpen(true);
     }).catch((e) => toast(e.message));
-    if (new URLSearchParams(window.location.search).get('subscribed')) {
-      toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
-      window.history.replaceState({}, '', '/dashboard');
-    }
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast('Configuration des paiements en cours de validation (quelques secondes).');
       window.history.replaceState({}, '', '/dashboard');
@@ -100,15 +95,13 @@ export default function DashboardLayout() {
         connectReturnRef.current = null;
         await api(`/restaurants/${id}/connect/refresh`, { method: 'POST', token }).catch(() => {});
       }
-      const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
+      const [ordersData, restoData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
         api(`/restaurants/${id}`),
-        api(`/restaurants/${id}/reviews`),
         api(`/restaurants/${id}/drivers`, { token })
       ]);
       setOrders(ordersData);
       setRestaurant(restoData);
-      setReviews(reviewsData);
       setDrivers(driversData);
     } catch (e) {
       toast(e.message);
@@ -306,7 +299,7 @@ export default function DashboardLayout() {
       )}
 
       {restaurant && (
-        <Outlet context={{ restaurant, orders, reviews, drivers, restoId, loadDashboard }} />
+        <Outlet context={{ restaurant, orders, drivers, restoId, loadDashboard }} />
       )}
     </div>
   );
