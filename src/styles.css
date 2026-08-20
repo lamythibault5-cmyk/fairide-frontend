@@ -177,45 +177,32 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 
 [id^="menu-cat-"] { scroll-margin-top: 14px; }
 
+/* Barre horizontale collée en haut (sticky), pas flottante au milieu de l'écran : la version
+   précédente ("position: fixed; top: 50%") se plaçait à mi-hauteur du VIEWPORT quelle que soit la
+   position de scroll, donc chevauchait systématiquement le contenu qui se trouvait juste là — d'abord
+   repéré sur mobile (chevauchait la carte resto/carte), puis à nouveau sur desktop (recouvrait
+   carrément deux plats de la grille menu, capture d'écran à l'appui). Une barre sticky en haut de page
+   pousse le contenu au lieu de flotter par-dessus : elle ne peut plus jamais chevaucher quoi que ce
+   soit, quel que soit l'écran ou la position de scroll. */
 .category-quicknav {
-  position: fixed; right: 10px; top: 50%; transform: translateY(-50%); z-index: 45;
-  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  position: sticky; top: 0; z-index: 40;
+  display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
+  gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  padding: 8px 2px 10px; margin: 0 0 8px;
+  background: linear-gradient(to bottom, var(--cream) 78%, rgba(251,248,242,0));
 }
+.category-quicknav::-webkit-scrollbar { display: none; }
 .category-quicknav button {
-  background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink-soft);
-  font-size: 12.5px; font-weight: 700; padding: 9px 15px; border-radius: 999px;
-  white-space: nowrap; box-shadow: 0 2px 10px rgba(22,35,58,.1); backdrop-filter: blur(3px);
+  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink-soft);
+  font-size: 12.5px; font-weight: 700; padding: 7px 13px; border-radius: 999px;
+  white-space: nowrap; box-shadow: 0 2px 8px rgba(22,35,58,.08); backdrop-filter: blur(3px);
   transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
-  min-height: 38px; display: flex; align-items: center;
+  min-height: 34px; display: flex; align-items: center;
 }
 .category-quicknav button:hover { border-color: var(--gold); color: var(--ink); }
 .category-quicknav button.active {
   background: var(--gold); color: var(--ink); border-color: var(--gold);
-  box-shadow: 0 4px 14px rgba(217,164,65,.45); transform: scale(1.08);
-}
-.category-quicknav button.active:hover { color: var(--ink); }
-/* Sur grand écran, le contenu est centré dans .wrap (max-width 960px) — la barre suit son bord
-   droit au lieu de rester plaquée contre le bord de la fenêtre, très loin du menu sur un large écran. */
-@media (min-width: 1108px) { .category-quicknav { right: calc((100vw - 960px) / 2 - 74px); } }
-
-/* Sous 760px, la barre verticale flottante (centrée à mi-hauteur d'écran) chevauchait la carte
-   resto/carte/bouton réservation en dessous d'elle, quelle que soit la position de scroll — bug
-   signalé par le restaurateur. Devient une barre horizontale défilante collée en haut de page (sticky),
-   qui suit le scroll au lieu de rester plaquée au milieu de l'écran. */
-@media (max-width: 760px) {
-  .category-quicknav {
-    position: sticky; top: 0; right: auto; left: 0; transform: none; z-index: 40;
-    flex-direction: row; align-items: center; justify-content: flex-start;
-    gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-    padding: 8px 2px 10px; margin: 0 0 8px;
-    background: linear-gradient(to bottom, var(--cream) 78%, rgba(251,248,242,0));
-  }
-  .category-quicknav::-webkit-scrollbar { display: none; }
-  .category-quicknav button {
-    flex: 0 0 auto; padding: 7px 13px; font-size: 12px; min-height: 34px;
-    box-shadow: 0 2px 8px rgba(22,35,58,.08);
-  }
-  .category-quicknav button.active { transform: none; }
+  box-shadow: 0 4px 14px rgba(217,164,65,.45);
 }
 
 .floating-cart {
@@ -485,17 +472,20 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
    coupée sous prefers-reduced-motion. */
 .decor-page {
   position: relative;
-  background-image: radial-gradient(circle at 1px 1px, rgba(22,35,58,0.05) 1px, transparent 0);
-  background-size: 26px 26px;
+  background-image: radial-gradient(circle at 1px 1px, rgba(22,35,58,0.1) 1.3px, transparent 0);
+  background-size: 24px 24px;
 }
 .decor-page > *:not(.decor-blob) { position: relative; z-index: 1; }
+/* Premier jet trop discret (blur 80px + opacity 0.28 sur fond quasi blanc se fond dans le décor,
+   signalé par le restaurateur "je ne vois pas de différence") — flou réduit pour garder la couleur
+   concentrée au lieu de la diluer sur toute sa zone, opacité proche du double pour un vrai contraste. */
 .decor-blob {
-  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.28; pointer-events: none; z-index: 0;
+  position: absolute; border-radius: 50%; filter: blur(55px); opacity: 0.5; pointer-events: none; z-index: 0;
   animation: blobDrift 22s ease-in-out infinite alternate;
 }
 .decor-blob.teal { background: var(--teal); }
 .decor-blob.gold { background: var(--gold); }
-.decor-blob.red { background: var(--red); opacity: 0.16; }
+.decor-blob.red { background: var(--red); opacity: 0.32; }
 .decor-blob:nth-of-type(3n) { animation-duration: 26s; }
 .decor-blob:nth-of-type(3n+1) { animation-duration: 19s; animation-direction: alternate-reverse; }
 @keyframes blobDrift {

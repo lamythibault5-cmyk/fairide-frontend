@@ -158,7 +158,7 @@ export const translations = {
       orderType: {
         delivery: '🛵 Livraison',
         pickup: '🏠 À emporter',
-        dineIn: '🍽️ Sur place'
+        dineIn: '🍽️ Manger sur place'
       },
       progress: {
         sent: 'Envoyée',
@@ -1088,7 +1088,7 @@ export const translations = {
       orderType: {
         delivery: '🛵 Levering',
         pickup: '🏠 Afhalen',
-        dineIn: '🍽️ Ter plaatse'
+        dineIn: '🍽️ Hier eten'
       },
       progress: {
         sent: 'Verzonden',
