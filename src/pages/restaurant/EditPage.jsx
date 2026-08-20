@@ -367,7 +367,7 @@ export default function EditPage() {
             currentImageUrl={editLogo}
             suggestions={logoSuggestions}
             title="Logo du restaurant"
-            suggestionsTitle={`Suggestions pour ${restaurant.cuisine}`}
+            suggestionsTitle={`Suggestions pour ${restaurant.name}`}
             onSelect={(url) => { setEditLogo(url); setLogoPickerOpen(false); }}
             onCancel={() => setLogoPickerOpen(false)}
           />
