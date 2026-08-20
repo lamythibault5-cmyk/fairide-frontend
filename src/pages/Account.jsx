@@ -38,6 +38,7 @@ export default function Account() {
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
   const [driverReviews, setDriverReviews] = useState(null);
+  const [referralStats, setReferralStats] = useState(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0].value);
   const [deleteComment, setDeleteComment] = useState('');
@@ -74,6 +75,18 @@ export default function Account() {
     }).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
+
+  useEffect(() => {
+    api('/auth/referral/mine', { token }).then(setReferralStats).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function copyReferralCode() {
+    if (!referralStats?.code) return;
+    navigator.clipboard.writeText(referralStats.code).then(() => {
+      toast(t('account.referral.toastCopied'));
+    }).catch(() => {});
+  }
 
   async function toggleLocationSharing(e) {
     const next = e.target.checked;
@@ -231,6 +244,35 @@ export default function Account() {
       )}
 
       {role === 'driver' && <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />}
+
+      <div className="card">
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.referral.title')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
+        {referralStats && (
+          <>
+            <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
+              <div className="field" style={{ flex: 1, margin: 0 }}>
+                <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} />
+              </div>
+              <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="stat-card" style={{ flex: 1 }}>
+                <div className="num">{referralStats.referredCount}</div>
+                <div className="label">{t('account.referral.statInvited')}</div>
+              </div>
+              <div className="stat-card highlight" style={{ flex: 1 }}>
+                <div className="num">{referralStats.earnedTotal.toFixed(2)}€</div>
+                <div className="label">{t('account.referral.statEarned')}</div>
+              </div>
+            </div>
+            {referralStats.pendingCount > 0 && (
+              <p className="small" style={{ margin: '10px 0 0' }}>{t('account.referral.pending', { count: referralStats.pendingCount })}</p>
+            )}
+            <p className="small" style={{ margin: '10px 0 0', opacity: 0.75 }}>{t('account.referral.spendOnly')}</p>
+          </>
+        )}
+      </div>
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('account.passwordTitle')}</h3>

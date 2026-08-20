@@ -50,7 +50,7 @@ export default function Auth() {
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState('');
   const [addressCity, setAddressCity] = useState('');
-  const [referralCode, setReferralCode] = useState('');
+  const [referralCode, setReferralCode] = useState(() => searchParams.get('ref') || '');
   const [legalName, setLegalName] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
   const [vatNumber, setVatNumber] = useState('');
@@ -442,12 +442,10 @@ export default function Auth() {
                 <div className="divider" />
               </>
             )}
-            {role === 'client' && (
-              <div className="field">
-                <label>{t('auth.promoCode')}</label>
-                <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-              </div>
-            )}
+            <div className="field">
+              <label>{t('auth.promoCode')}</label>
+              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+            </div>
           </>
         )}
 

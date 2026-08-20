@@ -298,6 +298,20 @@ export const translations = {
       accountHolderPlaceholder: 'Nom complet ou raison sociale',
       iban: 'IBAN',
       ibanPlaceholder: 'BE00 0000 0000 0000',
+      referral: {
+        title: '🎁 Parrainer un ami',
+        how: {
+          client: 'Partage ton code avec un ami. Dès qu\'il crée un compte client et passe sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairide.',
+          restaurant: 'Partage ton code avec un autre restaurateur. Dès que son restaurant reçoit sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairide.',
+          driver: 'Partage ton code avec un autre livreur. Dès qu\'il livre sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairide.'
+        },
+        copy: 'Copier',
+        toastCopied: 'Code copié !',
+        statInvited: 'Filleuls inscrits',
+        statEarned: 'Crédit gagné',
+        pending: '{count} filleul(s) inscrit(s) en attente de sa première commande qualifiante.',
+        spendOnly: 'Ce crédit s\'ajoute à ton solde Fairide et n\'est utilisable que sur l\'application — il ne peut pas être viré sur un compte bancaire.'
+      },
       geoTitle: 'Géolocalisation',
       geoExplain: "Quand c'est activé, ta position est partagée en direct avec le client pendant tes livraisons, pour qu'il puisse te suivre sur la carte.",
       geoToggleLabel: 'Partager ma position en direct pendant les livraisons',
@@ -764,6 +778,20 @@ export const translations = {
       accountHolderPlaceholder: 'Full name or business name',
       iban: 'IBAN',
       ibanPlaceholder: 'BE00 0000 0000 0000',
+      referral: {
+        title: '🎁 Refer a friend',
+        how: {
+          client: 'Share your code with a friend. Once they create a customer account and place their first order of €20 or more, you get €5 of Fairide credit.',
+          restaurant: 'Share your code with another restaurant owner. Once their restaurant receives its first order of €20 or more, you get €5 of Fairide credit.',
+          driver: 'Share your code with another driver. Once they deliver their first order of €20 or more, you get €5 of Fairide credit.'
+        },
+        copy: 'Copy',
+        toastCopied: 'Code copied!',
+        statInvited: 'Friends invited',
+        statEarned: 'Credit earned',
+        pending: '{count} invited friend(s) waiting on their first qualifying order.',
+        spendOnly: 'This credit is added to your Fairide balance and can only be spent on the app — it cannot be transferred to a bank account.'
+      },
       geoTitle: 'Location sharing',
       geoExplain: 'When enabled, your position is shared live with the customer during your deliveries, so they can track you on the map.',
       geoToggleLabel: 'Share my live location during deliveries',
@@ -1230,6 +1258,20 @@ export const translations = {
       accountHolderPlaceholder: 'Volledige naam of bedrijfsnaam',
       iban: 'IBAN',
       ibanPlaceholder: 'BE00 0000 0000 0000',
+      referral: {
+        title: '🎁 Nodig een vriend uit',
+        how: {
+          client: 'Deel je code met een vriend. Zodra die een klantaccount aanmaakt en zijn eerste bestelling van minstens 20€ plaatst, krijg jij 5€ Fairide-tegoed.',
+          restaurant: 'Deel je code met een andere zaakvoerder. Zodra zijn zaak zijn eerste bestelling van minstens 20€ ontvangt, krijg jij 5€ Fairide-tegoed.',
+          driver: 'Deel je code met een andere koerier. Zodra die zijn eerste bestelling van minstens 20€ levert, krijg jij 5€ Fairide-tegoed.'
+        },
+        copy: 'Kopiëren',
+        toastCopied: 'Code gekopieerd!',
+        statInvited: 'Uitgenodigde vrienden',
+        statEarned: 'Verdiend tegoed',
+        pending: '{count} uitgenodigde vriend(en) wachten nog op hun eerste kwalificerende bestelling.',
+        spendOnly: 'Dit tegoed wordt toegevoegd aan je Fairide-saldo en kan enkel op de app worden uitgegeven — het kan niet worden overgeschreven naar een bankrekening.'
+      },
       geoTitle: 'Locatiedeling',
       geoExplain: 'Wanneer dit is ingeschakeld, wordt je positie live gedeeld met de klant tijdens je leveringen, zodat hij je kan volgen op de kaart.',
       geoToggleLabel: 'Mijn live locatie delen tijdens leveringen',
