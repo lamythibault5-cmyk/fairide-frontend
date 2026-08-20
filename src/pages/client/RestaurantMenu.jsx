@@ -222,6 +222,11 @@ export default function RestaurantMenu() {
             {t('restaurantMenu.promoBanner')}
           </div>
         )}
+        {(restaurant.freeDelivery || restaurant.deliveryFeeDiscount > 0) && (
+          <div style={{ background: 'var(--teal)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
+            {restaurant.freeDelivery ? `🚴 Livraison offerte par ${restaurant.name}` : `🚴 -${restaurant.deliveryFeeDiscount.toFixed(2)}€ sur les frais de livraison, offert par ${restaurant.name}`}
+          </div>
+        )}
         <button
           type="button"
           className="btn-outline btn-block"

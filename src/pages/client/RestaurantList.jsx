@@ -37,8 +37,18 @@ function offerLabelFor(r) {
   return itemPromo?.label || null;
 }
 
+// Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
+// livraison" dans son dashboard) — affiché comme un pill à côté de la commune, pas confondu avec le
+// badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
+function deliveryOfferLabelFor(r) {
+  if (r.freeDelivery) return '🚴 Livraison offerte';
+  if (r.deliveryFeeDiscount > 0) return `🚴 -${r.deliveryFeeDiscount.toFixed(2)}€ livraison`;
+  return null;
+}
+
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const offerLabel = offerLabelFor(r);
+  const deliveryOfferLabel = deliveryOfferLabelFor(r);
   const isClosed = r.hours && !getOpenStatus(r.hours, new Date(), r.closures).isOpen;
   return (
     <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
@@ -53,6 +63,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       <div className="pill-row">
         <span className="pill teal">{r.commune}</span>
         {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
+        {deliveryOfferLabel && <span className="pill teal">{deliveryOfferLabel}</span>}
         {isClosed && <span className="pill closed-pill">🔒 Fermé</span>}
       </div>
       <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>

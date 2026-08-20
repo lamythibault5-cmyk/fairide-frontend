@@ -65,7 +65,7 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
-  const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo);
+  const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
@@ -213,6 +213,9 @@ export default function Checkout() {
               {fulfillmentType === 'delivery' && (
                 <>
                   <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+                  {totals.deliveryDiscount > 0 && (
+                    <div className="line"><span>🚴 {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
+                  )}
                   <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
@@ -442,6 +445,9 @@ export default function Checkout() {
               {pendingOrder.orderType === 'delivery' && (
                 <>
                   <div className="line"><span>{t('checkout.deliveryFeeLine')}</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  {pendingOrder.deliveryDiscount > 0 && (
+                    <div className="line"><span>🚴 {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
+                  )}
                   <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}

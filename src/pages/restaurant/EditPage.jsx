@@ -65,6 +65,10 @@ export default function EditPage() {
   const [unlinkingDriverId, setUnlinkingDriverId] = useState(null);
   const [switchingMode, setSwitchingMode] = useState(false);
 
+  const [freeDeliveryEdit, setFreeDeliveryEdit] = useState(false);
+  const [deliveryFeeDiscountEdit, setDeliveryFeeDiscountEdit] = useState('0');
+  const [savingDeliveryOffer, setSavingDeliveryOffer] = useState(false);
+
   const [newClosureStart, setNewClosureStart] = useState('');
   const [newClosureEnd, setNewClosureEnd] = useState('');
   const [newClosureReason, setNewClosureReason] = useState('');
@@ -88,6 +92,8 @@ export default function EditPage() {
     setEditLogo(restaurant.logoImageUrl || '');
     setEditHours(restaurant.hours || null);
     setEditOpenFlag(restaurant.open);
+    setFreeDeliveryEdit(!!restaurant.freeDelivery);
+    setDeliveryFeeDiscountEdit(String(restaurant.deliveryFeeDiscount || 0));
   }, [restaurant]);
 
   async function saveRestoInfo() {
@@ -288,6 +294,30 @@ export default function EditPage() {
       toast(e.message);
     } finally {
       setSwitchingMode(false);
+    }
+  }
+
+  // Le restaurant prend à sa charge tout ou partie du tarif livreur pour se démarquer sur la liste des
+  // restos (visible côté client comme un badge, voir RestaurantList.jsx) — le livreur et Fairide ne
+  // sont jamais affectés, voir le calcul détaillé dans routes/orders.js côté backend.
+  async function saveDeliveryOffer() {
+    const discount = Number(deliveryFeeDiscountEdit);
+    if (!freeDeliveryEdit && (Number.isNaN(discount) || discount < 0 || discount > 50)) {
+      toast('Indique un montant valide entre 0€ et 50€.');
+      return;
+    }
+    setSavingDeliveryOffer(true);
+    try {
+      await api(`/restaurants/${restoId}/delivery-discount`, {
+        method: 'PATCH', token,
+        body: { freeDelivery: freeDeliveryEdit, deliveryFeeDiscount: freeDeliveryEdit ? 0 : discount }
+      });
+      await loadDashboard(restoId);
+      toast('Offre de livraison mise à jour.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSavingDeliveryOffer(false);
     }
   }
 
@@ -565,6 +595,26 @@ export default function EditPage() {
             {switchingMode ? '...' : 'Repasser au pool de livreurs Fairide'}
           </button>
         )}
+      </div>
+
+      <div className="card">
+        <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🏷️ Frais de livraison</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>
+          Prends à ta charge tout ou partie des frais de livraison pour te démarquer — visible comme une offre sur ta fiche dans la liste des restaurants. Ton livreur et Fairide touchent toujours leur part complète ; seule ta propre part est réduite du montant offert.
+        </p>
+        <label className="row" style={{ gap: 8, marginBottom: 10, cursor: 'pointer' }}>
+          <input type="checkbox" style={{ width: 'auto' }} checked={freeDeliveryEdit} onChange={(e) => setFreeDeliveryEdit(e.target.checked)} />
+          <span>🚴 Offrir la livraison (gratuite pour le client)</span>
+        </label>
+        {!freeDeliveryEdit && (
+          <div className="field" style={{ maxWidth: 220 }}>
+            <label>Réduction fixe sur les frais de livraison (€)</label>
+            <input type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder="Ex: 2" />
+          </div>
+        )}
+        <button className="btn-teal" style={{ marginTop: 10 }} disabled={savingDeliveryOffer} onClick={saveDeliveryOffer}>
+          {savingDeliveryOffer ? '...' : 'Enregistrer'}
+        </button>
       </div>
     </div>
   );

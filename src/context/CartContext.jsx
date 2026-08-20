@@ -115,7 +115,7 @@ export function CartProvider({ children }) {
     setRestaurantId(null);
   }
 
-  function totals(menu, cartPromo) {
+  function totals(menu, cartPromo, deliveryOffer) {
     let rawSubtotal = 0;
     let promoDiscount = 0;
     const discountedItems = [];
@@ -147,8 +147,15 @@ export function CartProvider({ children }) {
     promoDiscount = +promoDiscount.toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
     const serviceFee = +(DELIVERY_FEE * SYSTEM_FEE_RATE).toFixed(2);
-    const total = +(subtotal + DELIVERY_FEE + serviceFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, serviceFee, commission, total };
+    // Estimation avant checkout (frais réels calculés côté serveur à la commande, selon la distance
+    // réelle — voir routes/orders.js) : même règle de plafonnement que le calcul serveur, pour que ce
+    // qui s'affiche ici corresponde à ce que la commande facturera vraiment.
+    const deliveryDiscount = deliveryOffer?.freeDelivery
+      ? DELIVERY_FEE
+      : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, DELIVERY_FEE);
+    const clientDeliveryFee = +(DELIVERY_FEE - deliveryDiscount).toFixed(2);
+    const total = +(subtotal + clientDeliveryFee + serviceFee).toFixed(2);
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, commission, total };
   }
 
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant
