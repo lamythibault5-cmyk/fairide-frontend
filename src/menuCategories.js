@@ -1740,6 +1740,10 @@ const ITEM_IMAGE_OVERRIDES = {
 
   // --- Sandwichs (Boulangerie / Night Shop — jusqu'à 9 plats partageaient la même photo) ---
   'sandwich jambon-fromage': U('1647505794572-0a6d945d664d'),
+  // Même plat que ci-dessus mais orthographié sans tiret dans le menu type Boulangerie (voir
+  // menuCategories.js) — l'ancien override ne matchait jamais cette variante exacte, la faisant
+  // retomber sur le pool générique sandwich/panini/croque partagé avec 2 autres plats du même menu.
+  'sandwich jambon fromage': U('1647505794572-0a6d945d664d'),
   'panini jambon-fromage': U('1647505794572-0a6d945d664d'),
   'sandwich poulet-crudités': U('1650134973671-fc0bf931be92'),
   'sandwich poulet': U('1650134973671-fc0bf931be92'),
@@ -1752,6 +1756,10 @@ const ITEM_IMAGE_OVERRIDES = {
   'formule sandwich + boisson': U('1553909489-cd47e0907980'),
   'pack soirée (sandwich, chips & boisson)': U('1553909489-cd47e0907980'),
   'sandwich thon': U('1528735602780-2552fd46c7af'),
+  'sandwich thon mayonnaise': U('1528735602780-2552fd46c7af'),
+  'sandwich poulet curry': U('1475090169767-40ed8d18f67d'),
+  'sandwich américain préparé': U('1716535233357-822bcc293573'),
+  'club poulet crudités': U('1567234669003-dce7a7a88821'),
 
   // --- Apéro / chips (Supermarché / Night Shop — jusqu'à 8 produits partageaient la même photo) ---
   'chips nature 150g': U('1647764430080-6000fbe7efee'),
@@ -2077,9 +2085,9 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Nouvelle carte pizzeria : plats dont le nom matche par erreur un tout autre type de plat
   // ("Bolognese"/"Kebab"/"Poulet curry" sont des PIZZAS, pas des pâtes/kebabs/currys ; "Calzone
   // Nutella" est un DESSERT, pas une pizza salée) ---
-  'bolognese (pizza)': U('1600028068383-ea11a7a101f3'),
-  'kebab (pizza)': U('1600028068383-ea11a7a101f3'),
-  'poulet curry (pizza)': U('1571407970349-bc81e7e96d47'),
+  'bolognese (pizza)': U('1534308983496-4fabb1a015ee'),
+  'kebab (pizza)': U('1637438333468-2ea466032288'),
+  'poulet curry (pizza)': U('1615719413546-198b25453f85'),
   'calzone nutella': U('1673551490812-eaee2e9bf0ef'),
   "pain à l'ail": U('1573140401552-3fab0b24306f'),
 
@@ -2210,19 +2218,23 @@ const ITEM_IMAGE_OVERRIDES = {
   // ===== Deuxième passe : mêmes incohérences que ci-dessus, mais pour les catégories Plats/
   // Desserts/Boissons (ex. "Filet américain préparé" affichait un poke bowl — photo générique "Plats"). =====
 
-  // --- Pizza : variantes nommées sans le mot "pizza", ne matchaient aucun mot-clé ---
-  'funghi': U('1600028068383-ea11a7a101f3'),
-  'hawaï': U('1571407970349-bc81e7e96d47'),
+  // --- Pizza : variantes nommées sans le mot "pizza", ne matchaient aucun mot-clé — puis re-signalé
+  // en 2026-08 : deux groupes de 5 et 7 pizzas/menus différents partageaient chacun UNE seule de ces
+  // photos (copier-coller au lieu de différencier). Chaque variante a maintenant sa propre photo
+  // vérifiée (téléchargée puis inspectée) ; "menu solo/duo/famille" restent volontairement identiques
+  // entre eux (même formule, tailles différentes — comme baguette/baguette tradition ailleurs). ---
+  'funghi': U('1590947132387-155cc02f3212'),
+  'hawaï': U('1565299624946-b28f40a0ae38'),
   'végétarienne': U('1613564834361-9436948817d1'),
-  'tonno': U('1571407970349-bc81e7e96d47'),
+  'tonno': U('1639397753197-bab733459943'),
   'bufalina': U('1548369937-47519962c11a'),
   'tartufo': U('1548369937-47519962c11a'),
   'chèvre-miel': U('1571066811602-716837d681de'),
-  'frutti di mare': U('1600028068383-ea11a7a101f3'),
-  'fromages et jambon fumé': U('1571407970349-bc81e7e96d47'),
-  'menu solo': U('1600028068383-ea11a7a101f3'),
-  'menu duo': U('1600028068383-ea11a7a101f3'),
-  'menu famille': U('1600028068383-ea11a7a101f3'),
+  'frutti di mare': U('1652952561151-97e82f26c336'),
+  'fromages et jambon fumé': U('1732223229355-95a1433404bf'),
+  'menu solo': U('1651981075280-9a9e01acbff0'),
+  'menu duo': U('1651981075280-9a9e01acbff0'),
+  'menu famille': U('1651981075280-9a9e01acbff0'),
   'eau 50cl': U('1534616042650-80f5c9b61f09'),
   'bouteille 1,5l': U('1534616042650-80f5c9b61f09'),
 
@@ -2334,13 +2346,27 @@ const ITEM_IMAGE_OVERRIDES = {
   'hojicha latte': U('1506372023823-741c83b836fe'),
   'golden latte': U('1778449303540-3274878cdc85'),
 
-  // --- Boulangerie : viennoiseries sans mot-clé dédié ---
-  'pistolet (pièce)': U('1623334044303-241021148842'),
-  'couque aux raisins': U('1623334044303-241021148842'),
-  'couque suisse': U('1623334044303-241021148842'),
-  'craquelin': U('1623334044303-241021148842'),
-  'merveilleux': U('1623334044303-241021148842'),
-  'boule de berlin': U('1623334044303-241021148842'),
+  // --- Boulangerie : jusqu'à 16 plats (pains, viennoiseries, tartes) retombaient tous sur l'unique
+  // photo générique du mot-clé pain/croissant/viennoiserie (1623334044303), certains via cet override
+  // qui ne faisait alors que dupliquer ce même générique au lieu de le différencier — chaque plat a
+  // maintenant sa propre photo vérifiée (téléchargée puis inspectée), 2026-08. ---
+  'baguette': U('1568471173242-461f0a730452'),
+  'pain blanc / gris 800g': U('1509440159596-0249088772ff'),
+  'pain de campagne': U('1509440159596-0249088772ff'),
+  'pain aux céréales': U('1509440159596-0249088772ff'),
+  "pain d'épeautre": U('1509440159596-0249088772ff'),
+  'pistolet (pièce)': U('1549438247-223f2db1dd29'),
+  'cramique (tranche)': U('1546309919-812d3b094670'),
+  'éclair': U('1774119649906-c82806125e23'),
+  'couque aux raisins': U('1509365465985-25d11c17e812'),
+  'couque suisse': U('1591538001662-0d5a25234305'),
+  'craquelin': U('1622941367239-8acd68fa946d'),
+  'merveilleux': U('1519915028121-7d3463d20b13'),
+  'boule de berlin': U('1570727624862-3008fe67a6be'),
+  'tarte au riz (part)': U('1637273483570-10e72651892e'),
+  'tarte au riz entière (6-8 pers.)': U('1637273483570-10e72651892e'),
+  'tarte aux fruits (part)': U('1614174486496-344ef3e9d870'),
+  'tarte aux fraises entière (6-8 pers.)': U('1503485838016-53579610c389'),
 
   // --- Boucherie (plats) : viandes crues au poids + préparations, signalé par le restaurateur sur
   // "Filet américain préparé" qui affichait un poke bowl (photo générique "Plats"), puis re-signalé
@@ -2356,14 +2382,14 @@ const ITEM_IMAGE_OVERRIDES = {
   'steak de bœuf (kg)': U('1723893905879-0e309c2a8e06'),
   'filet américain préparé (100g)': U('1785517605613-e55a1470305d'),
   'saucisses maison (pièce)': U('1612392061787-2d078b3e573c'),
-  'merguez (pièce)': U('1612392061787-2d078b3e573c'),
+  'merguez (pièce)': U('1743674453093-592bed88018e'),
   'cordon bleu (pièce)': U('1626645738196-c2a7c87a8f58'),
   'oiseaux sans tête (pièce)': U('1588347818036-558601350947'),
   'filet de poulet (kg)': U('1672787153652-b3b9d92f3e8c'),
   'cuisses de poulet (kg)': U('1682991136736-a2b44623eeba'),
   'vol-au-vent (portion)': U('1716959669858-11d415bdead6'),
-  'boulets sauce tomate (portion)': U('1529042410759-befb1204b468'),
-  'carbonnades (portion)': U('1716959669858-11d415bdead6'),
+  'boulets sauce tomate (portion)': U('1543353071-873f17a7a088'),
+  'carbonnades (portion)': U('1682428617976-f25633ed8469'),
   'stoemp carottes (portion)': U('1650844010413-3f24dc1c182b'),
 
   // --- Supermarché / Autre ---
