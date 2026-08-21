@@ -77,8 +77,29 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   );
 }
 
-function Section({ title, icon, list, favoriteIds, onToggleFavorite, t }) {
+function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
   if (list.length === 0) return null;
+  // Boucle façon barre de cuisines (cuisine-track) : la liste est dupliquée et l'animation CSS
+  // translate de -50% pour un défilement continu et sans coupure, en pause au survol/toucher.
+  if (loop && list.length > 1) {
+    return (
+      <div style={{ marginBottom: 24 }}>
+        <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
+        <div className="rest-grid-loop">
+          <div className="rest-grid-loop-track">
+            {list.map((r) => (
+              <RestaurantCard key={`a-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+            ))}
+            <div aria-hidden="true" style={{ display: 'contents' }}>
+              {list.map((r) => (
+                <RestaurantCard key={`b-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ marginBottom: 24 }}>
       <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
@@ -229,7 +250,7 @@ export default function RestaurantList() {
         <>
           <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
           <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
-          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
