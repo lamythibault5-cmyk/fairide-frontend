@@ -2364,19 +2364,19 @@ const ITEM_IMAGE_OVERRIDES = {
   'sashimi saumon ×6': U('1641898378716-1f38ec04bb0f'),
 
   // --- Night shop : marques de bière qui ne contiennent pas le mot "bière" donc ne matchent aucun
-  // mot-clé (retombaient sur une photo générique de boisson) — les 9 marques partageaient ensuite
-  // toutes la même photo de verre (doublon signalé par le restaurateur, 2026-08) : rotation sur 4
-  // photos vérifiées (bouteille/verre) pour qu'aucune paire consécutive ne soit identique. ---
-  'jupiler 33cl': U('1618183479302-1e0aa382c36b'),
-  'jupiler 50cl': U('1703564803611-36f9358b5b03'),
-  'cara pils 50cl': U('1691419775322-1864f752dbac'),
-  'duvel 33cl': U('1703564803569-2a9063d5cf06'),
-  'chimay bleue 33cl': U('1618183479302-1e0aa382c36b'),
-  'kriek / chouffe 33cl': U('1703564803611-36f9358b5b03'),
-  'leffe 33cl': U('1691419775322-1864f752dbac'),
-  'desperados 33cl': U('1703564803569-2a9063d5cf06'),
-  'corona 35,5cl': U('1618183479302-1e0aa382c36b'),
-  'pack jupiler 6 × 33cl': U('1703564803611-36f9358b5b03'),
+  // mot-clé (retombaient sur une photo générique de boisson) — re-signalé 2026-08 : la rotation sur 4
+  // photos (précédente) laissait encore des paires identiques dans un même menu de 9 marques. Chaque
+  // marque a maintenant sa propre photo distincte (aucune répétition), vérifiée individuellement. ---
+  'jupiler 33cl': U('1618885472179-5e474019f2a9'),
+  'jupiler 50cl': U('1619760078865-ee0f4c6586ee'),
+  'cara pils 50cl': U('1636391945755-4e260dd880cb'),
+  'duvel 33cl': U('1761926184403-72c14dc44409'),
+  'chimay bleue 33cl': U('1644085159285-5fd924740cb3'),
+  'kriek / chouffe 33cl': U('1571613316887-6f8d5cbf7ef7'),
+  'leffe 33cl': U('1535958636474-b021ee887b13'),
+  'desperados 33cl': U('1700151561995-5313146bb997'),
+  'corona 35,5cl': U('1597822738124-151fb72dcb79'),
+  'pack jupiler 6 × 33cl': U('1608270586620-248524c67de9'),
   // "Prosecco" partageait la photo de vin rouge (verres) — remplacé par une vraie bouteille de mousseux.
   'prosecco': U('1761757225438-711aa1bbf8d9'),
 
@@ -2450,13 +2450,16 @@ const ITEM_IMAGE_OVERRIDES = {
   // (doublons + incohérences signalés par le restaurateur, 2026-08). ---
   'pringles': U('1599490659213-e2b9527bd087'),
   "chips lay's 175-250g": U('1621447504864-d8686e12698c'),
+  "chips lay's 45g": U('1694101493127-eca6dfef5011'),
+  'coca-cola 1,5l': U('1648569883125-d01072540b4c'),
+  'vin correct': U('1561461056-77634126673a'),
   'doritos': U('1754088605508-4148fefd8a43'),
   'tuc': U('1781820222136-894190cc3fdb'),
   'cacahuètes / mix apéro': U('1742524252643-d1f3fddd8cca'),
   'beef jerky': U('1652209695374-7a91c243f12f'),
   'papier toilette (4 rouleaux)': U('1584556812952-905ffd0c611a'),
   'mouchoirs': U('1609840112990-4265448268d1'),
-  'dentifrice': U('1550985543-f1ea83691cd8'),
+  'dentifrice': U('1594178990090-ca641059a506'),
   'brosse à dents': U('1550985543-f1ea83691cd8'),
   'déodorant': U('1700225195176-39ebd9cd5550'),
   'gel douche': U('1673847401561-fcd75a7888c5'),
@@ -2464,7 +2467,7 @@ const ITEM_IMAGE_OVERRIDES = {
   'préservatifs (3)': U('1698376621004-70ce754157d1'),
   'briquet': U('1575908539629-62b3f98d7b3a'),
   'chargeur usb': U('1492107376256-4026437926cd'),
-  'câble téléphone': U('1492107376256-4026437926cd'),
+  'câble téléphone': U('1557767382-97b28f5488e7'),
   'piles aa (4)': U('1576834975354-ee694be1f0d1'),
 
   // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" ---
@@ -2668,20 +2671,20 @@ const ITEM_IMAGE_OVERRIDES = {
   'barres choco (mars, snickers, kinder bueno)': U('1621939514649-280e2ee25f60'),
   "tablette côte d'or": U('1627647227768-705244233b56'),
   'haribo': U('1582058091505-f87a2e55a40f'),
-  "m&m's pochon": U('1582058091505-f87a2e55a40f'),
+  "m&m's pochon": U('1632689462345-c202ee1427c8'),
   'magnum (pièce)': U('1541014741259-de529411b96a'),
   'red bull 25cl': U('1570526427001-9d80d114054d'),
   'monster 50cl': U('1622543925917-763c34d1a86e'),
-  'eau 1,5l': U('1534616042650-80f5c9b61f09'),
-  'capri-sun': U('1622597467821-df79dcb4f94d'),
+  'eau 1,5l': U('1616118132534-381148898bb4'),
+  'capri-sun': U('1706881811931-12e3692a20b2'),
   'whisky 70cl': U('1615887023544-3a566f29d822'),
   // "Gin"/"Jägermeister"/"Mignonnettes" partageaient tous la photo de verres de vin rouge — des
   // spiritueux qui n'ont rien à voir visuellement, chacun a maintenant sa propre bouteille.
   'gin 70cl': U('1735416031163-863c7cf824bb'),
   'rhum 70cl': U('1652284917571-e6475a979ea5'),
   'vodka 70cl': U('1591704951890-0862b2e98acb'),
-  'jägermeister 70cl': U('1615887023544-3a566f29d822'),
-  'mignonnettes': U('1591704951890-0862b2e98acb'),
+  'jägermeister 70cl': U('1727989806974-43836c555326'),
+  'mignonnettes': U('1570649462630-2eec4e6bcd6d'),
 
   // --- City Burger : condiment sans mot-clé dédié, retombait sur la photo générique "Entrées" ---
   'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752'),
