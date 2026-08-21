@@ -150,7 +150,8 @@ export function CartProvider({ children }) {
     // Estimation avant checkout (frais réels calculés côté serveur à la commande, selon la distance
     // réelle — voir routes/orders.js) : même règle de plafonnement que le calcul serveur, pour que ce
     // qui s'affiche ici corresponde à ce que la commande facturera vraiment.
-    const deliveryDiscount = deliveryOffer?.freeDelivery
+    const qualifiesForThresholdFreeDelivery = deliveryOffer?.freeDeliveryMinOrder != null && subtotal >= Number(deliveryOffer.freeDeliveryMinOrder);
+    const deliveryDiscount = (deliveryOffer?.freeDelivery || qualifiesForThresholdFreeDelivery)
       ? DELIVERY_FEE
       : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, DELIVERY_FEE);
     const clientDeliveryFee = +(DELIVERY_FEE - deliveryDiscount).toFixed(2);

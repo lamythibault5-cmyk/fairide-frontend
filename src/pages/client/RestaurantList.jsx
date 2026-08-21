@@ -42,6 +42,7 @@ function offerLabelFor(r) {
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
 function deliveryOfferLabelFor(r) {
   if (r.freeDelivery) return '🚴 Livraison offerte';
+  if (r.freeDeliveryMinOrder != null) return `🚴 Offerte dès ${r.freeDeliveryMinOrder.toFixed(2)}€`;
   if (r.deliveryFeeDiscount > 0) return `🚴 -${r.deliveryFeeDiscount.toFixed(2)}€ livraison`;
   return null;
 }

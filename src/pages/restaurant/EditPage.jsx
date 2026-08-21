@@ -67,6 +67,8 @@ export default function EditPage() {
 
   const [freeDeliveryEdit, setFreeDeliveryEdit] = useState(false);
   const [deliveryFeeDiscountEdit, setDeliveryFeeDiscountEdit] = useState('0');
+  const [freeDeliveryMinOrderEnabled, setFreeDeliveryMinOrderEnabled] = useState(false);
+  const [freeDeliveryMinOrderEdit, setFreeDeliveryMinOrderEdit] = useState('20');
   const [savingDeliveryOffer, setSavingDeliveryOffer] = useState(false);
 
   const [newClosureStart, setNewClosureStart] = useState('');
@@ -102,6 +104,8 @@ export default function EditPage() {
     setEditOpenFlag(restaurant.open);
     setFreeDeliveryEdit(!!restaurant.freeDelivery);
     setDeliveryFeeDiscountEdit(String(restaurant.deliveryFeeDiscount || 0));
+    setFreeDeliveryMinOrderEnabled(restaurant.freeDeliveryMinOrder != null);
+    setFreeDeliveryMinOrderEdit(restaurant.freeDeliveryMinOrder != null ? String(restaurant.freeDeliveryMinOrder) : '20');
   }, [restaurant]);
 
   async function saveRestoInfo() {
@@ -314,11 +318,19 @@ export default function EditPage() {
       toast('Indique un montant valide entre 0€ et 50€.');
       return;
     }
+    let minOrder = null;
+    if (!freeDeliveryEdit && freeDeliveryMinOrderEnabled) {
+      minOrder = Number(freeDeliveryMinOrderEdit);
+      if (Number.isNaN(minOrder) || minOrder < 5 || minOrder > 200) {
+        toast('Indique un montant minimum valide entre 5€ et 200€.');
+        return;
+      }
+    }
     setSavingDeliveryOffer(true);
     try {
       await api(`/restaurants/${restoId}/delivery-discount`, {
         method: 'PATCH', token,
-        body: { freeDelivery: freeDeliveryEdit, deliveryFeeDiscount: freeDeliveryEdit ? 0 : discount }
+        body: { freeDelivery: freeDeliveryEdit, deliveryFeeDiscount: freeDeliveryEdit ? 0 : discount, freeDeliveryMinOrder: minOrder }
       });
       await loadDashboard(restoId);
       toast('Offre de livraison mise à jour.');
@@ -619,6 +631,20 @@ export default function EditPage() {
             <label>Réduction fixe sur les frais de livraison (€)</label>
             <input type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder="Ex: 2" />
           </div>
+        )}
+        {!freeDeliveryEdit && (
+          <>
+            <label className="row" style={{ gap: 8, margin: '12px 0 10px', cursor: 'pointer' }}>
+              <input type="checkbox" style={{ width: 'auto' }} checked={freeDeliveryMinOrderEnabled} onChange={(e) => setFreeDeliveryMinOrderEnabled(e.target.checked)} />
+              <span>🚴 Offrir la livraison à partir d'un certain montant de commande</span>
+            </label>
+            {freeDeliveryMinOrderEnabled && (
+              <div className="field" style={{ maxWidth: 220 }}>
+                <label>Montant minimum de commande (€)</label>
+                <input type="number" min="5" max="200" step="1" value={freeDeliveryMinOrderEdit} onChange={(e) => setFreeDeliveryMinOrderEdit(e.target.value)} placeholder="Ex: 25" />
+              </div>
+            )}
+          </>
         )}
         <button className="btn-teal" style={{ marginTop: 10 }} disabled={savingDeliveryOffer} onClick={saveDeliveryOffer}>
           {savingDeliveryOffer ? '...' : 'Enregistrer'}
