@@ -2414,7 +2414,6 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Autres entrées Boucherie / Fried Chicken retombant sur la même photo générique "Entrées" ---
   'sauce maison (pot)': U('1605940374327-ca3508431b42'),
   'sauces': U('1518013431117-eb1465fa5752'),
-  'roquette parmesan': U('1650844010413-3f24dc1c182b'),
   'toast cannibale': U('1727243866425-3bf2cbf7480a'),
   'samoussas (3 pcs)': U('1572098873382-f8e4bf925781'),
   'cervelas': U('1612392061787-2d078b3e573c'),
@@ -2506,10 +2505,33 @@ const ITEM_IMAGE_OVERRIDES = {
   'veggie': U('1520072959219-c595dc870360'),
   'vegan': U('1520072959219-c595dc870360'),
 
-  // --- Italien (plats sans mot-clé) ---
-  'escalope milanaise': U('1773417325310-cc9c9bef75e7'),
-  'tagliata de bœuf, roquette, parmesan': U('1773417325310-cc9c9bef75e7'),
+  // --- Italien (plats sans mot-clé) : re-signalé 2026-08, 5 plats de viande différents partageaient
+  // cette même photo (Vitello tonnato/Saltimbocca/Escalope milanaise/Osso buco/Tagliata) — chacun a
+  // maintenant sa propre photo vérifiée. ---
+  'vitello tonnato': U('1640346060848-ad6921833885'),
+  'saltimbocca alla romana': U('1625940947539-6d4702b302a2'),
+  'escalope milanaise': U('1649463509344-e2d2db8e4686'),
+  'osso buco': U('1769773183948-d24e3c5a2b82'),
+  'tagliata de bœuf, roquette, parmesan': U('1588168333986-5078d3ae3976'),
   'menu midi (entrée + plat, semaine)': U('1551183053-bf91a1d81141'),
+  'spaghetti carbonara (guanciale, pecorino)': U('1633337474564-1d9478ca4e2e'),
+  'roquette parmesan': U('1511994714008-b6d68a8b32a2'),
+  'tagliatelle bolognese': U('1621996346565-e3dbc646d9a9'),
+  'lasagne maison': U('1646077978608-65ed63765302'),
+  'penne arrabbiata': U('1676300184847-4ee4030409c0'),
+  'pâtes à la truffe': U('1608219992759-8d74ed8d76eb'),
+  'linguine vongole': U('1581073598026-26753e28b782'),
+  'ravioli ricotta épinards, beurre sauge': U('1778850620699-79ba3ff60bf0'),
+  'tagliatelle scampis': U('1522666257812-173fdc2d11fe'),
+  'risotto champignons': U('1609770424775-39ec362f2d94'),
+  'risotto scampis': U('1601579112759-761ccbaa8bde'),
+  'panna cotta': U('1452968011964-24f8831c43c3'),
+  'cannoli (2 pcs)': U('1749767138348-2e5bf1cbcef2'),
+  'vin au verre': U('1553361371-9b22f78e8b1d'),
+  'bouteille de vin maison (75cl)': U('1593548615309-5a45c504f994'),
+  'limoncello': U('1656057088883-546495ba6945'),
+  'burrata tomates cerises': U('1623855244697-5d8fbe9c7892'),
+  'planche antipasti misti (2 pers.)': U('1708593679370-0523990e8922'),
 
   // --- Belge : plats + bières sans mot-clé dédié ---
   'stoemp saucisses': U('1650844010413-3f24dc1c182b'),
