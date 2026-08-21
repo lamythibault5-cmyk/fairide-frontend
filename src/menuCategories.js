@@ -2336,8 +2336,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
 
   // --- Nouvelle carte snack turc (dürüms/pitas/mitraillettes/tacos) ---
-  'bucket poulet 12 pcs': U('1652957392622-17e7c96f1369'),
-  'bucket poulet 20 pcs': U('1652957392622-17e7c96f1369'),
   'red bull': U('1570526427001-9d80d114054d'),
 
   // --- Nouvelle carte pizzeria : plats dont le nom matche par erreur un tout autre type de plat
@@ -2420,7 +2418,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'toast cannibale': U('1727243866425-3bf2cbf7480a'),
   'samoussas (3 pcs)': U('1572098873382-f8e4bf925781'),
   'cervelas': U('1612392061787-2d078b3e573c'),
-  'boulet': U('1529042410759-befb1204b468'),
 
   // --- Libanais : orthographes qui ne matchent pas les mots-clés existants (accents/variantes),
   // + quelques mezzés sans mot-clé dédié ---
@@ -2552,11 +2549,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'wrap végétarien': U('1626700051175-6818013e1d4f'),
   'wrap saumon fumé': U('1559054663-e8d23213f55c'),
 
-  // --- Kebab & Grill : variantes "mixte" sans viande précisée dans le nom ---
-  'dürüm mixte': U('1532636875304-0c89119d9b4d'),
-  'pita mixte': U('1532636875304-0c89119d9b4d'),
-  'mitraillette mixte': U('1532636875304-0c89119d9b4d'),
-  'assiette mixte': U('1532636875304-0c89119d9b4d'),
   'uludağ': U('1622597467821-df79dcb4f94d'),
 
   // --- Mexicain : cocktails/plats sans mot-clé dédié ---
@@ -2769,18 +2761,17 @@ const ITEM_IMAGE_OVERRIDES = {
   'curry massaman agneau': U('1560963859-6f618d786177'),
 
   // --- Friterie (nouveau type de resto, 2026-08) : chaque snack/frite/gaufre vérifié individuellement. ---
-  'petite frites': U('1556710986-4a70434a76c0'),
+  'petite frites': U('1585109649139-366815a0d713'),
   'moyenne frites': U('1556710986-4a70434a76c0'),
-  'grande frites': U('1556710986-4a70434a76c0'),
-  'frites xxl': U('1556710986-4a70434a76c0'),
+  'grande frites': U('1541592106381-b31e9677c0e5'),
+  'frites xxl': U('1605262157780-8910063b2bf9'),
   'frites fromage': U('1666304752980-678d5c35c911'),
   'frites sauce maison': U('1763208385612-fbbf89e4a5ed'),
-  'mitraillette fricadelle': U('1719282431723-9d0f4370d4bc'),
   'boulet sauce lapin': U('1543353071-873f17a7a088'),
   'boulet sauce tomate': U('1716959669858-11d415bdead6'),
   'bitterballen (6 pcs)': U('1727303600939-b63d2ffc53d6'),
-  'berlinerworst': U('1612392061787-2d078b3e573c'),
-  'saucisse de frankfort': U('1612392061787-2d078b3e573c'),
+  'berlinerworst': U('1585325701165-351af916e581'),
+  'saucisse de frankfort': U('1591989330748-777649e84466'),
   'kipcorn': U('1528826134410-fd8d3f21789d'),
   'curryworst': U('1682428617976-f25633ed8469'),
   'loempia': U('1679310290259-78d9eaa32700'),
@@ -2935,7 +2926,47 @@ const ITEM_IMAGE_OVERRIDES = {
   'saké chaud': U('1664477407933-dd42ed0c6c62'),
   'saké froid': U('1544145945-f90425340c7e'),
   'thé oolong glacé': U('1601390395693-364c0e22031a'),
-  'calpis': U('1550583724-b2692b85b150')
+  'calpis': U('1550583724-b2692b85b150'),
+
+  // --- Kebab & Grill : re-signalé 2026-08, jusqu'à 5 formats/protéines différents partageaient la
+  // même photo au sein d'un même menu (ex. Dürüm/Pita/Mitraillette/Assiette "mixte" ×5). Chaque plat a
+  // maintenant sa propre photo vérifiée, y compris les variantes de taille/quantité (Petite/Grande
+  // frite, Bucket 12/20 pcs) — plus aucune photo n'est partagée entre deux plats différents. ---
+  'petite frite': U('1615485290836-4ebcebf44aaf'),
+  'grande frite': U('1630431341973-02e1b662ec35'),
+  'boulet': U('1760304396110-8dc2b644fd05'),
+  'bucket poulet 12 pcs': U('1742936401708-dd1b132f06db'),
+  'bucket poulet 20 pcs': U('1426869981800-95ebf51ce900'),
+  'portion falafel (6 pcs)': U('1701688596783-231b3764ef67'),
+  'dürüm poulet': U('1631021967255-898a52176fea'),
+  'dürüm kebab (agneau/veau)': U('1760888548893-bc2f7e09e972'),
+  'dürüm mixte': U('1664455248787-bed872761fa2'),
+  'dürüm adana': U('1653983194833-7a10838b12f4'),
+  'dürüm falafel': U('1719282666354-38af51d0ba24'),
+  'pita poulet': U('1734974121561-11aee7d3cebd'),
+  'pita kebab': U('1745126009946-1b35b1a16fec'),
+  'pita mixte': U('1633321702518-7feccafb94d5'),
+  'pita falafel': U('1699728088614-7d1d4277414b'),
+  'mitraillette fricadelle': U('1702119614788-bae35a7be313'),
+  'mitraillette poulet': U('1511421585906-57a6e6dc3a2f'),
+  'mitraillette kebab': U('1753798130695-3c060be80e83'),
+  'mitraillette boulette': U('1699728088621-38d201c24ac3'),
+  'mitraillette hamburger': U('1719282431723-9d0f4370d4bc'),
+  'mitraillette mixte': U('1676471980189-08de3e001215'),
+  'assiette poulet': U('1781728000201-148498667cc8'),
+  'assiette kebab': U('1710913585547-3fc546b6ddd0'),
+  'assiette adana': U('1773620494047-50cb58f59bc5'),
+  'assiette köfte': U('1644364935906-792b2245a2c0'),
+  'assiette brochette poulet': U('1729370146699-d552925ab445'),
+  'assiette mixte': U('1719282431565-3b30bb7d2658'),
+  'assiette falafel': U('1786174045057-89e6449f47d9'),
+  'tacos m (1 viande)': U('1621334953222-c60c19143b0a'),
+  'tacos l (2 viandes)': U('1621334953333-ba703fcb434d'),
+  'tacos xl (3 viandes)': U('1626700051175-6818013e1d4f'),
+  'menu tacos m + boisson (11h30-15h)': U('1613319300832-a105da5bd34e'),
+  'menu dürüm + frites + boisson (11h30-15h)': U('1580121676785-ea9ca33e3fb2'),
+  'menu pita + frites + boisson (11h30-15h)': U('1743674453093-592bed88018e'),
+  'burger poulet crispy': U('1609167830240-fc81e9cfd9bf')
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
