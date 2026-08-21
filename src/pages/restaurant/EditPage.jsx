@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -75,8 +75,16 @@ export default function EditPage() {
   const [addingClosure, setAddingClosure] = useState(false);
   const [deletingClosureId, setDeletingClosureId] = useState(null);
 
+  // DashboardLayout relit /restaurants/:id toutes les 15s (voir loadDashboard), ce qui donne un nouvel
+  // objet `restaurant` à chaque poll — sans ce garde-fou, le formulaire se réinitialisait sur CHAQUE
+  // poll et effaçait ce que le restaurateur venait de taper avant même qu'il ait pu cliquer sur
+  // Enregistrer (signalé : le nom retombait tout seul sur l'ancien). On ne (re)peuple les champs
+  // qu'une fois par restaurant, pas à chaque rafraîchissement des mêmes données.
+  const initializedRestoIdRef = useRef(null);
   useEffect(() => {
     if (!restaurant) return;
+    if (initializedRestoIdRef.current === restaurant.id) return;
+    initializedRestoIdRef.current = restaurant.id;
     setEditName(restaurant.name || '');
     setEditLegalName(restaurant.legalName || '');
     setEditCompanyNumber(restaurant.companyNumber || '');
