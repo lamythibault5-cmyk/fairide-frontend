@@ -46,7 +46,10 @@ export default function Checkout() {
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
 
-  const restaurantId = cart.restaurantId;
+  // Réservation seule (bouton "Réserver une table") : le panier n'a jamais reçu d'article pour ce
+  // restaurant, donc cart.restaurantId peut être vide — on retombe alors sur l'id transmis explicitement
+  // par le bouton (voir RestaurantMenu.jsx) plutôt que de rediriger vers /restaurants à tort.
+  const restaurantId = cart.restaurantId || (reservationOnly ? location.state?.restaurantId : null);
 
   useEffect(() => {
     if (!restaurantId || (cart.count === 0 && !reservationOnly)) {

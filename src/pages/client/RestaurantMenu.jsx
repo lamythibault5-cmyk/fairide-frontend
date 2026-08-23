@@ -241,7 +241,7 @@ export default function RestaurantMenu() {
           <button
             type="button"
             className="btn-outline btn-block"
-            onClick={() => navigate('/checkout', { state: { reservationOnly: true } })}
+            onClick={() => navigate('/checkout', { state: { reservationOnly: true, restaurantId: id } })}
           >
             {t('restaurantMenu.reserveTable')}
           </button>
