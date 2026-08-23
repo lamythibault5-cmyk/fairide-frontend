@@ -44,6 +44,7 @@ export default function Checkout() {
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const pendingOrderRef = useRef(null);
+  const fulfillmentInitRef = useRef(false);
 
   const restaurantId = cart.restaurantId;
 
@@ -55,6 +56,25 @@ export default function Checkout() {
     api(`/restaurants/${restaurantId}`).then(setRestaurant).catch(() => setNotFound(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
+
+  // Corrige le type de commande par défaut (initialisé à 'delivery' avant même de savoir ce que ce
+  // restaurant propose) une fois ses services chargés — une seule fois, pour ne pas écraser un choix
+  // déjà fait par le client si le restaurant est rechargé ensuite.
+  useEffect(() => {
+    if (!restaurant || fulfillmentInitRef.current) return;
+    fulfillmentInitRef.current = true;
+    if (reservationOnly) {
+      if (!restaurant.offersDineIn) {
+        toast('Ce restaurant ne propose pas la réservation de table.');
+        navigate(`/restaurants/${restaurantId}`);
+      }
+      return;
+    }
+    if (!restaurant.offersDelivery) {
+      if (restaurant.offersPickup) setFulfillmentType('pickup');
+      else if (restaurant.offersDineIn) setFulfillmentType('dine_in');
+    }
+  }, [restaurant]);
 
   useEffect(() => {
     if (pendingOrder && pendingOrderRef.current) {
@@ -238,11 +258,17 @@ export default function Checkout() {
             <div className="field">
               <label>{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
               <div className="row" style={{ gap: 8 }}>
-                <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>{t('orderStatus.orderType.dineIn')}</button>
+                {restaurant.offersDineIn && (
+                  <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>{t('orderStatus.orderType.dineIn')}</button>
+                )}
                 {cart.count > 0 && (
                   <>
-                    <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>{t('orderStatus.orderType.delivery')}</button>
-                    <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>{t('orderStatus.orderType.pickup')}</button>
+                    {restaurant.offersDelivery && (
+                      <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>{t('orderStatus.orderType.delivery')}</button>
+                    )}
+                    {restaurant.offersPickup && (
+                      <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>{t('orderStatus.orderType.pickup')}</button>
+                    )}
                   </>
                 )}
               </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -53,6 +53,11 @@ export default function Account() {
   const [redeeming, setRedeeming] = useState(false);
   const [convertAmount, setConvertAmount] = useState('');
   const [converting, setConverting] = useState(false);
+  const [offersDelivery, setOffersDelivery] = useState(true);
+  const [offersPickup, setOffersPickup] = useState(true);
+  const [offersDineIn, setOffersDineIn] = useState(true);
+  const [savingServices, setSavingServices] = useState(false);
+  const servicesInitRef = useRef(false);
   const [generatedCodes, setGeneratedCodes] = useState(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleteReason, setDeleteReason] = useState(DELETION_REASONS[0].value);
@@ -123,6 +128,33 @@ export default function Account() {
   function refreshRestaurant() {
     if (!restoId) return;
     api(`/restaurants/${restoId}`).then(setRestaurant).catch((e) => toast(e.message));
+  }
+
+  // N'initialise les cases à cocher qu'une fois par restaurant, pas à chaque refreshRestaurant() (ex.
+  // après une action sur l'abonnement) — sinon ça écraserait une modification en cours, non sauvegardée.
+  useEffect(() => {
+    if (!restaurant || servicesInitRef.current) return;
+    servicesInitRef.current = true;
+    setOffersDelivery(restaurant.offersDelivery);
+    setOffersPickup(restaurant.offersPickup);
+    setOffersDineIn(restaurant.offersDineIn);
+  }, [restaurant]);
+
+  async function saveServices() {
+    if (!offersDelivery && !offersPickup && !offersDineIn) {
+      toast('Sélectionne au moins un service.');
+      return;
+    }
+    setSavingServices(true);
+    try {
+      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn } });
+      refreshRestaurant();
+      toast('Services mis à jour.');
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setSavingServices(false);
+    }
   }
 
   async function subscribeNow() {
@@ -482,6 +514,29 @@ export default function Account() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {role === 'restaurant' && restaurant && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🛎️ Services proposés</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            Choisis les modes de commande que ton restaurant propose à ses clients — n'importe quelle combinaison, au moins un doit rester actif.
+            Si seule la réservation est activée, tes clients ne pourront pas commander en ligne : ils ne verront que la carte et un bouton pour réserver une table.
+          </p>
+          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 8 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={offersDelivery} disabled={savingServices} onChange={(e) => setOffersDelivery(e.target.checked)} />
+            <span className="small">🚴 Livraison</span>
+          </label>
+          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 8 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={offersPickup} disabled={savingServices} onChange={(e) => setOffersPickup(e.target.checked)} />
+            <span className="small">🥡 À emporter</span>
+          </label>
+          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 12 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={offersDineIn} disabled={savingServices} onChange={(e) => setOffersDineIn(e.target.checked)} />
+            <span className="small">🍽️ Réservation de table (sur place)</span>
+          </label>
+          <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
         </div>
       )}
 

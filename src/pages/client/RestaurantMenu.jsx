@@ -122,7 +122,13 @@ export default function RestaurantMenu() {
     }
   }
 
+  const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
+
   function addToCart(item) {
+    if (onlineOrderingDisabled) {
+      toast('Ce restaurant ne propose pas la commande en ligne — réserve une table pour découvrir la carte sur place.');
+      return;
+    }
     if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
       toast('Ce commerce est actuellement fermé.');
       return;
@@ -231,18 +237,26 @@ export default function RestaurantMenu() {
               : `🚴 -${restaurant.deliveryFeeDiscount.toFixed(2)}€ sur les frais de livraison, offert par ${restaurant.name}`}
           </div>
         )}
-        <button
-          type="button"
-          className="btn-outline btn-block"
-          onClick={() => navigate('/checkout', { state: { reservationOnly: true } })}
-        >
-          {t('restaurantMenu.reserveTable')}
-        </button>
+        {restaurant.offersDineIn && (
+          <button
+            type="button"
+            className="btn-outline btn-block"
+            onClick={() => navigate('/checkout', { state: { reservationOnly: true } })}
+          >
+            {t('restaurantMenu.reserveTable')}
+          </button>
+        )}
       </div>
+
+      {onlineOrderingDisabled && (
+        <div className="card">
+          <p className="small" style={{ margin: 0 }}>🍽️ Ce restaurant fonctionne uniquement sur réservation — la commande en ligne n'est pas disponible ici. Réserve une table pour découvrir la carte sur place.</p>
+        </div>
+      )}
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
-        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
+        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} hideAdd={onlineOrderingDisabled} />
       </div>
 
       {reviews && reviews.reviews.length > 0 && (

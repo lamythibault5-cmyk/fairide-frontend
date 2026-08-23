@@ -1,7 +1,7 @@
 import { categoryImage, categoryLabel, defaultItemImage, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
-function ItemCard({ item, onAdd, t }) {
+function ItemCard({ item, onAdd, hideAdd, t }) {
   return (
     <div className="menu-item-card" style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
@@ -10,7 +10,7 @@ function ItemCard({ item, onAdd, t }) {
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : (item.desc || '')}</div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>
-        <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => onAdd(item)}>+</button>
+        {!hideAdd && <button className="btn-outline" style={{ padding: '6px 12px' }} disabled={item.available === false} onClick={() => onAdd(item)}>+</button>}
       </div>
     </div>
   );
@@ -24,7 +24,7 @@ function ItemCard({ item, onAdd, t }) {
 // manuelle retombe sur l'ancienne déduction automatique (chaudes/alcool/froides) par nom, pour ne
 // pas casser les menus déjà en place. Partagé entre la page client (RestaurantMenu) et l'aperçu
 // restaurateur (RestaurantPreview) pour que les deux restent strictement identiques.
-export default function MenuCategorySections({ menu, sections, onAdd }) {
+export default function MenuCategorySections({ menu, sections, onAdd, hideAdd }) {
   const { t } = useLanguage();
   return (
     <>
@@ -44,7 +44,7 @@ export default function MenuCategorySections({ menu, sections, onAdd }) {
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
                 <div className="menu-grid">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} t={t} />)}
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} hideAdd={hideAdd} t={t} />)}
                 </div>
               </div>
             ))}
