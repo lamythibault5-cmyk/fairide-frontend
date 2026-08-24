@@ -2496,6 +2496,13 @@ const ITEM_IMAGE_OVERRIDES = {
   'œufs bénédicte': U('1621523130535-d9f3e46124b0'),
   'œufs au plat toast': U('1582169505937-b9992bd01ed9'),
 
+  // --- Africain : corrections doublons (accras/beignets crevettes, mafé poulet/bœuf, attiéké/riz
+  // gras/sauce graine) ---
+  'beignets de crevettes (pastels, 5 pcs)': U('1669385184561-1f4d6153bd65'),
+  'mafé bœuf': U('1665332561290-cc6757172890'),
+  'attiéké poisson braisé': U('1665401015549-712c0dc5ef85'),
+  'sauce graine riz': U('1664992960082-0ea299a9c53e'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
