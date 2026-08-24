@@ -2482,6 +2482,13 @@ const ITEM_IMAGE_OVERRIDES = {
   'salade césar poulet': U('1546069901-ba9599a7e63c'),
   'salade chèvre chaud': U('1634234498278-b01fbf12bf4c'),
 
+  // --- Thaïlandais : corrections doublons (nems/rouleaux de printemps frais, pad thaï poulet/tofu,
+  // curry vert poulet/curry rouge bœuf/canard laqué curry rouge) ---
+  'rouleaux de printemps frais (2 pcs)': U('1594020292985-216a72a2c7ce'),
+  'pad thaï tofu': U('1637806931098-af30b519be53'),
+  'curry rouge bœuf': U('1672933036331-e27ffae157bd'),
+  'canard laqué au curry rouge': U('1757715376673-2540c53becb0'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
