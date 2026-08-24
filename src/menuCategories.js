@@ -2643,14 +2643,22 @@ const ITEM_IMAGE_OVERRIDES = {
 
   'uludağ': U('1622597467821-df79dcb4f94d'),
 
-  // --- Mexicain : cocktails/plats sans mot-clé dédié ---
+  // --- Mexicain : cocktails/plats sans mot-clé dédié + corrections doublons (tacos pastor/menu midi
+  // tombaient sur le mot-clé générique 'tacos', enchiladas sur le mot-clé générique 'poulet', nachos
+  // pulled pork sur le mot-clé générique 'nachos', quesadilla poulet sur le mot-clé générique
+  // 'quesadilla', et les 4 boissons partageaient toutes la même photo) ---
   'fajitas bœuf': U('1664138788119-bd4f073259d5'),
   'flan mexicain': U('1676300184943-09b2a08319a3'),
+  'tacos pastor (porc ananas)': U('1579888944880-d98341245702'),
+  'menu midi (2 tacos + boisson)': U('1574782091246-c65ed4510300'),
+  'enchiladas poulet': U('1636777408340-e053c0b5ba2a'),
+  'nachos pulled pork': U('1655017976676-61a3bcdabac6'),
+  'quesadilla poulet': U('1673990349292-ed2dfa7988c9'),
   'margarita': U('1516684163977-84cc7de8c7c8'),
-  'margarita fruits': U('1516684163977-84cc7de8c7c8'),
-  'mojito': U('1516684163977-84cc7de8c7c8'),
+  'margarita fruits': U('1556855810-ac404aa91e85'),
+  'mojito': U('1653542772393-71ffa417b1c4'),
   'agua fresca': U('1622597467821-df79dcb4f94d'),
-  'tequila / mezcal (shot)': U('1516684163977-84cc7de8c7c8'),
+  'tequila / mezcal (shot)': U('1529671434436-8fbb37410056'),
 
   // --- Libanais : plat + desserts sans mot-clé dédié ---
   'assiette végétarienne': U('1593001872095-7d5b3868fb1d'),
