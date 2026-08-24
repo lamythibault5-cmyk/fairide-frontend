@@ -1956,7 +1956,11 @@ const KEYWORD_IMAGES = [
   { keywords: ['jus de pomme', 'apple juice', 'jus pressé pomme'], image: 'https://images.unsplash.com/photo-1727989815707-1b9e8f376775?w=300&q=80' },
   { keywords: ['jus', 'aranciata', 'lemonata', 'mango drink', 'pack sodas', 'pack de sodas'], image: 'https://images.unsplash.com/photo-1622597467821-df79dcb4f94d?w=300&q=80' },
   { keywords: ['thé', 'the', 'tea'], image: 'https://images.unsplash.com/photo-1573784540576-21ddeff9479b?w=300&q=80' },
-  { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair', 'cramique', 'financier', 'cannelé', 'canele', 'muffin', 'baguette', 'chausson'], image: 'https://images.unsplash.com/photo-1623334044303-241021148842?w=300&q=80' },
+  // 'baguette' retiré de ce groupe : trop générique en tant que sous-chaîne, il matchait aussi les
+  // sandwichs baguette (ex: "Poulet crudités baguette") qui recevaient alors une photo de croissants
+  // au lieu d'un vrai sandwich. Les items "Baguette"/"Baguette tradition" (le pain lui-même) restent
+  // couverts par leurs overrides exacts dédiés plus bas.
+  { keywords: ['pain', 'croissant', 'viennoiserie', 'éclair', 'eclair', 'cramique', 'financier', 'cannelé', 'canele', 'muffin', 'chausson'], image: 'https://images.unsplash.com/photo-1623334044303-241021148842?w=300&q=80' },
   { keywords: ['poulet', 'chicken'], image: 'https://images.unsplash.com/photo-1763219802762-1d34ee0907c5?w=300&q=80' },
   { keywords: ['beignet'], image: 'https://images.unsplash.com/photo-1570727624862-3008fe67a6be?w=300&q=80' },
   { keywords: ['riz', 'curry', 'cantonais'], images: ['https://images.unsplash.com/photo-1543353071-873f17a7a088?w=300&q=80', 'https://images.unsplash.com/photo-1716959669858-11d415bdead6?w=300&q=80', 'https://images.unsplash.com/photo-1682428617976-f25633ed8469?w=300&q=80'] },
@@ -2049,6 +2053,23 @@ const ITEM_IMAGE_OVERRIDES = {
   'financier amande': U('1638518909918-27910011e4d6'),
   'cannelé': U('1593353994452-97b4560c50c2'),
   'baguette tradition': U('1586765501019-cbe3973ef8fa'),
+  // Sandwichs baguette des restos "Sandwicherie" de démo (server.js SANDWICH_RESTAURANTS) — retombaient
+  // sur la photo générique pain/croissant via le mot-clé 'baguette' (voir KEYWORD_IMAGES ci-dessous,
+  // corrigé) faute d'override dédié. Une photo distincte par nom, y compris entre plats d'un même resto.
+  'américain préparé baguette': U('1550507992-eb63ffee0847'),
+  'poulet curry baguette': U('1741414203946-9d8e45350f04'),
+  'thon mayo baguette': U('1509722747041-616f39b57569'),
+  'jambon fromage baguette': U('1554433607-66b5efe9d304'),
+  'salade piémontaise baguette': U('1586657395688-476c3f92b5f6'),
+  'poulet crudités baguette': U('1715925717150-2a6d181d8846'),
+  'saumon fumé baguette': U('1627308594171-ebd99b564ff6'),
+  'boulettes sauce tomate baguette': U('1749513762144-8991c898d95c'),
+  'merguez baguette': U('1642694358592-e4df77878e6d'),
+  'kefta baguette': U('1738173689012-95fa988f684d'),
+  'thon épicé baguette': U('1639667911189-700bd2029f5b'),
+  'poulet avocat baguette': U('1521390188846-e2a3a97453a0'),
+  'brie noix miel baguette': U('1481070414801-51fd732d7184'),
+  'américain baguette': U('1600454309261-3dc9b7597637'),
   'tarte flamiche': U('1633205772834-c0b9943c5a54'),
   'formule quiche + salade': U('1767065584079-87834f242fe9'),
   'pain au chocolat': U('1613929231151-d7571591259e'),
