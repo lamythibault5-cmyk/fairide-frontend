@@ -2503,6 +2503,12 @@ const ITEM_IMAGE_OVERRIDES = {
   'attiéké poisson braisé': U('1665401015549-712c0dc5ef85'),
   'sauce graine riz': U('1664992960082-0ea299a9c53e'),
 
+  // --- Boulangerie : corrections doublons (4 pains partageaient une photo, les 2 tartes au riz aussi) ---
+  'pain de campagne': U('1534620808146-d33bb39128b2'),
+  'pain aux céréales': U('1706954622635-939539dd9246'),
+  "pain d'épeautre": U('1549931319-a545dcf3bc73'),
+  'tarte au riz entière (6-8 pers.)': U('1535920527002-b35e96722eb9'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
@@ -2765,9 +2771,6 @@ const ITEM_IMAGE_OVERRIDES = {
   // maintenant sa propre photo vérifiée (téléchargée puis inspectée), 2026-08. ---
   'baguette': U('1568471173242-461f0a730452'),
   'pain blanc / gris 800g': U('1509440159596-0249088772ff'),
-  'pain de campagne': U('1509440159596-0249088772ff'),
-  'pain aux céréales': U('1509440159596-0249088772ff'),
-  "pain d'épeautre": U('1509440159596-0249088772ff'),
   'pistolet (pièce)': U('1549438247-223f2db1dd29'),
   'cramique (tranche)': U('1546309919-812d3b094670'),
   'éclair': U('1774119649906-c82806125e23'),
@@ -2777,7 +2780,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'merveilleux': U('1519915028121-7d3463d20b13'),
   'boule de berlin': U('1570727624862-3008fe67a6be'),
   'tarte au riz (part)': U('1637273483570-10e72651892e'),
-  'tarte au riz entière (6-8 pers.)': U('1637273483570-10e72651892e'),
   'tarte aux fruits (part)': U('1614174486496-344ef3e9d870'),
   'tarte aux fraises entière (6-8 pers.)': U('1503485838016-53579610c389'),
 
