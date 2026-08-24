@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 export default function ContactSection() {
   const { t } = useLanguage();
   const INFO_CARDS = [
-    { icon: '✉️', title: t('contact.emailLabel'), lines: ['fairide.entreprise@gmail.com'] },
+    { icon: '✉️', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
     { icon: '📍', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
     { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
   ];
