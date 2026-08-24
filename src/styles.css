@@ -151,9 +151,14 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    mobile (durée plus longue) pour rester lisible sur un écran étroit où les cartes défilent plus vite
    à l'œil (plus proches, moins de contexte visuel autour). */
 .rest-grid-loop { overflow: hidden; padding-bottom: 6px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.rest-grid-loop-track { display: flex; gap: 14px; width: max-content; animation: restGridMarquee 40s linear infinite; }
+/* Pas de "gap" ici : avec N cartes doublées, gap ne pose que N-1 espaces (nombre impair côté 2N),
+   donc translateX(-50%) retombe une demi-largeur-de-gap avant/après la vraie frontière entre les deux
+   copies — un léger à-coup visible à chaque tour. En mettant l'espacement en margin-right sur CHAQUE
+   carte (y compris la dernière), chaque carte "pèse" exactement le même poids (largeur + marge) dans le
+   total, donc 50% de la largeur totale tombe pile sur la frontière entre les deux copies : boucle exacte. */
+.rest-grid-loop-track { display: flex; width: max-content; animation: restGridMarquee 40s linear infinite; }
 .rest-grid-loop:hover .rest-grid-loop-track { animation-play-state: paused; }
-.rest-grid-loop-track .rest-card { flex: 0 0 220px; }
+.rest-grid-loop-track .rest-card { flex: 0 0 220px; margin-right: 14px; }
 @keyframes restGridMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (max-width: 640px) {
   .rest-grid-loop-track .rest-card { flex-basis: 168px; }
@@ -456,8 +461,12 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 }
 
 .cuisine-scroll { overflow: hidden; padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.cuisine-track { display: flex; gap: 8px; width: max-content; animation: cuisineMarquee 34s linear infinite; }
+/* Pas de "gap" ici, même raison que .rest-grid-loop-track ci-dessus (margin-right sur chaque puce
+   plutôt que gap sur le conteneur) : une boucle à N puces doublées avec gap laisse un demi-espacement
+   de décalage à la frontière entre les deux copies, visible comme un petit à-coup à chaque tour. */
+.cuisine-track { display: flex; width: max-content; animation: cuisineMarquee 34s linear infinite; }
 .cuisine-scroll:hover .cuisine-track { animation-play-state: paused; }
+.cuisine-track .cuisine-chip { margin-right: 8px; }
 @keyframes cuisineMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 20px; line-height: 1; }
