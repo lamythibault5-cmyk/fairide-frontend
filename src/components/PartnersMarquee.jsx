@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
 // Défilement horizontal infini des commerces déjà partenaires, en bas de la page d'accueil — un mur
-// de confiance avant l'appel à l'action final. Public (pas besoin d'être connecté), lu directement
+// de confiance avant l'appel à l'action final. Purement décoratif : ne mène nulle part au clic (pas de
+// lien vers une fiche resto ni vers une interface qui exigerait une connexion), le défilement continue
+// sans interruption quoi que fasse le visiteur. Public (pas besoin d'être connecté), lu directement
 // depuis /restaurants ; se met donc à jour tout seul à mesure que de nouveaux commerces rejoignent Fairide.
 export default function PartnersMarquee() {
   const { t } = useLanguage();
@@ -28,10 +29,10 @@ export default function PartnersMarquee() {
           style={canLoop ? { animationDuration: `${restaurants.length * 3.5}s` } : undefined}
         >
           {items.map((r, i) => (
-            <Link key={`${r.id}-${i}`} to={`/restaurants/${r.id}`} className="trust-card" title={r.name}>
+            <div key={`${r.id}-${i}`} className="trust-card" title={r.name}>
               {r.coverImageUrl ? <img src={r.coverImageUrl} alt={r.name} /> : <span className="trust-card-fallback">{r.name.slice(0, 2).toUpperCase()}</span>}
               <span>{r.name}</span>
-            </Link>
+            </div>
           ))}
         </div>
       </div>
