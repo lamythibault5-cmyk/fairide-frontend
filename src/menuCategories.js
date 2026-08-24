@@ -534,7 +534,8 @@ const TYPE_TEMPLATES = {
       { name: 'Porridge fruits', price: 6.5, desc: '' },
       { name: 'Chia pudding', price: 6, desc: '' },
       { name: 'Açaí bowl', price: 9.5, desc: '' },
-      { name: 'Yaourt granola', price: 6.5, desc: '' }
+      { name: 'Yaourt granola', price: 6.5, desc: '' },
+      { name: 'Skyr fruits rouges', price: 6, desc: '' }
     ],
     dessert: [
       { name: 'Energy balls (3 pcs)', price: 3.5, desc: '' },
@@ -705,13 +706,15 @@ const TYPE_TEMPLATES = {
       { name: 'Gnocchis épinards gorgonzola', price: 14.5, desc: '' },
       { name: 'Assiette mezze végétarien', price: 15, desc: '' },
       { name: 'Tarte du jour, salade', price: 12.5, desc: '' },
-      { name: 'Menu midi (plat du jour + soupe)', price: 16, desc: '' }
+      { name: 'Menu midi (plat du jour + soupe)', price: 16, desc: '' },
+      { name: 'Poke bowl végétarien', price: 13.5, desc: '' }
     ],
     dessert: [
       { name: 'Cheesecake vegan', price: 6, desc: '' },
       { name: 'Moelleux chocolat', price: 6.5, desc: '' },
       { name: 'Crumble aux pommes', price: 5.5, desc: '' },
-      { name: 'Energy balls (3 pcs)', price: 3.5, desc: '' }
+      { name: 'Energy balls (3 pcs)', price: 3.5, desc: '' },
+      { name: 'Tiramisu vegan', price: 6, desc: '' }
     ],
     boisson: [
       { name: 'Jus pressé', price: 4.5, desc: '' },
@@ -2476,8 +2479,21 @@ const ITEM_IMAGE_OVERRIDES = {
   'câble téléphone': U('1557767382-97b28f5488e7'),
   'piles aa (4)': U('1576834975354-ee694be1f0d1'),
 
-  // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" ---
+  // --- Healthy : dernier orphelin retombant sur la photo générique "Entrées" (+ corrections doublons
+  // et item ajouté pour atteindre 30 plats) ---
   'porridge fruits': U('1571212515416-fef01fc43637'),
+  'buddha bowl': U('1505576633757-0ac1084af824'),
+  'curry de légumes riz': U('1695720247911-817755ad7d02'),
+  'yaourt granola': U('1612182062572-e29c5dfb5eb4'),
+  'skyr fruits rouges': U('1571230389215-b34a89739ef1'),
+
+  // --- Végétarien : corrections doublons (soupe du jour/menu midi, houmous/buddha bowl, burger
+  // végétarien/vegan tombaient tous sur la même image générique) + 2 items ajoutés pour atteindre 30 ---
+  'soupe du jour': U('1605909388460-74ec8b204127'),
+  'houmous pain plat': U('1697126248475-a537cc5cce28'),
+  'burger végétarien (galette maison, frites)': U('1661529515642-fef696c86f64'),
+  'poke bowl végétarien': U('1606757819934-d61a9f7279d5'),
+  'tiramisu vegan': U('1714385905983-6f8e06fffae1'),
 
   // ===== Deuxième passe : mêmes incohérences que ci-dessus, mais pour les catégories Plats/
   // Desserts/Boissons (ex. "Filet américain préparé" affichait un poke bowl — photo générique "Plats"). =====
