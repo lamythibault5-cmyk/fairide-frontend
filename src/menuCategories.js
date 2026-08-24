@@ -2475,6 +2475,13 @@ const ITEM_IMAGE_OVERRIDES = {
   'milkshake fraise': U('1579954115545-a95591f28bfc'),
   'chocolat chaud chantilly': U('1700488629510-bf60790ff9fc'),
 
+  // --- Sandwichs & Salades : corrections doublons (salade verte/tomates mozzarella, sandwich poulet/
+  // saumon fumé, wrap césar/salade césar, salade grecque/chèvre chaud) ---
+  'salade de tomates mozzarella': U('1595587870672-c79b47875c6a'),
+  'sandwich saumon fumé': U('1676798088371-858393f11f88'),
+  'salade césar poulet': U('1546069901-ba9599a7e63c'),
+  'salade chèvre chaud': U('1634234498278-b01fbf12bf4c'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
