@@ -3,6 +3,7 @@ import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
+import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
 
 function joinCards(t) {
@@ -90,53 +91,53 @@ export default function Landing() {
       </div>
 
       <div className="feature-grid">
-        {features(t).map((f) => (
-          <div className="card feature-card" key={f.title}>
+        {features(t).map((f, i) => (
+          <Reveal className="card feature-card" key={f.title} delay={i * 90}>
             <div className="feature-icon">{f.icon}</div>
             <h3 style={{ fontSize: 17, margin: '10px 0 6px' }}>{f.title}</h3>
             <p className="small" style={{ lineHeight: 1.5 }}>{f.text}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
 
-      <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.howItWorks')}</h2>
+      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.howItWorks')}</Reveal>
       <div className="steps-grid">
-        {steps(t).map((s) => (
-          <div key={s.num} className="step-card">
+        {steps(t).map((s, i) => (
+          <Reveal as="div" className="step-card" key={s.num} delay={i * 90}>
             <div className="step-num">{s.num}</div>
             <h3 style={{ fontSize: 15, margin: '8px 0 4px' }}>{s.title}</h3>
             <p className="small">{s.text}</p>
-          </div>
+          </Reveal>
         ))}
       </div>
 
-      <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.joinTitle')}</h2>
+      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.joinTitle')}</Reveal>
       <div className="join-grid">
-        {joinCards(t).map((c) => (
-          <Link key={c.key} to={c.to} className="join-card" style={{ backgroundImage: `url('${c.image}')` }}>
+        {joinCards(t).map((c, i) => (
+          <Reveal as={Link} to={c.to} key={c.key} delay={i * 90} className="join-card" style={{ backgroundImage: `url('${c.image}')` }}>
             <h3>{c.title}</h3>
             <span className="join-link">{c.link}</span>
-          </Link>
+          </Reveal>
         ))}
       </div>
 
-      <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.communesTitle')}</h2>
-      <div className="commune-pills">
+      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.communesTitle')}</Reveal>
+      <Reveal className="commune-pills">
         {COMMUNES.map((c) => <span key={c} className="pill teal">{c}</span>)}
-      </div>
+      </Reveal>
 
-      <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.contactTitle')}</h2>
-      <ContactSection />
+      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.contactTitle')}</Reveal>
+      <Reveal><ContactSection /></Reveal>
 
-      <PartnersMarquee />
+      <Reveal><PartnersMarquee /></Reveal>
 
-      <div className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
+      <Reveal className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
         <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>{t('landing.ctaTitle')}</h2>
         <p className="small" style={{ color: 'var(--cream)', opacity: 0.85, marginBottom: 16 }}>
           {t('landing.ctaText')}
         </p>
         <button className="btn-gold" onClick={() => navigate('/login')}>{t('landing.ctaButton')}</button>
-      </div>
+      </Reveal>
     </div>
   );
 }
