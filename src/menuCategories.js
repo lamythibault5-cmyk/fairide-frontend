@@ -238,24 +238,31 @@ const TYPE_TEMPLATES = {
       { name: 'Veggie', price: 11.5, desc: 'Galette de légumes, pain brioché' },
       { name: 'Vegan', price: 12.5, desc: 'Steak végétal, pain brioché' },
       { name: 'Burger du mois', price: 14, desc: '' },
-      { name: 'Mini burger + frites + jus', price: 8.5, desc: 'Menu enfant' }
+      { name: 'Mini burger + frites + jus', price: 8.5, desc: 'Menu enfant' },
+      { name: 'Fish burger', price: 13, desc: 'Poisson pané, sauce tartare, pain brioché' }
     ],
     entree: [
       { name: 'Frites', price: 3.5, desc: '' },
       { name: 'Frites cheddar bacon', price: 6, desc: '' },
       { name: 'Onion rings', price: 4.5, desc: '' },
       { name: 'Nuggets (6 pcs)', price: 5, desc: '' },
-      { name: 'Coleslaw', price: 3, desc: '' }
+      { name: 'Coleslaw', price: 3, desc: '' },
+      { name: 'Chili cheese fries', price: 6.5, desc: '' },
+      { name: 'Cheese sticks (5 pcs)', price: 5.5, desc: 'Bâtonnets de mozzarella panés' }
     ],
     dessert: [
       { name: 'Milkshake', price: 5.5, desc: 'Vanille, fraise, chocolat ou Oreo — au choix' },
       { name: 'Brownie', price: 4.5, desc: '' },
-      { name: 'Cookie', price: 3, desc: '' }
+      { name: 'Cookie', price: 3, desc: '' },
+      { name: 'Apple pie', price: 4.5, desc: '' }
     ],
     boisson: [
       { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
       { name: 'Limonade maison', price: 3.5, desc: '' },
-      { name: 'Bière artisanale', price: 4.5, desc: '' }
+      { name: 'Bière artisanale', price: 4.5, desc: '' },
+      { name: 'Thé glacé pêche', price: 3, desc: '' },
+      { name: 'Eau plate', price: 1.8, desc: '' },
+      { name: 'Jus d\'orange pressé', price: 4, desc: '' }
     ]
   },
   // Carte type pizzeria italienne (pâte fine 30cm, options taille/pâte/suppléments gérées via les
@@ -2495,15 +2502,24 @@ const ITEM_IMAGE_OVERRIDES = {
   'eau 50cl': U('1534616042650-80f5c9b61f09'),
   'bouteille 1,5l': U('1534616042650-80f5c9b61f09'),
 
-  // --- Burgers : variantes nommées sans le mot "burger" ---
+  // --- Burgers : variantes nommées sans le mot "burger" (+ items ajoutés pour atteindre 30 plats) ---
   'classic': U('1571091718767-18b5b1457add'),
   'bacon cheese': U('1586190848861-99aa4a171e90'),
   'double': U('1550317138-10000687a72b'),
   'blue cheese': U('1610440042657-612c34d95e9f'),
   'bbq': U('1610614819513-58e34989848b'),
-  'truffe': U('1610440042657-612c34d95e9f'),
+  'truffe': U('1596956470007-2bf6095e7e16'),
   'veggie': U('1520072959219-c595dc870360'),
-  'vegan': U('1520072959219-c595dc870360'),
+  'vegan': U('1610970878459-a0e464d7592b'),
+  'burger du mois': U('1568901346375-23c9450c58cd'),
+  'mini burger + frites + jus': U('1619290463523-6d18f6a6b220'),
+  'chicken crispy': U('1551782450-a2132b4ba21d'),
+  'chicken hot honey': U('1703219342329-fce8488cf443'),
+  'fish burger': U('1615297928064-24977384d0da'),
+  'chili cheese fries': U('1639744210631-209fce3e256c'),
+  'cheese sticks (5 pcs)': U('1734774924912-dcbb467f8599'),
+  'apple pie': U('1572383672419-ab35444a6934'),
+  'thé glacé pêche': U('1601390395693-364c0e22031a'),
 
   // --- Italien (plats sans mot-clé) : re-signalé 2026-08, 5 plats de viande différents partageaient
   // cette même photo (Vitello tonnato/Saltimbocca/Escalope milanaise/Osso buco/Tagliata) — chacun a
