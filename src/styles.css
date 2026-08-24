@@ -28,10 +28,13 @@
    au-dessus de html pour la contenir — c'est simplement le scroll normal de la page.  */
 html {
   overflow-x: hidden;
+  touch-action: pan-y;
 }
 
 body {
   margin: 0;
+  overflow-x: hidden;
+  touch-action: pan-y;
   background: var(--cream);
   color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
