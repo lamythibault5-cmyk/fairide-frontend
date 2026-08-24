@@ -2615,6 +2615,14 @@ const ITEM_IMAGE_OVERRIDES = {
   'lapin à la kriek': U('1773417325310-cc9c9bef75e7'),
   'plat du jour (midi, semaine)': U('1543353071-873f17a7a088'),
   'dame blanche': U('1541014741259-de529411b96a'),
+
+  // --- Chinois : corrections doublons (nems/rouleaux de printemps, soupes wonton/aigre-piquante,
+  // poulet general tao/bœuf oignons, nouilles/riz cantonais, thé jasmin/oolong) ---
+  'rouleaux de printemps (4 pcs)': U('1594020292985-216a72a2c7ce'),
+  'soupe aigre-piquante': U('1705088294904-c17a2205c1e3'),
+  'bœuf aux oignons sauce noire': U('1612171680033-bc0f806740a0'),
+  'riz cantonais': U('1540100716001-4b432820e37f'),
+  'thé oolong': U('1629440408433-a9e951bfbcd8'),
   'jupiler 25cl': U('1618183479302-1e0aa382c36b'),
   'duvel': U('1703564803611-36f9358b5b03'),
   'chimay': U('1691419775322-1864f752dbac'),
@@ -2629,7 +2637,6 @@ const ITEM_IMAGE_OVERRIDES = {
   // correcte — les deux gardées) retombaient sur le pool générique riz/curry (soupe ou risotto selon le
   // hash) au lieu d'un vrai riz sauté — override dédié vers une vraie photo de riz cantonais.
   'riz cantonnais': U('1603133872878-684f208fb84b'),
-  'riz cantonais': U('1603133872878-684f208fb84b'),
   // "Nouilles sautées poulet" pouvait retomber sur une photo de riz frit (pool "nouilles"/"bo bun")
   // au lieu de nouilles — override dédié.
   'nouilles sautées poulet': U('1609183480237-ccbb2d7c5772'),
