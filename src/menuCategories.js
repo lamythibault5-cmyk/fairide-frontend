@@ -2451,6 +2451,20 @@ const ITEM_IMAGE_OVERRIDES = {
   'kafta grillée': U('1659275798977-6eee03f687a2'),
   'namoura': U('1590429878071-1fabde685deb'),
 
+  // --- Desserts & Glaces : corrections doublons — les 3 tailles de glace boule partageaient la même
+  // photo, pareil pour cookie/cookie double chocolat/part de tarte (pool 'cookie'), les 2 donuts
+  // (mot-clé générique 'donut'), les 3 gaufres (mot-clé générique 'gaufre'), les 2 milkshakes (mot-clé
+  // générique 'milkshake') et les 2 chocolats chauds (mot-clé 'chocolat chaud') ---
+  'glace boule (2 parfums)': U('1579954115563-e72bf1381629'),
+  'glace boule (3 parfums)': U('1646321155308-96c1b84e4685'),
+  'cookie double chocolat': U('1634188023615-7e08901193b6'),
+  'part de tarte aux fruits': U('1636894435570-c3c400dfac53'),
+  'donut garni (nutella, caramel...)': U('1685779923180-b78b6b8231b9'),
+  'gaufre de liège chocolat': U('1675194588436-9c76aa85795d'),
+  'gaufre de bruxelles sucre': U('1639471045701-b11e96875a7e'),
+  'milkshake fraise': U('1579954115545-a95591f28bfc'),
+  'chocolat chaud chantilly': U('1700488629510-bf60790ff9fc'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
