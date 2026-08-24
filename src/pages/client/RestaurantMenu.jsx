@@ -344,7 +344,7 @@ function DiscoverSection({ restaurants, t }) {
       <div className="discover-marquee">
         <div
           className={`discover-track${canLoop ? ' animate' : ''}`}
-          style={canLoop ? { animationDuration: `${restaurants.length * 4}s` } : undefined}
+          style={canLoop ? { animationDuration: `${restaurants.length * 9}s` } : undefined}
         >
           {items.map((r, i) => (
             <Link key={`${r.id}-${i}`} to={`/restaurants/${r.id}`} className="discover-card">

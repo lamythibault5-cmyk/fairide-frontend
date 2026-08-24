@@ -163,13 +163,13 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    copies — un léger à-coup visible à chaque tour. En mettant l'espacement en margin-right sur CHAQUE
    carte (y compris la dernière), chaque carte "pèse" exactement le même poids (largeur + marge) dans le
    total, donc 50% de la largeur totale tombe pile sur la frontière entre les deux copies : boucle exacte. */
-.rest-grid-loop-track { display: flex; width: max-content; animation: restGridMarquee 40s linear infinite; }
+.rest-grid-loop-track { display: flex; width: max-content; animation: restGridMarquee 68s linear infinite; }
 .rest-grid-loop:hover .rest-grid-loop-track { animation-play-state: paused; }
 .rest-grid-loop-track .rest-card { flex: 0 0 220px; margin-right: 14px; }
 @keyframes restGridMarquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @media (max-width: 640px) {
   .rest-grid-loop-track .rest-card { flex-basis: 168px; }
-  .rest-grid-loop-track { animation-duration: 70s; }
+  .rest-grid-loop-track { animation-duration: 110s; }
 }
 .rest-card { cursor: pointer; transition: border-color .15s, transform .12s ease, box-shadow .15s ease; display: block; text-decoration: none; color: inherit; min-width: 0; }
 .rest-card:hover { border-color: var(--gold); }
