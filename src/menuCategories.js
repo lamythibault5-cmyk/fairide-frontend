@@ -2509,6 +2509,12 @@ const ITEM_IMAGE_OVERRIDES = {
   "pain d'épeautre": U('1549931319-a545dcf3bc73'),
   'tarte au riz entière (6-8 pers.)': U('1535920527002-b35e96722eb9'),
 
+  // --- Poke Bowl : corrections doublons (bœuf épicé/double saumon, tofu edamame/edamame seul, gyoza
+  // légumes/poulet 4 pcs) ---
+  'poke bowl double saumon': U('1602881917445-0b1ba001addf'),
+  'poke bowl tofu edamame': U('1602881916963-5daf2d97c06e'),
+  'gyoza poulet (4 pcs)': U('1638502338747-f7f368214cce'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
