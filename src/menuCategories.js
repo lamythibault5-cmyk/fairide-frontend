@@ -2603,9 +2603,15 @@ const ITEM_IMAGE_OVERRIDES = {
   'burrata tomates cerises': U('1623855244697-5d8fbe9c7892'),
   'planche antipasti misti (2 pers.)': U('1708593679370-0523990e8922'),
 
-  // --- Belge : plats + bières sans mot-clé dédié ---
+  // --- Belge : plats + bières sans mot-clé dédié + corrections doublons (croquettes fromage/crevettes,
+  // boulets/filet américain, vol-au-vent/moules, carbonnades/steak, stoemp/chicons partageaient chacun
+  // une même photo) ---
+  'croquettes de crevettes grises (2 pcs)': U('1669385184491-8ab70b39324e'),
+  'filet américain préparé, frites': U('1785517605613-e55a1470305d'),
+  'moules marinière, frites': U('1600265721436-734abbfe2137'),
+  'steak frites': U('1714692571386-0f26dec1bab5'),
   'stoemp saucisses': U('1650844010413-3f24dc1c182b'),
-  'chicons au gratin': U('1650844010413-3f24dc1c182b'),
+  'chicons au gratin': U('1645453014403-4ad5170a386c'),
   'lapin à la kriek': U('1773417325310-cc9c9bef75e7'),
   'plat du jour (midi, semaine)': U('1543353071-873f17a7a088'),
   'dame blanche': U('1541014741259-de529411b96a'),
