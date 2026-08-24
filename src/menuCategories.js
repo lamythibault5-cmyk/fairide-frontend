@@ -2501,22 +2501,25 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Pizza : variantes nommées sans le mot "pizza", ne matchaient aucun mot-clé — puis re-signalé
   // en 2026-08 : deux groupes de 5 et 7 pizzas/menus différents partageaient chacun UNE seule de ces
   // photos (copier-coller au lieu de différencier). Chaque variante a maintenant sa propre photo
-  // vérifiée (téléchargée puis inspectée) ; "menu solo/duo/famille" restent volontairement identiques
-  // entre eux (même formule, tailles différentes — comme baguette/baguette tradition ailleurs). ---
-  'funghi': U('1590947132387-155cc02f3212'),
+  // vérifiée (téléchargée puis inspectée), y compris "menu solo/duo/famille" et "eau 50cl"/"bouteille
+  // 1,5l" — même un même plat à quantité différente ne doit plus partager sa photo avec une autre. ---
+  'napoletana': U('1660309770197-350a0167b178'),
+  'funghi': U('1717883235373-ef10b2a745a3'),
   'hawaï': U('1565299624946-b28f40a0ae38'),
   'végétarienne': U('1613564834361-9436948817d1'),
   'tonno': U('1639397753197-bab733459943'),
   'bufalina': U('1548369937-47519962c11a'),
-  'tartufo': U('1548369937-47519962c11a'),
-  'chèvre-miel': U('1571066811602-716837d681de'),
+  'tartufo': U('1566843972223-8fc2316bfa9e'),
+  'chèvre-miel': U('1593560708920-61dd98c46a4e'),
   'frutti di mare': U('1652952561151-97e82f26c336'),
   'fromages et jambon fumé': U('1732223229355-95a1433404bf'),
   'menu solo': U('1651981075280-9a9e01acbff0'),
-  'menu duo': U('1651981075280-9a9e01acbff0'),
-  'menu famille': U('1651981075280-9a9e01acbff0'),
+  'menu duo': U('1516697073-419b2bd079db'),
+  'menu famille': U('1599462620592-8e17c48eed70'),
+  'penne quatre fromages': U('1612152328178-4a6c83d96429'),
+  'penne poulet-champignons': U('1607116667981-ff148a14e975'),
   'eau 50cl': U('1534616042650-80f5c9b61f09'),
-  'bouteille 1,5l': U('1534616042650-80f5c9b61f09'),
+  'bouteille 1,5l': U('1616118132534-381148898bb4'),
 
   // --- Burgers : variantes nommées sans le mot "burger" (+ items ajoutés pour atteindre 30 plats) ---
   'classic': U('1571091718767-18b5b1457add'),
