@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -10,6 +10,7 @@ import FavoriteHeart from '../../components/FavoriteHeart';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
+import usePageMeta from '../../hooks/usePageMeta';
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -116,6 +117,9 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) 
 export default function RestaurantList() {
   const { token, user } = useAuth();
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const location = useLocation();
+  usePageMeta({ title: 'Restaurants et commerces à Bruxelles — Fairide', path: '/restaurants' });
   const homeCommune = matchCommune(user?.addressCity);
   const [restaurants, setRestaurants] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
@@ -129,14 +133,22 @@ export default function RestaurantList() {
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
-    api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
-    api('/orders/mine', { token }).then((orders) => setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId)))).catch(() => {});
+    // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
+    // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
+    if (token) {
+      api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+      api('/orders/mine', { token }).then((orders) => setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId)))).catch(() => {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function toggleFavorite(e, id) {
     e.preventDefault();
     e.stopPropagation();
+    if (!user) {
+      navigate('/login?audience=client', { state: { from: location.pathname } });
+      return;
+    }
     const isFav = favoriteIds.has(id);
     try {
       if (isFav) {

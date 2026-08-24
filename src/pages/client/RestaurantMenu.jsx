@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -13,6 +13,7 @@ import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
+import usePageMeta from '../../hooks/usePageMeta';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -30,7 +31,12 @@ export default function RestaurantMenu() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
+  // Page publique (consultable sans compte, voir App.jsx) — chaque restaurant a besoin de son propre
+  // titre/canonical, sinon index.html sert le même <link rel="canonical" href="/"> partout et Google
+  // considère la fiche comme un doublon de l'accueil plutôt que de l'indexer pour elle-même.
+  usePageMeta({ title: restaurant ? `${restaurant.name} — Fairide` : undefined, path: `/restaurants/${id}` });
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 30000);
@@ -55,7 +61,10 @@ export default function RestaurantMenu() {
     api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
-    api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+    // Page publique (consultable sans compte, voir App.jsx) — inutile pour un visiteur anonyme.
+    if (token) {
+      api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -106,6 +115,10 @@ export default function RestaurantMenu() {
   const presentSections = (restaurant.sections || []).filter((s) => restaurant.menu.some((i) => (i.category || 'plat') === s.name));
 
   async function toggleFavorite() {
+    if (!user) {
+      navigate('/login?audience=client', { state: { from: location.pathname } });
+      return;
+    }
     setFavoriteBusy(true);
     try {
       if (isFavorite) {
@@ -125,6 +138,11 @@ export default function RestaurantMenu() {
   const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
 
   function addToCart(item) {
+    if (!user) {
+      toast('Connecte-toi ou crée un compte pour commander.');
+      navigate('/login?audience=client', { state: { from: location.pathname } });
+      return;
+    }
     if (onlineOrderingDisabled) {
       toast('Ce restaurant ne propose pas la commande en ligne — réserve une table pour découvrir la carte sur place.');
       return;
@@ -241,7 +259,13 @@ export default function RestaurantMenu() {
           <button
             type="button"
             className="btn-outline btn-block"
-            onClick={() => navigate('/checkout', { state: { reservationOnly: true, restaurantId: id } })}
+            onClick={() => {
+              if (!user) {
+                navigate('/login?audience=client', { state: { from: location.pathname } });
+                return;
+              }
+              navigate('/checkout', { state: { reservationOnly: true, restaurantId: id } });
+            }}
           >
             {t('restaurantMenu.reserveTable')}
           </button>

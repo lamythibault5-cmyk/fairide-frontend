@@ -45,8 +45,11 @@ export default function App() {
         <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route path="/home" element={<ProtectedRoute role="client"><ClientHome /></ProtectedRoute>} />
-        <Route path="/restaurants" element={<ProtectedRoute role="client"><RestaurantList /></ProtectedRoute>} />
-        <Route path="/restaurants/:id" element={<ProtectedRoute role="client"><RestaurantMenu /></ProtectedRoute>} />
+        {/* Volontairement publiques (pas de ProtectedRoute) : consultables sans compte pour être
+            indexables par les moteurs de recherche et partageables par lien — seule une action
+            (commander, réserver, mettre en favori) exige de se connecter, voir RestaurantList/RestaurantMenu. */}
+        <Route path="/restaurants" element={<RestaurantList />} />
+        <Route path="/restaurants/:id" element={<RestaurantMenu />} />
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />

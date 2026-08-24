@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -73,6 +73,11 @@ export default function Auth() {
   const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Arrivée ici via une action nécessitant un compte (ex. "+" sur une carte, "Réserver une table")
+  // depuis une page publique — on revient y déposer le client une fois connecté, au lieu de le
+  // renvoyer systématiquement à l'accueil (voir RestaurantMenu.jsx / RestaurantList.jsx).
+  const from = location.state?.from || '/';
 
   useEffect(() => {
     if (responsibleTouched) return;
@@ -106,7 +111,7 @@ export default function Auth() {
         } : {})
       });
       toast(t('auth.welcome', { name: data.user.name }));
-      navigate('/');
+      navigate(from);
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
         setMode('register');
@@ -190,7 +195,7 @@ export default function Auth() {
       } else {
         const data = await login(email.trim(), password);
         toast(t('auth.welcome', { name: data.user.name }));
-        navigate('/');
+        navigate(from);
       }
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
@@ -211,7 +216,7 @@ export default function Auth() {
     try {
       const data = await verifyEmail(pendingEmail, code.trim());
       toast(t('auth.welcome', { name: data.user.name }));
-      navigate('/');
+      navigate(from);
     } catch (err) {
       toast(err.message);
     } finally {
