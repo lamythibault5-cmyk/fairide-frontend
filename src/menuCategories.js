@@ -2489,6 +2489,13 @@ const ITEM_IMAGE_OVERRIDES = {
   'curry rouge bœuf': U('1672933036331-e27ffae157bd'),
   'canard laqué au curry rouge': U('1757715376673-2540c53becb0'),
 
+  // --- Petit-déjeuner & Brunch : corrections doublons (granola/yaourt maison, toast avocat/toast avocat
+  // œuf poché, les 3 plats d'œufs) ---
+  'yaourt maison miel granola': U('1692071106919-01bc0b9b0919'),
+  'toast avocat œuf poché': U('1687276287139-88f7333c8ca4'),
+  'œufs bénédicte': U('1621523130535-d9f3e46124b0'),
+  'œufs au plat toast': U('1582169505937-b9992bd01ed9'),
+
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
   'manchego': U('1623855244697-5d8fbe9c7892'),
