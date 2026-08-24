@@ -2429,15 +2429,27 @@ const ITEM_IMAGE_OVERRIDES = {
   'cervelas': U('1612392061787-2d078b3e573c'),
 
   // --- Libanais : orthographes qui ne matchent pas les mots-clés existants (accents/variantes),
-  // + quelques mezzés sans mot-clé dédié ---
+  // + quelques mezzés sans mot-clé dédié + corrections doublons (moutabbal/mouhammara, taboulé/
+  // fattouch, falafel/sandwich falafel/assiette végétarienne, warak enab/mezzé x2, et surtout le
+  // mot-clé "kafta" qui pointait par erreur vers la même photo que "shawarma" — collision à 6) ---
   'moutabbal': U('1627308595127-d9acf19107ce'),
-  'mouhammara': U('1627308595127-d9acf19107ce'),
+  'mouhammara': U('1612192666510-e7ccf6e5f359'),
+  'taboulé': U('1498048615146-6a435b1e65a4'),
   'fattouch': U('1594040815645-5442fb6d48f6'),
   'kibbeh (3 pcs)': U('1663004940335-8e7d8f1a093c'),
   'sambousek fromage (4 pcs)': U('1767124559112-088d7d1cc000'),
+  'falafel (6 pcs)': U('1786174045057-89e6449f47d9'),
+  'sandwich falafel': U('1681072530653-db8fe2538631'),
   'warak enab (feuilles de vigne)': U('1743674453093-592bed88018e'),
-  'mezzé végétarien (6 pièces)': U('1743674453093-592bed88018e'),
-  'mezzé royal (10 pièces)': U('1743674453093-592bed88018e'),
+  'mezzé végétarien (6 pièces)': U('1767114915974-3481fa23cbb0'),
+  'mezzé royal (10 pièces)': U('1748540459503-19efc015143b'),
+  'sandwich shawarma poulet': U('1719282431565-3b30bb7d2658'),
+  'sandwich shawarma viande': U('1719282431723-9d0f4370d4bc'),
+  'sandwich kafta': U('1748955307113-992406078fee'),
+  'assiette shawarma poulet': U('1670165088604-5a39f5c1be51'),
+  'assiette shawarma viande': U('1670164745516-06547b04520a'),
+  'kafta grillée': U('1659275798977-6eee03f687a2'),
+  'namoura': U('1590429878071-1fabde685deb'),
 
   // --- Espagnol : cuisine sans mot-clé dédié, toutes les entrées retombaient sur la photo générique ---
   'pan con tomate': U('1656423521731-9665583f100c'),
@@ -2623,7 +2635,6 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Libanais : plat + desserts sans mot-clé dédié ---
   'assiette végétarienne': U('1593001872095-7d5b3868fb1d'),
   'halawet el jibn': U('1643910509872-78bc24a2bc53'),
-  'namoura': U('1643910509872-78bc24a2bc53'),
 
   // --- Espagnol : cuisine entière sans mot-clé, suite (plats/desserts/boissons) ---
   'paella valenciana (par pers., min. 2 pers.)': U('1694685367640-05d6624e57f1'),
