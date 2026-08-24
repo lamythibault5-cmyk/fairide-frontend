@@ -2396,11 +2396,17 @@ const ITEM_IMAGE_OVERRIDES = {
   'légumes grillés': U('1650844010413-3f24dc1c182b'),
   'peroni 33cl': U('1618183479302-1e0aa382c36b'),
 
-  // --- Asiatique (wok) : accent sur "phở"/"pad thaï" empêche le match des mots-clés (sans accent) ---
+  // --- Asiatique (wok) : accent sur "phở"/"pad thaï" empêche le match des mots-clés (sans accent),
+  // + corrections doublons (nems/rouleaux de printemps, phở bœuf/poulet, pad thaï poulet/crevettes,
+  // poulet légumes/ramen poulet via le mot-clé générique 'poulet', curry vert/rouge, riz sauté/cantonnais) ---
+  'rouleaux de printemps (2 pcs)': U('1594020292985-216a72a2c7ce'),
   'phở bœuf': U('1555126634-323283e090fa'),
-  'phở poulet': U('1555126634-323283e090fa'),
+  'phở poulet': U('1503764654157-72d979d9af2f'),
+  'poulet légumes sauce soja': U('1628025114288-1693ac3bcac1'),
   'pad thaï poulet': U('1746973645769-c11eb0a81025'),
-  'pad thaï crevettes': U('1746973645769-c11eb0a81025'),
+  'pad thaï crevettes': U('1559314809-0d155014e29e'),
+  'curry rouge crevettes': U('1720949579179-b4d04403f548'),
+  'riz sauté crevettes': U('1609570324378-ec0c4c9b6ba8'),
   'banane frite au miel': U('1570727624862-3008fe67a6be'),
 
   // --- Végétarien : "tarte" seul retombe sur la photo générique de dessert (gâteau au chocolat) ---
