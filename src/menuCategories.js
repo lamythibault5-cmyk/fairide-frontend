@@ -2482,7 +2482,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'salmorejo': U('1578861256505-d3be7cb037d3'),
   'patatas bravas': U('1573080496219-bb080dd4f877'),
   'tortilla': U('1518569656558-1f25e69d93d7'),
-  'gambas al ajillo': U('1641898378716-1f38ec04bb0f'),
   'calamares a la romana': U('1652209911920-2700fcbd5011'),
   'pimientos de padrón': U('1650844010413-3f24dc1c182b'),
   'albóndigas': U('1529042410759-befb1204b468'),
@@ -2668,17 +2667,21 @@ const ITEM_IMAGE_OVERRIDES = {
   'assiette végétarienne': U('1593001872095-7d5b3868fb1d'),
   'halawet el jibn': U('1643910509872-78bc24a2bc53'),
 
-  // --- Espagnol : cuisine entière sans mot-clé, suite (plats/desserts/boissons) ---
+  // --- Espagnol : cuisine entière sans mot-clé, suite (plats/desserts/boissons) + corrections doublons
+  // (les 3 paellas, les 2 tapas, gambas/boquerones, et sangria/tinto/vin rioja partageaient tous une
+  // même photo entre eux) ---
   'paella valenciana (par pers., min. 2 pers.)': U('1694685367640-05d6624e57f1'),
-  'paella marisco (par pers.)': U('1694685367640-05d6624e57f1'),
-  'fideuá (par pers.)': U('1694685367640-05d6624e57f1'),
+  'paella marisco (par pers.)': U('1623961990059-28356e226a77'),
+  'fideuá (par pers.)': U('1572337712872-ac1b3d9ca7d6'),
   'secreto ibérico': U('1532636875304-0c89119d9b4d'),
-  'sélection 6 tapas': U('1656423521731-9665583f100c'),
-  'sélection 10 tapas': U('1656423521731-9665583f100c'),
+  'sélection 6 tapas': U('1671180401158-8d9d060d4966'),
+  'sélection 10 tapas': U('1682988779823-bccfe4261c49'),
+  'gambas al ajillo': U('1619860705619-1e0ba34091e0'),
   'crema catalana': U('1676300184943-09b2a08319a3'),
   'tarta de santiago': U('1517427294546-5aa121f68e8a'),
   'sangria 50cl': U('1587920710219-f6f9804dc10d'),
-  'tinto de verano': U('1587920710219-f6f9804dc10d'),
+  'tinto de verano': U('1563227812-0ea4c22e6cc8'),
+  'vin rioja (verre)': U('1780675520350-917559e364c0'),
 
   // --- Fried Chicken ---
   'eau': U('1534616042650-80f5c9b61f09'),
