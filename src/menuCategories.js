@@ -2359,9 +2359,13 @@ const ITEM_IMAGE_OVERRIDES = {
 
   // --- Nouvelles cartes sushi/healthy/chicken/belge/burgers/boulangerie/boucherie/café/libanais/
   // espagnol : plateaux sushi sans photo dédiée + "vino" collision avec le mot-clé "vin" ---
-  'plateau solo (16 pcs)': U('1553621042-f6e147245754'),
-  'plateau duo (32 pcs)': U('1553621042-f6e147245754'),
-  'plateau family (54 pcs)': U('1553621042-f6e147245754'),
+  'plateau solo (16 pcs)': U('1709984110217-57d7d18e5299'),
+  'plateau duo (32 pcs)': U('1625938145312-c18f06f53be0'),
+  'plateau family (54 pcs)': U('1562802378-063ec186a863'),
+  'sashimi thon ×6': U('1625248464253-1b528c1ab7e0'),
+  'sashimi mixte ×6': U('1607246749106-0a2b287f7245'),
+  'california roll saumon avocat ×8': U('1696091811927-6b9552931f70'),
+  'spring rolls thon mangue ×6': U('1648146298904-d58a8c79e0a7'),
   'chich taouk': U('1629450748686-c86699b710ac'),
   // --- Sushi à la pièce (×2/×6) : retombaient tous sur la même photo de plateau géant (via le mot-clé
   // générique "sushi"), trompeur pour une commande de 2 pièces — chaque poisson a maintenant sa
@@ -2838,8 +2842,8 @@ const ITEM_IMAGE_OVERRIDES = {
   'maki thon ×6': U('1712725214706-e564b8dd1bbe'),
   'maki concombre ×6': U('1728691190534-e1e8c564014e'),
   'maki saumon avocat ×6': U('1646196603168-ed92068477c3'),
-  // 4 California rolls différents partageaient tous la même photo.
-  'california roll saumon avocat ×8': U('1646196603168-ed92068477c3'),
+  // 4 California rolls différents partageaient tous la même photo (le saumon-avocat a maintenant sa
+  // propre photo, définie plus haut, pour ne plus la partager avec Maki saumon avocat non plus).
   'california roll crevette tempura ×8': U('1580822184713-fc5400e7fe10'),
   'california roll poulet croustillant ×8': U('1625668742946-4ade4980c01e'),
   'california roll végétarien ×8': U('1564489563601-c53cfc451e93'),
@@ -2978,7 +2982,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'bubble tea myrtille': U('1575159249868-df58bf5e09ec'),
   'nems végétariens (3 pcs)': U('1679310290259-78d9eaa32700'),
   'beignets de crevettes (4 pcs)': U('1579887829114-282b4fa31072'),
-  'edamame': U('1597958792579-bd3517df6399'),
   'chips crevettes': U('1599490659213-e2b9527bd087'),
   'mochi glacé (3 pcs)': U('1541014741259-de529411b96a'),
   'takoyaki (5 pcs)': U('1571066811602-716837d681de'),
