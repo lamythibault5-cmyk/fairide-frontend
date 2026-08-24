@@ -2630,7 +2630,13 @@ const ITEM_IMAGE_OVERRIDES = {
 
   // --- Asiatique / Healthy / Végétarien ---
   'menu midi (entrée + plat)': U('1543353071-873f17a7a088'),
-  'dahl de lentilles': U('1716959669858-11d415bdead6'),
+  'dahl de lentilles': U('1612700722193-f0410adb8949'),
+  // --- Indien : corrections doublons (samoussas/pakoras, butter chicken/tikka masala/biryani,
+  // curry d'agneau/dahl de lentilles, aloo gobi/riz basmati) ---
+  'pakoras de légumes': U('1767114915965-7abe87d7c7d8'),
+  'tikka masala poulet': U('1565557623262-b51c2513a641'),
+  'biryani poulet': U('1589302168068-964664d93dc0'),
+  'riz basmati': U('1536304993881-ff6e9eefa2a6'),
   'eau infusée': U('1534616042650-80f5c9b61f09'),
   'dahl de lentilles, naan': U('1716959669858-11d415bdead6'),
   // "Riz cantonnais"/"Riz cantonais" (Asiatique a une coquille avec un double n, Chinois l'orthographe
