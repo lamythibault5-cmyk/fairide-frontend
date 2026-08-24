@@ -3,6 +3,7 @@ import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
+import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
 
@@ -120,6 +121,8 @@ export default function Landing() {
           </Reveal>
         ))}
       </div>
+
+      <Reveal><AppComingSoonSection /></Reveal>
 
       <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.communesTitle')}</Reveal>
       <Reveal className="commune-pills">

@@ -1,0 +1,16 @@
+{
+  "name": "Fairide — Livraison locale à Bruxelles",
+  "short_name": "Fairide",
+  "description": "Commande chez les commerces de ton quartier à Bruxelles — commission plafonnée à 10% pour les restaurants et livreurs.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#FBF8F2",
+  "theme_color": "#16233A",
+  "lang": "fr-BE",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
