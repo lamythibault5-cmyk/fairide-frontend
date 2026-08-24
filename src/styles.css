@@ -70,8 +70,12 @@ a { color: inherit; }
 .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
 
 .brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
-.brand .mark { border-radius: 14px; overflow: hidden; flex-shrink: 0; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
-.brand .mark svg { display: block; width: 100%; height: 100%; }
+/* Règles universelles (BrandMark est utilisé ailleurs que dans le header, ex. le mockup téléphone de
+   AppComingSoonSection) — sans ça, un <svg> sans width/height explicite s'affiche à sa taille
+   intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
+.mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
+.mark svg { display: block; width: 100%; height: 100%; }
+.brand .mark { border-radius: 14px; box-shadow: 0 0 0 1px rgba(217,164,65,0.25); }
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .brand h1 { font-size: 32px; color: var(--cream); line-height: 1.1; }
 .brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
@@ -386,6 +390,57 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 }
 .trust-card-fallback { display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: var(--teal-deep); background: rgba(47,111,94,0.12); }
 .trust-card span:last-child { font-size: 11.5px; font-weight: 600; text-align: center; max-width: 84px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "L'appli arrive" : bannière de type "téléchargez l'appli" mais honnête — pas encore d'appli mobile
+   (lancement 15 octobre), donc les badges de store sont juste des indicateurs visuels, pas des liens :
+   voir AppComingSoonSection.jsx, aucun onClick dessus, exprès. */
+.app-soon {
+  display: flex; align-items: center; gap: 40px; padding: 40px 36px; margin-bottom: 22px;
+  border-radius: 22px; background: linear-gradient(135deg, var(--teal) 0%, var(--teal-deep) 100%);
+  overflow: hidden; position: relative;
+}
+.app-soon::before {
+  content: ''; position: absolute; width: 260px; height: 260px; border-radius: 50%;
+  background: var(--gold); opacity: 0.16; top: -80px; right: -60px; pointer-events: none;
+}
+.app-soon-text { flex: 1 1 320px; position: relative; z-index: 1; }
+.app-soon-badge { background: rgba(251,248,242,0.16); color: var(--cream); border: 1px solid rgba(251,248,242,0.3); margin-bottom: 14px; }
+.app-soon-title { color: var(--cream); font-size: 30px; margin: 0 0 10px; }
+.app-soon-sub { color: rgba(251,248,242,0.9); font-size: 15px; line-height: 1.6; margin: 0 0 22px; max-width: 440px; }
+.app-soon-badges { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.app-soon-store-badge {
+  display: flex; align-items: center; gap: 8px; background: rgba(22,35,58,0.55); border: 1px solid rgba(251,248,242,0.2);
+  border-radius: 10px; padding: 8px 14px; cursor: default; user-select: none;
+}
+.app-soon-store-icon { font-size: 20px; }
+.app-soon-store-text { display: flex; flex-direction: column; color: var(--cream); font-weight: 700; font-size: 13.5px; line-height: 1.15; }
+.app-soon-store-text small { font-weight: 500; font-size: 10.5px; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.03em; }
+.app-soon-note { color: rgba(251,248,242,0.75); font-size: 12.5px; margin: 0; max-width: 420px; }
+
+.app-soon-phone {
+  flex: 0 0 220px; width: 220px; height: 400px; background: var(--ink); border-radius: 32px; padding: 12px 10px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.35); position: relative; z-index: 1;
+}
+.app-soon-phone-notch { width: 70px; height: 18px; background: var(--ink); border-radius: 0 0 12px 12px; margin: 0 auto 6px; position: relative; }
+.app-soon-phone-notch::after { content: ''; position: absolute; inset: 0; margin: auto; width: 34px; height: 5px; border-radius: 4px; background: #0a1220; top: 6px; }
+.app-soon-phone-screen { background: var(--cream); border-radius: 22px; height: calc(100% - 24px); padding: 14px 12px; overflow: hidden; }
+.app-soon-phone-brand { display: flex; align-items: center; gap: 6px; font-family: 'Fraunces', serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 12px; }
+.app-soon-phone-search { background: var(--cream-dim); border-radius: 8px; padding: 8px 10px; font-size: 10.5px; color: var(--ink-soft); margin-bottom: 10px; }
+.app-soon-phone-chips { display: flex; gap: 6px; margin-bottom: 14px; }
+.app-soon-phone-chips span { width: 26px; height: 26px; border-radius: 50%; background: var(--cream-dim); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+.app-soon-phone-cards { display: flex; flex-direction: column; gap: 10px; }
+.app-soon-phone-card { display: flex; gap: 8px; align-items: center; background: #fff; border-radius: 10px; padding: 6px; box-shadow: 0 2px 6px rgba(22,35,58,0.06); }
+.app-soon-phone-card-img { width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0; }
+.app-soon-phone-card-lines { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+.app-soon-phone-card-lines span { display: block; height: 6px; border-radius: 4px; background: var(--cream-dim); width: 85%; }
+
+@media (max-width: 720px) {
+  .app-soon { flex-direction: column; padding: 30px 22px; text-align: center; }
+  .app-soon-sub { max-width: none; }
+  .app-soon-badges { justify-content: center; }
+  .app-soon-note { max-width: none; }
+  .app-soon-phone { flex-basis: auto; }
+}
 .dish-thumb-lg { width: 100%; height: 130px; border-radius: 10px; object-fit: cover; background: var(--cream-dim); display: block; margin-bottom: 8px; }
 .cover-banner { width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius); margin-bottom: 14px; background: var(--cream-dim); }
 .cover-banner-sm { width: 100%; height: 110px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 10px; width: calc(100% + 36px); }
@@ -513,8 +568,15 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 /* Apparition au scroll (voir Reveal.jsx) : fondu + léger glissement vers le haut, déclenché une fois
    par section via IntersectionObserver. prefers-reduced-motion est déjà géré côté JS (le composant
    affiche directement sans observer), donc pas besoin de le regérer ici en CSS. */
-.reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s ease, transform 0.7s ease; }
-.reveal-visible { opacity: 1; transform: translateY(0); }
+/* Courbe façon "easeOutExpo" (démarre vite, ralentit tout en douceur en fin de course) plutôt qu'un
+   "ease" plat — beaucoup plus proche du ressenti "smooth" des sites soignés (ex. integrease.com) qu'une
+   interpolation linéaire-ish générique. Le léger scale-in (0.97→1) en plus du glissement/fondu ajoute
+   un peu de "pop" sans aller jusqu'à un rebond façon ressort, qui serait too much sur autant de sections. */
+.reveal {
+  opacity: 0; transform: translateY(32px) scale(0.97);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1), transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-visible { opacity: 1; transform: translateY(0) scale(1); }
 
 .landing-hero {
   text-align: center; max-width: 720px; margin: 0 auto 40px; display: flex; flex-direction: column; align-items: center;
