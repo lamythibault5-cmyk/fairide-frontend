@@ -2640,9 +2640,19 @@ const ITEM_IMAGE_OVERRIDES = {
   // poulet/chicken — qui montrait (avant fix ci-dessus) une poitrine de poulet CRUE, absurde pour un
   // produit frit. Override dédié vers une vraie photo de poulet frit doré.
   'poulet frit 3 pcs': U('1742936401708-dd1b132f06db'),
-  'poulet frit 6 pcs': U('1742936401708-dd1b132f06db'),
   'poulet frit 12 pcs': U('1426869981800-95ebf51ce900'),
-  'poulet frit bucket 20 pcs': U('1426869981800-95ebf51ce900'),
+  // --- Fried Chicken : corrections doublons — 3pcs/6pcs partageaient la même photo, pareil pour
+  // 12pcs/bucket 20pcs, tous les tenders (générique 'tenders'), tous les wings (générique 'wings'),
+  // bowl poulet/coleslaw (générique 'coleslaw'), et frites/menu tenders+frites (pool 'frite') ---
+  'poulet frit 6 pcs': U('1586793783658-261cddf883ef'),
+  'poulet frit bucket 20 pcs': U('1588923930957-81c81fd6262b'),
+  'tenders 8 pcs': U('1605291581926-df4bf7ee3e89'),
+  'tenders bucket 16 pcs': U('1647724394693-2c93af726785'),
+  'wrap tenders': U('1626700051175-6818013e1d4f'),
+  'wings 12 pcs': U('1762631934523-f91b18cbf81d'),
+  'wings 24 pcs': U('1585703900468-13c7a978ad86'),
+  'bowl poulet riz coleslaw': U('1682566509568-ded8649b26bb'),
+  'frites': U('1607329773021-91a5dbd5986f'),
 
   // --- Coffee Shop : boissons spécialité sans mot-clé exact — "Golden Latte"/"Strawberry Matcha"/
   // "Hojicha Latte" partageaient tous la même photo de matcha vert (doublon + couleur trompeuse : le
