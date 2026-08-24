@@ -2765,8 +2765,14 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- Coffee Shop : boissons spécialité sans mot-clé exact — "Golden Latte"/"Strawberry Matcha"/
   // "Hojicha Latte" partageaient tous la même photo de matcha vert (doublon + couleur trompeuse : le
   // golden latte doit être doré/curcuma, le strawberry matcha rose, le hojicha brun torréfié) ---
-  'formule brunch (week-end)': U('1603046891726-36bfd957e0bf'),
-  'latte': U('1509042239860-f550ce710b93'),
+  'formule brunch (week-end)': U('1504754524776-8f4f37790ca0'),
+  'latte': U('1593443320739-77f74939d0da'),
+  // --- Vietnamien : corrections doublons (nems/rouleaux de printemps frais — même override que le
+  // Thaïlandais ci-dessus couvre déjà ce nom d'item identique ; bo bun bœuf/riz sauté porc) ---
+  'riz sauté au porc': U('1705088293300-8fc8c7be90e2'),
+  // --- Poisson & Fruits de mer : corrections doublons (soupe/waterzooi, moules marinière/à la crème) ---
+  'waterzooi de poisson': U('1665594051407-7385d281ad76'),
+  'moules à la crème frites': U('1448043552756-e747b7a2b2b8'),
   'strawberry matcha': U('1744920666512-506c732c20f3'),
   'hojicha latte': U('1506372023823-741c83b836fe'),
   'golden latte': U('1778449303540-3274878cdc85'),
