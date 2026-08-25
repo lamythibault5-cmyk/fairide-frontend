@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
-  categoryImage, categoryLabel, getStarterTemplate,
+  categoryEmoji, categoryImage, categoryLabel, getStarterTemplate,
   fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImageOrNull,
   groupBySubsection
 } from '../../menuCategories';
@@ -504,7 +504,7 @@ export default function MenuPage() {
                           (itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })) ? (
                             <img src={itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
                           ) : (
-                            <span className="dish-thumb-empty">Pas de photo</span>
+                            <span className="dish-thumb-empty">{categoryEmoji(itemCategory)}</span>
                           )
                         )}
                         <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />

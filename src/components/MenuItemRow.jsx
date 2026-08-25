@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CATEGORIES, categoryLabel, defaultItemImageOrNull } from '../menuCategories';
+import { CATEGORIES, categoryEmoji, categoryLabel, defaultItemImageOrNull } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
 
@@ -99,7 +99,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             {(imageUrl || defaultItemImageOrNull({ name, category })) ? (
               <img src={imageUrl || defaultItemImageOrNull({ name, category })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             ) : (
-              <span className="dish-thumb-empty">Pas de photo</span>
+              <span className="dish-thumb-empty">{categoryEmoji(category)}</span>
             )}
             <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />
           </div>
@@ -184,7 +184,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       {(item.imageUrl || defaultItemImageOrNull(item)) ? (
         <img src={item.imageUrl || defaultItemImageOrNull(item)} alt={item.name} className="dish-thumb-lg" />
       ) : (
-        <div className="dish-thumb-lg-empty"><span className="icon">🍽️</span><span>Pas de photo</span></div>
+        <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
       <div className="name">{item.name}</div>
       <div className="small desc">

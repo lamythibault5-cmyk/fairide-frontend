@@ -35,6 +35,21 @@ export function categoryImage(value) {
   return CATEGORIES.find((c) => c.value === 'plat').image;
 }
 
+// Emoji "dessin animé" affiché à la place d'une vraie photo quand un plat n'en a aucune (voir
+// defaultItemImageOrNull) — plus chaleureux qu'un simple texte "Pas de photo", et cohérent avec le
+// style déjà utilisé partout ailleurs dans l'app (RESTAURANT_TYPES, icônes de section...). Mêmes
+// heuristiques que categoryImage() ci-dessus pour les sections personnalisées ("Sauces", "Vins"...).
+const CATEGORY_EMOJI = { entree: '🥗', plat: '🍽️', dessert: '🍰', boisson: '🥤' };
+export function categoryEmoji(value) {
+  const known = CATEGORY_EMOJI[value];
+  if (known) return known;
+  const v = (value || '').toLowerCase();
+  if (CATEGORY_HINT_DESSERT.test(v)) return CATEGORY_EMOJI.dessert;
+  if (CATEGORY_HINT_DRINK.test(v)) return CATEGORY_EMOJI.boisson;
+  if (CATEGORY_HINT_ENTREE.test(v)) return CATEGORY_EMOJI.entree;
+  return CATEGORY_EMOJI.plat;
+}
+
 // Sous-sections de la catégorie "Boissons", déduites du nom du produit — aucun champ supplémentaire
 // à gérer côté restaurateur, cohérent avec le reste du menu qui reste piloté par le seul champ "category".
 export const BOISSON_SUBCATEGORIES = [

@@ -1,4 +1,4 @@
-import { categoryImage, categoryLabel, defaultItemImageOrNull, groupBySubsection } from '../menuCategories';
+import { categoryEmoji, categoryImage, categoryLabel, defaultItemImageOrNull, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
 function ItemCard({ item, onAdd, hideAdd, t }) {
@@ -9,7 +9,7 @@ function ItemCard({ item, onAdd, hideAdd, t }) {
       {image ? (
         <img src={image} alt={item.name} className="dish-thumb-lg" />
       ) : (
-        <div className="dish-thumb-lg-empty"><span className="icon">🍽️</span><span>Pas de photo</span></div>
+        <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
       <div className="name">{item.name}</div>
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : (item.desc || '')}</div>

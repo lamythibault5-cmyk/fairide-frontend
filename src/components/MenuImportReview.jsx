@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { suggestItemImages } from '../menuCategories';
+import { categoryEmoji, suggestItemImages } from '../menuCategories';
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
 
@@ -143,7 +143,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       <div className="card" style={{ marginBottom: 8, padding: 12, border: '1px dashed var(--line)', background: 'var(--cream-dim)' }}>
         <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
           <span className="small" style={{ fontWeight: 700, marginTop: 10, flexShrink: 0 }}>Exemple ↓</span>
-          <span className="dish-thumb-empty">+ Photo</span>
+          <span className="dish-thumb-empty">🍽️</span>
           <div style={{ flex: 1, display: 'grid', gap: 6 }}>
             <div className="row" style={{ gap: 8 }}>
               <input style={{ flex: 2 }} disabled placeholder="Nom du plat" />
@@ -173,7 +173,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
               {it.imageUrl ? (
                 <img src={it.imageUrl} alt="" className="dish-thumb" />
               ) : (
-                <span className="dish-thumb-empty">+ Photo</span>
+                <span className="dish-thumb-empty">{categoryEmoji(it.category)}</span>
               )}
             </button>
             <div style={{ flex: 1, display: 'grid', gap: 6 }}>
