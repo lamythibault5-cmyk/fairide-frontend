@@ -103,6 +103,26 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
           )}
         </div>
       )}
+      <div className="card" style={{ marginBottom: 8, padding: 12, border: '1px dashed var(--line)', background: 'var(--cream-dim)' }}>
+        <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
+          <span className="small" style={{ fontWeight: 700, marginTop: 10, flexShrink: 0 }}>Exemple ↓</span>
+          <span className="dish-thumb-empty">+ Photo</span>
+          <div style={{ flex: 1, display: 'grid', gap: 6 }}>
+            <div className="row" style={{ gap: 8 }}>
+              <input style={{ flex: 2 }} disabled placeholder="Nom du plat" />
+              <input style={{ flex: 1 }} disabled placeholder="Prix" />
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <input style={{ flex: 1 }} disabled placeholder="Section (ex: Entrées, Plats, Boissons...)" />
+              <input style={{ flex: 1 }} disabled placeholder="Sous-section (ex: Sauces, Crudités, Chaudes...)" />
+            </div>
+            <input disabled placeholder="Description (optionnel)" />
+          </div>
+        </div>
+        <p className="small" style={{ margin: '10px 0 0' }}>
+          La <b>section</b> regroupe les plats sous un même titre affiché sur ton menu (Entrées, Plats, Desserts, Boissons, ou un nom que tu choisis toi-même comme "Pizzas"). La <b>sous-section</b> crée un sous-groupe à l'intérieur d'une section — par exemple <b>"Sauces"</b> ou <b>"Crudités"</b> dans une section "Plats", ou <b>"Chaudes"</b> / <b>"Froides"</b> / <b>"Boissons alcoolisées"</b> dans une section "Boissons". Laisse-la vide pour un plat qui n'a pas besoin d'être sous-groupé.
+        </p>
+      </div>
       {items.map((it) => (
         <div key={it.key} className="card" style={{ marginBottom: 8, opacity: it.included ? 1 : 0.5, padding: 12 }}>
           <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
