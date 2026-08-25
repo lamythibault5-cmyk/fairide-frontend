@@ -22,6 +22,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
   const [mode, setMode] = useState('append');
   const [pickerKey, setPickerKey] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   function updateField(key, field, value) {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, [field]: value } : it)));
@@ -39,6 +40,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
   const pickerItem = items.find((it) => it.key === pickerKey);
 
   function submit() {
+    setConfirmOpen(false);
     const toSubmit = items
       .filter((it) => it.included)
       .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl }))
@@ -155,11 +157,33 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         </div>
       ))}
       <div className="row" style={{ gap: 8, marginTop: 10 }}>
-        <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting || includedCount === 0} onClick={submit}>
+        <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting || includedCount === 0} onClick={() => setConfirmOpen(true)}>
           {submitting ? '...' : mode === 'replace' ? `Remplacer le menu par ces ${includedCount} plat(s)` : `Ajouter ${includedCount} plat(s) au menu`}
         </button>
         <button className="btn-ghost" onClick={onCancel}>Annuler</button>
       </div>
+      {confirmOpen && (
+        <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>
+              {mode === 'replace' ? '⚠️ Remplacer ton menu actuel ?' : 'Ajouter ces plats à ton menu ?'}
+            </h3>
+            <p className="small" style={{ margin: '0 0 16px' }}>
+              {mode === 'replace'
+                ? `Les ${existingItemCount} plat(s) actuel(s) de ton menu seront définitivement supprimés et remplacés par les ${includedCount} plat(s) sélectionné(s) dans ce document. Cette action est irréversible.`
+                : existingItemCount > 0
+                ? `Les ${existingItemCount} plat(s) déjà dans ton menu sont conservés — les ${includedCount} plat(s) sélectionné(s) dans ce document viendront s'y ajouter.`
+                : `Les ${includedCount} plat(s) sélectionné(s) dans ce document seront ajoutés à ton menu.`}
+            </p>
+            <div className="row" style={{ gap: 8 }}>
+              <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting} onClick={submit}>
+                {submitting ? '...' : mode === 'replace' ? 'Oui, remplacer' : 'Oui, ajouter'}
+              </button>
+              <button className="btn-ghost" disabled={submitting} onClick={() => setConfirmOpen(false)}>Annuler</button>
+            </div>
+          </div>
+        </div>
+      )}
       {pickerItem && (
         <GalleryPickerModal
           restoId={restoId}
