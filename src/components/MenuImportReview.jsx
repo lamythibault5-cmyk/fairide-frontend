@@ -1,28 +1,57 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { suggestItemImages } from '../menuCategories';
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
+
+function draftKeyFor(restoId) {
+  return `fairide_menu_import_draft_${restoId}`;
+}
+
+// Relit un brouillon sauvegardé (voir l'effet de sauvegarde plus bas) — un restaurateur qui rafraîchit
+// la page en pleine relecture (ou revient dessus plus tard) retombe exactement là où il en était, avec
+// toutes ses modifications (plats renommés/décochés, photos choisies, sous-sections) plutôt que de tout
+// perdre et repartir de l'écran "+ Choisir un fichier" vide.
+function loadDraft(restoId) {
+  try {
+    const raw = sessionStorage.getItem(draftKeyFor(restoId));
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 // Relecture des plats extraits d'un PDF/photo de menu par l'IA avant tout ajout réel — chaque champ
 // reste modifiable (l'IA peut se tromper sur un prix mal imprimé ou une catégorie ambiguë) et chaque
 // ligne peut être décochée, exactement comme pour un template de démarrage classique.
 export default function MenuImportReview({ items: initialItems, existingItemCount, restoId, restaurant, onSubmit, onCancel, submitting }) {
-  const [items, setItems] = useState(() => initialItems.map((it, i) => ({
-    ...it,
-    subsection: it.subsection || '',
-    key: i,
-    included: true,
-    // Jamais de photo auto-assignée sur un plat importé d'un document — même en cas de correspondance
-    // exacte, mieux vaut laisser le restaurateur choisir lui-même (voir GalleryPickerModal plus bas, qui
-    // propose sa galerie déjà en ligne + quelques suggestions) que de remplir silencieusement le menu.
-    imageUrl: ''
-  })));
+  const [items, setItems] = useState(() => {
+    const draft = loadDraft(restoId);
+    if (draft?.items) return draft.items;
+    return initialItems.map((it, i) => ({
+      ...it,
+      subsection: it.subsection || '',
+      key: i,
+      included: true,
+      // Jamais de photo auto-assignée sur un plat importé d'un document — même en cas de correspondance
+      // exacte, mieux vaut laisser le restaurateur choisir lui-même (voir GalleryPickerModal plus bas, qui
+      // propose sa galerie déjà en ligne + quelques suggestions) que de remplir silencieusement le menu.
+      imageUrl: ''
+    }));
+  });
   // Par défaut on ajoute aux plats existants — remplacer est une action destructive (supprime tout le
   // menu actuel), donc jamais le choix pré-sélectionné, même quand le resto n'a encore aucun plat.
-  const [mode, setMode] = useState('append');
+  const [mode, setMode] = useState(() => loadDraft(restoId)?.mode || 'append');
   const [pickerKey, setPickerKey] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    sessionStorage.setItem(draftKeyFor(restoId), JSON.stringify({ items, mode }));
+  }, [items, mode, restoId]);
+
+  function discardDraft() {
+    sessionStorage.removeItem(draftKeyFor(restoId));
+  }
 
   function updateField(key, field, value) {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, [field]: value } : it)));
@@ -45,7 +74,13 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       .filter((it) => it.included)
       .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl }))
       .filter((it) => it.name && Number.isFinite(it.price) && it.price > 0);
+    discardDraft();
     onSubmit(toSubmit, mode === 'replace');
+  }
+
+  function cancel() {
+    discardDraft();
+    onCancel();
   }
 
   if (previewOpen) {
@@ -160,7 +195,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting || includedCount === 0} onClick={() => setConfirmOpen(true)}>
           {submitting ? '...' : mode === 'replace' ? `Remplacer le menu par ces ${includedCount} plat(s)` : `Ajouter ${includedCount} plat(s) au menu`}
         </button>
-        <button className="btn-ghost" onClick={onCancel}>Annuler</button>
+        <button className="btn-ghost" onClick={cancel}>Annuler</button>
       </div>
       {confirmOpen && (
         <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>

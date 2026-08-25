@@ -44,7 +44,12 @@ export default function MenuPage() {
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
 
   const [importing, setImporting] = useState(false);
-  const [importedItems, setImportedItems] = useState(null);
+  // Non-null dès qu'un brouillon d'import existe pour ce resto (voir MenuImportReview, qui sauvegarde son
+  // état en continu dans sessionStorage) — rouvre directement l'écran de relecture au lieu du bouton
+  // "+ Choisir un fichier" si le restaurateur avait rafraîchi la page en pleine relecture. Le contenu
+  // exact (plats édités, mode remplacer/ajouter) est relu par MenuImportReview lui-même ; ce tableau vide
+  // sert juste de déclencheur de rendu ici.
+  const [importedItems, setImportedItems] = useState(() => (sessionStorage.getItem(`fairide_menu_import_draft_${restoId}`) ? [] : null));
   const [submittingImport, setSubmittingImport] = useState(false);
   const importFileRef = useRef(null);
 
