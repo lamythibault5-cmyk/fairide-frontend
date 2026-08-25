@@ -342,7 +342,7 @@ export default function MenuPage() {
       <div className="card">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Importer un menu (PDF ou photo)</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Envoie une carte existante — Fairide la lit et propose les plats à ajouter. Tu relis et corriges avant que rien ne soit ajouté à ton menu.
+          Envoie une carte existante — Fairide la lit et propose les plats à ajouter. Tu relis et corriges avant que rien ne soit ajouté à ton menu. La lecture peut prendre quelques minutes (1-2 min) selon la taille du document.
         </p>
         <input
           ref={importFileRef}
@@ -360,6 +360,8 @@ export default function MenuPage() {
           <MenuImportReview
             items={importedItems}
             existingItemCount={restaurant.menu.length}
+            restoId={restoId}
+            restaurant={restaurant}
             submitting={submittingImport}
             onSubmit={submitImportedItems}
             onCancel={() => setImportedItems(null)}
