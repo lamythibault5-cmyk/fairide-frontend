@@ -105,6 +105,12 @@ a { color: inherit; }
 .pill { font-size: 12px; padding: 4px 10px; border-radius: 20px; background: var(--cream-dim); color: var(--ink-soft); font-weight: 600; }
 .pill.teal { background: rgba(47,111,94,0.12); color: var(--teal-deep); }
 .pill.gold { background: rgba(217,164,65,0.18); color: var(--gold-deep); }
+/* Distingue les comptes de test (+qa dans l'email) des vraies personnes sur le dashboard admin — voir
+   isTestAccount dans Admin.jsx. Teinte violette délibérément différente des couleurs de statut déjà en
+   place (vert=approuvé, rouge=bloqué/non vérifié, or=offre) pour ne jamais se confondre avec elles. */
+.test-account-pill { background: rgba(122,79,160,0.16); color: var(--purple); margin-left: 6px; }
+.card-test-account { background: rgba(122,79,160,0.05); border-color: rgba(122,79,160,0.35); }
+.row-test-account { background: rgba(122,79,160,0.05); border-radius: 8px; padding-left: 6px; padding-right: 6px; }
 .pill.hero { background: rgba(217,164,65,0.22); color: var(--gold); border: 1px solid rgba(217,164,65,0.4); }
 .promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--red); color: #fff; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
@@ -206,6 +212,11 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 }
 .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--cream-dim); }
 .dish-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; background: var(--cream-dim); flex-shrink: 0; }
+.dish-thumb-empty {
+  width: 40px; height: 40px; border-radius: 8px; flex-shrink: 0; border: 1px dashed var(--line);
+  background: var(--cream-dim); color: var(--ink-soft); font-size: 9px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; text-align: center; line-height: 1.2;
+}
 .category-header { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; scroll-margin-top: 14px; }
 .category-header img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--cream-dim); flex-shrink: 0; }
 .category-header span { font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 12px; color: var(--ink); }

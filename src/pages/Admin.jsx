@@ -20,6 +20,17 @@ function filterBySearch(list, search, getFields) {
   return list.filter((item) => getFields(item).some((v) => v && String(v).toLowerCase().includes(q)));
 }
 
+// Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
+// (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
+// Aucun champ base de données dédié — dérivé à la volée de l'email déjà présent dans chaque liste admin.
+function isTestAccount(email) {
+  return /\+qa/i.test(email || '');
+}
+
+function TestBadge() {
+  return <span className="pill test-account-pill" title="Compte de test (+qa dans l'email)">🧪 Test</span>;
+}
+
 const PROMO_TYPES = [
   { value: 'client_balance', label: 'Solde client (€)' },
   { value: 'restaurant_trial_months', label: 'Mois d\'essai restaurateur' }
@@ -224,10 +235,11 @@ export default function Admin() {
           {!users && <SkeletonCards count={3} />}
           {users && filteredUsers.length === 0 && <div className="empty">Aucun résultat pour "{userSearch}".</div>}
           {filteredUsers && filteredUsers.map((u) => (
-            <div className="card order-card-clickable" key={u.id} onClick={() => openClient(u)}>
+            <div className={`card order-card-clickable${isTestAccount(u.email) ? ' card-test-account' : ''}`} key={u.id} onClick={() => openClient(u)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <div>
                   <b>{u.name}</b>
+                  {isTestAccount(u.email) && <TestBadge />}
                   {!u.emailVerified && <span className="pill" style={{ marginLeft: 6, color: 'var(--red)' }}>Email non vérifié</span>}
                   <div className="small">{u.email}{u.phone ? ` · ${u.phone}` : ''}</div>
                 </div>
@@ -289,10 +301,11 @@ export default function Admin() {
           {!restaurants && <SkeletonCards count={3} />}
           {restaurants && filteredRestaurants.length === 0 && <div className="empty">Aucun résultat pour "{restaurantSearch}".</div>}
           {filteredRestaurants && filteredRestaurants.map((r) => (
-            <div className="card order-card-clickable" key={r.id} onClick={() => openRestaurant(r)}>
+            <div className={`card order-card-clickable${isTestAccount(r.ownerEmail) ? ' card-test-account' : ''}`} key={r.id} onClick={() => openRestaurant(r)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{r.name}</b>
                 <div className="row" style={{ gap: 6 }}>
+                  {isTestAccount(r.ownerEmail) && <TestBadge />}
                   <span className="pill teal">{r.open ? 'Ouvert' : 'Fermé'}</span>
                   <span className="pill" style={{ color: r.adminStatus === 'approved' ? 'var(--teal-deep)' : r.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
                     {r.adminStatus === 'approved' ? '✅ Approuvé' : r.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente'}
@@ -324,10 +337,11 @@ export default function Admin() {
           {drivers && drivers.length === 0 && <div className="empty">Aucun livreur inscrit.</div>}
           {drivers && drivers.length > 0 && filteredDrivers.length === 0 && <div className="empty">Aucun résultat pour "{driverSearch}".</div>}
           {filteredDrivers && filteredDrivers.map((d) => (
-            <div className="card order-card-clickable" key={d.id} onClick={() => openDriver(d)}>
+            <div className={`card order-card-clickable${isTestAccount(d.email) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{d.name}</b>
                 <div className="row" style={{ gap: 6 }}>
+                  {isTestAccount(d.email) && <TestBadge />}
                   {!d.emailVerified && <span className="pill" style={{ color: 'var(--red)' }}>Email non vérifié</span>}
                   <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
                     {d.adminStatus === 'approved' ? '✅ Approuvé' : d.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente'}
@@ -559,7 +573,7 @@ function UserTypeGroup({ type, items, departed }) {
           {filtered.map((it, i) => (
             <div
               key={it.id}
-              className="row"
+              className={`row${isTestAccount(it.email) ? ' row-test-account' : ''}`}
               style={{ justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < filtered.length - 1 ? '1px solid var(--cream-dim)' : 'none', flexWrap: 'wrap' }}
             >
               <div>
@@ -567,12 +581,14 @@ function UserTypeGroup({ type, items, departed }) {
                 {departed ? (
                   <>
                     <b>{it.email}</b>
+                    {isTestAccount(it.email) && <TestBadge />}
                     {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
                     {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
                   </>
                 ) : (
                   <>
                     <b>{it.name}</b> <span className="small">{it.email}</span>
+                    {isTestAccount(it.email) && <TestBadge />}
                     {it.phone && <div className="small">📞 {it.phone}</div>}
                     <div className="row" style={{ gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                       {type === 'driver' && statusPill(it.adminStatus)}
