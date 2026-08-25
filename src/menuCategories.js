@@ -2053,6 +2053,87 @@ const ITEM_IMAGE_OVERRIDES = {
   'financier amande': U('1638518909918-27910011e4d6'),
   'cannelé': U('1593353994452-97b4560c50c2'),
   'baguette tradition': U('1586765501019-cbe3973ef8fa'),
+  // City Burger (live, 87 plats construits via le dashboard resto au fil des tests) — 66 plats
+  // partageaient une photo à deux (variantes de quantité, paires "X" / "Menu X", sauces) faute
+  // d'override dédié, retombant sur un même mot-clé générique (KEYWORD_IMAGES) à chaque fois.
+  'nuggets de poulet ×4': U('1562967916-eb82221dfb92'),
+  'nuggets de poulet ×6': U('1627662168223-7df99068099a'),
+  'nuggets de poulet ×9': U('1582981760753-b52aae38f237'),
+  'nuggets de poulet ×20': U('1550513008-8cd1a9b590c8'),
+  'nuggets poivre noir & ail ×6': U('1627662055487-551888db3aa8'),
+  'nuggets poivre noir & ail ×9': U('1562967914-608f82629710'),
+  'menu 6 nuggets': U('1569691899455-88464f6d3ab1'),
+  'menu 9 nuggets': U('1605291581926-df4bf7ee3e89'),
+  'chicken wings ×4': U('1585703900468-13c7a978ad86'),
+  'chicken wings ×6': U('1578874557108-9fc2cfb1121e'),
+  'chicken wings ×9': U('1767438030771-4f1d20615881'),
+  'box à partager': U('1606803634706-838a8d0e99ec'),
+  'menu chicken wings': U('1647681514551-7e2d2fe052d2'),
+  'glace tourbillon': U('1636564499112-6113e73c504a'),
+  'sundae caramel': U('1686922172452-65f39c99ea6a'),
+  'cornet': U('1705103654884-cbd03d95761a'),
+  'sundae chocolat': U('1697125138277-962ef4126de4'),
+  'sundae nature': U('1591636687027-a157c53387cd'),
+  'double cheeseburger': U('1572802419224-296b0aeee0d9'),
+  'grand double burger': U('1542574271-7f3b92e6c821'),
+  'menu grand double burger': U('1600688640154-9619e002df30'),
+  'menu double cheeseburger': U('1564362411991-472954b39f56'),
+  'crispy chicken burger': U('1678110707493-8d05425137ac'),
+  'menu crispy chicken burger': U('1599155253646-7989e08c05c1'),
+  'royal cheddar burger': U('1678110707289-ab14382a1625'),
+  'menu royal cheddar burger': U('1639020715088-e7afebe6cb25'),
+  'filet de poisson pané burger': U('1595531172949-30922c28a240'),
+  'menu filet de poisson pané burger': U('1688246780164-00c01647e78c'),
+  'filet de poisson deluxe burger': U('1618538701087-fb7e0312de34'),
+  'menu filet de poisson deluxe burger': U('1552526881-721ce8509abb'),
+  'poulet crispy burger': U('1610614819513-58e34989848b'),
+  'menu poulet crispy burger': U('1692737348416-0a4fa4cf1523'),
+  'poulet crispy teriyaki': U('1615996001375-c7ef13294436'),
+  'menu poulet crispy teriyaki': U('1571805618149-3a772570ebcd'),
+  'crispy bacon deluxe': U('1585238340764-c6f1f6fe1a6d'),
+  'menu crispy bacon deluxe': U('1595255669512-144851438b8b'),
+  'double crispy bacon deluxe': U('1536014019466-da3e69c19fe9'),
+  'menu double crispy bacon deluxe': U('1631533633021-0a0a3e1ed34b'),
+  'burger végétarien deluxe': U('1645024679624-e8351ac98f01'),
+  'menu burger végétarien deluxe': U('1576379392044-6d933410d374'),
+  'le généreux bacon cheddar': U('1508424897381-4fd8755e4b7a'),
+  'menu le généreux bacon cheddar': U('1611001395137-a5795d9c9ac4'),
+  'le généreux double bacon cheddar': U('1541657267876-788b156193bc'),
+  'menu le généreux double bacon cheddar': U('1606755962773-d324e0a13086'),
+  'double philly cheese': U('1699728088600-6d684acbeada'),
+  'menu double philly cheese': U('1600555379885-08a02224726d'),
+  'petit milkshake vanille': U('1568901839119-631418a3910d'),
+  'petit milkshake chocolat': U('1577805947697-89e18249d767'),
+  'petit milkshake fraise': U('1650553451009-f967b2eb2dd2'),
+  'tropicana orange': U('1613478223719-2ab802602423'),
+  "jus d'orange": U('1577680716097-9a565ddc2007'),
+  'eau plate 33cl': U('1616118132534-381148898bb4'),
+  'eau plate 50cl': U('1561041695-d2fadf9f318c'),
+  'eau gazeuse 33cl': U('1523362628745-0c100150b504'),
+  'eau gazeuse 50cl': U('1616118133103-baf54a4790c6'),
+  'eau pétillante': U('1559839914-17aae19cec71'),
+  'wrap poulet croustillant': U('1666819615040-eff5e52c778a'),
+  'petit wrap poulet': U('1585238342107-49a3cdace47f'),
+  'menu wrap poulet croustillant': U('1671572579845-52270341950f'),
+  'frites cheddar & bacon': U('1639744210631-209fce3e256c'),
+  'sauce frites': U('1622810002646-906e134171b8'),
+  'mayonnaise': U('1622268349641-4c814e2cc806'),
+  'barbecue': U('1755831922426-10290cfe503c'),
+  'aigre-douce': U('1634976099174-19f91dcaf31f'),
+  'cajun': U('1693057747521-fe1b977d476d'),
+  'vinaigrette miel-moutarde': U('1635099063865-efef49c0dd45'),
+  // Items live des restos Supermarché (FreshMart, Marché Express, Casa Fresh) qui ne correspondent plus
+  // au gabarit 'Supermarché' actuel (renommé depuis) — retombaient sur des KEYWORD_IMAGES trop génériques
+  // ('jus', 'biscuit'...) partagées entre plusieurs plats du même resto.
+  'plat préparé lasagnes': U('1621510456681-2330135e5871'),
+  'menu plat préparé lasagnes': U('1597289124948-688c1a35cb48'),
+  'plat préparé poulet-riz': U('1749640566096-5d8098d452b4'),
+  'menu plat préparé poulet-riz': U('1781747835478-a9c3bab5a670'),
+  'tablette chocolat lait': U('1623660053975-cf75a8be0908'),
+  'tablette chocolat noir': U('1610450949065-1f2841536c88'),
+  'paquet biscuits sablés': U('1622467827417-bbe2237067a9'),
+  'pack sodas 6x33cl': U('1527960471264-932f39eb5846'),
+  'jus multifruits 1l': U('1603569283847-aa295f0d016a'),
   // Sandwichs baguette des restos "Sandwicherie" de démo (server.js SANDWICH_RESTAURANTS) — retombaient
   // sur la photo générique pain/croissant via le mot-clé 'baguette' (voir KEYWORD_IMAGES ci-dessous,
   // corrigé) faute d'override dédié. Une photo distincte par nom, y compris entre plats d'un même resto.
@@ -2130,26 +2211,11 @@ const ITEM_IMAGE_OVERRIDES = {
   // --- City Burger (menu générique 83 produits — variantes qui partageaient toutes la même photo) ---
   'hamburger': U('1568901346375-23c9450c58cd'),
   'cheeseburger': U('1551782450-a2132b4ba21d'),
-  'royal cheddar burger': U('1713330801172-03f8d1c0dde7'),
-  'menu royal cheddar burger': U('1713330801172-03f8d1c0dde7'),
-  'filet de poisson pané burger': U('1551782450-17144efb9c50'),
-  'menu filet de poisson pané burger': U('1551782450-17144efb9c50'),
-  'filet de poisson deluxe burger': U('1615297928064-24977384d0da'),
-  'menu filet de poisson deluxe burger': U('1615297928064-24977384d0da'),
-  'poulet crispy burger': U('1637710847214-f91d99669e18'),
-  'menu poulet crispy burger': U('1637710847214-f91d99669e18'),
-  'burger végétarien deluxe': U('1655895176036-bf1a11326e5c'),
-  'menu burger végétarien deluxe': U('1655895176036-bf1a11326e5c'),
-  'crispy bacon deluxe': U('1606149059549-6042addafc5a'),
-  'menu crispy bacon deluxe': U('1606149059549-6042addafc5a'),
-  'double crispy bacon deluxe': U('1513185158878-8d8c2a2a3da3'),
-  'menu double crispy bacon deluxe': U('1513185158878-8d8c2a2a3da3'),
-  'le généreux bacon cheddar': U('1692737349870-e3bfc704ebf9'),
-  'menu le généreux bacon cheddar': U('1692737349870-e3bfc704ebf9'),
-  'le généreux double bacon cheddar': U('1520073201527-6b044ba2ca9f'),
-  'menu le généreux double bacon cheddar': U('1520073201527-6b044ba2ca9f'),
-  'double philly cheese': U('1734769853702-c7444c039c8c'),
-  'menu double philly cheese': U('1734769853702-c7444c039c8c'),
+  // royal cheddar burger / filet de poisson pané / filet de poisson deluxe / poulet crispy /
+  // burger végétarien deluxe / crispy bacon deluxe / double crispy bacon deluxe / le généreux
+  // bacon cheddar / le généreux double bacon cheddar / double philly cheese : déplacés plus haut
+  // (bloc "City Burger (live...)") — chaque "X" avait ici la MÊME photo que son "Menu X", ce qui
+  // recréait exactement le doublon que ce bloc prétendait corriger.
   'peppery cheese': U('1566217688581-b2191944c2f9'),
 
   // --- Boucherie ---
@@ -2347,7 +2413,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'chinotto': U('1554866585-cd94860890b7'),
   'boza': U('1619158403521-ed9795026d47'),
   'horchata': U('1619158403521-ed9795026d47'),
-  'box à partager': U('1608039755401-742074f0548d'),
 
   // --- Corrections de doublons/incohérences détectées par audit (mots-clés qui matchaient un plat
   // sans rapport : "Chianti" → chia pudding, "Vinaigrette" → vin, "grillé" végé/poulet → photo kebab,
@@ -2362,7 +2427,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'beignets de banane': U('1570727624862-3008fe67a6be'),
   'beignets à la banane': U('1570727624862-3008fe67a6be'),
   'beignets sucrés': U('1714545049821-9eddecf6e20d'),
-  'petit milkshake chocolat': U('1619158403521-ed9795026d47'),
   'tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
   'menu tarte salée aux légumes': U('1650844010413-3f24dc1c182b'),
 
@@ -2880,9 +2944,6 @@ const ITEM_IMAGE_OVERRIDES = {
   'vodka 70cl': U('1591704951890-0862b2e98acb'),
   'jägermeister 70cl': U('1727989806974-43836c555326'),
   'mignonnettes': U('1570649462630-2eec4e6bcd6d'),
-
-  // --- City Burger : condiment sans mot-clé dédié, retombait sur la photo générique "Entrées" ---
-  'vinaigrette miel-moutarde': U('1518013431117-eb1465fa5752'),
 
   // --- Plats retombant sur la photo générique de catégorie faute de mot-clé dédié — chaque photo
   // vérifiée individuellement (téléchargée puis inspectée) pour confirmer qu'elle représente bien
