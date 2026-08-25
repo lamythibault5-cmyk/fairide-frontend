@@ -135,6 +135,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .btn-primary { background: var(--ink); color: var(--cream); }
 .btn-gold { background: var(--gold); color: var(--ink); }
 .btn-teal { background: var(--teal); color: #fff; }
+.btn-danger { background: var(--red); color: #fff; }
 .btn-outline { background: transparent; border: 1px solid var(--line); color: var(--ink); }
 .btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }

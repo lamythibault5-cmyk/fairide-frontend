@@ -305,14 +305,16 @@ export default function MenuPage() {
     }
   }
 
-  async function submitImportedItems(items) {
+  async function submitImportedItems(items, replaceExisting) {
     if (!items.length) { toast('Choisis au moins un plat.'); return; }
     setSubmittingImport(true);
     try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting } });
       setImportedItems(null);
       loadDashboard(restoId);
-      toast(`${items.length} plat(s) ajouté(s) au menu depuis le document importé.`);
+      toast(replaceExisting
+        ? `Menu remplacé — ${items.length} plat(s) importé(s) du document.`
+        : `${items.length} plat(s) ajouté(s) au menu depuis le document importé.`);
     } catch (e) {
       toast(e.message);
     } finally {
@@ -357,6 +359,7 @@ export default function MenuPage() {
         {importedItems && (
           <MenuImportReview
             items={importedItems}
+            existingItemCount={restaurant.menu.length}
             submitting={submittingImport}
             onSubmit={submitImportedItems}
             onCancel={() => setImportedItems(null)}
