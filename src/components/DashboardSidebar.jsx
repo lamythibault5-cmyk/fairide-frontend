@@ -1,6 +1,7 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 
 const HOME_PATH_BY_ROLE = { client: '/home', restaurant: '/dashboard', driver: '/driver' };
@@ -45,16 +46,33 @@ function navItemsForRole(role, t) {
 export default function DashboardSidebar() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
-  const items = navItemsForRole(role, t);
+  const { previewMode, exitPreview } = usePreviewMode();
+  const navigate = useNavigate();
+  // Un restaurateur en mode aperçu voit la nav "client" (favoris, commandes, carte...) au lieu de la
+  // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
+  // correspondantes, toujours réservées aux vrais clients côté API.
+  const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
+  const items = navItemsForRole(effectiveRole, t);
   if (user?.isAdmin) items.push({ to: '/admin', icon: '🛠️', label: t('nav.admin') });
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
 
+  function leavePreview() {
+    exitPreview();
+    navigate('/dashboard/preview');
+  }
+
   return (
     <aside className="dashboard-sidebar">
-      <Link className="dashboard-sidebar-brand" to={HOME_PATH_BY_ROLE[role] || '/'}>
+      <Link className="dashboard-sidebar-brand" to={HOME_PATH_BY_ROLE[effectiveRole] || '/'}>
         <BrandMark size={30} />
         <span>Fairide</span>
       </Link>
+      {previewMode && role === 'restaurant' && (
+        <div className="preview-mode-sidebar-banner">
+          <span>👁️ Mode aperçu client</span>
+          <button type="button" onClick={leavePreview}>Quitter</button>
+        </div>
+      )}
       <nav className="dashboard-nav">
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
@@ -67,7 +85,7 @@ export default function DashboardSidebar() {
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
           <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
-          <span className="dashboard-profile-role">{role}</span>
+          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? 'aperçu client' : role}</span>
           <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
       </div>

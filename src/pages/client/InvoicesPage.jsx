@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { api, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 
 // Liste les commandes payées avec un lien vers leur facture Stripe (générée automatiquement au
@@ -21,14 +22,21 @@ function isInPeriod(order, period) {
 }
 
 export default function InvoicesPage() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const toast = useToast();
+  const { previewMode } = usePreviewMode();
   const [orders, setOrders] = useState(null);
   const [selected, setSelected] = useState(() => new Set());
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch((e) => toast(e.message));
+    // Voir MapPage.jsx : un restaurateur en mode aperçu n'a pas de vraies factures (403 côté API) —
+    // repli sur une liste vide plutôt qu'un message d'erreur trompeur ou un chargement bloqué à vie.
+    const isPreviewingRestaurant = previewMode && role === 'restaurant';
+    api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch((e) => {
+      if (!isPreviewingRestaurant) toast(e.message);
+      setOrders([]);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -100,12 +101,16 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const toast = useToast();
+  const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
 
   useEffect(() => {
-    api('/orders/mine', { token }).then(setOrders).catch((e) => toast(e.message)).finally(() => setLoading(false));
+    // Un restaurateur en mode aperçu n'a pas de vraies commandes client (403 côté API) — liste vide
+    // silencieuse plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
+    const isPreviewingRestaurant = previewMode && role === 'restaurant';
+    api('/orders/mine', { token }).then(setOrders).catch((e) => { if (!isPreviewingRestaurant) toast(e.message); }).finally(() => setLoading(false));
     const interval = setInterval(() => {
       api('/orders/mine', { token }).then(setOrders).catch(() => {});
     }, 15000);

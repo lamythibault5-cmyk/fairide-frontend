@@ -3,19 +3,24 @@ import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
 
 export default function Favorites() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
 
   useEffect(() => {
-    api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
+    // Un restaurateur en mode aperçu n'a pas de vrais favoris (403 côté API) — liste vide silencieuse
+    // plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
+    const isPreviewingRestaurant = previewMode && role === 'restaurant';
+    api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => { if (!isPreviewingRestaurant) toast(e.message); }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -767,6 +767,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .dashboard-sidebar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 24px; padding: 0 6px; }
 .dashboard-sidebar-brand span { font-family: 'Fraunces', serif; font-weight: 700; font-size: 18px; color: var(--ink); }
+.preview-mode-sidebar-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: rgba(122,79,160,0.12); color: var(--purple); border: 1px solid rgba(122,79,160,0.3);
+  border-radius: 10px; padding: 8px 10px; margin: 0 6px 16px; font-size: 12px; font-weight: 700;
+}
+.preview-mode-sidebar-banner button {
+  background: var(--purple); color: #fff; border: none; border-radius: 7px; padding: 4px 10px; font-size: 11px; cursor: pointer;
+}
 .dashboard-nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
 .dashboard-nav-link {
   display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius);

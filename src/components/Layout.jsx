@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
+import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
@@ -21,7 +22,12 @@ export default function Layout() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  const { previewMode } = usePreviewMode();
   const [rightSlot, setRightSlot] = useState(null);
+  // Le restaurateur en mode aperçu voit le panier flottant comme un vrai client (voir RestaurantMenu.jsx
+  // "addToCart" réel, pas le panier isolé de RestaurantPreview) — pousser jusqu'au paiement échoue
+  // volontairement côté serveur (requireRole('client')), ce qui bloque naturellement au bon endroit.
+  const seesClientCart = role === 'client' || (previewMode && role === 'restaurant');
 
   if (user && isDashboardPath(location.pathname)) {
     return (
@@ -41,7 +47,7 @@ export default function Layout() {
           {rightSlot && <aside className="dashboard-right">{rightSlot}</aside>}
         </div>
         <CookieBanner />
-        {role === 'client' && <FloatingCart />}
+        {seesClientCart && <FloatingCart />}
         <AssistantWidget />
       </>
     );
@@ -107,7 +113,7 @@ export default function Layout() {
         <Footer />
       </div>
       <CookieBanner />
-      {role === 'client' && <FloatingCart />}
+      {seesClientCart && <FloatingCart />}
       <AssistantWidget />
     </>
   );

@@ -2,19 +2,28 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { usePreviewMode } from '../../context/PreviewModeContext';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import GameSwitcher from '../../components/GameSwitcher';
 
 // Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
 // accessible en permanence depuis la nav plutôt que caché dans le détail d'une commande.
 export default function MapPage() {
-  const { token } = useAuth();
+  const { token, role } = useAuth();
   const toast = useToast();
+  const { previewMode } = usePreviewMode();
   const [orders, setOrders] = useState(null);
 
   useEffect(() => {
+    // Un restaurateur en mode aperçu n'a pas de vraies commandes client (l'API les refuse, 403) — page
+    // vide plutôt qu'un message d'erreur trompeur, et surtout pas bloquée indéfiniment sur "Chargement..."
+    // (voir plus bas : sans ce filet, orders resterait null pour toujours si l'appel échoue).
+    const isPreviewingRestaurant = previewMode && role === 'restaurant';
     function load() {
-      api('/orders/mine', { token }).then(setOrders).catch((e) => toast(e.message));
+      api('/orders/mine', { token }).then(setOrders).catch((e) => {
+        if (!isPreviewingRestaurant) toast(e.message);
+        setOrders([]);
+      });
     }
     load();
     const interval = setInterval(load, 15000);
