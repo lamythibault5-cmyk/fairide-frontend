@@ -457,6 +457,16 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .app-soon-phone { flex-basis: auto; }
 }
 .dish-thumb-lg { width: 100%; height: 130px; border-radius: 10px; object-fit: cover; background: var(--cream-dim); display: block; margin-bottom: 8px; }
+/* Affiché à la place de dish-thumb-lg quand aucune photo n'est choisie ET qu'aucune correspondance
+   exacte n'existe au catalogue (voir defaultItemImageOrNull) — plutôt qu'une photo "à peu près" mais
+   parfois trompeuse (l'ancien comportement via defaultItemImage/KEYWORD_IMAGES), mieux vaut ne rien
+   montrer et laisser le restaurateur choisir lui-même une vraie photo pour ce plat. */
+.dish-thumb-lg-empty {
+  width: 100%; height: 130px; border-radius: 10px; margin-bottom: 8px; border: 1px dashed var(--line);
+  background: var(--cream-dim); color: var(--ink-soft); display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 4px; font-size: 11px; font-weight: 600; text-align: center;
+}
+.dish-thumb-lg-empty .icon { font-size: 22px; opacity: 0.5; }
 .cover-banner { width: 100%; height: 160px; object-fit: cover; border-radius: var(--radius); margin-bottom: 14px; background: var(--cream-dim); }
 .cover-banner-sm { width: 100%; height: 110px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 10px; width: calc(100% + 36px); }
 .cover-banner-detail { height: 190px; object-fit: cover; border-radius: calc(var(--radius) - 4px) calc(var(--radius) - 4px) 0 0; background: var(--cream-dim); display: block; margin: -18px -18px 14px; width: calc(100% + 36px); }

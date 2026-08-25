@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CATEGORIES, categoryLabel, defaultItemImage } from '../menuCategories';
+import { CATEGORIES, categoryLabel, defaultItemImageOrNull } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
 
@@ -94,10 +94,14 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           )}
         </div>
         <div className="field">
-          <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
+          <label>Image (optionnel)</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-            <img src={imageUrl || defaultItemImage({ name, category })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
-            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+            {(imageUrl || defaultItemImageOrNull({ name, category })) ? (
+              <img src={imageUrl || defaultItemImageOrNull({ name, category })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+            ) : (
+              <span className="dish-thumb-empty">Pas de photo</span>
+            )}
+            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />
           </div>
           {restoId && (
             <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setGalleryOpen(true)}>
@@ -177,7 +181,11 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         </span>
       )}
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
-      <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
+      {(item.imageUrl || defaultItemImageOrNull(item)) ? (
+        <img src={item.imageUrl || defaultItemImageOrNull(item)} alt={item.name} className="dish-thumb-lg" />
+      ) : (
+        <div className="dish-thumb-lg-empty"><span className="icon">🍽️</span><span>Pas de photo</span></div>
+      )}
       <div className="name">{item.name}</div>
       <div className="small desc">
         {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}

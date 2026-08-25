@@ -18,9 +18,9 @@ export function categoryLabel(value, t) {
 // d'une carte importée : voir menuImport.js côté backend, dont le prompt reprend explicitement le nom
 // de section tel qu'écrit sur le document, ex. "Pizzas", "Nos Burgers", "Vins") : aucune correspondance
 // exacte avec les 4 catégories internes, mais on peut souvent deviner le bon type de photo à partir du
-// nom plutôt que de renvoyer '' — sans ça, defaultItemImage() ci-dessous finissait sur une image cassée
-// (<img src="">, sans garde contrairement à l'icône d'en-tête de section) pour tout plat importé dont
-// le nom ne matchait aucun mot-clé, un bug concret sur les menus importés signalé par le restaurateur.
+// nom plutôt que de renvoyer '' — categoryImage() sert de bannière de SECTION (large catégorie, risque
+// de mauvaise photo bien plus faible qu'au niveau d'un plat précis), contrairement à
+// defaultItemImageOrNull() plus bas qui n'autorise aucune approximation par mot-clé sur un plat donné.
 const CATEGORY_HINT_DESSERT = /dessert|sucr|glace|pâtisserie|patisserie|gâteau|gateau/iu;
 const CATEGORY_HINT_DRINK = /boisson|breuvage|soft|vin\b|vins\b|bière|biere|cocktail|café|the\b|thé|jus\b|eau\b|cave/iu;
 const CATEGORY_HINT_ENTREE = /entrée|entree|apéritif|aperitif|salade|starter|mise en bouche/iu;
@@ -3234,29 +3234,17 @@ const ITEM_IMAGE_OVERRIDES = {
 // Le multiplicateur 31 seul dégénère en simple somme de caractères pour un modulo comme 3 (31 % 3 === 1),
 // ce qui donnait une très mauvaise répartition sur les petits pools — l'étape de mixage final (type
 // Murmur) corrige cette dégénérescence.
-function hashSeed(str) {
-  let h = 0;
-  for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
-  h ^= h >>> 16;
-  h = Math.imul(h, 0x45d9f3b);
-  h ^= h >>> 16;
-  h = Math.imul(h, 0x45d9f3b);
-  h ^= h >>> 16;
-  return h >>> 0;
-}
-
-export function defaultItemImage(item) {
+// Ne renvoie une photo que si le nom du plat a une correspondance EXACTE et vérifiée dans
+// ITEM_IMAGE_OVERRIDES (construit à partir des noms exacts des templates officiels) — jamais de
+// correspondance approximative par mot-clé (l'ancienne fonction defaultItemImage, supprimée, faisait ça
+// via KEYWORD_IMAGES et a été la source de nombreux bugs de photo mal assortie sur des plats
+// personnalisés/importés, voir menuImport.js/MenuImportReview) dont le nom ne fait QUE ressembler à un
+// plat du catalogue. Les plats des templates officiels gardent leur vraie photo (nom exactement
+// identique) ; tout le reste affiche un espace vide plutôt qu'une photo trompeuse, à remplir
+// manuellement par le restaurateur.
+export function defaultItemImageOrNull(item) {
   const name = (item?.name || '').toLowerCase().trim();
-  if (ITEM_IMAGE_OVERRIDES[name]) return ITEM_IMAGE_OVERRIDES[name];
-  for (const entry of KEYWORD_IMAGES) {
-    if (entry.keywords.some((k) => name.includes(k))) {
-      if (entry.images) return entry.images[hashSeed(name) % entry.images.length];
-      return entry.image;
-    }
-  }
-  // categoryImage() ci-dessus renvoie toujours une image non vide désormais (dernier repli sur
-  // 'plat') — jamais de <img src=""> cassée, même pour un plat importé sans mot-clé reconnu.
-  return categoryImage(item?.category);
+  return ITEM_IMAGE_OVERRIDES[name] || null;
 }
 
 // Liste de quelques photos candidates (pas une seule) pour un plat sans correspondance exacte — puisées

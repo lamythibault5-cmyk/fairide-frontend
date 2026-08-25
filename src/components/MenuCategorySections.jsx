@@ -1,11 +1,16 @@
-import { categoryImage, categoryLabel, defaultItemImage, groupBySubsection } from '../menuCategories';
+import { categoryImage, categoryLabel, defaultItemImageOrNull, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
 function ItemCard({ item, onAdd, hideAdd, t }) {
+  const image = item.imageUrl || defaultItemImageOrNull(item);
   return (
     <div className="menu-item-card" style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
-      <img src={item.imageUrl || defaultItemImage(item)} alt={item.name} className="dish-thumb-lg" />
+      {image ? (
+        <img src={image} alt={item.name} className="dish-thumb-lg" />
+      ) : (
+        <div className="dish-thumb-lg-empty"><span className="icon">🍽️</span><span>Pas de photo</span></div>
+      )}
       <div className="name">{item.name}</div>
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : (item.desc || '')}</div>
       <div className="bottom-row">

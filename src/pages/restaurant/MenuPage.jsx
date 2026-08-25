@@ -8,7 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
   categoryImage, categoryLabel, getStarterTemplate,
-  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImage,
+  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImageOrNull,
   groupBySubsection
 } from '../../menuCategories';
 import MenuItemRow from '../../components/MenuItemRow';
@@ -498,12 +498,16 @@ export default function MenuPage() {
                     <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
                     <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
-                      <label>Image (optionnel — une photo est choisie automatiquement sinon)</label>
+                      <label>Image (optionnel)</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         {itemName.trim() && (
-                          <img src={itemImageUrl || defaultItemImage({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                          (itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })) ? (
+                            <img src={itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                          ) : (
+                            <span className="dish-thumb-empty">Pas de photo</span>
+                          )
                         )}
-                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL pour remplacer la photo automatique" />
+                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />
                       </div>
                       <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setAddItemGalleryOpen(true)}>
                         📷 Depuis ma galerie
