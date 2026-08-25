@@ -3258,3 +3258,18 @@ export function defaultItemImage(item) {
   // 'plat') — jamais de <img src=""> cassée, même pour un plat importé sans mot-clé reconnu.
   return categoryImage(item?.category);
 }
+
+// Liste de quelques photos candidates (pas une seule) pour un plat sans correspondance exacte — puisées
+// dans les mêmes pools KEYWORD_IMAGES que la résolution automatique, mais présentées comme un choix plutôt
+// qu'imposées. Complète la galerie personnelle du resto dans le sélecteur (voir GalleryPickerModal
+// "suggestions"), jamais comme seule option.
+export function suggestItemImages(item, max = 6) {
+  const name = (item?.name || '').toLowerCase().trim();
+  const urls = [];
+  for (const entry of KEYWORD_IMAGES) {
+    if (!entry.keywords.some((k) => name.includes(k))) continue;
+    if (entry.images) urls.push(...entry.images); else urls.push(entry.image);
+  }
+  urls.push(categoryImage(item?.category));
+  return [...new Set(urls)].slice(0, max);
+}

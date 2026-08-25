@@ -1,13 +1,27 @@
 import { useState } from 'react';
+import { suggestItemImages } from '../menuCategories';
+import GalleryPickerModal from './GalleryPickerModal';
+import RestaurantPreview from './RestaurantPreview';
 
 // Relecture des plats extraits d'un PDF/photo de menu par l'IA avant tout ajout réel — chaque champ
 // reste modifiable (l'IA peut se tromper sur un prix mal imprimé ou une catégorie ambiguë) et chaque
 // ligne peut être décochée, exactement comme pour un template de démarrage classique.
-export default function MenuImportReview({ items: initialItems, existingItemCount, onSubmit, onCancel, submitting }) {
-  const [items, setItems] = useState(() => initialItems.map((it, i) => ({ ...it, subsection: it.subsection || '', key: i, included: true })));
+export default function MenuImportReview({ items: initialItems, existingItemCount, restoId, restaurant, onSubmit, onCancel, submitting }) {
+  const [items, setItems] = useState(() => initialItems.map((it, i) => ({
+    ...it,
+    subsection: it.subsection || '',
+    key: i,
+    included: true,
+    // Jamais de photo auto-assignée sur un plat importé d'un document — même en cas de correspondance
+    // exacte, mieux vaut laisser le restaurateur choisir lui-même (voir GalleryPickerModal plus bas, qui
+    // propose sa galerie déjà en ligne + quelques suggestions) que de remplir silencieusement le menu.
+    imageUrl: ''
+  })));
   // Par défaut on ajoute aux plats existants — remplacer est une action destructive (supprime tout le
   // menu actuel), donc jamais le choix pré-sélectionné, même quand le resto n'a encore aucun plat.
   const [mode, setMode] = useState('append');
+  const [pickerKey, setPickerKey] = useState(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   function updateField(key, field, value) {
     setItems((prev) => prev.map((it) => (it.key === key ? { ...it, [field]: value } : it)));
@@ -22,20 +36,55 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
   }
 
   const includedCount = items.filter((it) => it.included).length;
+  const pickerItem = items.find((it) => it.key === pickerKey);
 
   function submit() {
     const toSubmit = items
       .filter((it) => it.included)
-      .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim() }))
+      .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl }))
       .filter((it) => it.name && Number.isFinite(it.price) && it.price > 0);
     onSubmit(toSubmit, mode === 'replace');
   }
 
+  if (previewOpen) {
+    const orderedCategories = [];
+    items.filter((it) => it.included).forEach((it) => {
+      const cat = it.category.trim() || 'plat';
+      if (!orderedCategories.includes(cat)) orderedCategories.push(cat);
+    });
+    const draftRestaurant = {
+      ...restaurant,
+      menu: items.filter((it) => it.included).map((it) => ({
+        id: `draft-${it.key}`,
+        name: it.name,
+        price: parseFloat(it.price) || 0,
+        desc: it.desc,
+        category: it.category.trim() || 'plat',
+        subsection: it.subsection,
+        imageUrl: it.imageUrl,
+        available: true,
+        optionGroups: []
+      })),
+      sections: orderedCategories.map((name, i) => ({ id: `draft-sec-${i}`, name }))
+    };
+    return (
+      <div>
+        <button type="button" className="btn-ghost" style={{ marginBottom: 10 }} onClick={() => setPreviewOpen(false)}>← Retour à la relecture</button>
+        <RestaurantPreview restaurant={draftRestaurant} />
+      </div>
+    );
+  }
+
   return (
     <div>
-      <p className="small" style={{ margin: '0 0 12px' }}>
-        {items.length} plat(s) lu(s) dans le document — vérifie et corrige avant d'ajouter au menu (décoche ce que tu ne veux pas garder).
-      </p>
+      <div className="row" style={{ gap: 8, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+        <p className="small" style={{ margin: 0 }}>
+          {items.length} plat(s) lu(s) dans le document — vérifie et corrige avant d'ajouter au menu (décoche ce que tu ne veux pas garder). Aucune photo n'est ajoutée automatiquement : tu peux en choisir une pour chaque plat en cliquant sur sa vignette — les photos déjà présentes dans ta galerie y sont directement disponibles.
+        </p>
+        <button type="button" className="btn-outline" style={{ flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => setPreviewOpen(true)}>
+          👁️ Aperçu client
+        </button>
+      </div>
       {existingItemCount > 0 && (
         <div className="field" style={{ marginBottom: 14 }}>
           <label>Que faire des {existingItemCount} plat(s) déjà dans ton menu ?</label>
@@ -58,6 +107,18 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         <div key={it.key} className="card" style={{ marginBottom: 8, opacity: it.included ? 1 : 0.5, padding: 12 }}>
           <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
             <input type="checkbox" style={{ width: 'auto', marginTop: 10 }} checked={it.included} onChange={() => toggleIncluded(it.key)} />
+            <button
+              type="button"
+              onClick={() => setPickerKey(it.key)}
+              title={it.imageUrl ? 'Changer la photo' : 'Choisir une photo (aucune trouvée automatiquement)'}
+              style={{ flexShrink: 0, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
+            >
+              {it.imageUrl ? (
+                <img src={it.imageUrl} alt="" className="dish-thumb" />
+              ) : (
+                <span className="dish-thumb-empty">+ Photo</span>
+              )}
+            </button>
             <div style={{ flex: 1, display: 'grid', gap: 6 }}>
               <div className="row" style={{ gap: 8 }}>
                 <input style={{ flex: 2 }} value={it.name} onChange={(e) => updateField(it.key, 'name', e.target.value)} placeholder="Nom du plat" />
@@ -79,6 +140,17 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         </button>
         <button className="btn-ghost" onClick={onCancel}>Annuler</button>
       </div>
+      {pickerItem && (
+        <GalleryPickerModal
+          restoId={restoId}
+          currentImageUrl={pickerItem.imageUrl}
+          suggestions={suggestItemImages(pickerItem)}
+          suggestionsTitle="Photos suggérées pour ce plat"
+          title={`Photo — ${pickerItem.name || 'ce plat'}`}
+          onSelect={(url) => { updateField(pickerKey, 'imageUrl', url); setPickerKey(null); }}
+          onCancel={() => setPickerKey(null)}
+        />
+      )}
     </div>
   );
 }
