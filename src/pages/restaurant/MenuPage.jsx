@@ -398,7 +398,7 @@ export default function MenuPage() {
       <div className="card">
         <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Exactement ce que voient tes clients. Clique sur un plat pour le modifier. Sur chaque section : ☑️ pour sélectionner plusieurs plats et les supprimer d'un coup, ↕️ pour les réorganiser, ✏️ pour la renommer, 🗑️ pour la supprimer.
+          Clique sur un plat pour le modifier. Sur chaque section : ☑️ pour sélectionner plusieurs plats et les supprimer d'un coup, ↕️ pour les réorganiser, ✏️ pour la renommer, 🗑️ pour la supprimer.
         </p>
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
