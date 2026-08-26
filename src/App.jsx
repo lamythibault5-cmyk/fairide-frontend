@@ -6,7 +6,14 @@ import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import Home from './pages/Home';
 import Account from './pages/Account';
-import Admin from './pages/Admin';
+import AdminLayout from './pages/admin/AdminLayout';
+import AdminDashboardPage from './pages/admin/AdminDashboardPage';
+import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
+import AdminDriversPage from './pages/admin/AdminDriversPage';
+import AdminClientsPage from './pages/admin/AdminClientsPage';
+import AdminFinancePage from './pages/admin/AdminFinancePage';
+import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import LegalNotice from './pages/legal/LegalNotice';
 import Terms from './pages/legal/Terms';
 import Privacy from './pages/legal/Privacy';
@@ -74,7 +81,15 @@ export default function App() {
         <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
-        <Route path="/admin" element={<ProtectedRoute admin><Admin /></ProtectedRoute>} />
+        <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="restaurants" element={<AdminRestaurantsPage />} />
+          <Route path="drivers" element={<AdminDriversPage />} />
+          <Route path="clients" element={<AdminClientsPage />} />
+          <Route path="finance" element={<AdminFinancePage />} />
+          <Route path="settings" element={<AdminSettingsPage />} />
+        </Route>
 
         <Route path="/mentions-legales" element={<LegalNotice />} />
         <Route path="/cgv" element={<Terms />} />
