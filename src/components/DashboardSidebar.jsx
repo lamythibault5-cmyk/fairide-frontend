@@ -52,7 +52,8 @@ const ADMIN_NAV_ITEMS = [
   { to: '/admin/drivers', icon: '🛵', label: 'Livreurs' },
   { to: '/admin/clients', icon: '👥', label: 'Clients' },
   { to: '/admin/finance', icon: '💶', label: 'Finance' },
-  { to: '/admin/settings', icon: '⚙️', label: 'Paramètres' }
+  { to: '/admin/settings', icon: '⚙️', label: 'Paramètres' },
+  { to: '/account', icon: '👤', label: 'Mon compte' }
 ];
 
 export default function DashboardSidebar() {

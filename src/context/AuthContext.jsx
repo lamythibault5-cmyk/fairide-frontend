@@ -67,6 +67,19 @@ export function AuthProvider({ children }) {
     return user;
   }
 
+  async function requestContactChange(field, newValue) {
+    return api('/auth/me/request-contact-change', { method: 'POST', token: session.token, body: { field, newValue } });
+  }
+
+  async function confirmContactChange(field, newValue, code) {
+    // Réponse { token, user } comme login/register — un nouveau token est nécessaire car le JWT
+    // embarque l'email (voir middleware/auth.js requireAdmin) et resterait sinon périmé après un
+    // changement d'email jusqu'à la prochaine reconnexion.
+    const data = await api('/auth/me/confirm-contact-change', { method: 'PATCH', token: session.token, body: { field, newValue, code } });
+    setSession(data);
+    return data.user;
+  }
+
   async function requestDeletionCode() {
     return api('/auth/me/request-deletion', { method: 'POST', token: session.token });
   }
@@ -94,6 +107,8 @@ export function AuthProvider({ children }) {
     loginWithGoogle,
     updateProfile,
     refreshUser,
+    requestContactChange,
+    confirmContactChange,
     requestDeletionCode,
     deleteAccount,
     logout

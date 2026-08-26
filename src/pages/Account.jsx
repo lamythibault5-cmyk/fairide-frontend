@@ -31,7 +31,7 @@ function genders(t) {
 }
 
 export default function Account() {
-  const { user, role, token, updateProfile, refreshUser, requestDeletionCode, deleteAccount, logout } = useAuth();
+  const { user, role, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
   const { t } = useLanguage();
   const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
@@ -70,7 +70,6 @@ export default function Account() {
   const [lastName, setLastName] = useState(user.lastName || '');
   const [gender, setGender] = useState(user.gender || '');
   const [birthDate, setBirthDate] = useState(user.birthDate || '');
-  const [phone, setPhone] = useState(user.phone || '');
   const [addressStreet, setAddressStreet] = useState(user.addressStreet || '');
   const [addressNumber, setAddressNumber] = useState(user.addressNumber || '');
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
@@ -275,7 +274,7 @@ export default function Account() {
     setSavingInfo(true);
     try {
       await updateProfile({
-        firstName: firstName.trim(), lastName: lastName.trim(), phone: phone.trim(),
+        firstName: firstName.trim(), lastName: lastName.trim(),
         gender, birthDate: birthDate || '',
         addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim()
@@ -377,10 +376,6 @@ export default function Account() {
               <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
             </div>
           </div>
-          <div className="field">
-            <label>{t('auth.phone')}</label>
-            <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('account.phonePlaceholder')} />
-          </div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 2 }}>
               <label>{t('auth.street')}</label>
@@ -403,6 +398,22 @@ export default function Account() {
           </div>
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
         </form>
+      </div>
+
+      <div className="card">
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🔒 Coordonnées de connexion</h3>
+        <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
+          Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d'email ou de téléphone.
+        </p>
+        <ContactChangeField
+          field="email" label="Adresse email" currentValue={user.email} type="email" placeholder="nouvelle@adresse.com"
+          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+        />
+        <div className="divider" style={{ margin: '4px 0' }} />
+        <ContactChangeField
+          field="phone" label="Numéro de téléphone" currentValue={user.phone} type="tel" placeholder="04xx xx xx xx"
+          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+        />
       </div>
 
       {role === 'restaurant' && restaurant && (
@@ -710,6 +721,94 @@ export default function Account() {
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
+    </div>
+  );
+}
+
+// Un champ (email OU téléphone) avec son propre flux demande-code / confirme-code, indépendant de
+// saveInfo() ci-dessus : la nouvelle valeur n'est jamais envoyée telle quelle à confirmContactChange
+// tant qu'un code valide n'est pas fourni, donc rien à gérer côté état global du formulaire principal.
+function ContactChangeField({ field, label, currentValue, type, placeholder, requestContactChange, confirmContactChange, toast }) {
+  const [editing, setEditing] = useState(false);
+  const [newValue, setNewValue] = useState('');
+  const [codeSent, setCodeSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [sending, setSending] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  function cancel() {
+    setEditing(false);
+    setCodeSent(false);
+    setNewValue('');
+    setCode('');
+  }
+
+  async function sendCode() {
+    if (!newValue.trim()) { toast('Renseigne la nouvelle valeur.'); return; }
+    setSending(true);
+    try {
+      await requestContactChange(field, newValue.trim());
+      setCodeSent(true);
+      toast('Code envoyé par email à ton adresse actuelle.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function confirm() {
+    if (!code.trim()) { toast('Code requis.'); return; }
+    setConfirming(true);
+    try {
+      await confirmContactChange(field, newValue.trim(), code.trim());
+      toast(`${label} mis à jour.`);
+      cancel();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setConfirming(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+        <div>
+          <div className="small" style={{ opacity: 0.7 }}>{label}</div>
+          <div>{currentValue || '—'}</div>
+        </div>
+        <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditing(true)}>Changer</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: '8px 0' }}>
+      <div className="small" style={{ opacity: 0.7, marginBottom: 4 }}>{label}</div>
+      {!codeSent ? (
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <div className="field" style={{ flex: 1, margin: 0, minWidth: 180 }}>
+            <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />
+          </div>
+          <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : 'Envoyer le code'}</button>
+          <button type="button" className="btn-ghost" onClick={cancel}>Annuler</button>
+        </div>
+      ) : (
+        <div>
+          <p className="small" style={{ margin: '0 0 8px' }}>
+            Code envoyé par email à ton adresse actuelle{field === 'phone' ? " (pas encore de SMS chez Fairide)" : ''} pour confirmer le passage à <b>{newValue}</b>.
+          </p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>
+              <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
+            </div>
+            <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : 'Confirmer'}</button>
+            <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>Renvoyer</button>
+            <button type="button" className="btn-ghost" onClick={cancel}>Annuler</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
