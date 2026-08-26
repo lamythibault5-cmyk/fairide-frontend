@@ -27,7 +27,7 @@ export default function Layout() {
   // Le restaurateur en mode aperçu voit le panier flottant comme un vrai client (voir RestaurantMenu.jsx
   // "addToCart" réel, pas le panier isolé de RestaurantPreview) — pousser jusqu'au paiement échoue
   // volontairement côté serveur (requireRole('client')), ce qui bloque naturellement au bon endroit.
-  const seesClientCart = role === 'client' || (previewMode && role === 'restaurant');
+  const seesClientCart = !user?.isAdmin && (role === 'client' || (previewMode && role === 'restaurant'));
 
   if (user && isDashboardPath(location.pathname)) {
     return (
@@ -87,20 +87,22 @@ export default function Layout() {
           </div>
           {user && (
             <nav className="role-nav">
-              {role === 'client' && (
+              {/* Le compte admin ne voit jamais la nav client/restaurateur/livreur, seulement l'ERP —
+                  voir la même règle dans DashboardSidebar.jsx (isAdminAccount). */}
+              {!user.isAdmin && role === 'client' && (
                 <>
                   <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
                   <NavLink to="/favorites" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.favorites')}</NavLink>
                   <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.orders')}</NavLink>
                 </>
               )}
-              {role === 'restaurant' && (
+              {!user.isAdmin && role === 'restaurant' && (
                 <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.myBusiness')}</NavLink>
               )}
-              {role === 'driver' && (
+              {!user.isAdmin && role === 'driver' && (
                 <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.deliveries')}</NavLink>
               )}
-              <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.account')}</NavLink>
+              {!user.isAdmin && <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.account')}</NavLink>}
               {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
             </nav>
           )}

@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
@@ -43,9 +43,8 @@ function navItemsForRole(role, t) {
   return [{ to: '/account', icon: '👤', label: t('nav.account') }];
 }
 
-// ERP interne : mêmes 7 sections que demandées, indépendantes du rôle "métier" du compte admin
-// (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) — affichées à la place de la nav
-// du rôle dès qu'on est sous /admin.
+// ERP interne : mêmes 7 sections que demandées, affichées à la place de la nav du rôle pour tout compte
+// admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
 const ADMIN_NAV_ITEMS = [
   { to: '/admin', end: true, icon: '📊', label: 'Dashboard' },
   { to: '/admin/orders', icon: '📦', label: 'Commandes' },
@@ -61,16 +60,19 @@ export default function DashboardSidebar() {
   const { t } = useLanguage();
   const { previewMode, exitPreview } = usePreviewMode();
   const navigate = useNavigate();
-  const location = useLocation();
-  const isAdminSection = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
+  // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
+  // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
+  // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7
+  // sections ERP. Un vrai utilisateur (non-admin) garde sa propre nav, avec juste un lien "Admin" en plus
+  // s'il a aussi ce statut.
+  const isAdminAccount = !!user?.isAdmin;
   // Un restaurateur en mode aperçu voit la nav "client" (favoris, commandes, carte...) au lieu de la
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminSection ? ADMIN_NAV_ITEMS : navItemsForRole(effectiveRole, t);
-  if (user?.isAdmin && !isAdminSection) items.push({ to: '/admin', icon: '🛠️', label: t('nav.admin') });
+  const items = isAdminAccount ? ADMIN_NAV_ITEMS : navItemsForRole(effectiveRole, t);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
-  const brandHome = isAdminSection ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
+  const brandHome = isAdminAccount ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
 
   function leavePreview() {
     exitPreview();
@@ -101,7 +103,7 @@ export default function DashboardSidebar() {
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
           <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
-          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? 'aperçu client' : isAdminSection ? 'admin' : role}</span>
+          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? 'aperçu client' : isAdminAccount ? 'admin' : role}</span>
           <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
       </div>
