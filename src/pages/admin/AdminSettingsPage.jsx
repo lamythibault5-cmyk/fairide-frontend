@@ -3,9 +3,18 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import { isTestAccount, TestBadge, fmtDate } from './adminUtils';
 
-const SECTIONS = ['Utilisateurs', 'Avis', 'Codes promo'];
+const SECTIONS = ['Tarification', 'Utilisateurs', 'Avis', 'Codes promo'];
+
+const PRICING_FIELDS = [
+  { key: 'commissionRate', label: 'Commission restaurant', suffix: '%', isRate: true, hint: 'Prélevée sur le sous-total plats de chaque commande.' },
+  { key: 'deliveryFairideRate', label: 'Part Fairide sur la livraison', suffix: '%', isRate: true, hint: "Facturée en plus au client, gardée par Fairide — le livreur touche toujours 100% du tarif livreur." },
+  { key: 'deliveryBaseFee', label: 'Tarif livraison de base', suffix: '€', hint: "Jusqu'à la distance de base ci-dessous, entièrement pour le livreur." },
+  { key: 'deliveryBaseKm', label: 'Distance de base', suffix: 'km' },
+  { key: 'deliveryExtraPerKm', label: 'Supplément par km au-delà', suffix: '€/km' }
+];
 
 const USER_TYPE_LABELS = { client: 'Clients', restaurant: 'Commerçants', driver: 'Livreurs' };
 const USER_TYPE_ORDER = ['client', 'restaurant', 'driver'];
@@ -15,10 +24,20 @@ const PROMO_TYPES = [
   { value: 'restaurant_trial_months', label: 'Mois d\'essai restaurateur' }
 ];
 
+function toDisplayForm(p) {
+  const out = {};
+  PRICING_FIELDS.forEach((f) => { out[f.key] = f.isRate ? +(Number(p[f.key]) * 100).toFixed(2) : Number(p[f.key]); });
+  return out;
+}
+
 export default function AdminSettingsPage() {
   const { token } = useAuth();
   const toast = useToast();
-  const [section, setSection] = useState('Utilisateurs');
+  const [section, setSection] = useState('Tarification');
+  const [pricing, setPricing] = useState(null);
+  const [pricingForm, setPricingForm] = useState(null);
+  const [confirmSave, setConfirmSave] = useState(false);
+  const [savingPricing, setSavingPricing] = useState(false);
   const [usersOverview, setUsersOverview] = useState(null);
   const [reviews, setReviews] = useState(null);
   const [promoCodes, setPromoCodes] = useState(null);
@@ -29,11 +48,33 @@ export default function AdminSettingsPage() {
   const [creatingPromo, setCreatingPromo] = useState(false);
 
   useEffect(() => {
+    if (section === 'Tarification' && pricing === null) {
+      api('/admin/settings', { token }).then((p) => { setPricing(p); setPricingForm(toDisplayForm(p)); }).catch((e) => toast(e.message));
+    }
     if (section === 'Utilisateurs' && usersOverview === null) api('/admin/users/overview', { token }).then(setUsersOverview).catch((e) => toast(e.message));
     if (section === 'Avis' && reviews === null) api('/admin/reviews', { token }).then(setReviews).catch((e) => toast(e.message));
     if (section === 'Codes promo' && promoCodes === null) api('/admin/promo-codes', { token }).then(setPromoCodes).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
+
+  const pricingDirty = pricing && pricingForm && PRICING_FIELDS.some((f) => Number(pricingForm[f.key]) !== Number(toDisplayForm(pricing)[f.key]));
+
+  async function savePricing() {
+    setSavingPricing(true);
+    try {
+      const body = {};
+      PRICING_FIELDS.forEach((f) => { body[f.key] = f.isRate ? Number(pricingForm[f.key]) / 100 : Number(pricingForm[f.key]); });
+      const updated = await api('/admin/settings', { method: 'PATCH', token, body });
+      setPricing(updated);
+      setPricingForm(toDisplayForm(updated));
+      toast('Tarification mise à jour — applicable aux nouvelles commandes uniquement.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSavingPricing(false);
+      setConfirmSave(false);
+    }
+  }
 
   async function createPromoCode() {
     if (!newPromoCode.trim() || !newPromoValue) { toast('Code et valeur requis.'); return; }
@@ -78,6 +119,30 @@ export default function AdminSettingsPage() {
       <div className="role-pick" style={{ marginBottom: 16 }}>
         {SECTIONS.map((s) => <div key={s} className={`chip${section === s ? ' active' : ''}`} onClick={() => setSection(s)}>{s}</div>)}
       </div>
+
+      {section === 'Tarification' && (
+        !pricingForm ? <SkeletonCards count={1} /> : (
+          <div className="card">
+            <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>💶 Tarification Fairide</h3>
+            <p className="small" style={{ margin: '0 0 14px', opacity: 0.75 }}>
+              Centralisée ici — n'affecte que les commandes créées après l'enregistrement, jamais les commandes passées.
+            </p>
+            {PRICING_FIELDS.map((f) => (
+              <div className="field" key={f.key}>
+                <label>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> — {f.hint}</span> : null}</label>
+                <input
+                  type="number" step="0.01"
+                  value={pricingForm[f.key]}
+                  onChange={(e) => setPricingForm({ ...pricingForm, [f.key]: e.target.value })}
+                />
+              </div>
+            ))}
+            <button className="btn-teal" disabled={!pricingDirty || savingPricing} onClick={() => setConfirmSave(true)}>
+              {savingPricing ? '...' : 'Enregistrer'}
+            </button>
+          </div>
+        )
+      )}
 
       {section === 'Utilisateurs' && (
         !usersOverview ? <SkeletonCards count={2} /> : (
@@ -156,6 +221,15 @@ export default function AdminSettingsPage() {
           ))}
         </div>
       )}
+      <ConfirmDialog
+        open={confirmSave}
+        title="Changer la tarification Fairide ?"
+        message="Ça s'appliquera à toutes les commandes créées à partir de maintenant, sur toute la plateforme."
+        danger
+        loading={savingPricing}
+        onConfirm={savePricing}
+        onCancel={() => setConfirmSave(false)}
+      />
     </div>
   );
 }

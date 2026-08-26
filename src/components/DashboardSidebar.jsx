@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
+import AdminGlobalSearch from './admin/AdminGlobalSearch';
 
 const HOME_PATH_BY_ROLE = { client: '/home', restaurant: '/dashboard', driver: '/driver' };
 
@@ -92,6 +93,7 @@ export default function DashboardSidebar() {
           <button type="button" onClick={leavePreview}>Quitter</button>
         </div>
       )}
+      {isAdminAccount && <AdminGlobalSearch />}
       <nav className="dashboard-nav">
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>

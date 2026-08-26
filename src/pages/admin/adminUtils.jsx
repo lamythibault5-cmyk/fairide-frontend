@@ -1,3 +1,5 @@
+import { useEffect, useState } from 'react';
+
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
 // (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
 // Aucun champ base de données dédié — dérivé à la volée de l'email déjà présent dans chaque liste admin.
@@ -51,3 +53,50 @@ export const BUSINESS_STATUS_LABELS = {
   actif: { label: '✅ Actif', color: 'var(--teal-deep)' },
   suspendu: { label: '🚫 Suspendu', color: 'var(--red)' }
 };
+
+export function pct(n, digits = 0) {
+  if (n === null || n === undefined) return '—';
+  return `${(Number(n) * 100).toFixed(digits)}%`;
+}
+
+// Une valeur brute peut être soit un nombre nu, soit { value, changePct } (voir GET /admin/dashboard) —
+// évite de dupliquer ce petit if partout où le dashboard consomme ses KPI.
+export function kpiValue(kpi) {
+  return typeof kpi === 'object' && kpi !== null ? kpi.value : kpi;
+}
+
+// CSV minimal, sans dépendance : échappe guillemets/virgules/retours à la ligne (RFC 4180), BOM UTF-8
+// pour qu'Excel détecte l'encodage correctement à l'ouverture.
+export function toCsv(rows, columns) {
+  const escape = (v) => {
+    const s = v === null || v === undefined ? '' : String(v);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = columns.map((c) => escape(c.label)).join(',');
+  const lines = rows.map((row) => columns.map((c) => escape(c.get(row))).join(','));
+  return '﻿' + [header, ...lines].join('\n');
+}
+
+// Retarde la valeur retournée de `delayMs` après la dernière frappe — évite un appel API à chaque
+// caractère tapé dans un champ de recherche.
+export function useDebouncedValue(value, delayMs = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delayMs);
+    return () => clearTimeout(timer);
+  }, [value, delayMs]);
+  return debounced;
+}
+
+export function downloadCsv(filename, rows, columns) {
+  const csv = toCsv(rows, columns);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
