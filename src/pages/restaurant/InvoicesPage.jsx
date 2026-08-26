@@ -163,7 +163,7 @@ export default function InvoicesPage() {
                     <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString('fr-BE')}</td>
                     <td style={{ padding: '6px 4px' }}>Commission de service (10%) — commande #{o.id.slice(0, 8)}</td>
                     <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.commission.toFixed(2)}€</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>21%</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{(invoice.vatRate * 100).toFixed(0)}%</td>
                   </tr>
                 ))}
               </tbody>
@@ -173,7 +173,7 @@ export default function InvoicesPage() {
                   <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.subtotalHt.toFixed(2)}€</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: '4px' }} colSpan={2}>TVA (21%)</td>
+                  <td style={{ padding: '4px' }} colSpan={2}>TVA ({(invoice.vatRate * 100).toFixed(0)}%)</td>
                   <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{invoice.vatAmount.toFixed(2)}€</td>
                 </tr>
                 <tr style={{ fontWeight: 700 }}>
