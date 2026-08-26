@@ -209,6 +209,12 @@ export const RESTAURANT_TYPES = [
   { value: 'Marocain', emoji: '🕌' },
   { value: 'Bubble Tea', emoji: '🧋' },
   { value: 'Ramen', emoji: '🍥' },
+  // Cuisine saine "vrai restaurant" (plats à l'assiette, service à table) — distincte de Healthy
+  // ci-dessus qui reste le format rapide bowls/wraps/smoothies à emporter.
+  { value: 'Cuisine Saine', emoji: '🥦' },
+  // Grandes portions à partager, pensées pour toute la famille (4-6 pers.) — distinct des menus
+  // individuels des autres types.
+  { value: 'Cuisine Familiale', emoji: '👨‍👩‍👧‍👦' },
   { value: 'Autre', emoji: '🍽️' }
 ];
 

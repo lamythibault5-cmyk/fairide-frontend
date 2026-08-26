@@ -95,6 +95,7 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & Glaces', 'Petit-déjeuner & Brunch': 'Petit-déjeuner & Brunch',
         'Sandwichs & Salades': 'Sandwichs & Salades', Africain: 'Africain', 'Poisson & Fruits de mer': 'Poisson & Fruits de mer',
         Friterie: 'Friterie', 'Coréen': 'Coréen', Marocain: 'Marocain', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
+        'Cuisine Saine': 'Cuisine Saine', 'Cuisine Familiale': 'Cuisine Familiale',
         Autre: 'Autre'
       },
       unavailable: 'Indisponible pour le moment'
@@ -596,6 +597,7 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & Ice Cream', 'Petit-déjeuner & Brunch': 'Breakfast & Brunch',
         'Sandwichs & Salades': 'Sandwiches & Salads', Africain: 'African', 'Poisson & Fruits de mer': 'Fish & Seafood',
         Friterie: 'Fry Shop', 'Coréen': 'Korean', Marocain: 'Moroccan', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
+        'Cuisine Saine': 'Healthy Dining', 'Cuisine Familiale': 'Family Style',
         Autre: 'Other'
       },
       unavailable: 'Currently unavailable'
@@ -1097,6 +1099,7 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & IJs', 'Petit-déjeuner & Brunch': 'Ontbijt & Brunch',
         'Sandwichs & Salades': 'Sandwiches & Salades', Africain: 'Afrikaans', 'Poisson & Fruits de mer': 'Vis & Zeevruchten',
         Friterie: 'Frituur', 'Coréen': 'Koreaans', Marocain: 'Marokkaans', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
+        'Cuisine Saine': 'Gezonde Keuken', 'Cuisine Familiale': 'Familiekeuken',
         Autre: 'Andere'
       },
       unavailable: 'Momenteel niet beschikbaar'
