@@ -9,7 +9,8 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS } from './adminUtils';
+import { UploadDocumentModal } from './AdminDocumentsPage';
+import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 
 export default function AdminRestaurantsPage() {
   const { token } = useAuth();
@@ -157,12 +158,20 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   const [saving, setSaving] = useState(false);
   const [invoices, setInvoices] = useState(null);
   const [crmProspect, setCrmProspect] = useState(null);
+  const [documents, setDocuments] = useState(null);
+  const [showUploadDoc, setShowUploadDoc] = useState(false);
+
+  function loadDocuments() {
+    setDocuments(null);
+    api(`/admin/documents?targetType=restaurant&targetId=${selected.id}&limit=10`, { token }).then((r) => setDocuments(r.rows)).catch(() => setDocuments([]));
+  }
 
   useEffect(() => {
     setInvoices(null);
     api(`/admin/invoices?restaurantId=${selected.id}&limit=5`, { token }).then((r) => setInvoices(r.rows)).catch(() => setInvoices([]));
     setCrmProspect(null);
     api(`/admin/crm/prospects?restaurantId=${selected.id}&limit=1`, { token }).then((r) => setCrmProspect(r.rows[0] || null)).catch(() => {});
+    loadDocuments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected.id]);
 
@@ -253,6 +262,28 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
                 <span className="small">{money(inv.totalTtc)} · <span style={{ color: INVOICE_STATUS_LABELS[inv.status]?.color }}>{INVOICE_STATUS_LABELS[inv.status]?.label}</span></span>
               </div>
             ))}
+            <div className="divider" />
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: '0 0 6px' }}>Documents</h4>
+              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>+ Ajouter</button>
+            </div>
+            {!documents && <div className="small">Chargement...</div>}
+            {documents && documents.length === 0 && <div className="small">Aucun document.</div>}
+            {documents && documents.map((doc) => (
+              <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
+                <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+                <span className="small">
+                  {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
+                  {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                </span>
+              </div>
+            ))}
+            {showUploadDoc && (
+              <UploadDocumentModal
+                presetTargetType="restaurant" presetTargetId={selected.id} presetTargetLabel={detail.name}
+                onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(); }}
+              />
+            )}
             <div className="divider" />
             <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
             <div className="divider" />

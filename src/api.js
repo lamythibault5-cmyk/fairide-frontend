@@ -17,9 +17,13 @@ export async function api(path, { method = 'GET', body, token } = {}) {
 // Upload de fichier (multipart) : pas de Content-Type manuel, le navigateur doit fixer lui-même la
 // boundary du FormData — contrairement à api() ci-dessus qui envoie toujours du JSON. fieldName doit
 // correspondre au nom attendu par multer côté backend (ex: upload.single('image') vs .single('file')).
-export async function apiUpload(path, { file, token, fieldName = 'image' }) {
+// `fields` (optionnel) ajoute des champs texte au FormData (ex: module Documents, POST /admin/documents
+// qui a besoin de targetType/targetId/title en plus du fichier) — undefined/absent pour tous les autres
+// appelants existants, aucun changement de comportement pour eux.
+export async function apiUpload(path, { file, token, fieldName = 'image', fields }) {
   const formData = new FormData();
   formData.append(fieldName, file);
+  if (fields) Object.entries(fields).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') formData.append(k, v); });
   const headers = {};
   if (token) headers.Authorization = 'Bearer ' + token;
   let res;

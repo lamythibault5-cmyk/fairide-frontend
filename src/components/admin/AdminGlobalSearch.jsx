@@ -10,11 +10,12 @@ const GROUPS = [
   { key: 'drivers', label: 'Livreurs' },
   { key: 'clients', label: 'Clients' },
   { key: 'crmProspects', label: 'CRM' },
-  { key: 'tickets', label: 'Support' }
+  { key: 'tickets', label: 'Support' },
+  { key: 'documents', label: 'Documents' }
 ];
 // La route ne suit pas toujours la clé de groupe telle quelle (ex: crmProspects → /admin/crm) — mapping
 // explicite plutôt que de dériver la route depuis le nom du groupe backend.
-const GROUP_ROUTES = { orders: 'orders', restaurants: 'restaurants', drivers: 'drivers', clients: 'clients', crmProspects: 'crm', tickets: 'support' };
+const GROUP_ROUTES = { orders: 'orders', restaurants: 'restaurants', drivers: 'drivers', clients: 'clients', crmProspects: 'crm', tickets: 'support', documents: 'documents' };
 
 // Recherche globale de la sidebar admin : une commande, un restaurant, un livreur ou un client, retrouvés
 // en un seul champ — voir GET /admin/search côté backend.

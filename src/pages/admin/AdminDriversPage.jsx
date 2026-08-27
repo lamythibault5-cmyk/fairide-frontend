@@ -9,7 +9,8 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv } from './adminUtils';
+import { UploadDocumentModal } from './AdminDocumentsPage';
+import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 
 const ACTIVITY_LABELS = {
   disponible: { label: '🟢 Disponible', color: 'var(--teal-deep)' },
@@ -27,16 +28,24 @@ export default function AdminDriversPage() {
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [documents, setDocuments] = useState(null);
+  const [showUploadDoc, setShowUploadDoc] = useState(false);
 
   useEffect(() => {
     api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function loadDocuments(driverId) {
+    setDocuments(null);
+    api(`/admin/documents?targetType=driver&targetId=${driverId}&limit=10`, { token }).then((r) => setDocuments(r.rows)).catch(() => setDocuments([]));
+  }
+
   function openDriver(d) {
     setSelected(d);
     setDetail(null);
     api(`/admin/drivers/${d.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    loadDocuments(d.id);
   }
 
   async function setStatus(id, status) {
@@ -160,6 +169,28 @@ export default function AdminDriversPage() {
                     <span className={`status-badge status-${o.status}`}>{o.status}</span>
                   </div>
                 ))}
+                <div className="divider" />
+                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: '0 0 6px' }}>Documents</h4>
+                  <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>+ Ajouter</button>
+                </div>
+                {!documents && <div className="small">Chargement...</div>}
+                {documents && documents.length === 0 && <div className="small">Aucun document.</div>}
+                {documents && documents.map((doc) => (
+                  <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
+                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+                    <span className="small">
+                      {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
+                      {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                    </span>
+                  </div>
+                ))}
+                {showUploadDoc && (
+                  <UploadDocumentModal
+                    presetTargetType="driver" presetTargetId={selected.id} presetTargetLabel={detail.name}
+                    onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(selected.id); }}
+                  />
+                )}
                 <div className="divider" />
                 <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
                 <div className="divider" />

@@ -114,6 +114,23 @@ export const TICKET_STATUS_LABELS = {
 };
 export const TICKET_STATUSES = ['ouvert', 'en_cours', 'en_attente', 'resolu', 'ferme'];
 
+export const DOCUMENT_TYPES = ['contrat', 'attestation', 'piece_identite', 'assurance', 'facture', 'justificatif', 'conditions_commerciales', 'autre'];
+export const DOCUMENT_TYPE_LABELS = {
+  contrat: 'Contrat', attestation: 'Attestation', piece_identite: "Pièce d'identité", assurance: 'Assurance',
+  facture: 'Facture', justificatif: 'Justificatif', conditions_commerciales: 'Conditions commerciales', autre: 'Autre'
+};
+export const DOCUMENT_VERIFICATION_LABELS = {
+  en_attente: { label: '🕐 En attente', color: 'var(--gold-deep)' },
+  valide: { label: '✅ Validé', color: 'var(--teal-deep)' },
+  rejete: { label: '🚫 Rejeté', color: 'var(--red)' }
+};
+export const DOCUMENT_EXPIRY_LABELS = {
+  expired: { label: '⚠️ Expiré', color: 'var(--red)' },
+  expiring_soon: { label: '🕐 Expire bientôt', color: 'var(--gold-deep)' },
+  valid: { label: '✅ Valide', color: 'inherit' }
+};
+export const DOCUMENT_TARGET_TYPE_LABELS = { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket' };
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;
