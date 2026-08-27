@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 
@@ -192,7 +193,10 @@ export default function AdminDriversPage() {
                   />
                 )}
                 <div className="divider" />
-                <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
+                <div className="row" style={{ gap: 8 }}>
+                  <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
+                  <CreateTaskButton targetType="driver" targetId={selected.id} label={detail.name} />
+                </div>
                 <div className="divider" />
                 <AdminNotesPanel targetType="driver" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
                 <div className="divider" />

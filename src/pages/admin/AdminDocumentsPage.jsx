@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import {
   fmtDate, fmtDateTime, useDebouncedValue,
   DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS, DOCUMENT_VERIFICATION_LABELS, DOCUMENT_EXPIRY_LABELS, DOCUMENT_TARGET_TYPE_LABELS
@@ -293,6 +294,7 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
             <div className="row" style={{ gap: 8 }}>
               <button className="btn-outline" onClick={startEdit}>✏️ Modifier</button>
               <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>Supprimer</button>
+              <CreateTaskButton targetType="document" targetId={id} label={d.title} />
             </div>
           </>
         )}

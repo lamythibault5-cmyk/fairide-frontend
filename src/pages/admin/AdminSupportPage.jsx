@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import {
   pct, fmtDateTime, downloadCsv, useDebouncedValue,
   TICKET_CATEGORIES, TICKET_CATEGORY_LABELS, TICKET_PRIORITY_LABELS, TICKET_STATUS_LABELS, TICKET_STATUSES
@@ -393,6 +394,7 @@ function TicketDetailModal({ id, onClose, onChanged }) {
                 <button key={s} className="btn-outline" onClick={() => changeStatus(s)}>{TICKET_STATUS_LABELS[s].label}</button>
               ))}
               {!t.escalated ? <button className="btn-danger-ghost" onClick={() => setShowEscalate(true)}>Escalader</button> : <button className="btn-outline" onClick={deescalate}>Désescalader</button>}
+              <CreateTaskButton targetType="ticket" targetId={id} label={t.subject} />
             </div>
 
             <div className="divider" />

@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 
 const FILTERS = [
@@ -326,7 +327,10 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
             </div>
 
             <div className="divider" />
-            <CreateTicketButton linkType="linkedOrderId" linkId={selected.id} label={`Commande ${selected.restaurantName}`} />
+            <div className="row" style={{ gap: 8 }}>
+              <CreateTicketButton linkType="linkedOrderId" linkId={selected.id} label={`Commande ${selected.restaurantName}`} />
+              <CreateTaskButton targetType="order" targetId={selected.id} label={`Commande ${selected.restaurantName}`} />
+            </div>
             <div className="divider" />
             <AdminNotesPanel targetType="order" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
             <div className="divider" />

@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 
@@ -285,7 +286,10 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               />
             )}
             <div className="divider" />
-            <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
+            <div className="row" style={{ gap: 8 }}>
+              <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
+              <CreateTaskButton targetType="restaurant" targetId={selected.id} label={detail.name} />
+            </div>
             <div className="divider" />
             <AdminNotesPanel targetType="restaurant" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
             <div className="divider" />

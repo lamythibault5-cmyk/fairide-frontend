@@ -55,6 +55,7 @@ const ADMIN_NAV_ITEMS = [
   { to: '/admin/clients', icon: '👥', label: 'Clients' },
   { to: '/admin/support', icon: '🎫', label: 'Support' },
   { to: '/admin/documents', icon: '📁', label: 'Documents' },
+  { to: '/admin/tasks', icon: '✅', label: 'Tâches' },
   { to: '/admin/finance', icon: '💶', label: 'Finance' },
   { to: '/admin/payments', icon: '💳', label: 'Paiements' },
   { to: '/admin/accounting', icon: '📚', label: 'Comptabilité' },

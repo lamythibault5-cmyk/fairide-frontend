@@ -131,6 +131,24 @@ export const DOCUMENT_EXPIRY_LABELS = {
 };
 export const DOCUMENT_TARGET_TYPE_LABELS = { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket' };
 
+export const TASK_PRIORITY_LABELS = {
+  low: { label: 'Basse', color: 'inherit' },
+  medium: { label: 'Moyenne', color: 'var(--gold-deep)' },
+  high: { label: 'Haute', color: 'var(--red)' }
+};
+export const TASK_STATUSES = ['a_faire', 'en_cours', 'fait', 'annulee'];
+export const TASK_STATUS_LABELS = {
+  a_faire: { label: 'À faire', color: 'var(--gold-deep)' },
+  en_cours: { label: 'En cours', color: 'var(--teal-deep)' },
+  fait: { label: 'Fait', color: 'var(--teal-deep)' },
+  annulee: { label: 'Annulée', color: 'inherit' }
+};
+export const TASK_DUE_STATE_LABELS = {
+  overdue: { label: '⚠️ En retard', color: 'var(--red)' },
+  due_soon: { label: '🕐 Bientôt', color: 'var(--gold-deep)' }
+};
+export const TASK_TARGET_TYPE_LABELS = { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket', document: 'Document', invoice: 'Facture' };
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;

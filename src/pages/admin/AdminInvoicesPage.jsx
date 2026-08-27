@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { money, fmtDate, fmtDateTime, useDebouncedValue, downloadPdf, INVOICE_STATUS_LABELS, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 
 const TABS = ['Factures', 'Relevés livreurs'];
@@ -287,6 +288,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
               {inv.status !== 'annulee' && inv.status !== 'en_retard' && (
                 <button className="btn-outline" disabled={busy} onClick={() => changeStatus('en_retard')}>Marquer en retard</button>
               )}
+              <CreateTaskButton targetType="invoice" targetId={id} label={inv.invoiceNumber} />
             </div>
             {inv.status !== 'annulee' && (
               !showCreditNoteForm ? (

@@ -7,7 +7,8 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
-import { fmtDate, filterBySearch, pct, CRM_STAGES, CRM_STAGE_LABELS, CRM_PRIORITY_LABELS } from './adminUtils';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
+import { fmtDate, fmtDateTime, filterBySearch, pct, CRM_STAGES, CRM_STAGE_LABELS, CRM_PRIORITY_LABELS, TASK_STATUS_LABELS } from './adminUtils';
 
 const PERIOD_TYPES = [{ key: 'month', label: 'Mois' }, { key: 'quarter', label: 'Trimestre' }, { key: 'year', label: 'Année' }];
 
@@ -235,6 +236,7 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
   const [p, setP] = useState(null);
   const [notes, setNotes] = useState(null);
   const [actions, setActions] = useState(null);
+  const [tasks, setTasks] = useState(null);
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -247,6 +249,7 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
     api(`/admin/crm/prospects/${id}`, { token }).then(setP).catch((e) => toast(e.message));
     api(`/admin/notes?targetType=crm_prospect&targetId=${id}`, { token }).then(setNotes).catch(() => {});
     api(`/admin/actions?targetType=crm_prospect&targetId=${id}`, { token }).then(setActions).catch(() => {});
+    api(`/admin/tasks?targetType=crm_prospect&targetId=${id}&limit=10`, { token }).then((r) => setTasks(r.rows)).catch(() => setTasks([]));
   }
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -313,7 +316,19 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
             <div className="row" style={{ gap: 8, marginTop: 8 }}>
               <button className="btn-outline" onClick={startEdit}>✏️ Modifier</button>
               {!p.convertedRestaurantId && <button className="btn-teal" onClick={openConvert}>Convertir en restaurant</button>}
+              <CreateTaskButton targetType="crm_prospect" targetId={id} label={p.name} />
             </div>
+
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Tâches</h4>
+            {!tasks && <div className="small">Chargement...</div>}
+            {tasks && tasks.length === 0 && <div className="small">Aucune tâche.</div>}
+            {tasks && tasks.map((tk) => (
+              <div key={tk.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
+                <span className="small">{tk.title}</span>
+                <span className="small" style={{ color: TASK_STATUS_LABELS[tk.status]?.color }}>{TASK_STATUS_LABELS[tk.status]?.label}{tk.dueAt ? ` · ${fmtDateTime(tk.dueAt)}` : ''}</span>
+              </div>
+            ))}
 
             <div className="divider" />
             <AdminNotesPanel targetType="crm_prospect" targetId={id} notes={notes} onAdded={load} showChannel />

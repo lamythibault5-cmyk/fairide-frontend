@@ -18,7 +18,11 @@ const ACTION_LABELS = {
   ticket_updated: 'Ticket modifié',
   ticket_status_change: 'Statut ticket modifié',
   ticket_escalated: 'Ticket escaladé',
-  ticket_replied: 'Réponse envoyée'
+  ticket_replied: 'Réponse envoyée',
+  task_created: 'Tâche créée',
+  task_updated: 'Tâche modifiée',
+  task_status_change: 'Statut tâche modifié',
+  task_deleted: 'Tâche supprimée'
 };
 
 function describeDetails(action, details) {
@@ -34,6 +38,8 @@ function describeDetails(action, details) {
   if (action === 'ticket_status_change') return `→ ${details.status}`;
   if (action === 'ticket_escalated') return details.escalated ? `⚠️ ${details.reason || ''}` : 'désescaladé';
   if (action === 'ticket_replied') return `"${details.text}"`;
+  if (action === 'task_status_change') return `→ ${details.status}`;
+  if (action === 'task_created' || action === 'task_deleted') return details.title ? `"${details.title}"` : '';
   return '';
 }
 

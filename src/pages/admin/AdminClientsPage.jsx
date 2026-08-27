@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
+import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv } from './adminUtils';
 
 export default function AdminClientsPage() {
@@ -157,7 +158,10 @@ export default function AdminClientsPage() {
                   </div>
                 ))}
                 <div className="divider" />
-                <CreateTicketButton linkType="linkedClientId" linkId={selected.id} label={detail.name} />
+                <div className="row" style={{ gap: 8 }}>
+                  <CreateTicketButton linkType="linkedClientId" linkId={selected.id} label={detail.name} />
+                  <CreateTaskButton targetType="client" targetId={selected.id} label={detail.name} />
+                </div>
                 <div className="divider" />
                 <AdminNotesPanel targetType="client" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
                 <div className="divider" />
