@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
+import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS } from './adminUtils';
 
 export default function AdminRestaurantsPage() {
@@ -252,6 +253,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
                 <span className="small">{money(inv.totalTtc)} · <span style={{ color: INVOICE_STATUS_LABELS[inv.status]?.color }}>{INVOICE_STATUS_LABELS[inv.status]?.label}</span></span>
               </div>
             ))}
+            <div className="divider" />
+            <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
             <div className="divider" />
             <AdminNotesPanel targetType="restaurant" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
             <div className="divider" />

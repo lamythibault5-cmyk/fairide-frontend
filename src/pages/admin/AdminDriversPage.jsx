@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
+import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv } from './adminUtils';
 
 const ACTIVITY_LABELS = {
@@ -159,6 +160,8 @@ export default function AdminDriversPage() {
                     <span className={`status-badge status-${o.status}`}>{o.status}</span>
                   </div>
                 ))}
+                <div className="divider" />
+                <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
                 <div className="divider" />
                 <AdminNotesPanel targetType="driver" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
                 <div className="divider" />

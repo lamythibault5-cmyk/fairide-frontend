@@ -13,7 +13,12 @@ const ACTION_LABELS = {
   crm_prospect_created: 'Prospect créé',
   crm_prospect_updated: 'Prospect modifié',
   crm_stage_change: 'Étape CRM modifiée',
-  crm_prospect_converted: 'Converti en partenaire'
+  crm_prospect_converted: 'Converti en partenaire',
+  ticket_created: 'Ticket créé',
+  ticket_updated: 'Ticket modifié',
+  ticket_status_change: 'Statut ticket modifié',
+  ticket_escalated: 'Ticket escaladé',
+  ticket_replied: 'Réponse envoyée'
 };
 
 function describeDetails(action, details) {
@@ -26,6 +31,9 @@ function describeDetails(action, details) {
   if (action === 'settings_change') return Object.entries(details).map(([k, v]) => `${k}=${v}`).join(', ');
   if (action === 'crm_stage_change') return `→ ${details.stage}${details.lossReason ? ` (${details.lossReason})` : ''}`;
   if (action === 'crm_prospect_converted') return `→ ${details.restaurantName}`;
+  if (action === 'ticket_status_change') return `→ ${details.status}`;
+  if (action === 'ticket_escalated') return details.escalated ? `⚠️ ${details.reason || ''}` : 'désescaladé';
+  if (action === 'ticket_replied') return `"${details.text}"`;
   return '';
 }
 

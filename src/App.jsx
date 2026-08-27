@@ -15,6 +15,7 @@ import AdminDriversPage from './pages/admin/AdminDriversPage';
 import AdminClientsPage from './pages/admin/AdminClientsPage';
 import AdminFinancePage from './pages/admin/AdminFinancePage';
 import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
+import AdminSupportPage from './pages/admin/AdminSupportPage';
 import AdminAccountingPage from './pages/admin/AdminAccountingPage';
 import AdminInvoicesPage from './pages/admin/AdminInvoicesPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="clients" element={<AdminClientsPage />} />
           <Route path="finance" element={<AdminFinancePage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
+          <Route path="support" element={<AdminSupportPage />} />
           <Route path="accounting" element={<AdminAccountingPage />} />
           <Route path="invoices" element={<AdminInvoicesPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />

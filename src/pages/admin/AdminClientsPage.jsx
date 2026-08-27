@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
+import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv } from './adminUtils';
 
 export default function AdminClientsPage() {
@@ -155,6 +156,8 @@ export default function AdminClientsPage() {
                     <span className="small">{money(o.total)}</span>
                   </div>
                 ))}
+                <div className="divider" />
+                <CreateTicketButton linkType="linkedClientId" linkId={selected.id} label={detail.name} />
                 <div className="divider" />
                 <AdminNotesPanel targetType="client" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
                 <div className="divider" />

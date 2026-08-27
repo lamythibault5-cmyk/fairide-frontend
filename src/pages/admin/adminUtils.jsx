@@ -95,6 +95,25 @@ export const CRM_PRIORITY_LABELS = {
 
 export const CRM_NOTE_CHANNEL_LABELS = { call: '📞 Appel', email: '✉️ Email', meeting: '🤝 Rendez-vous' };
 
+export const TICKET_CATEGORIES = ['commande', 'paiement', 'compte', 'technique', 'partenariat', 'autre'];
+export const TICKET_CATEGORY_LABELS = {
+  commande: 'Commande', paiement: 'Paiement', compte: 'Compte', technique: 'Technique', partenariat: 'Partenariat', autre: 'Autre'
+};
+export const TICKET_PRIORITY_LABELS = {
+  low: { label: 'Basse', color: 'inherit' },
+  medium: { label: 'Moyenne', color: 'var(--gold-deep)' },
+  high: { label: 'Haute', color: 'var(--red)' },
+  urgent: { label: 'Urgente', color: 'var(--red)' }
+};
+export const TICKET_STATUS_LABELS = {
+  ouvert: { label: 'Ouvert', color: 'var(--gold-deep)' },
+  en_cours: { label: 'En cours', color: 'var(--teal-deep)' },
+  en_attente: { label: 'En attente', color: 'inherit' },
+  resolu: { label: 'Résolu', color: 'var(--teal-deep)' },
+  ferme: { label: 'Fermé', color: 'inherit' }
+};
+export const TICKET_STATUSES = ['ouvert', 'en_cours', 'en_attente', 'resolu', 'ferme'];
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;
