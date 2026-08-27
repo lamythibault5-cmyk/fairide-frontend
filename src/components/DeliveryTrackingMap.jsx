@@ -13,9 +13,23 @@ function emojiIcon(emoji, bg) {
   });
 }
 
+// Icône du livreur avec un anneau qui pulse autour, pour que "en mouvement, en direct" se lise d'un
+// coup d'œil (même codage visuel que les apps de livraison grand public) — un simple <div> enfant animé
+// en CSS (.tracking-driver-pulse), pas de dépendance ni de logique JS supplémentaire.
+const DRIVER_ICON = L.divIcon({
+  className: '',
+  html: `
+    <div style="position:relative;width:32px;height:32px;">
+      <div class="tracking-driver-pulse"></div>
+      <div style="position:relative;background:#16233A;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">🛵</div>
+    </div>
+  `,
+  iconSize: [32, 32],
+  iconAnchor: [16, 16]
+});
+
 const RESTAURANT_ICON = emojiIcon('🏪', '#2F6F5E');
 const DELIVERY_ICON = emojiIcon('🏠', '#D9A441');
-const DRIVER_ICON = emojiIcon('🛵', '#16233A');
 
 async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
@@ -43,9 +57,13 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView(BRUSSELS_CENTER, 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
+    // Fond de carte CARTO Voyager plutôt que les tuiles OSM brutes par défaut : rendu bien plus épuré
+    // (moins de bruit visuel, palette plus douce), tout en gardant les rues/quartiers lisibles — mêmes
+    // données OpenStreetMap en dessous, gratuit sans clé API pour un usage raisonnable comme ici.
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 19,
+      subdomains: 'abcd'
     }).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
     // Voir RestaurantsMap.jsx : corrige la bande grise Leaflet quand le conteneur change de taille
@@ -83,7 +101,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (hasResto && hasDelivery) {
       const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(straightLine, { color: '#2F6F5E', weight: 3, dashArray: '6, 8', opacity: 0.6 }).addTo(mapRef.current);
+        lineRef.current = L.polyline(straightLine, { color: '#2F6F5E', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
       } else {
         lineRef.current.setLatLngs(straightLine);
       }

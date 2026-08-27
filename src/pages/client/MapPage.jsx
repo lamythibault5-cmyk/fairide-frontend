@@ -99,6 +99,37 @@ export default function MapPage() {
 // jeu et le jeu en cours l'autre moitié — empilés au lieu de côte à côte sous 800px (voir styles.css,
 // .tracking-fullscreen-split). `order` est null pour le bloc "aucune livraison en cours" (carte vide,
 // jeux jouables quand même).
+// Sous 800px de large, .tracking-fullscreen-split empile la carte au-dessus du jeu (voir styles.css) —
+// avec des tailles pensées pour le desktop (carte jusqu'à 640px de haut, jeu 280×420), les deux empilés
+// dépassent largement un écran de téléphone et forcent à faire défiler pour voir l'un ou l'autre, ce qui
+// va à l'encontre du but (jouer ET voir le livreur en même temps). Ici on calcule donc des tailles bien
+// plus modestes, proportionnelles à la fenêtre réelle, quand on est en mise en page empilée — recalculées
+// au redimensionnement/à la rotation de l'écran.
+const NARROW_BREAKPOINT = 800;
+
+function useFullscreenSizes() {
+  const [size, setSize] = useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
+  useEffect(() => {
+    function onResize() { setSize({ width: window.innerWidth, height: window.innerHeight }); }
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  const narrow = size.width <= NARROW_BREAKPOINT;
+  return narrow
+    ? {
+        narrow,
+        mapHeight: Math.round(Math.max(120, Math.min(195, size.height * 0.2))),
+        gameWidth: Math.round(Math.min(230, size.width - 100)),
+        gameHeight: Math.round(Math.max(180, Math.min(230, size.height * 0.25)))
+      }
+    : {
+        narrow,
+        mapHeight: Math.round(Math.max(320, Math.min(640, size.height - 220))),
+        gameWidth: 280,
+        gameHeight: 420
+      };
+}
+
 function TrackingFullscreen({ order, onClose }) {
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
@@ -111,7 +142,7 @@ function TrackingFullscreen({ order, onClose }) {
     };
   }, [onClose]);
 
-  const mapHeight = Math.max(320, Math.min(640, window.innerHeight - 220));
+  const { mapHeight, gameWidth, gameHeight } = useFullscreenSizes();
 
   return createPortal(
     <div className="tracking-fullscreen-overlay">
@@ -129,7 +160,7 @@ function TrackingFullscreen({ order, onClose }) {
           </div>
         </div>
         <div className="tracking-fullscreen-game">
-          <GameSwitcher width={280} height={420} large />
+          <GameSwitcher width={gameWidth} height={gameHeight} large />
         </div>
       </div>
     </div>,

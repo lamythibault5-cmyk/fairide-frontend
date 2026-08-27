@@ -883,6 +883,21 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .tracking-map-legend { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; font-size: 11px; color: var(--ink-soft); }
 .tracking-map-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .tracking-map-legend-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; flex-shrink: 0; }
+
+/* Anneau qui pulse autour du livreur (DeliveryTrackingMap.jsx) — signale "en mouvement, en direct" d'un
+   coup d'œil, dans l'esprit des apps de livraison grand public. Transform/opacity uniquement : léger
+   pour le GPU, ne redéclenche jamais de layout. */
+.tracking-driver-pulse {
+  position: absolute; inset: 0; border-radius: 50%; background: rgba(22, 35, 58, 0.55);
+  animation: trackingDriverPulse 2s ease-out infinite;
+}
+@keyframes trackingDriverPulse {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tracking-driver-pulse { animation: none; display: none; }
+}
 .food-catch-game { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
 .food-catch-best { font-weight: 700; font-size: 11px; color: var(--gold-deep); }
 .food-catch-score { font-weight: 700; font-size: 12px; color: var(--ink); }
@@ -890,11 +905,23 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .food-catch-field {
   position: relative; background: var(--cream-dim); border-radius: 10px; overflow: hidden; border: 1px solid var(--line);
   touch-action: none; cursor: pointer;
+  /* Isole le rendu du jeu du reste de la page (dont la carte à côté) : le navigateur sait que ce qui
+     bouge ici (60ms par tick) n'affecte jamais la mise en page en dehors de ce cadre, et n'a donc pas
+     besoin d'y repenser à chaque frame — nettement plus sensible sur mobile. */
+  contain: layout style paint;
 }
-.food-catch-item { position: absolute; font-size: 20px; line-height: 1; user-select: none; }
+/* Positionnement par transform plutôt que left/top : left/top déclenche un recalcul de layout à chaque
+   frame (coûteux, surtout sur mobile en même temps que le rendu de la carte Leaflet à côté) ; transform
+   passe par le compositeur GPU, sans recalcul de layout. La transition sur .food-catch-item lisse le
+   saut de position d'un tick à l'autre (60ms, voir TICK_MS des 4 jeux) pour une chute qui a l'air fluide
+   sans avoir besoin d'un intervalle plus court (donc sans travail JS supplémentaire par seconde). */
+.food-catch-item {
+  position: absolute; left: 0; top: 0; font-size: 20px; line-height: 1; user-select: none;
+  will-change: transform; transition: transform 60ms linear;
+}
 .food-catch-basket {
-  position: absolute; bottom: 4px; font-size: 24px; line-height: 1; text-align: center; user-select: none;
-  transition: left .08s linear; will-change: left;
+  position: absolute; left: 0; bottom: 4px; font-size: 24px; line-height: 1; text-align: center; user-select: none;
+  transition: transform .08s linear; will-change: transform;
 }
 .food-catch-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -924,7 +951,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 /* Cible cliquable du jeu réflexe (ReactionGame) — utilise .food-catch-field/.food-catch-item etc.
    ci-dessus, communes aux 4 mini-jeux (voir GameSwitcher.jsx). */
-.reaction-target { position: absolute; font-size: 20px; padding: 0; background: none; border: none; line-height: 1; cursor: pointer; }
+.reaction-target { position: absolute; left: 0; top: 0; font-size: 20px; padding: 0; background: none; border: none; line-height: 1; cursor: pointer; will-change: transform; }
 
 /* Variante "grand écran" des 4 mini-jeux (voir GameSwitcher.jsx `large`, déclenchée depuis le bouton
    Agrandir de MapPage.jsx) : mêmes classes, juste une typographie et des éléments de jeu plus grands —
@@ -1002,7 +1029,12 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 20px; overflow-y: auto;
 }
 @media (max-width: 800px) {
-  .tracking-fullscreen-split { flex-direction: column; gap: 20px; }
+  .tracking-fullscreen-split { flex-direction: column; gap: 14px; }
+  /* Empilés, un partage 50/50 (flex:1) centre chaque bloc dans une moitié fixe de l'écran — la carte,
+     plus courte que sa moitié, se retrouve entourée de vide, pendant que le jeu, plus grand que la
+     sienne, déborde sous le viewport. On dimensionne donc chaque bloc à son contenu réel (déjà calculé
+     pour tenir ensemble par useFullscreenSizes dans MapPage.jsx) plutôt que par un partage égal. */
+  .tracking-fullscreen-map, .tracking-fullscreen-game { flex: 0 0 auto; justify-content: flex-start; }
 }
 
 /* Impression des récaps de facturation (InvoicesPage restaurant/livreur) : n'affiche que le

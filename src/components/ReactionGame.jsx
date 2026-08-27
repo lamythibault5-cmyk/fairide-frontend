@@ -108,7 +108,7 @@ export default function ReactionGame({ width = 110, height = 260, large = false 
           <button
             type="button"
             className="reaction-target"
-            style={{ left: target.x, top: target.y, width: TARGET_SIZE, height: TARGET_SIZE }}
+            style={{ transform: `translate3d(${target.x}px, ${target.y}px, 0)`, width: TARGET_SIZE, height: TARGET_SIZE }}
             onClick={hitTarget}
             aria-label="Cible"
           >🎯</button>

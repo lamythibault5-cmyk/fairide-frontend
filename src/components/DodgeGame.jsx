@@ -128,9 +128,9 @@ export default function DodgeGame({ width = 110, height = 260, large = false }) 
         onPointerMove={followPointer}
       >
         {items.map((it) => (
-          <span key={it.id} className="food-catch-item" style={{ left: it.x, top: it.y }}>{it.emoji}</span>
+          <span key={it.id} className="food-catch-item" style={{ transform: `translate3d(${it.x}px, ${it.y}px, 0)` }}>{it.emoji}</span>
         ))}
-        <div className="food-catch-basket" style={{ left: riderX, width: RIDER_WIDTH }}>🛵</div>
+        <div className="food-catch-basket" style={{ transform: `translate3d(${riderX}px, 0, 0)`, width: RIDER_WIDTH }}>🛵</div>
         {status === 'idle' && (
           <div className="food-catch-overlay">
             <div className="food-catch-overlay-card">
