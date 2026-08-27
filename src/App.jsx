@@ -18,6 +18,7 @@ import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
 import AdminSupportPage from './pages/admin/AdminSupportPage';
 import AdminDocumentsPage from './pages/admin/AdminDocumentsPage';
 import AdminTasksPage from './pages/admin/AdminTasksPage';
+import AdminAutomationsPage from './pages/admin/AdminAutomationsPage';
 import AdminAccountingPage from './pages/admin/AdminAccountingPage';
 import AdminInvoicesPage from './pages/admin/AdminInvoicesPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
@@ -42,6 +43,7 @@ import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
 import RestaurantMapPage from './pages/restaurant/MapPage';
 import RestaurantReviewsPage from './pages/restaurant/ReviewsPage';
 import RestaurantInvoicesPage from './pages/restaurant/InvoicesPage';
+import RestaurantGuidePage from './pages/restaurant/GuidePage';
 import DriverDashboard from './pages/driver/Dashboard';
 import DriverMapPage from './pages/driver/MapPage';
 import DriverReviewsPage from './pages/driver/ReviewsPage';
@@ -81,6 +83,7 @@ export default function App() {
           <Route path="map" element={<RestaurantMapPage />} />
           <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
+          <Route path="guide" element={<RestaurantGuidePage />} />
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
@@ -100,6 +103,7 @@ export default function App() {
           <Route path="support" element={<AdminSupportPage />} />
           <Route path="documents" element={<AdminDocumentsPage />} />
           <Route path="tasks" element={<AdminTasksPage />} />
+          <Route path="automations" element={<AdminAutomationsPage />} />
           <Route path="accounting" element={<AdminAccountingPage />} />
           <Route path="invoices" element={<AdminInvoicesPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />

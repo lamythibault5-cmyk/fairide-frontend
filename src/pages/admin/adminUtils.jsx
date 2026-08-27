@@ -149,6 +149,43 @@ export const TASK_DUE_STATE_LABELS = {
 };
 export const TASK_TARGET_TYPE_LABELS = { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket', document: 'Document', invoice: 'Facture' };
 
+export const AUTOMATION_RULES_META = {
+  crm_prospect_inactive: {
+    label: 'Prospects CRM inactifs',
+    description: "Crée une tâche de relance si un prospect CRM (non converti, non perdu) est sans activité depuis N jours.",
+    params: [{ key: 'days', label: 'Jours sans activité', type: 'number' }]
+  },
+  invoice_marked_overdue: {
+    label: 'Factures en retard',
+    description: 'Crée une tâche de relance pour chaque facture de commission actuellement marquée "en retard" par un admin.',
+    params: []
+  },
+  document_expiring: {
+    label: "Documents proches d'expiration",
+    description: "Crée une tâche de vérification pour chaque document expirant bientôt (seuil réglé dans Paramètres → Tarification).",
+    params: []
+  },
+  order_no_driver: {
+    label: 'Commandes sans livreur',
+    description: "Alerte les opérations si une commande en préparation/prête n'a toujours pas de livreur après N minutes.",
+    params: [{ key: 'minutes', label: 'Minutes sans livreur', type: 'number' }]
+  },
+  restaurant_cancellation_rate: {
+    label: "Taux d'annulation restaurant",
+    description: "Alerte si le taux d'annulation d'un restaurant dépasse un seuil sur une fenêtre glissante.",
+    params: [
+      { key: 'thresholdRate', label: 'Seuil (0 à 1)', type: 'number', step: '0.01' },
+      { key: 'minOrders', label: 'Commandes minimum', type: 'number' },
+      { key: 'windowDays', label: 'Fenêtre (jours)', type: 'number' }
+    ]
+  },
+  large_refund_review: {
+    label: 'Remboursements élevés',
+    description: "Crée une tâche de vérification (PAS un blocage) pour tout remboursement dépassant un montant. Une vraie validation à deux mains est prévue en phase Approbations.",
+    params: [{ key: 'minAmount', label: 'Montant minimum (€)', type: 'number' }]
+  }
+};
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;

@@ -28,6 +28,7 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
       { to: '/dashboard/map', icon: '🗺️', label: 'Carte' },
+      { to: '/dashboard/guide', icon: '📘', label: "Mode d'emploi" },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -56,6 +57,7 @@ const ADMIN_NAV_ITEMS = [
   { to: '/admin/support', icon: '🎫', label: 'Support' },
   { to: '/admin/documents', icon: '📁', label: 'Documents' },
   { to: '/admin/tasks', icon: '✅', label: 'Tâches' },
+  { to: '/admin/automations', icon: '⚡', label: 'Automatisations' },
   { to: '/admin/finance', icon: '💶', label: 'Finance' },
   { to: '/admin/payments', icon: '💳', label: 'Paiements' },
   { to: '/admin/accounting', icon: '📚', label: 'Comptabilité' },

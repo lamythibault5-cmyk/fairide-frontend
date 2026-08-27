@@ -22,7 +22,9 @@ const ACTION_LABELS = {
   task_created: 'Tâche créée',
   task_updated: 'Tâche modifiée',
   task_status_change: 'Statut tâche modifié',
-  task_deleted: 'Tâche supprimée'
+  task_deleted: 'Tâche supprimée',
+  automation_rule_updated: 'Règle automatisation modifiée',
+  automation_run_triggered: 'Exécution manuelle déclenchée'
 };
 
 function describeDetails(action, details) {

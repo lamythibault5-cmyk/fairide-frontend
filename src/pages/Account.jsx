@@ -578,6 +578,18 @@ export default function Account() {
         </div>
       )}
 
+      {role === 'restaurant' && (
+        <div className="card">
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>📘 Mode d'emploi</h3>
+              <p className="small" style={{ margin: 0 }}>Comment recevoir et traiter les commandes Fairide au quotidien, sans matériel imposé.</p>
+            </div>
+            <Link to="/dashboard/guide" className="btn-ghost">Voir le mode d'emploi →</Link>
+          </div>
+        </div>
+      )}
+
       {role === 'driver' && (
         <div className="card">
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.geoTitle')}</h3>
