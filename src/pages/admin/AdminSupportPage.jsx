@@ -8,7 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import {
-  money, pct, fmtDate, fmtDateTime, downloadCsv, useDebouncedValue,
+  pct, fmtDateTime, downloadCsv, useDebouncedValue,
   TICKET_CATEGORIES, TICKET_CATEGORY_LABELS, TICKET_PRIORITY_LABELS, TICKET_STATUS_LABELS, TICKET_STATUSES
 } from './adminUtils';
 
