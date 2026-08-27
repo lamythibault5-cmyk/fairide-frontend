@@ -267,7 +267,10 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                 {inv.creditNotes.map((cn) => (
                   <div key={cn.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                     <span className="small" style={{ fontFamily: 'monospace' }}>{cn.creditNoteNumber}</span>
-                    <span className="small" style={{ color: 'var(--red)' }}>-{money(cn.totalTtc)}</span>
+                    <div className="row" style={{ gap: 8 }}>
+                      <span className="small" style={{ color: 'var(--red)' }}>-{money(cn.totalTtc)}</span>
+                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message))}>PDF</button>
+                    </div>
                   </div>
                 ))}
               </>
