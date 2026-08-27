@@ -13,7 +13,10 @@ const PRICING_FIELDS = [
   { key: 'deliveryFairideRate', label: 'Part Fairide sur la livraison', suffix: '%', isRate: true, hint: "Facturée en plus au client, gardée par Fairide — le livreur touche toujours 100% du tarif livreur." },
   { key: 'deliveryBaseFee', label: 'Tarif livraison de base', suffix: '€', hint: "Jusqu'à la distance de base ci-dessous, entièrement pour le livreur." },
   { key: 'deliveryBaseKm', label: 'Distance de base', suffix: 'km' },
-  { key: 'deliveryExtraPerKm', label: 'Supplément par km au-delà', suffix: '€/km' }
+  { key: 'deliveryExtraPerKm', label: 'Supplément par km au-delà', suffix: '€/km' },
+  { key: 'vatRateCommission', label: 'TVA — commission restaurant', suffix: '%', isRate: true, hint: 'À confirmer avec un comptable (voir Comptabilité). Hypothèse par défaut : 21%.' },
+  { key: 'vatRateDeliveryShare', label: 'TVA — part Fairide livraison', suffix: '%', isRate: true, hint: 'À confirmer avec un comptable — peut différer de la commission.' },
+  { key: 'vatRateServiceFee', label: 'TVA — frais de service', suffix: '%', isRate: true, hint: 'À confirmer avec un comptable.' }
 ];
 
 const USER_TYPE_LABELS = { client: 'Clients', restaurant: 'Commerçants', driver: 'Livreurs' };

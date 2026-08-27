@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -8,7 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS } from './adminUtils';
+import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS } from './adminUtils';
 
 export default function AdminRestaurantsPage() {
   const { token } = useAuth();
@@ -154,6 +154,13 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [invoices, setInvoices] = useState(null);
+
+  useEffect(() => {
+    setInvoices(null);
+    api(`/admin/invoices?restaurantId=${selected.id}&limit=5`, { token }).then((r) => setInvoices(r.rows)).catch(() => setInvoices([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected.id]);
 
   function startEdit() {
     setForm({
@@ -216,6 +223,19 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
                 <span className="small">{o.clientName}{o.driverName ? ` · livré par ${o.driverName}` : ''}</span>
                 <span className={`status-badge status-${o.status}`}>{o.status}</span>
+              </div>
+            ))}
+            <div className="divider" />
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <h4 style={{ margin: '0 0 6px' }}>Factures</h4>
+              <Link to="/admin/invoices" state={{ restaurantId: selected.id }} className="small">Tout voir ↗</Link>
+            </div>
+            {!invoices && <div className="small">Chargement...</div>}
+            {invoices && invoices.length === 0 && <div className="small">Aucune facture pour l'instant.</div>}
+            {invoices && invoices.map((inv) => (
+              <div key={inv.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
+                <span className="small" style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</span>
+                <span className="small">{money(inv.totalTtc)} · <span style={{ color: INVOICE_STATUS_LABELS[inv.status]?.color }}>{INVOICE_STATUS_LABELS[inv.status]?.label}</span></span>
               </div>
             ))}
             <div className="divider" />

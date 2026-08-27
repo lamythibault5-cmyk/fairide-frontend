@@ -13,6 +13,8 @@ import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
 import AdminDriversPage from './pages/admin/AdminDriversPage';
 import AdminClientsPage from './pages/admin/AdminClientsPage';
 import AdminFinancePage from './pages/admin/AdminFinancePage';
+import AdminAccountingPage from './pages/admin/AdminAccountingPage';
+import AdminInvoicesPage from './pages/admin/AdminInvoicesPage';
 import AdminSettingsPage from './pages/admin/AdminSettingsPage';
 import LegalNotice from './pages/legal/LegalNotice';
 import Terms from './pages/legal/Terms';
@@ -88,6 +90,8 @@ export default function App() {
           <Route path="drivers" element={<AdminDriversPage />} />
           <Route path="clients" element={<AdminClientsPage />} />
           <Route path="finance" element={<AdminFinancePage />} />
+          <Route path="accounting" element={<AdminAccountingPage />} />
+          <Route path="invoices" element={<AdminInvoicesPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
         </Route>
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { API_BASE } from '../../api';
 
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
 // (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
@@ -54,6 +55,26 @@ export const BUSINESS_STATUS_LABELS = {
   suspendu: { label: '🚫 Suspendu', color: 'var(--red)' }
 };
 
+export const ACCOUNTING_ENTRY_TYPE_LABELS = {
+  order_commission: 'Commission restaurant',
+  order_delivery_share: 'Part Fairide livraison',
+  order_restaurant_due: 'Dû restaurant',
+  order_driver_due: 'Dû livreur',
+  order_payment: 'Paiement client',
+  refund: 'Remboursement',
+  payout_restaurant: 'Virement restaurant',
+  payout_driver: 'Virement livreur'
+};
+
+export const INVOICE_STATUS_LABELS = {
+  brouillon: { label: 'Brouillon', color: 'inherit' },
+  emise: { label: 'Émise', color: 'var(--gold-deep)' },
+  envoyee: { label: 'Envoyée', color: 'var(--teal-deep)' },
+  payee: { label: 'Payée', color: 'var(--teal-deep)' },
+  en_retard: { label: 'En retard', color: 'var(--red)' },
+  annulee: { label: 'Annulée', color: 'var(--red)' }
+};
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;
@@ -86,6 +107,26 @@ export function useDebouncedValue(value, delayMs = 300) {
     return () => clearTimeout(timer);
   }, [value, delayMs]);
   return debounced;
+}
+
+// Téléchargement d'un PDF généré côté serveur (factures, notes de crédit, relevés livreurs) — même
+// pattern d'authentification par blob que ClientInvoicesPage.jsx (download Stripe en masse), mais ici un
+// PDF unique par appel plutôt qu'un zip.
+export async function downloadPdf(path, token, filename) {
+  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Échec du téléchargement.');
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
 }
 
 export function downloadCsv(filename, rows, columns) {

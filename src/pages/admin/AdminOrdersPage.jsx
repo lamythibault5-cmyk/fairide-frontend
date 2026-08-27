@@ -8,7 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
-import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES } from './adminUtils';
+import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 
 const FILTERS = [
   { key: '', label: 'Toutes' },
@@ -161,7 +161,14 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   const [confirmAction, setConfirmAction] = useState(null); // { type, run }
   const [busy, setBusy] = useState(false);
 
+  const [entries, setEntries] = useState(null);
+
   useEffect(() => { setNewStatus(detail?.status || ''); }, [detail?.status]);
+  useEffect(() => {
+    setEntries(null);
+    api(`/admin/accounting/journal?orderId=${selected.id}&limit=50`, { token }).then((r) => setEntries(r.rows)).catch(() => setEntries([]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected.id]);
 
   function loadDrivers() {
     if (drivers) return;
@@ -276,6 +283,19 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
                 <span className="small" style={{ opacity: 0.6 }}>{fmtDateTime(step.at)}</span>
               </div>
             ))}
+
+            {entries && entries.length > 0 && (
+              <>
+                <div className="divider" />
+                <h4 style={{ margin: '0 0 6px' }}>Écritures comptables</h4>
+                {entries.map((e) => (
+                  <div key={e.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
+                    <span className="small">{ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType} — {e.accountCode}</span>
+                    <span className="small">{e.debit > 0 ? `-${money(e.debit)}` : money(e.credit)}</span>
+                  </div>
+                ))}
+              </>
+            )}
 
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>Actions admin</h4>
