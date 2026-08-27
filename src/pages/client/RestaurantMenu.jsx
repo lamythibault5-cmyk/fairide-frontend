@@ -11,6 +11,7 @@ import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
+import CertifiedBadge from '../../components/CertifiedBadge';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -191,7 +192,10 @@ export default function RestaurantMenu() {
           </div>
         )}
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
+          <h2 className="restaurant-header-name-row" style={{ marginBottom: 2 }}>
+            <span>{restaurant.name}</span>
+            {restaurant.certified && <CertifiedBadge size={20} />}
+          </h2>
           <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />
         </div>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>

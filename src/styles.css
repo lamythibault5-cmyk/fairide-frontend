@@ -199,7 +199,8 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .rest-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .rest-grid .rest-card { padding: 8px; }
   .rest-grid .cover-banner-sm { height: 92px; margin: -8px -8px 6px; width: calc(100% + 16px); }
-  .rest-grid .rest-card-name { font-size: 13px; margin: 4px 0 2px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rest-grid .rest-card-name { font-size: 13px; margin: 4px 0 2px; line-height: 1.25; }
+  .rest-grid .rest-card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .rest-grid .pill-row { margin-bottom: 4px; gap: 4px; }
   .rest-grid .pill { font-size: 9.5px; padding: 2px 7px; }
   .rest-grid .rest-card-rating { transform: scale(0.9); transform-origin: left center; }
@@ -473,6 +474,13 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 /* Enveloppe la photo d'accueil pour pouvoir y superposer le logo (badge rond à cheval sur le bas de
    la photo, façon page pro Facebook/Uber Eats) — reprend le débordement de .cover-banner-detail sur
    le wrapper et neutralise celui de l'image elle-même pour ne pas le cumuler deux fois. */
+/* Nom du resto + pastille de certification (voir CertifiedBadge.jsx) sur une même ligne — le nom seul
+   tronque avec des points de suspension si trop long (.rest-card-name-text, carte de la liste), la
+   pastille elle-même ne rétrécit jamais et reste toujours entièrement visible. */
+.rest-card-name, .restaurant-header-name-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+.rest-card-name-text { min-width: 0; }
+.certified-badge { color: var(--teal); flex-shrink: 0; }
+
 .restaurant-header-media { position: relative; margin: -18px -18px 28px; width: calc(100% + 36px); }
 .restaurant-header-media .cover-banner-detail { margin: 0; width: 100%; }
 .restaurant-logo-badge {

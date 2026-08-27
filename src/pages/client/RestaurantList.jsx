@@ -7,6 +7,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import RestaurantsMap from '../../components/RestaurantsMap';
 import FavoriteHeart from '../../components/FavoriteHeart';
+import CertifiedBadge from '../../components/CertifiedBadge';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -68,7 +69,10 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         {deliveryOfferLabel && <span className="pill teal">{deliveryOfferLabel}</span>}
         {isClosed && <span className="pill closed-pill">🔒 Fermé</span>}
       </div>
-      <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>{r.name}</h3>
+      <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>
+        <span className="rest-card-name-text">{r.name}</span>
+        {r.certified && <CertifiedBadge />}
+      </h3>
       <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
         <StarsDisplay value={r.rating} />
         <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>

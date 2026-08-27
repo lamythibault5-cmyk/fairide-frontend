@@ -4,6 +4,7 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
 import { StarsDisplay } from './Stars';
+import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
@@ -116,7 +117,10 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
               <span className="pill teal">{cuisineEmoji(selected.cuisine)} {restaurantTypeLabel(selected.cuisine, t)}</span>
               <span className="pill gold">{selected.commune}{selected.neighborhood ? ' · ' + selected.neighborhood : ''}</span>
             </div>
-            <h3 style={{ margin: '4px 0' }}>{selected.name}</h3>
+            <h3 className="restaurant-header-name-row" style={{ margin: '4px 0' }}>
+              <span>{selected.name}</span>
+              {selected.certified && <CertifiedBadge size={16} />}
+            </h3>
             <div className="row" style={{ gap: 6, margin: '2px 0' }}>
               <StarsDisplay value={selected.rating} />
               <span className="small">{selected.reviewCount > 0 ? t('map.reviewsCount', { count: selected.reviewCount }) : t('restaurantList.newBadge')}</span>
