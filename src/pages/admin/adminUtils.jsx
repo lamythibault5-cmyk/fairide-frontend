@@ -75,6 +75,26 @@ export const INVOICE_STATUS_LABELS = {
   annulee: { label: 'Annulée', color: 'var(--red)' }
 };
 
+export const CRM_STAGES = ['prospect', 'contacte', 'interesse', 'demo', 'onboarding', 'actif', 'perdu'];
+
+export const CRM_STAGE_LABELS = {
+  prospect: 'Prospect',
+  contacte: 'Contacté',
+  interesse: 'Intéressé',
+  demo: 'Démo',
+  onboarding: 'Onboarding',
+  actif: 'Actif',
+  perdu: 'Perdu'
+};
+
+export const CRM_PRIORITY_LABELS = {
+  low: { label: 'Basse', color: 'inherit' },
+  medium: { label: 'Moyenne', color: 'var(--gold-deep)' },
+  high: { label: 'Haute', color: 'var(--red)' }
+};
+
+export const CRM_NOTE_CHANNEL_LABELS = { call: '📞 Appel', email: '✉️ Email', meeting: '🤝 Rendez-vous' };
+
 export function pct(n, digits = 0) {
   if (n === null || n === undefined) return '—';
   return `${(Number(n) * 100).toFixed(digits)}%`;

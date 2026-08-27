@@ -9,7 +9,11 @@ const ACTION_LABELS = {
   driver_status_change: 'Statut livreur modifié',
   client_status_change: 'Statut client modifié',
   note_added: 'Note ajoutée',
-  settings_change: 'Tarification modifiée'
+  settings_change: 'Tarification modifiée',
+  crm_prospect_created: 'Prospect créé',
+  crm_prospect_updated: 'Prospect modifié',
+  crm_stage_change: 'Étape CRM modifiée',
+  crm_prospect_converted: 'Converti en partenaire'
 };
 
 function describeDetails(action, details) {
@@ -20,6 +24,8 @@ function describeDetails(action, details) {
   if (action === 'restaurant_status_change' || action === 'driver_status_change' || action === 'client_status_change') return `→ ${details.status}`;
   if (action === 'note_added') return `"${details.text}"`;
   if (action === 'settings_change') return Object.entries(details).map(([k, v]) => `${k}=${v}`).join(', ');
+  if (action === 'crm_stage_change') return `→ ${details.stage}${details.lossReason ? ` (${details.lossReason})` : ''}`;
+  if (action === 'crm_prospect_converted') return `→ ${details.restaurantName}`;
   return '';
 }
 

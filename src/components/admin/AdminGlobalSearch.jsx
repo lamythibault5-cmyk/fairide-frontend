@@ -8,8 +8,12 @@ const GROUPS = [
   { key: 'orders', label: 'Commandes' },
   { key: 'restaurants', label: 'Restaurants' },
   { key: 'drivers', label: 'Livreurs' },
-  { key: 'clients', label: 'Clients' }
+  { key: 'clients', label: 'Clients' },
+  { key: 'crmProspects', label: 'CRM' }
 ];
+// La route ne suit pas toujours la clé de groupe telle quelle (ex: crmProspects → /admin/crm) — mapping
+// explicite plutôt que de dériver la route depuis le nom du groupe backend.
+const GROUP_ROUTES = { orders: 'orders', restaurants: 'restaurants', drivers: 'drivers', clients: 'clients', crmProspects: 'crm' };
 
 // Recherche globale de la sidebar admin : une commande, un restaurant, un livreur ou un client, retrouvés
 // en un seul champ — voir GET /admin/search côté backend.
@@ -42,7 +46,7 @@ export default function AdminGlobalSearch() {
     setQ('');
     setResults(null);
     if (groupKey === 'orders') navigate(`/admin/orders?q=${encodeURIComponent(item.label)}`);
-    else navigate(`/admin/${groupKey}`, { state: { presetSearch: item.label } });
+    else navigate(`/admin/${GROUP_ROUTES[groupKey]}`, { state: { presetSearch: item.label } });
   }
 
   const hasResults = results && GROUPS.some((g) => results[g.key]?.length > 0);

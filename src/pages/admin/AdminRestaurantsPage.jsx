@@ -155,10 +155,13 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [invoices, setInvoices] = useState(null);
+  const [crmProspect, setCrmProspect] = useState(null);
 
   useEffect(() => {
     setInvoices(null);
     api(`/admin/invoices?restaurantId=${selected.id}&limit=5`, { token }).then((r) => setInvoices(r.rows)).catch(() => setInvoices([]));
+    setCrmProspect(null);
+    api(`/admin/crm/prospects?restaurantId=${selected.id}&limit=1`, { token }).then((r) => setCrmProspect(r.rows[0] || null)).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected.id]);
 
@@ -225,6 +228,17 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
                 <span className={`status-badge status-${o.status}`}>{o.status}</span>
               </div>
             ))}
+            {crmProspect && (
+              <>
+                <div className="divider" />
+                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                  <h4 style={{ margin: '0 0 6px' }}>Origine commerciale</h4>
+                  <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">Voir dans le CRM ↗</Link>
+                </div>
+                <div className="small">Responsable : {crmProspect.ownerEmail || '—'} · Source : {crmProspect.source || '—'}</div>
+                <div className="small">Converti le {fmtDate(crmProspect.convertedAt)}</div>
+              </>
+            )}
             <div className="divider" />
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
               <h4 style={{ margin: '0 0 6px' }}>Factures</h4>

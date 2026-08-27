@@ -9,6 +9,7 @@ import Account from './pages/Account';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminDashboardPage from './pages/admin/AdminDashboardPage';
 import AdminOrdersPage from './pages/admin/AdminOrdersPage';
+import AdminCrmPage from './pages/admin/AdminCrmPage';
 import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
 import AdminDriversPage from './pages/admin/AdminDriversPage';
 import AdminClientsPage from './pages/admin/AdminClientsPage';
@@ -86,6 +87,7 @@ export default function App() {
         <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
+          <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />
           <Route path="drivers" element={<AdminDriversPage />} />
           <Route path="clients" element={<AdminClientsPage />} />

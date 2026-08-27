@@ -49,6 +49,7 @@ function navItemsForRole(role, t) {
 const ADMIN_NAV_ITEMS = [
   { to: '/admin', end: true, icon: '📊', label: 'Dashboard' },
   { to: '/admin/orders', icon: '📦', label: 'Commandes' },
+  { to: '/admin/crm', icon: '🤝', label: 'CRM' },
   { to: '/admin/restaurants', icon: '🏪', label: 'Restaurants' },
   { to: '/admin/drivers', icon: '🛵', label: 'Livreurs' },
   { to: '/admin/clients', icon: '👥', label: 'Clients' },
