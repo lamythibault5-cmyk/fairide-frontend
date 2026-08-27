@@ -7,11 +7,6 @@ import { useEffect, useRef, useState } from 'react';
 // .food-catch-* que FoodCatchGame.jsx.
 const GOOD_ITEMS = ['🍕', '🍔', '🍟', '🍩', '🍣', '🌮'];
 const BAD_ITEMS = ['🗑️', '🦠', '💀', '🧪'];
-const WIDTH = 110;
-const HEIGHT = 260;
-const BASKET_WIDTH = 34;
-const BASKET_Y = HEIGHT - 32;
-const ITEM_SIZE = 22;
 const BASE_SPAWN_EVERY_TICKS = 17;
 const MIN_SPAWN_EVERY_TICKS = 8;
 const TICK_MS = 60;
@@ -36,7 +31,12 @@ function badChanceForLevel(level) {
   return Math.min(MAX_BAD_CHANCE, BASE_BAD_CHANCE + level * 0.03);
 }
 
-export default function SortGame() {
+export default function SortGame({ width = 110, height = 260, large = false }) {
+  const WIDTH = width;
+  const HEIGHT = height;
+  const BASKET_WIDTH = large ? 56 : 34;
+  const BASKET_Y = HEIGHT - (large ? 44 : 32);
+  const ITEM_SIZE = large ? 34 : 22;
   const [status, setStatus] = useState('idle');
   const [items, setItems] = useState([]);
   const [basketX, setBasketX] = useState(WIDTH / 2 - BASKET_WIDTH / 2);
@@ -105,6 +105,9 @@ export default function SortGame() {
       });
     }, TICK_MS);
     return () => clearInterval(interval);
+    // Voir FoodCatchGame.jsx : WIDTH/HEIGHT/BASKET_WIDTH/BASKET_Y/ITEM_SIZE dérivent de props fixes pour
+    // toute la durée de vie du composant, volontairement absents des deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   function followPointer(e) {
@@ -129,7 +132,7 @@ export default function SortGame() {
   function restartGame() { startGame(); }
 
   return (
-    <div className="food-catch-game">
+    <div className={`food-catch-game${large ? ' food-catch-game--large' : ''}`}>
       <div className="food-catch-best">🥇 Meilleur : {bestScore}</div>
       <div className="food-catch-score">🏆 {score} <span className="food-catch-level">· Niv. {levelForScore(score) + 1}</span></div>
       <div
@@ -146,7 +149,7 @@ export default function SortGame() {
         {status === 'idle' && (
           <div className="food-catch-overlay">
             <div className="food-catch-overlay-card">
-              <span className="food-catch-overlay-title">🗑️ Attrape les bons plats, évite le reste !</span>
+              <span className="food-catch-overlay-title">🗑️ FairSort : attrape les bons plats, évite le reste !</span>
               <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
             </div>
           </div>

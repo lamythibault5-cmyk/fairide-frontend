@@ -9,11 +9,6 @@ import { useEffect, useRef, useState } from 'react';
 // jamais un minuteur automatique. Contrôle au doigt (mobile) ou à la souris (desktop) via Pointer Events :
 // le panier suit directement la position du pointeur dans le cadre, pas de flèches à cliquer.
 const FOODS = ['🍕', '🍔', '🍟', '🍩', '🍣', '🌮', '🥐', '🍦'];
-const WIDTH = 110;
-const HEIGHT = 260;
-const BASKET_WIDTH = 34;
-const BASKET_Y = HEIGHT - 32;
-const ITEM_SIZE = 22;
 const BASE_SPAWN_EVERY_TICKS = 16;
 const MIN_SPAWN_EVERY_TICKS = 7;
 const TICK_MS = 60;
@@ -31,7 +26,15 @@ function speedRangeForLevel(level) {
   return { min: 2 + level * 0.35, max: 4.2 + level * 0.55 };
 }
 
-export default function FoodCatchGame() {
+// `width`/`height` pilotent le cadre de jeu (110×260 par défaut, à côté de la carte ; bien plus grand en
+// mode plein écran, voir GameSwitcher.jsx). `large` bascule uniquement l'habillage visuel (taille du
+// panier/des plats, typographie) via la classe .food-catch-game--large, sans toucher à la logique.
+export default function FoodCatchGame({ width = 110, height = 260, large = false }) {
+  const WIDTH = width;
+  const HEIGHT = height;
+  const BASKET_WIDTH = large ? 56 : 34;
+  const BASKET_Y = HEIGHT - (large ? 44 : 32);
+  const ITEM_SIZE = large ? 34 : 22;
   const [status, setStatus] = useState('idle'); // 'idle' | 'playing' | 'paused' | 'lost'
   const [items, setItems] = useState([]);
   const [basketX, setBasketX] = useState(WIDTH / 2 - BASKET_WIDTH / 2);
@@ -95,6 +98,10 @@ export default function FoodCatchGame() {
       });
     }, TICK_MS);
     return () => clearInterval(interval);
+    // WIDTH/HEIGHT/BASKET_WIDTH/BASKET_Y/ITEM_SIZE dérivent des props width/height/large, fixes pour
+    // toute la durée de vie du composant (voir GameSwitcher.jsx : un changement de jeu remonte via `key`,
+    // jamais un changement de props à chaud) — volontairement absents des deps, comme dans ReactionGame.jsx.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   function followPointer(e) {
@@ -127,7 +134,7 @@ export default function FoodCatchGame() {
   }
 
   return (
-    <div className="food-catch-game">
+    <div className={`food-catch-game${large ? ' food-catch-game--large' : ''}`}>
       <div className="food-catch-best">🥇 Meilleur : {bestScore}</div>
       <div className="food-catch-score">🏆 {score} <span className="food-catch-level">· Niv. {levelForScore(score) + 1}</span></div>
       <div
@@ -144,7 +151,7 @@ export default function FoodCatchGame() {
         {status === 'idle' && (
           <div className="food-catch-overlay">
             <div className="food-catch-overlay-card">
-              <span className="food-catch-overlay-title">🧺 Attrape les plats !</span>
+              <span className="food-catch-overlay-title">🧺 FairCatch : attrape les plats !</span>
               <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
             </div>
           </div>

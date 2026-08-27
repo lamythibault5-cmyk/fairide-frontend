@@ -6,11 +6,6 @@ import { useEffect, useRef, useState } from 'react';
 // Réutilise les mêmes classes CSS .food-catch-* que FoodCatchGame.jsx (structure visuelle partagée par
 // tous les mini-jeux : score, meilleur score, cadre, overlays début/pause/perdu).
 const OBSTACLES = ['🚧', '🪨', '🕳️', '🔥', '💥'];
-const WIDTH = 110;
-const HEIGHT = 260;
-const RIDER_WIDTH = 30;
-const RIDER_Y = HEIGHT - 32;
-const ITEM_SIZE = 22;
 const BASE_SPAWN_EVERY_TICKS = 20;
 const MIN_SPAWN_EVERY_TICKS = 9;
 const TICK_MS = 60;
@@ -28,7 +23,12 @@ function speedRangeForLevel(level) {
   return { min: 1.8 + level * 0.3, max: 3.6 + level * 0.5 };
 }
 
-export default function DodgeGame() {
+export default function DodgeGame({ width = 110, height = 260, large = false }) {
+  const WIDTH = width;
+  const HEIGHT = height;
+  const RIDER_WIDTH = large ? 50 : 30;
+  const RIDER_Y = HEIGHT - (large ? 44 : 32);
+  const ITEM_SIZE = large ? 34 : 22;
   const [status, setStatus] = useState('idle');
   const [items, setItems] = useState([]);
   const [riderX, setRiderX] = useState(WIDTH / 2 - RIDER_WIDTH / 2);
@@ -90,6 +90,9 @@ export default function DodgeGame() {
       });
     }, TICK_MS);
     return () => clearInterval(interval);
+    // Voir FoodCatchGame.jsx : WIDTH/HEIGHT/RIDER_WIDTH/RIDER_Y/ITEM_SIZE dérivent de props fixes pour
+    // toute la durée de vie du composant, volontairement absents des deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
   function followPointer(e) {
@@ -114,7 +117,7 @@ export default function DodgeGame() {
   function restartGame() { startGame(); }
 
   return (
-    <div className="food-catch-game">
+    <div className={`food-catch-game${large ? ' food-catch-game--large' : ''}`}>
       <div className="food-catch-best">🥇 Meilleur : {bestScore}</div>
       <div className="food-catch-score">🏆 {score} <span className="food-catch-level">· Niv. {levelForScore(score) + 1}</span></div>
       <div
@@ -131,7 +134,7 @@ export default function DodgeGame() {
         {status === 'idle' && (
           <div className="food-catch-overlay">
             <div className="food-catch-overlay-card">
-              <span className="food-catch-overlay-title">🚧 Évite les obstacles !</span>
+              <span className="food-catch-overlay-title">🚧 FairDodge : évite les obstacles !</span>
               <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
             </div>
           </div>

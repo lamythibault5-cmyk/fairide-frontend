@@ -4,9 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 // cadre, il faut taper dessus avant qu'elle disparaisse. Une cible manquée (temps écoulé sans clic)
 // termine la partie — jamais de reprise automatique, toujours le joueur qui relance via "Rejouer".
 // Réutilise les mêmes classes CSS .food-catch-* que FoodCatchGame.jsx.
-const WIDTH = 110;
-const HEIGHT = 260;
-const TARGET_SIZE = 34;
 const BASE_WINDOW_MS = 1500;
 const MIN_WINDOW_MS = 550;
 const BEST_SCORE_KEY = 'fairide_reaction_best';
@@ -20,14 +17,19 @@ function windowForLevel(level) {
   return Math.max(MIN_WINDOW_MS, BASE_WINDOW_MS - level * 120);
 }
 
-function randomTargetPos() {
+// Fonction de module (pas dans le composant) : width/height/targetSize lui sont passés explicitement
+// plutôt que capturés par fermeture, pour rester utilisable indépendamment du composant.
+function randomTargetPos(width, height, targetSize) {
   return {
-    x: Math.random() * (WIDTH - TARGET_SIZE),
-    y: Math.random() * (HEIGHT - TARGET_SIZE)
+    x: Math.random() * (width - targetSize),
+    y: Math.random() * (height - targetSize)
   };
 }
 
-export default function ReactionGame() {
+export default function ReactionGame({ width = 110, height = 260, large = false }) {
+  const WIDTH = width;
+  const HEIGHT = height;
+  const TARGET_SIZE = large ? 56 : 34;
   const [status, setStatus] = useState('idle');
   const [target, setTarget] = useState(null);
   const [score, setScore] = useState(0);
@@ -55,7 +57,7 @@ export default function ReactionGame() {
   }
 
   function spawnTarget() {
-    setTarget(randomTargetPos());
+    setTarget(randomTargetPos(WIDTH, HEIGHT, TARGET_SIZE));
     const level = levelForScore(scoreRef.current);
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
@@ -98,7 +100,7 @@ export default function ReactionGame() {
   function restartGame() { startGame(); }
 
   return (
-    <div className="food-catch-game">
+    <div className={`food-catch-game${large ? ' food-catch-game--large' : ''}`}>
       <div className="food-catch-best">🥇 Meilleur : {bestScore}</div>
       <div className="food-catch-score">🏆 {score} <span className="food-catch-level">· Niv. {levelForScore(score) + 1}</span></div>
       <div className="food-catch-field" style={{ width: WIDTH, height: HEIGHT }}>
@@ -114,7 +116,7 @@ export default function ReactionGame() {
         {status === 'idle' && (
           <div className="food-catch-overlay">
             <div className="food-catch-overlay-card">
-              <span className="food-catch-overlay-title">🎯 Tape la cible !</span>
+              <span className="food-catch-overlay-title">🎯 FairFlash : tape la cible !</span>
               <button type="button" className="food-catch-start" onClick={startGame}>▶️ Commencer</button>
             </div>
           </div>

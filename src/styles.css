@@ -926,12 +926,84 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    ci-dessus, communes aux 4 mini-jeux (voir GameSwitcher.jsx). */
 .reaction-target { position: absolute; font-size: 20px; padding: 0; background: none; border: none; line-height: 1; cursor: pointer; }
 
-.game-switcher { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; }
-.game-switcher-btn {
-  padding: 6px 12px; font-size: 11px; font-weight: 700; background: var(--teal); color: #fff; white-space: nowrap;
-  border: none; border-radius: 999px; cursor: pointer; transition: filter .15s ease;
+/* Variante "grand écran" des 4 mini-jeux (voir GameSwitcher.jsx `large`, déclenchée depuis le bouton
+   Agrandir de MapPage.jsx) : mêmes classes, juste une typographie et des éléments de jeu plus grands —
+   la logique (WIDTH/HEIGHT/BASKET_WIDTH/ITEM_SIZE...) est déjà pilotée par les props JS, ceci ne fait
+   que suivre visuellement côté CSS (tailles de police des emojis, qui ne sont pas pilotables en JS).
+*/
+.food-catch-game--large .food-catch-item { font-size: 34px; }
+.food-catch-game--large .food-catch-basket { font-size: 46px; }
+.food-catch-game--large .reaction-target { font-size: 34px; }
+.food-catch-game--large .food-catch-best { font-size: 14px; }
+.food-catch-game--large .food-catch-score { font-size: 16px; }
+.food-catch-game--large .food-catch-overlay-title { font-size: 18px; }
+.food-catch-game--large .food-catch-paused-label { font-size: 16px; }
+.food-catch-game--large .food-catch-lost-title { font-size: 20px; }
+.food-catch-game--large .food-catch-lost-score { font-size: 14px; }
+.food-catch-game--large .food-catch-start,
+.food-catch-game--large .food-catch-overlay-buttons button { font-size: 15px; padding: 11px 16px; }
+.food-catch-game--large .food-catch-controls button { font-size: 15px; padding: 8px 16px; }
+
+.game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Colonne étroite à côté de la carte (110px) : la sélection tient en une grille 2×2 d'icônes, avec le
+   nom complet en info-bulle (title) plutôt qu'affiché — pas la place pour du texte à cet endroit. */
+.game-switcher-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 100%; }
+.game-switcher-tab {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 6px; font-size: 16px; background: var(--cream-dim); border: 2px solid transparent; border-radius: 10px;
+  cursor: pointer; transition: filter .15s ease, border-color .15s ease, background .15s ease;
 }
-.game-switcher-btn:hover { filter: brightness(1.1); }
+.game-switcher-tab:hover { filter: brightness(0.97); }
+.game-switcher-tab.active { background: var(--teal); border-color: var(--teal-deep); }
+.game-switcher-tab-text { display: none; }
+
+/* Mode plein écran (voir .tracking-fullscreen-split ci-dessous) : assez de place pour une vraie rangée
+   de 4 boutons nom + sous-titre, plus lisible et plus explicite qu'une grille d'icônes. */
+.game-switcher--large { width: 100%; max-width: 560px; }
+.game-switcher--large .game-switcher-picker { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.game-switcher--large .game-switcher-tab { flex-direction: column; gap: 2px; padding: 10px 6px; border-radius: 12px; }
+.game-switcher--large .game-switcher-tab-emoji { font-size: 22px; }
+.game-switcher--large .game-switcher-tab-text { display: flex; flex-direction: column; align-items: center; }
+.game-switcher--large .game-switcher-tab-label { font-size: 12px; font-weight: 800; color: var(--ink); }
+.game-switcher--large .game-switcher-tab.active .game-switcher-tab-label { color: #fff; }
+.game-switcher--large .game-switcher-tab-sub { font-size: 10px; color: var(--ink-soft); text-align: center; }
+.game-switcher--large .game-switcher-tab.active .game-switcher-tab-sub { color: rgba(255,255,255,0.85); }
+@media (max-width: 560px) {
+  .game-switcher--large .game-switcher-picker { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Bouton "Agrandir" sous chaque carte de suivi (MapPage.jsx) qui ouvre la vue plein écran ci-dessous. */
+.tracking-expand-btn {
+  margin-top: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; background: var(--cream-dim);
+  color: var(--ink); border: 1px solid var(--line); border-radius: 999px; cursor: pointer; transition: filter .15s ease;
+}
+.tracking-expand-btn:hover { filter: brightness(0.97); border-color: var(--gold); }
+
+/* Vue plein écran : la carte occupe une moitié, le sélecteur de jeu + le jeu en cours l'autre moitié
+   (demande explicite : carte + livreur d'un côté, jeux de l'autre, en grand). En dessous de 800px, pas
+   assez de largeur pour un vrai côte-à-côte lisible : empile carte au-dessus, jeu en dessous, comme le
+   fait déjà .tracking-with-game en compact. */
+.tracking-fullscreen-overlay {
+  position: fixed; inset: 0; background: rgba(22, 35, 58, 0.95); z-index: 200;
+  display: flex; flex-direction: column; padding: 16px; overflow-y: auto;
+}
+.tracking-fullscreen-close {
+  align-self: flex-end; width: 38px; height: 38px; flex-shrink: 0; margin-bottom: 10px;
+  background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 999px; font-size: 18px; line-height: 1; cursor: pointer; transition: background .15s ease;
+}
+.tracking-fullscreen-close:hover { background: rgba(255,255,255,0.26); }
+.tracking-fullscreen-split { display: flex; gap: 24px; flex: 1; min-height: 0; align-items: stretch; }
+.tracking-fullscreen-map, .tracking-fullscreen-game {
+  flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.tracking-fullscreen-map-caption { color: rgba(255,255,255,0.85); margin-top: 8px; text-align: center; }
+.tracking-fullscreen-game {
+  background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 20px; overflow-y: auto;
+}
+@media (max-width: 800px) {
+  .tracking-fullscreen-split { flex-direction: column; gap: 20px; }
+}
 
 /* Impression des récaps de facturation (InvoicesPage restaurant/livreur) : n'affiche que le
    document lui-même, pas la navigation ni les contrôles de la page. */

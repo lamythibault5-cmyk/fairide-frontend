@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -13,6 +14,9 @@ export default function MapPage() {
   const toast = useToast();
   const { previewMode } = usePreviewMode();
   const [orders, setOrders] = useState(null);
+  // Identifiant du bloc actuellement agrandi en plein écran ('empty' pour le bloc "aucune livraison",
+  // sinon l'id de la commande) — un seul à la fois, null si aucun.
+  const [fullscreenId, setFullscreenId] = useState(null);
 
   useEffect(() => {
     // Un restaurateur en mode aperçu n'a pas de vraies commandes client (l'API les refuse, 403) — page
@@ -35,6 +39,7 @@ export default function MapPage() {
   const inDelivery = orders.filter(
     (o) => o.status === 'livraison' && o.orderType === 'delivery' && o.restaurantLat && o.deliveryLat
   );
+  const fullscreenOrder = fullscreenId && fullscreenId !== 'empty' ? inDelivery.find((o) => o.id === fullscreenId) : null;
 
   return (
     <div>
@@ -54,6 +59,7 @@ export default function MapPage() {
             </div>
             <GameSwitcher />
           </div>
+          <button type="button" className="tracking-expand-btn" onClick={() => setFullscreenId('empty')}>⛶ Agrandir la carte et les jeux</button>
         </div>
       ) : (
         inDelivery.map((o) => (
@@ -77,9 +83,56 @@ export default function MapPage() {
               </div>
               <GameSwitcher />
             </div>
+            <button type="button" className="tracking-expand-btn" onClick={() => setFullscreenId(o.id)}>⛶ Agrandir la carte et les jeux</button>
           </div>
         ))
       )}
+
+      {fullscreenId && (
+        <TrackingFullscreen order={fullscreenOrder} onClose={() => setFullscreenId(null)} />
+      )}
     </div>
+  );
+}
+
+// Vue plein écran : la carte (avec le livreur en direct) occupe une moitié de l'écran, le sélecteur de
+// jeu et le jeu en cours l'autre moitié — empilés au lieu de côte à côte sous 800px (voir styles.css,
+// .tracking-fullscreen-split). `order` est null pour le bloc "aucune livraison en cours" (carte vide,
+// jeux jouables quand même).
+function TrackingFullscreen({ order, onClose }) {
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    function onKeyDown(e) { if (e.key === 'Escape') onClose(); }
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [onClose]);
+
+  const mapHeight = Math.max(320, Math.min(640, window.innerHeight - 220));
+
+  return createPortal(
+    <div className="tracking-fullscreen-overlay">
+      <button type="button" className="tracking-fullscreen-close" onClick={onClose} aria-label="Fermer">✕</button>
+      <div className="tracking-fullscreen-split">
+        <div className="tracking-fullscreen-map">
+          <DeliveryTrackingMap
+            restaurantLat={order?.restaurantLat} restaurantLng={order?.restaurantLng}
+            deliveryLat={order?.deliveryLat} deliveryLng={order?.deliveryLng}
+            driverLat={order?.driverLat} driverLng={order?.driverLng}
+            height={mapHeight}
+          />
+          <div className="small tracking-fullscreen-map-caption">
+            {order ? (order.driverLat ? `🛵 Position de ${order.driverName || 'ton livreur'} en direct` : 'En attente de la position du livreur') : "Dès qu'une livraison démarre, ton livreur apparaît ici en direct."}
+          </div>
+        </div>
+        <div className="tracking-fullscreen-game">
+          <GameSwitcher width={280} height={420} large />
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }
