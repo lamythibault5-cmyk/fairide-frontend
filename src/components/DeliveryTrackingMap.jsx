@@ -52,7 +52,12 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   // Dernier périmètre ajusté (droite puis, une fois reçu, le vrai trajet routier) — permet au bouton
   // "Recentrer" de revenir dessus si l'utilisateur a zoomé/déplacé la carte pour explorer.
   const boundsRef = useRef(null);
+  // Périmètre livreur + adresse de livraison — le segment qui compte une fois la course commencée (le
+  // livreur peut s'écarter du trajet restaurant→adresse initialement tracé). Alimente le bouton "Voir
+  // le livreur", qui recadre sur ce segment plutôt que sur tout l'itinéraire depuis le restaurant.
+  const driverBoundsRef = useRef(null);
   const [showRecenter, setShowRecenter] = useState(false);
+  const [showFollowDriver, setShowFollowDriver] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -74,6 +79,16 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
+      // Les marqueurs/tracé appartenaient à cette instance de carte, maintenant détruite — sans ce
+      // reset, un remontage (StrictMode en dev, ou un vrai remontage du composant) verrait ces refs
+      // encore "remplies" et se contenterait de déplacer les anciens objets au lieu d'en recréer sur
+      // la nouvelle carte, qui resterait alors vide.
+      restaurantMarkerRef.current = null;
+      deliveryMarkerRef.current = null;
+      driverMarkerRef.current = null;
+      lineRef.current = null;
+      boundsRef.current = null;
+      driverBoundsRef.current = null;
     };
   }, []);
 
@@ -135,27 +150,32 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (!driverMarkerRef.current) {
       driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON })
         .addTo(mapRef.current).bindPopup('Ton livreur');
-      return;
+    } else {
+      const marker = driverMarkerRef.current;
+      const start = marker.getLatLng();
+      const end = L.latLng(driverLat, driverLng);
+      if (!start.equals(end)) {
+        if (animRef.current) cancelAnimationFrame(animRef.current);
+        const duration = 1200;
+        const startTime = performance.now();
+        const step = (now) => {
+          const t = Math.min(1, (now - startTime) / duration);
+          const lat = start.lat + (end.lat - start.lat) * t;
+          const lng = start.lng + (end.lng - start.lng) * t;
+          marker.setLatLng([lat, lng]);
+          if (t < 1) animRef.current = requestAnimationFrame(step);
+        };
+        animRef.current = requestAnimationFrame(step);
+      }
     }
-    const marker = driverMarkerRef.current;
-    const start = marker.getLatLng();
-    const end = L.latLng(driverLat, driverLng);
-    if (start.equals(end)) return;
-    if (animRef.current) cancelAnimationFrame(animRef.current);
-    const duration = 1200;
-    const startTime = performance.now();
-    function step(now) {
-      const t = Math.min(1, (now - startTime) / duration);
-      const lat = start.lat + (end.lat - start.lat) * t;
-      const lng = start.lng + (end.lng - start.lng) * t;
-      marker.setLatLng([lat, lng]);
-      if (t < 1) animRef.current = requestAnimationFrame(step);
+    if (deliveryLat && deliveryLng) {
+      driverBoundsRef.current = L.latLngBounds([[driverLat, driverLng], [deliveryLat, deliveryLng]]);
+      setShowFollowDriver(true);
     }
-    animRef.current = requestAnimationFrame(step);
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [driverLat, driverLng]);
+  }, [driverLat, driverLng, deliveryLat, deliveryLng]);
 
   function recenter() {
     if (mapRef.current && boundsRef.current) {
@@ -163,11 +183,27 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     }
   }
 
+  // Recadre sur le segment qui compte une fois la course en cours : la position actuelle du livreur et
+  // l'adresse de livraison, donc le chemin qu'il reste à parcourir — plutôt que tout l'itinéraire depuis
+  // le restaurant, qui peut sortir du cadre une fois que le livreur a bien avancé.
+  function followDriver() {
+    if (mapRef.current && driverBoundsRef.current) {
+      mapRef.current.fitBounds(driverBoundsRef.current, { padding: [50, 50] });
+    }
+  }
+
   return (
     <div className="tracking-map-wrap">
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
-      {showRecenter && (
-        <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Recentrer</button>
+      {(showRecenter || showFollowDriver) && (
+        <div className="tracking-map-controls">
+          {showFollowDriver && (
+            <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>🛵 Voir le livreur</button>
+          )}
+          {showRecenter && (
+            <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>
+          )}
+        </div>
       )}
       <div className="tracking-map-legend">
         <span><span className="tracking-map-legend-icon" style={{ background: '#2F6F5E' }}>🏪</span> Restaurant</span>
