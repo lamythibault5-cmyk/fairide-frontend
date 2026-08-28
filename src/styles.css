@@ -353,6 +353,15 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .dashboard-shell ~ .floating-cart-bubble,
   .dashboard-shell ~ .floating-cart { bottom: 78px; }
 }
+/* Au-dessus de 900px, la sidebar est une colonne fixe de 240px collée à gauche (voir .dashboard-shell
+   / .dashboard-sidebar plus bas) : le panier flottant, ancré à left: 16px, se posait pile par-dessus la
+   carte profil en bas de cette colonne (nom, rôle, « Se déconnecter »), rendue illisible. Décalé juste à
+   droite de la colonne (240px + la même marge de 16px) pour s'aligner sur le bord gauche du contenu,
+   uniquement quand la sidebar est là — les pages publiques gardent le coin bas-gauche de l'écran. */
+@media (min-width: 901px) {
+  .dashboard-shell ~ .floating-cart-bubble,
+  .dashboard-shell ~ .floating-cart { left: 256px; }
+}
 
 /* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
    déploie le récap complet ci-dessus plutôt que de l'imposer en permanence sur toutes les pages. */
