@@ -32,21 +32,34 @@ export default function GuidePage() {
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>2. Installer Fairide sur l'appareil</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>2. Modifier les informations et le menu du restaurant</h3>
+        <p className="small"><b>Infos du restaurant</b> (nom, adresse, description, photo d'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, frais de livraison...) : section « Modifier mon restaurant » dans le menu de gauche.</p>
+        <p className="small">Un changement d'horaires ou de fermeture exceptionnelle est visible immédiatement par les clients — pas besoin d'attendre une validation.</p>
+        <p className="small"><b>Menu</b> (plats, prix, disponibilité, photos, groupes d'options comme les sauces ou suppléments) : section « Mon commerce » dans le menu de gauche.</p>
+        <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
+          <li>Chaque section du menu (Entrées, Plats, Mitraillettes...) peut avoir ses propres plats, être renommée, réorganisée ou supprimée.</li>
+          <li>Une section peut aussi avoir sa propre photo (icône 🖼️ sur la section), utilisée par défaut pour tous les plats de cette section qui n'ont pas déjà la leur — pratique pour éviter d'uploader la même photo plat par plat. Après l'avoir choisie, il est possible de l'appliquer directement à certains plats précis ou à tous d'un coup.</li>
+          <li>Un plat peut être marqué « indisponible » temporairement (rupture de stock) sans avoir à le supprimer.</li>
+        </ul>
+        <p className="small" style={{ marginBottom: 0 }}>Toute modification (infos comme menu) est répercutée immédiatement côté client, sans délai ni validation à attendre — sauf le changement de type de cuisine, qui exige un code de confirmation reçu par e-mail avant d'être appliqué (car il peut vider le menu actuel).</p>
+      </section>
+
+      <section className="card">
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>3. Installer Fairide sur l'appareil</h3>
         <p className="small">L'installation sur l'écran d'accueil permet d'ouvrir directement l'espace restaurateur en plein écran, sans passer par le navigateur à chaque fois.</p>
         <p className="small" style={{ marginBottom: 4 }}><b>Sur Android (Chrome) :</b> ouvrir le site Fairide, appuyer sur le menu (les trois points en haut à droite), puis choisir « Ajouter à l'écran d'accueil ».</p>
         <p className="small" style={{ marginBottom: 0 }}><b>Sur iPhone ou iPad (Safari) :</b> ouvrir le site Fairide, appuyer sur le bouton Partager (le carré avec une flèche vers le haut), puis choisir « Sur l'écran d'accueil ».</p>
       </section>
 
       <section className="card" style={{ borderLeft: '3px solid var(--gold)' }}>
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>3. Suivre les commandes pendant le service</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>4. Suivre les commandes pendant le service</h3>
         <p className="small">Il n'existe pas encore de notification automatique (pas de son, pas d'alerte visible même écran verrouillé) : la liste des commandes se met à jour automatiquement toutes les 15 secondes tant que la page est ouverte.</p>
         <p className="small">Un e-mail récapitulatif est envoyé automatiquement à l'adresse du restaurant à chaque commande payée (voir la solution de repli plus bas) : consulter aussi la boîte mail pendant le service permet de ne rien manquer.</p>
         <p className="small" style={{ marginBottom: 0 }}>En attendant que les notifications soient disponibles, il est conseillé de garder la page des commandes ouverte, l'appareil allumé et déverrouillé, et de vérifier l'écran régulièrement pendant les heures de service.</p>
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>4. Recevoir et accepter une commande</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>5. Recevoir et accepter une commande</h3>
         <p className="small">Une nouvelle commande apparaît dans la liste avec le statut Nouvelle. La fiche affiche les articles commandés, les options choisies pour chacun (par exemple une sauce ou une taille) et le commentaire laissé par le client, s'il y en a un.</p>
         <p className="small">Il n'existe pas de champ spécifique pour une allergie : si un client a une allergie, elle est signalée dans son commentaire ou par téléphone.</p>
         <p className="small">Deux boutons sont disponibles : Accepter et Refuser.</p>
@@ -57,7 +70,7 @@ export default function GuidePage() {
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>5. Suivre la commande jusqu'à la fin</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>6. Suivre la commande jusqu'à la fin</h3>
         <p className="small">Les statuts se suivent dans cet ordre : Nouvelle, En préparation, Prête, et pour une commande à livrer, En livraison, puis Livrée (Récupérée pour une commande à emporter, Terminée pour une commande sur place).</p>
         <p className="small">Pour une commande à livrer, une fois acceptée, l'application indique si un livreur a déjà confirmé la prise en charge ou si elle est encore en attente d'un livreur.</p>
         <p className="small">Une fois le plat prêt, il faut cliquer sur le bouton Prête : la commande passe à ce statut et devient visible pour les livreurs disponibles.</p>
@@ -66,18 +79,18 @@ export default function GuidePage() {
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>6. Imprimer un bon de commande (optionnel)</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>7. Imprimer un bon de commande (optionnel)</h3>
         <p className="small" style={{ marginBottom: 0 }}>Cette fonctionnalité n'est pas encore disponible : il n'existe pas de bouton dédié pour imprimer une commande, ni de compatibilité avec une imprimante thermique Bluetooth. En attendant, la solution ci-dessous (e-mail) permet de garder une trace de chaque commande et de l'imprimer si besoin, depuis la messagerie.</p>
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>7. Solution de repli : le bon de commande par e-mail</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>8. Solution de repli : le bon de commande par e-mail</h3>
         <p className="small">À chaque commande payée, un e-mail récapitulatif est envoyé automatiquement à l'adresse e-mail du restaurant. Il contient la liste des articles avec leur prix, le sous-total, l'adresse de livraison si applicable, la consigne de livraison choisie par le client, son commentaire éventuel et son numéro de téléphone.</p>
         <p className="small" style={{ marginBottom: 0 }}>Cet e-mail peut être ouvert et imprimé depuis n'importe quelle messagerie, sans avoir besoin d'ouvrir Fairide ni d'imprimante spécifique. L'envoi par WhatsApp n'est pas encore disponible.</p>
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>8. Questions fréquentes</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>9. Questions fréquentes</h3>
         <div className="divider" />
         <p className="small" style={{ marginBottom: 2 }}><b>Une commande a été manquée</b></p>
         <p className="small">Comme il n'existe pas encore de notification, une commande peut être manquée si la page n'était pas ouverte au bon moment. Vérifier régulièrement l'e-mail et la page des commandes pendant le service permet de limiter ce risque.</p>
@@ -93,9 +106,12 @@ export default function GuidePage() {
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>9. Aide</h3>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>10. Aide</h3>
+        <p className="small">
+          Une question sur l'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? L'assistant Fairide 🤖 répond directement dans le tableau de bord — bulle de discussion en bas à droite de l'écran, sur n'importe quelle page.
+        </p>
         <p className="small" style={{ marginBottom: 0 }}>
-          Pour toute question, le support Fairide est joignable par e-mail à <a href="mailto:contact@fairide.be">contact@fairide.be</a> ou par téléphone au <a href="tel:+32474200713">+32 474 20 07 13</a>.
+          Pour toute autre question, le support Fairide est joignable par e-mail à <a href="mailto:contact@fairide.be">contact@fairide.be</a> ou par téléphone au <a href="tel:+32474200713">+32 474 20 07 13</a>.
         </p>
       </section>
     </div>
