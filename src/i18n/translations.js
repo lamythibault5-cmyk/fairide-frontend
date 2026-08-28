@@ -123,12 +123,6 @@ export const translations = {
       backToMap: '← Retour à la carte',
       reviewsCount: '({count} avis)'
     },
-    categoryQuickNav: {
-      cart: '{count} · {total}€',
-      cartEmpty: 'Panier vide',
-      goToCheckout: 'Valider ma commande',
-      clearCart: '🗑️ Vider le panier'
-    },
     restaurantMenu: {
       backToRestaurants: '← Tous les restaurants',
       ratingReviews: '{rating} ({count} avis)',
@@ -633,12 +627,6 @@ export const translations = {
       backToMap: '← Back to map',
       reviewsCount: '({count} reviews)'
     },
-    categoryQuickNav: {
-      cart: '{count} · €{total}',
-      cartEmpty: 'Empty cart',
-      goToCheckout: 'Go to checkout',
-      clearCart: '🗑️ Clear cart'
-    },
     restaurantMenu: {
       backToRestaurants: '← All restaurants',
       ratingReviews: '{rating} ({count} reviews)',
@@ -1142,12 +1130,6 @@ export const translations = {
       viewRestaurant: 'Restaurant bekijken →',
       backToMap: '← Terug naar de kaart',
       reviewsCount: '({count} beoordelingen)'
-    },
-    categoryQuickNav: {
-      cart: '{count} · {total}€',
-      cartEmpty: 'Winkelmandje leeg',
-      goToCheckout: 'Bestelling bevestigen',
-      clearCart: '🗑️ Winkelmandje leegmaken'
     },
     restaurantMenu: {
       backToRestaurants: '← Alle restaurants',

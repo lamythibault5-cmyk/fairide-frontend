@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { useCart } from '../context/CartContext';
 import { categoryLabel } from '../menuCategories';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...), fixée en
 // haut de l'écran pendant qu'on parcourt le menu. Met en évidence la section actuellement lue, fait
 // défiler la barre elle-même pour garder ce bouton visible (utile en mobile où tous les boutons ne
-// tiennent pas à l'écran à la fois), et fait défiler jusqu'au début d'une section au clic. Affiche
-// aussi en permanence l'état du panier (même à vide), pour que son remplissage reste visible sans
-// avoir à chercher la bulle flottante. Repose sur les ids `menu-cat-<id>` (id de section) posés par
-// MenuCategorySections. `categories` attend des objets { id, name } (une section de restaurant.sections).
+// tiennent pas à l'écran à la fois), et fait défiler jusqu'au début d'une section au clic. Le panier
+// lui-même vit dans FloatingCart (bulle persistante en bas à gauche, sur toutes les pages) — pas de
+// second accès panier ici pour éviter le doublon. Repose sur les ids `menu-cat-<id>` (id de section)
+// posés par MenuCategorySections. `categories` attend des objets { id, name } (une section de
+// restaurant.sections).
 
 // Doit dépasser la hauteur réelle de la barre (~56px) : une section n'est considérée "active" qu'une
 // fois son titre passé sous la barre, pas simplement entré quelque part dans le haut de l'écran.
@@ -18,14 +17,10 @@ const ACTIVE_THRESHOLD_PX = 70;
 
 export default function CategoryQuickNav({ categories }) {
   const { t } = useLanguage();
-  const cart = useCart();
-  const navigate = useNavigate();
   const [active, setActive] = useState(categories[0]?.id);
-  const [showCartMenu, setShowCartMenu] = useState(false);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
   const buttonRefs = useRef(new Map());
-  const cartMenuRef = useRef(null);
 
   useEffect(() => {
     // Scroll-spy par position plutôt que par IntersectionObserver : la section active est la DERNIÈRE
@@ -73,37 +68,17 @@ export default function CategoryQuickNav({ categories }) {
     if (btn) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
   }, [active]);
 
-  // Ferme le menu du panier au clic ailleurs sur la page.
-  useEffect(() => {
-    if (!showCartMenu) return undefined;
-    function onClickOutside(e) {
-      if (cartMenuRef.current && !cartMenuRef.current.contains(e.target)) setShowCartMenu(false);
-    }
-    document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [showCartMenu]);
-
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  function clearCart() {
-    cart.clearLines();
-    setShowCartMenu(false);
-  }
-
-  function goToCheckout() {
-    setShowCartMenu(false);
-    navigate('/checkout');
-  }
-
-  if (categories.length === 0) return null;
+  if (categories.length < 2) return null;
 
   return (
     <div className="category-quicknav">
       <div className="category-quicknav-sections">
-        {categories.length >= 2 && categories.map((c) => (
+        {categories.map((c) => (
           <button
             key={c.id}
             type="button"
@@ -114,43 +89,6 @@ export default function CategoryQuickNav({ categories }) {
             {categoryLabel(c.name, t)}
           </button>
         ))}
-      </div>
-      <div className="category-quicknav-cart-wrap" ref={cartMenuRef}>
-        <button
-          type="button"
-          className={`category-quicknav-cart${cart.count === 0 ? ' empty' : ''}`}
-          onClick={() => { if (cart.count > 0) setShowCartMenu((v) => !v); }}
-        >
-          🛒 {cart.count > 0 ? t('categoryQuickNav.cart', { count: cart.count, total: cart.rawTotal.toFixed(2) }) : t('categoryQuickNav.cartEmpty')}
-        </button>
-        {showCartMenu && cart.count > 0 && (
-          <div className="category-quicknav-cart-menu">
-            <div className="category-quicknav-cart-lines">
-              {Object.entries(cart.lines).map(([lineKey, line]) => (
-                <div key={lineKey} className="floating-cart-line">
-                  <div className="floating-cart-line-info">
-                    <span className="floating-cart-line-name">{line.name}</span>
-                    {line.optionsSnapshot?.length > 0 && (
-                      <span className="small">{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-                    )}
-                  </div>
-                  <div className="row" style={{ gap: 6, flexShrink: 0 }}>
-                    <button type="button" className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-                    <span>{line.qty}</span>
-                    <button type="button" className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-                    <button type="button" className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>✕</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="row" style={{ justifyContent: 'space-between', fontWeight: 700, margin: '8px 0' }}>
-              <span>{t('common.subtotal')}</span>
-              <span>{cart.rawTotal.toFixed(2)}€</span>
-            </div>
-            <button type="button" className="btn-gold" onClick={goToCheckout}>{t('categoryQuickNav.goToCheckout')}</button>
-            <button type="button" className="btn-danger-ghost" onClick={clearCart}>{t('categoryQuickNav.clearCart')}</button>
-          </div>
-        )}
       </div>
     </div>
   );

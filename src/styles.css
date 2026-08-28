@@ -245,10 +245,8 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
   background: linear-gradient(to bottom, var(--cream) 78%, rgba(251,248,242,0));
 }
-/* Sous-conteneur DÉDIÉ au défilement horizontal des sections (Entrées/Plats/Desserts...) — le panier
-   (ci-dessous) reste volontairement EN DEHORS de ce conteneur : sur un menu à beaucoup de sections en
-   mobile, s'il partageait le même défilement horizontal, il pouvait se retrouver poussé hors champ à
-   droite tant qu'on n'avait pas fait défiler la barre à la main, ce qui contredit "toujours visible". */
+/* Conteneur du défilement horizontal des sections (Entrées/Plats/Desserts...) — occupe toute la barre :
+   le panier vit désormais uniquement dans FloatingCart (bulle en bas à gauche), plus ici. */
 .category-quicknav-sections {
   display: flex; flex-direction: row; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto;
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
@@ -266,60 +264,78 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   background: var(--gold); color: var(--ink); border-color: var(--gold);
   box-shadow: 0 4px 14px rgba(217,164,65,.45);
 }
-/* Accès direct au panier, TOUJOURS visible (hors du conteneur qui défile, voir plus haut) pendant que
-   le client parcourt le menu, pour que son remplissage reste visible en continu sans avoir à chercher la
-   bulle flottante en bas de l'écran. Distingué en teinte foncée pour rester repérable à côté des
-   sections. */
-.category-quicknav-cart-wrap { position: relative; flex: 0 0 auto; }
-.category-quicknav-cart {
-  background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important;
-}
-.category-quicknav-cart:hover { filter: brightness(1.15); }
-/* À vide : n'est pas encore une action ("Voir le panier" n'aurait rien à montrer), juste un indicateur
-   qui se transforme en bouton dès le premier article ajouté — estompé et sans le curseur pointeur d'un
-   vrai bouton pour ne pas laisser croire qu'il y a quelque chose à cliquer avant ça. */
-.category-quicknav-cart.empty {
-  background: rgba(22,35,58,0.45) !important; border-color: transparent !important; cursor: default;
-}
-.category-quicknav-cart.empty:hover { filter: none; }
-/* Petit menu qui s'ouvre au clic sur le panier (voir permis "vider le panier" ou valider directement),
-   plutôt qu'une redirection immédiate vers /checkout qui ne proposait aucune alternative. */
-.category-quicknav-cart-menu {
-  position: absolute; top: calc(100% + 6px); right: 0; z-index: 45;
-  background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
-  padding: 10px; display: flex; flex-direction: column; gap: 6px;
-  width: min(280px, calc(100vw - 24px));
-  animation: fadeInUp .15s ease both;
-}
-.category-quicknav-cart-menu > button { width: 100%; white-space: nowrap; }
-/* Liste des lignes du panier, éditable directement depuis la barre de navigation (voir demande client :
-   ajuster quantités/supprimer sans quitter le menu) — hauteur plafonnée avec défilement propre plutôt
-   que de laisser le popover grandir indéfiniment si le panier contient beaucoup d'articles différents. */
-.category-quicknav-cart-lines { max-height: 45vh; overflow-y: auto; }
-.category-quicknav-cart-lines .floating-cart-line { padding: 7px 0; }
-.category-quicknav-cart-lines .floating-cart-line-name { max-width: 150px; }
 
 .floating-cart {
-  position: fixed; left: 12px; bottom: 12px; z-index: 46;
-  width: min(300px, calc(100vw - 24px));
-  background: #fff; border: 1px solid var(--line); border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(22,35,58,.2);
+  position: fixed; left: 16px; bottom: 16px; z-index: 46;
+  width: min(320px, calc(100vw - 28px));
+  background: #fff; border: 1px solid var(--line); border-radius: 20px;
+  box-shadow: 0 16px 40px rgba(22,35,58,.22);
   display: flex; flex-direction: column; overflow: hidden;
-  max-height: min(70vh, 460px);
-  animation: fadeInUp .25s ease both;
+  max-height: min(72vh, 480px);
+  animation: fadeInUp .22s cubic-bezier(.2,.8,.3,1) both;
 }
 .floating-cart-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 12px 14px; background: var(--cream-dim); border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 14px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--teal), #1f4d40); color: #fff;
 }
-.floating-cart-lines { overflow-y: auto; padding: 4px 14px; flex: 1; }
-.floating-cart-line { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--cream-dim); }
+.floating-cart-header-icon {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.floating-cart-header-text { min-width: 0; flex: 1; }
+.floating-cart-header-text b { font-size: 14px; }
+.floating-cart-header-sub { color: rgba(255,255,255,.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.floating-cart-lines { overflow-y: auto; padding: 6px 14px; flex: 1; }
+.floating-cart-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--cream-dim); }
 .floating-cart-line:last-child { border-bottom: none; }
-.floating-cart-line-info { display: flex; flex-direction: column; min-width: 0; }
-.floating-cart-line-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 130px; }
-.floating-cart-remove { background: transparent; border: none; color: var(--red); font-size: 13px; padding: 3px 5px; line-height: 1; }
-.floating-cart-footer { padding: 12px 14px; border-top: 1px solid var(--cream-dim); flex-shrink: 0; }
-.floating-cart-collapse { background: transparent; border: none; font-size: 14px; line-height: 1; cursor: pointer; color: var(--ink-soft); padding: 2px 4px; }
+.floating-cart-line-info { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+.floating-cart-line-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.floating-cart-line-options { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
+.floating-cart-line-price { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
+.floating-cart-line-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Stepper en pilule segmentée (plutôt que deux boutons outline séparés) : plus compact, plus lisible,
+   et visuellement cohérent avec le reste des contrôles arrondis du panier. */
+.floating-cart-stepper {
+  display: flex; align-items: center; background: var(--cream-dim); border-radius: 999px; overflow: hidden;
+}
+.floating-cart-stepper button {
+  background: transparent; border: none; width: 26px; height: 26px; font-size: 15px; font-weight: 700;
+  color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  line-height: 1; transition: background .15s ease;
+}
+.floating-cart-stepper button:hover { background: rgba(217,164,65,.35); }
+.floating-cart-stepper span { min-width: 18px; text-align: center; font-weight: 700; font-size: 13px; }
+.floating-cart-remove {
+  background: transparent; border: none; color: var(--red); font-size: 13px; padding: 3px 4px; line-height: 1;
+  cursor: pointer; opacity: .75; transition: opacity .15s ease;
+}
+.floating-cart-remove:hover { opacity: 1; }
+.floating-cart-footer { padding: 12px 14px 14px; border-top: 1px solid var(--cream-dim); flex-shrink: 0; }
+.floating-cart-subtotal-row {
+  display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0 12px;
+  font-weight: 600; font-size: 13px; color: var(--ink-soft);
+}
+.floating-cart-subtotal-amount { font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.floating-cart-order-btn {
+  width: 100%; background: var(--gold); color: var(--ink); border: none; border-radius: 999px;
+  padding: 12px; font-weight: 800; font-size: 14px; cursor: pointer;
+  box-shadow: 0 6px 16px rgba(217,164,65,.4); transition: transform .15s ease, box-shadow .15s ease;
+}
+.floating-cart-order-btn:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(217,164,65,.5); }
+.floating-cart-clear-link {
+  display: block; width: 100%; text-align: center; background: transparent; border: none;
+  color: var(--ink-soft); font-size: 12.5px; padding: 9px 4px 0; cursor: pointer; opacity: .8;
+  transition: opacity .15s ease, color .15s ease;
+}
+.floating-cart-clear-link:hover { opacity: 1; color: var(--red); }
+.floating-cart-collapse {
+  flex-shrink: 0; background: rgba(255,255,255,.15); border: none; border-radius: 50%;
+  width: 26px; height: 26px; font-size: 13px; line-height: 1; cursor: pointer; color: #fff;
+  transition: background .15s ease;
+}
+.floating-cart-collapse:hover { background: rgba(255,255,255,.3); }
 /* Sur mobile, le widget assistant flottant occupe déjà le coin bas-droit (54px, right/bottom 12px) —
    la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. */
 @media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; bottom: 82px; max-height: min(55vh, 400px); } }
@@ -334,15 +350,22 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 /* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
    déploie le récap complet ci-dessus plutôt que de l'imposer en permanence sur toutes les pages. */
 .floating-cart-bubble {
-  position: fixed; left: 12px; bottom: 12px; z-index: 46;
-  display: flex; align-items: center; gap: 8px;
-  background: var(--teal); color: #fff; border: none; border-radius: 999px;
-  padding: 10px 16px; font-weight: 700; font-size: 14px; cursor: pointer;
-  box-shadow: 0 10px 30px rgba(22,35,58,.25);
-  animation: fadeInUp .25s ease both;
+  position: fixed; left: 16px; bottom: 16px; z-index: 46;
+  display: flex; align-items: center; gap: 10px;
+  background: linear-gradient(135deg, var(--teal), #1f4d40); color: #fff; border: none; border-radius: 999px;
+  padding: 9px 18px 9px 9px; font-weight: 700; font-size: 13.5px; cursor: pointer;
+  box-shadow: 0 12px 28px rgba(22,35,58,.3);
+  animation: fadeInUp .22s cubic-bezier(.2,.8,.3,1) both;
+  transition: transform .15s ease, box-shadow .15s ease;
 }
-.floating-cart-bubble:hover { filter: brightness(1.05); }
-.floating-cart-bubble-count { background: rgba(255,255,255,.25); border-radius: 999px; padding: 1px 8px; font-size: 12px; }
+.floating-cart-bubble:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(22,35,58,.36); }
+.floating-cart-bubble-icon {
+  width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2);
+  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
+}
+.floating-cart-bubble-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
+.floating-cart-bubble-count { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.85); }
+.floating-cart-bubble-total { font-size: 14.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
 @media (max-width: 480px) { .floating-cart-bubble { left: 8px; bottom: 82px; } }
 
 .modal-overlay {

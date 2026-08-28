@@ -4,9 +4,11 @@ import { api } from '../api';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 
-// Panier persistant sur toutes les pages (monté une seule fois dans Layout.jsx) : une petite bulle tant
-// qu'on ne clique pas dessus, plutôt que le récap complet toujours déployé — moins intrusif pendant
-// qu'on parcourt le site, mais jamais perdu en changeant de page grâce à CartContext (sessionStorage).
+// Panier persistant sur toutes les pages (monté une seule fois dans Layout.jsx), toujours en bas à
+// gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
+// toujours déployé — moins intrusif pendant qu'on parcourt le site, mais jamais perdu en changeant de
+// page grâce à CartContext (sessionStorage). Seul et unique accès panier de l'appli (pas de doublon
+// dans la barre de sections du menu, voir CategoryQuickNav).
 export default function FloatingCart() {
   const cart = useCart();
   const navigate = useNavigate();
@@ -33,26 +35,29 @@ export default function FloatingCart() {
   if (!expanded) {
     return (
       <button type="button" className="floating-cart-bubble" onClick={handleExpand}>
-        <span>🛒</span>
-        <span className="floating-cart-bubble-count">{cart.count}</span>
-        <span>{cart.rawTotal.toFixed(2)}€</span>
+        <span className="floating-cart-bubble-icon">🛒</span>
+        <span className="floating-cart-bubble-text">
+          <span className="floating-cart-bubble-count">{t('floatingCart.itemCount', { count: cart.count })}</span>
+          <span className="floating-cart-bubble-total">{cart.rawTotal.toFixed(2)}€</span>
+        </span>
       </button>
     );
   }
 
   const totals = preciseData ? cart.totals(preciseData.menu, preciseData.cartPromo) : null;
+  const displayedSubtotal = loadingPrecise ? null : (totals ? totals.subtotal : cart.rawTotal);
 
   return (
     <div className="floating-cart">
       <div className="floating-cart-header">
-        <div style={{ minWidth: 0 }}>
+        <span className="floating-cart-header-icon">🛒</span>
+        <div className="floating-cart-header-text">
           <b>{t('floatingCart.title')}</b>
-          {cart.restaurantName && <div className="small" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cart.restaurantName}</div>}
+          <div className="small floating-cart-header-sub">
+            {cart.restaurantName ? `${cart.restaurantName} · ` : ''}{t('floatingCart.itemCount', { count: cart.count })}
+          </div>
         </div>
-        <div className="row" style={{ gap: 8, flexShrink: 0 }}>
-          <span className="small">{t('floatingCart.itemCount', { count: cart.count })}</span>
-          <button type="button" className="floating-cart-collapse" onClick={() => setExpanded(false)} aria-label={t('floatingCart.collapse')}>✕</button>
-        </div>
+        <button type="button" className="floating-cart-collapse" onClick={() => setExpanded(false)} aria-label={t('floatingCart.collapse')}>✕</button>
       </div>
       <div className="floating-cart-lines">
         {Object.entries(cart.lines).map(([lineKey, line]) => (
@@ -60,14 +65,17 @@ export default function FloatingCart() {
             <div className="floating-cart-line-info">
               <span className="floating-cart-line-name">{line.name}</span>
               {line.optionsSnapshot?.length > 0 && (
-                <span className="small">{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
+                <span className="small floating-cart-line-options">{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
               )}
+              <span className="floating-cart-line-price">{(line.unitPrice * line.qty).toFixed(2)}€</span>
             </div>
-            <div className="row" style={{ gap: 6, flexShrink: 0 }}>
-              <button className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-              <span>{line.qty}</span>
-              <button className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-              <button className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>✕</button>
+            <div className="floating-cart-line-actions">
+              <div className="floating-cart-stepper">
+                <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label="−">−</button>
+                <span>{line.qty}</span>
+                <button type="button" onClick={() => cart.changeLineQty(lineKey, 1)} aria-label="+">+</button>
+              </div>
+              <button type="button" className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>🗑️</button>
             </div>
           </div>
         ))}
@@ -78,14 +86,14 @@ export default function FloatingCart() {
             <span className="small">🏷️ {d.name || d.label}</span><span className="small">-{d.discount.toFixed(2)}€</span>
           </div>
         ))}
-        <div className="row" style={{ justifyContent: 'space-between', fontWeight: 700, marginBottom: 10 }}>
+        <div className="floating-cart-subtotal-row">
           <span>{t('common.subtotal')}</span>
-          <span>{loadingPrecise ? '...' : (totals ? totals.subtotal : cart.rawTotal).toFixed(2)}€</span>
+          <span className="floating-cart-subtotal-amount">{loadingPrecise ? '···' : `${displayedSubtotal.toFixed(2)}€`}</span>
         </div>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn-gold" style={{ flex: 1 }} onClick={() => navigate('/checkout')}>{t('floatingCart.order')}</button>
-          <button className="btn-danger-ghost" onClick={() => cart.clearLines()}>{t('floatingCart.clear')}</button>
-        </div>
+        <button type="button" className="floating-cart-order-btn" onClick={() => navigate('/checkout')}>
+          {t('floatingCart.order')}
+        </button>
+        <button type="button" className="floating-cart-clear-link" onClick={() => cart.clearLines()}>🗑️ {t('floatingCart.clear')}</button>
       </div>
     </div>
   );
