@@ -124,7 +124,8 @@ export const translations = {
       reviewsCount: '({count} avis)'
     },
     categoryQuickNav: {
-      cart: '{count} · {total}€'
+      cart: '{count} · {total}€',
+      cartEmpty: 'Panier vide'
     },
     restaurantMenu: {
       backToRestaurants: '← Tous les restaurants',
@@ -630,7 +631,8 @@ export const translations = {
       reviewsCount: '({count} reviews)'
     },
     categoryQuickNav: {
-      cart: '{count} · €{total}'
+      cart: '{count} · €{total}',
+      cartEmpty: 'Empty cart'
     },
     restaurantMenu: {
       backToRestaurants: '← All restaurants',
@@ -1136,7 +1138,8 @@ export const translations = {
       reviewsCount: '({count} beoordelingen)'
     },
     categoryQuickNav: {
-      cart: '{count} · {total}€'
+      cart: '{count} · {total}€',
+      cartEmpty: 'Winkelmandje leeg'
     },
     restaurantMenu: {
       backToRestaurants: '← Alle restaurants',

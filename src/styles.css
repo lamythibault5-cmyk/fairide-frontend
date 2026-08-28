@@ -259,13 +259,21 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   background: var(--gold); color: var(--ink); border-color: var(--gold);
   box-shadow: 0 4px 14px rgba(217,164,65,.45);
 }
-/* Accès direct au panier depuis la barre de sections, toujours visible en la parcourant (sticky comme
-   le reste de la barre) — évite de devoir chercher la bulle flottante en bas de l'écran. Poussé à droite
-   (margin-left: auto) et distingué en teinte foncée pour rester repérable même parmi les boutons actifs. */
+/* Accès direct au panier depuis la barre de sections, TOUJOURS affiché en la parcourant (même à vide)
+   pour que son remplissage reste visible en continu, sans avoir à chercher la bulle flottante en bas de
+   l'écran. Poussé à droite (margin-left: auto) et distingué en teinte foncée pour rester repérable même
+   parmi les boutons de section actifs. */
 .category-quicknav-cart {
   margin-left: auto; background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important;
 }
 .category-quicknav-cart:hover { filter: brightness(1.15); }
+/* À vide : n'est pas encore une action ("Voir le panier" n'aurait rien à montrer), juste un indicateur
+   qui se transforme en bouton dès le premier article ajouté — estompé et sans le curseur pointeur d'un
+   vrai bouton pour ne pas laisser croire qu'il y a quelque chose à cliquer avant ça. */
+.category-quicknav-cart.empty {
+  background: rgba(22,35,58,0.45) !important; border-color: transparent !important; cursor: default;
+}
+.category-quicknav-cart.empty:hover { filter: none; }
 
 .floating-cart {
   position: fixed; left: 12px; bottom: 12px; z-index: 46;
