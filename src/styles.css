@@ -359,6 +359,14 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   transition: transform .15s ease, box-shadow .15s ease;
 }
 .floating-cart-bubble:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(22,35,58,.36); }
+/* Panier vide : reste affiché (au lieu de disparaître complètement) pour que le client sache toujours où
+   le retrouver, mais estompé et non cliquable puisqu'il n'y a rien à déplier. */
+.floating-cart-bubble-empty {
+  background: rgba(22,35,58,.4); box-shadow: 0 8px 20px rgba(22,35,58,.18); cursor: default;
+}
+.floating-cart-bubble-empty:hover { transform: none; box-shadow: 0 8px 20px rgba(22,35,58,.18); }
+.floating-cart-bubble-empty .floating-cart-bubble-text { flex-direction: row; }
+.floating-cart-bubble-empty .floating-cart-bubble-count { font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,.9); }
 .floating-cart-bubble-icon {
   width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2);
   display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;

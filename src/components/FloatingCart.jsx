@@ -8,7 +8,9 @@ import { useLanguage } from '../context/LanguageContext';
 // gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
 // toujours déployé — moins intrusif pendant qu'on parcourt le site, mais jamais perdu en changeant de
 // page grâce à CartContext (sessionStorage). Seul et unique accès panier de l'appli (pas de doublon
-// dans la barre de sections du menu, voir CategoryQuickNav).
+// dans la barre de sections du menu, voir CategoryQuickNav). Reste affiché même à vide (indicateur
+// estompé, non cliquable) pour que le client sache toujours où se trouve son panier plutôt que de le
+// voir disparaître entièrement de l'écran une fois vidé.
 export default function FloatingCart() {
   const cart = useCart();
   const navigate = useNavigate();
@@ -19,8 +21,6 @@ export default function FloatingCart() {
   const [preciseData, setPreciseData] = useState(null);
   const [loadingPrecise, setLoadingPrecise] = useState(false);
 
-  if (cart.count === 0) return null;
-
   function handleExpand() {
     setExpanded(true);
     if (!preciseData && cart.restaurantId) {
@@ -30,6 +30,17 @@ export default function FloatingCart() {
         .catch(() => {})
         .finally(() => setLoadingPrecise(false));
     }
+  }
+
+  if (cart.count === 0) {
+    return (
+      <div className="floating-cart-bubble floating-cart-bubble-empty">
+        <span className="floating-cart-bubble-icon">🛒</span>
+        <span className="floating-cart-bubble-text">
+          <span className="floating-cart-bubble-count">{t('floatingCart.emptyLabel')}</span>
+        </span>
+      </div>
+    );
   }
 
   if (!expanded) {

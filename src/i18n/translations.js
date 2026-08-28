@@ -135,6 +135,7 @@ export const translations = {
     },
     floatingCart: {
       title: '🛒 Ton panier',
+      emptyLabel: 'Panier vide',
       itemCount: '{count} article(s)',
       removeItem: 'Retirer ce produit',
       order: 'Commander',
@@ -639,6 +640,7 @@ export const translations = {
     },
     floatingCart: {
       title: '🛒 Your cart',
+      emptyLabel: 'Empty cart',
       itemCount: '{count} item(s)',
       removeItem: 'Remove this item',
       order: 'Order',
@@ -1143,6 +1145,7 @@ export const translations = {
     },
     floatingCart: {
       title: '🛒 Jouw winkelmandje',
+      emptyLabel: 'Winkelmandje leeg',
       itemCount: '{count} artikel(en)',
       removeItem: 'Dit product verwijderen',
       order: 'Bestellen',
