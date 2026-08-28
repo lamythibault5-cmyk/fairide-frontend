@@ -253,11 +253,11 @@ export default function MenuPage() {
     if (!sectionApplyPanel || applySelectedIds.size === 0) return;
     setApplyingImage(true);
     try {
-      await api(`/restaurants/${restoId}/sections/${sectionApplyPanel.section.id}/apply-image`, {
+      const res = await api(`/restaurants/${restoId}/sections/${sectionApplyPanel.section.id}/apply-image`, {
         method: 'POST', token, body: { itemIds: [...applySelectedIds] }
       });
       await loadDashboard(restoId);
-      toast(`Photo appliquée à ${applySelectedIds.size} plat(s).`);
+      toast(`Photo appliquée à ${res.count} plat(s).`);
       setSectionApplyPanel(null);
     } catch (e) {
       toast(e.message);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../context/CartContext';
@@ -20,6 +20,21 @@ export default function FloatingCart() {
   // main puisqu'il peut être affiché depuis n'importe quelle page, pas seulement celle du restaurant.
   const [preciseData, setPreciseData] = useState(null);
   const [loadingPrecise, setLoadingPrecise] = useState(false);
+
+  // preciseData vient du menu/promo du restaurant en cours au moment où le panier a été ouvert — sans
+  // ce reset, changer de restaurant (nouvelle commande après une première terminée, ou panier vidé puis
+  // rempli ailleurs) réutiliserait le menu de l'ANCIEN restaurant pour calculer les totaux du nouveau
+  // panier, avec des prix/promos qui n'ont rien à voir.
+  useEffect(() => {
+    setPreciseData(null);
+  }, [cart.restaurantId]);
+
+  // Repasse la bulle à l'état replié une fois le panier vide (qu'il ait été vidé au restaurant en cours
+  // via le stepper, ou en changeant de restaurant) — sinon, une fois rempli à nouveau, elle rouvrirait
+  // directement en grand au lieu de repartir pliée comme au premier ajout.
+  useEffect(() => {
+    if (cart.count === 0) setExpanded(false);
+  }, [cart.count]);
 
   function handleExpand() {
     setExpanded(true);
