@@ -9,7 +9,7 @@ import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { money, fmtDate, fmtDateTime, useDebouncedValue, downloadPdf, INVOICE_STATUS_LABELS, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 
-const TABS = ['Factures', 'Relevés livreurs'];
+const TABS = ['Factures', 'Relevés livreurs', 'Autofacturation'];
 const PAGE_SIZE = 25;
 const STATUS_FILTERS = [{ key: '', label: 'Tous' }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
 
@@ -39,6 +39,7 @@ export default function AdminInvoicesPage() {
       )}
       {tab === 'Factures' && <InvoicesTab token={token} toast={toast} presetRestaurantId={restaurantFilter} />}
       {tab === 'Relevés livreurs' && <DriverStatementsTab token={token} toast={toast} />}
+      {tab === 'Autofacturation' && <SelfBillingTab token={token} toast={toast} />}
     </div>
   );
 }
@@ -204,6 +205,14 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     }
   }
 
+  async function downloadInvoiceUbl() {
+    try {
+      await downloadPdf(`/admin/invoices/${id}/ubl`, token, `${inv.invoiceNumber}.xml`);
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
   async function createCreditNote() {
     if (!creditNoteReason.trim()) { toast('Motif requis.'); return; }
     setBusy(true);
@@ -281,6 +290,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
             <h4 style={{ margin: '0 0 6px' }}>Actions</h4>
             <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
               <button className="btn-outline" onClick={downloadInvoicePdf}>⬇️ PDF</button>
+              <button className="btn-outline" onClick={downloadInvoiceUbl} title="Fichier UBL 2.1 (Peppol BIS Billing 3.0), à valider avant tout envoi réel">⬇️ UBL (Peppol)</button>
               <button className="btn-outline" disabled={busy} onClick={sendEmail}>✉️ Envoyer par email</button>
               {inv.status !== 'annulee' && inv.status !== 'payee' && (
                 <button className="btn-outline" disabled={busy} onClick={() => changeStatus('payee')}>Marquer payée</button>
@@ -344,7 +354,8 @@ function DriverStatementsTab({ token, toast }) {
   return (
     <>
       <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-        Documents informatifs — pas des factures au sens légal (livreurs indépendants, pas de TVA applicable). Voir InvoicesPage.jsx côté livreur.
+        Documents informatifs — pas des factures au sens légal. Pour une vraie facture (mentions TVA
+        exactes selon le régime du livreur), voir l'onglet Autofacturation.
       </p>
       <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
         <button className="btn-teal" onClick={() => setShowGenerate(true)}>+ Générer un relevé</button>
@@ -416,6 +427,193 @@ function GenerateStatementModal({ onClose, onGenerated }) {
           <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : 'Générer'}</button>
           <button className="btn-ghost" onClick={onClose}>Annuler</button>
         </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+const VAT_STATUS_LABELS = { franchise: 'Franchise (art. 56bis CTVA)', assujetti: 'Assujetti TVA' };
+
+function SelfBillingTab({ token, toast }) {
+  const [page, setPage] = useState(0);
+  const [data, setData] = useState(null);
+  const [showGenerate, setShowGenerate] = useState(false);
+
+  function load() {
+    setData(null);
+    const params = new URLSearchParams();
+    params.set('limit', PAGE_SIZE);
+    params.set('offset', page * PAGE_SIZE);
+    api(`/admin/self-billing-invoices?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message));
+  }
+  useEffect(load, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function downloadInvoicePdf(inv) {
+    try {
+      await downloadPdf(`/admin/self-billing-invoices/${inv.id}/pdf`, token, `${inv.invoiceNumber}.pdf`);
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
+  async function sendEmail(inv) {
+    try {
+      await api(`/admin/self-billing-invoices/${inv.id}/send`, { method: 'POST', token });
+      toast('Autofacturation envoyée par email.');
+    } catch (e) {
+      toast(e.message);
+    }
+  }
+
+  return (
+    <>
+      <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
+        Facture établie par Fairide au nom du livreur (mention légale "Autofacturation"), pas un simple relevé.
+        Nécessite un régime TVA renseigné et un accord préalable confirmé sur la fiche du livreur.
+      </p>
+      <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
+        <button className="btn-teal" onClick={() => setShowGenerate(true)}>+ Générer une autofacturation</button>
+      </div>
+      {!data && <SkeletonCards count={3} />}
+      {data && data.rows.length === 0 && <div className="empty">Aucune autofacturation.</div>}
+      {data && data.rows.map((inv) => (
+        <div className="card" key={inv.id}>
+          <div className="row" style={{ justifyContent: 'space-between' }}>
+            <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>
+            <span className="pill">{VAT_STATUS_LABELS[inv.vatStatus] || inv.vatStatus}</span>
+          </div>
+          <div className="small">{inv.driverName} · période {fmtDate(inv.periodStart)}</div>
+          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
+            <span className="small">{inv.vatStatus === 'assujetti' ? `HTVA ${money(inv.subtotalHt)} + TVA ${money(inv.vatAmount)}` : 'TVA non applicable'}</span>
+            <b className="small">{money(inv.totalTtc)}</b>
+          </div>
+          <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
+            <span className="small" style={{ opacity: 0.6 }}>Émise le {fmtDateTime(inv.issuedAt)}</span>
+            <div className="row" style={{ gap: 6 }}>
+              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadInvoicePdf(inv)}>⬇️ PDF</button>
+              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => sendEmail(inv)}>✉️ Envoyer</button>
+            </div>
+          </div>
+        </div>
+      ))}
+      {data && data.total > PAGE_SIZE && (
+        <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
+          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+        </div>
+      )}
+      {showGenerate && <GenerateSelfBillingModal onClose={() => setShowGenerate(false)} onGenerated={() => { setShowGenerate(false); load(); }} />}
+    </>
+  );
+}
+
+function GenerateSelfBillingModal({ onClose, onGenerated }) {
+  const { token } = useAuth();
+  const toast = useToast();
+  const [drivers, setDrivers] = useState(null);
+  const [driverId, setDriverId] = useState('');
+  const [driver, setDriver] = useState(null);
+  const [vatStatus, setVatStatus] = useState('');
+  const [vatNumber, setVatNumber] = useState('');
+  const [confirmAgreement, setConfirmAgreement] = useState(false);
+  const [month, setMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
+  const [savingStatus, setSavingStatus] = useState(false);
+  const [generating, setGenerating] = useState(false);
+
+  useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!driverId) { setDriver(null); return; }
+    api(`/admin/drivers/${driverId}`, { token }).then((d) => {
+      setDriver(d);
+      setVatStatus(d.vatStatus || '');
+      setVatNumber(d.vatNumber || '');
+    }).catch((e) => toast(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [driverId]);
+
+  const agreementAlreadyConfirmed = !!driver?.selfBillingAgreedAt;
+  const canGenerate = driver && vatStatus && (vatStatus === 'franchise' || vatNumber.trim()) && (agreementAlreadyConfirmed || confirmAgreement);
+
+  async function saveVatStatus() {
+    setSavingStatus(true);
+    try {
+      const updated = await api(`/admin/drivers/${driverId}/vat-status`, {
+        method: 'PATCH', token, body: { vatStatus, vatNumber: vatStatus === 'assujetti' ? vatNumber.trim() : null, confirmAgreement }
+      });
+      setDriver((d) => ({ ...d, ...updated }));
+      toast('Régime TVA enregistré.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
+  async function generate() {
+    setGenerating(true);
+    try {
+      const inv = await api('/admin/self-billing-invoices/generate', { method: 'POST', token, body: { driverId, month } });
+      toast(`Autofacturation ${inv.invoiceNumber} générée.`);
+      onGenerated();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return createPortal(
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+        <h3 style={{ margin: '0 0 8px' }}>Générer une autofacturation</h3>
+        <div className="field">
+          <label>Livreur</label>
+          <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+            <option value="">Choisir...</option>
+            {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+          </select>
+        </div>
+        {driver && (
+          <div className="card" style={{ background: 'var(--cream-dim)', margin: '10px 0', padding: 12 }}>
+            <p className="small" style={{ margin: '0 0 8px', fontWeight: 700 }}>Régime TVA du livreur</p>
+            <div className="row" style={{ gap: 12, marginBottom: 8 }}>
+              <label className="row" style={{ gap: 4, cursor: 'pointer' }}>
+                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'franchise'} onChange={() => setVatStatus('franchise')} /> Franchise
+              </label>
+              <label className="row" style={{ gap: 4, cursor: 'pointer' }}>
+                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'assujetti'} onChange={() => setVatStatus('assujetti')} /> Assujetti
+              </label>
+            </div>
+            {vatStatus === 'assujetti' && (
+              <input placeholder="Numéro de TVA (BE...)" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
+            )}
+            {agreementAlreadyConfirmed ? (
+              <p className="small" style={{ color: 'var(--teal-deep)', margin: 0 }}>✅ Accord préalable confirmé le {fmtDate(driver.selfBillingAgreedAt)}.</p>
+            ) : (
+              <label className="row" style={{ gap: 6, cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto' }} checked={confirmAgreement} onChange={(e) => setConfirmAgreement(e.target.checked)} />
+                <span className="small">Je confirme que ce livreur a donné son accord écrit préalable à l'autofacturation.</span>
+              </label>
+            )}
+            <button className="btn-outline" style={{ marginTop: 8, padding: '4px 10px', fontSize: 12 }} disabled={savingStatus || !vatStatus} onClick={saveVatStatus}>
+              {savingStatus ? '...' : 'Enregistrer le régime TVA'}
+            </button>
+          </div>
+        )}
+        <div className="field">
+          <label>Mois</label>
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+        </div>
+        <div className="row" style={{ gap: 8, marginTop: 8 }}>
+          <button className="btn-teal" disabled={generating || !canGenerate} onClick={generate}>{generating ? '...' : 'Générer'}</button>
+          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+        </div>
+        {driver && !canGenerate && (
+          <p className="small" style={{ color: 'var(--red)', marginTop: 8 }}>Enregistre le régime TVA et confirme l'accord préalable avant de générer.</p>
+        )}
       </div>
     </div>,
     document.body
