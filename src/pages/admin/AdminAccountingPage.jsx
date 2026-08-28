@@ -411,6 +411,63 @@ function BalanceTab({ token, toast, periodKey }) {
   );
 }
 
+// Déclaration TVA par grille (voir GET /admin/accounting/vat-return, routes/admin.js) : grilles 03/54
+// telles que précisées par l'utilisateur, calculées uniquement depuis des écritures déjà réellement
+// comptabilisées. 59/49 restent à 0 avec un statut "non prêt" explicite plutôt qu'un chiffre inventé —
+// jamais présentée comme prête à déposer telle quelle.
+function VatReturnCard({ token, toast, periodKey }) {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setData(null);
+    api(`/admin/accounting/vat-return?${periodKey}`, { token }).then(setData).catch((e) => toast(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  function exportCsv() {
+    if (!data) { toast('Rien à exporter.'); return; }
+    const grilleRows = Object.entries(data.grilles).map(([code, g]) => ({ code, ...g }));
+    downloadCsv(`declaration-tva-grilles-${Date.now()}.csv`, grilleRows, [
+      { label: 'Grille', get: (r) => r.code }, { label: 'Intitulé', get: (r) => r.label },
+      { label: 'Montant', get: (r) => r.amount }, { label: 'Prêt', get: (r) => r.ready ? 'Oui' : 'Non — ' + (r.reason || '') }
+    ]);
+  }
+
+  if (!data) return <SkeletonCards count={1} />;
+
+  return (
+    <div className="card" style={{ marginBottom: 14 }}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <b>Déclaration TVA par grille</b>
+        <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={exportCsv}>⬇️ CSV</button>
+      </div>
+      {!data.fullyReady && (
+        <p className="small" style={{ margin: '6px 0 10px', color: 'var(--red)' }}>
+          ⚠️ Pas prête à déposer telle quelle — voir les grilles marquées "non prête" ci-dessous, et fait
+          confirmer les numéros de grille par un comptable sur le formulaire Intervat en vigueur.
+        </p>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginTop: 8 }}>
+        {Object.entries(data.grilles).map(([code, g]) => (
+          <div key={code} style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 12px' }}>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <span className="small" style={{ fontFamily: 'monospace', fontWeight: 700 }}>Grille {code}</span>
+              <span className="small" style={{ color: g.ready ? 'var(--teal-deep)' : 'var(--red)' }}>{g.ready ? '✓' : '✗'}</span>
+            </div>
+            <div className="small" style={{ margin: '2px 0 4px', opacity: 0.75 }}>{g.label}</div>
+            <b>{money(g.amount)}</b>
+            {!g.ready && <div className="small" style={{ marginTop: 4, color: 'var(--red)' }}>{g.reason}</div>}
+          </div>
+        ))}
+      </div>
+      <div className="row" style={{ justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+        <b>Solde dû à l'État (54 − 59 − 49)</b>
+        <b>{money(data.soldeDu)}</b>
+      </div>
+    </div>
+  );
+}
+
 function VatTab({ token, toast, periodKey }) {
   const [data, setData] = useState(null);
 
@@ -432,6 +489,7 @@ function VatTab({ token, toast, periodKey }) {
 
   return (
     <>
+      <VatReturnCard token={token} toast={toast} periodKey={periodKey} />
       <div className="card" style={{ borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>
           ⚠️ Taux de TVA par défaut (21%), à confirmer avec un comptable — notamment pour les frais de livraison et de service, qui peuvent avoir une qualification différente de la commission. Configurables dans Paramètres → Tarification.
