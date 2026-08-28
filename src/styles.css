@@ -385,6 +385,12 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   background: var(--cream); border-radius: var(--radius); box-shadow: var(--shadow);
   max-width: 480px; width: 100%; padding: 20px;
 }
+/* Repères d'étape du choix des options (voir OptionsPickerModal) : un point par groupe (boisson, sauce,
+   crudités...), rempli une fois passé, en évidence sur l'étape en cours. */
+.options-picker-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 14px; }
+.options-picker-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex-shrink: 0; }
+.options-picker-dot.done { background: var(--teal); }
+.options-picker-dot.active { background: var(--gold); width: 9px; height: 9px; }
 .order-card-clickable { cursor: pointer; }
 .order-card-clickable:hover { box-shadow: var(--shadow); }
 

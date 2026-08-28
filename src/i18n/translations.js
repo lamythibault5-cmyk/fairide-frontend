@@ -399,7 +399,10 @@ export const translations = {
       required: 'Obligatoire',
       maxChoices: "Choisis jusqu'à {max} option{plural}.",
       price: 'Prix',
-      addToCart: 'Ajouter au panier'
+      addToCart: 'Ajouter au panier',
+      stepIndicator: 'Étape {current} sur {total}',
+      next: 'Suivant →',
+      back: '← Précédent'
     },
     assistant: {
       greeting: "Bonjour ! Je suis l'assistant Fairide 🤖 Pose-moi tes questions sur les commandes, les livraisons, les commissions ou comment devenir partenaire !",
@@ -904,7 +907,10 @@ export const translations = {
       required: 'Required',
       maxChoices: 'Choose up to {max} option{plural}.',
       price: 'Price',
-      addToCart: 'Add to cart'
+      addToCart: 'Add to cart',
+      stepIndicator: 'Step {current} of {total}',
+      next: 'Next →',
+      back: '← Back'
     },
     assistant: {
       greeting: "Hi! I'm the Fairide assistant 🤖 Ask me anything about orders, deliveries, commissions, or how to become a partner!",
@@ -1409,7 +1415,10 @@ export const translations = {
       required: 'Verplicht',
       maxChoices: 'Kies tot {max} optie{plural}.',
       price: 'Prijs',
-      addToCart: 'Toevoegen aan winkelmandje'
+      addToCart: 'Toevoegen aan winkelmandje',
+      stepIndicator: 'Stap {current} van {total}',
+      next: 'Volgende →',
+      back: '← Terug'
     },
     assistant: {
       greeting: 'Hallo! Ik ben de Fairide-assistent 🤖 Stel me je vragen over bestellingen, leveringen, commissies of hoe je partner kan worden!',
