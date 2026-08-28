@@ -3280,6 +3280,26 @@ export function defaultItemImageOrNull(item) {
   return ITEM_IMAGE_OVERRIDES[name] || null;
 }
 
+// Photo choisie par le restaurateur pour toute une SECTION (ex: "Mitraillettes") — voir
+// restaurant_sections.image_url côté backend. Cherche par nom plutôt que par id : `sections` peut venir
+// de sources différentes (restaurant.sections complet, ou juste la section courante dans une boucle
+// d'affichage), le nom (menu_items.category) est la clé commune partout dans le menu.
+export function sectionImageFor(categoryName, sections) {
+  if (!categoryName || !sections) return null;
+  const match = sections.find((s) => s.name === categoryName);
+  return (match?.imageUrl || '').trim() || null;
+}
+
+// Résolution complète de la photo d'un plat, du plus spécifique au plus générique : sa propre photo
+// (si le restaurateur en a mis une) > la photo de sa section (si le restaurateur en a choisi une, voir
+// sectionImageFor) > une correspondance exacte de nom dans le catalogue (defaultItemImageOrNull) > rien
+// (l'affichage retombe alors sur l'emoji de catégorie, voir categoryEmoji). Centralise cet ordre plutôt
+// que de le répéter à chaque endroit qui affiche un plat (menu client, aperçu restaurateur, panier,
+// suggestions dessert/boisson...).
+export function resolveItemImage(item, sections) {
+  return (item?.imageUrl || '').trim() || sectionImageFor(item?.category, sections) || defaultItemImageOrNull(item);
+}
+
 // Liste de quelques photos candidates (pas une seule) pour un plat sans correspondance exacte — puisées
 // dans les mêmes pools KEYWORD_IMAGES que la résolution automatique, mais présentées comme un choix plutôt
 // qu'imposées. Complète la galerie personnelle du resto dans le sélecteur (voir GalleryPickerModal

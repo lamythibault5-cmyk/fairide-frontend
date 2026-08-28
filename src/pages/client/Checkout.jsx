@@ -8,7 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
-import { categoryKind, defaultItemImageOrNull } from '../../menuCategories';
+import { categoryKind, resolveItemImage } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
@@ -54,7 +54,7 @@ function UpsellRow({ items, cart, restaurant }) {
   return (
     <div className="upsell-row">
       {items.map((item) => {
-        const image = item.imageUrl || defaultItemImageOrNull(item);
+        const image = resolveItemImage(item, restaurant.sections);
         return (
           <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
             {image ? <img src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}

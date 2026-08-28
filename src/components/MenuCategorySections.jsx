@@ -1,8 +1,8 @@
-import { categoryEmoji, categoryImage, categoryLabel, defaultItemImageOrNull, groupBySubsection } from '../menuCategories';
+import { categoryEmoji, categoryImage, categoryLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
-function ItemCard({ item, onAdd, hideAdd, t }) {
-  const image = item.imageUrl || defaultItemImageOrNull(item);
+function ItemCard({ item, onAdd, hideAdd, t, sections }) {
+  const image = resolveItemImage(item, sections);
   return (
     <div className="menu-item-card" style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
@@ -37,7 +37,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, hideAdd })
         const items = menu.filter((i) => (i.category || 'plat') === section.name);
         if (!items.length) return null;
         const label = categoryLabel(section.name, t);
-        const image = categoryImage(section.name);
+        const image = section.imageUrl || categoryImage(section.name);
         const subsectionGroups = groupBySubsection(items, section.name, t);
         return (
           <div key={section.id} id={`menu-cat-${section.id}`}>
@@ -49,7 +49,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, hideAdd })
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
                 <div className="menu-grid">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} hideAdd={hideAdd} t={t} />)}
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} hideAdd={hideAdd} t={t} sections={sections} />)}
                 </div>
               </div>
             ))}

@@ -8,7 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import {
   categoryEmoji, categoryImage, categoryLabel, getStarterTemplate,
-  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, defaultItemImageOrNull,
+  fullTemplateItems, quickTemplateItems, CLASSIC_DRINKS, CLASSIC_DESSERTS, missingClassicItems, resolveItemImage,
   groupBySubsection
 } from '../../menuCategories';
 import MenuItemRow from '../../components/MenuItemRow';
@@ -33,6 +33,7 @@ export default function MenuPage() {
   const [editSectionName, setEditSectionName] = useState('');
   const [creatingSection, setCreatingSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
+  const [sectionGalleryFor, setSectionGalleryFor] = useState(null);
 
   const [templateOpen, setTemplateOpen] = useState(false);
   const [addingTemplate, setAddingTemplate] = useState(false);
@@ -222,6 +223,21 @@ export default function MenuPage() {
     }
   }
 
+  // Photo utilisée pour TOUS les plats de cette section qui n'ont pas déjà leur propre photo (voir
+  // resolveItemImage) — évite au restaurateur de devoir uploader la même photo plat par plat (ex: une
+  // section "Mitraillettes" avec plusieurs variantes qui se ressemblent visuellement).
+  async function saveSectionImage(sectionId, imageUrl) {
+    try {
+      await api(`/restaurants/${restoId}/sections/${sectionId}`, { method: 'PATCH', token, body: { imageUrl } });
+      await loadDashboard(restoId);
+      toast(imageUrl ? 'Photo de section enregistrée.' : 'Photo de section retirée.');
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setSectionGalleryFor(null);
+    }
+  }
+
   async function handleSectionRename(id) {
     if (!editSectionName.trim()) return;
     try {
@@ -403,7 +419,7 @@ export default function MenuPage() {
       <div className="card">
         <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Clique sur un plat pour le modifier. Sur chaque section : ☑️ pour sélectionner plusieurs plats et les supprimer d'un coup, ↕️ pour les réorganiser, ✏️ pour la renommer, 🗑️ pour la supprimer.
+          Clique sur un plat pour le modifier. Sur chaque section : ☑️ pour sélectionner plusieurs plats et les supprimer d'un coup, ↕️ pour les réorganiser, 🖼️ pour choisir une photo utilisée pour tous les plats de la section qui n'ont pas déjà la leur, ✏️ pour la renommer, 🗑️ pour la supprimer.
         </p>
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
@@ -412,7 +428,7 @@ export default function MenuPage() {
           const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
           const order = localOrder[section.id];
           const items = order ? order.map((id) => rawItems.find((i) => i.id === id)).filter(Boolean) : rawItems;
-          const image = categoryImage(section.name);
+          const image = section.imageUrl || categoryImage(section.name);
           const sectionSubsections = [...new Set(rawItems.map((i) => i.subsection).filter(Boolean))];
           const inReorder = reorderSectionId === section.id;
           const subsectionGroups = inReorder ? null : groupBySubsection(items, section.name, t);
@@ -441,6 +457,10 @@ export default function MenuPage() {
                       <>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title="Sélectionner plusieurs plats">☑️</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title="Réorganiser les plats">↕️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title="Choisir une photo pour toute la section">🖼️</button>
+                        {section.imageUrl && (
+                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section.id, '')} title="Retirer la photo de section">🖼️✕</button>
+                        )}
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
                         <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
                       </>
@@ -501,8 +521,8 @@ export default function MenuPage() {
                       <label>Image (optionnel)</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         {itemName.trim() && (
-                          (itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })) ? (
-                            <img src={itemImageUrl || defaultItemImageOrNull({ name: itemName, category: itemCategory })} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                          resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections) ? (
+                            <img src={resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
                           ) : (
                             <span className="dish-thumb-empty">{categoryEmoji(itemCategory)}</span>
                           )
@@ -544,6 +564,16 @@ export default function MenuPage() {
           <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>+ Nouvelle section</button>
         ))}
       </div>
+
+      {sectionGalleryFor && (
+        <GalleryPickerModal
+          restoId={restoId}
+          title={`Photo de la section "${categoryLabel(sectionGalleryFor.name, t)}"`}
+          currentImageUrl={sectionGalleryFor.imageUrl}
+          onSelect={(url) => saveSectionImage(sectionGalleryFor.id, url)}
+          onCancel={() => setSectionGalleryFor(null)}
+        />
+      )}
 
       <OptionGroupManager
         groups={restaurant.optionGroups || []}
