@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useOutletContext } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
@@ -34,6 +35,9 @@ export default function MenuPage() {
   const [creatingSection, setCreatingSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [sectionGalleryFor, setSectionGalleryFor] = useState(null);
+  const [sectionApplyPanel, setSectionApplyPanel] = useState(null);
+  const [applySelectedIds, setApplySelectedIds] = useState(new Set());
+  const [applyingImage, setApplyingImage] = useState(false);
 
   const [templateOpen, setTemplateOpen] = useState(false);
   const [addingTemplate, setAddingTemplate] = useState(false);
@@ -223,19 +227,51 @@ export default function MenuPage() {
     }
   }
 
-  // Photo utilisée pour TOUS les plats de cette section qui n'ont pas déjà leur propre photo (voir
-  // resolveItemImage) — évite au restaurateur de devoir uploader la même photo plat par plat (ex: une
-  // section "Mitraillettes" avec plusieurs variantes qui se ressemblent visuellement).
-  async function saveSectionImage(sectionId, imageUrl) {
+  // Photo utilisée par défaut pour les plats de cette section qui n'ont pas déjà leur propre photo
+  // (voir resolveItemImage) — évite au restaurateur de devoir uploader la même photo plat par plat (ex:
+  // une section "Mitraillettes" avec plusieurs variantes qui se ressemblent visuellement). Juste après
+  // l'avoir choisie, on lui propose en plus de l'appliquer explicitement à des plats précis (voir
+  // applyImageToItems ci-dessous) — utile par exemple pour écraser une photo déjà présente sur un plat.
+  async function saveSectionImage(section, imageUrl) {
+    const sectionItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
     try {
-      await api(`/restaurants/${restoId}/sections/${sectionId}`, { method: 'PATCH', token, body: { imageUrl } });
+      await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'PATCH', token, body: { imageUrl } });
       await loadDashboard(restoId);
       toast(imageUrl ? 'Photo de section enregistrée.' : 'Photo de section retirée.');
+      if (imageUrl && sectionItems.length > 0) {
+        setSectionApplyPanel({ section: { ...section, imageUrl }, items: sectionItems });
+        setApplySelectedIds(new Set(sectionItems.map((i) => i.id)));
+      }
     } catch (e) {
       toast(e.message);
     } finally {
       setSectionGalleryFor(null);
     }
+  }
+
+  async function applyImageToItems() {
+    if (!sectionApplyPanel || applySelectedIds.size === 0) return;
+    setApplyingImage(true);
+    try {
+      await api(`/restaurants/${restoId}/sections/${sectionApplyPanel.section.id}/apply-image`, {
+        method: 'POST', token, body: { itemIds: [...applySelectedIds] }
+      });
+      await loadDashboard(restoId);
+      toast(`Photo appliquée à ${applySelectedIds.size} plat(s).`);
+      setSectionApplyPanel(null);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setApplyingImage(false);
+    }
+  }
+
+  function toggleApplyItem(itemId) {
+    setApplySelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(itemId)) next.delete(itemId); else next.add(itemId);
+      return next;
+    });
   }
 
   async function handleSectionRename(id) {
@@ -459,7 +495,7 @@ export default function MenuPage() {
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title="Réorganiser les plats">↕️</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title="Choisir une photo pour toute la section">🖼️</button>
                         {section.imageUrl && (
-                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section.id, '')} title="Retirer la photo de section">🖼️✕</button>
+                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title="Retirer la photo de section">🖼️✕</button>
                         )}
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
                         <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
@@ -570,9 +606,53 @@ export default function MenuPage() {
           restoId={restoId}
           title={`Photo de la section "${categoryLabel(sectionGalleryFor.name, t)}"`}
           currentImageUrl={sectionGalleryFor.imageUrl}
-          onSelect={(url) => saveSectionImage(sectionGalleryFor.id, url)}
+          onSelect={(url) => saveSectionImage(sectionGalleryFor, url)}
           onCancel={() => setSectionGalleryFor(null)}
         />
+      )}
+
+      {sectionApplyPanel && createPortal(
+        <div className="modal-overlay" onClick={() => setSectionApplyPanel(null)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>Appliquer cette photo à quels plats ?</h3>
+            <p className="small" style={{ margin: '0 0 12px' }}>
+              La photo est déjà celle par défaut de la section "{categoryLabel(sectionApplyPanel.section.name, t)}" pour les plats
+              sans photo propre. Tu peux en plus l'appliquer directement sur des plats précis (utile pour remplacer une photo
+              déjà présente) — décoche ceux à laisser tels quels, ou ignore pour ne rien changer aux plats.
+            </p>
+            <div className="row" style={{ gap: 8, marginBottom: 10 }}>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
+                Tout sélectionner
+              </button>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set())}>
+                Tout désélectionner
+              </button>
+            </div>
+            <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 14 }}>
+              {sectionApplyPanel.items.map((item) => (
+                <label key={item.id} className="row" style={{ gap: 8, marginBottom: 6, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    style={{ width: 'auto' }}
+                    checked={applySelectedIds.has(item.id)}
+                    onChange={() => toggleApplyItem(item.id)}
+                  />
+                  <span>{item.name}</span>
+                  {item.imageUrl && item.imageUrl !== sectionApplyPanel.section.imageUrl && (
+                    <span className="small" style={{ opacity: 0.7 }}>(a déjà sa propre photo)</span>
+                  )}
+                </label>
+              ))}
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <button className="btn-teal" disabled={applyingImage || applySelectedIds.size === 0} onClick={applyImageToItems}>
+                {applyingImage ? '...' : `Appliquer à ${applySelectedIds.size} plat(s)`}
+              </button>
+              <button className="btn-ghost" disabled={applyingImage} onClick={() => setSectionApplyPanel(null)}>Ignorer</button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       <OptionGroupManager
