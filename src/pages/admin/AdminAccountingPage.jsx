@@ -466,6 +466,47 @@ function VatTab({ token, toast, periodKey }) {
 
 const RECONCILIATION_LABELS = { rapproche: '✅ Rapproché', non_rapproche: '🕐 Non rapproché', problematique: '⚠️ Problématique' };
 
+// Comparaison en direct avec l'API Stripe (pas dérivée des colonnes déjà en base comme le reste de cet
+// onglet) : solde du compte 5500-STRIPE dans les livres vs solde Stripe réel à l'instant présent. Sur
+// toute la durée de vie du compte, pas seulement la période choisie — un écart d'aujourd'hui vient d'un
+// mouvement Stripe jamais traduit en écriture, peu importe quand il a eu lieu.
+function StripeBalanceCard({ token, toast }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  function check() {
+    setLoading(true);
+    api('/admin/accounting/stripe-balance', { token }).then(setData).catch((e) => toast(e.message)).finally(() => setLoading(false));
+  }
+  useEffect(check, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="card" style={{ borderLeft: `3px solid ${!data ? 'var(--line)' : data.matched ? 'var(--teal-deep)' : 'var(--red)'}`, marginBottom: 14 }}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <b>
+          {!data ? 'Solde Stripe : vérification…' : data.matched ? '✅ Solde Stripe conforme aux livres' : '⚠️ Écart avec le solde Stripe réel'}
+        </b>
+        <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={loading} onClick={check}>{loading ? '...' : '🔄 Revérifier'}</button>
+      </div>
+      {data && (
+        <>
+          <div className="row" style={{ gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
+            <span className="small">Livres (5500-STRIPE) : <b>{money(data.booksBalance)}</b></span>
+            <span className="small">Stripe disponible : <b>{money(data.stripeAvailable)}</b></span>
+            <span className="small">Stripe en attente : <b>{money(data.stripePending)}</b></span>
+          </div>
+          {!data.matched && (
+            <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
+              Écart de {money(Math.abs(data.delta))} ({data.delta > 0 ? 'les livres montrent plus que Stripe' : 'Stripe montre plus que les livres'}).
+              Vérifié à {fmtDateTime(data.checkedAt)}.
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
 function ReconciliationTab({ token, toast, periodKey }) {
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState('non_rapproche');
@@ -484,11 +525,12 @@ function ReconciliationTab({ token, toast, periodKey }) {
     ]);
   }
 
-  if (!data) return <SkeletonCards count={3} />;
+  if (!data) return (<><StripeBalanceCard token={token} toast={toast} /><SkeletonCards count={3} /></>);
   const rows = data.rows.filter((r) => !filter || r.state === filter);
 
   return (
     <>
+      <StripeBalanceCard token={token} toast={toast} />
       <div className="stat-grid">
         <div className="stat-card"><div className="num">{data.counts.rapproche}</div><div className="label">Rapprochées</div></div>
         <div className="stat-card"><div className="num" style={{ color: 'var(--gold-deep)' }}>{data.counts.non_rapproche}</div><div className="label">Non rapprochées</div></div>

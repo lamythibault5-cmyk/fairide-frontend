@@ -65,7 +65,8 @@ export const ACCOUNTING_ENTRY_TYPE_LABELS = {
   order_payment: 'Paiement client',
   refund: 'Remboursement',
   payout_restaurant: 'Virement restaurant',
-  payout_driver: 'Virement livreur'
+  payout_driver: 'Virement livreur',
+  stripe_fee: 'Frais Stripe'
 };
 
 export const INVOICE_STATUS_LABELS = {
