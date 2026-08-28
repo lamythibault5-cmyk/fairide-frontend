@@ -123,8 +123,30 @@ export default function CategoryQuickNav({ categories }) {
         >
           🛒 {cart.count > 0 ? t('categoryQuickNav.cart', { count: cart.count, total: cart.rawTotal.toFixed(2) }) : t('categoryQuickNav.cartEmpty')}
         </button>
-        {showCartMenu && (
+        {showCartMenu && cart.count > 0 && (
           <div className="category-quicknav-cart-menu">
+            <div className="category-quicknav-cart-lines">
+              {Object.entries(cart.lines).map(([lineKey, line]) => (
+                <div key={lineKey} className="floating-cart-line">
+                  <div className="floating-cart-line-info">
+                    <span className="floating-cart-line-name">{line.name}</span>
+                    {line.optionsSnapshot?.length > 0 && (
+                      <span className="small">{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
+                    )}
+                  </div>
+                  <div className="row" style={{ gap: 6, flexShrink: 0 }}>
+                    <button type="button" className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
+                    <span>{line.qty}</span>
+                    <button type="button" className="btn-outline" style={{ padding: '3px 8px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
+                    <button type="button" className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>✕</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="row" style={{ justifyContent: 'space-between', fontWeight: 700, margin: '8px 0' }}>
+              <span>{t('common.subtotal')}</span>
+              <span>{cart.rawTotal.toFixed(2)}€</span>
+            </div>
             <button type="button" className="btn-gold" onClick={goToCheckout}>{t('categoryQuickNav.goToCheckout')}</button>
             <button type="button" className="btn-danger-ghost" onClick={clearCart}>{t('categoryQuickNav.clearCart')}</button>
           </div>

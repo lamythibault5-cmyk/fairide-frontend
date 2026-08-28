@@ -17,6 +17,13 @@ const DASHBOARD_PATHS = ['/home', '/restaurants', '/favorites', '/orders', '/map
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+// La page menu d'un restaurant (/restaurants/:id) affiche déjà son propre accès panier complet dans sa
+// barre de sections (voir CategoryQuickNav) — la bulle flottante globale y ferait doublon (deux paniers
+// visibles en même temps), donc masquée uniquement là.
+const RESTAURANT_MENU_PATH = /^\/restaurants\/[^/]+$/;
+function isRestaurantMenuPath(pathname) {
+  return RESTAURANT_MENU_PATH.test(pathname);
+}
 
 export default function Layout() {
   const { user, role, logout } = useAuth();
@@ -47,7 +54,7 @@ export default function Layout() {
           {rightSlot && <aside className="dashboard-right">{rightSlot}</aside>}
         </div>
         <CookieBanner />
-        {seesClientCart && <FloatingCart />}
+        {seesClientCart && !isRestaurantMenuPath(location.pathname) && <FloatingCart />}
         <AssistantWidget />
       </>
     );

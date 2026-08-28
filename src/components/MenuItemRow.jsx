@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { CATEGORIES, categoryEmoji, categoryLabel, defaultItemImageOrNull } from '../menuCategories';
+import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, defaultItemImageOrNull } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
 
@@ -21,6 +21,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [category, setCategory] = useState(item.category || 'plat');
   const [subsection, setSubsection] = useState(item.subsection || '');
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
+  const [suggestAtCheckout, setSuggestAtCheckout] = useState(!!item.suggestAtCheckout);
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -39,7 +40,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim() });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       setEditing(false);
     } finally {
@@ -116,6 +117,14 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}
           />
+        )}
+        {categoryKind(category) && (
+          <div className="field">
+            <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" style={{ width: 'auto' }} checked={suggestAtCheckout} onChange={(e) => setSuggestAtCheckout(e.target.checked)} />
+              <span className="small">⭐ Suggérer ce plat juste avant le paiement (au lieu du choix automatique)</span>
+            </label>
+          </div>
         )}
         {allOptionGroups.length > 0 && (
           <div className="field">

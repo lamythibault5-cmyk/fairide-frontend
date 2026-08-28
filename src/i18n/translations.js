@@ -199,6 +199,7 @@ export const translations = {
     checkout: {
       notAvailable: "Ce restaurant n'est plus disponible.",
       upsellTitle: 'Un dessert ou une boisson avec ça ?',
+      continueToDetails: 'Continuer →',
       yourOrder: 'Ta commande',
       yourReservation: 'Ta réservation',
       howToGet: 'Comment récupérer ta commande ?',
@@ -708,6 +709,7 @@ export const translations = {
     checkout: {
       notAvailable: 'This restaurant is no longer available.',
       upsellTitle: 'Fancy a dessert or a drink with that?',
+      continueToDetails: 'Continue →',
       yourOrder: 'Your order',
       yourReservation: 'Your reservation',
       howToGet: 'How do you want to get your order?',
@@ -1217,6 +1219,7 @@ export const translations = {
     checkout: {
       notAvailable: 'Dit restaurant is niet meer beschikbaar.',
       upsellTitle: 'Zin in een dessert of een drankje erbij?',
+      continueToDetails: 'Doorgaan →',
       yourOrder: 'Jouw bestelling',
       yourReservation: 'Jouw reservering',
       howToGet: 'Hoe wil je je bestelling ontvangen?',

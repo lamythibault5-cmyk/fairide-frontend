@@ -14,17 +14,26 @@ import { useLanguage } from '../../context/LanguageContext';
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
 // service à table qui demande "un dessert avec ça ?", pas une case à cocher qu'on pourrait manquer.
-function LastChanceUpsell({ restaurant, cart, t }) {
+function computeUpsellSuggestions(restaurant, cart) {
   const cartItemIds = new Set(Object.values(cart.lines).map((l) => l.itemId));
   const kindOf = (item) => categoryKind(item.category);
   const hasKindInCart = (kind) => Object.values(cart.lines).some((l) => {
     const item = restaurant.menu.find((m) => m.id === l.itemId);
     return item && kindOf(item) === kind;
   });
-  const suggestionsFor = (kind) => (hasKindInCart(kind) ? [] : restaurant.menu.filter((m) => kindOf(m) === kind && m.available !== false && !cartItemIds.has(m.id)).slice(0, 4));
+  // Le restaurateur peut marquer explicitement certains plats à mettre en avant ici (suggestAtCheckout) —
+  // s'il en a marqué au moins un dans cette catégorie, on ne montre QUE ceux-là (choix éditorial assumé du
+  // restaurateur) ; sinon, repli sur le comportement automatique d'avant (n'importe quel plat de la catégorie).
+  const suggestionsFor = (kind) => {
+    if (hasKindInCart(kind)) return [];
+    const candidates = restaurant.menu.filter((m) => kindOf(m) === kind && m.available !== false && !cartItemIds.has(m.id));
+    const featured = candidates.filter((m) => m.suggestAtCheckout);
+    return (featured.length > 0 ? featured : candidates).slice(0, 4);
+  };
+  return { desserts: suggestionsFor('dessert'), drinks: suggestionsFor('boisson') };
+}
 
-  const desserts = suggestionsFor('dessert');
-  const drinks = suggestionsFor('boisson');
+function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
   if (desserts.length === 0 && drinks.length === 0) return null;
 
   return (
@@ -102,8 +111,10 @@ export default function Checkout() {
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [step, setStep] = useState('details');
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
+  const stepInitRef = useRef(false);
 
   // Réservation seule (bouton "Réserver une table") : le panier n'a jamais reçu d'article pour ce
   // restaurant, donc cart.restaurantId peut être vide — on retombe alors sur l'id transmis explicitement
@@ -144,9 +155,20 @@ export default function Checkout() {
     }
   }, [pendingOrder]);
 
+  // Étape "dessert/boisson" affichée seulement à l'arrivée sur la page (une fois), et seulement s'il y a
+  // vraiment quelque chose à proposer — sinon on saute directement à la confirmation des infos de commande.
+  useEffect(() => {
+    if (!restaurant || stepInitRef.current) return;
+    stepInitRef.current = true;
+    const { desserts, drinks } = computeUpsellSuggestions(restaurant, cart);
+    if (!reservationOnly && cart.count > 0 && (desserts.length > 0 || drinks.length > 0)) setStep('upsell');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restaurant]);
+
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
+  const { desserts: upsellDesserts, drinks: upsellDrinks } = computeUpsellSuggestions(restaurant, cart);
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
@@ -262,7 +284,17 @@ export default function Checkout() {
     <div>
       <Link to={`/restaurants/${restaurantId}`} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; {restaurant.name}</Link>
 
-      {!pendingOrder && (
+      {!pendingOrder && step === 'upsell' && (
+        <>
+          <LastChanceUpsell desserts={upsellDesserts} drinks={upsellDrinks} restaurant={restaurant} cart={cart} t={t} />
+          <div className="cart-bar">
+            <span>{t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) })}</span>
+            <button className="btn-gold" onClick={() => setStep('details')}>{t('checkout.continueToDetails')}</button>
+          </div>
+        </>
+      )}
+
+      {!pendingOrder && step === 'details' && (
         <>
           {cart.count > 0 && (
           <div className="card">
@@ -315,8 +347,6 @@ export default function Checkout() {
             )}
           </div>
           )}
-
-          {cart.count > 0 && <LastChanceUpsell restaurant={restaurant} cart={cart} t={t} />}
 
           <div className="card">
             <div className="field">

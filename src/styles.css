@@ -287,10 +287,17 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .category-quicknav-cart-menu {
   position: absolute; top: calc(100% + 6px); right: 0; z-index: 45;
   background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
-  padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 180px;
+  padding: 10px; display: flex; flex-direction: column; gap: 6px;
+  width: min(280px, calc(100vw - 24px));
   animation: fadeInUp .15s ease both;
 }
-.category-quicknav-cart-menu button { width: 100%; white-space: nowrap; }
+.category-quicknav-cart-menu > button { width: 100%; white-space: nowrap; }
+/* Liste des lignes du panier, éditable directement depuis la barre de navigation (voir demande client :
+   ajuster quantités/supprimer sans quitter le menu) — hauteur plafonnée avec défilement propre plutôt
+   que de laisser le popover grandir indéfiniment si le panier contient beaucoup d'articles différents. */
+.category-quicknav-cart-lines { max-height: 45vh; overflow-y: auto; }
+.category-quicknav-cart-lines .floating-cart-line { padding: 7px 0; }
+.category-quicknav-cart-lines .floating-cart-line-name { max-width: 150px; }
 
 .floating-cart {
   position: fixed; left: 12px; bottom: 12px; z-index: 46;
