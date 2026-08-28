@@ -337,14 +337,21 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 }
 .floating-cart-collapse:hover { background: rgba(255,255,255,.3); }
 /* Sur mobile, le widget assistant flottant occupe déjà le coin bas-droit (54px, right/bottom 12px) —
-   la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. */
-@media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; bottom: 82px; max-height: min(55vh, 400px); } }
+   la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. Le
+   décalage vertical (pour ne pas passer sous la barre d'onglets) est géré par la règle ≤900px ci-dessous,
+   commune au mobile et à la tablette. */
+@media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; max-height: min(55vh, 400px); } }
 /* Sous 900px, .dashboard-shell devient une barre d'onglets fixée en bas (voir règles .dashboard-shell
-   ci-dessus) — le widget assistant (frère de .dashboard-shell dans le DOM, monté une fois dans
-   Layout.jsx) se retrouvait affiché par-dessus cette barre à bottom:12px. Remonté pour se placer
-   juste au-dessus au lieu de la chevaucher, uniquement quand la barre est présente. */
+   ci-dessus, z-index: 50) — le widget assistant ET le panier flottant (tous deux frères de .dashboard-shell
+   dans le DOM, montés dans Layout.jsx) se retrouvaient affichés PAR-DESSOUS cette barre à bottom:12/16px
+   (z-index 45/46 < 50) : invisibles en pratique dès qu'on repasse sous 900px de large, pas seulement en
+   dessous de 480px — la tablette (ex: 768px) était donc concernée alors qu'aucune règle ne la corrigeait.
+   Remontés pour se placer juste au-dessus de la barre au lieu de disparaître derrière elle, uniquement
+   quand la barre est présente (sélecteur ~ .dashboard-shell). */
 @media (max-width: 900px) {
   .dashboard-shell ~ .assistant-widget { bottom: 70px; }
+  .dashboard-shell ~ .floating-cart-bubble,
+  .dashboard-shell ~ .floating-cart { bottom: 78px; }
 }
 
 /* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
@@ -374,7 +381,9 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .floating-cart-bubble-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
 .floating-cart-bubble-count { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.85); }
 .floating-cart-bubble-total { font-size: 14.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
-@media (max-width: 480px) { .floating-cart-bubble { left: 8px; bottom: 82px; } }
+/* Le décalage vertical (ne pas passer sous la barre d'onglets) vit dans la règle ≤900px plus haut,
+   commune au mobile et à la tablette — ici seulement le resserrement horizontal propre au mobile. */
+@media (max-width: 480px) { .floating-cart-bubble { left: 8px; } }
 
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(22, 35, 58, 0.5);
