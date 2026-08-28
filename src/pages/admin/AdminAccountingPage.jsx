@@ -5,7 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { money, pct, fmtDate, fmtDateTime, downloadCsv, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 
-const TABS = ['Vue d\'ensemble', 'Journal', 'TVA', 'Rapprochement', 'Plan comptable'];
+const TABS = ['Vue d\'ensemble', 'Journal', 'Grand livre', 'Balance', 'TVA', 'Rapprochement', 'Plan comptable'];
 const PERIOD_TYPES = [
   { key: 'month', label: 'Mois' },
   { key: 'quarter', label: 'Trimestre' },
@@ -117,6 +117,8 @@ export default function AdminAccountingPage() {
       </div>
       {tab === 'Vue d\'ensemble' && <OverviewTab token={token} toast={toast} periodKey={periodKey} />}
       {tab === 'Journal' && <JournalTab token={token} toast={toast} dateFrom={dateFrom} dateTo={dateTo} />}
+      {tab === 'Grand livre' && <LedgerTab token={token} toast={toast} periodKey={periodKey} />}
+      {tab === 'Balance' && <BalanceTab token={token} toast={toast} periodKey={periodKey} />}
       {tab === 'TVA' && <VatTab token={token} toast={toast} periodKey={periodKey} />}
       {tab === 'Rapprochement' && <ReconciliationTab token={token} toast={toast} periodKey={periodKey} />}
       {tab === 'Plan comptable' && <ChartOfAccountsTab token={token} toast={toast} />}
@@ -160,6 +162,23 @@ function OverviewTab({ token, toast, periodKey }) {
 
 const ENTRY_TYPE_FILTERS = [{ key: '', label: 'Tous' }, ...Object.entries(ACCOUNTING_ENTRY_TYPE_LABELS).map(([key, label]) => ({ key, label }))];
 
+// Regroupe les lignes en écritures (une écriture = toutes les lignes générées ensemble par un même
+// événement réel : paiement, remboursement, virement — voir accountingService.js, qui donne à chacune
+// de ses lignes la même référence). Uniquement pour l'affichage : la pagination reste par ligne côté API,
+// une écriture à cheval sur deux pages (rare, uniquement en cas de gros volume) s'affiche donc coupée.
+function groupByEcriture(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    if (!map.has(r.reference)) map.set(r.reference, []);
+    map.get(r.reference).push(r);
+  }
+  return [...map.entries()].map(([reference, lines]) => {
+    const totalDebit = +lines.reduce((a, l) => a + l.debit, 0).toFixed(2);
+    const totalCredit = +lines.reduce((a, l) => a + l.credit, 0).toFixed(2);
+    return { reference, date: lines[0].date, lines, totalDebit, totalCredit, balanced: Math.abs(totalDebit - totalCredit) < 0.01 };
+  }).sort((a, b) => b.date - a.date);
+}
+
 function JournalTab({ token, toast, dateFrom, dateTo }) {
   const [entryType, setEntryType] = useState('');
   const [page, setPage] = useState(0);
@@ -200,17 +219,34 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
       </div>
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">Aucune écriture.</div>}
-      {data && data.rows.map((r) => (
-        <div className="card" key={r.id}>
+      {data && groupByEcriture(data.rows).map((ecriture) => (
+        <div className="card" key={ecriture.reference}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType}</b>
-            <span className="small" style={{ opacity: 0.6 }}>{fmtDateTime(r.date)}</span>
+            <b>{ecriture.reference}</b>
+            <div className="row" style={{ gap: 8 }}>
+              <span className="small" style={{ opacity: 0.6 }}>{fmtDateTime(ecriture.date)}</span>
+              <span className="pill" style={{ color: ecriture.balanced ? 'var(--teal-deep)' : 'var(--red)' }}>
+                {ecriture.balanced ? '✅ Équilibrée' : '⚠️ Non équilibrée'}
+              </span>
+            </div>
           </div>
-          <div className="small">{r.reference} · {r.accountCode} {r.accountName}</div>
-          <div className="small">{[r.restaurantName, r.driverName, r.clientName].filter(Boolean).join(' · ')}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{r.debit > 0 ? `Débit ${money(r.debit)}` : `Crédit ${money(r.credit)}`}{r.vatAmount > 0 ? ` · TVA ${money(r.vatAmount)}` : ''}</span>
-            <span className={`pill${r.status === 'flagged' ? '' : ''}`} style={{ color: r.status === 'flagged' ? 'var(--red)' : r.status === 'reconciled' ? 'var(--teal-deep)' : 'inherit' }}>{r.status}</span>
+          <div style={{ marginTop: 6, borderTop: '1px solid var(--line)', paddingTop: 6 }}>
+            {ecriture.lines.map((r) => (
+              <div key={r.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0', fontSize: 13 }}>
+                <span>
+                  <span style={{ fontFamily: 'monospace', opacity: 0.7 }}>{r.accountCode}</span> {r.accountName}
+                  <span className="small" style={{ opacity: 0.6 }}> · {ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType}</span>
+                </span>
+                <span>
+                  {r.debit > 0 ? money(r.debit) : ''}
+                  <span style={{ display: 'inline-block', width: 70, textAlign: 'right', color: 'var(--teal-deep)' }}>{r.credit > 0 ? money(r.credit) : ''}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--line)', fontWeight: 700, fontSize: 13 }}>
+            <span>{[ecriture.lines[0].restaurantName, ecriture.lines[0].driverName, ecriture.lines[0].clientName].filter(Boolean).join(' · ')}</span>
+            <span>Total {money(ecriture.totalDebit)} / <span style={{ color: 'var(--teal-deep)' }}>{money(ecriture.totalCredit)}</span></span>
           </div>
         </div>
       ))}
@@ -221,6 +257,156 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
           <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
         </div>
       )}
+    </>
+  );
+}
+
+// Ordre d'affichage classique d'un plan comptable : actifs, passifs, TVA, revenus, charges — plutôt que
+// l'ordre alphabétique des codes, pour se lire comme un vrai plan comptable.
+const ACCOUNT_KIND_ORDER = ['asset', 'liability', 'vat', 'revenue', 'expense'];
+const ACCOUNT_KIND_LABELS = { revenue: 'Revenu', expense: 'Charge', asset: 'Actif', liability: 'Passif', vat: 'TVA' };
+
+function LedgerTab({ token, toast, periodKey }) {
+  const [accounts, setAccounts] = useState(null);
+  const [accountCode, setAccountCode] = useState('');
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    api('/admin/accounting/accounts', { token }).then((rows) => {
+      setAccounts(rows);
+      if (rows.length && !accountCode) setAccountCode(rows[0].code);
+    }).catch((e) => toast(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!accountCode) return;
+    setData(null);
+    api(`/admin/accounting/ledger?accountCode=${encodeURIComponent(accountCode)}&${periodKey}`, { token }).then(setData).catch((e) => toast(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountCode, periodKey]);
+
+  function exportCsv() {
+    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    downloadCsv(`grand-livre-${data.account.code}-${Date.now()}.csv`, data.rows, [
+      { label: 'Date', get: (r) => fmtDateTime(r.date) }, { label: 'Référence', get: (r) => r.reference },
+      { label: 'Type', get: (r) => ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType },
+      { label: 'Débit', get: (r) => r.debit }, { label: 'Crédit', get: (r) => r.credit }, { label: 'Solde progressif', get: (r) => r.runningBalance }
+    ]);
+  }
+
+  const sortedAccounts = accounts ? [...accounts].sort((a, b) => ACCOUNT_KIND_ORDER.indexOf(a.kind) - ACCOUNT_KIND_ORDER.indexOf(b.kind) || a.code.localeCompare(b.code)) : [];
+
+  return (
+    <>
+      <div className="row" style={{ justifyContent: 'space-between', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+        <select value={accountCode} onChange={(e) => setAccountCode(e.target.value)} style={{ maxWidth: 320 }}>
+          {sortedAccounts.map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
+        </select>
+        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+      </div>
+      {!data && <SkeletonCards count={3} />}
+      {data && (
+        <>
+          <div className="stat-grid">
+            <div className="stat-card"><div className="num">{money(data.openingBalance)}</div><div className="label">Solde d'ouverture</div></div>
+            <div className="stat-card"><div className="num">{money(data.totalDebit)}</div><div className="label">Total débit (période)</div></div>
+            <div className="stat-card"><div className="num" style={{ color: 'var(--teal-deep)' }}>{money(data.totalCredit)}</div><div className="label">Total crédit (période)</div></div>
+            <div className="stat-card highlight"><div className="num">{money(data.closingBalance)}</div><div className="label">Solde de clôture</div></div>
+          </div>
+          {data.rows.length === 0 && <div className="empty" style={{ marginTop: 14 }}>Aucune écriture sur ce compte pour cette période.</div>}
+          {data.rows.length > 0 && (
+            <div className="table-scroll" style={{ marginTop: 14, overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr><th>Date</th><th>Référence</th><th>Type</th><th style={{ textAlign: 'right' }}>Débit</th><th style={{ textAlign: 'right' }}>Crédit</th><th style={{ textAlign: 'right' }}>Solde</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td colSpan={5} className="small" style={{ opacity: 0.6 }}>Solde d'ouverture</td><td style={{ textAlign: 'right', fontWeight: 700 }}>{money(data.openingBalance)}</td></tr>
+                  {data.rows.map((r) => (
+                    <tr key={r.id}>
+                      <td className="small">{fmtDateTime(r.date)}</td>
+                      <td className="small">{r.reference}</td>
+                      <td className="small">{ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType}</td>
+                      <td style={{ textAlign: 'right' }}>{r.debit > 0 ? money(r.debit) : ''}</td>
+                      <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{r.credit > 0 ? money(r.credit) : ''}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 700 }}>{money(r.runningBalance)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
+function BalanceTab({ token, toast, periodKey }) {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    setData(null);
+    api(`/admin/accounting/balance?${periodKey}`, { token }).then(setData).catch((e) => toast(e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [periodKey]);
+
+  function exportCsv() {
+    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    downloadCsv(`balance-comptes-${Date.now()}.csv`, data.rows, [
+      { label: 'Code', get: (r) => r.code }, { label: 'Nom', get: (r) => r.name }, { label: 'Type', get: (r) => ACCOUNT_KIND_LABELS[r.kind] },
+      { label: 'Débit', get: (r) => r.debit }, { label: 'Crédit', get: (r) => r.credit }, { label: 'Solde', get: (r) => r.balance }
+    ]);
+  }
+
+  if (!data) return <SkeletonCards count={3} />;
+  const sortedRows = [...data.rows].sort((a, b) => ACCOUNT_KIND_ORDER.indexOf(a.kind) - ACCOUNT_KIND_ORDER.indexOf(b.kind) || a.code.localeCompare(b.code));
+
+  return (
+    <>
+      <div className="card" style={{ borderLeft: `3px solid ${data.balanced ? 'var(--teal-deep)' : 'var(--red)'}` }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+          <b>{data.balanced ? '✅ Le journal est équilibré sur cette période' : '⚠️ Le journal n\'est pas équilibré sur cette période'}</b>
+          <span className="small">Total débit {money(data.totalDebit)} · Total crédit {money(data.totalCredit)}</span>
+        </div>
+        {!data.balanced && (
+          <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
+            Écart de {money(Math.abs(data.totalDebit - data.totalCredit))}. Le plus souvent, des écritures postées avant la
+            correction de la TVA (commission/livraison) ou un compte désactivé après coup — voir Journal pour repérer les écritures concernées.
+          </p>
+        )}
+      </div>
+      <div className="row" style={{ justifyContent: 'flex-end', margin: '10px 0' }}>
+        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+      </div>
+      <div className="table-scroll" style={{ overflowX: 'auto' }}>
+        <table className="admin-table">
+          <thead>
+            <tr><th>Code</th><th>Nom</th><th>Type</th><th style={{ textAlign: 'right' }}>Débit</th><th style={{ textAlign: 'right' }}>Crédit</th><th style={{ textAlign: 'right' }}>Solde</th></tr>
+          </thead>
+          <tbody>
+            {sortedRows.map((r) => (
+              <tr key={r.code} style={{ opacity: r.active ? 1 : 0.5 }}>
+                <td className="small" style={{ fontFamily: 'monospace' }}>{r.code}</td>
+                <td className="small">{r.name}{!r.active ? ' (désactivé)' : ''}</td>
+                <td className="small">{ACCOUNT_KIND_LABELS[r.kind]}</td>
+                <td style={{ textAlign: 'right' }}>{r.debit > 0 ? money(r.debit) : ''}</td>
+                <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{r.credit > 0 ? money(r.credit) : ''}</td>
+                <td style={{ textAlign: 'right', fontWeight: 700 }}>{money(r.balance)}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr style={{ fontWeight: 700 }}>
+              <td colSpan={3}>Total</td>
+              <td style={{ textAlign: 'right' }}>{money(data.totalDebit)}</td>
+              <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{money(data.totalCredit)}</td>
+              <td />
+            </tr>
+          </tfoot>
+        </table>
+      </div>
     </>
   );
 }
@@ -333,8 +519,6 @@ function ReconciliationTab({ token, toast, periodKey }) {
     </>
   );
 }
-
-const ACCOUNT_KIND_LABELS = { revenue: 'Revenu', expense: 'Charge', asset: 'Actif', liability: 'Passif', vat: 'TVA' };
 
 function ChartOfAccountsTab({ token, toast }) {
   const [accounts, setAccounts] = useState(null);

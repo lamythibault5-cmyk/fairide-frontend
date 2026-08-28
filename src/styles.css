@@ -562,6 +562,16 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 
 .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
 .stat-card { background: var(--cream-dim); border-radius: 12px; padding: 14px; }
+
+/* Grand livre / Balance des comptes (Admin > Comptabilité) : seuls endroits de l'admin avec un vrai
+   tableau de données tabulaires (beaucoup de colonnes numériques par ligne) plutôt que des cartes —
+   .table-scroll isole le débordement horizontal sur mobile sans jamais faire scroller la page entière. */
+.table-scroll { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.admin-table th, .admin-table td { padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.admin-table th { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); background: var(--cream-dim); text-align: left; }
+.admin-table tbody tr:last-child td { border-bottom: none; }
+.admin-table tfoot td { border-top: 2px solid var(--line); border-bottom: none; background: var(--cream-dim); }
 .stat-card .num { font-family: 'Fraunces', serif; font-weight: 700; font-size: 22px; color: var(--ink); }
 .stat-card .label { font-size: 11px; color: var(--ink-soft); font-weight: 600; text-transform: uppercase; }
 .stat-card.highlight { background: rgba(47,111,94,0.12); }
