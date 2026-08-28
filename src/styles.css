@@ -286,7 +286,11 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 }
 .floating-cart-header-text { min-width: 0; flex: 1; }
 .floating-cart-header-text b { font-size: 14px; }
-.floating-cart-header-sub { color: rgba(255,255,255,.8); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Sélecteur volontairement porté à deux classes : cet élément porte aussi .small (voir plus bas), qui
+   impose color: var(--ink-soft) — du gris foncé, illisible sur le dégradé vert de l'en-tête. À
+   spécificité égale (0,1,0) c'est .small qui gagnait, puisqu'il est déclaré plus bas dans le fichier.
+   Passer par le parent (0,2,0) rend le blanc prioritaire sans toucher à .small, utilisé partout ailleurs. */
+.floating-cart-header .floating-cart-header-sub { color: rgba(255,255,255,.85); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .floating-cart-lines { overflow-y: auto; padding: 6px 14px; flex: 1; }
 .floating-cart-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--cream-dim); }
 .floating-cart-line:last-child { border-bottom: none; }
@@ -330,9 +334,14 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   transition: opacity .15s ease, color .15s ease;
 }
 .floating-cart-clear-link:hover { opacity: 1; color: var(--red); }
+/* padding: 0 + centrage flex indispensables : la règle globale sur button (voir plus haut) impose
+   padding: 11px 18px, et avec box-sizing: border-box ces 36px de padding horizontal débordaient le
+   width: 26px — le bouton devenait une ellipse de 36x26 et le ✕ se retrouvait décalé de ~5px à droite
+   et ~4px vers le bas au lieu d'être au centre du cercle. Même recette que .floating-cart-header-icon. */
 .floating-cart-collapse {
   flex-shrink: 0; background: rgba(255,255,255,.15); border: none; border-radius: 50%;
-  width: 26px; height: 26px; font-size: 13px; line-height: 1; cursor: pointer; color: #fff;
+  width: 26px; height: 26px; padding: 0; font-size: 13px; line-height: 1; cursor: pointer; color: #fff;
+  display: flex; align-items: center; justify-content: center;
   transition: background .15s ease;
 }
 .floating-cart-collapse:hover { background: rgba(255,255,255,.3); }
