@@ -242,11 +242,18 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .category-quicknav {
   position: sticky; top: 0; z-index: 40;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
-  gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-  padding: 8px 2px 10px; margin: 0 0 8px;
+  gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
   background: linear-gradient(to bottom, var(--cream) 78%, rgba(251,248,242,0));
 }
-.category-quicknav::-webkit-scrollbar { display: none; }
+/* Sous-conteneur DÉDIÉ au défilement horizontal des sections (Entrées/Plats/Desserts...) — le panier
+   (ci-dessous) reste volontairement EN DEHORS de ce conteneur : sur un menu à beaucoup de sections en
+   mobile, s'il partageait le même défilement horizontal, il pouvait se retrouver poussé hors champ à
+   droite tant qu'on n'avait pas fait défiler la barre à la main, ce qui contredit "toujours visible". */
+.category-quicknav-sections {
+  display: flex; flex-direction: row; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto;
+  overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+}
+.category-quicknav-sections::-webkit-scrollbar { display: none; }
 .category-quicknav button {
   flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink-soft);
   font-size: 12.5px; font-weight: 700; padding: 7px 13px; border-radius: 999px;
@@ -259,12 +266,13 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   background: var(--gold); color: var(--ink); border-color: var(--gold);
   box-shadow: 0 4px 14px rgba(217,164,65,.45);
 }
-/* Accès direct au panier depuis la barre de sections, TOUJOURS affiché en la parcourant (même à vide)
-   pour que son remplissage reste visible en continu, sans avoir à chercher la bulle flottante en bas de
-   l'écran. Poussé à droite (margin-left: auto) et distingué en teinte foncée pour rester repérable même
-   parmi les boutons de section actifs. */
+/* Accès direct au panier, TOUJOURS visible (hors du conteneur qui défile, voir plus haut) pendant que
+   le client parcourt le menu, pour que son remplissage reste visible en continu sans avoir à chercher la
+   bulle flottante en bas de l'écran. Distingué en teinte foncée pour rester repérable à côté des
+   sections. */
+.category-quicknav-cart-wrap { position: relative; flex: 0 0 auto; }
 .category-quicknav-cart {
-  margin-left: auto; background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important;
+  background: var(--ink) !important; color: #fff !important; border-color: var(--ink) !important;
 }
 .category-quicknav-cart:hover { filter: brightness(1.15); }
 /* À vide : n'est pas encore une action ("Voir le panier" n'aurait rien à montrer), juste un indicateur
@@ -274,6 +282,15 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   background: rgba(22,35,58,0.45) !important; border-color: transparent !important; cursor: default;
 }
 .category-quicknav-cart.empty:hover { filter: none; }
+/* Petit menu qui s'ouvre au clic sur le panier (voir permis "vider le panier" ou valider directement),
+   plutôt qu'une redirection immédiate vers /checkout qui ne proposait aucune alternative. */
+.category-quicknav-cart-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; z-index: 45;
+  background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow);
+  padding: 10px; display: flex; flex-direction: column; gap: 6px; min-width: 180px;
+  animation: fadeInUp .15s ease both;
+}
+.category-quicknav-cart-menu button { width: 100%; white-space: nowrap; }
 
 .floating-cart {
   position: fixed; left: 12px; bottom: 12px; z-index: 46;

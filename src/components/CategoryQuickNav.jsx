@@ -5,11 +5,12 @@ import { useCart } from '../context/CartContext';
 import { categoryLabel } from '../menuCategories';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...), fixée en
-// haut de l'écran pendant qu'on parcourt le menu. Met en évidence la section actuellement lue et fait
-// défiler jusqu'au début d'une section au clic. Affiche aussi en permanence l'état du panier (même à
-// vide), pour que son remplissage reste visible sans avoir à chercher la bulle flottante. Repose sur
-// les ids `menu-cat-<id>` (id de section) posés par MenuCategorySections.
-// `categories` attend des objets { id, name } (une section de restaurant.sections).
+// haut de l'écran pendant qu'on parcourt le menu. Met en évidence la section actuellement lue, fait
+// défiler la barre elle-même pour garder ce bouton visible (utile en mobile où tous les boutons ne
+// tiennent pas à l'écran à la fois), et fait défiler jusqu'au début d'une section au clic. Affiche
+// aussi en permanence l'état du panier (même à vide), pour que son remplissage reste visible sans
+// avoir à chercher la bulle flottante. Repose sur les ids `menu-cat-<id>` (id de section) posés par
+// MenuCategorySections. `categories` attend des objets { id, name } (une section de restaurant.sections).
 
 // Doit dépasser la hauteur réelle de la barre (~56px) : une section n'est considérée "active" qu'une
 // fois son titre passé sous la barre, pas simplement entré quelque part dans le haut de l'écran.
@@ -20,8 +21,11 @@ export default function CategoryQuickNav({ categories }) {
   const cart = useCart();
   const navigate = useNavigate();
   const [active, setActive] = useState(categories[0]?.id);
+  const [showCartMenu, setShowCartMenu] = useState(false);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
+  const buttonRefs = useRef(new Map());
+  const cartMenuRef = useRef(null);
 
   useEffect(() => {
     // Scroll-spy par position plutôt que par IntersectionObserver : la section active est la DERNIÈRE
@@ -59,32 +63,73 @@ export default function CategoryQuickNav({ categories }) {
     };
   }, [categories]);
 
+  // Fait défiler HORIZONTALEMENT la barre elle-même pour garder le bouton actif visible (ex: sur un
+  // menu avec beaucoup de sections en mobile, arrivé à "Boissons" tout à la fin, le bouton correspondant
+  // serait sinon resté hors champ à droite tant qu'on n'a pas fait glisser la barre à la main).
+  // block: 'nearest' pour ne jamais provoquer de scroll VERTICAL de la page en plus (le bouton est déjà
+  // visible verticalement puisque la barre est sticky en haut) — seul le défilement horizontal compte ici.
+  useEffect(() => {
+    const btn = buttonRefs.current.get(active);
+    if (btn) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+  }, [active]);
+
+  // Ferme le menu du panier au clic ailleurs sur la page.
+  useEffect(() => {
+    if (!showCartMenu) return undefined;
+    function onClickOutside(e) {
+      if (cartMenuRef.current && !cartMenuRef.current.contains(e.target)) setShowCartMenu(false);
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [showCartMenu]);
+
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function clearCart() {
+    cart.clearLines();
+    setShowCartMenu(false);
+  }
+
+  function goToCheckout() {
+    setShowCartMenu(false);
+    navigate('/checkout');
   }
 
   if (categories.length === 0) return null;
 
   return (
     <div className="category-quicknav">
-      {categories.length >= 2 && categories.map((c) => (
+      <div className="category-quicknav-sections">
+        {categories.length >= 2 && categories.map((c) => (
+          <button
+            key={c.id}
+            type="button"
+            ref={(el) => { if (el) buttonRefs.current.set(c.id, el); else buttonRefs.current.delete(c.id); }}
+            className={active === c.id ? 'active' : ''}
+            onClick={() => jumpTo(c.id)}
+          >
+            {categoryLabel(c.name, t)}
+          </button>
+        ))}
+      </div>
+      <div className="category-quicknav-cart-wrap" ref={cartMenuRef}>
         <button
-          key={c.id}
           type="button"
-          className={active === c.id ? 'active' : ''}
-          onClick={() => jumpTo(c.id)}
+          className={`category-quicknav-cart${cart.count === 0 ? ' empty' : ''}`}
+          onClick={() => { if (cart.count > 0) setShowCartMenu((v) => !v); }}
         >
-          {categoryLabel(c.name, t)}
+          🛒 {cart.count > 0 ? t('categoryQuickNav.cart', { count: cart.count, total: cart.rawTotal.toFixed(2) }) : t('categoryQuickNav.cartEmpty')}
         </button>
-      ))}
-      <button
-        type="button"
-        className={`category-quicknav-cart${cart.count === 0 ? ' empty' : ''}`}
-        onClick={() => { if (cart.count > 0) navigate('/checkout'); }}
-      >
-        🛒 {cart.count > 0 ? t('categoryQuickNav.cart', { count: cart.count, total: cart.rawTotal.toFixed(2) }) : t('categoryQuickNav.cartEmpty')}
-      </button>
+        {showCartMenu && (
+          <div className="category-quicknav-cart-menu">
+            <button type="button" className="btn-gold" onClick={goToCheckout}>{t('categoryQuickNav.goToCheckout')}</button>
+            <button type="button" className="btn-danger-ghost" onClick={clearCart}>{t('categoryQuickNav.clearCart')}</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

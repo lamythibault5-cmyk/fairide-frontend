@@ -125,7 +125,9 @@ export const translations = {
     },
     categoryQuickNav: {
       cart: '{count} · {total}€',
-      cartEmpty: 'Panier vide'
+      cartEmpty: 'Panier vide',
+      goToCheckout: 'Valider ma commande',
+      clearCart: '🗑️ Vider le panier'
     },
     restaurantMenu: {
       backToRestaurants: '← Tous les restaurants',
@@ -632,7 +634,9 @@ export const translations = {
     },
     categoryQuickNav: {
       cart: '{count} · €{total}',
-      cartEmpty: 'Empty cart'
+      cartEmpty: 'Empty cart',
+      goToCheckout: 'Go to checkout',
+      clearCart: '🗑️ Clear cart'
     },
     restaurantMenu: {
       backToRestaurants: '← All restaurants',
@@ -1139,7 +1143,9 @@ export const translations = {
     },
     categoryQuickNav: {
       cart: '{count} · {total}€',
-      cartEmpty: 'Winkelmandje leeg'
+      cartEmpty: 'Winkelmandje leeg',
+      goToCheckout: 'Bestelling bevestigen',
+      clearCart: '🗑️ Winkelmandje leegmaken'
     },
     restaurantMenu: {
       backToRestaurants: '← Alle restaurants',
