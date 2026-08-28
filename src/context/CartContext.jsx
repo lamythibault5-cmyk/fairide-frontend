@@ -4,6 +4,10 @@ const CartContext = createContext(null);
 const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const SYSTEM_FEE_RATE = 0.10;
 const COMMISSION_RATE = 0.10;
+// Part Fairide (SYSTEM_FEE_RATE) HT, TVA ajoutée en plus au panier comme sur toute plateforme
+// classique — même taux par défaut que vatRateDeliveryShare côté serveur (pricing.js), le montant
+// exact reste toujours celui renvoyé par la commande réelle.
+const SYSTEM_FEE_VAT_RATE = 0.21;
 const STORAGE_KEY = 'fairide_cart';
 
 function lineKeyFor(itemId, optionItemIds) {
@@ -147,6 +151,7 @@ export function CartProvider({ children }) {
     promoDiscount = +promoDiscount.toFixed(2);
     const commission = +(subtotal * COMMISSION_RATE).toFixed(2);
     const serviceFee = +(DELIVERY_FEE * SYSTEM_FEE_RATE).toFixed(2);
+    const serviceFeeVat = +(serviceFee * SYSTEM_FEE_VAT_RATE).toFixed(2);
     // Estimation avant checkout (frais réels calculés côté serveur à la commande, selon la distance
     // réelle — voir routes/orders.js) : même règle de plafonnement que le calcul serveur, pour que ce
     // qui s'affiche ici corresponde à ce que la commande facturera vraiment.
@@ -155,8 +160,8 @@ export function CartProvider({ children }) {
       ? DELIVERY_FEE
       : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, DELIVERY_FEE);
     const clientDeliveryFee = +(DELIVERY_FEE - deliveryDiscount).toFixed(2);
-    const total = +(subtotal + clientDeliveryFee + serviceFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, commission, total };
+    const total = +(subtotal + clientDeliveryFee + serviceFee + serviceFeeVat).toFixed(2);
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, serviceFeeVat, commission, total };
   }
 
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant

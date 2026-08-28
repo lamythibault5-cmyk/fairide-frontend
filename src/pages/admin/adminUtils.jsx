@@ -56,8 +56,10 @@ export const BUSINESS_STATUS_LABELS = {
 };
 
 export const ACCOUNTING_ENTRY_TYPE_LABELS = {
-  order_commission: 'Commission restaurant',
-  order_delivery_share: 'Part Fairide livraison',
+  order_commission: 'Commission restaurant (HT)',
+  order_commission_vat: 'TVA sur commission',
+  order_delivery_share: 'Part Fairide livraison (HT)',
+  order_delivery_share_vat: 'TVA sur part livraison',
   order_restaurant_due: 'Dû restaurant',
   order_driver_due: 'Dû livreur',
   order_payment: 'Paiement client',
