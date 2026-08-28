@@ -123,6 +123,9 @@ export const translations = {
       backToMap: '← Retour à la carte',
       reviewsCount: '({count} avis)'
     },
+    categoryQuickNav: {
+      cart: '{count} · {total}€'
+    },
     restaurantMenu: {
       backToRestaurants: '← Tous les restaurants',
       ratingReviews: '{rating} ({count} avis)',
@@ -192,6 +195,7 @@ export const translations = {
     },
     checkout: {
       notAvailable: "Ce restaurant n'est plus disponible.",
+      upsellTitle: 'Un dessert ou une boisson avec ça ?',
       yourOrder: 'Ta commande',
       yourReservation: 'Ta réservation',
       howToGet: 'Comment récupérer ta commande ?',
@@ -625,6 +629,9 @@ export const translations = {
       backToMap: '← Back to map',
       reviewsCount: '({count} reviews)'
     },
+    categoryQuickNav: {
+      cart: '{count} · €{total}'
+    },
     restaurantMenu: {
       backToRestaurants: '← All restaurants',
       ratingReviews: '{rating} ({count} reviews)',
@@ -694,6 +701,7 @@ export const translations = {
     },
     checkout: {
       notAvailable: 'This restaurant is no longer available.',
+      upsellTitle: 'Fancy a dessert or a drink with that?',
       yourOrder: 'Your order',
       yourReservation: 'Your reservation',
       howToGet: 'How do you want to get your order?',
@@ -1127,6 +1135,9 @@ export const translations = {
       backToMap: '← Terug naar de kaart',
       reviewsCount: '({count} beoordelingen)'
     },
+    categoryQuickNav: {
+      cart: '{count} · {total}€'
+    },
     restaurantMenu: {
       backToRestaurants: '← Alle restaurants',
       ratingReviews: '{rating} ({count} beoordelingen)',
@@ -1196,6 +1207,7 @@ export const translations = {
     },
     checkout: {
       notAvailable: 'Dit restaurant is niet meer beschikbaar.',
+      upsellTitle: 'Zin in een dessert of een drankje erbij?',
       yourOrder: 'Jouw bestelling',
       yourReservation: 'Jouw reservering',
       howToGet: 'Hoe wil je je bestelling ontvangen?',

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import { useCart } from '../context/CartContext';
 import { categoryLabel } from '../menuCategories';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...) — fixée
@@ -9,6 +11,8 @@ import { categoryLabel } from '../menuCategories';
 // `categories` attend des objets { id, name } (une section de restaurant.sections).
 export default function CategoryQuickNav({ categories }) {
   const { t } = useLanguage();
+  const cart = useCart();
+  const navigate = useNavigate();
   const [active, setActive] = useState(categories[0]?.id);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
@@ -40,11 +44,11 @@ export default function CategoryQuickNav({ categories }) {
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
-  if (categories.length < 2) return null;
+  if (categories.length < 2 && cart.count === 0) return null;
 
   return (
     <div className="category-quicknav">
-      {categories.map((c) => (
+      {categories.length >= 2 && categories.map((c) => (
         <button
           key={c.id}
           type="button"
@@ -54,6 +58,11 @@ export default function CategoryQuickNav({ categories }) {
           {categoryLabel(c.name, t)}
         </button>
       ))}
+      {cart.count > 0 && (
+        <button type="button" className="category-quicknav-cart" onClick={() => navigate('/checkout')}>
+          🛒 {t('categoryQuickNav.cart', { count: cart.count, total: cart.rawTotal.toFixed(2) })}
+        </button>
+      )}
     </div>
   );
 }

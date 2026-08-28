@@ -5,9 +5,68 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
+import { categoryKind, defaultItemImageOrNull } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
+
+// Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
+// propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
+// service à table qui demande "un dessert avec ça ?", pas une case à cocher qu'on pourrait manquer.
+function LastChanceUpsell({ restaurant, cart, t }) {
+  const cartItemIds = new Set(Object.values(cart.lines).map((l) => l.itemId));
+  const kindOf = (item) => categoryKind(item.category);
+  const hasKindInCart = (kind) => Object.values(cart.lines).some((l) => {
+    const item = restaurant.menu.find((m) => m.id === l.itemId);
+    return item && kindOf(item) === kind;
+  });
+  const suggestionsFor = (kind) => (hasKindInCart(kind) ? [] : restaurant.menu.filter((m) => kindOf(m) === kind && m.available !== false && !cartItemIds.has(m.id)).slice(0, 4));
+
+  const desserts = suggestionsFor('dessert');
+  const drinks = suggestionsFor('boisson');
+  if (desserts.length === 0 && drinks.length === 0) return null;
+
+  return (
+    <div className="card upsell-card">
+      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('checkout.upsellTitle')}</h3>
+      {desserts.length > 0 && <UpsellRow items={desserts} cart={cart} restaurant={restaurant} />}
+      {drinks.length > 0 && <UpsellRow items={drinks} cart={cart} restaurant={restaurant} />}
+    </div>
+  );
+}
+
+function UpsellRow({ items, cart, restaurant }) {
+  const [pickerItem, setPickerItem] = useState(null);
+  function handleAdd(item) {
+    if (item.optionGroups?.length > 0) { setPickerItem(item); return; }
+    cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
+  }
+  return (
+    <div className="upsell-row">
+      {items.map((item) => {
+        const image = item.imageUrl || defaultItemImageOrNull(item);
+        return (
+          <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
+            {image ? <img src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
+            <span className="upsell-item-name">{item.name}</span>
+            <span className="upsell-item-price">+{item.price.toFixed(2)}€</span>
+          </button>
+        );
+      })}
+      {pickerItem && (
+        <OptionsPickerModal
+          item={pickerItem}
+          onCancel={() => setPickerItem(null)}
+          onConfirm={(optionItemIds, snapshot, unitPrice) => {
+            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
+            setPickerItem(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
 
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
@@ -256,6 +315,8 @@ export default function Checkout() {
             )}
           </div>
           )}
+
+          {cart.count > 0 && <LastChanceUpsell restaurant={restaurant} cart={cart} t={t} />}
 
           <div className="card">
             <div className="field">

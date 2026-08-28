@@ -35,6 +35,18 @@ export function categoryImage(value) {
   return CATEGORIES.find((c) => c.value === 'plat').image;
 }
 
+// Même heuristique que categoryImage/categoryEmoji ci-dessus, exposée pour repérer si un plat est un
+// dessert/une boisson (ex: proposer les desserts/boissons manquants juste avant le paiement, voir
+// Checkout.jsx) — reconnaît aussi bien les 4 catégories par défaut ('dessert'/'boisson') qu'une section
+// personnalisée dont le nom l'indique clairement ("Nos desserts", "Cave à vins"...).
+export function categoryKind(value) {
+  if (value === 'dessert' || value === 'boisson') return value;
+  const v = (value || '').toLowerCase();
+  if (CATEGORY_HINT_DESSERT.test(v)) return 'dessert';
+  if (CATEGORY_HINT_DRINK.test(v)) return 'boisson';
+  return null;
+}
+
 // Emoji "dessin animé" affiché à la place d'une vraie photo quand un plat n'en a aucune (voir
 // defaultItemImageOrNull) — plus chaleureux qu'un simple texte "Pas de photo", et cohérent avec le
 // style déjà utilisé partout ailleurs dans l'app (RESTAURANT_TYPES, icônes de section...). Mêmes
