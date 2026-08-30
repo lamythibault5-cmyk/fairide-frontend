@@ -3275,7 +3275,30 @@ const ITEM_IMAGE_OVERRIDES = {
 // plat du catalogue. Les plats des templates officiels gardent leur vraie photo (nom exactement
 // identique) ; tout le reste affiche un espace vide plutôt qu'une photo trompeuse, à remplir
 // manuellement par le restaurateur.
+// Interrupteur des photos d'illustration automatiques sur un PLAT précis.
+//
+// ITEM_IMAGE_OVERRIDES associe des noms de plats à des photos de banque d'images : un restaurant qui
+// n'a mis aucune photo affiche quand même un burger appétissant. C'est exactement ce qu'il faut pour
+// une maquette peuplée de restaurants fictifs — et exactement ce qu'il ne faut plus dès qu'un vrai
+// commerçant est en ligne : présenter une photo de banque d'images comme le produit d'un commerçant
+// donné est une pratique commerciale trompeuse au sens du droit européen de la consommation, et c'est
+// le restaurateur qui encaisse la réclamation quand l'assiette ne ressemble pas à la photo.
+//
+// ⚠️ À BASCULER SUR 'off' AVANT LE PREMIER VRAI RESTAURANT EN LIGNE — via VITE_STOCK_DISH_PHOTOS=off.
+// La valeur par défaut reste 'on' pour ne pas vider la maquette actuelle de ses visuels du jour au
+// lendemain : c'est une décision produit, pas technique.
+//
+// Ce que l'interrupteur NE touche PAS, et c'est voulu :
+//   - la photo que le restaurateur a lui-même choisie pour un plat (item.imageUrl) ;
+//   - la photo de section qu'il a choisie (sectionImageFor) ;
+//   - les bannières génériques de catégorie (categoryImage) — « Desserts » illustré par une pâtisserie
+//     n'affirme rien sur un plat précis ;
+//   - suggestItemImages(), qui PROPOSE des photos au restaurateur, lequel choisit en connaissance de
+//     cause. C'est le bon chemin : une photo assumée, pas une photo devinée.
+const STOCK_DISH_PHOTOS_ENABLED = (import.meta.env.VITE_STOCK_DISH_PHOTOS || 'on') !== 'off';
+
 export function defaultItemImageOrNull(item) {
+  if (!STOCK_DISH_PHOTOS_ENABLED) return null;
   const name = (item?.name || '').toLowerCase().trim();
   return ITEM_IMAGE_OVERRIDES[name] || null;
 }

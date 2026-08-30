@@ -5,7 +5,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import ConfirmDialog from '../../components/admin/ConfirmDialog';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import {
   fmtDate, fmtDateTime, useDebouncedValue, downloadCsv,
   TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS, TASK_DUE_STATE_LABELS, TASK_TARGET_TYPE_LABELS

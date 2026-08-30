@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -6,7 +6,9 @@ import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
-import RestaurantsMap from '../../components/RestaurantsMap';
+// Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
+// l'affichage d'une fiche de commerce, qui est une page publique et indexable.
+const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
@@ -242,7 +244,9 @@ export default function RestaurantMenu() {
         )}
         {restaurant.lat && restaurant.lng && (
           <div style={{ marginBottom: 14 }}>
-            <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />
+            <Suspense fallback={<div style={{ height: 220 }} />}>
+              <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />
+            </Suspense>
           </div>
         )}
         {restaurant.hasPromo && (
@@ -352,7 +356,7 @@ function DiscoverSection({ restaurants, t }) {
         >
           {items.map((r, i) => (
             <Link key={`${r.id}-${i}`} to={`/restaurants/${r.id}`} className="discover-card">
-              {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} />}
+              {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} />}
               <div className="info">
                 <b>{r.name}</b>
                 <span className="small">{r.commune}</span>

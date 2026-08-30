@@ -38,8 +38,15 @@ export const translations = {
       bottom: 'Fairide — la livraison de repas à commission réduite.'
     },
     cookies: {
-      text: "Fairide utilise uniquement des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Aucun tracking publicitaire.",
-      accept: "J'ai compris"
+      text: "Fairide utilise des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Avec ton accord uniquement, nous activons aussi un outil de rapport d'erreurs qui nous aide à corriger les pannes. Aucun tracking publicitaire.",
+      accept: 'Accepter',
+      refuse: 'Refuser'
+    },
+    notFound: {
+      title: 'Cette page n\'existe pas',
+      text: "Le lien est peut-être périmé, ou l'adresse comporte une faute de frappe. Les commerces, eux, sont toujours là.",
+      browseRestaurants: 'Voir les commerces',
+      backHome: "Retour à l'accueil"
     },
     landing: {
       pill: "📍 Local d'abord",
@@ -445,7 +452,13 @@ export const translations = {
       cancelText: "Le paiement n'a pas été finalisé — ta commande reste en attente.",
       orderNumber: 'Commande n°{id}',
       viewOrders: 'Voir mes commandes',
-      backToRestaurants: '← Retour aux restaurants'
+      backToRestaurants: '← Retour aux restaurants',
+      checkingTitle: 'Confirmation de ton paiement...',
+      checkingText: 'Encore quelques secondes, le temps que notre prestataire de paiement nous confirme la transaction. Ne ferme pas cette page.',
+      pendingTitle: 'Paiement en cours de vérification',
+      pendingText: "Ton paiement n'est pas encore confirmé de notre côté. Cela peut prendre une minute. Ta commande apparaît dans « Mes commandes » et son statut s'y mettra à jour tout seul.",
+      failedTitle: "Ce paiement n'a pas abouti",
+      failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Tu peux réessayer depuis « Mes commandes »."
     },
     auth: {
       login: 'Se connecter',
@@ -546,8 +559,15 @@ export const translations = {
       bottom: 'Fairide — reduced-commission food delivery.'
     },
     cookies: {
-      text: 'Fairide only uses technical cookies necessary for the site to work (login, cart). No advertising tracking.',
-      accept: 'Got it'
+      text: 'Fairide uses technical cookies necessary for the site to work (login, cart). Only with your consent, we also enable an error-reporting tool that helps us fix breakages. No advertising tracking.',
+      accept: 'Accept',
+      refuse: 'Refuse'
+    },
+    notFound: {
+      title: 'This page does not exist',
+      text: 'The link may be out of date, or the address has a typo. The shops are all still here.',
+      browseRestaurants: 'Browse shops',
+      backHome: 'Back home'
     },
     landing: {
       pill: '📍 Local first',
@@ -953,7 +973,13 @@ export const translations = {
       cancelText: 'The payment was not completed — your order remains pending.',
       orderNumber: 'Order #{id}',
       viewOrders: 'View my orders',
-      backToRestaurants: '← Back to restaurants'
+      backToRestaurants: '← Back to restaurants',
+      checkingTitle: 'Confirming your payment...',
+      checkingText: 'Just a few seconds while our payment provider confirms the transaction. Please do not close this page.',
+      pendingTitle: 'Payment still being verified',
+      pendingText: 'Your payment is not confirmed on our side yet. This can take a minute. Your order is listed under "My orders" and its status will update there on its own.',
+      failedTitle: 'This payment did not go through',
+      failedText: 'We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. You can try again from "My orders".'
     },
     auth: {
       login: 'Log in',
@@ -1054,8 +1080,15 @@ export const translations = {
       bottom: 'Fairide — maaltijdlevering tegen verlaagde commissie.'
     },
     cookies: {
-      text: 'Fairide gebruikt uitsluitend technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Geen advertentietracking.',
-      accept: 'Begrepen'
+      text: 'Fairide gebruikt technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Alleen met jouw toestemming schakelen we ook een tool voor foutrapportage in die ons helpt storingen op te lossen. Geen advertentietracking.',
+      accept: 'Accepteren',
+      refuse: 'Weigeren'
+    },
+    notFound: {
+      title: 'Deze pagina bestaat niet',
+      text: 'De link is misschien verouderd, of er staat een typfout in het adres. De handelszaken zijn er nog altijd.',
+      browseRestaurants: 'Handelszaken bekijken',
+      backHome: 'Terug naar de startpagina'
     },
     landing: {
       pill: '📍 Lokaal eerst',
@@ -1461,7 +1494,13 @@ export const translations = {
       cancelText: 'De betaling werd niet voltooid — je bestelling blijft in afwachting.',
       orderNumber: 'Bestelling nr. {id}',
       viewOrders: 'Mijn bestellingen bekijken',
-      backToRestaurants: '← Terug naar restaurants'
+      backToRestaurants: '← Terug naar restaurants',
+      checkingTitle: 'Je betaling wordt bevestigd...',
+      checkingText: 'Nog een paar seconden terwijl onze betaalpartner de transactie bevestigt. Sluit deze pagina niet.',
+      pendingTitle: 'Betaling wordt nog geverifieerd',
+      pendingText: 'Je betaling is bij ons nog niet bevestigd. Dit kan een minuut duren. Je bestelling staat onder "Mijn bestellingen" en de status wordt daar vanzelf bijgewerkt.',
+      failedTitle: 'Deze betaling is niet gelukt',
+      failedText: 'We hebben deze betaling niet ontvangen. Je bestelling is niet naar het restaurant gestuurd en er is niets afgeschreven. Je kunt het opnieuw proberen via "Mijn bestellingen".'
     },
     auth: {
       login: 'Inloggen',

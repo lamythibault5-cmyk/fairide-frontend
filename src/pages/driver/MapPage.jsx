@@ -4,6 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
 
+// Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
+// pour les deux pages qui partagent la position.
+const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
+
 // Carte de navigation pour le livreur : le trajet depuis sa position actuelle jusqu'à son prochain
 // arrêt (le restaurant tant que la commande n'est pas retirée, sinon l'adresse du client) — à utiliser
 // à la place d'une appli de guidage externe pendant une course. Reprend le même partage de position que
@@ -38,29 +42,37 @@ export default function MapPage() {
       return;
     }
     let deniedNotified = false;
-    function tick() {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setSharingLocation(true);
-          const { latitude, longitude } = pos.coords;
-          setPosition({ lat: latitude, lng: longitude });
-          activeIdsRef.current.forEach((id) => {
-            api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
-          });
-        },
-        () => {
-          setSharingLocation(false);
-          if (!deniedNotified) {
-            deniedNotified = true;
-            toast('Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
-    tick();
-    const interval = setInterval(tick, 8000);
-    return () => clearInterval(interval);
+    let lastSentAt = 0;
+
+    // Même bascule que dans Dashboard.jsx : watchPosition au lieu d'un getCurrentPosition relancé par
+    // setInterval, que le verrouillage de l'écran suspendait en silence en pleine course. Ici l'enjeu
+    // est double, puisque cette page sert aussi de guidage : la carte doit suivre le livreur en continu,
+    // pas se rafraîchir toutes les 8 secondes.
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setSharingLocation(true);
+        const { latitude, longitude } = pos.coords;
+        // La carte locale suit chaque relevé — c'est gratuit et c'est ce qui rend le guidage fluide.
+        setPosition({ lat: latitude, lng: longitude });
+        // Les envois au serveur, eux, restent limités pour ne pas multiplier les requêtes.
+        const now = Date.now();
+        if (now - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+        lastSentAt = now;
+        activeIdsRef.current.forEach((id) => {
+          api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
+        });
+      },
+      () => {
+        setSharingLocation(false);
+        if (!deniedNotified) {
+          deniedNotified = true;
+          toast('Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 

@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
-import RestaurantsMap from '../../components/RestaurantsMap';
+// Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
+// rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
+// de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
+// est un affichage secondaire, choisi par l'utilisateur.
+const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
@@ -62,7 +66,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         className="rest-card-fav"
       />
       {offerLabel && <span className="promo-badge">🏷️ {offerLabel}</span>}
-      {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
+      {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
       <div className="pill-row">
         <span className="pill teal">{r.commune}</span>
         {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
@@ -250,10 +254,12 @@ export default function RestaurantList() {
       {loading && <SkeletonCards count={4} />}
       {!loading && view === 'map' && (
         <div className="card">
-          <RestaurantsMap
-            restaurants={hasActiveFilter ? list : restaurants}
-            userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
-          />
+          <Suspense fallback={<SkeletonCards count={1} />}>
+            <RestaurantsMap
+              restaurants={hasActiveFilter ? list : restaurants}
+              userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
+            />
+          </Suspense>
         </div>
       )}
       {!loading && view === 'list' && hasActiveFilter && (

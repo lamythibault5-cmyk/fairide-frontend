@@ -98,7 +98,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           <label>Image (optionnel)</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             {resolveItemImage({ name, category, imageUrl }, sections) ? (
-              <img src={resolveItemImage({ name, category, imageUrl }, sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+              <img loading="lazy" src={resolveItemImage({ name, category, imageUrl }, sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             ) : (
               <span className="dish-thumb-empty">{categoryEmoji(category)}</span>
             )}
@@ -191,7 +191,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       )}
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
       {resolveItemImage(item, sections) ? (
-        <img src={resolveItemImage(item, sections)} alt={item.name} className="dish-thumb-lg" />
+        <img loading="lazy" src={resolveItemImage(item, sections)} alt={item.name} className="dish-thumb-lg" />
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}

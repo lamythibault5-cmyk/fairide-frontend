@@ -1,10 +1,12 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { api } from '../api';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { api, setSessionExpiredHandler } from '../api';
+import { useToast } from './ToastContext';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
 
 export function AuthProvider({ children }) {
+  const toast = useToast();
   const [session, setSession] = useState(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
@@ -14,10 +16,35 @@ export function AuthProvider({ children }) {
     }
   });
 
+  // Garde-fou anti-répétition de la déconnexion pour expiration (voir l'effet plus bas).
+  const expiredRef = useRef(false);
+
   useEffect(() => {
-    if (session) localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
-    else localStorage.removeItem(STORAGE_KEY);
+    if (session) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+      // Nouvelle session valide : on réarme le garde-fou ci-dessous, sinon une deuxième expiration
+      // plus tard dans la même page passerait silencieusement (aucun toast, aucune déconnexion).
+      expiredRef.current = false;
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   }, [session]);
+
+  // Session expirée (401 sur une requête authentifiée, voir api.js) : on vide la session, ce qui
+  // suffit à renvoyer vers /login puisque ProtectedRoute redirige dès que `user` est nul — pas de
+  // navigation impérative ici, qui ferait sortir à tort un visiteur d'une page publique.
+  // Un garde-fou est nécessaire : une page charge souvent plusieurs endpoints en parallèle
+  // (voir loadDashboard), qui repartiraient donc tous en 401 en même temps et empileraient autant
+  // de toasts identiques.
+  useEffect(() => {
+    setSessionExpiredHandler(() => {
+      if (expiredRef.current) return;
+      expiredRef.current = true;
+      setSession(null);
+      toast('Ta session a expiré. Reconnecte-toi pour continuer.');
+    });
+    return () => setSessionExpiredHandler(null);
+  }, [toast]);
 
   async function login(email, password) {
     const data = await api('/auth/login', { method: 'POST', body: { email, password } });

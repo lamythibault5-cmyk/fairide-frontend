@@ -4,6 +4,15 @@ import 'leaflet/dist/leaflet.css';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
+// Au-delà de ce délai sans nouvelle position, on prévient le client que la carte ne bouge plus. Deux
+// minutes : assez long pour ne pas s'alarmer d'un feu rouge ou d'un immeuble qui coupe le GPS, assez
+// court pour ne pas laisser quelqu'un attendre devant une carte morte.
+const STALE_AFTER_MS = 120000;
+
+function formatClock(date) {
+  return date.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+}
+
 function emojiIcon(emoji, bg) {
   return L.divIcon({
     className: '',
@@ -64,6 +73,31 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const [showRecenter, setShowRecenter] = useState(false);
   const [showFollowDriver, setShowFollowDriver] = useState(false);
   const [hasTrail, setHasTrail] = useState(false);
+
+  // Horodatage du dernier DÉPLACEMENT réellement observé, mesuré côté client : aucun champ de date
+  // n'accompagne aujourd'hui la position du livreur dans la commande, et on ne va pas en inventer un
+  // ici. Une position identique à la précédente ne rafraîchit donc pas l'heure — c'est exactement ce
+  // qu'on veut signaler, un livreur dont la position n'avance plus.
+  const [lastMoveAt, setLastMoveAt] = useState(null);
+  const [now, setNow] = useState(() => Date.now());
+  const lastDriverPosRef = useRef(null);
+
+  useEffect(() => {
+    if (driverLat == null || driverLng == null) return;
+    const key = `${driverLat},${driverLng}`;
+    if (lastDriverPosRef.current === key) return;
+    lastDriverPosRef.current = key;
+    setLastMoveAt(new Date());
+  }, [driverLat, driverLng]);
+
+  // Fait vieillir l'affichage même si plus aucune position n'arrive — sans cette horloge, le message
+  // resterait bloqué sur "à jour" indéfiniment puisque rien ne provoquerait de nouveau rendu.
+  useEffect(() => {
+    const clock = setInterval(() => setNow(Date.now()), 30000);
+    return () => clearInterval(clock);
+  }, []);
+
+  const isStale = lastMoveAt != null && now - lastMoveAt.getTime() > STALE_AFTER_MS;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -228,6 +262,17 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
           {showRecenter && (
             <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>
           )}
+        </div>
+      )}
+      {/* Fraîcheur de la position. Le partage de position du livreur s'interrompt dès que son téléphone
+          se verrouille (limite du web, voir driver/Dashboard.jsx) : sans cette mention, une carte figée
+          est indiscernable d'un livreur à l'arrêt à un feu, et le client attend en croyant être suivi
+          en direct. Au-delà du seuil, on le dit franchement plutôt que d'afficher une heure rassurante. */}
+      {driverLat != null && driverLng != null && lastMoveAt && (
+        <div className={`tracking-map-freshness${isStale ? ' stale' : ''}`}>
+          {isStale
+            ? `⚠️ Position figée depuis ${formatClock(lastMoveAt)} — le livreur est peut-être hors réseau ou son écran est éteint.`
+            : `Position mise à jour à ${formatClock(lastMoveAt)}`}
         </div>
       )}
       <div className="tracking-map-legend">

@@ -7,6 +7,8 @@ import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
+import NewOrderAlertBar from '../../components/NewOrderAlertBar';
+import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -36,6 +38,9 @@ export default function DashboardLayout() {
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [hours, setHours] = useState(null);
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
+
+  // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
+  const orderAlert = useNewOrderAlert(orders);
 
   const [connecting, setConnecting] = useState(false);
   // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
@@ -300,6 +305,10 @@ export default function DashboardLayout() {
           </button>
         </div>
       )}
+
+      {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
+          s'il est en train de modifier son menu ou de consulter ses avis. */}
+      {restaurant && <NewOrderAlertBar {...orderAlert} />}
 
       {restaurant && (
         <Outlet context={{ restaurant, orders, reviews, drivers, restoId, loadDashboard }} />

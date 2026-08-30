@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/translations';
 
 const LanguageContext = createContext(null);
@@ -22,6 +22,13 @@ function resolve(dict, path) {
 
 export function LanguageProvider({ children }) {
   const [language, setLanguageState] = useState(loadLanguage);
+
+  // index.html porte lang="fr" en dur : sans cette synchronisation, un visiteur passé en néerlandais ou
+  // en anglais restait annoncé comme lisant du français. Les lecteurs d'écran appliquent alors la
+  // prononciation française à du texte néerlandais, et les moteurs de recherche classent mal la page.
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   const setLanguage = useCallback((lang) => {
     if (!SUPPORTED_LANGUAGES.includes(lang)) return;

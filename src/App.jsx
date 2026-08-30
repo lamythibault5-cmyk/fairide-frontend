@@ -1,59 +1,88 @@
+import { Suspense, lazy } from 'react';
 import { Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
 import ProtectedRoute from './components/ProtectedRoute';
+import { SkeletonCards } from './components/Skeleton';
+
+// Découpage du bundle par rôle.
+//
+// Tout était jusqu'ici livré dans un seul fichier de 1,2 Mo : un client affamé sur la 4G téléchargeait
+// les quinze pages d'administration, Leaflet, dnd-kit et les mini-jeux avant de voir le moindre
+// restaurant. Ce sont pourtant des univers disjoints — un client n'ouvrira jamais /admin, un
+// restaurateur jamais /driver.
+//
+// Ce qui reste chargé d'emblée (imports statiques ci-dessous) : uniquement le parcours d'arrivée —
+// accueil, connexion, liste et fiche des commerces. Ce sont les seules pages publiques, donc celles
+// qui décident du temps de premier affichage et du référencement. Tout le reste part en chargement
+// différé.
+import Home from './pages/Home';
 import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
-import Home from './pages/Home';
-import Account from './pages/Account';
-import AdminLayout from './pages/admin/AdminLayout';
-import AdminDashboardPage from './pages/admin/AdminDashboardPage';
-import AdminOrdersPage from './pages/admin/AdminOrdersPage';
-import AdminCrmPage from './pages/admin/AdminCrmPage';
-import AdminRestaurantsPage from './pages/admin/AdminRestaurantsPage';
-import AdminDriversPage from './pages/admin/AdminDriversPage';
-import AdminClientsPage from './pages/admin/AdminClientsPage';
-import AdminFinancePage from './pages/admin/AdminFinancePage';
-import AdminPaymentsPage from './pages/admin/AdminPaymentsPage';
-import AdminSupportPage from './pages/admin/AdminSupportPage';
-import AdminDocumentsPage from './pages/admin/AdminDocumentsPage';
-import AdminTasksPage from './pages/admin/AdminTasksPage';
-import AdminAutomationsPage from './pages/admin/AdminAutomationsPage';
-import AdminAccountingPage from './pages/admin/AdminAccountingPage';
-import AdminInvoicesPage from './pages/admin/AdminInvoicesPage';
-import AdminSettingsPage from './pages/admin/AdminSettingsPage';
-import LegalNotice from './pages/legal/LegalNotice';
-import Terms from './pages/legal/Terms';
-import Privacy from './pages/legal/Privacy';
-import ClientHome from './pages/client/Home';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
-import Checkout from './pages/client/Checkout';
-import Favorites from './pages/client/Favorites';
-import Orders from './pages/client/Orders';
-import OrderResult from './pages/client/OrderResult';
-import ClientMapPage from './pages/client/MapPage';
-import ClientInvoicesPage from './pages/client/InvoicesPage';
-import RestaurantDashboardLayout from './pages/restaurant/DashboardLayout';
-import RestaurantMenuPage from './pages/restaurant/MenuPage';
-import RestaurantOrdersPage from './pages/restaurant/OrdersPage';
-import RestaurantPreviewPage from './pages/restaurant/PreviewPage';
-import RestaurantEditPage from './pages/restaurant/EditPage';
-import RestaurantPromotionsPage from './pages/restaurant/PromotionsPage';
-import RestaurantMapPage from './pages/restaurant/MapPage';
-import RestaurantReviewsPage from './pages/restaurant/ReviewsPage';
-import RestaurantInvoicesPage from './pages/restaurant/InvoicesPage';
-import RestaurantGuidePage from './pages/restaurant/GuidePage';
-import DriverDashboard from './pages/driver/Dashboard';
-import DriverMapPage from './pages/driver/MapPage';
-import DriverReviewsPage from './pages/driver/ReviewsPage';
-import DriverTipsPage from './pages/driver/TipsPage';
-import DriverInvoicesPage from './pages/driver/InvoicesPage';
+import NotFound from './pages/NotFound';
+
+// --- Espace client (au-delà des pages publiques) ---
+const ClientHome = lazy(() => import('./pages/client/Home'));
+const Checkout = lazy(() => import('./pages/client/Checkout'));
+const Favorites = lazy(() => import('./pages/client/Favorites'));
+const Orders = lazy(() => import('./pages/client/Orders'));
+const OrderResult = lazy(() => import('./pages/client/OrderResult'));
+const ClientMapPage = lazy(() => import('./pages/client/MapPage'));
+const ClientInvoicesPage = lazy(() => import('./pages/client/InvoicesPage'));
+const Account = lazy(() => import('./pages/Account'));
+
+// --- Espace restaurateur ---
+const RestaurantDashboardLayout = lazy(() => import('./pages/restaurant/DashboardLayout'));
+const RestaurantMenuPage = lazy(() => import('./pages/restaurant/MenuPage'));
+const RestaurantOrdersPage = lazy(() => import('./pages/restaurant/OrdersPage'));
+const RestaurantPreviewPage = lazy(() => import('./pages/restaurant/PreviewPage'));
+const RestaurantEditPage = lazy(() => import('./pages/restaurant/EditPage'));
+const RestaurantPromotionsPage = lazy(() => import('./pages/restaurant/PromotionsPage'));
+const RestaurantMapPage = lazy(() => import('./pages/restaurant/MapPage'));
+const RestaurantReviewsPage = lazy(() => import('./pages/restaurant/ReviewsPage'));
+const RestaurantInvoicesPage = lazy(() => import('./pages/restaurant/InvoicesPage'));
+const RestaurantGuidePage = lazy(() => import('./pages/restaurant/GuidePage'));
+
+// --- Espace livreur ---
+const DriverDashboard = lazy(() => import('./pages/driver/Dashboard'));
+const DriverMapPage = lazy(() => import('./pages/driver/MapPage'));
+const DriverReviewsPage = lazy(() => import('./pages/driver/ReviewsPage'));
+const DriverTipsPage = lazy(() => import('./pages/driver/TipsPage'));
+const DriverInvoicesPage = lazy(() => import('./pages/driver/InvoicesPage'));
+
+// --- Console d'administration ---
+const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
+const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
+const AdminCrmPage = lazy(() => import('./pages/admin/AdminCrmPage'));
+const AdminRestaurantsPage = lazy(() => import('./pages/admin/AdminRestaurantsPage'));
+const AdminDriversPage = lazy(() => import('./pages/admin/AdminDriversPage'));
+const AdminClientsPage = lazy(() => import('./pages/admin/AdminClientsPage'));
+const AdminFinancePage = lazy(() => import('./pages/admin/AdminFinancePage'));
+const AdminPaymentsPage = lazy(() => import('./pages/admin/AdminPaymentsPage'));
+const AdminSupportPage = lazy(() => import('./pages/admin/AdminSupportPage'));
+const AdminDocumentsPage = lazy(() => import('./pages/admin/AdminDocumentsPage'));
+const AdminTasksPage = lazy(() => import('./pages/admin/AdminTasksPage'));
+const AdminAutomationsPage = lazy(() => import('./pages/admin/AdminAutomationsPage'));
+const AdminAccountingPage = lazy(() => import('./pages/admin/AdminAccountingPage'));
+const AdminInvoicesPage = lazy(() => import('./pages/admin/AdminInvoicesPage'));
+const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
+
+// --- Pages légales ---
+const LegalNotice = lazy(() => import('./pages/legal/LegalNotice'));
+const Terms = lazy(() => import('./pages/legal/Terms'));
+const Privacy = lazy(() => import('./pages/legal/Privacy'));
 
 export default function App() {
   return (
     <>
       <ScrollRestorer />
+      {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
+          au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
+          requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
+      <Suspense fallback={<div className="wrap" style={{ paddingTop: 24 }}><SkeletonCards count={3} /></div>}>
       <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
@@ -63,7 +92,9 @@ export default function App() {
         <Route path="/home" element={<ProtectedRoute role="client"><ClientHome /></ProtectedRoute>} />
         {/* Volontairement publiques (pas de ProtectedRoute) : consultables sans compte pour être
             indexables par les moteurs de recherche et partageables par lien — seule une action
-            (commander, réserver, mettre en favori) exige de se connecter, voir RestaurantList/RestaurantMenu. */}
+            (commander, réserver, mettre en favori) exige de se connecter, voir RestaurantList/RestaurantMenu.
+            Ce sont aussi, pour cette raison, les deux seules pages hors accueil gardées en import
+            statique : une page indexable ne doit pas attendre un second téléchargement pour s'afficher. */}
         <Route path="/restaurants" element={<RestaurantList />} />
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
@@ -112,8 +143,13 @@ export default function App() {
         <Route path="/mentions-legales" element={<LegalNotice />} />
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
+
+        {/* Attrape-tout, obligatoirement en dernier : sans lui, une URL inconnue affichait la mise en
+            page avec un contenu vide, sans message ni lien de sortie. */}
+        <Route path="*" element={<NotFound />} />
       </Route>
       </Routes>
+      </Suspense>
     </>
   );
 }

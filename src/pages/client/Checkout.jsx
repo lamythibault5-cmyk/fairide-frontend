@@ -57,7 +57,7 @@ function UpsellRow({ items, cart, restaurant }) {
         const image = resolveItemImage(item, restaurant.sections);
         return (
           <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
-            {image ? <img src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
+            {image ? <img loading="lazy" src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
             <span className="upsell-item-name">{item.name}</span>
             <span className="upsell-item-price">+{item.price.toFixed(2)}€</span>
           </button>
@@ -250,14 +250,18 @@ export default function Checkout() {
     setPaying(true);
     try {
       const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
-      // Le panier n'est vidé qu'une fois le paiement confirmé, pas dès la création de la commande —
-      // sinon "Annuler" laisserait le client avec un panier vide, sans possibilité de reformuler son
-      // choix (livraison/à emporter, planification) sans tout rajouter au panier.
-      cart.clear();
       if (pay.simulated) {
+        // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
+        cart.clear();
         toast(isPureReservation ? t('checkout.toastReservationSent') : t('checkout.toastOrderPaid'));
         navigate('/orders');
       } else {
+        // Le panier n'est PAS vidé ici. L'intention d'origine — ne le vider qu'une fois le paiement
+        // confirmé — n'était pas respectée : il était vidé dès la création de la session de paiement,
+        // c'est-à-dire avant la redirection. Tout client qui hésitait sur la page de paiement, dont la
+        // carte était refusée, ou qui revenait en arrière retrouvait un panier vide et devait tout
+        // reconstituer — un abandon fréquent sur mobile, donc une perte de commandes quotidienne.
+        // Le panier est désormais vidé dans OrderResult.jsx, une fois la commande réellement `paid`.
         window.location.href = pay.checkoutUrl;
       }
     } catch (e) {
@@ -350,8 +354,11 @@ export default function Checkout() {
 
           <div className="card">
             <div className="field">
-              <label>{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
-              <div className="row" style={{ gap: 8 }}>
+              {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
+                  désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
+                  les options, au lieu de trois boutons sans contexte. */}
+              <label id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
+              <div className="row" style={{ gap: 8 }} role="group" aria-labelledby="checkout-fulfillment-label">
                 {restaurant.offersDineIn && (
                   <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>{t('orderStatus.orderType.dineIn')}</button>
                 )}
@@ -370,32 +377,32 @@ export default function Checkout() {
             {fulfillmentType === 'delivery' && (
               <>
                 <div className="field">
-                  <label>{t('auth.street')}</label>
-                  <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
+                  <label htmlFor="checkout-f-1">{t('auth.street')}</label>
+                  <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>{t('auth.number')}</label>
-                    <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
+                    <label htmlFor="checkout-f-2">{t('auth.number')}</label>
+                    <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>{t('auth.postalCode')}</label>
-                    <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
+                    <label htmlFor="checkout-f-3">{t('auth.postalCode')}</label>
+                    <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
                   </div>
                 </div>
                 <div className="field">
-                  <label>{t('auth.city')}</label>
-                  <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
+                  <label htmlFor="checkout-f-4">{t('auth.city')}</label>
+                  <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
                 </div>
                 <div className="field">
-                  <label>{t('checkout.atDelivery')}</label>
-                  <select value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
+                  <label htmlFor="checkout-f-5">{t('checkout.atDelivery')}</label>
+                  <select id="checkout-f-5" value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
                     {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{deliveryInstructionLabel(o.value, t)}</option>)}
                   </select>
                 </div>
                 <div className="field">
-                  <label>{t('checkout.driverNote')}</label>
-                  <input value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
+                  <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
+                  <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
                 </div>
               </>
             )}
@@ -406,12 +413,15 @@ export default function Checkout() {
               <>
                 <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.dineInHere', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
                 <div className="field">
-                  <label>{t('checkout.reservationDateTime')}</label>
-                  <div className="row" style={{ gap: 8 }}>
+                  {/* Deux champs (jour + heure) sous un seul intitulé : groupe, et chaque select reçoit
+                      en plus son propre aria-label pour être identifiable une fois le focus dessus. */}
+                  <label id="checkout-reservation-label">{t('checkout.reservationDateTime')}</label>
+                  <div className="row" style={{ gap: 8 }} role="group" aria-labelledby="checkout-reservation-label">
                     <select
                       value={scheduleDate}
                       onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
                       style={{ flex: 1 }}
+                      aria-label={t('checkout.reservationDateTime')}
                     >
                       {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                     </select>
@@ -419,6 +429,7 @@ export default function Checkout() {
                       value={scheduleTime}
                       onChange={(e) => setScheduleTime(e.target.value)}
                       style={{ flex: 1 }}
+                      aria-label={t('checkout.timePlaceholder')}
                     >
                       <option value="">{t('checkout.timePlaceholder')}</option>
                       {scheduleTimeOptions.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
@@ -433,16 +444,16 @@ export default function Checkout() {
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>{t('checkout.partySize')}</label>
-                    <input
+                    <label htmlFor="checkout-f-7">{t('checkout.partySize')}</label>
+                    <input id="checkout-f-7"
                       type="number" min="1" max="30"
                       value={partySize}
                       onChange={(e) => setPartySize(e.target.value === '' ? '' : Number(e.target.value))}
                     />
                   </div>
                   <div className="field" style={{ flex: 2 }}>
-                    <label>{t('checkout.reservationName')}</label>
-                    <input value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
+                    <label htmlFor="checkout-f-8">{t('checkout.reservationName')}</label>
+                    <input id="checkout-f-8" value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
                   </div>
                 </div>
               </>
