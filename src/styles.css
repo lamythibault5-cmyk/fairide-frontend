@@ -90,6 +90,19 @@ a { color: inherit; }
 @media (max-width: 640px) { .brand h1 { font-size: 24px; } .brand-slogan { font-size: 12px; } }
 @media (max-width: 480px) { .brand-slogan { display: none; } }
 
+/* Filigrane "Fairide" permanent, coin haut-droit (voir BrandWatermark.jsx, monté une seule fois dans
+   Layout.jsx, sur toutes les pages) — pointer-events: none pour ne jamais gêner un vrai contrôle de
+   l'interface en dessous (barre de sections sticky, sélecteur de langue...), même en cas de léger
+   chevauchement visuel. z-index sous les modales (100) : une modale ouverte le recouvre normalement. */
+.brand-watermark {
+  position: fixed; top: 10px; right: 10px; z-index: 80; pointer-events: none;
+  display: flex; align-items: center; gap: 6px; padding: 5px 11px 5px 6px; border-radius: 999px;
+  background: rgba(251,248,242,.94); box-shadow: 0 3px 12px rgba(22,35,58,.18); backdrop-filter: blur(4px);
+}
+.brand-watermark .mark { width: 18px; height: 18px; border-radius: 5px; }
+.brand-watermark span { font-family: 'Fraunces', serif; font-weight: 700; font-size: 12.5px; color: var(--ink); letter-spacing: .01em; }
+@media (max-width: 480px) { .brand-watermark { top: 8px; right: 8px; padding: 4px 9px 4px 5px; } .brand-watermark .mark { width: 16px; height: 16px; } .brand-watermark span { font-size: 11.5px; } }
+
 .userbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--cream); opacity: .9; }
 .role-nav { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .role-nav a {

@@ -10,6 +10,7 @@ import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
+import BrandWatermark from './BrandWatermark';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -48,6 +49,7 @@ export default function Layout() {
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
         <AssistantWidget />
+        <BrandWatermark />
       </>
     );
   }
@@ -116,6 +118,7 @@ export default function Layout() {
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
       <AssistantWidget />
+      <BrandWatermark />
     </>
   );
 }
