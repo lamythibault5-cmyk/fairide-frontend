@@ -34,7 +34,7 @@ export default function Favorites() {
       <div className="rest-grid">
         {!loading && restaurants.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
-            {r.coverImageUrl && <img src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
+            {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
             <div className="pill-row">
               <span className="pill teal">{r.commune}</span>
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}

@@ -171,7 +171,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
               style={{ flexShrink: 0, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
             >
               {it.imageUrl ? (
-                <img src={it.imageUrl} alt="" className="dish-thumb" />
+                <img loading="lazy" src={it.imageUrl} alt="" className="dish-thumb" />
               ) : (
                 <span className="dish-thumb-empty">{categoryEmoji(it.category)}</span>
               )}

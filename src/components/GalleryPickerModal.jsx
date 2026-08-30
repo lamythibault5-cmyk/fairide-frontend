@@ -120,7 +120,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
               {suggestions.map((url) => (
                 <div key={url} className="gallery-picker-tile">
                   <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(url)} title="Utiliser cette photo">
-                    <img src={url} alt="" />
+                    <img loading="lazy" src={url} alt="" />
                   </button>
                 </div>
               ))}
@@ -152,7 +152,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
             {images.map((img) => (
               <div key={img.id} className="gallery-picker-tile">
                 <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(img.imageUrl)} title="Utiliser cette photo">
-                  <img src={img.imageUrl} alt="" />
+                  <img loading="lazy" src={img.imageUrl} alt="" />
                 </button>
                 <button
                   type="button"

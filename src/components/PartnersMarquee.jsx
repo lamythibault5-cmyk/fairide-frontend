@@ -30,7 +30,7 @@ export default function PartnersMarquee() {
         >
           {items.map((r, i) => (
             <div key={`${r.id}-${i}`} className="trust-card" title={r.name}>
-              {r.coverImageUrl ? <img src={r.coverImageUrl} alt={r.name} /> : <span className="trust-card-fallback">{r.name.slice(0, 2).toUpperCase()}</span>}
+              {r.coverImageUrl ? <img loading="lazy" src={r.coverImageUrl} alt={r.name} /> : <span className="trust-card-fallback">{r.name.slice(0, 2).toUpperCase()}</span>}
               <span>{r.name}</span>
             </div>
           ))}

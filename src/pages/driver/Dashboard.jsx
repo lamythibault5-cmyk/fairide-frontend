@@ -6,6 +6,14 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 
+// Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
+// l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
+const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
+
+function formatClock(date) {
+  return date.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+}
+
 export default function DriverDashboard() {
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
@@ -15,6 +23,7 @@ export default function DriverDashboard() {
   const [loading, setLoading] = useState(true);
   const [codeInputs, setCodeInputs] = useState({});
   const [sharingLocation, setSharingLocation] = useState(false);
+  const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
   const activeIdsRef = useRef([]);
@@ -83,35 +92,71 @@ export default function DriverDashboard() {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);
   }, [mine]);
 
+  // Partage de position : watchPosition plutôt qu'un getCurrentPosition relancé toutes les 12 s.
+  //
+  // Le sondage par setInterval était doublement fragile : un onglet en arrière-plan voit ses minuteurs
+  // fortement ralentis, et un téléphone qui se verrouille les suspend tout court — donc le suivi
+  // s'arrêtait en silence dès que le livreur rangeait son téléphone dans sa poche, sans que ni lui ni
+  // le client ne le voient. watchPosition est alimenté par le GPS lui-même et continue à émettre plus
+  // longtemps dans ces conditions.
+  //
+  // Ce que cela ne règle PAS : navigateur fermé ou appareil en veille prolongée. La géolocalisation en
+  // arrière-plan n'existe pas sur le web ; elle demande une app native ou un emballage Capacitor. D'où
+  // l'horodatage renvoyé au client (lastLocationAt ci-dessous) : tant que le suivi peut s'interrompre,
+  // une carte figée doit être lisible comme telle plutôt que passer pour une position à jour.
   useEffect(() => {
     if (!('geolocation' in navigator) || user?.locationSharingEnabled === false) {
       setSharingLocation(false);
-      return;
+      return undefined;
     }
     let deniedNotified = false;
-    function tick() {
+    let lastSentAt = 0;
+    let lastCoords = null;
+
+    function send(latitude, longitude) {
       if (!activeIdsRef.current.length) return;
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setSharingLocation(true);
-          const { latitude, longitude } = pos.coords;
-          activeIdsRef.current.forEach((id) => {
-            api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
-          });
-        },
-        () => {
-          setSharingLocation(false);
-          if (!deniedNotified) {
-            deniedNotified = true;
-            toast('Autorise la géolocalisation dans ton navigateur pour partager ta position en direct avec le client.');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
+      lastSentAt = Date.now();
+      setLastPositionAt(new Date());
+      activeIdsRef.current.forEach((id) => {
+        api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
+      });
     }
-    tick();
-    const interval = setInterval(tick, 12000);
-    return () => clearInterval(interval);
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setSharingLocation(true);
+        const { latitude, longitude } = pos.coords;
+        lastCoords = { latitude, longitude };
+        // watchPosition peut émettre plusieurs fois par seconde en déplacement : on limite les envois
+        // au même rythme que l'ancien sondage, pour ne pas multiplier les requêtes par course.
+        if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+        send(latitude, longitude);
+      },
+      () => {
+        setSharingLocation(false);
+        if (!deniedNotified) {
+          deniedNotified = true;
+          toast('Autorise la géolocalisation dans ton navigateur pour partager ta position en direct avec le client.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+    );
+
+    // Battement de cœur. watchPosition n'émet QUE lorsque la position change : un livreur immobile —
+    // arrêté devant le restaurant en attendant la commande, ou coincé à un feu — n'envoyait donc plus
+    // rien du tout, et le client voyait une carte vide. L'ancien sondage par intervalle envoyait au
+    // moins une position toutes les 12 s, immobile ou non ; on rétablit cette garantie en réémettant
+    // la dernière position connue quand aucune n'est partie depuis trop longtemps.
+    const heartbeat = setInterval(() => {
+      if (!lastCoords) return;
+      if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+      send(lastCoords.latitude, lastCoords.longitude);
+    }, MIN_LOCATION_SEND_INTERVAL_MS);
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      clearInterval(heartbeat);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 
@@ -141,7 +186,7 @@ export default function DriverDashboard() {
       : user?.locationSharingEnabled === false
         ? '📍 Partage de position désactivé.'
         : sharingLocation
-          ? '📍 Position partagée en direct.'
+          ? `📍 Position partagée${lastPositionAt ? ` — dernier envoi à ${formatClock(lastPositionAt)}` : ''}.`
           : '📍 En attente de l\'autorisation de géolocalisation...';
     setRightSlot(
       <div className="card">
@@ -155,7 +200,7 @@ export default function DriverDashboard() {
       </div>
     );
     return () => setRightSlot(null);
-  }, [available, mine, sharingLocation, user?.locationSharingEnabled, setRightSlot]);
+  }, [available, mine, sharingLocation, lastPositionAt, user?.locationSharingEnabled, setRightSlot]);
 
   if (loading) return <SkeletonCards count={3} />;
 
@@ -291,8 +336,13 @@ export default function DriverDashboard() {
           {user?.locationSharingEnabled === false
             ? '📍 Partage de position désactivé (réactivable dans les réglages du compte).'
             : sharingLocation
-              ? '📍 Ta position est partagée en direct avec le(s) client(s).'
+              ? `📍 Ta position est partagée avec le(s) client(s)${lastPositionAt ? ` — dernier envoi à ${formatClock(lastPositionAt)}` : ''}.`
               : '📍 En attente de ton autorisation de géolocalisation...'}
+          {/* Dit explicitement ce que le web ne peut pas garantir, plutôt que de laisser croire à un
+              suivi permanent : tant qu'il n'y a pas d'app native, écran éteint = suivi interrompu. */}
+          {sharingLocation && (
+            <div style={{ marginTop: 2 }}>Garde cet écran allumé : le partage s'interrompt quand le téléphone se verrouille.</div>
+          )}
         </div>
       )}
       {active.length === 0 && <div className="empty">Pas de livraison en cours.</div>}

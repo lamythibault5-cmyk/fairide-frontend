@@ -4,6 +4,14 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
 
+// Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
+// pour les deux pages qui partagent la position.
+const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
+
+// Cadence de rafraîchissement de la carte de guidage. 8 s : la valeur du sondage d'origine, assez
+// réactive pour suivre un scooter, assez lente pour ne pas relancer un calcul d'itinéraire par seconde.
+const MIN_MAP_REFRESH_INTERVAL_MS = 8000;
+
 // Carte de navigation pour le livreur : le trajet depuis sa position actuelle jusqu'à son prochain
 // arrêt (le restaurant tant que la commande n'est pas retirée, sinon l'adresse du client) — à utiliser
 // à la place d'une appli de guidage externe pendant une course. Reprend le même partage de position que
@@ -38,29 +46,47 @@ export default function MapPage() {
       return;
     }
     let deniedNotified = false;
-    function tick() {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setSharingLocation(true);
-          const { latitude, longitude } = pos.coords;
+    let lastSentAt = 0;
+    let lastShownAt = 0;
+
+    // Même bascule que dans Dashboard.jsx : watchPosition au lieu d'un getCurrentPosition relancé par
+    // setInterval, que le verrouillage de l'écran suspendait en silence en pleine course. Ici l'enjeu
+    // est double, puisque cette page sert aussi de guidage : la carte doit suivre le livreur en continu,
+    // pas se rafraîchir toutes les 8 secondes.
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setSharingLocation(true);
+        const { latitude, longitude } = pos.coords;
+        const now = Date.now();
+
+        // Rafraîchissement de la carte volontairement bridé, contrairement à ce que je pensais en
+        // écrivant "c'est gratuit" : chaque nouvelle position relance un calcul d'itinéraire chez
+        // OSRM et un recadrage de la carte dans DriverNavigationMap. watchPosition émettant jusqu'à
+        // plusieurs fois par seconde en roulant, la carte devenait impossible à déplacer (elle se
+        // recentrait sans cesse) et on martelait le serveur de démonstration public d'OSRM.
+        if (now - lastShownAt >= MIN_MAP_REFRESH_INTERVAL_MS) {
+          lastShownAt = now;
           setPosition({ lat: latitude, lng: longitude });
-          activeIdsRef.current.forEach((id) => {
-            api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
-          });
-        },
-        () => {
-          setSharingLocation(false);
-          if (!deniedNotified) {
-            deniedNotified = true;
-            toast('Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.');
-          }
-        },
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
-    }
-    tick();
-    const interval = setInterval(tick, 8000);
-    return () => clearInterval(interval);
+        }
+
+        // Les envois au serveur ont leur propre cadence, plus lente encore.
+        if (now - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+        lastSentAt = now;
+        activeIdsRef.current.forEach((id) => {
+          api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
+        });
+      },
+      () => {
+        setSharingLocation(false);
+        if (!deniedNotified) {
+          deniedNotified = true;
+          toast('Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 

@@ -7,7 +7,7 @@ function ItemCard({ item, onAdd, hideAdd, t, sections }) {
     <div className="menu-item-card" style={{ position: 'relative', ...(item.available === false ? { opacity: 0.5 } : {}) }}>
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
       {image ? (
-        <img src={image} alt={item.name} className="dish-thumb-lg" />
+        <img loading="lazy" src={image} alt={item.name} className="dish-thumb-lg" />
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
@@ -42,7 +42,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, hideAdd })
         return (
           <div key={section.id} id={`menu-cat-${section.id}`}>
             <div className="category-header">
-              {image && <img src={image} alt={label} />}
+              {image && <img loading="lazy" src={image} alt={label} />}
               <span>{label}</span>
             </div>
             {subsectionGroups.map((group) => (

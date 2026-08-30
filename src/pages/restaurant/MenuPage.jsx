@@ -17,6 +17,7 @@ import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import MenuImportReview from '../../components/MenuImportReview';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function MenuPage() {
   const { token } = useAuth();
@@ -65,6 +66,14 @@ export default function MenuPage() {
   const [selectSectionId, setSelectSectionId] = useState(null);
   const [selectedIds, setSelectedIds] = useState(() => new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  // Confirmation en attente : { title, message, confirmLabel, onConfirm } — null quand aucune modale
+  // n'est ouverte. Un seul état pour toutes les suppressions de cette page, voir ConfirmDialog en bas.
+  const [confirm, setConfirm] = useState(null);
+  // Verrou du bouton de confirmation, distinct de bulkDeleting (qui ne couvre que la suppression en
+  // lot). window.confirm se fermait de lui-même au clic ; la modale, elle, reste affichée pendant les
+  // deux allers-retours réseau — sans ce verrou, un second clic envoyait une deuxième suppression et
+  // le restaurateur récupérait une erreur pour une action qui avait pourtant réussi.
+  const [confirmBusy, setConfirmBusy] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
   // l'aller-retour visible (retour à l'ancien ordre puis saut au nouveau) entre le lâcher et le rechargement.
   const [localOrder, setLocalOrder] = useState({});
@@ -96,9 +105,23 @@ export default function MenuPage() {
     });
   }
 
-  async function bulkDeleteSelected() {
+  // Les deux suppressions ci-dessous passent par ConfirmDialog et non plus par window.confirm() :
+  // les dialogues natifs sont supprimés ou incohérents dans une PWA installée et dans les webviews,
+  // c'est-à-dire exactement là où un restaurateur travaille. Une confirmation qui ne s'affiche pas
+  // sur une suppression irréversible, c'est soit une perte de données, soit une action bloquée.
+  function bulkDeleteSelected() {
     if (!selectedIds.size) return;
-    if (!window.confirm(`Supprimer ${selectedIds.size} plat(s) sélectionné(s) ? Cette action est irréversible.`)) return;
+    setConfirm({
+      title: `Supprimer ${selectedIds.size} plat(s) ?`,
+      message: 'Cette action est irréversible.',
+      confirmLabel: 'Supprimer',
+      onConfirm: doBulkDelete
+    });
+  }
+
+  async function doBulkDelete() {
+    if (confirmBusy) return;
+    setConfirmBusy(true);
     setBulkDeleting(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk-delete`, { method: 'POST', token, body: { itemIds: Array.from(selectedIds) } });
@@ -110,6 +133,8 @@ export default function MenuPage() {
       toast(e.message);
     } finally {
       setBulkDeleting(false);
+      setConfirmBusy(false);
+      setConfirm(null);
     }
   }
 
@@ -303,15 +328,30 @@ export default function MenuPage() {
     setItemImageUrl('');
   }
 
-  async function deleteSection(section) {
+  function deleteSection(section) {
     const count = restaurant.menu.filter((i) => (i.category || 'plat') === section.name).length;
-    if (count > 0 && !window.confirm(`Cette section contient ${count} plat(s). Les supprimer aussi et retirer la section "${categoryLabel(section.name, t)}" ?`)) return;
+    // Section vide : rien à perdre, donc pas de confirmation — comme avant.
+    if (count === 0) { doDeleteSection(section); return; }
+    setConfirm({
+      title: `Supprimer la section « ${categoryLabel(section.name, t)} » ?`,
+      message: `Elle contient ${count} plat(s), qui seront supprimés avec elle. Cette action est irréversible.`,
+      confirmLabel: 'Supprimer la section',
+      onConfirm: () => doDeleteSection(section)
+    });
+  }
+
+  async function doDeleteSection(section) {
+    if (confirmBusy) return;
+    setConfirmBusy(true);
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
       toast('Section supprimée.');
     } catch (e) {
       toast(e.message);
+    } finally {
+      setConfirmBusy(false);
+      setConfirm(null);
     }
   }
 
@@ -472,7 +512,7 @@ export default function MenuPage() {
             <div key={section.id} style={{ marginBottom: 16 }}>
               <div className="category-header" style={{ justifyContent: 'space-between' }}>
                 <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-                  {image && <img src={image} alt={section.name} />}
+                  {image && <img loading="lazy" src={image} alt={section.name} />}
                   {editingSectionId === section.id ? (
                     <div className="row" style={{ gap: 6 }}>
                       <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />
@@ -558,7 +598,7 @@ export default function MenuPage() {
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         {itemName.trim() && (
                           resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections) ? (
-                            <img src={resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
+                            <img loading="lazy" src={resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
                           ) : (
                             <span className="dish-thumb-empty">{categoryEmoji(itemCategory)}</span>
                           )
@@ -691,6 +731,17 @@ export default function MenuPage() {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel}
+        danger
+        loading={confirmBusy}
+        onConfirm={() => confirm?.onConfirm?.()}
+        onCancel={() => { if (!confirmBusy) setConfirm(null); }}
+      />
     </div>
   );
 }

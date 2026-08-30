@@ -276,8 +276,8 @@ export default function Auth() {
               </p>
               <form onSubmit={submitForgotPassword}>
                 <div className="field">
-                  <label>{t('auth.email')}</label>
-                  <input type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="toi@exemple.com" />
+                  <label htmlFor="auth-f-1">{t('auth.email')}</label>
+                  <input id="auth-f-1" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="toi@exemple.com" />
                 </div>
                 <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
                   {forgotLoading ? t('common.loading') : t('auth.sendLink')}
@@ -307,8 +307,8 @@ export default function Auth() {
           </p>
           <form onSubmit={submitCode}>
             <div className="field">
-              <label>{t('auth.verifyCodeLabel')}</label>
-              <input
+              <label htmlFor="auth-f-2">{t('auth.verifyCodeLabel')}</label>
+              <input id="auth-f-2"
                 value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456"
                 maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
               />
@@ -373,48 +373,48 @@ export default function Auth() {
             )}
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.firstName')}</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
+                <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
+                <input id="auth-f-3" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.lastName')}</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
+                <label htmlFor="auth-f-4">{t('auth.lastName')}</label>
+                <input id="auth-f-4" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.gender')}</label>
-                <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                <label htmlFor="auth-f-5">{t('auth.gender')}</label>
+                <select id="auth-f-5" value={gender} onChange={(e) => setGender(e.target.value)}>
                   {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.birthDate')}</label>
-                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                <label htmlFor="auth-f-6">{t('auth.birthDate')}</label>
+                <input id="auth-f-6" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
               </div>
             </div>
             <div className="field">
-              <label>{t('auth.phone')}</label>
-              <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+              <label htmlFor="auth-f-7">{t('auth.phone')}</label>
+              <input id="auth-f-7" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 2 }}>
-                <label>{t('auth.street')}</label>
-                <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+                <label htmlFor="auth-f-8">{t('auth.street')}</label>
+                <input id="auth-f-8" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.number')}</label>
-                <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+                <label htmlFor="auth-f-9">{t('auth.number')}</label>
+                <input id="auth-f-9" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.postalCode')}</label>
-                <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                <label htmlFor="auth-f-10">{t('auth.postalCode')}</label>
+                <input id="auth-f-10" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
               </div>
               <div className="field" style={{ flex: 2 }}>
-                <label>{t('auth.city')}</label>
-                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+                <label htmlFor="auth-f-11">{t('auth.city')}</label>
+                <input id="auth-f-11" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
               </div>
             </div>
             {role === 'restaurant' && (
@@ -423,22 +423,22 @@ export default function Auth() {
                 <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales du commerce</h4>
                 <p className="small" style={{ margin: '0 0 10px' }}>Obligatoire pour la vérification de conformité de ton commerce.</p>
                 <div className="field">
-                  <label>Nom légal / entreprise</label>
-                  <input value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
+                  <label htmlFor="auth-f-12">Nom légal / entreprise</label>
+                  <input id="auth-f-12" value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>N° d'entreprise (BCE)</label>
-                    <input value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                    <label htmlFor="auth-f-13">N° d'entreprise (BCE)</label>
+                    <input id="auth-f-13" value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>N° TVA</label>
-                    <input value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+                    <label htmlFor="auth-f-14">N° TVA</label>
+                    <input id="auth-f-14" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Responsable</label>
-                  <input
+                  <label htmlFor="auth-f-15">Responsable</label>
+                  <input id="auth-f-15"
                     value={responsibleName}
                     onChange={(e) => { setResponsibleName(e.target.value); setResponsibleTouched(true); }}
                     placeholder="Nom du responsable légal"
@@ -448,8 +448,8 @@ export default function Auth() {
               </>
             )}
             <div className="field">
-              <label>{t('auth.promoCode')}</label>
-              <input value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+              <label htmlFor="auth-f-16">{t('auth.promoCode')}</label>
+              <input id="auth-f-16" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
             </div>
           </>
         )}
@@ -469,12 +469,12 @@ export default function Auth() {
 
         <form onSubmit={submit}>
           <div className="field">
-            <label>{t('auth.email')}</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+            <label htmlFor="auth-f-17">{t('auth.email')}</label>
+            <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
           </div>
           <div className="field">
-            <label>{t('auth.password')}</label>
-            <input
+            <label htmlFor="auth-f-18">{t('auth.password')}</label>
+            <input id="auth-f-18"
               type="password" value={password} onChange={(e) => setPassword(e.target.value)}
               placeholder={mode === 'register' ? t('auth.passwordPlaceholderRegister') : t('auth.password')}
             />
@@ -486,8 +486,8 @@ export default function Auth() {
           )}
           {mode === 'register' && (
             <div className="field">
-              <label>{t('auth.confirmPassword')}</label>
-              <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('auth.confirmPasswordPlaceholder')} />
+              <label htmlFor="auth-f-19">{t('auth.confirmPassword')}</label>
+              <input id="auth-f-19" type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('auth.confirmPasswordPlaceholder')} />
             </div>
           )}
           <button type="submit" className="btn-gold btn-block" disabled={loading}>
