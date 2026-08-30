@@ -18,6 +18,11 @@ const DASHBOARD_PATHS = ['/home', '/restaurants', '/favorites', '/orders', '/map
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+// Fiche resto (/restaurants/:id) consultable sans compte (voir App.jsx) — un visiteur non connecté y
+// arrive donc sur la nav publique plutôt que la coquille sidebar. On y allège quand même ce header
+// (pas de gros bloc "Connexion/Inscription" au-dessus d'une carte de menu) : l'ajout au panier redirige
+// déjà vers /login au bon moment (voir RestaurantMenu.jsx), le module d'auth du header y est redondant.
+const RESTAURANT_DETAIL_PATH = /^\/restaurants\/[^/]+$/;
 export default function Layout() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
@@ -28,6 +33,7 @@ export default function Layout() {
   // "addToCart" réel, pas le panier isolé de RestaurantPreview) — pousser jusqu'au paiement échoue
   // volontairement côté serveur (requireRole('client')), ce qui bloque naturellement au bon endroit.
   const seesClientCart = !user?.isAdmin && (role === 'client' || (previewMode && role === 'restaurant'));
+  const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
 
   if (user && isDashboardPath(location.pathname)) {
     return (
@@ -56,35 +62,38 @@ export default function Layout() {
 
   return (
     <>
-      <div className="hero">
+      <div className={`hero${leanHeader ? ' hero-lean' : ''}`}>
         <div className="hero-inner">
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <Link className="brand" to="/">
-              <BrandMark size={64} />
-              <div className="brand-text">
-                <h1>Fairide</h1>
-                <span className="brand-slogan">{t('common.slogan')}</span>
-              </div>
+              <BrandMark size={leanHeader ? 34 : 48} />
+              {!leanHeader && (
+                <div className="brand-text">
+                  <h1>Fairide</h1>
+                  <span className="brand-slogan">{t('common.slogan')}</span>
+                </div>
+              )}
             </Link>
-            <div className="row" style={{ gap: 12, alignItems: 'center' }}>
-              <LanguageSwitcher />
-              {user && (
-                <div className="userbar" style={{ padding: 0 }}>
-                  <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
-                    {user.name}
-                  </Link>
-                  <button className="btn-ghost" style={{ color: 'var(--cream)' }} onClick={logout}>
-                    {t('nav.logout')}
-                  </button>
-                </div>
-              )}
-              {!user && (
-                <div className="row header-auth" style={{ gap: 10 }}>
-                  <Link to="/login" className="header-auth-link">{t('nav.login')}</Link>
-                  <Link to="/login?audience=client" className="btn-gold" style={{ padding: '9px 18px', fontSize: 13 }}>{t('nav.register')}</Link>
-                </div>
-              )}
-            </div>
+            <LanguageSwitcher />
+            {!leanHeader && user && (
+              <div className="userbar" style={{ padding: 0 }}>
+                <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
+                  {user.name}
+                </Link>
+                <button className="btn-ghost" style={{ color: 'var(--cream)' }} onClick={logout}>
+                  {t('nav.logout')}
+                </button>
+              </div>
+            )}
+            {/* header-auth reste un item atomique (non wrappable) de cette même rangée flex-wrap : sur
+                grand écran il tient à côté de la marque/langues, et retombe proprement à la ligne (seul,
+                sous la zone du filigrane .brand-watermark) dès que la largeur manque — voir styles.css. */}
+            {!leanHeader && !user && (
+              <div className="row header-auth">
+                <Link to="/login" className="header-auth-link">{t('nav.login')}</Link>
+                <Link to="/login?audience=client" className="btn-gold header-register-btn">{t('nav.register')}</Link>
+              </div>
+            )}
           </div>
           {user && (
             <nav className="role-nav">

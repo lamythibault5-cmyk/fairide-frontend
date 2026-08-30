@@ -62,13 +62,17 @@ a { color: inherit; }
 .hero {
   background: linear-gradient(160deg, var(--ink) 0%, #1F3253 100%);
   color: var(--cream);
-  padding: 20px 24px;
+  padding: 14px 24px;
   position: sticky;
   top: 0;
   z-index: 40;
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(22,35,58,0.18);
 }
+/* Variante allégée : fiche resto consultée sans compte (voir Layout.jsx, leanHeader) — juste la marque,
+   pas de nav de rôle ni de module Connexion/Inscription, pour laisser un maximum de place au menu. */
+.hero-lean { padding: 8px 20px; }
+@media (max-width: 640px) { .hero { padding: 10px 18px; } .hero-lean { padding: 6px 16px; } }
 .hero::after {
   content: "";
   position: absolute; right: -60px; top: -60px;
@@ -76,6 +80,12 @@ a { color: inherit; }
   background: radial-gradient(circle, rgba(217,164,65,0.25), transparent 70%);
 }
 .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+/* Au-delà de 960px l'espacement centré de .hero-inner laisse déjà le coin haut-droit (occupé par le
+   filigrane .brand-watermark) libre. En dessous, .hero-inner touche les bords de l'écran : on réserve
+   la largeur du filigrane pour que "Connexion"/"Inscription", désormais sur une seule ligne compacte
+   (voir .header-actions), ne passent jamais dessous. */
+@media (max-width: 960px) { .hero-inner { padding-right: 108px; } }
+@media (max-width: 480px) { .hero-inner { padding-right: 88px; } }
 
 .brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
 /* Règles universelles (BrandMark est utilisé ailleurs que dans le header, ex. le mockup téléphone de
@@ -89,6 +99,10 @@ a { color: inherit; }
 .brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
 @media (max-width: 640px) { .brand h1 { font-size: 24px; } .brand-slogan { font-size: 12px; } }
 @media (max-width: 480px) { .brand-slogan { display: none; } }
+/* Sous 520px, le mot "Fairide" à côté du logo force le header sur 2 lignes (logo+titre puis
+   langues/connexion) et alourdit inutilement la bannière — le filigrane (voir .brand-watermark)
+   garde déjà la marque visible en permanence, on peut donc se contenter du logo seul ici. */
+@media (max-width: 520px) { .hero .brand-text { display: none; } }
 
 /* Filigrane "Fairide" permanent, coin haut-droit (voir BrandWatermark.jsx, monté une seule fois dans
    Layout.jsx, sur toutes les pages) — pointer-events: none pour ne jamais gêner un vrai contrôle de
@@ -156,6 +170,16 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 
 .header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14px; opacity: 0.9; display: flex; align-items: center; }
 .header-auth-link:hover { opacity: 1; }
+/* Bloc atomique (non wrappable) de la rangée principale du header (voir Layout.jsx) : tient à côté de
+   la marque/langues en large, retombe seul à la ligne dès que la largeur manque plutôt que d'éclater
+   Connexion et Inscription chacun sur leur propre ligne. */
+.header-auth { gap: 10px; flex-wrap: nowrap; }
+.header-register-btn { padding: 9px 18px; font-size: 13px; white-space: nowrap; }
+@media (max-width: 520px) {
+  .header-auth { gap: 6px; }
+  .header-auth-link { font-size: 12.5px; }
+  .header-register-btn { padding: 7px 12px; font-size: 12px; }
+}
 .btn-primary { background: var(--ink); color: var(--cream); }
 .btn-gold { background: var(--gold); color: var(--ink); }
 .btn-teal { background: var(--teal); color: #fff; }
@@ -775,7 +799,7 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
     linear-gradient(160deg, rgba(22,35,58,0.72) 0%, rgba(31,50,83,0.6) 100%),
     url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1600&q=80') center/cover;
   border-radius: var(--radius);
-  padding: 56px 24px;
+  padding: 38px 24px;
   color: var(--cream);
 }
 .be-flag {
@@ -786,7 +810,7 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 .be-flag-stripe { flex: 1; }
 .landing-title { font-size: 34px; line-height: 1.15; margin: 0 0 16px; color: var(--cream); }
 .landing-sub { color: rgba(251,248,242,0.88); font-size: 16px; line-height: 1.6; margin: 0 0 22px; }
-@media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 40px 18px; } }
+@media (max-width: 640px) { .landing-title { font-size: 26px; } .landing-hero { padding: 26px 18px; } }
 
 .stats-bar {
   display: flex; flex-wrap: wrap; justify-content: center; gap: 28px;
