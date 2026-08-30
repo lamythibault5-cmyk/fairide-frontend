@@ -1257,3 +1257,21 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-main, .dashboard-shell { display: block !important; padding: 0 !important; }
   .card { box-shadow: none !important; border: none !important; }
 }
+
+/* Bon de livraison (OrderReceipt.jsx) : toujours démonté du flux normal, ne s'affiche qu'à l'impression
+   — voir OrdersPage.jsx pour pourquoi il vit dans son propre portail, hors de tout `.no-print`. Largeur
+   étroite façon ticket de caisse : lisible aussi bien sur une imprimante thermique 58/80mm (le pilote
+   recadre/redimensionne automatiquement, voir RawBT et équivalents) que sur une imprimante A4 classique. */
+.receipt-print { display: none; }
+@media print {
+  .receipt-print {
+    display: block; width: 100%; max-width: 300px; margin: 0 auto;
+    font-family: 'Space Grotesk', monospace, sans-serif; font-size: 12px; color: #000;
+  }
+  .receipt-print h3 { font-size: 15px; margin: 0 0 4px; }
+  .receipt-center { text-align: center; margin: 2px 0; }
+  .receipt-divider { border-top: 1px dashed #000; margin: 8px 0; }
+  .receipt-line { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+  .receipt-total { font-weight: 700; font-size: 14px; }
+  .receipt-note { font-size: 10px; color: #444; line-height: 1.4; margin-top: 10px; }
+}

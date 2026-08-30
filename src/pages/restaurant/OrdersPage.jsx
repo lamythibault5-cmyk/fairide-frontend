@@ -4,6 +4,7 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import OrderReceipt from '../../components/OrderReceipt';
 import {
   DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
@@ -12,7 +13,7 @@ import {
 export default function OrdersPage() {
   const { token } = useAuth();
   const toast = useToast();
-  const { orders, restoId, loadDashboard } = useOutletContext();
+  const { orders, restaurant, restoId, loadDashboard } = useOutletContext();
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [pickupCodeInputs, setPickupCodeInputs] = useState({});
@@ -79,9 +80,16 @@ export default function OrdersPage() {
     }
   }
 
+  function printReceipt(order) {
+    const prevTitle = document.title;
+    document.title = `Fairide - Commande ${order.id.slice(0, 8)}`;
+    window.print();
+    document.title = prevTitle;
+  }
+
   return (
-    <div>
-      <div className="card no-print">
+    <div className="no-print">
+      <div className="card">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <h3 style={{ margin: 0, fontSize: 15 }}>🎨 Couleurs des commandes</h3>
           <button type="button" className="btn-ghost" onClick={() => setColorSettingsOpen((v) => !v)}>
@@ -184,7 +192,7 @@ export default function OrdersPage() {
       })}
 
       {selectedOrder && createPortal(
-        <div className="modal-overlay" onClick={() => setSelectedOrder(null)}>
+        <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
               <h3 style={{ margin: 0 }}>Commande de {selectedOrder.clientName}</h3>
@@ -260,11 +268,18 @@ export default function OrdersPage() {
                 </button>
               </div>
             )}
-            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelectedOrder(null)}>Fermer</button>
+            <div className="row" style={{ marginTop: 12, gap: 8 }}>
+              <button className="btn-outline" onClick={() => printReceipt(selectedOrder)}>🖨️ Imprimer le bon de livraison</button>
+              <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>Fermer</button>
+            </div>
           </div>
         </div>,
         document.body
       )}
+      {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
+          visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
+          et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
+      {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
     </div>
   );
 }
