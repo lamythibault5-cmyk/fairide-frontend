@@ -118,7 +118,7 @@ function useFullscreenSizes() {
   return narrow
     ? {
         narrow,
-        mapHeight: Math.round(Math.max(120, Math.min(195, size.height * 0.2))),
+        mapHeight: Math.round(Math.max(180, Math.min(280, size.height * 0.3))),
         gameWidth: Math.round(Math.min(230, size.width - 100)),
         gameHeight: Math.round(Math.max(180, Math.min(230, size.height * 0.25)))
       }

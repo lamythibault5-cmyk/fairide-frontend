@@ -292,6 +292,22 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    Passer par le parent (0,2,0) rend le blanc prioritaire sans toucher à .small, utilisé partout ailleurs. */
 .floating-cart-header .floating-cart-header-sub { color: rgba(255,255,255,.85); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .floating-cart-lines { overflow-y: auto; padding: 6px 14px; flex: 1; }
+/* Un groupe par restaurant quand le panier en contient plusieurs (voir CartContext.jsx, un panier par
+   restaurant) — la ligne de séparation vit sur le groupe entier plutôt que sur chaque plat, pour que la
+   frontière entre deux restaurants reste visuellement plus marquée qu'entre deux plats du même. */
+.floating-cart-restaurant-group { border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 4px; }
+.floating-cart-restaurant-group:last-child { border-bottom: none; margin-bottom: 0; }
+.floating-cart-restaurant-group .floating-cart-line:last-child { border-bottom: none; }
+.floating-cart-restaurant-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 8px 0 2px;
+  font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .02em; color: var(--teal-deep);
+}
+.floating-cart-restaurant-clear {
+  background: transparent; border: none; font-size: 12px; opacity: .6; cursor: pointer; padding: 2px 4px;
+  transition: opacity .15s ease;
+}
+.floating-cart-restaurant-clear:hover { opacity: 1; }
+.floating-cart-multi-note { margin: 0 0 8px; opacity: .75; }
 .floating-cart-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--cream-dim); }
 .floating-cart-line:last-child { border-bottom: none; }
 .floating-cart-line-info { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
@@ -1039,6 +1055,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .tracking-map-legend { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 8px; font-size: 11px; color: var(--ink-soft); }
 .tracking-map-legend span { display: inline-flex; align-items: center; gap: 4px; }
 .tracking-map-legend-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; flex-shrink: 0; }
+/* Trace du trajet déjà parcouru par le livreur (voir DeliveryTrackingMap.jsx) : une ligne, pas un point
+   — repère visuel différent des icônes rondes ci-dessus pour ne pas laisser croire à un 4e lieu fixe. */
+.tracking-map-legend-line { display: inline-block; width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; }
 
 /* Anneau qui pulse autour du livreur (DeliveryTrackingMap.jsx) — signale "en mouvement, en direct" d'un
    coup d'œil, dans l'esprit des apps de livraison grand public. Transform/opacity uniquement : léger
@@ -1174,6 +1193,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   align-self: flex-end; width: 38px; height: 38px; flex-shrink: 0; margin-bottom: 10px;
   background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
   border-radius: 999px; font-size: 18px; line-height: 1; cursor: pointer; transition: background .15s ease;
+  padding: 0; display: flex; align-items: center; justify-content: center;
 }
 .tracking-fullscreen-close:hover { background: rgba(255,255,255,0.26); }
 .tracking-fullscreen-split { display: flex; gap: 24px; flex: 1; min-height: 0; align-items: stretch; }

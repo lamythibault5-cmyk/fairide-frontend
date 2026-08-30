@@ -49,6 +49,11 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const driverMarkerRef = useRef(null);
   const lineRef = useRef(null);
   const animRef = useRef(null);
+  // Trace des positions déjà vues du livreur (pas juste le trajet prévu restaurant→adresse) : une ligne
+  // qui s'allonge en direct à chaque nouvelle position reçue, visible d'un coup d'œil même si le client
+  // ne regarde la carte que de temps en temps (typiquement en jouant à un des mini-jeux à côté).
+  const driverTrailRef = useRef([]);
+  const driverTrailLineRef = useRef(null);
   // Dernier périmètre ajusté (droite puis, une fois reçu, le vrai trajet routier) — permet au bouton
   // "Recentrer" de revenir dessus si l'utilisateur a zoomé/déplacé la carte pour explorer.
   const boundsRef = useRef(null);
@@ -58,6 +63,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const driverBoundsRef = useRef(null);
   const [showRecenter, setShowRecenter] = useState(false);
   const [showFollowDriver, setShowFollowDriver] = useState(false);
+  const [hasTrail, setHasTrail] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -89,6 +95,8 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       lineRef.current = null;
       boundsRef.current = null;
       driverBoundsRef.current = null;
+      driverTrailLineRef.current = null;
+      driverTrailRef.current = [];
     };
   }, []);
 
@@ -147,6 +155,23 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
 
   useEffect(() => {
     if (!mapRef.current || !driverLat || !driverLng) return;
+    // Allonge la trace en direct — n'empile pas un point identique au précédent (aucun mouvement réel
+    // entre deux rafraîchissements) et garde une fenêtre glissante raisonnable plutôt qu'illimitée,
+    // une livraison pouvant rester ouverte longtemps.
+    const trail = driverTrailRef.current;
+    const lastPoint = trail[trail.length - 1];
+    if (!lastPoint || lastPoint[0] !== driverLat || lastPoint[1] !== driverLng) {
+      trail.push([driverLat, driverLng]);
+      if (trail.length > 200) trail.shift();
+    }
+    if (trail.length > 1) {
+      if (!driverTrailLineRef.current) {
+        driverTrailLineRef.current = L.polyline(trail, { color: '#B5822B', weight: 3, opacity: 0.8, lineCap: 'round' }).addTo(mapRef.current);
+      } else {
+        driverTrailLineRef.current.setLatLngs(trail);
+      }
+      setHasTrail(true);
+    }
     if (!driverMarkerRef.current) {
       driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON })
         .addTo(mapRef.current).bindPopup('Ton livreur');
@@ -209,6 +234,9 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         <span><span className="tracking-map-legend-icon" style={{ background: '#2F6F5E' }}>🏪</span> Restaurant</span>
         <span><span className="tracking-map-legend-icon" style={{ background: '#16233A' }}>🛵</span> Livreur</span>
         <span><span className="tracking-map-legend-icon" style={{ background: '#D9A441' }}>🏠</span> Toi</span>
+        {hasTrail && (
+          <span><span className="tracking-map-legend-line" style={{ background: '#B5822B' }} /> Trajet parcouru</span>
+        )}
       </div>
     </div>
   );
