@@ -50,7 +50,7 @@ export const ORDER_STAGES = [
   { key: 'attenteLivreur', label: 'Prête — en attente de l\'arrivée du livreur', icon: '⏳', defaultColor: '#C8722E' },
   { key: 'pretClient', label: 'Prête — en attente du client', icon: '⏳', defaultColor: '#C8722E' },
   { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#3B6FA0' },
-  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#2F6F5E' },
+  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#16233A' },
   { key: 'annulee', label: 'Refusée / annulée', icon: '🚫', defaultColor: '#8A8A8A' }
 ];
 
