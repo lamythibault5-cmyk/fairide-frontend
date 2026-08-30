@@ -111,21 +111,26 @@ export default function DriverDashboard() {
     }
     let deniedNotified = false;
     let lastSentAt = 0;
+    let lastCoords = null;
+
+    function send(latitude, longitude) {
+      if (!activeIdsRef.current.length) return;
+      lastSentAt = Date.now();
+      setLastPositionAt(new Date());
+      activeIdsRef.current.forEach((id) => {
+        api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
+      });
+    }
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         setSharingLocation(true);
-        if (!activeIdsRef.current.length) return;
+        const { latitude, longitude } = pos.coords;
+        lastCoords = { latitude, longitude };
         // watchPosition peut émettre plusieurs fois par seconde en déplacement : on limite les envois
         // au même rythme que l'ancien sondage, pour ne pas multiplier les requêtes par course.
-        const now = Date.now();
-        if (now - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
-        lastSentAt = now;
-        const { latitude, longitude } = pos.coords;
-        setLastPositionAt(new Date());
-        activeIdsRef.current.forEach((id) => {
-          api(`/orders/${id}/location`, { method: 'PATCH', token, body: { lat: latitude, lng: longitude } }).catch(() => {});
-        });
+        if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+        send(latitude, longitude);
       },
       () => {
         setSharingLocation(false);
@@ -137,7 +142,21 @@ export default function DriverDashboard() {
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
     );
 
-    return () => navigator.geolocation.clearWatch(watchId);
+    // Battement de cœur. watchPosition n'émet QUE lorsque la position change : un livreur immobile —
+    // arrêté devant le restaurant en attendant la commande, ou coincé à un feu — n'envoyait donc plus
+    // rien du tout, et le client voyait une carte vide. L'ancien sondage par intervalle envoyait au
+    // moins une position toutes les 12 s, immobile ou non ; on rétablit cette garantie en réémettant
+    // la dernière position connue quand aucune n'est partie depuis trop longtemps.
+    const heartbeat = setInterval(() => {
+      if (!lastCoords) return;
+      if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
+      send(lastCoords.latitude, lastCoords.longitude);
+    }, MIN_LOCATION_SEND_INTERVAL_MS);
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      clearInterval(heartbeat);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 

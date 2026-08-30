@@ -40,7 +40,8 @@ export default function DashboardLayout() {
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
 
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
-  const orderAlert = useNewOrderAlert(orders);
+  const [ordersLoaded, setOrdersLoaded] = useState(false);
+  const orderAlert = useNewOrderAlert(orders, ordersLoaded);
 
   const [connecting, setConnecting] = useState(false);
   // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
@@ -111,6 +112,10 @@ export default function DashboardLayout() {
       setRestaurant(restoData);
       setReviews(reviewsData);
       setDrivers(driversData);
+      // Marque la fin du premier chargement réel : sans ce signal, l'alerte "nouvelle commande"
+      // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
+      // useNewOrderAlert).
+      setOrdersLoaded(true);
     } catch (e) {
       toast(e.message);
     }

@@ -75,6 +75,7 @@ export default function MapPage() {
                   restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
                   deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
                   driverLat={o.driverLat} driverLng={o.driverLng}
+                  lastUpdatedAt={o.driverLocationUpdatedAt}
                   height={260}
                 />
                 <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
@@ -153,6 +154,7 @@ function TrackingFullscreen({ order, onClose }) {
             restaurantLat={order?.restaurantLat} restaurantLng={order?.restaurantLng}
             deliveryLat={order?.deliveryLat} deliveryLng={order?.deliveryLng}
             driverLat={order?.driverLat} driverLng={order?.driverLng}
+            lastUpdatedAt={order?.driverLocationUpdatedAt}
             height={mapHeight}
           />
           <div className="small tracking-fullscreen-map-caption">

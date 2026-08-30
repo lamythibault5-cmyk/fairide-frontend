@@ -50,7 +50,10 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, height = 260 }) {
+// `lastUpdatedAt` (optionnel) : heure du dernier envoi de position par le livreur, telle que mesurée
+// par le serveur. Voir le bloc "Fraîcheur de la position" plus bas — c'est la source fiable, et le
+// composant s'en passe proprement tant que le backend ne la renvoie pas.
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, height = 260 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const restaurantMarkerRef = useRef(null);
@@ -74,20 +77,32 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const [showFollowDriver, setShowFollowDriver] = useState(false);
   const [hasTrail, setHasTrail] = useState(false);
 
-  // Horodatage du dernier DÉPLACEMENT réellement observé, mesuré côté client : aucun champ de date
-  // n'accompagne aujourd'hui la position du livreur dans la commande, et on ne va pas en inventer un
-  // ici. Une position identique à la précédente ne rafraîchit donc pas l'heure — c'est exactement ce
-  // qu'on veut signaler, un livreur dont la position n'avance plus.
-  const [lastMoveAt, setLastMoveAt] = useState(null);
+  // Fraîcheur de la position du livreur. Deux sources possibles, très inégales :
+  //
+  //   1. `lastUpdatedAt` (à privilégier) : l'heure du DERNIER ENVOI par le livreur, mesurée par le
+  //      serveur. C'est la seule information qui distingue vraiment "livreur à l'arrêt mais connecté"
+  //      de "livreur hors ligne". La colonne existe déjà en base (orders.driver_location_updated_at,
+  //      mise à jour à chaque PATCH /orders/:id/location) mais n'est pas encore renvoyée au client :
+  //      une ligne à ajouter dans le mapper de commande côté backend, et cet affichage devient exact.
+  //
+  //   2. Repli, tant que (1) n'arrive pas : l'heure à laquelle CETTE page a vu la position changer.
+  //      C'est une information bien plus faible, et il ne faut pas lui faire dire ce qu'elle ne dit
+  //      pas. Une première version affichait "position figée, le livreur est peut-être hors réseau" :
+  //      c'était faux deux fois — une position vieille d'une demi-heure passait pour fraîche à
+  //      l'ouverture de la page, et un livreur simplement arrêté devant le restaurant déclenchait
+  //      l'alerte. On se contente donc de dater le dernier déplacement observé, sans rien affirmer
+  //      sur l'état du livreur.
+  const [firstSeenMoveAt, setFirstSeenMoveAt] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   const lastDriverPosRef = useRef(null);
 
   useEffect(() => {
     if (driverLat == null || driverLng == null) return;
     const key = `${driverLat},${driverLng}`;
+    if (lastDriverPosRef.current === null) { lastDriverPosRef.current = key; return; }
     if (lastDriverPosRef.current === key) return;
     lastDriverPosRef.current = key;
-    setLastMoveAt(new Date());
+    setFirstSeenMoveAt(new Date());
   }, [driverLat, driverLng]);
 
   // Fait vieillir l'affichage même si plus aucune position n'arrive — sans cette horloge, le message
@@ -97,7 +112,11 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     return () => clearInterval(clock);
   }, []);
 
-  const isStale = lastMoveAt != null && now - lastMoveAt.getTime() > STALE_AFTER_MS;
+  const authoritativeAt = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
+  // L'alerte "plus de nouvelles" n'est affichée QUE sur la source serveur : elle seule permet de
+  // l'affirmer sans se tromper.
+  const isStale = authoritativeAt != null && now - authoritativeAt.getTime() > STALE_AFTER_MS;
+  const shownAt = authoritativeAt || firstSeenMoveAt;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -264,15 +283,13 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
           )}
         </div>
       )}
-      {/* Fraîcheur de la position. Le partage de position du livreur s'interrompt dès que son téléphone
-          se verrouille (limite du web, voir driver/Dashboard.jsx) : sans cette mention, une carte figée
-          est indiscernable d'un livreur à l'arrêt à un feu, et le client attend en croyant être suivi
-          en direct. Au-delà du seuil, on le dit franchement plutôt que d'afficher une heure rassurante. */}
-      {driverLat != null && driverLng != null && lastMoveAt && (
+      {driverLat != null && driverLng != null && shownAt && (
         <div className={`tracking-map-freshness${isStale ? ' stale' : ''}`}>
           {isStale
-            ? `⚠️ Position figée depuis ${formatClock(lastMoveAt)} — le livreur est peut-être hors réseau ou son écran est éteint.`
-            : `Position mise à jour à ${formatClock(lastMoveAt)}`}
+            ? `⚠️ Aucune nouvelle position depuis ${formatClock(shownAt)}. Le suivi peut s'interrompre si le téléphone du livreur se met en veille.`
+            : authoritativeAt
+              ? `Position mise à jour à ${formatClock(shownAt)}`
+              : `Dernier déplacement observé à ${formatClock(shownAt)}`}
         </div>
       )}
       <div className="tracking-map-legend">

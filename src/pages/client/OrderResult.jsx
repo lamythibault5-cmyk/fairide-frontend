@@ -36,6 +36,13 @@ export default function OrderResult({ success }) {
   const cartRef = useRef(cart);
   cartRef.current = cart;
 
+  // Arrivée sur /order-cancelled : le client a explicitement renoncé au paiement. On lui rend son
+  // panier immédiatement, sans rien interroger — il n'y a rien à vérifier, l'issue est connue.
+  useEffect(() => {
+    if (success) return;
+    cartRef.current.restoreStashed();
+  }, [success]);
+
   useEffect(() => {
     if (!orderId || !success || !token) return;
     let polls = 0;
@@ -53,14 +60,16 @@ export default function OrderResult({ success }) {
         const order = orders.find((o) => o.id === orderId || String(o.id) === String(orderId));
         if (order?.paid) {
           setState('paid');
-          // C'EST ICI que le panier se vide, et nulle part ailleurs : une fois le paiement réellement
-          // confirmé. Checkout.jsx le vidait avant même de rediriger vers le prestataire, ce qui
-          // faisait perdre son panier à tout client qui abandonnait ou dont la carte était refusée.
-          cartRef.current.clear();
+          // Paiement confirmé : la copie du panier mise de côté avant la redirection n'a plus lieu
+          // d'être. (Le panier visible, lui, a déjà été vidé au départ — voir stashForPayment.)
+          cartRef.current.discardStashed();
           return;
         }
         if (order && (order.status === 'annule' || order.status === 'refuse')) {
           setState('failed');
+          // Commande annulée ou refusée : on rend au client son panier tel qu'il l'avait composé,
+          // pour qu'il puisse réessayer sans tout ressaisir.
+          cartRef.current.restoreStashed();
           return;
         }
       } catch {

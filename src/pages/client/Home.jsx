@@ -75,6 +75,7 @@ export default function ClientHome() {
                 restaurantLat={activeOrder.restaurantLat} restaurantLng={activeOrder.restaurantLng}
                 deliveryLat={activeOrder.deliveryLat} deliveryLng={activeOrder.deliveryLng}
                 driverLat={activeOrder.driverLat} driverLng={activeOrder.driverLng}
+                lastUpdatedAt={activeOrder.driverLocationUpdatedAt}
               />
               <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
                 {activeOrder.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}

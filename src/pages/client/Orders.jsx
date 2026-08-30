@@ -169,6 +169,7 @@ export default function Orders() {
                 restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
                 deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
                 driverLat={o.driverLat} driverLng={o.driverLng}
+                lastUpdatedAt={o.driverLocationUpdatedAt}
               />
               <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
                 {o.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}

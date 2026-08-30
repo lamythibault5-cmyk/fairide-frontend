@@ -256,12 +256,13 @@ export default function Checkout() {
         toast(isPureReservation ? t('checkout.toastReservationSent') : t('checkout.toastOrderPaid'));
         navigate('/orders');
       } else {
-        // Le panier n'est PAS vidé ici. L'intention d'origine — ne le vider qu'une fois le paiement
-        // confirmé — n'était pas respectée : il était vidé dès la création de la session de paiement,
-        // c'est-à-dire avant la redirection. Tout client qui hésitait sur la page de paiement, dont la
-        // carte était refusée, ou qui revenait en arrière retrouvait un panier vide et devait tout
-        // reconstituer — un abandon fréquent sur mobile, donc une perte de commandes quotidienne.
-        // Le panier est désormais vidé dans OrderResult.jsx, une fois la commande réellement `paid`.
+        // Le panier est mis de côté, pas vidé et pas laissé en place — voir stashForPayment() dans
+        // CartContext.jsx pour le raisonnement complet. En résumé : le vider ici faisait perdre son
+        // panier à tout client qui abandonnait ou dont la carte était refusée (le bug d'origine) ;
+        // le laisser en place lui laissait un panier d'articles déjà payés s'il ne revenait jamais
+        // sur la page de retour. La copie mise de côté est restaurée ou supprimée par OrderResult.jsx,
+        // une fois l'issue réellement connue.
+        cart.stashForPayment();
         window.location.href = pay.checkoutUrl;
       }
     } catch (e) {

@@ -9,6 +9,8 @@ const COMMISSION_RATE = 0.10;
 // exact reste toujours celui renvoyé par la commande réelle.
 const SYSTEM_FEE_VAT_RATE = 0.21;
 const STORAGE_KEY = 'fairide_cart';
+// Copie du panier mise de côté pendant un paiement en cours — voir stashForPayment() plus bas.
+const PENDING_KEY = 'fairide_cart_pending';
 
 function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
@@ -117,6 +119,49 @@ export function CartProvider({ children }) {
   function clear() {
     setLines({});
     setRestaurantId(null);
+    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
+  }
+
+  // Mise de côté du panier au moment de partir vers le prestataire de paiement.
+  //
+  // Le panier ne peut pas simplement rester en place pendant le paiement : si le client paie puis ne
+  // revient jamais sur la page de retour (onglet fermé, redirection perdue, session expirée), rien ne
+  // viderait plus jamais ce panier — il retrouverait au prochain passage un panier plein d'articles
+  // déjà achetés et payés. Mais on ne peut pas non plus le vider sèchement, sinon un paiement abandonné
+  // ou refusé lui fait tout reconstituer, ce qui était précisément le bug corrigé au départ.
+  //
+  // D'où la mise de côté : le panier visible est vidé, sa copie est conservée à part, et seule la page
+  // de retour décide de son sort — restauration si le paiement n'a pas abouti, suppression s'il a
+  // abouti. Aucune décision n'est prise à l'aveugle avant de connaître l'issue.
+  function stashForPayment() {
+    try {
+      sessionStorage.setItem(PENDING_KEY, JSON.stringify({ restaurantId, restaurantName, lines }));
+    } catch { /* stockage indisponible : le panier sera simplement perdu en cas d'abandon */ }
+    setLines({});
+    setRestaurantId(null);
+  }
+
+  // Paiement non abouti : on remet le panier tel qu'il était avant la redirection.
+  // Retourne true si quelque chose a effectivement été restauré.
+  function restoreStashed() {
+    try {
+      const raw = sessionStorage.getItem(PENDING_KEY);
+      if (!raw) return false;
+      const parsed = JSON.parse(raw);
+      sessionStorage.removeItem(PENDING_KEY);
+      if (!parsed?.lines || Object.keys(parsed.lines).length === 0) return false;
+      setRestaurantId(parsed.restaurantId ?? null);
+      setRestaurantName(parsed.restaurantName ?? '');
+      setLines(parsed.lines);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Paiement confirmé : la copie mise de côté n'a plus lieu d'être.
+  function discardStashed() {
+    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
   }
 
   function totals(menu, cartPromo, deliveryOffer) {
@@ -169,7 +214,7 @@ export function CartProvider({ children }) {
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, rawTotal, hasConflict, switchRestaurant, addOne, changeLineQty, removeLine, clear, clearLines, totals }}>
+    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, rawTotal, hasConflict, switchRestaurant, addOne, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
       {children}
     </CartContext.Provider>
   );

@@ -11,15 +11,21 @@ const STORAGE_KEY = 'fairide_cookie_consent';
 
 const listeners = new Set();
 
+// Copie en mémoire du choix, indispensable quand localStorage n'est pas accessible (navigation privée
+// stricte, cookies tiers bloqués). Sans elle, un visiteur qui ACCEPTAIT voyait son choix perdu
+// aussitôt : setConsent notifiait bien les abonnés, mais ceux-ci relisaient le stockage — vide — et en
+// concluaient qu'aucun consentement n'avait été donné. La bannière disparaissait, et rien ne démarrait.
+let inMemoryConsent = null;
+
 export function getConsent() {
   try {
     const value = localStorage.getItem(STORAGE_KEY);
-    return value === 'accepted' || value === 'refused' ? value : null;
+    if (value === 'accepted' || value === 'refused') return value;
   } catch {
-    // Stockage indisponible (navigation privée stricte) : on considère qu'aucun consentement n'a été
-    // donné. C'est le repli sûr — rien de non essentiel ne démarre.
-    return null;
+    // Stockage indisponible : on retombe sur la copie en mémoire ci-dessous.
   }
+  // Repli sûr quand rien n'a jamais été choisi : null, donc rien de non essentiel ne démarre.
+  return inMemoryConsent;
 }
 
 export function hasAcceptedConsent() {
@@ -27,10 +33,13 @@ export function hasAcceptedConsent() {
 }
 
 export function setConsent(value) {
+  // Enregistré en mémoire AVANT la notification des abonnés : ceux-ci appellent getConsent() et
+  // doivent y trouver le choix, même si le stockage du navigateur refuse de l'écrire.
+  inMemoryConsent = value;
   try {
     localStorage.setItem(STORAGE_KEY, value);
   } catch {
-    // Choix non persistable : il reste valable pour la session en cours via les abonnés ci-dessous.
+    // Choix non persistable : il reste valable pour la session en cours grâce à inMemoryConsent.
   }
   listeners.forEach((fn) => fn(value));
 }

@@ -69,6 +69,11 @@ export default function MenuPage() {
   // Confirmation en attente : { title, message, confirmLabel, onConfirm } — null quand aucune modale
   // n'est ouverte. Un seul état pour toutes les suppressions de cette page, voir ConfirmDialog en bas.
   const [confirm, setConfirm] = useState(null);
+  // Verrou du bouton de confirmation, distinct de bulkDeleting (qui ne couvre que la suppression en
+  // lot). window.confirm se fermait de lui-même au clic ; la modale, elle, reste affichée pendant les
+  // deux allers-retours réseau — sans ce verrou, un second clic envoyait une deuxième suppression et
+  // le restaurateur récupérait une erreur pour une action qui avait pourtant réussi.
+  const [confirmBusy, setConfirmBusy] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
   // l'aller-retour visible (retour à l'ancien ordre puis saut au nouveau) entre le lâcher et le rechargement.
   const [localOrder, setLocalOrder] = useState({});
@@ -115,6 +120,8 @@ export default function MenuPage() {
   }
 
   async function doBulkDelete() {
+    if (confirmBusy) return;
+    setConfirmBusy(true);
     setBulkDeleting(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk-delete`, { method: 'POST', token, body: { itemIds: Array.from(selectedIds) } });
@@ -126,6 +133,7 @@ export default function MenuPage() {
       toast(e.message);
     } finally {
       setBulkDeleting(false);
+      setConfirmBusy(false);
       setConfirm(null);
     }
   }
@@ -333,6 +341,8 @@ export default function MenuPage() {
   }
 
   async function doDeleteSection(section) {
+    if (confirmBusy) return;
+    setConfirmBusy(true);
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
@@ -340,6 +350,7 @@ export default function MenuPage() {
     } catch (e) {
       toast(e.message);
     } finally {
+      setConfirmBusy(false);
       setConfirm(null);
     }
   }
@@ -727,9 +738,9 @@ export default function MenuPage() {
         message={confirm?.message}
         confirmLabel={confirm?.confirmLabel}
         danger
-        loading={bulkDeleting}
+        loading={confirmBusy}
         onConfirm={() => confirm?.onConfirm?.()}
-        onCancel={() => setConfirm(null)}
+        onCancel={() => { if (!confirmBusy) setConfirm(null); }}
       />
     </div>
   );

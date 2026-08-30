@@ -22,11 +22,18 @@ export function setSessionExpiredHandler(fn) {
 }
 
 // Un 401 sur une requête SANS token n'est pas une session expirée mais un échec de connexion
-// (mauvais mot de passe sur /auth/login, code de vérification erroné...) : il doit remonter
-// normalement à l'appelant pour être affiché dans le formulaire, sans déclencher de déconnexion.
-function handleResponse(res, data, hadToken) {
+// (mauvais mot de passe sur /auth/login, jeton Google invalide...) : il doit remonter normalement à
+// l'appelant pour être affiché dans le formulaire, sans déclencher de déconnexion.
+//
+// `logoutOn401: false` couvre le cas restant, vérifié côté serveur : PATCH /auth/me renvoie 401
+// « Mot de passe actuel incorrect » alors que le token, lui, est parfaitement valide (voir
+// routes/auth.js). Sans cette exception, se tromper de mot de passe actuel en le changeant
+// déconnecterait l'utilisateur en lui annonçant une session expirée — deux mensonges d'un coup.
+// C'est le SEUL endpoint authentifié du backend dans ce cas ; partout ailleurs un 401 vient du
+// middleware requireAuth, donc d'un token réellement périmé.
+function handleResponse(res, data, hadToken, logoutOn401) {
   if (res.ok) return data;
-  if (res.status === 401 && hadToken) {
+  if (res.status === 401 && hadToken && logoutOn401) {
     const error = new ApiError('Ta session a expiré. Reconnecte-toi pour continuer.', 401);
     if (onSessionExpired) onSessionExpired();
     throw error;
@@ -34,7 +41,7 @@ function handleResponse(res, data, hadToken) {
   throw new ApiError(data.error || 'Une erreur est survenue.', res.status);
 }
 
-export async function api(path, { method = 'GET', body, token } = {}) {
+export async function api(path, { method = 'GET', body, token, logoutOn401 = true } = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers.Authorization = 'Bearer ' + token;
   let res;
@@ -44,7 +51,7 @@ export async function api(path, { method = 'GET', body, token } = {}) {
     throw new ApiError("Impossible de joindre le serveur Fairide. Réessaie dans un instant.", 0);
   }
   const data = await res.json().catch(() => ({}));
-  return handleResponse(res, data, !!token);
+  return handleResponse(res, data, !!token, logoutOn401);
 }
 
 // Upload de fichier (multipart) : pas de Content-Type manuel, le navigateur doit fixer lui-même la
@@ -66,5 +73,5 @@ export async function apiUpload(path, { file, token, fieldName = 'image', fields
     throw new ApiError("Impossible de joindre le serveur Fairide. Réessaie dans un instant.", 0);
   }
   const data = await res.json().catch(() => ({}));
-  return handleResponse(res, data, !!token);
+  return handleResponse(res, data, !!token, true);
 }

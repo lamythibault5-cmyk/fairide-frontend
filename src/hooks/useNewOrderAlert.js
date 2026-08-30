@@ -48,7 +48,12 @@ function playChime(ctx) {
   });
 }
 
-export default function useNewOrderAlert(orders) {
+// `ready` : le tableau de bord a-t-il terminé au moins un chargement ? Indispensable et pas cosmétique.
+// `orders` vaut [] avant la première réponse du serveur, donc l'arrivée des données est vue comme un
+// passage de 0 à N — et sans ce drapeau, le carillon et la notification système se déclenchaient à
+// CHAQUE ouverture du tableau de bord pour des commandes qui existaient déjà. Une alerte qui crie au
+// loup à chaque chargement est pire que pas d'alerte : on apprend à l'ignorer.
+export default function useNewOrderAlert(orders, ready) {
   const [soundEnabled, setSoundEnabledState] = useState(loadSoundPref);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
@@ -76,17 +81,29 @@ export default function useNewOrderAlert(orders) {
   // AudioContext créé au chargement démarre "suspended" et reste muet. On le débloque au premier
   // clic/appui/touche, ce qui arrive de toute façon très vite sur un tableau de bord.
   useEffect(() => {
+    const Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return undefined;
+    // Créé tout de suite, pas au premier clic : sur une tablette de comptoir posée et jamais touchée,
+    // l'ancienne version ne créait jamais de contexte et restait donc muette précisément dans le cas
+    // d'usage visé. Il démarre "suspended", ce qui est sans effet tant qu'on ne joue rien.
+    const ctx = new Ctor();
+    ctxRef.current = ctx;
+
+    // Les navigateurs interdisent de produire du son avant une interaction : on lève la suspension au
+    // premier geste, quel qu'il soit.
     function unlock() {
-      if (!ctxRef.current) {
-        const Ctor = window.AudioContext || window.webkitAudioContext;
-        if (!Ctor) return;
-        ctxRef.current = new Ctor();
-      }
-      if (ctxRef.current.state === 'suspended') ctxRef.current.resume().catch(() => {});
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
     }
     const events = ['pointerdown', 'keydown', 'touchstart'];
-    events.forEach((e) => window.addEventListener(e, unlock, { once: true, passive: true }));
-    return () => events.forEach((e) => window.removeEventListener(e, unlock));
+    events.forEach((e) => window.addEventListener(e, unlock, { passive: true }));
+
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, unlock));
+      // Fermeture explicite : sans elle, chaque remontage du tableau de bord laissait un contexte
+      // audio derrière lui, et Chrome refuse d'en ouvrir plus d'environ six par page.
+      ctxRef.current = null;
+      ctx.close().catch(() => {});
+    };
   }, []);
 
   const ring = useCallback(() => {
@@ -100,10 +117,14 @@ export default function useNewOrderAlert(orders) {
   // null pour distinguer le tout premier chargement (où l'on ne veut pas sonner pour des commandes
   // déjà présentes avant l'ouverture de la page) d'une vraie arrivée.
   useEffect(() => {
+    // Tant que les données ne sont pas chargées, on n'établit aucune référence : le premier VRAI
+    // chargement sert de point de départ, et seules les commandes arrivées après déclenchent l'alerte.
+    if (!ready) return;
     const prev = prevCountRef.current;
     prevCountRef.current = newCount;
     if (prev === null || newCount <= prev) return;
     ring();
+
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       const arrived = newCount - prev;
       try {
@@ -118,7 +139,11 @@ export default function useNewOrderAlert(orders) {
         );
       } catch { /* notifications refusées entre-temps */ }
     }
-  }, [newCount, ring]);
+    // `ready` fait partie des dépendances, ce n'est pas une formalité : sans lui, un restaurant sans
+    // commande en attente au chargement ne rejouait jamais cet effet au passage de ready à true (le
+    // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
+    // reçue repartait par la branche `prev === null`, sans un son.
+  }, [newCount, ring, ready]);
 
   // Rappel tant que la commande n'est pas traitée : c'est ce qui rattrape le restaurateur parti en
   // cuisine au moment du premier son.
@@ -129,9 +154,19 @@ export default function useNewOrderAlert(orders) {
   }, [newCount, ring]);
 
   // Compteur dans le titre de l'onglet : le seul canal visible quand la page n'est pas au premier plan.
+  //
+  // Le titre de base est CAPTURÉ au montage, pas écrit en dur. Une constante 'Fairide' écrasait le titre
+  // complet de la page (voir usePageMeta) pour tout le reste de la session, y compris après le retour à
+  // zéro commande — et pouvait entrer en conflit avec la sauvegarde de titre faite à l'impression d'un
+  // bon de commande (OrdersPage).
+  const baseTitleRef = useRef(null);
+  if (baseTitleRef.current === null && typeof document !== 'undefined') baseTitleRef.current = document.title;
+
   useEffect(() => {
-    const base = 'Fairide';
-    document.title = newCount > 0 ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''} — ${base}` : base;
+    const base = baseTitleRef.current || 'Fairide';
+    document.title = newCount > 0
+      ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''} — ${base}`
+      : base;
     return () => { document.title = base; };
   }, [newCount]);
 

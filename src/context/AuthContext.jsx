@@ -83,7 +83,9 @@ export function AuthProvider({ children }) {
   }
 
   async function updateProfile(patch) {
-    const user = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch });
+    // logoutOn401: false — cet endpoint renvoie 401 pour un mot de passe ACTUEL incorrect, pas pour
+    // une session invalide (voir api.js). L'erreur doit s'afficher dans le formulaire.
+    const user = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch, logoutOn401: false });
     setSession((prev) => ({ ...prev, user }));
     return user;
   }
