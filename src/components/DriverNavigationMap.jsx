@@ -30,7 +30,7 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#2F6F5E', height = 280 }) {
+export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3A4A63', height = 280 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);

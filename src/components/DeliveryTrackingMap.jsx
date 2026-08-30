@@ -28,7 +28,7 @@ const DRIVER_ICON = L.divIcon({
   iconAnchor: [16, 16]
 });
 
-const RESTAURANT_ICON = emojiIcon('🏪', '#2F6F5E');
+const RESTAURANT_ICON = emojiIcon('🏪', '#3A4A63');
 const DELIVERY_ICON = emojiIcon('🏠', '#D9A441');
 
 async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
@@ -124,7 +124,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (hasResto && hasDelivery) {
       const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(straightLine, { color: '#2F6F5E', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
+        lineRef.current = L.polyline(straightLine, { color: '#3A4A63', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
       } else {
         lineRef.current.setLatLngs(straightLine);
       }
@@ -231,7 +231,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         </div>
       )}
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#2F6F5E' }}>🏪</span> Restaurant</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#3A4A63' }}>🏪</span> Restaurant</span>
         <span><span className="tracking-map-legend-icon" style={{ background: '#16233A' }}>🛵</span> Livreur</span>
         <span><span className="tracking-map-legend-icon" style={{ background: '#D9A441' }}>🏠</span> Toi</span>
         {hasTrail && (

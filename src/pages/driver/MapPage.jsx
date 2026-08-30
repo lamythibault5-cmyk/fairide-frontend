@@ -82,7 +82,7 @@ export default function MapPage() {
           const pickedUp = o.status === 'livraison';
           const target = pickedUp
             ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: '🏠', color: '#D9A441' }
-            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#2F6F5E' };
+            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#3A4A63' };
           return (
             <div className="card" key={o.id} style={{ marginBottom: 16 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
