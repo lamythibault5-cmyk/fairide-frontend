@@ -446,8 +446,8 @@ export default function Account() {
         <h4 style={{ margin: '0 0 6px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Notre identité</h4>
         <p className="small" style={{ margin: '0 0 14px' }}>
           Fairide est conçue et opérée depuis la Belgique, par des Belges, pour des Belges. La plateforme est aujourd'hui active dans 19 communes
-          bruxelloises et se concentre volontairement sur le commerce local et indépendant plutôt que sur les grandes chaînes, pour que la valeur créée
-          profite d'abord au quartier.
+          bruxelloises et met un point d'honneur à soutenir le commerce local et les indépendants qui font vivre le quartier, pour que la valeur créée
+          profite d'abord à Bruxelles.
         </p>
 
         <h4 style={{ margin: '0 0 6px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Nos valeurs</h4>
