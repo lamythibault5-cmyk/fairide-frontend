@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import InvoiceArchive from '../../components/InvoiceArchive';
 
 function currentMonthValue() {
   const d = new Date();
@@ -39,6 +40,17 @@ export default function InvoicesPage() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Factures</h2>
+
+      {/* Les vraies pièces comptables du livreur : Fairide émet ces autofacturations en son nom, il n'a
+          rien à rédiger mais doit pouvoir les récupérer. Le récap mensuel plus bas reste un outil de
+          suivi personnel, calculé à la volée, et n'a aucune valeur de facture. */}
+      <InvoiceArchive
+        endpoint="/invoices/driver"
+        pdfPath={(inv) => `/invoices/driver/${inv.id}/pdf`}
+        titre="Mes autofacturations"
+        description="Fairide établit ces factures en ton nom pour tes prestations de livraison. Ce sont elles qui font foi comptablement."
+        colonneMontant="Total"
+      />
 
       <div className="card no-print">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Récap de paiements</h3>

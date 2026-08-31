@@ -27,6 +27,7 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
+      { to: '/dashboard/invoices', icon: '📄', label: 'Factures' },
       { to: '/dashboard/map', icon: '🗺️', label: 'Carte' },
       { to: '/dashboard/guide', icon: '📘', label: "Mode d'emploi" },
       { to: '/account', icon: '👤', label: t('nav.account') }

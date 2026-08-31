@@ -54,6 +54,34 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   return handleResponse(res, data, !!token, logoutOn401);
 }
 
+// Téléchargement d'un fichier servi par une route authentifiée (PDF de facture...). Un simple lien
+// <a href> ne convient pas : le navigateur n'y joint pas l'en-tête Authorization, et la requête
+// repartirait donc en 401. On récupère donc le binaire par fetch, puis on déclenche l'enregistrement
+// depuis un blob local. L'URL d'objet est révoquée juste après, sinon le blob resterait en mémoire
+// pour toute la durée de vie de l'onglet.
+export async function apiDownload(path, { token, filename }) {
+  let res;
+  try {
+    res = await fetch(API_BASE + path, { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+  } catch {
+    throw new Error("Impossible de joindre le serveur Fairide. Réessaie dans un instant.");
+  }
+  if (!res.ok) {
+    // Les erreurs de ces routes restent en JSON même quand le succès est un PDF.
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Téléchargement impossible.');
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 // Upload de fichier (multipart) : pas de Content-Type manuel, le navigateur doit fixer lui-même la
 // boundary du FormData — contrairement à api() ci-dessus qui envoie toujours du JSON. fieldName doit
 // correspondre au nom attendu par multer côté backend (ex: upload.single('image') vs .single('file')).

@@ -1295,3 +1295,19 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .receipt-total { font-weight: 700; font-size: 14px; }
   .receipt-note { font-size: 10px; color: #444; line-height: 1.4; margin-top: 10px; }
 }
+
+/* Tableau des factures (voir InvoiceArchive.jsx, partagé restaurateur/livreur). Le conteneur défile
+   horizontalement plutôt que de laisser le tableau élargir la page : 8 colonnes ne tiennent pas sur un
+   téléphone, et un tableau financier se lit mieux en le faisant glisser qu'en repliant ses colonnes. */
+.invoice-table-wrap { overflow-x: auto; }
+.invoice-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.invoice-table th {
+  text-align: left; padding: 8px 10px; white-space: nowrap;
+  border-bottom: 2px solid var(--line); font-size: 12px; color: var(--ink-soft);
+}
+.invoice-table td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.invoice-table tr:last-child td { border-bottom: none; }
+/* font-variant-numeric: tabular-nums aligne les chiffres en colonne : sans ça les montants "ondulent"
+   d'une ligne à l'autre, les chiffres n'ayant pas tous la même largeur dans cette police. */
+.invoice-table .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.invoice-table tbody tr:hover { background: var(--cream-dim); }
