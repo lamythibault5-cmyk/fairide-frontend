@@ -24,6 +24,10 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 26, m
   const trackRef = useRef(null);
   const pausedRef = useRef(false);
   const resumeTimerRef = useRef(null);
+  // Position de l'auto-défilement, tenue en pleine précision côté JS (voir l'explication dans l'effet
+  // plus bas). Resynchronisée sur le DOM à chaque reprise, sinon la rangée ressauterait là où elle
+  // était avant le geste de l'utilisateur.
+  const positionRef = useRef(0);
   const canLoop = items.length > 1;
   const doubled = canLoop ? [...items, ...items] : items;
 
@@ -34,8 +38,14 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 26, m
 
   function resume(delay) {
     clearTimeout(resumeTimerRef.current);
-    if (!delay) { pausedRef.current = false; return; }
-    resumeTimerRef.current = setTimeout(() => { pausedRef.current = false; }, delay);
+    const go = () => {
+      // Reprendre depuis là où l'utilisateur a laissé la rangée, pas depuis la dernière position
+      // calculée avant son geste.
+      if (trackRef.current) positionRef.current = trackRef.current.scrollLeft;
+      pausedRef.current = false;
+    };
+    if (!delay) { go(); return; }
+    resumeTimerRef.current = setTimeout(go, delay);
   }
 
   // Le minuteur survivrait au démontage et écrirait dans une ref d'un composant disparu (sans planter,
@@ -45,17 +55,28 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 26, m
   useEffect(() => {
     const track = trackRef.current;
     if (!track || !canLoop) return undefined;
+    // Respecte le réglage système "réduire les animations" : la rangée reste alors immobile, mais
+    // toujours défilable au doigt — on ne retire pas l'accès au contenu, seulement le mouvement subi.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
     const effectiveSpeed = window.innerWidth <= 640 ? mobileSpeed : speed;
     let raf;
     let last = null;
+    positionRef.current = track.scrollLeft;
     function step(now) {
       if (last === null) last = now;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
       if (!pausedRef.current) {
         const halfWidth = track.scrollWidth / 2;
-        let next = track.scrollLeft + effectiveSpeed * dt;
+        // La position vit dans positionRef, en pleine précision, et NON dans track.scrollLeft relu à
+        // chaque frame. À 60 fps l'incrément vaut 0,27 px sur mobile et 0,43 px sur PC : sous le pixel.
+        // Le navigateur quantifiant scrollLeft à la relecture, réinjecter la valeur lue écrasait
+        // l'incrément à chaque frame et la rangée ne bougeait tout simplement jamais. En accumulant
+        // côté JS, la position progresse toujours ; seul l'affichage est quantifié, ce qui est sans
+        // conséquence visible.
+        let next = positionRef.current + effectiveSpeed * dt;
         if (halfWidth > 0 && next >= halfWidth) next -= halfWidth;
+        positionRef.current = next;
         track.scrollLeft = next;
       }
       raf = requestAnimationFrame(step);
