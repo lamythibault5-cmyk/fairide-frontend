@@ -22,6 +22,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [subsection, setSubsection] = useState(item.subsection || '');
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
   const [suggestAtCheckout, setSuggestAtCheckout] = useState(!!item.suggestAtCheckout);
+  const [healthy, setHealthy] = useState(!!item.healthy);
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -40,7 +41,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       setEditing(false);
     } finally {
@@ -118,6 +119,14 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             onCancel={() => setGalleryOpen(false)}
           />
         )}
+        {/* Hors du bloc categoryKind ci-dessous, volontairement : la suggestion avant paiement ne concerne
+            que les desserts/boissons, alors que n'importe quel plat de la carte peut être healthy. */}
+        <div className="field">
+          <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
+            <span className="small">🥗 Marquer ce plat comme healthy (affiche l'emoji à côté du nom et fait apparaître le restaurant dans la section "Healthy")</span>
+          </label>
+        </div>
         {categoryKind(category) && (
           <div className="field">
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
@@ -195,7 +204,10 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
-      <div className="name">{item.name}</div>
+      <div className="name">
+        {item.name}
+        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+      </div>
       <div className="small desc">
         {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
       </div>

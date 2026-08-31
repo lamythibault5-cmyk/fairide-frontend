@@ -11,7 +11,10 @@ function ItemCard({ item, onAdd, hideAdd, t, sections }) {
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
-      <div className="name">{item.name}</div>
+      <div className="name">
+        {item.name}
+        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+      </div>
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : (item.desc || '')}</div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>

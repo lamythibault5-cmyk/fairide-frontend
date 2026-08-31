@@ -482,6 +482,11 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
 .menu-item-card:hover { border-color: var(--gold); box-shadow: var(--shadow); }
 .menu-item-card .name { font-weight: 600; font-size: 14px; margin: 0 0 2px; }
+/* Emoji "healthy" accolé au nom du plat (menu_items.healthy, coché par le restaurateur). white-space:
+   nowrap sur le seul emoji : le nom peut passer à la ligne, mais jamais entre le nom et son emoji, qui
+   se retrouverait seul sur une ligne. Taille légèrement réduite pour rester un marqueur discret plutôt
+   qu'un second point d'accroche en concurrence avec le nom lui-même. */
+.dish-healthy { font-size: .92em; white-space: nowrap; }
 .menu-item-card .desc { flex: 1; margin: 0 0 8px; }
 .menu-item-card .bottom-row { display: flex; justify-content: space-between; align-items: center; }
 .menu-item-card-add { align-items: center; justify-content: center; min-height: 120px; border: 2px dashed var(--line); background: none; cursor: pointer; font-weight: 600; font-size: 13px; color: var(--ink-soft); }

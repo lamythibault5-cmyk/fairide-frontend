@@ -105,7 +105,8 @@ export const translations = {
         'Cuisine Saine': 'Cuisine Saine', 'Cuisine Familiale': 'Cuisine Familiale',
         Autre: 'Autre'
       },
-      unavailable: 'Indisponible pour le moment'
+      unavailable: 'Indisponible pour le moment',
+      healthy: 'Plat healthy'
     },
     restaurantList: {
       searchPlaceholder: 'Chercher un restaurant ou un plat',
@@ -121,6 +122,7 @@ export const translations = {
       sectionNearby: 'Autour de vous',
       sectionOffers: 'Offres',
       sectionDiscover: 'À découvrir',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarchés'
     },
     map: {
@@ -626,7 +628,8 @@ export const translations = {
         'Cuisine Saine': 'Healthy Dining', 'Cuisine Familiale': 'Family Style',
         Autre: 'Other'
       },
-      unavailable: 'Currently unavailable'
+      unavailable: 'Currently unavailable',
+      healthy: 'Healthy dish'
     },
     restaurantList: {
       searchPlaceholder: 'Search for a restaurant or a dish',
@@ -642,6 +645,7 @@ export const translations = {
       sectionNearby: 'Near you',
       sectionOffers: 'Offers',
       sectionDiscover: 'Discover',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Grocery stores'
     },
     map: {
@@ -1147,7 +1151,8 @@ export const translations = {
         'Cuisine Saine': 'Gezonde Keuken', 'Cuisine Familiale': 'Familiekeuken',
         Autre: 'Andere'
       },
-      unavailable: 'Momenteel niet beschikbaar'
+      unavailable: 'Momenteel niet beschikbaar',
+      healthy: 'Gezond gerecht'
     },
     restaurantList: {
       searchPlaceholder: 'Zoek een restaurant of een gerecht',
@@ -1163,6 +1168,7 @@ export const translations = {
       sectionNearby: 'Bij jou in de buurt',
       sectionOffers: 'Aanbiedingen',
       sectionDiscover: 'Ontdekken',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarkten'
     },
     map: {
