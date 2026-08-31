@@ -18,21 +18,30 @@ import { useEffect, useRef } from 'react';
 // l'animation en plein élan d'inertie, qui pousse vers la droite pendant que le geste porte vers la
 // gauche — la rangée se bat contre l'utilisateur juste après son balayage. La souris n'a pas d'inertie,
 // d'où une reprise immédiate quand le curseur quitte la rangée.
-const RESUME_AFTER_TOUCH_MS = 1600;
+const RESUME_AFTER_TOUCH_MS = 900;
+
+// Constante de temps du fondu de vitesse, en secondes. La rangée ne connaissait que deux états — pleine
+// vitesse ou arrêt total : elle se figeait net sous le doigt puis repartait net. C'est ce basculement
+// binaire qui donnait le côté mécanique, bien plus que la vitesse elle-même. Elle ralentit et réaccélère
+// désormais progressivement. 0,45 s donne une décélération franchement perceptible sans donner
+// l'impression que la rangée traîne à obéir.
+const SPEED_RAMP_TAU = 0.45;
 
 // Seuil du palier "compact". 900px et non 640 : la tablette héritait jusqu'ici de la vitesse desktop
 // alors qu'elle a la même contrainte de fluidité que le téléphone. C'est aussi le seuil déjà retenu
 // ailleurs dans l'app (la sidebar y devient une barre d'onglets), plutôt que d'en introduire un de plus.
 const COMPACT_BREAKPOINT = 900;
 
-// Vitesses en px/s. Parti de 26 (desktop) et 16 (mobile), relevé une première fois à 34/30, puis à
-// 46/42 — le mouvement restait trop lent et trop saccadé sur téléphone. La vitesse joue directement sur
-// la fluidité perçue : scrollLeft étant quantifié, la position n'avance que par pas d'un pixel entier,
-// et plus la vitesse est basse plus ces pas sont espacés dans le temps. À 16 px/s il fallait 3,75 frames
-// par pixel, à 42 px/s il en faut 1,43 — le mouvement se lit alors comme continu. Le palier compact reste
-// juste en dessous du desktop parce que ses cartes plus étroites (flex-basis 168 contre 220) défilent
-// déjà plus vite en proportion, à vitesse égale.
-export default function AutoScrollRow({ items, renderItem, keyFor, speed = 46, mobileSpeed = 42, className = '' }) {
+// Vitesses en px/s, relevées par paliers successifs depuis 26/16 à l'origine.
+//
+// RECTIFICATIF : les versions précédentes de ce commentaire justifiaient ces hausses par une
+// quantification de scrollLeft au pixel ENTIER. C'est faux, vérifié depuis dans le navigateur —
+// scrollLeft accepte bien des valeurs fractionnaires, simplement alignées sur le pixel ÉCRAN : pas de
+// 0,8 px à dpr 1,25, de 0,33 px à dpr 3. Sur un téléphone la position avance donc à chaque frame dès
+// une vingtaine de px/s, et le rendu mécanique ne venait pas de là mais de l'absence de tout fondu à
+// l'arrêt et à la reprise (voir SPEED_RAMP_TAU ci-dessus). Le palier compact reste juste sous le desktop :
+// ses cartes plus étroites (flex-basis 168 contre 220) défilent déjà plus vite en proportion.
+export default function AutoScrollRow({ items, renderItem, keyFor, speed = 56, mobileSpeed = 52, className = '' }) {
   const trackRef = useRef(null);
   const pausedRef = useRef(false);
   const resumeTimerRef = useRef(null);
@@ -40,12 +49,18 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 46, m
   // plus bas). Resynchronisée sur le DOM à chaque reprise, sinon la rangée ressauterait là où elle
   // était avant le geste de l'utilisateur.
   const positionRef = useRef(0);
+  // Vitesse instantanée, distincte de la vitesse visée : c'est l'écart entre les deux qui est lissé.
+  const currentSpeedRef = useRef(0);
   const canLoop = items.length > 1;
   const doubled = canLoop ? [...items, ...items] : items;
 
-  function pause() {
+  // `immediate` coupe la vitesse d'un coup au lieu de la laisser redescendre en fondu. Indispensable au
+  // toucher : tant que le doigt est posé, la moindre écriture de scrollLeft de notre part contrarierait
+  // le geste. À la souris au contraire, rien ne conflicte — le survol peut donc ralentir en douceur.
+  function pause({ immediate = false } = {}) {
     clearTimeout(resumeTimerRef.current);
     pausedRef.current = true;
+    if (immediate) currentSpeedRef.current = 0;
   }
 
   function resume(delay) {
@@ -102,11 +117,18 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 46, m
       if (last === null) last = now;
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      if (!pausedRef.current) {
-        // La position vit dans positionRef, en pleine précision, et NON dans track.scrollLeft relu à
-        // chaque frame : le navigateur quantifie scrollLeft, donc réinjecter la valeur lue écrasait
-        // l'incrément quand celui-ci restait sous le pixel, et la rangée ne bougeait jamais.
-        let next = positionRef.current + effectiveSpeed * dt;
+      // Fondu exponentiel vers la vitesse visée (0 en pause) au lieu d'un basculement binaire : c'est ce
+      // qui retire le côté robotique. Formule indépendante de la cadence d'affichage, donc ressenti
+      // identique à 60 comme à 120 Hz.
+      const target = pausedRef.current ? 0 : effectiveSpeed;
+      currentSpeedRef.current += (target - currentSpeedRef.current) * (1 - Math.exp(-dt / SPEED_RAMP_TAU));
+
+      // Sous ce seuil le mouvement n'est plus perceptible : on cesse d'écrire pour laisser le défilement
+      // natif de l'utilisateur entièrement libre, plutôt que de le contrarier avec un résidu de vitesse.
+      if (currentSpeedRef.current > 0.4) {
+        // La position vit dans positionRef, en pleine précision, et non dans track.scrollLeft relu à
+        // chaque frame : la relecture est alignée sur le pixel écran, ce qui rognerait l'incrément.
+        let next = positionRef.current + currentSpeedRef.current * dt;
         if (halfWidth > 0 && next >= halfWidth) next -= halfWidth;
         positionRef.current = next;
         track.scrollLeft = next;
@@ -126,9 +148,9 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 46, m
     <div
       ref={trackRef}
       className={`auto-scroll-row ${className}`}
-      onMouseEnter={pause}
+      onMouseEnter={() => pause()}
       onMouseLeave={() => resume(0)}
-      onTouchStart={pause}
+      onTouchStart={() => pause({ immediate: true })}
       onTouchEnd={() => resume(RESUME_AFTER_TOUCH_MS)}
       onTouchCancel={() => resume(RESUME_AFTER_TOUCH_MS)}
     >
