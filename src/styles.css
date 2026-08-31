@@ -215,9 +215,15 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    déjà en auto, qui se balayaient normalement. */
 .auto-scroll-row {
   display: flex; gap: 14px; padding-bottom: 6px;
-  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
   scrollbar-width: none;
+  /* Prévient le navigateur que le scrollLeft de ce conteneur change en continu (voir AutoScrollRow.jsx),
+     pour qu'il prépare une couche adaptée au lieu de repeindre sur le fil principal à chaque frame. */
+  will-change: scroll-position;
 }
+/* -webkit-overflow-scrolling: touch retiré volontairement. Obsolète depuis iOS 13, qui applique l'inertie
+   par défaut, il crée une couche de défilement séparée qui entre en conflit avec une écriture de
+   scrollLeft à chaque frame — exactement notre cas — et produit des à-coups sur iOS. */
 /* Barre de défilement masquée (même procédé que .dashboard-sidebar) : la rangée défile déjà d'elle-même,
    une barre visible en dessous ferait du bruit. Le défilement reste possible — glissement, molette, clavier. */
 .auto-scroll-row::-webkit-scrollbar { display: none; }

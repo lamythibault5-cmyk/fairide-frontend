@@ -25,11 +25,14 @@ const RESUME_AFTER_TOUCH_MS = 1600;
 // ailleurs dans l'app (la sidebar y devient une barre d'onglets), plutôt que d'en introduire un de plus.
 const COMPACT_BREAKPOINT = 900;
 
-// Vitesses en px/s. Le mobile tournait à 16 px/s, nettement sous le desktop (26) : sur des cartes plus
-// étroites (flex-basis 168 contre 220), cela donnait un mouvement à peine perceptible. Les deux paliers
-// sont remontés et rapprochés — le compact reste légèrement en dessous parce que ses cartes plus étroites
-// défilent déjà plus vite en proportion, à vitesse égale.
-export default function AutoScrollRow({ items, renderItem, keyFor, speed = 34, mobileSpeed = 30, className = '' }) {
+// Vitesses en px/s. Parti de 26 (desktop) et 16 (mobile), relevé une première fois à 34/30, puis à
+// 46/42 — le mouvement restait trop lent et trop saccadé sur téléphone. La vitesse joue directement sur
+// la fluidité perçue : scrollLeft étant quantifié, la position n'avance que par pas d'un pixel entier,
+// et plus la vitesse est basse plus ces pas sont espacés dans le temps. À 16 px/s il fallait 3,75 frames
+// par pixel, à 42 px/s il en faut 1,43 — le mouvement se lit alors comme continu. Le palier compact reste
+// juste en dessous du desktop parce que ses cartes plus étroites (flex-basis 168 contre 220) défilent
+// déjà plus vite en proportion, à vitesse égale.
+export default function AutoScrollRow({ items, renderItem, keyFor, speed = 46, mobileSpeed = 42, className = '' }) {
   const trackRef = useRef(null);
   const pausedRef = useRef(false);
   const resumeTimerRef = useRef(null);
