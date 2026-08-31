@@ -213,20 +213,28 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    carrément figée : poser le doigt met l'animation en pause (onTouchStart) sans rien offrir en échange.
    C'était la seule différence avec les rangées voisines .rest-grid-scroll (Offres, Healthy, Supermarchés),
    déjà en auto, qui se balayaient normalement. */
+/* Fenêtre de la rangée. `clip` et non `hidden` : les deux masquent le débordement, mais `hidden` ferait
+   du conteneur une zone défilable, ce qui remettrait en concurrence le défilement natif et la
+   transformation animée de la piste (voir AutoScrollRow.jsx). Même raisonnement, et même choix, que sur
+   html/body plus haut dans ce fichier.
+   touch-action: pan-y laisse le balayage vertical faire défiler la PAGE — le composant ne prend en
+   charge que l'horizontal, qu'il gère lui-même. */
 .auto-scroll-row {
-  display: flex; gap: 14px; padding-bottom: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  /* Prévient le navigateur que le scrollLeft de ce conteneur change en continu (voir AutoScrollRow.jsx),
-     pour qu'il prépare une couche adaptée au lieu de repeindre sur le fil principal à chaque frame. */
-  will-change: scroll-position;
+  padding-bottom: 6px;
+  overflow: clip;
+  touch-action: pan-y;
+  cursor: grab;
 }
-/* -webkit-overflow-scrolling: touch retiré volontairement. Obsolète depuis iOS 13, qui applique l'inertie
-   par défaut, il crée une couche de défilement séparée qui entre en conflit avec une écriture de
-   scrollLeft à chaque frame — exactement notre cas — et produit des à-coups sur iOS. */
-/* Barre de défilement masquée (même procédé que .dashboard-sidebar) : la rangée défile déjà d'elle-même,
-   une barre visible en dessous ferait du bruit. Le défilement reste possible — glissement, molette, clavier. */
-.auto-scroll-row::-webkit-scrollbar { display: none; }
+.auto-scroll-row:active { cursor: grabbing; }
+/* La piste porte le flux et la transformation. will-change: transform la place sur sa propre couche :
+   l'animation est alors composée par le GPU, sans calcul de mise en page ni repeinte à chaque frame. */
+.auto-scroll-track {
+  display: flex; gap: 14px;
+  will-change: transform;
+}
+/* Les images ne doivent pas capter le glissement à la place de la rangée (comportement natif de
+   glisser-déposer d'une image dans le navigateur). */
+.auto-scroll-row img { -webkit-user-drag: none; user-select: none; }
 .auto-scroll-row .rest-card { flex: 0 0 220px; }
 @media (max-width: 640px) { .auto-scroll-row .rest-card { flex-basis: 168px; } }
 .rest-card { cursor: pointer; transition: border-color .15s, transform .12s ease, box-shadow .15s ease; display: block; text-decoration: none; color: inherit; min-width: 0; }
@@ -572,7 +580,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .dashboard-menu-grid .menu-item-card-add { min-height: 92px; font-size: 12px; }
 }
 
-.auto-scroll-row.discover-track { gap: 12px; }
+.auto-scroll-row.discover-track .auto-scroll-track { gap: 12px; }
 @keyframes discover-marquee-move {
   from { transform: translateX(-50%); }
   to { transform: translateX(0%); }
@@ -737,7 +745,8 @@ h2.section-title { font-size: 20px; margin: 26px 0 12px; }
 }
 
 .cuisine-scroll { padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
-.auto-scroll-row.cuisine-track { gap: 8px; padding-bottom: 0; }
+.auto-scroll-row.cuisine-track { padding-bottom: 0; }
+.auto-scroll-row.cuisine-track .auto-scroll-track { gap: 8px; }
 .cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: 14px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
 .cuisine-chip .emoji { font-size: 20px; line-height: 1; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
