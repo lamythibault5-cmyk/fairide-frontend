@@ -12,6 +12,7 @@ import { StarsDisplay } from '../../components/Stars';
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
+import AutoScrollRow from '../../components/AutoScrollRow';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -89,24 +90,18 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
 
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
   if (list.length === 0) return null;
-  // Boucle façon barre de cuisines (cuisine-track) : la liste est dupliquée et l'animation CSS
-  // translate de -50% pour un défilement continu et sans coupure, en pause au survol/toucher.
   if (loop && list.length > 1) {
     return (
       <div style={{ marginBottom: 24 }}>
         <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
-        <div className="rest-grid-loop">
-          <div className="rest-grid-loop-track">
-            {list.map((r) => (
-              <RestaurantCard key={`a-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
-            ))}
-            <div aria-hidden="true" style={{ display: 'contents' }}>
-              {list.map((r) => (
-                <RestaurantCard key={`b-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
-              ))}
-            </div>
-          </div>
-        </div>
+        <AutoScrollRow
+          items={list}
+          keyFor={(r) => r.id}
+          className="rest-grid-loop"
+          renderItem={(r, i, key) => (
+            <RestaurantCard key={key} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+          )}
+        />
       </div>
     );
   }
@@ -214,30 +209,21 @@ export default function RestaurantList() {
   return (
     <div>
       <div className="cuisine-scroll">
-        <div className="cuisine-track">
-          {cuisineOptions.map((opt) => (
+        <AutoScrollRow
+          items={cuisineOptions}
+          keyFor={(opt) => opt.value}
+          className="cuisine-track"
+          renderItem={(opt, i, key) => (
             <div
-              key={`a-${opt.value}`}
+              key={key}
               className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
               onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
             >
               <span className="emoji">{opt.emoji}</span>
               <span>{opt.label}</span>
             </div>
-          ))}
-          {cuisineOptions.map((opt) => (
-            <div
-              key={`b-${opt.value}`}
-              aria-hidden="true"
-              tabIndex={-1}
-              className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
-              onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
-            >
-              <span className="emoji">{opt.emoji}</span>
-              <span>{opt.label}</span>
-            </div>
-          ))}
-        </div>
+          )}
+        />
       </div>
       <div className="restaurant-search-row">
         <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
