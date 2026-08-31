@@ -13,11 +13,34 @@ import { useEffect, useRef } from 'react';
 // Le contenu est dupliqué une fois (comme avant) pour boucler sans coupure visible : une fois que le
 // scroll dépasse la largeur d'une copie, on retranche cette largeur — la seconde copie étant identique
 // à la première, le saut est invisible.
+// Délai avant que l'auto-défilement ne reprenne la main après un geste de l'utilisateur. La rangée est
+// défilable au doigt (voir .auto-scroll-row en CSS) : sans ce délai, relâcher le doigt relancerait
+// l'animation en plein élan d'inertie, qui pousse vers la droite pendant que le geste porte vers la
+// gauche — la rangée se bat contre l'utilisateur juste après son balayage. La souris n'a pas d'inertie,
+// d'où une reprise immédiate quand le curseur quitte la rangée.
+const RESUME_AFTER_TOUCH_MS = 1600;
+
 export default function AutoScrollRow({ items, renderItem, keyFor, speed = 26, mobileSpeed = 16, className = '' }) {
   const trackRef = useRef(null);
   const pausedRef = useRef(false);
+  const resumeTimerRef = useRef(null);
   const canLoop = items.length > 1;
   const doubled = canLoop ? [...items, ...items] : items;
+
+  function pause() {
+    clearTimeout(resumeTimerRef.current);
+    pausedRef.current = true;
+  }
+
+  function resume(delay) {
+    clearTimeout(resumeTimerRef.current);
+    if (!delay) { pausedRef.current = false; return; }
+    resumeTimerRef.current = setTimeout(() => { pausedRef.current = false; }, delay);
+  }
+
+  // Le minuteur survivrait au démontage et écrirait dans une ref d'un composant disparu (sans planter,
+  // mais autant ne pas le laisser courir) — typiquement en changeant de page pendant l'inertie.
+  useEffect(() => () => clearTimeout(resumeTimerRef.current), []);
 
   useEffect(() => {
     const track = trackRef.current;
@@ -46,10 +69,11 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 26, m
     <div
       ref={trackRef}
       className={`auto-scroll-row ${className}`}
-      onMouseEnter={() => { pausedRef.current = true; }}
-      onMouseLeave={() => { pausedRef.current = false; }}
-      onTouchStart={() => { pausedRef.current = true; }}
-      onTouchEnd={() => { pausedRef.current = false; }}
+      onMouseEnter={pause}
+      onMouseLeave={() => resume(0)}
+      onTouchStart={pause}
+      onTouchEnd={() => resume(RESUME_AFTER_TOUCH_MS)}
+      onTouchCancel={() => resume(RESUME_AFTER_TOUCH_MS)}
     >
       {doubled.map((item, i) => renderItem(item, i, keyFor ? `${keyFor(item)}-${i}` : i))}
     </div>

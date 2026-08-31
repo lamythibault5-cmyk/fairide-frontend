@@ -207,7 +207,20 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    bug d'affichage — la rangée entière disparaissait parfois après un scroll de la page (desktop comme
    mobile), un défaut de repaint du navigateur avec cette combinaison, pas un souci ponctuel. overflow-x
    masque le scroll natif à l'œil sans empêcher de le piloter par JS. */
-.auto-scroll-row { display: flex; gap: 14px; overflow-x: hidden; padding-bottom: 6px; }
+/* overflow-x: auto et non hidden. Avec hidden, l'auto-défilement continuait de fonctionner — le JS écrit
+   scrollLeft directement (voir AutoScrollRow.jsx), ce qui marche même sur un conteneur non défilable —
+   mais l'utilisateur ne pouvait rien faire glisser lui-même. Sur mobile et tablette la rangée paraissait
+   carrément figée : poser le doigt met l'animation en pause (onTouchStart) sans rien offrir en échange.
+   C'était la seule différence avec les rangées voisines .rest-grid-scroll (Offres, Healthy, Supermarchés),
+   déjà en auto, qui se balayaient normalement. */
+.auto-scroll-row {
+  display: flex; gap: 14px; padding-bottom: 6px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+/* Barre de défilement masquée (même procédé que .dashboard-sidebar) : la rangée défile déjà d'elle-même,
+   une barre visible en dessous ferait du bruit. Le défilement reste possible — glissement, molette, clavier. */
+.auto-scroll-row::-webkit-scrollbar { display: none; }
 .auto-scroll-row .rest-card { flex: 0 0 220px; }
 @media (max-width: 640px) { .auto-scroll-row .rest-card { flex-basis: 168px; } }
 .rest-card { cursor: pointer; transition: border-color .15s, transform .12s ease, box-shadow .15s ease; display: block; text-decoration: none; color: inherit; min-width: 0; }
