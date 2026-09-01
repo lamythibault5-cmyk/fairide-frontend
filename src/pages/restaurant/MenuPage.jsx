@@ -16,6 +16,7 @@ import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
+import { galleryForCuisine } from '../../galleryImages';
 import MenuImportReview from '../../components/MenuImportReview';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -563,7 +564,7 @@ export default function MenuPage() {
                         <MenuItemRow
                           key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
                           allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                          sections={restaurant.sections || []} reorderMode restoId={restoId}
+                          sections={restaurant.sections || []} reorderMode restoId={restoId} cuisine={restaurant.cuisine}
                           existingSubsections={sectionSubsections}
                         />
                       ))}
@@ -577,7 +578,7 @@ export default function MenuPage() {
                             <MenuItemRow
                               key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
                               allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
-                              sections={restaurant.sections || []} reorderMode={false} restoId={restoId}
+                              sections={restaurant.sections || []} reorderMode={false} restoId={restoId} cuisine={restaurant.cuisine}
                               selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
                               existingSubsections={sectionSubsections}
                             />
@@ -616,6 +617,8 @@ export default function MenuPage() {
                     {addItemGalleryOpen && (
                       <GalleryPickerModal
                         restoId={restoId}
+                        suggestions={galleryForCuisine(restaurant.cuisine)}
+                        suggestionsTitle="Photos suggérées pour ton type de commerce"
                         onSelect={(url) => { setItemImageUrl(url); setAddItemGalleryOpen(false); }}
                         onCancel={() => setAddItemGalleryOpen(false)}
                       />
@@ -645,6 +648,8 @@ export default function MenuPage() {
         <GalleryPickerModal
           restoId={restoId}
           title={`Photo de la section "${categoryLabel(sectionGalleryFor.name, t)}"`}
+          suggestions={galleryForCuisine(restaurant.cuisine)}
+          suggestionsTitle="Photos suggérées pour ton type de commerce"
           currentImageUrl={sectionGalleryFor.imageUrl}
           onSelect={(url) => saveSectionImage(sectionGalleryFor, url)}
           onCancel={() => setSectionGalleryFor(null)}

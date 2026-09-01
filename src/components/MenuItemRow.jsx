@@ -4,11 +4,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
+import { galleryForCuisine } from '../galleryImages';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [] }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '' }) {
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
@@ -111,9 +112,13 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             </button>
           )}
         </div>
+        {/* Galerie du type de commerce (voir galleryImages.js) : une trentaine de photos utilisables
+            sans rien téléverser, la galerie personnelle restant affichée juste en dessous. */}
         {galleryOpen && (
           <GalleryPickerModal
             restoId={restoId}
+            suggestions={galleryForCuisine(cuisine)}
+            suggestionsTitle="Photos suggérées pour ton type de commerce"
             currentImageUrl={imageUrl}
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}
