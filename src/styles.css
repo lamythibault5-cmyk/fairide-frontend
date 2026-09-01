@@ -858,26 +858,39 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    est le réflexe par défaut de toutes les landing pages ; l'alignement à gauche
    donne au titre une arête verticale nette, qui répond au cadre à droite.
    --------------------------------------------------------------------------- */
+/* Deux colonnes explicites — texte à gauche, cadre à droite — et non un cadre en
+   position: absolute par-dessus. La première version posait le cadre en absolu à
+   droite avec une largeur en pourcentage : dès que la fenêtre dépassait ~900px,
+   il recouvrait le paragraphe d'accroche et les traits lime passaient derrière
+   le texte blanc. Une colonne de grille ne peut structurellement pas empiéter
+   sur sa voisine, donc le défaut ne peut pas revenir en changeant une valeur.
+   Le drapeau belge reste en absolu (coin haut-droit), d'où le position: relative. */
 .landing-hero {
   position: relative; overflow: hidden;
   background: var(--iris); color: var(--cream);
   border-radius: var(--radius);
   padding: 54px 34px 0;
   margin: 0 0 20px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 40%);
+  grid-template-areas: "text frame" "stats stats";
+  align-items: center;
+  column-gap: 28px;
 }
-.landing-hero-text { position: relative; z-index: 2; max-width: 560px; }
-@media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
+.landing-hero-text { grid-area: text; }
+.landing-hero .stats-bar { grid-area: stats; }
 
-/* Le cadre, à ~62% de la largeur du bloc, débordant volontairement à droite —
-   mais jamais au point de couper une roue : la roue avant reste entière, seul
-   le vide autour est rogné (voir le viewBox élargi côté JSX). Masqué sous
-   860px, où il ne resterait qu'un fragment illisible derrière le texte. */
-.landing-frame {
-  position: absolute; z-index: 1; pointer-events: none;
-  right: 12px; top: 46%; transform: translateY(-50%);
-  width: min(460px, 52%); height: auto;
+/* Le cadre à l'échelle affiche. Il tient ENTIER : le viewBox côté JSX laisse
+   3 unités de marge tout autour pour que le trait ne soit jamais rogné — la
+   première maquette coupait la roue avant. Retiré (et non juste masqué) sous
+   860px : display: none sur l'élément de grille laisse la colonne vide, c'est
+   la grille elle-même qui repasse à une seule colonne. */
+.landing-frame { grid-area: frame; width: 100%; height: auto; justify-self: end; }
+@media (max-width: 860px) {
+  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "stats"; }
+  .landing-frame { display: none; }
 }
-@media (max-width: 860px) { .landing-frame { display: none; } }
+@media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
 
 /* Le drapeau belge : trois bandes nettes, plus d'ombre portée. */
 .be-flag {

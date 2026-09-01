@@ -110,8 +110,22 @@ a { color: inherit; text-decoration: none; }
   background: var(--iris); color: #fff;
   position: relative; overflow: hidden;
 }
-.hero-in { position: relative; z-index: 2; padding: 88px 0 0; max-width: 700px; }
-@media (max-width: 900px) { .hero-in { padding-top: 60px; } }
+/* Deux colonnes explicites — texte à gauche, cadre à droite. La première version posait le
+   cadre en position: absolute par-dessus le hero : passé ~1000px de large il recouvrait le
+   paragraphe et les traits lime passaient derrière le texte blanc. Une colonne de grille ne
+   peut pas empiéter sur sa voisine, le défaut ne peut donc pas revenir par un réglage. */
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 38%);
+  grid-template-areas: "text frame" "stats stats";
+  align-items: center;
+  column-gap: 40px;
+  padding-top: 88px;
+}
+.hero-in { grid-area: text; max-width: 700px; }
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; grid-template-areas: "text" "stats"; padding-top: 60px; }
+}
 
 .hero h1 {
   font-size: clamp(40px, 6.6vw, 76px);
@@ -127,18 +141,13 @@ a { color: inherit; text-decoration: none; }
    Il tient ENTIER dans le hero : la première version le sortait de 6% à droite
    et tranchait la roue avant, ce qui abîmait la lecture de la marque au lieu de
    l'affirmer. Masqué sous 900px, où il ne resterait qu'un fragment. */
-.hero-frame {
-  position: absolute; z-index: 1;
-  right: 3%; top: 50%; transform: translateY(-50%);
-  width: min(600px, 48vw); height: auto;
-  pointer-events: none;
-}
+.hero-frame { grid-area: frame; width: 100%; height: auto; justify-self: end; pointer-events: none; }
 @media (max-width: 900px) { .hero-frame { display: none; } }
 
 /* Bandeau de chiffres : dans le hero, séparé par un filet blanc translucide —
    pas de deuxième bloc iris collé au premier. */
 .hero-stats {
-  position: relative; z-index: 2;
+  grid-area: stats;
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 1px; margin-top: 72px;
   border-top: 1px solid rgba(255,255,255,.22);
@@ -321,19 +330,7 @@ a { color: inherit; text-decoration: none; }
 
 <!-- ====================== HERO ====================== -->
 <section class="hero on-iris" id="top">
-  <!-- Le cadre, échelle affiche, rogné par le bord de l'écran -->
-  <svg class="hero-frame" viewBox="-3 -3 82 50" aria-hidden="true">
-    <g fill="none" stroke="#C8F03C" stroke-width="2.4">
-      <circle class="draw-wheel" cx="15" cy="29" r="12.5"></circle>
-      <circle class="draw-wheel d2" cx="61" cy="29" r="12.5"></circle>
-    </g>
-    <g fill="#C8F03C">
-      <rect class="draw-bar" x="16" y="8" width="44" height="2.4" rx="1.2"></rect>
-      <g transform="rotate(42 27 22.5)"><rect class="draw-bar d2" x="13" y="20" width="28" height="2.4" rx="1.2"></rect></g>
-    </g>
-  </svg>
-
-  <div class="shell">
+  <div class="shell hero-grid">
     <div class="hero-in">
       <span class="meta rise r1">Bruxelles · local d'abord</span>
       <h1 class="rise r2">Les commerces de ton quartier,<br><em>livrés chez toi.</em></h1>
@@ -344,6 +341,20 @@ a { color: inherit; text-decoration: none; }
         <a class="btn btn-ghost" href="#rejoindre">Inscrire mon commerce</a>
       </div>
     </div>
+
+    <!-- Épaisseur 5 et coordonnées exactes de la spec §4 : les positions du tableau supposent ce
+         trait-là. Aminci, le tube supérieur décolle du sommet des roues et le tube de selle ne
+         rejoint plus rien — le vélo se casse en trois morceaux disjoints. -->
+    <svg class="hero-frame" viewBox="-3 5 82 42" aria-hidden="true">
+      <g fill="none" stroke="#C8F03C" stroke-width="5">
+        <circle class="draw-wheel" cx="15" cy="29" r="12.5"></circle>
+        <circle class="draw-wheel d2" cx="61" cy="29" r="12.5"></circle>
+      </g>
+      <g fill="#C8F03C">
+        <rect class="draw-bar" x="16" y="8" width="44" height="5" rx="2.5"></rect>
+        <g transform="rotate(42 27 22.5)"><rect class="draw-bar d2" x="13" y="20" width="28" height="5" rx="2.5"></rect></g>
+      </g>
+    </svg>
 
     <div class="hero-stats">
       <div class="hero-stat"><b>10&nbsp;%</b><span>de commission maximum, contre 22 à 32&nbsp;% ailleurs</span></div>

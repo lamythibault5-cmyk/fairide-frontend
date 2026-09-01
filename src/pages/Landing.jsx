@@ -7,21 +7,31 @@ import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
 
-/* Le cadre à l'échelle affiche, posé dans la bannière. C'est la même géométrie que BrandMark
-   (roues r=12,5, tube supérieur de 44, tube de selle à 42°), mais sans tuile : sur un fond déjà
-   iris, la tuile ferait un carré dans un carré. Le viewBox laisse 3 unités de marge tout autour
-   pour que le trait de 5 ne soit jamais rogné par le bord de l'élément — la première maquette
-   coupait la roue avant, ce qui abîmait la lecture de la marque. */
+/* Le cadre à l'échelle affiche, posé dans la bannière. Géométrie STRICTEMENT celle de la spec
+   §4 (roues r=12,5 aux centres x=15 et x=61, tube supérieur x=16 y=8 de 44×5, tube de selle
+   x=13 y=20 de 28×5 pivoté de 42° autour de (27; 22,5)), simplement sans tuile : sur un fond
+   déjà iris, la tuile ferait un carré dans un carré.
+
+   L'épaisseur de 5 n'est PAS un réglage esthétique, c'est ce qui fait tenir le dessin. Une
+   première version l'avait ramenée à 2,4 pour affiner le trait en grand format, sans toucher
+   aux coordonnées : le tube supérieur, dont le bord bas passait de y=13 à y=10,4, décollait du
+   sommet des roues (y=14) au lieu de l'effleurer, et l'extrémité haute du tube de selle ne
+   rejoignait plus le tube supérieur. Le vélo se lisait alors comme trois morceaux disjoints
+   avec une diagonale qui traversait la roue arrière. Ne pas amincir sans recalculer le tableau.
+
+   viewBox : le dessin occupe x[0;76] et y[8;44] une fois le trait compris — d'où "-3 5 82 42",
+   qui laisse exactement 3 unités de marge sur les quatre côtés. Rien n'est rogné, et la marque
+   est centrée dans son cadre plutôt que collée en bas. */
 function HeroFrame() {
   return (
-    <svg className="landing-frame" viewBox="-3 -3 82 50" aria-hidden="true">
-      <g fill="none" stroke="#C8F03C" strokeWidth="2.6">
+    <svg className="landing-frame" viewBox="-3 5 82 42" aria-hidden="true">
+      <g fill="none" stroke="#C8F03C" strokeWidth="5">
         <circle cx="15" cy="29" r="12.5" />
         <circle cx="61" cy="29" r="12.5" />
       </g>
       <g fill="#C8F03C">
-        <rect x="16" y="8" width="44" height="2.6" rx="1.3" />
-        <rect x="13" y="20" width="28" height="2.6" rx="1.3" transform="rotate(42 27 21.3)" />
+        <rect x="16" y="8" width="44" height="5" rx="2.5" />
+        <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)" />
       </g>
     </svg>
   );
