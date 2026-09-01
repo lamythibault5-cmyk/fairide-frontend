@@ -255,8 +255,6 @@ export default function Auth() {
   if (forgotMode) {
     return (
       <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
@@ -297,8 +295,6 @@ export default function Auth() {
   if (pendingEmail) {
     return (
       <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('auth.verifyTitle')}</h2>
@@ -331,8 +327,6 @@ export default function Auth() {
 
   return (
     <div className={`decor-page auth-decor ${decorClass}`}>
-      <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-      <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
       {audience && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
           <span className={`pill ${audience === 'client' ? 'gold' : 'teal'}`}>

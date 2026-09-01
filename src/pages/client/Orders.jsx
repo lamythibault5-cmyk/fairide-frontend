@@ -183,7 +183,7 @@ export default function Orders() {
                 {o.orderType === 'dine_in' && t('orders.codeShowArrival')}
                 {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
               </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.deliveryCode}</div>
+              <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.deliveryCode}</div>
             </div>
           )}
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>

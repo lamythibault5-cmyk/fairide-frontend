@@ -69,7 +69,7 @@ export default function Layout() {
               <BrandMark size={leanHeader ? 34 : 48} />
               {!leanHeader && (
                 <div className="brand-text">
-                  <h1>Fairide</h1>
+                  <h1>fairide</h1>
                   <span className="brand-slogan">{t('common.slogan')}</span>
                 </div>
               )}

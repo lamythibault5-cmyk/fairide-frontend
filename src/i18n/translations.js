@@ -88,7 +88,19 @@ export const translations = {
       ctaTitle: 'Prêt à soutenir ton quartier ?',
       ctaText: 'Rejoins Fairide comme client, commerce ou livreur — c\'est gratuit à l\'inscription.',
       ctaButton: 'Créer mon compte',
-      contactTitle: 'Contact'
+      contactTitle: 'Contact',
+      joinClientRole: 'Client',
+      joinRestaurantRole: 'Commerce',
+      joinDriverRole: 'Livreur',
+      euroEyebrow: 'Où va ton euro',
+      euroTitle: 'Sur 1 € de commande, voici ce que la plateforme prélève.',
+      euroUsCut: '0,10 € prélevés',
+      euroUsLegend: 'Le commerce garde 0,90 €. Le livreur garde 100 % des frais de livraison.',
+      euroThemName: 'Les grandes plateformes',
+      euroThemCut: '0,22 à 0,32 € prélevés',
+      euroThemLegend: 'Le commerce garde 0,68 à 0,78 €, et rogne souvent sur les portions ou monte ses prix.',
+      euroNoteFigure: '600 à 1 100 € par mois',
+      euroNoteText: 'restent dans le quartier au lieu de partir en commission, pour un commerce qui réalise 5 000 € de commandes mensuelles.'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -609,7 +621,19 @@ export const translations = {
       ctaTitle: 'Ready to support your neighbourhood?',
       ctaText: 'Join Fairide as a customer, business or driver — free to sign up.',
       ctaButton: 'Create my account',
-      contactTitle: 'Contact'
+      contactTitle: 'Contact',
+      joinClientRole: 'Customer',
+      joinRestaurantRole: 'Business',
+      joinDriverRole: 'Driver',
+      euroEyebrow: 'Where your euro goes',
+      euroTitle: 'On €1 of order value, this is what the platform takes.',
+      euroUsCut: '€0.10 taken',
+      euroUsLegend: 'The business keeps €0.90. The driver keeps 100% of the delivery fee.',
+      euroThemName: 'The big platforms',
+      euroThemCut: '€0.22 to €0.32 taken',
+      euroThemLegend: 'The business keeps €0.68 to €0.78, and often shrinks portions or raises prices.',
+      euroNoteFigure: '€600 to €1,100 a month',
+      euroNoteText: 'stays in the neighbourhood instead of going to commission, for a business doing €5,000 of orders a month.'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -1130,7 +1154,19 @@ export const translations = {
       ctaTitle: 'Klaar om jouw buurt te steunen?',
       ctaText: 'Word lid van Fairide als klant, handelszaak of koerier — gratis inschrijving.',
       ctaButton: 'Account aanmaken',
-      contactTitle: 'Contact'
+      contactTitle: 'Contact',
+      joinClientRole: 'Klant',
+      joinRestaurantRole: 'Handelaar',
+      joinDriverRole: 'Koerier',
+      euroEyebrow: 'Waar je euro naartoe gaat',
+      euroTitle: 'Op € 1 bestelling houdt het platform dit in.',
+      euroUsCut: '€ 0,10 ingehouden',
+      euroUsLegend: 'De handelaar houdt € 0,90. De koerier houdt 100% van de leveringskosten.',
+      euroThemName: 'De grote platformen',
+      euroThemCut: '€ 0,22 tot € 0,32 ingehouden',
+      euroThemLegend: 'De handelaar houdt € 0,68 tot € 0,78 over, en verkleint vaak porties of verhoogt de prijzen.',
+      euroNoteFigure: '€ 600 tot € 1.100 per maand',
+      euroNoteText: 'blijft in de buurt in plaats van naar commissie te gaan, voor een handelaar met € 5.000 aan bestellingen per maand.'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },

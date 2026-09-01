@@ -107,8 +107,8 @@ export default function MapPage() {
         active.map((o) => {
           const pickedUp = o.status === 'livraison';
           const target = pickedUp
-            ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: '🏠', color: '#D9A441' }
-            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#3A4A63' };
+            ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: '🏠', color: '#C8F03C' }
+            : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#3B2FB5' };
           return (
             <div className="card" key={o.id} style={{ marginBottom: 16 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>

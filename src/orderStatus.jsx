@@ -44,13 +44,13 @@ export function statusLabel(status, orderType, t) {
 // qu'un livreur sera bien disponible avant de lancer la cuisson ; la seconde reste isolée de
 // "enLivraison" (déjà pris en charge, donc déjà réglé) pour la même raison qu'avant.
 export const ORDER_STAGES = [
-  { key: 'nouveau', label: 'Nouvelle — à traiter', icon: '🆕', defaultColor: '#B5482E' },
-  { key: 'attenteConfirmationLivreur', label: 'En attente de la confirmation d\'un livreur', icon: '📣', defaultColor: '#8E5FC7' },
-  { key: 'preparation', label: 'En préparation', icon: '👨‍🍳', defaultColor: '#D9A441' },
-  { key: 'attenteLivreur', label: 'Prête — en attente de l\'arrivée du livreur', icon: '⏳', defaultColor: '#C8722E' },
-  { key: 'pretClient', label: 'Prête — en attente du client', icon: '⏳', defaultColor: '#C8722E' },
-  { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#3B6FA0' },
-  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#16233A' },
+  { key: 'nouveau', label: 'Nouvelle — à traiter', icon: '🆕', defaultColor: '#D92D3C' },
+  { key: 'attenteConfirmationLivreur', label: 'En attente de la confirmation d\'un livreur', icon: '📣', defaultColor: '#B0459B' },
+  { key: 'preparation', label: 'En préparation', icon: '👨‍🍳', defaultColor: '#C8F03C' },
+  { key: 'attenteLivreur', label: 'Prête — en attente de l\'arrivée du livreur', icon: '⏳', defaultColor: '#E07A1F' },
+  { key: 'pretClient', label: 'Prête — en attente du client', icon: '⏳', defaultColor: '#E07A1F' },
+  { key: 'enLivraison', label: 'Livreur en route', icon: '🛵', defaultColor: '#2B7FB8' },
+  { key: 'terminee', label: 'Terminée', icon: '✅', defaultColor: '#14121F' },
   { key: 'annulee', label: 'Refusée / annulée', icon: '🚫', defaultColor: '#8A8A8A' }
 ];
 

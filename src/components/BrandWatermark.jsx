@@ -10,7 +10,7 @@ export default function BrandWatermark() {
   return (
     <div className="brand-watermark" aria-hidden="true">
       <BrandMark size={18} />
-      <span>Fairide</span>
+      <span>fairide</span>
     </div>
   );
 }

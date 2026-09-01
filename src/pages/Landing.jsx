@@ -7,25 +7,48 @@ import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
 
+/* Le cadre à l'échelle affiche, posé dans la bannière. C'est la même géométrie que BrandMark
+   (roues r=12,5, tube supérieur de 44, tube de selle à 42°), mais sans tuile : sur un fond déjà
+   iris, la tuile ferait un carré dans un carré. Le viewBox laisse 3 unités de marge tout autour
+   pour que le trait de 5 ne soit jamais rogné par le bord de l'élément — la première maquette
+   coupait la roue avant, ce qui abîmait la lecture de la marque. */
+function HeroFrame() {
+  return (
+    <svg className="landing-frame" viewBox="-3 -3 82 50" aria-hidden="true">
+      <g fill="none" stroke="#C8F03C" strokeWidth="2.6">
+        <circle cx="15" cy="29" r="12.5" />
+        <circle cx="61" cy="29" r="12.5" />
+      </g>
+      <g fill="#C8F03C">
+        <rect x="16" y="8" width="44" height="2.6" rx="1.3" />
+        <rect x="13" y="20" width="28" height="2.6" rx="1.3" transform="rotate(42 27 21.3)" />
+      </g>
+    </svg>
+  );
+}
+
+/* Les trois portes d'entrée. Le parcours client passe en premier et en iris : c'est le seul des
+   trois qu'on veut voir avant les autres, et la spec ne tolère qu'un bloc coloré par rangée. */
 function joinCards(t) {
   return [
     {
       key: 'client',
-      image: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=700&q=80',
+      eyebrow: t('landing.joinClientRole'),
       title: t('landing.joinClientTitle'),
       link: t('landing.joinClientLink'),
-      to: '/login?audience=client'
+      to: '/login?audience=client',
+      iris: true
     },
     {
       key: 'restaurant',
-      image: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=700&q=80',
+      eyebrow: t('landing.joinRestaurantRole'),
       title: t('landing.joinRestaurantTitle'),
       link: t('landing.joinRestaurantLink'),
       to: '/login?audience=partner&role=restaurant'
     },
     {
       key: 'driver',
-      image: 'https://images.unsplash.com/photo-1526367790999-0150786686a2?w=700&q=80',
+      eyebrow: t('landing.joinDriverRole'),
       title: t('landing.joinDriverTitle'),
       link: t('landing.joinDriverLink'),
       to: '/login?audience=partner&role=driver'
@@ -56,67 +79,96 @@ export default function Landing() {
 
   return (
     <div className="decor-page">
-      {/* 4 halos espacés à intervalles réguliers (~25% de la hauteur de page chacun), tous ancrés en
-          "top" (pas de mélange top/bottom qui avait fini par recoller deux halos près du bas) — un
-          seul visible à la fois selon le défilement, jamais deux couleurs assez proches pour se
-          mélanger (voir le commentaire dans styles.css). Rien près du tout-haut : la bannière hero a
-          déjà sa propre photo, un halo juste au-dessus l'aurait juste rendue plus sale. */}
-      <div className="decor-blob teal" style={{ width: 420, height: 420, top: '14%', left: '-13%' }} />
-      <div className="decor-blob gold" style={{ width: 400, height: 400, top: '40%', right: '-12%' }} />
-      <div className="decor-blob teal" style={{ width: 440, height: 440, top: '64%', left: '-13%' }} />
-      <div className="decor-blob gold" style={{ width: 400, height: 400, top: '90%', right: '-12%' }} />
-
       <div className="landing-hero">
+        <HeroFrame />
         <div className="be-flag" title="Fièrement belge">
           <span className="be-flag-stripe" style={{ background: '#000' }} />
           <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
           <span className="be-flag-stripe" style={{ background: '#ED2939' }} />
         </div>
-        <span className="pill hero" style={{ marginBottom: 14 }}>{t('landing.pill')}</span>
-        <h1 className="landing-title">
-          {t('landing.title1')}<br />{t('landing.title2')}
-        </h1>
-        <p className="landing-sub">
-          {t('landing.sub')}
-        </p>
-        <div className="row" style={{ gap: 10 }}>
-          <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
-          <button className="btn-teal" onClick={() => navigate('/login?audience=partner')}>{t('landing.becomePartner')}</button>
-        </div>
-      </div>
 
-      <div className="stats-bar">
-        <div className="stats-bar-item"><b>10%</b><span>{t('landing.statCommission')}</span></div>
-        <div className="stats-bar-item"><b>19</b><span>{t('landing.statCommunes')}</span></div>
-        <div className="stats-bar-item"><b>100%</b><span>{t('landing.statLocal')}</span></div>
+        <div className="landing-hero-text">
+          <span className="pill hero">{t('landing.pill')}</span>
+          <h1 className="landing-title">
+            {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
+          </h1>
+          <p className="landing-sub">{t('landing.sub')}</p>
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
+            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner')}>{t('landing.becomePartner')}</button>
+          </div>
+        </div>
+
+        <div className="stats-bar">
+          <div className="stats-bar-item"><b>10 %</b><span>{t('landing.statCommission')}</span></div>
+          <div className="stats-bar-item"><b>19</b><span>{t('landing.statCommunes')}</span></div>
+          <div className="stats-bar-item"><b>100 %</b><span>{t('landing.statLocal')}</span></div>
+        </div>
       </div>
 
       <div className="feature-grid">
         {features(t).map((f, i) => (
           <Reveal className="card feature-card" key={f.title} delay={i * 90}>
-            <div className="feature-icon">{f.icon}</div>
-            <h3 style={{ fontSize: 17, margin: '10px 0 6px' }}>{f.title}</h3>
+            <span className="feature-icon">{f.icon}</span>
+            <h3 style={{ fontSize: 19, margin: '0 0 8px' }}>{f.title}</h3>
             <p className="small" style={{ lineHeight: 1.5 }}>{f.text}</p>
           </Reveal>
         ))}
       </div>
 
-      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.howItWorks')}</Reveal>
+      {/* L'argument central de Fairide — la commission plafonnée — n'existait jusqu'ici que sous
+          forme de phrase noyée dans le paragraphe d'accroche. Il devient ici une comparaison
+          visuelle : la piste vaut 1 € de commande, le segment plein vaut ce que la plateforme
+          prélève. On peut la lire sans lire un seul chiffre. */}
+      <Reveal className="euro-block">
+        <span className="pill hero">{t('landing.euroEyebrow')}</span>
+        <h2>{t('landing.euroTitle')}</h2>
+        <div className="euro-rows">
+          <div>
+            <div className="euro-row-top">
+              <span className="euro-name">fairide</span>
+              <span className="euro-cut">{t('landing.euroUsCut')}</span>
+            </div>
+            <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>
+            <p className="euro-legend">{t('landing.euroUsLegend')}</p>
+          </div>
+          <div>
+            <div className="euro-row-top">
+              <span className="euro-name">{t('landing.euroThemName')}</span>
+              <span className="euro-cut">{t('landing.euroThemCut')}</span>
+            </div>
+            <div className="euro-track"><div className="euro-fill euro-fill-them" /></div>
+            <p className="euro-legend">{t('landing.euroThemLegend')}</p>
+          </div>
+        </div>
+        <p className="euro-note"><b>{t('landing.euroNoteFigure')}</b> {t('landing.euroNoteText')}</p>
+      </Reveal>
+
+      <Reveal as="h2" className="section-title">{t('landing.howItWorks')}</Reveal>
       <div className="steps-grid">
         {steps(t).map((s, i) => (
           <Reveal as="div" className="step-card" key={s.num} delay={i * 90}>
             <div className="step-num">{s.num}</div>
-            <h3 style={{ fontSize: 15, margin: '8px 0 4px' }}>{s.title}</h3>
+            <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>{s.title}</h3>
             <p className="small">{s.text}</p>
           </Reveal>
         ))}
       </div>
 
-      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.joinTitle')}</Reveal>
+      <Reveal as="h2" className="section-title">{t('landing.joinTitle')}</Reveal>
       <div className="join-grid">
         {joinCards(t).map((c, i) => (
-          <Reveal as={Link} to={c.to} key={c.key} delay={i * 90} className="join-card" style={{ backgroundImage: `url('${c.image}')` }}>
-            <h3>{c.title}</h3>
+          <Reveal
+            as={Link}
+            to={c.to}
+            key={c.key}
+            delay={i * 90}
+            className={c.iris ? 'join-card join-card-iris' : 'join-card'}
+          >
+            <div>
+              <span className="join-eyebrow">{c.eyebrow}</span>
+              <h3>{c.title}</h3>
+            </div>
             <span className="join-link">{c.link}</span>
           </Reveal>
         ))}
@@ -124,21 +176,19 @@ export default function Landing() {
 
       <Reveal><AppComingSoonSection /></Reveal>
 
-      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.communesTitle')}</Reveal>
+      <Reveal as="h2" className="section-title">{t('landing.communesTitle')}</Reveal>
       <Reveal className="commune-pills">
-        {COMMUNES.map((c) => <span key={c} className="pill teal">{c}</span>)}
+        {COMMUNES.map((c) => <span key={c} className="pill">{c}</span>)}
       </Reveal>
 
-      <Reveal as="h2" className="section-title" style={{ textAlign: 'center' }}>{t('landing.contactTitle')}</Reveal>
+      <Reveal as="h2" className="section-title">{t('landing.contactTitle')}</Reveal>
       <Reveal><ContactSection /></Reveal>
 
       <Reveal><PartnersMarquee /></Reveal>
 
-      <Reveal className="card" style={{ textAlign: 'center', background: 'var(--ink)', color: 'var(--cream)', border: 'none' }}>
-        <h2 style={{ color: 'var(--cream)', marginBottom: 8 }}>{t('landing.ctaTitle')}</h2>
-        <p className="small" style={{ color: 'var(--cream)', opacity: 0.85, marginBottom: 16 }}>
-          {t('landing.ctaText')}
-        </p>
+      <Reveal className="landing-cta">
+        <h2>{t('landing.ctaTitle')}</h2>
+        <p>{t('landing.ctaText')}</p>
         <button className="btn-gold" onClick={() => navigate('/login')}>{t('landing.ctaButton')}</button>
       </Reveal>
     </div>

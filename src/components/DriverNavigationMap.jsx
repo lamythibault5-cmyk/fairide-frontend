@@ -18,7 +18,7 @@ function emojiIcon(emoji, bg) {
   });
 }
 
-const ORIGIN_ICON = emojiIcon('🛵', '#16233A');
+const ORIGIN_ICON = emojiIcon('🛵', '#14121F');
 
 async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
@@ -30,7 +30,7 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   return coords.map(([lng, lat]) => [lat, lng]);
 }
 
-export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3A4A63', height = 280 }) {
+export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', height = 280 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);

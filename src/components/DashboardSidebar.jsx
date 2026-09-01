@@ -94,7 +94,7 @@ export default function DashboardSidebar() {
     <aside className="dashboard-sidebar">
       <Link className="dashboard-sidebar-brand" to={brandHome}>
         <BrandMark size={30} />
-        <span>Fairide</span>
+        <span>fairide</span>
       </Link>
       {previewMode && role === 'restaurant' && (
         <div className="preview-mode-sidebar-banner">
