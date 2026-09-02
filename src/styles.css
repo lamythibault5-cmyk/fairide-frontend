@@ -1247,10 +1247,22 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .map-detail-cover { width: 100%; height: 130px; object-fit: cover; display: block; }
 .map-detail-body { padding: 14px; }
+/* padding: 0 et centrage flex indispensables — exactement le même piège que
+   .floating-cart-collapse plus haut dans ce fichier, et pour la même raison.
+
+   La règle globale sur `button` impose padding: 11px 18px. Avec box-sizing: border-box,
+   ces 36px de padding horizontal ne tiennent pas dans un bouton de 28px de large : la boîte
+   de contenu est écrasée à zéro, mais le padding gauche de 18px continue de pousser le ✕
+   vers la droite. Le glyphe se retrouve à 18px du bord gauche dans un cercle de 28, soit
+   4px hors du centre — ce qui se voit immédiatement sur un rond posé sur une photo.
+
+   Toute pastille ronde de moins de 36px de côté doit remettre padding: 0 et recentrer
+   au flex ; c'est le troisième bouton du projet à tomber dedans. */
 .map-detail-close {
   position: absolute; top: 8px; right: 8px; width: 28px; height: 28px; border-radius: 50%;
-  background: rgba(255,255,255,0.92); border: none; cursor: pointer; font-size: 13px; z-index: 1;
-  box-shadow: none;
+  background: rgba(255,255,255,0.92); border: none; cursor: pointer; z-index: 1;
+  padding: 0; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; color: var(--ink);
 }
 @media (min-width: 700px) { .map-detail-card { left: 16px; right: auto; bottom: 16px; width: 340px; } }
 
