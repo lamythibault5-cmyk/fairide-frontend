@@ -134,7 +134,13 @@ export default function Layout() {
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
       <AssistantWidget />
-      <BrandWatermark />
+      {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
+          mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
+          apportait rien, et sa présence obligeait .hero-inner à réserver 88 à 108px de largeur
+          pour ne pas passer dessous — c'est précisément cette réserve qui faisait déborder la
+          rangée en français et en néerlandais, où les libellés sont plus longs qu'en anglais.
+          Il reste monté sur la branche tableau de bord, la seule où il sert vraiment : la
+          barre latérale y masque son propre logo sous 900px. */}
     </>
   );
 }

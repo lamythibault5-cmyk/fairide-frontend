@@ -119,12 +119,10 @@ a { color: inherit; }
 /* Le halo doré flou du coin haut-droit a été retiré : « no shadows, no gradients, flat color
    only ». La bannière n'a plus qu'un aplat iris. */
 .hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
-/* Au-delà de 960px l'espacement centré de .hero-inner laisse déjà le coin haut-droit (occupé par le
-   filigrane .brand-watermark) libre. En dessous, .hero-inner touche les bords de l'écran : on réserve
-   la largeur du filigrane pour que "Connexion"/"Inscription", désormais sur une seule ligne compacte
-   (voir .header-actions), ne passent jamais dessous. */
-@media (max-width: 960px) { .hero-inner { padding-right: 108px; } }
-@media (max-width: 480px) { .hero-inner { padding-right: 88px; } }
+/* La réserve de 108px (88px sous 480px) qui protégeait le filigrane a été supprimée en même
+   temps que le filigrane lui-même sur cette branche — voir le commentaire dans Layout.jsx.
+   C'est elle qui rendait la rangée intenable en français et en néerlandais : sur un écran de
+   330px, elle en confisquait plus du quart avant même d'avoir placé un seul bouton. */
 
 .brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
 /* Règles universelles (BrandMark est utilisé ailleurs que dans le header, ex. le mockup téléphone de
@@ -155,9 +153,11 @@ a { color: inherit; }
   display: flex; align-items: center; gap: 6px; padding: 5px 11px 5px 6px; border-radius: 6px;
   background: #fff; border: 1px solid var(--line); backdrop-filter: none;
 }
-.brand-watermark .mark { width: 18px; height: 18px; border-radius: 5px; }
+/* Plus de tuile ni d'arrondi : le vélo est tracé à même la pastille blanche. Les dimensions
+   viennent du composant (rapport 82:42), on ne les impose plus ici — une hauteur carrée
+   laisserait le dessin flotter au milieu de deux bandes vides. */
 .brand-watermark span { font-weight: 700; font-size: 13px; color: var(--ink); letter-spacing: -0.03em; }
-@media (max-width: 480px) { .brand-watermark { top: 8px; right: 8px; padding: 4px 9px 4px 5px; } .brand-watermark .mark { width: 16px; height: 16px; } .brand-watermark span { font-size: 11.5px; } }
+@media (max-width: 480px) { .brand-watermark { top: 8px; right: 8px; padding: 4px 9px 4px 5px; } .brand-watermark span { font-size: 11.5px; } }
 
 /* Rangée principale de l'en-tête. Les blocs se tassent à DROITE et la marque est repoussée
    à gauche par sa propre marge automatique, au lieu d'un `space-between` qui répartissait
@@ -261,6 +261,16 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    Connexion et Inscription chacun sur leur propre ligne. */
 .header-auth { gap: 10px; flex-wrap: nowrap; }
 .header-register-btn { padding: 9px 18px; font-size: 13px; white-space: nowrap; }
+/* Marge de sécurité pour les langues à libellés longs. « Registreren » et « Inscription »
+   sont d'un tiers plus larges que « Sign up » : sans ce resserrement, la rangée tient en
+   anglais et déborde en néerlandais, ce qui est exactement le défaut qu'on vient de traiter.
+   Le !important est nécessaire sur la marque : BrandMark pose sa taille en style inline
+   (il est utilisé à des tailles différentes selon les écrans), et une règle CSS ordinaire
+   perd contre un style inline. */
+@media (max-width: 600px) {
+  .header-row .lang-switcher button { padding: 5px 6px; }
+  .header-row .brand .mark { width: 40px !important; height: 40px !important; }
+}
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
   .header-auth-link { font-size: 12.5px; }

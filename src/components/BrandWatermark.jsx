@@ -9,7 +9,7 @@ import BrandMark from './BrandMark';
 export default function BrandWatermark() {
   return (
     <div className="brand-watermark" aria-hidden="true">
-      <BrandMark size={18} />
+      <BrandMark size={30} tile={false} />
       <span>fairide</span>
     </div>
   );

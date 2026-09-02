@@ -6,15 +6,26 @@
 
    Sous ~28px les deux tubes se rejoignent en une tache illisible : en dessous de ce seuil on ne
    garde que les deux roues et le tube supérieur, ce qui reste identifiable comme un vélo. */
+/* Sans tuile, le viewBox se resserre sur le vélo seul.
+
+   Avec la tuile, le dessin occupe 76 unités sur 132 : à petite taille d'affichage le trait
+   devient sub-pixellaire et la marque tourne à la tache. Le filigrane de l'en-tête en faisait
+   la démonstration — 18px de côté, soit un trait de 0,7px, parfaitement illisible.
+
+   En retirant la tuile on peut cadrer sur le dessin (3 unités de marge de chaque côté, comme
+   la bannière) : le vélo occupe alors toute la largeur de l'élément et son trait retrouve les
+   6,6 % réglementaires. La boîte n'est plus carrée mais au rapport du dessin, d'où la hauteur
+   calculée plutôt que reprise de `size`. */
 export default function BrandMark({ size = 34, tile = true, color }) {
   const stroke = color || (tile ? '#C8F03C' : '#3B2FB5');
   const small = size < 28;
+  const height = tile ? size : Math.round((size * 42) / 82);
 
   return (
-    <span className="mark" style={{ width: size, height: size }}>
-      <svg viewBox="0 0 132 132" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairide">
+    <span className="mark" style={{ width: size, height }}>
+      <svg viewBox={tile ? '0 0 132 132' : '-3 5 82 42'} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairide">
         {tile && <rect width="132" height="132" rx="32" fill="#3B2FB5" />}
-        <g transform="translate(28 44)">
+        <g transform={tile ? 'translate(28 44)' : undefined}>
           <g fill="none" stroke={stroke} strokeWidth="5">
             <circle cx="15" cy="29" r="12.5" />
             <circle cx="61" cy="29" r="12.5" />
