@@ -159,6 +159,19 @@ a { color: inherit; }
 .brand-watermark span { font-weight: 700; font-size: 13px; color: var(--ink); letter-spacing: -0.03em; }
 @media (max-width: 480px) { .brand-watermark { top: 8px; right: 8px; padding: 4px 9px 4px 5px; } .brand-watermark .mark { width: 16px; height: 16px; } .brand-watermark span { font-size: 11.5px; } }
 
+/* Rangée principale de l'en-tête. Les blocs se tassent à DROITE et la marque est repoussée
+   à gauche par sa propre marge automatique, au lieu d'un `space-between` qui répartissait
+   l'espace libre entre les trois. Avec space-between, changer de langue changeait la largeur
+   du slogan et celle des boutons Connexion/Inscription, l'espace libre se recalculait, et
+   tout ce qui se trouvait entre les deux se déplaçait — dont le sélecteur de langue, juste
+   sous le curseur de la personne en train de l'utiliser.
+
+   Ici le dernier élément (le sélecteur) touche le bord droit et n'en bouge plus jamais ; seul
+   le bloc Connexion/Inscription se redimensionne, vers l'intérieur. Le défaut ne peut pas
+   revenir en changeant une traduction, puisqu'il ne reste plus d'espace libre à redistribuer. */
+.header-row { justify-content: flex-end; }
+.header-row > .brand { margin-right: auto; }
+
 .userbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--cream); opacity: .9; }
 .role-nav { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .role-nav a {
@@ -1072,8 +1085,39 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   display: flex; align-items: center; justify-content: center;
 }
 @media (max-width: 720px) {
-  .steps-grid { grid-template-columns: 1fr; gap: 24px; }
-  .steps-grid::before { left: 50%; right: auto; top: 26px; bottom: 34px; height: auto; width: 5px; transform: translateX(-2.5px); }
+  /* En colonne, le cadre passe SUR LE CÔTÉ et les étapes s'alignent à gauche à côté de lui.
+
+     La première version gardait le texte centré et faisait descendre le tube à 50% de la
+     largeur : le trait traversait alors « Choisis ton commerce » et sa description en plein
+     milieu, mot par mot. Un trait vertical au centre d'un bloc de texte centré le coupe
+     forcément — il n'y avait pas de réglage possible, il fallait changer la disposition.
+
+     Chaque étape devient donc une grille de deux colonnes : la roue à gauche, le titre et le
+     texte à droite. Le tube ne relie plus que les roues entre elles, dans une gouttière où
+     il n'y a jamais de texte. C'est aussi la forme habituelle d'une frise verticale, donc
+     elle se lit sans effort.
+
+     Le connecteur est posé sur CHAQUE carte sauf la dernière (::after) plutôt qu'en un seul
+     trait sur la grille : un trait unique devrait s'arrêter au centre de la dernière roue,
+     position qu'aucune valeur fixe ne peut connaître puisqu'elle dépend de la hauteur des
+     textes au-dessus. Là, chaque segment part du bas de sa roue (top: 54px) et franchit
+     exactement l'espacement de la grille (bottom: -26px) pour rejoindre la roue suivante.
+     Aucun bout de trait ne dépasse sous la dernière étape. */
+  .steps-grid { grid-template-columns: 1fr; gap: 26px; }
+  .steps-grid::before { display: none; }
+  .step-card {
+    display: grid; grid-template-columns: 54px 1fr;
+    column-gap: 16px; align-items: start;
+    text-align: left; padding: 0;
+  }
+  /* La roue occupe les deux rangées de sa colonne, sinon le placement automatique la met
+     sur la même rangée que le titre et renvoie la description sous elle, dans la gouttière. */
+  .step-num { grid-row: span 2; margin: 0; }
+  .step-card:not(:last-child)::after {
+    content: ""; position: absolute;
+    left: 24.5px; top: 54px; bottom: -26px; width: 5px;
+    border-radius: 2.5px; background: var(--iris);
+  }
 }
 
 .contact-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; align-items: start; margin-bottom: 36px; }

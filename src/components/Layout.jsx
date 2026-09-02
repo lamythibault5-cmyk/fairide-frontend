@@ -64,7 +64,14 @@ export default function Layout() {
     <>
       <div className={`hero${leanHeader ? ' hero-lean' : ''}`}>
         <div className="hero-inner">
-          <div className="row" style={{ justifyContent: 'space-between' }}>
+          {/* Le sélecteur de langue est le DERNIER élément de la rangée, et non plus celui du
+              milieu. La rangée contient trois blocs dont deux changent de largeur avec la langue
+              (le slogan sous la marque, et le couple Connexion/Inscription) : en `space-between`,
+              le sélecteur au milieu se faisait pousser à chaque changement de langue et
+              s'échappait de sous le curseur au moment même où on cliquait dessus. Placé en
+              dernier, son bord droit est collé au bord de la rangée : sa position ne dépend plus
+              de la largeur de quoi que ce soit. Voir .header-row dans styles.css. */}
+          <div className="row header-row">
             <Link className="brand" to="/">
               <BrandMark size={leanHeader ? 34 : 48} />
               {!leanHeader && (
@@ -74,7 +81,6 @@ export default function Layout() {
                 </div>
               )}
             </Link>
-            <LanguageSwitcher />
             {!leanHeader && user && (
               <div className="userbar" style={{ padding: 0 }}>
                 <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
@@ -94,6 +100,7 @@ export default function Layout() {
                 <Link to="/login?audience=client" className="btn-gold header-register-btn">{t('nav.register')}</Link>
               </div>
             )}
+            <LanguageSwitcher />
           </div>
           {user && (
             <nav className="role-nav">
