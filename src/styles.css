@@ -784,16 +784,12 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
-/* En-tête d'étape de l'inscription (voir Auth.jsx). Le compteur « Étape 2 sur 3 » et la barre de
-   progression font tout le travail : ils disent d'emblée que c'est court et fini, ce qu'un
-   formulaire d'un seul écran de 13 champs ne pouvait pas dire. */
+/* En-tête d'étape de l'inscription (voir Auth.jsx). La barre de progression dit à elle seule que
+   le formulaire est court et qu'il se termine ; le compteur écrit « Étape 2 sur 3 » qui
+   l'accompagnait a été retiré — il répétait la même information en la nommant, et annoncer un
+   nombre d'étapes attire l'attention sur leur nombre plutôt que sur la question posée. */
 .auth-step-head { margin-bottom: 18px; }
-.auth-step-count {
-  display: block; font-size: 11px; font-weight: 500;
-  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
-  font-variant-numeric: tabular-nums;
-}
-.auth-step-head h3 { font-size: 21px; margin: 8px 0 4px; }
+.auth-step-head h3 { font-size: 21px; margin: 0 0 4px; }
 .auth-step-head p.small { margin: 0; line-height: 1.45; }
 .auth-step-bar { height: 3px; border-radius: 2px; background: var(--cream-dim); margin-top: 14px; overflow: hidden; }
 .auth-step-bar span { display: block; height: 100%; background: var(--iris); transition: width .28s cubic-bezier(.22,.61,.36,1); }

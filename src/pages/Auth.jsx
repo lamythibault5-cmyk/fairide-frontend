@@ -449,7 +449,6 @@ export default function Auth() {
             )}
 
             <div className="auth-step-head">
-              <span className="auth-step-count">{t('auth.stepOf', { current: step + 1, total: steps.length })}</span>
               <h3>{stepCopy.title}</h3>
               <p className="small">{stepCopy.sub}</p>
               <div className="auth-step-bar">
