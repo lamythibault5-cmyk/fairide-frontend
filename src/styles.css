@@ -818,6 +818,12 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; margin: 40px 0 16px; }
 
 .auth-box { max-width: 380px; margin: 40px auto; }
+/* La carte de connexion / inscription est le seul objet de sa page : elle mérite un contour
+   franc plutôt que le filet gris de 1px des cartes de contenu. Deux pixels d'iris suffisent —
+   c'est le seul cadre appuyé du site, et le garder unique est ce qui lui donne son poids.
+   Règle volontairement portée par .auth-box et non par .card : le filet 1px reste la valeur
+   par défaut partout ailleurs, où des dizaines de cartes cohabitent sur un même écran. */
+.auth-box .card { border: 2px solid var(--iris); }
 .auth-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
 .auth-tabs .chip { flex: 1; text-align: center; padding: 8px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .auth-tabs .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
