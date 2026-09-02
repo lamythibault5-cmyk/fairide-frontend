@@ -890,6 +890,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "stats"; }
   .landing-frame { display: none; }
 }
+@media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
 
 /* Le drapeau belge : trois bandes nettes, plus d'ombre portée. */
 .be-flag {
@@ -959,54 +960,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   font-size: 14.5px; color: rgba(255,255,255,0.82); max-width: 62ch;
 }
 .euro-note b { color: var(--lime); font-weight: 500; }
-
-/* ---------------------------------------------------------------------------
-   Bandes pleine largeur.
-
-   Les trois blocs iris de l'accueil sortent de la colonne de 960px de .wrap
-   pour aller d'un bord à l'autre de l'écran : plus de marge blanche à gauche
-   et à droite d'un aplat de couleur, la page devient une alternance franche
-   de bandes blanches et iris. C'est ce que la direction demande — l'iris est
-   la chrome, pas une carte posée sur une page.
-
-   Technique : marges latérales négatives, sans `width`. Un bloc en largeur
-   auto s'étire de lui-même quand ses marges sont négatives ; ajouter
-   `width: 100vw` par-dessus compterait la largeur deux fois. Le `50%` se
-   résout sur la largeur du contenu de .wrap (920px au maximum, viewport-40
-   en dessous), donc `50% - 50vw` vaut exactement de quoi rejoindre le bord
-   de l'écran, à toutes les tailles.
-
-   Le padding latéral ramène ensuite le CONTENU sur la même colonne que le
-   reste de la page (460px de part et d'autre du centre) : le titre de la
-   bannière reste aligné avec les cartes en dessous, seul le fond déborde.
-   Le max() est indispensable — sous 920px de large, `50vw - 460px` devient
-   négatif, et un padding négatif est une déclaration invalide que le
-   navigateur jette silencieusement, ce qui collerait le texte au bord.
-
-   Ces règles sont volontairement APRÈS les définitions de chaque bloc :
-   à spécificité égale, c'est l'ordre du fichier qui tranche, et `padding-inline`
-   doit écraser le raccourci `padding` posé plus haut.
-
-   Débordement : `50vw` compte la barre de défilement, la bande dépasse donc
-   d'environ 7px de chaque côté quand il y en a une. C'est sans conséquence
-   ici, `html { overflow-x: clip }` (voir tout en haut du fichier) rogne
-   exactement ce genre de débordement sans jamais créer de barre horizontale.
-   --------------------------------------------------------------------------- */
-.landing-hero,
-.euro-block,
-.app-soon,
-.landing-cta {
-  margin-inline: calc(50% - 50vw);
-  padding-inline: max(20px, calc(50vw - 460px));
-  border-radius: 0;
-}
-
-/* Annule le padding-top de 24px que Layout.jsx pose en style inline sur .wrap :
-   la bannière doit venir se coller sous l'en-tête iris, sans filet blanc entre
-   les deux. Si ce 24 change dans Layout.jsx, changer ce -24 avec lui. */
-.landing-hero { margin-top: -24px; padding-top: 64px; }
-
-@media (max-width: 640px) { .euro-block { padding-block: 26px; } .landing-hero { padding-top: 40px; } }
+@media (max-width: 640px) { .euro-block { padding: 24px 18px; } }
 
 /* Les trois portes d'entrée (client / commerce / livreur) étaient des photos
    Unsplash sous un voile dégradé — trois images génériques qui ne disaient rien
