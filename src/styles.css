@@ -912,9 +912,16 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    860px : display: none sur l'élément de grille laisse la colonne vide, c'est
    la grille elle-même qui repasse à une seule colonne. */
 .landing-frame { grid-area: frame; width: 100%; height: auto; justify-self: end; }
+
+/* Sous 860px il n'y a plus la largeur pour deux colonnes : le cadre passe AU-DESSUS du
+   texte, en petit et aligné à gauche, au lieu d'être masqué. Une première version le
+   mettait en display: none — ce qui privait tout téléphone du geste signature de la
+   direction, alors que c'est justement sur mobile que la marque a le moins de place
+   pour s'exprimer par ailleurs. Réduit à 168px, il se lit comme une signature posée
+   au-dessus de l'accroche plutôt que comme un décor. */
 @media (max-width: 860px) {
-  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "stats"; }
-  .landing-frame { display: none; }
+  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "frame" "text" "stats"; }
+  .landing-frame { width: 168px; justify-self: start; margin-bottom: 22px; }
 }
 @media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
 
