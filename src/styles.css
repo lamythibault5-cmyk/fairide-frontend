@@ -784,6 +784,36 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
+/* En-tête d'étape de l'inscription (voir Auth.jsx). Le compteur « Étape 2 sur 3 » et la barre de
+   progression font tout le travail : ils disent d'emblée que c'est court et fini, ce qu'un
+   formulaire d'un seul écran de 13 champs ne pouvait pas dire. */
+.auth-step-head { margin-bottom: 18px; }
+.auth-step-count {
+  display: block; font-size: 11px; font-weight: 500;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+.auth-step-head h3 { font-size: 21px; margin: 8px 0 4px; }
+.auth-step-head p.small { margin: 0; line-height: 1.45; }
+.auth-step-bar { height: 3px; border-radius: 2px; background: var(--cream-dim); margin-top: 14px; overflow: hidden; }
+.auth-step-bar span { display: block; height: 100%; background: var(--iris); transition: width .28s cubic-bezier(.22,.61,.36,1); }
+
+/* « Retour » et « Continuer » sur une seule rangée, le bouton d'avancement occupant toute la
+   place restante : à la première étape il n'y a pas de retour et il prend donc toute la largeur. */
+.auth-step-nav { display: flex; gap: 8px; align-items: center; margin-top: 18px; }
+
+/* Erreur de champ. Le filet rouge seul ne suffit pas — il est invisible pour une partie des
+   daltoniens — d'où le message écrit sous le champ, qui dit aussi lequel des quatre champs
+   d'adresse est en cause, ce qu'un toast « adresse requise » ne disait pas. */
+.input-invalid { border-color: var(--red); }
+.input-invalid:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(217,45,60,0.15); }
+.field-error { margin: 5px 0 0; font-size: 12px; color: var(--red); }
+
+/* Rangée « libellé + bouton Afficher » au-dessus du champ mot de passe. */
+.field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.field-label-row label { margin-bottom: 5px; }
+.field-toggle { padding: 0; font-size: 12px; color: var(--iris); }
+
 .restaurant-search-row { display: flex; gap: 10px; margin-bottom: 14px; }
 .restaurant-search-row input { flex: 2; min-width: 160px; }
 .restaurant-search-row select { flex: 1; min-width: 130px; }
