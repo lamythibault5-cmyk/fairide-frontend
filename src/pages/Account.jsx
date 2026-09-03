@@ -514,6 +514,7 @@ export default function Account() {
       {role === 'restaurant' && restaurant && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           {[
+            { to: '/dashboard/reservations', icone: '📅', titre: 'Réservations', sous: 'Ton agenda du jour, table par table' },
             { to: '/dashboard/tables', icone: '🪑', titre: 'Plan de salle', sous: 'Tes tables et tes créneaux de réservation' },
             { to: '/dashboard/promotions', icone: '🏷️', titre: 'Promotions', sous: 'Réductions et offres sur ta carte' },
             { to: '/dashboard/invoices', icone: '📄', titre: 'Factures', sous: 'Tes factures de commission' },

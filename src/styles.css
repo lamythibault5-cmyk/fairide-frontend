@@ -1757,3 +1757,30 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    plutôt qu'à rogner le seul champ que le restaurateur a besoin de lire. */
 .service-table.plan-table { min-width: 430px; }
 .service-table.plan-table td:first-child input { width: 100%; max-width: none; }
+
+/* Agenda des réservations — grille salle × heures.
+   Douze heures ne tiennent pas sur un téléphone : la grille défile horizontalement et la colonne
+   des tables reste collée à gauche, sinon on perd de vue à quelle table appartient un bloc dès
+   qu'on fait défiler. */
+.resa-grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; padding: 0 2px; }
+.resa-grid { display: grid; grid-template-columns: 92px repeat(var(--resa-heures), 76px); width: max-content; min-width: 100%; }
+.resa-grid-coin { position: sticky; left: 0; z-index: 3; background: var(--cream); }
+.resa-grid-heure { font-size: 11px; font-weight: 700; color: var(--ink-faint); padding: 0 0 6px 5px; border-left: 1px solid var(--line); }
+.resa-grid-table { position: sticky; left: 0; z-index: 2; background: var(--cream); display: flex; flex-direction: column; justify-content: center; gap: 1px; padding: 6px 8px 6px 0; border-top: 1px solid var(--line); min-height: 46px; }
+.resa-grid-table b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resa-grid-piste { grid-column: 2 / -1; position: relative; min-height: 46px; border-top: 1px solid var(--line);
+  background: repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 76px); }
+
+.resa-bloc { position: absolute; top: 4px; bottom: 4px; border-radius: 8px; padding: 3px 7px; overflow: hidden;
+  display: flex; flex-direction: column; justify-content: center; gap: 1px; font-size: 11px; line-height: 1.15;
+  background: var(--iris); color: #fff; }
+.resa-bloc b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+.resa-bloc span { opacity: .78; }
+.resa-bloc-nouveau { background: var(--red); }
+.resa-bloc-livre { background: var(--ink-faint); }
+
+/* Liste chronologique — l'heure en gouttière, le reste libre de s'envelopper. */
+.resa-ligne { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--line); }
+.resa-ligne:first-of-type { border-top: 0; padding-top: 0; }
+.resa-ligne-heure { flex: 0 0 46px; display: flex; flex-direction: column; line-height: 1.2; }
+.resa-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
