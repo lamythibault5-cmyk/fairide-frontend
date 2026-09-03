@@ -139,25 +139,22 @@ a { color: inherit; }
 .brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
 @media (max-width: 640px) { .brand h1 { font-size: 24px; } .brand-slogan { font-size: 12px; } }
 @media (max-width: 480px) { .brand-slogan { display: none; } }
-/* Sous 520px, le mot "Fairide" à côté du logo force le header sur 2 lignes (logo+titre puis
-   langues/connexion) et alourdit inutilement la bannière — le filigrane (voir .brand-watermark)
-   garde déjà la marque visible en permanence, on peut donc se contenter du logo seul ici. */
+/* Sous 520px, le mot "fairide" à côté du logo pousse la bannière sur deux lignes (logo+titre puis
+   langues/connexion) et l'alourdit inutilement : le vélo seul suffit à cette largeur.
+   (Ce commentaire s'appuyait autrefois sur le filigrane fixe pour justifier la suppression du mot ;
+   le filigrane n'existe plus — voir la note en dessous — mais l'argument de place tient seul.) */
 @media (max-width: 520px) { .hero .brand-text { display: none; } }
 
-/* Filigrane "Fairide" permanent, coin haut-droit (voir BrandWatermark.jsx, monté une seule fois dans
-   Layout.jsx, sur toutes les pages) — pointer-events: none pour ne jamais gêner un vrai contrôle de
-   l'interface en dessous (barre de sections sticky, sélecteur de langue...), même en cas de léger
-   chevauchement visuel. z-index sous les modales (100) : une modale ouverte le recouvre normalement. */
-.brand-watermark {
-  position: fixed; top: 10px; right: 10px; z-index: 80; pointer-events: none;
-  display: flex; align-items: center; gap: 6px; padding: 5px 11px 5px 6px; border-radius: 6px;
-  background: #fff; border: 1px solid var(--line); backdrop-filter: none;
-}
-/* Plus de tuile ni d'arrondi : le vélo est tracé à même la pastille blanche. Les dimensions
-   viennent du composant (rapport 82:42), on ne les impose plus ici — une hauteur carrée
-   laisserait le dessin flotter au milieu de deux bandes vides. */
-.brand-watermark span { font-weight: 700; font-size: 13px; color: var(--ink); letter-spacing: -0.03em; }
-@media (max-width: 480px) { .brand-watermark { top: 8px; right: 8px; padding: 4px 9px 4px 5px; } .brand-watermark span { font-size: 11.5px; } }
+/* Le filigrane « fairide » fixé en haut à droite a été supprimé le 3 septembre 2026.
+
+   Il était en position: fixed avec un z-index de 80, donc au-dessus de la barre de sections
+   collante du menu (z-index 40) : sur une fiche restaurant, il se posait par-dessus une puce
+   de catégorie. Son pointer-events: none évitait de bloquer le clic, mais pas de cacher la
+   cible — on ne touche pas ce qu'on ne voit pas.
+
+   Il servait à garder la marque visible pour les captures d'écran. Ça ne vaut pas de
+   recouvrir un contrôle : la marque est déjà dans la barre latérale, et le logo de
+   l'application dans l'onglet du navigateur. Récupérable dans git si besoin. */
 
 /* Rangée principale de l'en-tête. Les blocs se tassent à DROITE et la marque est repoussée
    à gauche par sa propre marge automatique, au lieu d'un `space-between` qui répartissait
