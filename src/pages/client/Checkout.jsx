@@ -143,10 +143,17 @@ export default function Checkout() {
       }
       return;
     }
-    if (!restaurant.offersDelivery) {
-      if (restaurant.offersPickup) setFulfillmentType('pickup');
-      else if (restaurant.offersDineIn) setFulfillmentType('dine_in');
+    // Restaurant passé en réservation seule alors que le client avait déjà un panier : le repli vers
+    // 'dine_in' laissait passer une commande de plats en ligne, exactement ce que le restaurateur vient
+    // d'interdire — et ce que sa fiche annonce au client. On le renvoie vers la fiche, d'où part le
+    // parcours de réservation. Le panier est conservé : il redeviendra valable si le restaurant
+    // rouvre la commande en ligne.
+    if (!restaurant.offersDelivery && !restaurant.offersPickup) {
+      toast('Ce restaurant ne prend plus de commande en ligne — seule la réservation de table est possible.');
+      navigate(`/restaurants/${restaurantId}`);
+      return;
     }
+    if (!restaurant.offersDelivery) setFulfillmentType('pickup');
   }, [restaurant]);
 
   useEffect(() => {
