@@ -408,6 +408,33 @@ export default function Account() {
           déconnexion comme à la fermeture du navigateur. Sa place est donc ici.
           Le sélecteur reste en accès direct sur la bannière publique, pour un visiteur non connecté
           qui n'a pas encore de page Compte où aller. */}
+      {/* Raccourcis du client. Volontairement limités à des rubriques qui mènent quelque part :
+          Fairide n'a ni carte enregistrée (le paiement passe par Stripe à chaque commande) ni
+          titres-restaurant, donc pas de ligne pour eux — une rubrique qui n'ouvre rien coûte plus
+          de confiance qu'elle n'apporte de complétude.
+          « Mes réservations » pointe sur la liste des commandes filtrée : les réservations SONT des
+          commandes sur place, les ranger ailleurs les dédoublerait. */}
+      {role === 'client' && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          {[
+            { to: '/orders?type=dine_in', icone: '📅', titre: 'Mes réservations', sous: 'Tes tables réservées sur place' },
+            { to: '/orders', icone: '📦', titre: 'Mes commandes', sous: 'Livraisons, à emporter et sur place' },
+            { to: '/favorites', icone: '❤️', titre: 'Mes favoris', sous: 'Les commerces que tu as enregistrés' },
+            { to: '/invoices', icone: '📄', titre: 'Mes factures', sous: 'Les reçus de tes commandes payées' },
+            { to: '/map', icone: '🗺️', titre: 'Carte des commerces', sous: 'Trouver un commerce autour de toi' }
+          ].map((r) => (
+            <Link key={r.to} to={r.to} className="account-link-row">
+              <span className="account-link-icon" aria-hidden="true">{r.icone}</span>
+              <span className="account-link-text">
+                <b>{r.titre}</b>
+                <span className="small">{r.sous}</span>
+              </span>
+              <span className="account-link-chevron" aria-hidden="true">›</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       <div className="card">
         <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🌍 {t('account.language')}</h3>
         <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -98,6 +99,7 @@ function ReviewForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -132,13 +134,37 @@ export default function Orders() {
     }
   }
 
-  if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{t('orders.title')}</h2><SkeletonCards count={3} /></div>;
-  if (orders.length === 0) return <div className="empty">{t('orders.empty')}</div>;
+  // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
+  // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
+  // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
+  const typeFiltre = searchParams.get('type');
+  const listeAffichee = typeFiltre ? orders.filter((o) => o.orderType === typeFiltre) : orders;
+  const titre = typeFiltre === 'dine_in' ? 'Mes réservations' : t('orders.title');
+
+  if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2><SkeletonCards count={3} /></div>;
+  if (listeAffichee.length === 0) {
+    return (
+      <div>
+        <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+        <div className="empty">
+          {typeFiltre === 'dine_in'
+            ? "Aucune réservation de table pour l'instant."
+            : t('orders.empty')}
+        </div>
+        {typeFiltre && <button className="btn-ghost" onClick={() => setSearchParams({})}>Voir toutes mes commandes</button>}
+      </div>
+    );
+  }
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('orders.title')}</h2>
-      {orders.map((o) => (
+      <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+      {typeFiltre && (
+        <button className="btn-ghost" style={{ marginBottom: 10 }} onClick={() => setSearchParams({})}>
+          ← Voir toutes mes commandes
+        </button>
+      )}
+      {listeAffichee.map((o) => (
         <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
