@@ -3,6 +3,7 @@
 Ce qu'il reste à faire avant d'ouvrir Fairide à de vrais commerçants et de vrais clients.
 
 Établi le 30 août 2026, après une revue complète du frontend et une lecture du backend.
+Mis à jour le 3 septembre 2026 (refonte visuelle, inscription par étapes, traduction des cartes).
 Chaque point a été vérifié dans le code — rien ici n'est supposé.
 
 **Légende :** 🔴 bloquant · 🟠 obligation légale · 🟡 fiabilité · ⚪️ qualité
@@ -46,15 +47,26 @@ Tant que ce n'est pas fait, on ne sait pas si la plateforme fonctionne.
 
 ---
 
-## 🔴 3. Fusionner la branche de corrections
+## 🔴 3. Fusionner les branches en attente
 
-La branche `fix/production-readiness` corrige des défauts qui feraient perdre des commandes
-dès le premier jour : panier vidé avant paiement, page de confirmation qui annonçait le succès
-sans rien vérifier, session expirée qui bloquait l'application sans issue, page blanche à la
-moindre erreur d'affichage.
+Trois branches attendent d'être relues et fusionnées. **Elles s'empilent dans cet ordre** —
+`design/iris-5a` part de `fix/production-readiness`, il faut donc fusionner la première avant
+la seconde, sinon la refonte visuelle emporte avec elle des corrections non relues.
 
-- [ ] Relire et fusionner la branche
-- [ ] Vérifier le déploiement Vercel après fusion
+| Dépôt | Branche | Contenu |
+|---|---|---|
+| frontend | `fix/production-readiness` | panier vidé avant paiement, page de confirmation qui annonçait le succès sans rien vérifier, session expirée sans issue, page blanche à la moindre erreur d'affichage |
+| frontend | `design/iris-5a` | refonte visuelle complète (iris/lime), nouveau logo, inscription découpée en étapes, traduction des plats côté affichage, une dizaine de correctifs d'interface |
+| backend | `feat/menu-translations` | table `menu_item_translations`, module `menuTranslate.js`, deux endpoints |
+
+- [ ] Relire et fusionner `fix/production-readiness`
+- [ ] Relire et fusionner `design/iris-5a` **par-dessus**
+- [ ] Relire et fusionner `feat/menu-translations` côté backend (voir §13 pour le déploiement)
+- [ ] Vérifier le déploiement Vercel après chaque fusion
+
+⚠️ **Le frontend et le backend doivent partir ensemble.** Le frontend fusionné sans le backend
+affichera simplement les cartes non traduites — sans erreur, mais le bouton « Traduire ma
+carte » renverra une 404 au restaurateur qui clique dessus.
 
 ---
 
@@ -187,7 +199,17 @@ espaces commerçant, livreur et administration**, ainsi que les pages légales.
 Un commerçant néerlandophone à Bruxelles reçoit donc un back-office uniquement en français.
 C'est une objection commerciale, pas un détail cosmétique.
 
-- [ ] Traduire en priorité le tableau de bord commerçant — c'est l'écran montré en démonstration
+**Réglé sur `design/iris-5a` :** le sélecteur de langue n'existait que sur la bannière publique
+et disparaissait dès la connexion — quelqu'un arrivé en néerlandais y restait enfermé. Il est
+désormais dans la barre latérale, donc accessible en permanence. Les libellés « Factures » et
+« Carte », écrits en dur, sont passés en clés de traduction.
+
+Conséquence directe : le sélecteur est maintenant visible pour un restaurateur, mais changer
+de langue ne traduira que sa barre latérale — le corps de ses pages restera en français. Cela
+rend la lacune **plus visible qu'avant**, ce qui est une raison de plus de la traiter.
+
+- [ ] Traduire en priorité le tableau de bord commerçant — c'est l'écran montré en démonstration,
+      et c'est maintenant celui où le sélecteur de langue promet ce qu'il ne tient pas
 - [ ] Traduire les pages légales (CGV, confidentialité, mentions)
 
 ---
@@ -217,14 +239,95 @@ continuer d'être vérifiée à la main — d'où l'importance du §8.
 
 ---
 
+## 🔴 13. Traduction des cartes : trois gestes avant que ça marche
+
+Ajoutée le 3 septembre 2026. Les noms et descriptions de plats saisis par les commerçants sont
+traduits vers les deux autres langues de l'appli. Le commerçant ne saisit rien : il clique sur
+« 🌍 Traduire ma carte », Claude propose, et il peut corriger — une correction manuelle n'est
+jamais réécrite.
+
+**Le code est écrit et compile, mais rien n'a été exécuté contre une vraie base :** il n'existe
+pas de `.env` local (voir §8), donc aucun appel réel n'a pu être testé. À faire dans cet ordre :
+
+- [ ] **Appliquer `schema.sql` sur Railway.** La table est en `CREATE TABLE IF NOT EXISTS`, donc
+      rejouer le fichier entier est sans risque pour les données existantes.
+- [ ] **Vérifier `ANTHROPIC_API_KEY`.** Elle est déjà requise par l'import de menu (PDF/photo) :
+      si l'import fonctionne aujourd'hui, la clé est là. Sinon, l'endpoint de traduction renvoie
+      un message clair au lieu de planter.
+- [ ] **Tester sur UN seul commerce** avant d'annoncer le bouton aux autres.
+
+**Coût, calculé sur les données réelles de production :** 3 628 plats, 81 609 caractères,
+121 appels par lots de 30 → **0,66 $ une seule fois** avec `claude-sonnet-5` pour rattraper
+l'intégralité des 91 cartes. Ensuite, seuls les plats dont le texte a changé sont retraduits.
+
+Ce que ça ne fait **pas**, volontairement : les intitulés de sections (« Pizzas rouges »,
+« Viandes ») restent dans la langue du commerçant.
+
+Le ticket de cuisine n'est pas concerné : `POST /orders` reprend déjà le nom du plat depuis
+`menu_items`, jamais celui envoyé par le client. Une commande passée en néerlandais arrive donc
+en cuisine dans la langue du restaurant — vérifié dans `routes/orders.js`.
+
+---
+
+## 🟠 14. Une application mobile est promise pour le 15 octobre
+
+La page d'accueil affiche, en toutes lettres : *« Commande où que tu sois, dès le 15 octobre —
+l'appli Fairide arrive sur iOS, Android et AppGallery. »* (clé `landing.appSoonSub`).
+
+**Cette application n'existe pas, et rien n'est commencé.** Il n'y a même pas de service worker
+(voir §15). C'est un engagement public et daté, affiché à chaque visiteur.
+
+- [ ] **Trancher avant que la date approche** : livrer quelque chose, repousser la date, ou
+      retirer la promesse de l'accueil
+- [ ] Si l'objectif est tenu : l'emballage Capacitor du §7 est le seul chemin réaliste en six
+      semaines — il réutilise le site tel quel et règle au passage §6 et §7
+
+Une date affichée qui passe sans rien livrer coûte plus cher en crédibilité, auprès des
+commerçants comme des clients, que de ne jamais l'avoir annoncée.
+
+---
+
+## 🟡 15. Quatre quartiers ont l'accent cassé en base
+
+Sur 91 commerces, quatre ont un caractère détruit dans leur champ « quartier ». Vérifié en
+interrogeant l'API de production : la réponse est bien en UTF-8 et la même valeur existe ailleurs
+correctement écrite (`Châtelain` et `Ch<?>telain` coexistent), ce n'est donc **pas** un problème
+d'encodage du code mais bien la donnée stockée.
+
+| Commerce | Stocké | Devrait être |
+|---|---|---|
+| Sakura Sushi | `Ch<?>telain` | Châtelain |
+| Pizzeria Bella | `M<?>rode` | Mérode |
+| Burger House | `Barri<?>re` | Barrière |
+| Boucherie du Sablon | `<?>tangs` | Étangs |
+
+Le caractère stocké est U+FFFD, qui est un caractère UTF-8 **valide** — Postgres l'a donc accepté
+sans erreur, et la lettre d'origine est définitivement perdue. Aucune conversion ne la retrouvera :
+ces quatre valeurs doivent être **retapées**.
+
+- [ ] Corriger les quatre, soit dans la page « Modifier mon restaurant » du commerçant (champ
+      « Quartier »), soit par requête directe en base
+- [ ] **Optionnel :** refuser un U+FFFD à l'écriture des champs texte, pour que ça ne se
+      reproduise pas silencieusement
+
+Le tableau de bord admin **affiche** le quartier mais ne permet pas de le modifier, alors que
+l'API `PATCH /api/admin/restaurants/:id` l'accepterait — ajouter ce champ éviterait de se
+connecter sous quatre comptes différents.
+
+---
+
 ## Résumé : l'ordre à suivre
 
 1. Environnement de test (§8) — sans lui, rien ne peut être vérifié sans risque
 2. Un commerce qui remplit les quatre conditions (§1)
 3. Une commande complète de bout en bout (§1)
 4. Vérifier `APP_URL` et les clés Stripe (§2)
-5. Fusionner la branche de corrections (§3)
-6. Compléter les mentions légales et la politique de confidentialité (§4)
-7. Corriger les trois replis backend (§5)
-8. Couper les photos automatiques (§9)
-9. Puis : Web Push (§6), traductions (§10), référencement (§11)
+5. Fusionner les trois branches, dans l'ordre indiqué (§3)
+6. Appliquer `schema.sql` et tester la traduction sur un commerce (§13)
+7. Compléter les mentions légales et la politique de confidentialité (§4)
+8. Corriger les trois replis backend (§5)
+9. Couper les photos automatiques (§9)
+10. Corriger les quatre quartiers (§15) — cinq minutes, et c'est visible par les clients
+11. **Trancher la promesse du 15 octobre (§14)** — à faire tant qu'il reste six semaines,
+    pas la veille
+12. Puis : Web Push (§6), traduction des tableaux de bord (§10), référencement (§11)
