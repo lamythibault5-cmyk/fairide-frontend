@@ -137,13 +137,18 @@ a { color: inherit; }
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .brand h1 { font-size: 30px; color: var(--cream); line-height: 1; letter-spacing: -0.03em; }
 .brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
-@media (max-width: 640px) { .brand h1 { font-size: 24px; } .brand-slogan { font-size: 12px; } }
-@media (max-width: 480px) { .brand-slogan { display: none; } }
-/* Sous 520px, le mot "fairide" à côté du logo pousse la bannière sur deux lignes (logo+titre puis
-   langues/connexion) et l'alourdit inutilement : le vélo seul suffit à cette largeur.
-   (Ce commentaire s'appuyait autrefois sur le filigrane fixe pour justifier la suppression du mot ;
-   le filigrane n'existe plus — voir la note en dessous — mais l'argument de place tient seul.) */
-@media (max-width: 520px) { .hero .brand-text { display: none; } }
+@media (max-width: 640px) { .brand h1 { font-size: 24px; } }
+/* Le mot « fairide » reste affiché à TOUTES les largeurs, à côté du vélo.
+
+   Il était masqué sous 520px, à une époque où la rangée devait aussi loger un filigrane fixe
+   (supprimé depuis) et où elle était en flex-wrap : le mot la poussait sur deux lignes. Ces deux
+   contraintes ont disparu — la rangée est en nowrap et 108px de réserve ont été rendus — et un
+   logo seul ne dit pas le nom de la marque à quelqu'un qui arrive pour la première fois.
+
+   C'est le SLOGAN qui saute en premier quand la place manque, puis le lien « Connexion » : le
+   bouton d'inscription mène de toute façon à un écran qui propose les deux onglets. */
+@media (max-width: 640px) { .brand-slogan { display: none; } }
+@media (max-width: 520px) { .brand h1 { font-size: 20px; } .brand { gap: 10px; } }
 
 /* Le filigrane « fairide » fixé en haut à droite a été supprimé le 3 septembre 2026.
 
@@ -266,12 +271,16 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    perd contre un style inline. */
 @media (max-width: 600px) {
   .header-row .lang-switcher button { padding: 5px 6px; }
-  .header-row .brand .mark { width: 40px !important; height: 40px !important; }
+  .header-row .brand .mark { width: 36px !important; height: 36px !important; }
 }
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
-  .header-auth-link { font-size: 12.5px; }
   .header-register-btn { padding: 7px 12px; font-size: 12px; }
+  /* Le lien « Connexion » cède la place au nom de la marque : les deux ne tiennent pas ensemble
+     à cette largeur, et de ces deux-là c'est le nom qui doit rester. La fonction n'est pas perdue
+     — le bouton « Inscription » mène à /login, dont l'écran propose les onglets Connexion et
+     Créer un compte. Un visiteur qui revient trouve donc toujours son entrée, en un tap de plus. */
+  .header-row .header-auth-link { display: none; }
 }
 /* Répartition des deux couleurs entre les boutons — c'est ce qui décide de la
    discipline de toute l'interface, donc autant l'écrire noir sur blanc :
@@ -1313,11 +1322,13 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 /* Variante fond clair du sélecteur de langue. Sa version d'origine est dessinée pour l'aplat
    iris de la bannière publique : piste en blanc translucide, texte en --cream. Posée telle
-   quelle sur la barre latérale blanche, elle serait littéralement blanche sur blanc. */
-.dashboard-sidebar .lang-switcher { background: var(--cream-dim); align-self: flex-start; margin: 10px 6px 0; flex-shrink: 0; }
-.dashboard-sidebar .lang-switcher button { color: var(--ink-soft); opacity: 1; }
-.dashboard-sidebar .lang-switcher button:hover { color: var(--ink); }
-.dashboard-sidebar .lang-switcher button.active { background: var(--iris); color: #fff; }
+   quelle sur une carte blanche, elle serait littéralement blanche sur blanc.
+   Ciblée sur .card et non sur une page précise : le sélecteur vit désormais dans la page
+   Compte, et toute autre carte qui l'accueillerait un jour hériterait du bon rendu. */
+.card .lang-switcher { background: var(--cream-dim); align-self: flex-start; }
+.card .lang-switcher button { color: var(--ink-soft); opacity: 1; }
+.card .lang-switcher button:hover { color: var(--ink); }
+.card .lang-switcher button.active { background: var(--iris); color: #fff; }
 
 .dashboard-profile-card { display: flex; align-items: center; gap: 10px; padding: 10px 6px 0; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; }
 .dashboard-profile-avatar {
@@ -1360,17 +1371,16 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
   .dashboard-sidebar-brand, .dashboard-profile-card { display: none; }
-  /* En mobile, c'est la NAV qui défile, et non plus la barre entière. Le sélecteur de langue
-     est placé après elle : tant que le défilement appartenait au conteneur, il partait hors
-     écran avec les onglets et n'était plus « toujours là ». Sorti du conteneur de défilement,
-     il reste collé au bord droit pendant que les onglets glissent à côté. */
+  /* En mobile, c'est la NAV qui défile, et non plus la barre entière. Utile même maintenant que
+     le sélecteur de langue est parti dans la page Compte : la carte de profil est masquée à
+     cette largeur, mais le jour où un autre élément fixe s'ajoute à la barre, il restera visible
+     pendant que les onglets glissent dessous plutôt que de partir hors écran avec eux. */
   .dashboard-sidebar { overflow-x: visible; }
   .dashboard-nav {
     flex-direction: row; gap: 2px; width: auto; flex: 1 1 auto; min-width: 0;
     overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
   }
   .dashboard-nav::-webkit-scrollbar { display: none; }
-  .dashboard-sidebar .lang-switcher { margin: 0 0 0 6px; align-self: center; }
   /* Chaque onglet prend la largeur de son propre libellé (flex: 0 0 auto) au lieu de se
      partager la barre à parts égales (flex: 1).
 
@@ -1388,9 +1398,6 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
     padding: 6px 10px; flex: 0 0 auto; min-width: 54px; border-radius: var(--radius-chip);
   }
   .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
-  /* Sélecteur resserré : dans une barre déjà disputée, il n'a pas besoin de la même surface
-     de frappe que sur la bannière publique. */
-  .dashboard-sidebar .lang-switcher button { padding: 4px 6px; font-size: 10px; }
   .dashboard-nav-icon { font-size: 20px; width: auto; }
   .dashboard-main { padding: 18px 16px calc(30px + 66px); }
   .dashboard-right { padding: 0 16px calc(24px + 66px); }

@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { StarsDisplay } from '../components/Stars';
 
 // Les valeurs restent en français (stockées telles quelles côté backend) — seul le libellé affiché
@@ -398,6 +399,19 @@ export default function Account() {
           </div>
           <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
         </form>
+      </div>
+
+      {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en
+          permanence — mais une barre de navigation n'est pas l'endroit d'un réglage, et sur
+          téléphone elle y disputait la place aux onglets. Le choix est mémorisé dans
+          localStorage (voir LanguageContext) : on ne le règle qu'une fois, et il survit à la
+          déconnexion comme à la fermeture du navigateur. Sa place est donc ici.
+          Le sélecteur reste en accès direct sur la bannière publique, pour un visiteur non connecté
+          qui n'a pas encore de page Compte où aller. */}
+      <div className="card">
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🌍 {t('account.language')}</h3>
+        <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
+        <LanguageSwitcher />
       </div>
 
       <div className="card">

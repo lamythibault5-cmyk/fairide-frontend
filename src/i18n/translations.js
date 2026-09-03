@@ -320,6 +320,8 @@ export const translations = {
     },
     account: {
       title: 'Mon compte',
+      language: 'Langue',
+      languageHelp: "Choisis la langue de l'interface. Ton choix est mémorisé sur cet appareil.",
       roleClient: 'Client',
       roleRestaurant: 'Commerce',
       roleDriver: 'Livreur',
@@ -878,6 +880,8 @@ export const translations = {
     },
     account: {
       title: 'My account',
+      language: 'Language',
+      languageHelp: 'Choose the interface language. Your choice is remembered on this device.',
       roleClient: 'Customer',
       roleRestaurant: 'Business',
       roleDriver: 'Driver',
@@ -1436,6 +1440,8 @@ export const translations = {
     },
     account: {
       title: 'Mijn account',
+      language: 'Taal',
+      languageHelp: 'Kies de taal van de interface. Je keuze wordt op dit apparaat onthouden.',
       roleClient: 'Klant',
       roleRestaurant: 'Handelszaak',
       roleDriver: 'Koerier',
