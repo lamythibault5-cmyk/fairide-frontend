@@ -10,9 +10,9 @@
 //      seul un rafraîchissement de la liste toutes les 15s, voir DashboardLayout.jsx, tient lieu d'alerte)
 //   2. Choix du temps de préparation à l'acceptation + motif obligatoire au refus (PATCH /orders/:id/accept
 //      et /refuse ne lisent aujourd'hui aucun champ du corps de la requête, voir routes/orders.js)
-//   3. Impression dédiée du bon de commande (bouton + éventuelle compatibilité imprimante thermique
-//      Bluetooth ESC/POS) — window.print() n'existe aujourd'hui que sur les pages Factures, pas sur les
-//      commandes
+//   3. (Fait) Impression du ticket depuis la fiche commande : boîte d'impression du navigateur, et
+//      envoi direct en ESC/POS vers une imprimante thermique Bluetooth quand le navigateur le permet
+//      (voir escposTicket.js et bluetoothPrinter.js)
 //   4. Envoi du bon de commande par WhatsApp (aucun fournisseur SMS/WhatsApp n'est intégré actuellement)
 //   5. Délai d'acceptation automatique avec annulation si dépassé (choix produit à trancher : aujourd'hui
 //      une commande reste "Nouvelle" indéfiniment tant qu'elle n'est pas traitée manuellement)
@@ -79,8 +79,11 @@ export default function GuidePage() {
       </section>
 
       <section className="card">
-        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>7. Imprimer un bon de commande (optionnel)</h3>
-        <p className="small" style={{ marginBottom: 0 }}>Cette fonctionnalité n'est pas encore disponible : il n'existe pas de bouton dédié pour imprimer une commande, ni de compatibilité avec une imprimante thermique Bluetooth. En attendant, la solution ci-dessous (e-mail) permet de garder une trace de chaque commande et de l'imprimer si besoin, depuis la messagerie.</p>
+        <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>7. Imprimer le ticket d'une commande</h3>
+        <p className="small">Ouvre une commande dans l'onglet Commandes : en bas de la fiche, la section « Ticket de la commande » propose deux façons d'imprimer le récapitulatif à glisser dans le sac ou à coller dessus.</p>
+        <p className="small"><b>Sur imprimante thermique Bluetooth.</b> Choisis d'abord la largeur de ton papier (58 ou 80 mm), puis « Connecter l'imprimante » : ton navigateur affiche la liste des appareils à portée. Une fois l'imprimante choisie, les tickets suivants partent d'un seul clic, tant que l'onglet reste ouvert.</p>
+        <p className="small"><b>Deux conditions à connaître.</b> Ce bouton n'apparaît que sur Chrome, Edge ou Opera — sur iPhone et iPad, aucun navigateur n'autorise le Bluetooth depuis une page web, y compris Chrome. Et l'imprimante doit être un modèle <i>Bluetooth Low Energy</i> : les modèles en Bluetooth classique restent invisibles depuis un navigateur.</p>
+        <p className="small" style={{ marginBottom: 0 }}><b>Sur n'importe quelle autre imprimante.</b> « Imprimer le bon de livraison » passe par la boîte d'impression de ton appareil : elle fonctionne partout, y compris avec AirPrint sur iPhone et iPad.</p>
       </section>
 
       <section className="card">

@@ -1,4 +1,4 @@
-import { orderTypeLabel } from '../orderStatus';
+import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
 
 function formatDateTime(ms) {
   return new Date(ms).toLocaleString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -35,7 +35,7 @@ export default function OrderReceipt({ order, restaurant }) {
         {order.clientPhone && <> · {order.clientPhone}</>}
       </p>
       {order.orderType === 'dine_in' && <p style={{ margin: '4px 0' }}>Table pour {order.partySize} personne{order.partySize > 1 ? 's' : ''}</p>}
-      {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>Consigne : {order.deliveryInstructions}</p>}
+      {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>Consigne : {deliveryInstructionLabel(order.deliveryInstructions)}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>Note : {order.deliveryNote}</p>}
       <div className="receipt-divider" />
       {order.items.map((i) => (
