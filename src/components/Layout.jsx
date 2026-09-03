@@ -10,7 +10,6 @@ import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
-import BrandWatermark from './BrandWatermark';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -55,7 +54,6 @@ export default function Layout() {
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
         <AssistantWidget />
-        <BrandWatermark />
       </>
     );
   }
@@ -91,9 +89,9 @@ export default function Layout() {
                 </button>
               </div>
             )}
-            {/* header-auth reste un item atomique (non wrappable) de cette même rangée flex-wrap : sur
-                grand écran il tient à côté de la marque/langues, et retombe proprement à la ligne (seul,
-                sous la zone du filigrane .brand-watermark) dès que la largeur manque — voir styles.css. */}
+            {/* header-auth reste un bloc atomique : « Connexion » et « Inscription » ne se séparent
+                jamais l'un de l'autre. La rangée entière est en nowrap et c'est la marque qui rétrécit
+                quand la place manque — voir .header-row dans styles.css. */}
             {!leanHeader && !user && (
               <div className="row header-auth">
                 <Link to="/login" className="header-auth-link">{t('nav.login')}</Link>
