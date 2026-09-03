@@ -35,6 +35,11 @@ const STEP_KEYS = {
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
+// autoFocus retiré des premiers champs de chaque étape : le navigateur ne se contente pas de
+// placer le curseur, il fait défiler la page pour cadrer le champ. Sur téléphone, la carte venait se
+// coller sous l'en-tête — qui recouvrait alors le titre — et le clavier s'ouvrait tout seul, donnant
+// l'impression d'être enfermé dans le formulaire dès l'arrivée ou au moindre changement d'onglet.
+// Le gain d'un tap ne vaut pas ce saut de page à chaque étape.
 export default function Auth() {
   const { t } = useLanguage();
   const ROLES = roles(t);
@@ -467,7 +472,7 @@ export default function Auth() {
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
-                    <input id="auth-f-3" className={errors.firstName ? 'input-invalid' : undefined} autoFocus
+                    <input id="auth-f-3" className={errors.firstName ? 'input-invalid' : undefined}
                       value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
                     {fieldError('firstName')}
                   </div>
@@ -491,7 +496,7 @@ export default function Auth() {
               <>
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
-                  <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined} autoFocus
+                  <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
                     value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
                   {fieldError('legalName')}
                 </div>
@@ -526,7 +531,7 @@ export default function Auth() {
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-8">{t('auth.street')}</label>
-                    <input id="auth-f-8" className={errors.addressStreet ? 'input-invalid' : undefined} autoFocus
+                    <input id="auth-f-8" className={errors.addressStreet ? 'input-invalid' : undefined}
                       value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
                     {fieldError('addressStreet')}
                   </div>
