@@ -1383,6 +1383,25 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-right { padding: 0 16px calc(24px + 66px); }
 }
 
+/* Sous 520px : icônes seules dans la barre du bas.
+
+   Six libellés ne tiennent pas sur un téléphone. En néerlandais, « Restaurants », « Favorieten »,
+   « Mijn bestellingen », « Facturen », « Kaart » et « Mijn account » totalisent à eux seuls plus
+   de 320px de texte, auxquels s'ajoutent l'espacement de chaque onglet et le sélecteur de langue.
+   La barre défilait donc, et le dernier onglet — « Mon compte » — restait hors écran, caché
+   derrière le sélecteur épinglé à droite. Un onglet qu'on ne voit pas est un onglet qui n'existe
+   pas : c'est la carte du compte, déjà masquée en mobile, qui aurait dû prendre le relais.
+
+   En icônes seules, les six onglets se partagent la largeur et sont tous visibles d'un coup, sans
+   défilement. Le libellé reste porté par title et aria-label (voir DashboardSidebar.jsx) : il
+   n'est retiré qu'à l'œil, pas aux lecteurs d'écran. C'est la disposition habituelle d'une barre
+   d'onglets de téléphone, et la seule qui tienne dans les trois langues. */
+@media (max-width: 520px) {
+  .dashboard-nav-link { flex: 1 1 0; min-width: 0; padding: 8px 2px; }
+  .dashboard-nav-link span:last-child { display: none; }
+  .dashboard-nav-icon { font-size: 22px; }
+}
+
 .opening-hours-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .opening-hours-day-row { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; }
 .opening-hours-day-header { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
