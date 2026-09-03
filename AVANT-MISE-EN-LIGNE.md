@@ -49,18 +49,22 @@ Tant que ce n'est pas fait, on ne sait pas si la plateforme fonctionne.
 
 ## 🔴 3. Fusionner les branches en attente
 
-Trois branches attendent d'être relues et fusionnées. **Elles s'empilent dans cet ordre** —
-`design/iris-5a` part de `fix/production-readiness`, il faut donc fusionner la première avant
-la seconde, sinon la refonte visuelle emporte avec elle des corrections non relues.
+Deux branches attendent d'être relues et fusionnées, une par dépôt.
 
 | Dépôt | Branche | Contenu |
 |---|---|---|
-| frontend | `fix/production-readiness` | panier vidé avant paiement, page de confirmation qui annonçait le succès sans rien vérifier, session expirée sans issue, page blanche à la moindre erreur d'affichage |
 | frontend | `design/iris-5a` | refonte visuelle complète (iris/lime), nouveau logo, inscription découpée en étapes, traduction des plats côté affichage, une dizaine de correctifs d'interface |
 | backend | `feat/menu-translations` | table `menu_item_translations`, module `menuTranslate.js`, deux endpoints |
 
-- [ ] Relire et fusionner `fix/production-readiness`
-- [ ] Relire et fusionner `design/iris-5a` **par-dessus**
+`fix/production-readiness` **est déjà fusionnée dans `main`** — ce point est réglé.
+
+`main` avait avancé de 19 commits pendant la refonte (galeries d'images, impression du ticket
+sur imprimante thermique, archive de factures, badge « healthy », carrousels génériques). Ces
+19 commits ont été fusionnés dans `design/iris-5a` le 3 septembre : quatre conflits résolus à
+la main, aucune fonctionnalité de `main` perdue. La branche peut donc être fusionnée sans
+conflit.
+
+- [ ] Relire et fusionner `design/iris-5a`
 - [ ] Relire et fusionner `feat/menu-translations` côté backend (voir §13 pour le déploiement)
 - [ ] Vérifier le déploiement Vercel après chaque fusion
 
