@@ -69,13 +69,11 @@
    débordement horizontal exactement pareil, sans jamais créer ce conteneur de scroll implicite. */
 html {
   overflow-x: clip;
-  touch-action: pan-y;
 }
 
 body {
   margin: 0;
   overflow-x: clip;
-  touch-action: pan-y;
   background: var(--cream);
   color: var(--ink);
   font-family: 'Space Grotesk', sans-serif;
@@ -94,6 +92,23 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
    d'approche — titres très serrés (-0,02em) et compacts (1,1), texte courant aéré. C'est ce
    resserrement négatif sur les grandes tailles qui donne son air à la direction ; sans lui, les
    titres retombent en Space Grotesk par défaut, exactement ce qu'on voulait éviter. */
+/* Safari iOS n'a connu `overflow: clip` qu'à partir de la version 16 : avant, la déclaration est
+   ignorée et retombe sur `visible`, donc plus aucun découpage. Le moindre élément trop large rendait
+   alors toute la page pannable horizontalement, et le visiteur se retrouvait coincé sur sa moitié
+   gauche. On accepte `hidden` sur ces versions-là : il crée un conteneur de défilement et casse
+   `position: sticky` (la raison même du choix de `clip` ci-dessus), mais un en-tête qui ne colle pas
+   vaut mieux qu'une page dont la moitié droite est inatteignable. */
+@supports not (overflow: clip) {
+  html, body { overflow-x: hidden; }
+}
+
+/* touch-action: pan-y a été retiré de html et body. Il interdisait tout balayage horizontal de la
+   page entière : tant que rien ne dépasse il ne sert à rien, et le jour où quelque chose dépasse il
+   transforme un simple défaut d'affichage en blocage total — on voit la partie gauche et on ne peut
+   PAS atteindre la droite. Un débordement se règle en le découpant (ci-dessus), pas en confisquant
+   le geste qui permettrait d'y accéder. Les rangées défilantes gardent leur propre touch-action,
+   qui est le bon niveau pour cette contrainte. */
+
 h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0; text-wrap: balance; }
 
 a { color: inherit; }
@@ -276,11 +291,13 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
   .header-register-btn { padding: 7px 12px; font-size: 12px; }
-  /* Le lien « Connexion » cède la place au nom de la marque : les deux ne tiennent pas ensemble
-     à cette largeur, et de ces deux-là c'est le nom qui doit rester. La fonction n'est pas perdue
-     — le bouton « Inscription » mène à /login, dont l'écran propose les onglets Connexion et
-     Créer un compte. Un visiteur qui revient trouve donc toujours son entrée, en un tap de plus. */
-  .header-row .header-auth-link { display: none; }
+  /* « Connexion » était masqué ici faute de place : à 375px il ne restait que 40px libres pour un
+     lien qui en demande 72. Plutôt que de sacrifier l'un des deux, la rangée passe à la ligne — la
+     marque garde la première, le couple Connexion/Inscription et les langues descendent sur la
+     seconde. L'en-tête gagne une ligne sur petit écran, mais plus rien n'est masqué ni coupé, y
+     compris en néerlandais où les libellés sont plus longs. */
+  .header-row { flex-wrap: wrap; row-gap: 8px; }
+  .header-row .header-auth-link { display: flex; font-size: 13px; }
 }
 /* Répartition des deux couleurs entre les boutons — c'est ce qui décide de la
    discipline de toute l'interface, donc autant l'écrire noir sur blanc :
