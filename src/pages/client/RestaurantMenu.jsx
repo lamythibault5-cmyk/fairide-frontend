@@ -14,6 +14,7 @@ import MenuCategorySections from '../../components/MenuCategorySections';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
+import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -345,27 +346,23 @@ export default function RestaurantMenu() {
 }
 
 function DiscoverSection({ restaurants, t }) {
-  const canLoop = restaurants.length >= 3;
-  const items = canLoop ? [...restaurants, ...restaurants] : restaurants;
   return (
     <div style={{ marginTop: 18, marginBottom: 18 }}>
       <h3 className="section-title" style={{ fontSize: 16 }}>{t('restaurantMenu.discoverTitle')}</h3>
-      <div className="discover-marquee">
-        <div
-          className={`discover-track${canLoop ? ' animate' : ''}`}
-          style={canLoop ? { animationDuration: `${restaurants.length * 9}s` } : undefined}
-        >
-          {items.map((r, i) => (
-            <Link key={`${r.id}-${i}`} to={`/restaurants/${r.id}`} className="discover-card">
-              {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} />}
-              <div className="info">
-                <b>{r.name}</b>
-                <span className="small">{r.commune}</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
+      <AutoScrollRow
+        items={restaurants}
+        keyFor={(r) => r.id}
+        className="discover-track"
+        renderItem={(r, i, key) => (
+          <Link key={key} to={`/restaurants/${r.id}`} className="discover-card">
+            {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} />}
+            <div className="info">
+              <b>{r.name}</b>
+              <span className="small">{r.commune}</span>
+            </div>
+          </Link>
+        )}
+      />
     </div>
   );
 }

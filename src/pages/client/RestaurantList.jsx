@@ -12,6 +12,7 @@ import { StarsDisplay } from '../../components/Stars';
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
+import AutoScrollRow from '../../components/AutoScrollRow';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -89,24 +90,18 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
 
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
   if (list.length === 0) return null;
-  // Boucle façon barre de cuisines (cuisine-track) : la liste est dupliquée et l'animation CSS
-  // translate de -50% pour un défilement continu et sans coupure, en pause au survol/toucher.
   if (loop && list.length > 1) {
     return (
       <div style={{ marginBottom: 24 }}>
         <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
-        <div className="rest-grid-loop">
-          <div className="rest-grid-loop-track">
-            {list.map((r) => (
-              <RestaurantCard key={`a-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
-            ))}
-            <div aria-hidden="true" style={{ display: 'contents' }}>
-              {list.map((r) => (
-                <RestaurantCard key={`b-${r.id}`} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
-              ))}
-            </div>
-          </div>
-        </div>
+        <AutoScrollRow
+          items={list}
+          keyFor={(r) => r.id}
+          className="rest-grid-loop"
+          renderItem={(r, i, key) => (
+            <RestaurantCard key={key} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+          )}
+        />
       </div>
     );
   }
@@ -196,6 +191,16 @@ export default function RestaurantList() {
   const groceryList = restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine));
   const nearbyList = homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : [];
   const offersList = restaurants.filter((r) => r.hasPromo);
+  // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
+  // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
+  // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
+  // apparaît avant une enseigne dont toute la carte est healthy, alors que les deux sont légitimement
+  // dans la section. Les commerces de courses (Supermarchés) sont exclus, ils ont déjà leur section.
+  const healthyList = nonGrocery
+    .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
+    .filter(({ n }) => n > 0)
+    .sort((a, b) => b.n - a.n)
+    .map(({ r }) => r);
   // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
   // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
   // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
@@ -214,30 +219,21 @@ export default function RestaurantList() {
   return (
     <div>
       <div className="cuisine-scroll">
-        <div className="cuisine-track">
-          {cuisineOptions.map((opt) => (
+        <AutoScrollRow
+          items={cuisineOptions}
+          keyFor={(opt) => opt.value}
+          className="cuisine-track"
+          renderItem={(opt, i, key) => (
             <div
-              key={`a-${opt.value}`}
+              key={key}
               className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
               onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
             >
               <span className="emoji">{opt.emoji}</span>
               <span>{opt.label}</span>
             </div>
-          ))}
-          {cuisineOptions.map((opt) => (
-            <div
-              key={`b-${opt.value}`}
-              aria-hidden="true"
-              tabIndex={-1}
-              className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
-              onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
-            >
-              <span className="emoji">{opt.emoji}</span>
-              <span>{opt.label}</span>
-            </div>
-          ))}
-        </div>
+          )}
+        />
       </div>
       <div className="restaurant-search-row">
         <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -273,9 +269,10 @@ export default function RestaurantList() {
         <>
           <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
           <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionHealthy')} icon="🥗" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
           <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
           <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
+          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}
         </>

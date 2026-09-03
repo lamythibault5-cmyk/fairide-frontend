@@ -4,11 +4,12 @@ import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
+import { galleryForCuisine } from '../galleryImages';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], onSaveTranslations }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations }) {
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
@@ -25,6 +26,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [subsection, setSubsection] = useState(item.subsection || '');
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
   const [suggestAtCheckout, setSuggestAtCheckout] = useState(!!item.suggestAtCheckout);
+  const [healthy, setHealthy] = useState(!!item.healthy);
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -43,7 +45,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
       // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
@@ -159,14 +161,26 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             </button>
           )}
         </div>
+        {/* Galerie du type de commerce (voir galleryImages.js) : une trentaine de photos utilisables
+            sans rien téléverser, la galerie personnelle restant affichée juste en dessous. */}
         {galleryOpen && (
           <GalleryPickerModal
             restoId={restoId}
+            suggestions={galleryForCuisine(cuisine)}
+            suggestionsTitle="Photos suggérées pour ton type de commerce"
             currentImageUrl={imageUrl}
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}
           />
         )}
+        {/* Hors du bloc categoryKind ci-dessous, volontairement : la suggestion avant paiement ne concerne
+            que les desserts/boissons, alors que n'importe quel plat de la carte peut être healthy. */}
+        <div className="field">
+          <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
+            <span className="small">🥗 Marquer ce plat comme healthy (affiche l'emoji à côté du nom et fait apparaître le restaurant dans la section "Healthy")</span>
+          </label>
+        </div>
         {categoryKind(category) && (
           <div className="field">
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
@@ -244,7 +258,10 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
-      <div className="name">{item.name}</div>
+      <div className="name">
+        {item.name}
+        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+      </div>
       <div className="small desc">
         {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
       </div>

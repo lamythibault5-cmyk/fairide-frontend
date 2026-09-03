@@ -15,7 +15,12 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}
-      <div className="name">{name}</div>
+      {/* Le badge « healthy » vient de main, le texte traduit de la refonte : les deux se cumulent.
+          Le nom affiché est celui de la langue du client, le badge reste posé à côté. */}
+      <div className="name">
+        {name}
+        {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+      </div>
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : desc}</div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>

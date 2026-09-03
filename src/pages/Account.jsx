@@ -586,18 +586,52 @@ export default function Account() {
             Choisis les modes de commande que ton restaurant propose à ses clients — n'importe quelle combinaison, au moins un doit rester actif.
             Si seule la réservation est activée, tes clients ne pourront pas commander en ligne : ils ne verront que la carte et un bouton pour réserver une table.
           </p>
-          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 8 }}>
-            <input type="checkbox" style={{ width: 'auto' }} checked={offersDelivery} disabled={savingServices} onChange={(e) => setOffersDelivery(e.target.checked)} />
-            <span className="small">🚴 Livraison</span>
-          </label>
-          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 8 }}>
-            <input type="checkbox" style={{ width: 'auto' }} checked={offersPickup} disabled={savingServices} onChange={(e) => setOffersPickup(e.target.checked)} />
-            <span className="small">🥡 À emporter</span>
-          </label>
-          <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 12 }}>
-            <input type="checkbox" style={{ width: 'auto' }} checked={offersDineIn} disabled={savingServices} onChange={(e) => setOffersDineIn(e.target.checked)} />
-            <span className="small">🍽️ Réservation de table (sur place)</span>
-          </label>
+          <div className="service-table-wrap">
+            <table className="service-table">
+              <thead>
+                <tr><th>Service</th><th className="col-actif">Proposé</th><th>Ce que ça change pour le client</th></tr>
+              </thead>
+              <tbody>
+                {[
+                  { cle: 'delivery', icone: '🚴', nom: 'Livraison', valeur: offersDelivery, set: setOffersDelivery,
+                    effet: 'Il commande en ligne et se fait livrer à son adresse.' },
+                  { cle: 'pickup', icone: '🥡', nom: 'À emporter', valeur: offersPickup, set: setOffersPickup,
+                    effet: 'Il commande et paie en ligne, puis vient chercher sa commande.' },
+                  { cle: 'dine_in', icone: '🍽️', nom: 'Réservation de table', valeur: offersDineIn, set: setOffersDineIn,
+                    effet: 'Il réserve une table en indiquant le nombre de personnes, sans commander en ligne.' }
+                ].map((s) => (
+                  <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
+                    <td><b>{s.icone} {s.nom}</b></td>
+                    <td className="col-actif">
+                      {/* Le libellé rend toute la cellule cliquable, et nomme la case pour un lecteur d'écran :
+                          une case seule n'annoncerait que « coché », sans dire de quel service il s'agit. */}
+                      <label className="service-toggle">
+                        <input
+                          type="checkbox"
+                          checked={s.valeur}
+                          disabled={savingServices}
+                          onChange={(e) => s.set(e.target.checked)}
+                        />
+                        <span className="sr-only">{s.nom}</span>
+                      </label>
+                    </td>
+                    <td className="small">{s.valeur ? s.effet : <i>Non proposé — ce mode n'apparaît pas sur ta fiche.</i>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
+              d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
+          <p className="small service-summary">
+            {!offersDelivery && !offersPickup && !offersDineIn
+              ? '⚠️ Au moins un service doit rester proposé.'
+              : !offersDelivery && !offersPickup
+                ? '🍽️ Tes clients verront ta carte mais ne pourront rien commander en ligne : seulement réserver une table.'
+                : offersDelivery && offersPickup && offersDineIn
+                  ? '✅ Tes clients peuvent se faire livrer, venir chercher leur commande, ou réserver une table.'
+                  : `Tes clients pourront : ${[offersDelivery && 'se faire livrer', offersPickup && 'venir chercher leur commande', offersDineIn && 'réserver une table'].filter(Boolean).join(', ')}.`}
+          </p>
           <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
         </div>
       )}

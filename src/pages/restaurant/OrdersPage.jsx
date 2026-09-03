@@ -5,6 +5,8 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
+import { buildTicketBytes, COLUMNS_58MM, COLUMNS_80MM } from '../../escposTicket';
+import * as btPrinter from '../../bluetoothPrinter';
 import {
   DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
@@ -20,6 +22,34 @@ export default function OrdersPage() {
   const [confirmingPickup, setConfirmingPickup] = useState(null);
   const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
   const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
+  // Largeur de papier retenue par le restaurateur : sa valeur ne change pas d'une commande à l'autre,
+  // la redemander à chaque ticket serait une friction inutile.
+  const [paperColumns, setPaperColumns] = useState(() => Number(localStorage.getItem('fairide.paperColumns')) || COLUMNS_58MM);
+  const [btName, setBtName] = useState(btPrinter.connectedDeviceName());
+  const [printing, setPrinting] = useState(false);
+  const btSupported = btPrinter.isSupported();
+
+  function choosePaper(cols) {
+    setPaperColumns(cols);
+    localStorage.setItem('fairide.paperColumns', String(cols));
+  }
+
+  async function printBluetooth(order) {
+    setPrinting(true);
+    try {
+      if (!btPrinter.connectedDeviceName()) setBtName(await btPrinter.connect());
+      await btPrinter.printBytes(buildTicketBytes(order, restaurant, { columns: paperColumns }));
+      setBtName(btPrinter.connectedDeviceName());
+      toast(`Ticket envoyé à l'imprimante.`);
+    } catch (e) {
+      // Refuser le sélecteur d'appareils lève une NotFoundError : ce n'est pas une panne, inutile
+      // d'alarmer le restaurateur qui vient simplement de fermer la fenêtre.
+      if (e?.name !== 'NotFoundError') toast(e.message || 'Impression impossible.');
+      setBtName(btPrinter.connectedDeviceName());
+    } finally {
+      setPrinting(false);
+    }
+  }
 
   useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
 
@@ -212,6 +242,15 @@ export default function OrdersPage() {
             <ProgressBar status={selectedOrder.status} orderType={selectedOrder.orderType} />
             <DeliveryTiming order={selectedOrder} />
             <div className="divider" />
+            {/* Une réservation de table peut n'avoir aucun plat (voir routes/orders.js : seul 'dine_in'
+                l'autorise). Sans ce cas, la fiche affichait une section « Articles » vide suivie d'un
+                « Total payé 0,00 € », qui se lit comme une commande impayée au lieu d'une table réservée. */}
+            {selectedOrder.items.length === 0 ? (
+              <p className="small" style={{ margin: '4px 0' }}>
+                🍽️ Réservation de table sans commande — le client commandera sur place.
+              </p>
+            ) : (
+              <>
             <h4 style={{ margin: '0 0 6px' }}>Articles</h4>
             {selectedOrder.items.map((i) => (
               <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
@@ -231,6 +270,8 @@ export default function OrdersPage() {
               {selectedOrder.balanceUsed > 0 && <div className="line"><span>Solde client utilisé</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
               <div className="line total"><span>Total payé</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
             </div>
+              </>
+            )}
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? 'À emporter' : selectedOrder.orderType === 'dine_in' ? 'Sur place' : 'Livraison'}</h4>
             {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}
@@ -268,7 +309,35 @@ export default function OrdersPage() {
                 </button>
               </div>
             )}
-            <div className="row" style={{ marginTop: 12, gap: 8 }}>
+            <div className="divider" />
+            <h4 style={{ margin: '0 0 6px' }}>Ticket de la commande</h4>
+            <p className="small" style={{ margin: '0 0 8px' }}>
+              À glisser dans le sac ou à coller dessus. {btSupported
+                ? `Imprime directement sur ton imprimante thermique Bluetooth, ou via la boîte d'impression de ton appareil.`
+                : `Ton appareil ne permet pas le Bluetooth depuis le navigateur : passe par la boîte d'impression, qui gère aussi AirPrint.`}
+            </p>
+            {btSupported && (
+              <div className="row" style={{ gap: 6, marginBottom: 8, alignItems: 'center' }}>
+                <span className="small">Papier :</span>
+                <button
+                  className={paperColumns === COLUMNS_58MM ? 'btn-teal' : 'btn-outline'}
+                  style={{ padding: '5px 11px', fontSize: 12 }}
+                  onClick={() => choosePaper(COLUMNS_58MM)}
+                >58 mm</button>
+                <button
+                  className={paperColumns === COLUMNS_80MM ? 'btn-teal' : 'btn-outline'}
+                  style={{ padding: '5px 11px', fontSize: 12 }}
+                  onClick={() => choosePaper(COLUMNS_80MM)}
+                >80 mm</button>
+                {btName && <span className="small" style={{ marginLeft: 'auto' }}>🔗 {btName}</span>}
+              </div>
+            )}
+            <div className="row" style={{ marginTop: 4, gap: 8 }}>
+              {btSupported && (
+                <button className="btn-teal" disabled={printing} onClick={() => printBluetooth(selectedOrder)}>
+                  {printing ? 'Impression…' : btName ? '🖨️ Imprimer le ticket' : `🔗 Connecter l'imprimante et imprimer`}
+                </button>
+              )}
               <button className="btn-outline" onClick={() => printReceipt(selectedOrder)}>🖨️ Imprimer le bon de livraison</button>
               <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>Fermer</button>
             </div>

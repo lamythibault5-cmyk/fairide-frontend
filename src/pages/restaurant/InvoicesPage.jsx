@@ -3,6 +3,7 @@ import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import InvoiceArchive from '../../components/InvoiceArchive';
 
 function currentMonthValue() {
   const d = new Date();
@@ -69,6 +70,16 @@ export default function InvoicesPage() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Factures</h2>
+
+      {/* Archive de tout ce qui a déjà été émis, en plus de la vue mois par mois plus bas qui sert, elle,
+          à préparer et émettre la facture d'une période donnée. */}
+      <InvoiceArchive
+        endpoint="/invoices/restaurant"
+        pdfPath={(inv) => `/invoices/restaurant/${inv.id}/pdf`}
+        titre="Mes factures de commission"
+        description="Toutes les factures déjà émises, du plus récent au plus ancien. Le PDF reprend les mentions légales obligatoires et sert de pièce comptable."
+        colonneMontant="Total TTC"
+      />
 
       <div className="card no-print">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Abonnement Fairide</h3>

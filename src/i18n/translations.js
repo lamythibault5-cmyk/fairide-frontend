@@ -116,10 +116,11 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & Glaces', 'Petit-déjeuner & Brunch': 'Petit-déjeuner & Brunch',
         'Sandwichs & Salades': 'Sandwichs & Salades', Africain: 'Africain', 'Poisson & Fruits de mer': 'Poisson & Fruits de mer',
         Friterie: 'Friterie', 'Coréen': 'Coréen', Marocain: 'Marocain', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
-        'Cuisine Saine': 'Cuisine Saine', 'Cuisine Familiale': 'Cuisine Familiale',
+        'Cuisine Saine': 'Cuisine Saine', 'Cuisine Familiale': 'Cuisine Familiale', Sandwicherie: 'Sandwichs & Salades',
         Autre: 'Autre'
       },
-      unavailable: 'Indisponible pour le moment'
+      unavailable: 'Indisponible pour le moment',
+      healthy: 'Plat healthy'
     },
     restaurantList: {
       searchPlaceholder: 'Chercher un restaurant ou un plat',
@@ -135,6 +136,7 @@ export const translations = {
       sectionNearby: 'Autour de vous',
       sectionOffers: 'Offres',
       sectionDiscover: 'À découvrir',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarchés'
     },
     map: {
@@ -672,10 +674,11 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & Ice Cream', 'Petit-déjeuner & Brunch': 'Breakfast & Brunch',
         'Sandwichs & Salades': 'Sandwiches & Salads', Africain: 'African', 'Poisson & Fruits de mer': 'Fish & Seafood',
         Friterie: 'Fry Shop', 'Coréen': 'Korean', Marocain: 'Moroccan', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
-        'Cuisine Saine': 'Healthy Dining', 'Cuisine Familiale': 'Family Style',
+        'Cuisine Saine': 'Healthy Dining', 'Cuisine Familiale': 'Family Style', Sandwicherie: 'Sandwiches & Salads',
         Autre: 'Other'
       },
-      unavailable: 'Currently unavailable'
+      unavailable: 'Currently unavailable',
+      healthy: 'Healthy dish'
     },
     restaurantList: {
       searchPlaceholder: 'Search for a restaurant or a dish',
@@ -691,6 +694,7 @@ export const translations = {
       sectionNearby: 'Near you',
       sectionOffers: 'Offers',
       sectionDiscover: 'Discover',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Grocery stores'
     },
     map: {
@@ -1228,10 +1232,11 @@ export const translations = {
         'Desserts & Glaces': 'Desserts & IJs', 'Petit-déjeuner & Brunch': 'Ontbijt & Brunch',
         'Sandwichs & Salades': 'Sandwiches & Salades', Africain: 'Afrikaans', 'Poisson & Fruits de mer': 'Vis & Zeevruchten',
         Friterie: 'Frituur', 'Coréen': 'Koreaans', Marocain: 'Marokkaans', 'Bubble Tea': 'Bubble Tea', Ramen: 'Ramen',
-        'Cuisine Saine': 'Gezonde Keuken', 'Cuisine Familiale': 'Familiekeuken',
+        'Cuisine Saine': 'Gezonde Keuken', 'Cuisine Familiale': 'Familiekeuken', Sandwicherie: 'Sandwiches & Salades',
         Autre: 'Andere'
       },
-      unavailable: 'Momenteel niet beschikbaar'
+      unavailable: 'Momenteel niet beschikbaar',
+      healthy: 'Gezond gerecht'
     },
     restaurantList: {
       searchPlaceholder: 'Zoek een restaurant of een gerecht',
@@ -1247,6 +1252,7 @@ export const translations = {
       sectionNearby: 'Bij jou in de buurt',
       sectionOffers: 'Aanbiedingen',
       sectionDiscover: 'Ontdekken',
+      sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarkten'
     },
     map: {
