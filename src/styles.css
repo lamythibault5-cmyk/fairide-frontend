@@ -1358,11 +1358,26 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   }
   .dashboard-nav::-webkit-scrollbar { display: none; }
   .dashboard-sidebar .lang-switcher { margin: 0 0 0 6px; align-self: center; }
+  /* Chaque onglet prend la largeur de son propre libellé (flex: 0 0 auto) au lieu de se
+     partager la barre à parts égales (flex: 1).
+
+     Avec flex: 1 et min-width: 60px, tous les onglets recevaient la même largeur, mais le
+     libellé est en white-space: nowrap SANS overflow: hidden : « Mes commandes » fait environ
+     72px à 10px de corps, il sortait donc de sa boîte de 60px et se posait par-dessus l'onglet
+     voisin. D'où l'empilement de textes illisibles. Ajouter le sélecteur de langue a réduit la
+     part de chacun et rendu le débordement systématique, mais le défaut préexistait — il
+     suffisait d'un libellé long.
+
+     En largeur naturelle, plus rien ne peut se chevaucher : la barre défile horizontalement,
+     ce qu'elle sait déjà faire, et chaque libellé reste entièrement lisible. */
   .dashboard-nav-link {
     flex-direction: column; gap: 2px; justify-content: center; align-items: center;
-    padding: 6px 4px; flex: 1; min-width: 60px; border-radius: var(--radius-chip);
+    padding: 6px 10px; flex: 0 0 auto; min-width: 54px; border-radius: var(--radius-chip);
   }
   .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
+  /* Sélecteur resserré : dans une barre déjà disputée, il n'a pas besoin de la même surface
+     de frappe que sur la bannière publique. */
+  .dashboard-sidebar .lang-switcher button { padding: 4px 6px; font-size: 10px; }
   .dashboard-nav-icon { font-size: 20px; width: auto; }
   .dashboard-main { padding: 18px 16px calc(30px + 66px); }
   .dashboard-right { padding: 0 16px calc(24px + 66px); }
