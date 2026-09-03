@@ -10,7 +10,7 @@ export default function Footer() {
         <div className="footer-col footer-brand">
           <div className="row" style={{ gap: 8, marginBottom: 8 }}>
             <BrandMark size={28} />
-            <b style={{ fontFamily: "'Fraunces', serif", fontSize: 17 }}>Fairide</b>
+            <b style={{ fontSize: 19, letterSpacing: '-0.03em' }}>fairide</b>
           </div>
           <p className="small">{t('footer.tagline')}</p>
           <p className="small">{t('footer.belgian')}</p>

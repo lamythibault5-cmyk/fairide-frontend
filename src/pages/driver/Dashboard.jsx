@@ -322,7 +322,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ marginTop: 4 }}>Course : {o.deliveryFee.toFixed(2)}€</div>
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
             <div className="small" style={{ marginBottom: 2 }}>Code à donner au restaurant lors du retrait</div>
-            <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{o.pickupCode}</div>
+            <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
           </div>
           {o.status !== 'pret' && (
             <p className="small">La commande est encore en préparation — direction le restaurant, elle sera bientôt prête.</p>

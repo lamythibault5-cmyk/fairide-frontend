@@ -114,23 +114,42 @@ one-off spacing and is an accepted pattern here.
 Design tokens are CSS custom properties in `:root` at the top of the file. **Change colours
 there, not at call sites.**
 
+The identity is **"The frame"**: two brand colours and nothing else — iris `#3B2FB5` (the chrome)
+and lime `#C8F03C` (the spotlight). See [FairRide-5a-spec.md](FairRide-5a-spec.md) for the
+source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the reference page.
+
 | Token | Value | Role |
 |---|---|---|
-| `--ink` / `--ink-soft` | `#16233A` / `#3A4A63` | Primary navy, body text |
-| `--gold` / `--gold-deep` | `#D9A441` / `#B5822B` | Accent |
-| `--cream` / `--cream-dim` | `#FBF8F2` / `#F0EBDD` | Page background |
-| `--line` | `#E1D9C4` | Borders |
-| `--red` `--blue` `--orange` `--purple` | | Status / category colours |
-| `--radius` `--shadow` | `14px` | Shape |
+| `--iris` / `--iris-deep` | `#3B2FB5` / `#2A2185` | Brand. Headers, primary buttons, app icon |
+| `--lime` | `#C8F03C` | Accent. Badges, active states, one CTA per view |
+| `--ink` / `--ink-soft` / `--ink-faint` | `#14121F` / `#6B655D` / `#8A8377` | Text |
+| `--line` | `#DCD8D0` | 1px hairlines — the only separator, there are no shadows |
+| `--chip` | `#1E1A17` | Dark badge background, white text |
+| `--cream` / `--cream-dim` | `#FFFFFF` / `#F4F2ED` | Page background / surface tint |
+| `--red` `--blue` `--orange` `--purple` | | Status colours only, never brand |
+| `--radius` / `--radius-chip` | `20px` / `6px` | Cards / chips and controls |
+| `--shadow` | `none` | Kept as a token so old call sites resolve to nothing |
 
-Recent commits removed teal/green from the identity in favour of the navy-and-gold palette —
-check `git log` before reintroducing a green.
+**Three rules that are not negotiable, all inherited from the spec:**
 
-Fonts: **Fraunces** (serif, headings) and **Space Grotesk** (body), pulled from Google Fonts
-by an `@import` at the top of `styles.css`.
+1. **Lime only ever sits on iris, or as a filled block with `--ink` text on it.** Lime as text,
+   as a 1px border or as a thin rule on a white page fails contrast and is invisible. Wherever
+   you need "the accent, but on a light surface", the token is `--gold-deep` — which is iris.
+2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
+   halos, no drop shadows. Elevation is expressed by a hairline border.
+3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
+   nav item uses white or iris instead.
 
-There is no `button.btn-teal` rule — only `a.btn-teal`. Teal was removed from the identity; use
-`btn-gold` for primary actions and `btn-outline` for secondary.
+The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
+= iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
+
+Fonts: **Space Grotesk** only (400/500/700), `@import` at the top of `styles.css`. Fraunces was
+removed — the personality now comes from scale and tracking, not from a serif/sans pair. Headings
+are `-0.02em`, the `fairide` wordmark is lowercase at `-0.03em`.
+
+Buttons: `.btn-gold` (lime) is **the** decisive action of a screen — pay, confirm, sign in.
+`.btn-teal` (iris) is the ordinary primary action, and the default in dashboards. `.btn-outline`
+is secondary, `.btn-hero-ghost` is the secondary button on an iris ground.
 
 Confirmation modals use [ConfirmDialog](src/components/ConfirmDialog.jsx) — never `window.confirm`,
 which is suppressed in installed PWAs and webviews.

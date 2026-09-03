@@ -89,7 +89,7 @@ export default function ClientHome() {
                 {activeOrder.orderType === 'dine_in' && t('orders.codeShowArrival')}
                 {activeOrder.orderType === 'delivery' && t('orders.codeGiveDriver')}
               </div>
-              <div style={{ fontFamily: "'Fraunces', serif", fontWeight: 700, fontSize: 24, letterSpacing: 4, color: 'var(--ink)' }}>{activeOrder.deliveryCode}</div>
+              <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{activeOrder.deliveryCode}</div>
             </div>
           )}
           <Link to="/orders" className="small" style={{ display: 'block', textAlign: 'right', marginTop: 8 }}>Voir toutes mes commandes →</Link>

@@ -30,15 +30,15 @@ const DRIVER_ICON = L.divIcon({
   html: `
     <div style="position:relative;width:32px;height:32px;">
       <div class="tracking-driver-pulse"></div>
-      <div style="position:relative;background:#16233A;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">🛵</div>
+      <div style="position:relative;background:#14121F;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 8px rgba(0,0,0,.3);border:2px solid #fff;">🛵</div>
     </div>
   `,
   iconSize: [32, 32],
   iconAnchor: [16, 16]
 });
 
-const RESTAURANT_ICON = emojiIcon('🏪', '#3A4A63');
-const DELIVERY_ICON = emojiIcon('🏠', '#D9A441');
+const RESTAURANT_ICON = emojiIcon('🏪', '#3B2FB5');
+const DELIVERY_ICON = emojiIcon('🏠', '#C8F03C');
 
 async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
@@ -177,7 +177,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (hasResto && hasDelivery) {
       const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(straightLine, { color: '#3A4A63', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
+        lineRef.current = L.polyline(straightLine, { color: '#3B2FB5', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
       } else {
         lineRef.current.setLatLngs(straightLine);
       }
@@ -219,7 +219,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     }
     if (trail.length > 1) {
       if (!driverTrailLineRef.current) {
-        driverTrailLineRef.current = L.polyline(trail, { color: '#B5822B', weight: 3, opacity: 0.8, lineCap: 'round' }).addTo(mapRef.current);
+        driverTrailLineRef.current = L.polyline(trail, { color: '#C8F03C', weight: 3, opacity: 0.8, lineCap: 'round' }).addTo(mapRef.current);
       } else {
         driverTrailLineRef.current.setLatLngs(trail);
       }
@@ -293,11 +293,11 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
         </div>
       )}
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#3A4A63' }}>🏪</span> Restaurant</span>
-        <span><span className="tracking-map-legend-icon" style={{ background: '#16233A' }}>🛵</span> Livreur</span>
-        <span><span className="tracking-map-legend-icon" style={{ background: '#D9A441' }}>🏠</span> Toi</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> Restaurant</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Livreur</span>
+        <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> Toi</span>
         {hasTrail && (
-          <span><span className="tracking-map-legend-line" style={{ background: '#B5822B' }} /> Trajet parcouru</span>
+          <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> Trajet parcouru</span>
         )}
       </div>
     </div>

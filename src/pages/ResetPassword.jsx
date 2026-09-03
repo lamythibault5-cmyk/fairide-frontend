@@ -38,8 +38,6 @@ export default function ResetPassword() {
 
   return (
     <div className="decor-page auth-decor">
-      <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-      <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
       <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Nouveau mot de passe</h2>

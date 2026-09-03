@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
+import LanguageSwitcher from './LanguageSwitcher';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
 
 const HOME_PATH_BY_ROLE = { client: '/home', restaurant: '/dashboard', driver: '/driver' };
@@ -15,8 +16,8 @@ function navItemsForRole(role, t) {
       { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants') },
       { to: '/favorites', icon: '❤️', label: t('nav.favorites') },
       { to: '/orders', icon: '📦', label: t('nav.orders') },
-      { to: '/invoices', icon: '📄', label: 'Factures' },
-      { to: '/map', icon: '🗺️', label: 'Carte' },
+      { to: '/invoices', icon: '📄', label: t('nav.invoices') },
+      { to: '/map', icon: '🗺️', label: t('nav.map') },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -27,8 +28,8 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
-      { to: '/dashboard/invoices', icon: '📄', label: 'Factures' },
-      { to: '/dashboard/map', icon: '🗺️', label: 'Carte' },
+      { to: '/dashboard/invoices', icon: '📄', label: t('nav.invoices') },
+      { to: '/dashboard/map', icon: '🗺️', label: t('nav.map') },
       { to: '/dashboard/guide', icon: '📘', label: "Mode d'emploi" },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
@@ -36,10 +37,10 @@ function navItemsForRole(role, t) {
   if (role === 'driver') {
     return [
       { to: '/driver', end: true, icon: '📦', label: 'Mes commandes' },
-      { to: '/driver/map', icon: '🗺️', label: 'Carte' },
+      { to: '/driver/map', icon: '🗺️', label: t('nav.map') },
       { to: '/driver/reviews', icon: '⭐', label: 'Avis' },
       { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
-      { to: '/driver/invoices', icon: '📄', label: 'Factures' },
+      { to: '/driver/invoices', icon: '📄', label: t('nav.invoices') },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }
@@ -95,7 +96,7 @@ export default function DashboardSidebar() {
     <aside className="dashboard-sidebar">
       <Link className="dashboard-sidebar-brand" to={brandHome}>
         <BrandMark size={30} />
-        <span>Fairide</span>
+        <span>fairide</span>
       </Link>
       {previewMode && role === 'restaurant' && (
         <div className="preview-mode-sidebar-banner">
@@ -104,14 +105,23 @@ export default function DashboardSidebar() {
         </div>
       )}
       {isAdminAccount && <AdminGlobalSearch />}
+      {/* title et aria-label portent le libellé en toutes lettres : sous 520px la barre du bas
+          n'affiche plus que les icônes (voir styles.css), et une icône seule ne dit rien à un
+          lecteur d'écran ni au survol. */}
       <nav className="dashboard-nav">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+          <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
             <span className="dashboard-nav-icon">{item.icon}</span>
             <span>{item.label}</span>
           </NavLink>
         ))}
       </nav>
+      {/* Le sélecteur de langue n'existait que sur la bannière publique. Une fois connecté, on
+          passe sur cette barre latérale — et il n'y avait plus aucun moyen de changer de langue :
+          quelqu'un arrivé en néerlandais y restait enfermé. Il vit donc ici, après la navigation
+          et avant la carte de profil, c'est-à-dire visible en permanence dans les deux
+          dispositions (colonne à gauche en grand écran, barre du bas en mobile). */}
+      <LanguageSwitcher />
       <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">

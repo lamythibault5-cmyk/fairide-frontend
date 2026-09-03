@@ -116,7 +116,11 @@ export default function FloatingCart() {
           <span>{t('common.subtotal')}</span>
           <span className="floating-cart-subtotal-amount">{loadingPrecise ? '···' : `${displayedSubtotal.toFixed(2)}€`}</span>
         </div>
-        <button type="button" className="floating-cart-order-btn" onClick={() => navigate('/checkout')}>
+        {/* Replier avant de naviguer : ce composant est monté une seule fois dans Layout.jsx et
+            survit donc au changement de page. Sans ce setExpanded(false), le récap complet restait
+            déployé par-dessus la page de commande, qu'il recouvre en partie — alors même qu'on
+            venait de la demander. On repart de la bulle, comme au premier ajout. */}
+        <button type="button" className="floating-cart-order-btn" onClick={() => { setExpanded(false); navigate('/checkout'); }}>
           {t('floatingCart.order')}
         </button>
         <button type="button" className="floating-cart-clear-link" onClick={() => cart.clearLines()}>🗑️ {t('floatingCart.clear')}</button>

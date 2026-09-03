@@ -12,22 +12,32 @@ function roles(t) {
   ];
 }
 
-function genders(t) {
-  return [
-    { value: '', label: t('auth.genderPlaceholder') },
-    { value: 'Femme', label: t('auth.genderWoman') },
-    { value: 'Homme', label: t('auth.genderMan') },
-    { value: 'Autre', label: t('auth.genderOther') },
-    { value: 'Préfère ne pas dire', label: t('auth.genderPreferNot') }
-  ];
-}
+/* Étapes de l'inscription, dans l'ordre où elles sont posées.
+
+   L'inscription tenait auparavant sur un seul écran : 13 champs pour un client, 17 pour un
+   commerce, tous visibles d'un coup. À l'ouverture, ça se lit comme un dossier à monter et
+   non comme une inscription — la personne referme avant d'avoir commencé. Le même nombre de
+   questions réparti sur trois écrans se remplit sans jamais donner cette impression, parce
+   qu'on ne voit à aucun moment plus de quatre champs.
+
+   Le genre et la date de naissance ne sont plus demandés du tout : ils sont facultatifs côté
+   serveur, ils ne servent à rien pour livrer un repas, et ils restent modifiables dans la page
+   Compte (Account.jsx) pour qui veut les renseigner. Une question qui n'est pas nécessaire ne
+   doit pas être posée à l'inscription.
+
+   L'étape "business" n'existe que pour les commerces : le nom légal, le n° BCE, le n° TVA et le
+   responsable sont exigés par POST /register côté backend, on ne peut pas s'en passer. */
+const STEP_KEYS = {
+  client: ['identity', 'address', 'account'],
+  driver: ['identity', 'address', 'account'],
+  restaurant: ['identity', 'business', 'address', 'account']
+};
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 export default function Auth() {
   const { t } = useLanguage();
   const ROLES = roles(t);
-  const GENDERS = genders(t);
   const [searchParams] = useSearchParams();
   const audience = searchParams.get('audience'); // 'client' | 'partner' | null
   const roleHint = searchParams.get('role'); // optional pre-pick within an audience, e.g. 'driver'
@@ -43,8 +53,6 @@ export default function Auth() {
   });
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
-  const [gender, setGender] = useState('');
-  const [birthDate, setBirthDate] = useState('');
   const [phone, setPhone] = useState('');
   const [addressStreet, setAddressStreet] = useState('');
   const [addressNumber, setAddressNumber] = useState('');
@@ -61,7 +69,19 @@ export default function Auth() {
   const [responsibleTouched, setResponsibleTouched] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+  /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
+     protège mieux. Retaper un mot de passe à l'aveugle produit surtout la même faute deux fois,
+     et c'est une question de plus à l'écran. Le voir suffit à le vérifier. */
+  const [showPassword, setShowPassword] = useState(false);
+  /* Le code de parrainage n'apparaît que si la personne en a un : soit il arrive dans l'URL
+     (?ref=...) depuis un lien de parrainage, soit elle clique sur "J'ai un code". Sinon, c'est
+     un champ vide de plus qui allonge le formulaire sans jamais servir. */
+  const [referralOpen, setReferralOpen] = useState(() => Boolean(searchParams.get('ref')));
+  /* Étape courante de l'inscription, et erreurs par champ. Les erreurs vivent sous le champ
+     fautif plutôt qu'en toast : à la fin d'un formulaire de 13 champs, un toast "adresse
+     requise" n'indique pas lequel des quatre champs d'adresse est vide. */
+  const [step, setStep] = useState(0);
+  const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [code, setCode] = useState('');
@@ -84,6 +104,83 @@ export default function Auth() {
     const full = `${firstName} ${lastName}`.trim();
     if (full) setResponsibleName(full);
   }, [firstName, lastName, responsibleTouched]);
+
+  const steps = STEP_KEYS[role] || STEP_KEYS.client;
+  const stepKey = steps[Math.min(step, steps.length - 1)];
+  const isLastStep = step >= steps.length - 1;
+
+  /* Titre et sous-titre de l'étape en cours. Le sous-titre de l'adresse dépend du rôle : ce n'est
+     pas la même adresse ni le même usage selon qu'on commande, qu'on livre ou qu'on vend. Dire à
+     quoi sert une donnée au moment où on la demande évite la question "pourquoi vous voulez ça ?",
+     qui est une des raisons pour lesquelles on abandonne un formulaire. */
+  const stepCopy = {
+    identity: { title: t('auth.stepIdentityTitle'), sub: t('auth.stepIdentitySub') },
+    business: { title: t('auth.stepBusinessTitle'), sub: t('auth.stepBusinessSub') },
+    address: {
+      title: t('auth.stepAddressTitle'),
+      sub: role === 'client' ? t('auth.stepAddressSubClient')
+        : role === 'driver' ? t('auth.stepAddressSubDriver')
+        : t('auth.stepAddressSubRestaurant')
+    },
+    account: { title: t('auth.stepAccountTitle'), sub: t('auth.stepAccountSub') }
+  }[stepKey];
+
+  /* Un commerce a une étape de plus qu'un client : changer de rôle en cours de route (ou passer
+     de "Créer un compte" à "Se connecter") doit ramener au début, sinon on peut se retrouver à
+     une étape 3 qui n'existe plus pour le nouveau rôle. */
+  useEffect(() => { setStep(0); setErrors({}); }, [role, mode]);
+
+  /* Valide UNE étape et renvoie ses erreurs, par champ. Les règles reproduisent exactement celles
+     de POST /register côté backend (routes/auth.js) : prénom, nom, email, mot de passe, téléphone
+     et adresse complète obligatoires, plus les quatre champs légaux pour un commerce. Les faire
+     remonter ici évite un aller-retour réseau pour apprendre qu'il manque un numéro de rue. */
+  function validateStep(key) {
+    const required = t('auth.errFieldRequired');
+    const e = {};
+    if (key === 'identity') {
+      if (!firstName.trim()) e.firstName = required;
+      if (!lastName.trim()) e.lastName = required;
+      if (!phone.trim()) e.phone = required;
+    }
+    if (key === 'business') {
+      if (!legalName.trim()) e.legalName = required;
+      if (!companyNumber.trim()) e.companyNumber = required;
+      if (!vatNumber.trim()) e.vatNumber = required;
+      if (!responsibleName.trim()) e.responsibleName = required;
+    }
+    if (key === 'address') {
+      if (!addressStreet.trim()) e.addressStreet = required;
+      if (!addressNumber.trim()) e.addressNumber = required;
+      if (!addressPostalCode.trim()) e.addressPostalCode = required;
+      if (!addressCity.trim()) e.addressCity = required;
+    }
+    if (key === 'account') {
+      if (!email.trim()) e.email = required;
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
+      if (!password) e.password = required;
+      else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+        e.password = t('auth.errPasswordStrength');
+      }
+    }
+    return e;
+  }
+
+  function goNext() {
+    const e = validateStep(stepKey);
+    setErrors(e);
+    if (Object.keys(e).length === 0) setStep((s) => s + 1);
+  }
+
+  function goBack() {
+    setErrors({});
+    setStep((s) => Math.max(0, s - 1));
+  }
+
+  /* Erreur sous un champ. Le champ lui-même reçoit .input-invalid pour que le filet passe en
+     rouge : la couleur seule ne suffirait pas (daltonisme), d'où le texte en plus. */
+  function fieldError(name) {
+    return errors[name] ? <p className="field-error">{errors[name]}</p> : null;
+  }
 
   const googleBtnRef = useRef(null);
   const stateRef = useRef({ mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName });
@@ -150,27 +247,19 @@ export default function Auth() {
     setLoading(true);
     try {
       if (mode === 'register') {
-        if (!firstName.trim() || !lastName.trim()) { toast(t('auth.errNameRequired')); setLoading(false); return; }
-        if (!phone.trim()) { toast(t('auth.errPhoneRequired')); setLoading(false); return; }
-        if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim()) {
-          toast(t('auth.errAddressRequired'));
-          setLoading(false);
-          return;
-        }
-        if (role === 'restaurant' && (!legalName.trim() || !companyNumber.trim() || !vatNumber.trim() || !responsibleName.trim())) {
-          toast("Les informations légales de ton commerce sont requises (nom légal, n° d'entreprise, n° TVA, responsable).");
-          setLoading(false);
-          return;
-        }
-        if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-          toast(t('auth.errPasswordStrength'));
-          setLoading(false);
-          return;
-        }
-        if (password !== passwordConfirm) {
-          toast(t('auth.errPasswordMismatch'));
-          setLoading(false);
-          return;
+        /* Filet de sécurité : chaque étape a déjà validé ses propres champs avant de laisser
+           passer à la suivante, donc en pratique rien ne devrait tomber ici. Mais on revalide
+           TOUTES les étapes avant d'appeler le serveur — un retour en arrière suivi d'un champ
+           vidé pourrait sinon partir en requête et revenir en 400. Si une étape antérieure est
+           en faute, on y ramène la personne plutôt que d'afficher une erreur hors contexte. */
+        for (let i = 0; i < steps.length; i++) {
+          const e = validateStep(steps[i]);
+          if (Object.keys(e).length > 0) {
+            setStep(i);
+            setErrors(e);
+            setLoading(false);
+            return;
+          }
         }
         if (role === 'driver' && 'geolocation' in navigator) {
           // Demande l'autorisation de géolocalisation une seule fois, à la création du compte.
@@ -179,7 +268,7 @@ export default function Auth() {
         }
         const data = await register({
           firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role,
-          phone: phone.trim(), gender: gender || undefined, birthDate: birthDate || undefined,
+          phone: phone.trim(),
           referralCode: referralCode.trim() || undefined,
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
           addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
@@ -255,8 +344,6 @@ export default function Auth() {
   if (forgotMode) {
     return (
       <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
@@ -297,8 +384,6 @@ export default function Auth() {
   if (pendingEmail) {
     return (
       <div className={`decor-page auth-decor ${decorClass}`}>
-        <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-        <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
         <div className="auth-box">
         <div className="card">
           <h2 style={{ marginTop: 0 }}>{t('auth.verifyTitle')}</h2>
@@ -331,8 +416,6 @@ export default function Auth() {
 
   return (
     <div className={`decor-page auth-decor ${decorClass}`}>
-      <div className="decor-blob teal" style={{ width: 300, height: 300, top: -100, left: -120 }} />
-      <div className="decor-blob gold" style={{ width: 260, height: 260, bottom: -80, right: -100 }} />
       {audience && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
           <span className={`pill ${audience === 'client' ? 'gold' : 'teal'}`}>
@@ -350,9 +433,12 @@ export default function Auth() {
           <div className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</div>
         </div>
 
-        {mode === 'register' && (
-          <>
-            {visibleRoles.length > 1 && (
+        {mode === 'register' ? (
+          /* Entrée par étapes. La touche Entrée passe à l'étape suivante tant qu'il en reste une,
+             et ne déclenche la création du compte qu'à la dernière — sans ça, taper Entrée dans le
+             champ "Prénom" enverrait un formulaire aux trois quarts vide. */
+          <form onSubmit={(ev) => { if (isLastStep) { submit(ev); } else { ev.preventDefault(); goNext(); } }}>
+            {visibleRoles.length > 1 && step === 0 && (
               <div className="role-pick">
                 {visibleRoles.map((r) => (
                   <div key={r.value} className={`chip${role === r.value ? ' active' : ''}`} onClick={() => setRole(r.value)}>
@@ -361,139 +447,201 @@ export default function Auth() {
                 ))}
               </div>
             )}
-            {role === 'driver' && (
+
+            <div className="auth-step-head">
+              <h3>{stepCopy.title}</h3>
+              <p className="small">{stepCopy.sub}</p>
+              <div className="auth-step-bar">
+                <span style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+              </div>
+            </div>
+
+            {stepKey === 'identity' && (
               <>
-                <p className="small" style={{ marginTop: -6, marginBottom: 8 }}>
-                  {t('auth.driverGeoNotice')}
-                </p>
-                <p className="small" style={{ marginBottom: 12 }}>
-                  {t('auth.driverFeeNotice')}
-                </p>
+                {role === 'driver' && (
+                  <>
+                    <p className="small" style={{ marginBottom: 8 }}>{t('auth.driverGeoNotice')}</p>
+                    <p className="small" style={{ marginBottom: 14 }}>{t('auth.driverFeeNotice')}</p>
+                  </>
+                )}
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
+                    <input id="auth-f-3" className={errors.firstName ? 'input-invalid' : undefined} autoFocus
+                      value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
+                    {fieldError('firstName')}
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="auth-f-4">{t('auth.lastName')}</label>
+                    <input id="auth-f-4" className={errors.lastName ? 'input-invalid' : undefined}
+                      value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
+                    {fieldError('lastName')}
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="auth-f-7">{t('auth.phone')}</label>
+                  <input id="auth-f-7" type="tel" className={errors.phone ? 'input-invalid' : undefined}
+                    value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+                  {fieldError('phone')}
+                </div>
               </>
             )}
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
-                <input id="auth-f-3" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={t('auth.firstName')} />
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-4">{t('auth.lastName')}</label>
-                <input id="auth-f-4" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={t('auth.lastName')} />
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-5">{t('auth.gender')}</label>
-                <select id="auth-f-5" value={gender} onChange={(e) => setGender(e.target.value)}>
-                  {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-                </select>
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-6">{t('auth.birthDate')}</label>
-                <input id="auth-f-6" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-              </div>
-            </div>
-            <div className="field">
-              <label htmlFor="auth-f-7">{t('auth.phone')}</label>
-              <input id="auth-f-7" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 2 }}>
-                <label htmlFor="auth-f-8">{t('auth.street')}</label>
-                <input id="auth-f-8" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
-              </div>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-9">{t('auth.number')}</label>
-                <input id="auth-f-9" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
-              </div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}>
-                <label htmlFor="auth-f-10">{t('auth.postalCode')}</label>
-                <input id="auth-f-10" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
-              </div>
-              <div className="field" style={{ flex: 2 }}>
-                <label htmlFor="auth-f-11">{t('auth.city')}</label>
-                <input id="auth-f-11" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
-              </div>
-            </div>
-            {role === 'restaurant' && (
+
+            {stepKey === 'business' && (
               <>
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales du commerce</h4>
-                <p className="small" style={{ margin: '0 0 10px' }}>Obligatoire pour la vérification de conformité de ton commerce.</p>
                 <div className="field">
-                  <label htmlFor="auth-f-12">Nom légal / entreprise</label>
-                  <input id="auth-f-12" value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
+                  <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
+                  <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined} autoFocus
+                    value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
+                  {fieldError('legalName')}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="auth-f-13">N° d'entreprise (BCE)</label>
-                    <input id="auth-f-13" value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                    <label htmlFor="auth-f-13">{t('auth.companyNumber')}</label>
+                    <input id="auth-f-13" className={errors.companyNumber ? 'input-invalid' : undefined}
+                      value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                    {fieldError('companyNumber')}
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="auth-f-14">N° TVA</label>
-                    <input id="auth-f-14" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+                    <label htmlFor="auth-f-14">{t('auth.vatNumber')}</label>
+                    <input id="auth-f-14" className={errors.vatNumber ? 'input-invalid' : undefined}
+                      value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+                    {fieldError('vatNumber')}
                   </div>
                 </div>
                 <div className="field">
-                  <label htmlFor="auth-f-15">Responsable</label>
-                  <input id="auth-f-15"
+                  <label htmlFor="auth-f-15">{t('auth.responsibleName')}</label>
+                  <input id="auth-f-15" className={errors.responsibleName ? 'input-invalid' : undefined}
                     value={responsibleName}
                     onChange={(e) => { setResponsibleName(e.target.value); setResponsibleTouched(true); }}
-                    placeholder="Nom du responsable légal"
+                    placeholder={t('auth.responsibleNamePlaceholder')}
                   />
+                  {fieldError('responsibleName')}
                 </div>
-                <div className="divider" />
               </>
             )}
-            <div className="field">
-              <label htmlFor="auth-f-16">{t('auth.promoCode')}</label>
-              <input id="auth-f-16" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-            </div>
-          </>
-        )}
 
-        {GOOGLE_CLIENT_ID && (
+            {stepKey === 'address' && (
+              <>
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 2 }}>
+                    <label htmlFor="auth-f-8">{t('auth.street')}</label>
+                    <input id="auth-f-8" className={errors.addressStreet ? 'input-invalid' : undefined} autoFocus
+                      value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+                    {fieldError('addressStreet')}
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="auth-f-9">{t('auth.number')}</label>
+                    <input id="auth-f-9" className={errors.addressNumber ? 'input-invalid' : undefined}
+                      value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+                    {fieldError('addressNumber')}
+                  </div>
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="auth-f-10">{t('auth.postalCode')}</label>
+                    <input id="auth-f-10" className={errors.addressPostalCode ? 'input-invalid' : undefined}
+                      value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+                    {fieldError('addressPostalCode')}
+                  </div>
+                  <div className="field" style={{ flex: 2 }}>
+                    <label htmlFor="auth-f-11">{t('auth.city')}</label>
+                    <input id="auth-f-11" className={errors.addressCity ? 'input-invalid' : undefined}
+                      value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+                    {fieldError('addressCity')}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {stepKey === 'account' && (
+              <>
+                {GOOGLE_CLIENT_ID && (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
+                      <div ref={googleBtnRef} />
+                    </div>
+                    <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
+                      <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                      <span className="small">{t('auth.or')}</span>
+                      <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                    </div>
+                  </>
+                )}
+                <div className="field">
+                  <label htmlFor="auth-f-17">{t('auth.email')}</label>
+                  <input id="auth-f-17" type="email" className={errors.email ? 'input-invalid' : undefined}
+                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+                  {fieldError('email')}
+                </div>
+                <div className="field">
+                  <div className="field-label-row">
+                    <label htmlFor="auth-f-18">{t('auth.password')}</label>
+                    <button type="button" className="btn-ghost field-toggle" onClick={() => setShowPassword((v) => !v)}>
+                      {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    </button>
+                  </div>
+                  <input id="auth-f-18" type={showPassword ? 'text' : 'password'}
+                    className={errors.password ? 'input-invalid' : undefined}
+                    value={password} onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('auth.passwordPlaceholderRegister')}
+                  />
+                  {fieldError('password')}
+                </div>
+                {referralOpen ? (
+                  <div className="field">
+                    <label htmlFor="auth-f-16">{t('auth.promoCode')}</label>
+                    <input id="auth-f-16" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+                  </div>
+                ) : (
+                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => setReferralOpen(true)}>
+                    {t('auth.haveReferral')}
+                  </button>
+                )}
+              </>
+            )}
+
+            <div className="auth-step-nav">
+              {step > 0 && (
+                <button type="button" className="btn-outline" onClick={goBack}>{t('auth.back')}</button>
+              )}
+              <button type="submit" className="btn-gold" style={{ flex: 1 }} disabled={loading}>
+                {loading ? t('common.loading') : isLastStep ? t('auth.createAccount') : t('auth.continueStep')}
+              </button>
+            </div>
+          </form>
+        ) : (
           <>
-            <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-              <div ref={googleBtnRef} />
-            </div>
-            <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-              <span className="small">{t('auth.or')}</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
-            </div>
+            {GOOGLE_CLIENT_ID && (
+              <>
+                <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
+                  <div ref={googleBtnRef} />
+                </div>
+                <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
+                  <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                  <span className="small">{t('auth.or')}</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
+                </div>
+              </>
+            )}
+            <form onSubmit={submit}>
+              <div className="field">
+                <label htmlFor="auth-f-17">{t('auth.email')}</label>
+                <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+              </div>
+              <div className="field">
+                <label htmlFor="auth-f-18">{t('auth.password')}</label>
+                <input id="auth-f-18" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} />
+              </div>
+              <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
+                {t('auth.forgotPassword')}
+              </button>
+              <button type="submit" className="btn-gold btn-block" disabled={loading}>
+                {loading ? t('common.loading') : t('auth.signIn')}
+              </button>
+            </form>
           </>
         )}
-
-        <form onSubmit={submit}>
-          <div className="field">
-            <label htmlFor="auth-f-17">{t('auth.email')}</label>
-            <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
-          </div>
-          <div className="field">
-            <label htmlFor="auth-f-18">{t('auth.password')}</label>
-            <input id="auth-f-18"
-              type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-              placeholder={mode === 'register' ? t('auth.passwordPlaceholderRegister') : t('auth.password')}
-            />
-          </div>
-          {mode === 'login' && (
-            <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
-              {t('auth.forgotPassword')}
-            </button>
-          )}
-          {mode === 'register' && (
-            <div className="field">
-              <label htmlFor="auth-f-19">{t('auth.confirmPassword')}</label>
-              <input id="auth-f-19" type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('auth.confirmPasswordPlaceholder')} />
-            </div>
-          )}
-          <button type="submit" className="btn-gold btn-block" disabled={loading}>
-            {loading ? t('common.loading') : mode === 'register' ? t('auth.createAccount') : t('auth.signIn')}
-          </button>
-        </form>
       </div>
       </div>
     </div>
