@@ -1727,3 +1727,33 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
+
+/* Rubriques de « Mon compte » en liste : une ligne cliquable par rubrique, avec son icône, son nom
+   et ce qu'on y trouve. Sert aux entrées sorties de la barre du bas (plan de salle, promotions,
+   factures, mode d'emploi), qui y perdaient leur libellé sous 520px. */
+.account-link-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; text-decoration: none; color: inherit;
+  border-bottom: 1px solid var(--line-soft, var(--line));
+  transition: background .12s ease;
+}
+.account-link-row:last-child { border-bottom: none; }
+.account-link-row:hover { background: var(--cream-dim); }
+.account-link-row:active { background: var(--cream-dim); }
+.account-link-icon {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: var(--radius-chip, 8px);
+  background: var(--cream-dim); display: flex; align-items: center; justify-content: center; font-size: 17px;
+}
+/* min-width: 0 indispensable : sans lui un sous-titre long élargit la ligne au lieu d'être tronqué,
+   et la rangée déborde de la carte sur les écrans étroits. */
+.account-link-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.account-link-text b { font-size: 14px; }
+.account-link-text .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-link-chevron { flex-shrink: 0; color: var(--ink-soft); font-size: 20px; line-height: 1; }
+
+/* Le tableau du plan de salle ne se comprime pas : sur téléphone, les colonnes Places et Ouverte
+   sont incompressibles (nowrap) et écrasaient la colonne du nom, qui tombait à une quarantaine de
+   pixels — « Terrasse 2 » s'affichait « Terr ». Une largeur plancher force le cadre à défiler
+   plutôt qu'à rogner le seul champ que le restaurateur a besoin de lire. */
+.service-table.plan-table { min-width: 430px; }
+.service-table.plan-table td:first-child input { width: 100%; max-width: none; }

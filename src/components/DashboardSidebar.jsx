@@ -26,10 +26,10 @@ function navItemsForRole(role, t) {
       { to: '/dashboard/orders', icon: '📦', label: t('nav.orders') },
       { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
-      { to: '/dashboard/promotions', icon: '🏷️', label: 'Promotions' },
-      { to: '/dashboard/invoices', icon: '📄', label: t('nav.invoices') },
+      // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
+      // qu'on ouvre de temps en temps, pas au service. Neuf onglets ne tiennent pas dans une barre
+      // du bas — sous 520px ils deviennent des icônes muettes, et la sixième est déjà de trop.
       { to: '/dashboard/map', icon: '🗺️', label: t('nav.map') },
-      { to: '/dashboard/guide', icon: '📘', label: "Mode d'emploi" },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }

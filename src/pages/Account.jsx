@@ -481,6 +481,29 @@ export default function Account() {
         </ul>
       </div>
 
+      {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas : neuf onglets n'y
+          tenaient pas, et sous 520px ils deviennent des icônes muettes où l'on ne distingue plus
+          rien. Ici elles gardent leur nom en toutes lettres. */}
+      {role === 'restaurant' && restaurant && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          {[
+            { to: '/dashboard/tables', icone: '🪑', titre: 'Plan de salle', sous: 'Tes tables et tes créneaux de réservation' },
+            { to: '/dashboard/promotions', icone: '🏷️', titre: 'Promotions', sous: 'Réductions et offres sur ta carte' },
+            { to: '/dashboard/invoices', icone: '📄', titre: 'Factures', sous: 'Tes factures de commission' },
+            { to: '/dashboard/guide', icone: '📘', titre: "Mode d'emploi", sous: 'Comment gérer ton commerce sur Fairide' }
+          ].map((r) => (
+            <Link key={r.to} to={r.to} className="account-link-row">
+              <span className="account-link-icon" aria-hidden="true">{r.icone}</span>
+              <span className="account-link-text">
+                <b>{r.titre}</b>
+                <span className="small">{r.sous}</span>
+              </span>
+              <span className="account-link-chevron" aria-hidden="true">›</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
       {role === 'restaurant' && restaurant && (
         <div className="card" style={{ border: `2px solid ${['active', 'trialing'].includes(restaurant.subscriptionStatus) ? 'var(--teal)' : 'var(--red)'}` }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>💳 Abonnement</h3>
