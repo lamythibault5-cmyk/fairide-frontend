@@ -3,6 +3,7 @@ import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
+import PhotoWash from '../components/PhotoWash';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
@@ -90,6 +91,7 @@ export default function Landing() {
   return (
     <div className="decor-page">
       <div className="landing-hero">
+        <PhotoWash depart={0} />
         <HeroFrame />
         <div className="be-flag" title="Fièrement belge">
           <span className="be-flag-stripe" style={{ background: '#000' }} />
@@ -131,6 +133,7 @@ export default function Landing() {
           visuelle : la piste vaut 1 € de commande, le segment plein vaut ce que la plateforme
           prélève. On peut la lire sans lire un seul chiffre. */}
       <Reveal className="euro-block">
+        <PhotoWash depart={5} />
         <span className="pill hero">{t('landing.euroEyebrow')}</span>
         <h2>{t('landing.euroTitle')}</h2>
         <div className="euro-rows">
@@ -197,6 +200,7 @@ export default function Landing() {
       <Reveal><PartnersMarquee /></Reveal>
 
       <Reveal className="landing-cta">
+        <PhotoWash depart={9} />
         <h2>{t('landing.ctaTitle')}</h2>
         <p>{t('landing.ctaText')}</p>
         <button className="btn-gold" onClick={() => navigate('/login')}>{t('landing.ctaButton')}</button>

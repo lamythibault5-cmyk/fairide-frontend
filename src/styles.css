@@ -1784,3 +1784,48 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .resa-ligne:first-of-type { border-top: 0; padding-top: 0; }
 .resa-ligne-heure { flex: 0 0 46px; display: flex; flex-direction: column; line-height: 1.2; }
 .resa-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
+
+/* ---------------------------------------------------------------------------
+   Filigrane de plats derrière les blocs iris de la page d'accueil (PhotoWash)
+   --------------------------------------------------------------------------- */
+
+/* z-index: -1 dans un contexte isolé : la mosaïque se peint AU-DESSUS du fond iris du bloc et
+   EN DESSOUS de son contenu, sans qu'aucun enfant existant n'ait à être repositionné. L'isolation
+   est ce qui empêche le -1 de filer derrière la page entière, et elle borne aussi le mélange :
+   `screen` ne se mélange qu'avec le fond du bloc, pas avec ce qu'il y a derrière. */
+.photo-wash {
+  position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(2, 1fr);
+  opacity: .30; mix-blend-mode: screen;
+  /* Le coin haut-gauche — accroche et sous-titre — est vidé, la mosaïque ne monte en intensité
+     qu'en s'en éloignant. Le contraste passerait sans ce masque ; il sert au confort, pas à la
+     conformité : lire un titre par-dessus une texture fatigue même quand le ratio est bon. */
+  -webkit-mask-image: radial-gradient(118% 98% at 10% 22%, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,1) 80%);
+  mask-image: radial-gradient(118% 98% at 10% 22%, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,1) 80%);
+}
+/* Assombries AVANT le mélange : c'est ce filtre qui plafonne ce que `screen` peut ajouter de clarté. */
+.photo-wash img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(.38) saturate(1.12); }
+
+.landing-hero, .euro-block, .landing-cta { isolation: isolate; }
+.euro-block, .landing-cta { position: relative; overflow: hidden; }
+
+@media (max-width: 700px) {
+  .photo-wash { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); opacity: .26; }
+}
+
+/* Sur un écran qui rend mal les mélanges, ou pour qui demande moins d'animation et de bruit visuel,
+   le décor s'efface complètement plutôt que de se dégrader en taches. */
+@media (prefers-reduced-motion: reduce) { .photo-wash { opacity: .16; } }
+@media (prefers-contrast: more) { .photo-wash { display: none; } }
+
+/* L'intensité n'est pas la même partout, parce que le texte le plus pâle n'est pas le même partout.
+   Le bloc « où va ton euro » porte des légendes à 72 % d'opacité : mesuré, le filigrane à 30 % y
+   ramenait leur contraste exactement sur 4,50:1 — le seuil AA au pixel près, sans aucune marge.
+   Il y est donc réduit à 20 % (4,84:1). Le bloc d'appel final n'a pas de texte sous 82 %, il tient
+   à 26 %. La bannière, dont le plus pâle est à 78 %, garde les 30 %. */
+.euro-block .photo-wash { opacity: .20; }
+.landing-cta .photo-wash { opacity: .26; }
+@media (max-width: 700px) {
+  .euro-block .photo-wash { opacity: .18; }
+  .landing-cta .photo-wash { opacity: .23; }
+}
