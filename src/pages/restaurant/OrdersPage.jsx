@@ -242,6 +242,15 @@ export default function OrdersPage() {
             <ProgressBar status={selectedOrder.status} orderType={selectedOrder.orderType} />
             <DeliveryTiming order={selectedOrder} />
             <div className="divider" />
+            {/* Une réservation de table peut n'avoir aucun plat (voir routes/orders.js : seul 'dine_in'
+                l'autorise). Sans ce cas, la fiche affichait une section « Articles » vide suivie d'un
+                « Total payé 0,00 € », qui se lit comme une commande impayée au lieu d'une table réservée. */}
+            {selectedOrder.items.length === 0 ? (
+              <p className="small" style={{ margin: '4px 0' }}>
+                🍽️ Réservation de table sans commande — le client commandera sur place.
+              </p>
+            ) : (
+              <>
             <h4 style={{ margin: '0 0 6px' }}>Articles</h4>
             {selectedOrder.items.map((i) => (
               <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
@@ -261,6 +270,8 @@ export default function OrdersPage() {
               {selectedOrder.balanceUsed > 0 && <div className="line"><span>Solde client utilisé</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
               <div className="line total"><span>Total payé</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
             </div>
+              </>
+            )}
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? 'À emporter' : selectedOrder.orderType === 'dine_in' ? 'Sur place' : 'Livraison'}</h4>
             {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}

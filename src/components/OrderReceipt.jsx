@@ -38,6 +38,13 @@ export default function OrderReceipt({ order, restaurant }) {
       {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>Consigne : {deliveryInstructionLabel(order.deliveryInstructions)}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>Note : {order.deliveryNote}</p>}
       <div className="receipt-divider" />
+      {/* Réservation de table sans plat : sans ce cas, le reçu affichait une liste vide puis un
+          « Total payé 0.00€ », qui se lit comme une commande impayée. */}
+      {order.items.length === 0 && (
+        <p className="receipt-center" style={{ margin: '8px 0' }}>
+          <b>Réservation de table sans commande</b><br />Le client commandera sur place.
+        </p>
+      )}
       {order.items.map((i) => (
         <div key={i.itemId} className="receipt-line" style={{ alignItems: 'flex-start' }}>
           <span>
@@ -47,6 +54,7 @@ export default function OrderReceipt({ order, restaurant }) {
           <span>{(i.price * i.qty - (i.discount || 0)).toFixed(2)}€</span>
         </div>
       ))}
+      {order.items.length > 0 && <>
       <div className="receipt-divider" />
       <div className="receipt-line"><span>Sous-total</span><span>{order.subtotal.toFixed(2)}€</span></div>
       {order.promoDiscount > 0 && <div className="receipt-line"><span>Promo {order.promoLabel}</span><span>-{order.promoDiscount.toFixed(2)}€</span></div>}
@@ -56,6 +64,7 @@ export default function OrderReceipt({ order, restaurant }) {
       <div className="receipt-divider" />
       <div className="receipt-line receipt-total"><span>Total payé</span><span>{order.total.toFixed(2)}€</span></div>
       <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paid ? 'Payé via Fairide ✓' : 'Non payé'}</p>
+      </>}
       <div className="receipt-divider" />
       <p className="receipt-note">
         Récapitulatif de commande fourni par Fairide — ne remplace pas le ticket de caisse de votre

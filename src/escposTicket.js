@@ -128,6 +128,17 @@ export function buildTicketBytes(order, restaurant, { columns = COLUMNS_58MM } =
   t.rule();
 
   // --- Articles -------------------------------------------------------------------------------------
+  // Une réservation de table peut n'avoir aucun plat : imprimer une liste vide suivie d'un « TOTAL
+  // 0.00EUR » ferait lire le ticket comme une commande impayée. On dit ce qu'il est.
+  if (!(order.items || []).length) {
+    t.align(1).lines('Reservation de table').line('sans commande').align(0);
+    t.rule();
+    t.lines("Le client commandera sur place.");
+    t.align(1).line().line('A bientot !');
+    t.raw(0x0a, 0x0a, 0x0a, 0x0a);
+    t.raw(GS, 0x56, 0x42, 0x00);
+    return t.build();
+  }
   for (const i of order.items || []) {
     const montant = money(i.price * i.qty - (i.discount || 0));
     t.line(pair(`${i.qty}x ${i.name}`, montant, columns));
