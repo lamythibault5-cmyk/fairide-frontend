@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
+import LanguageSwitcher from './LanguageSwitcher';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
 
 const HOME_PATH_BY_ROLE = { client: '/home', restaurant: '/dashboard', driver: '/driver' };
@@ -111,6 +112,12 @@ export default function DashboardSidebar() {
           </NavLink>
         ))}
       </nav>
+      {/* Le sélecteur de langue n'existait que sur la bannière publique. Une fois connecté, on
+          passe sur cette barre latérale — et il n'y avait plus aucun moyen de changer de langue :
+          quelqu'un arrivé en néerlandais y restait enfermé. Il vit donc ici, après la navigation
+          et avant la carte de profil, c'est-à-dire visible en permanence dans les deux
+          dispositions (colonne à gauche en grand écran, barre du bas en mobile). */}
+      <LanguageSwitcher />
       <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">

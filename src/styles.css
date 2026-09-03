@@ -1298,6 +1298,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-nav-link.active { background: rgba(59,47,181,0.12); color: var(--teal-deep); }
 .dashboard-nav-icon { font-size: 17px; line-height: 1; width: 20px; text-align: center; flex-shrink: 0; }
 
+/* Variante fond clair du sélecteur de langue. Sa version d'origine est dessinée pour l'aplat
+   iris de la bannière publique : piste en blanc translucide, texte en --cream. Posée telle
+   quelle sur la barre latérale blanche, elle serait littéralement blanche sur blanc. */
+.dashboard-sidebar .lang-switcher { background: var(--cream-dim); align-self: flex-start; margin: 10px 6px 0; flex-shrink: 0; }
+.dashboard-sidebar .lang-switcher button { color: var(--ink-soft); opacity: 1; }
+.dashboard-sidebar .lang-switcher button:hover { color: var(--ink); }
+.dashboard-sidebar .lang-switcher button.active { background: var(--iris); color: #fff; }
+
 .dashboard-profile-card { display: flex; align-items: center; gap: 10px; padding: 10px 6px 0; border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; }
 .dashboard-profile-avatar {
   width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--cream);
@@ -1339,7 +1347,17 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
   .dashboard-sidebar-brand, .dashboard-profile-card { display: none; }
-  .dashboard-nav { flex-direction: row; gap: 2px; width: 100%; }
+  /* En mobile, c'est la NAV qui défile, et non plus la barre entière. Le sélecteur de langue
+     est placé après elle : tant que le défilement appartenait au conteneur, il partait hors
+     écran avec les onglets et n'était plus « toujours là ». Sorti du conteneur de défilement,
+     il reste collé au bord droit pendant que les onglets glissent à côté. */
+  .dashboard-sidebar { overflow-x: visible; }
+  .dashboard-nav {
+    flex-direction: row; gap: 2px; width: auto; flex: 1 1 auto; min-width: 0;
+    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  }
+  .dashboard-nav::-webkit-scrollbar { display: none; }
+  .dashboard-sidebar .lang-switcher { margin: 0 0 0 6px; align-self: center; }
   .dashboard-nav-link {
     flex-direction: column; gap: 2px; justify-content: center; align-items: center;
     padding: 6px 4px; flex: 1; min-width: 60px; border-radius: var(--radius-chip);
