@@ -17,6 +17,7 @@ import CertifiedBadge from '../../components/CertifiedBadge';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
+import { localizedItem } from '../../menuTranslation';
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -35,7 +36,7 @@ export default function RestaurantMenu() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   // Page publique (consultable sans compte, voir App.jsx) — chaque restaurant a besoin de son propre
   // titre/canonical, sinon index.html sert le même <link rel="canonical" href="/"> partout et Google
   // considère la fiche comme un doublon de l'accueil plutôt que de l'indexer pour elle-même.
@@ -161,7 +162,7 @@ export default function RestaurantMenu() {
     if (item.optionGroups?.length > 0) {
       setPickerItem(item);
     } else {
-      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: item.imageUrl, unitPrice: item.price });
     }
   }
 
@@ -178,7 +179,7 @@ export default function RestaurantMenu() {
       cart.switchRestaurant(id, restaurant.name);
       setPickerItem(item);
     } else {
-      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price, force: true });
+      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: item.imageUrl, unitPrice: item.price, force: true });
     }
   }
 

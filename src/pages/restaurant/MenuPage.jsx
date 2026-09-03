@@ -25,6 +25,7 @@ export default function MenuPage() {
   const { t } = useLanguage();
   const { restaurant, restoId, loadDashboard } = useOutletContext();
 
+  const [translating, setTranslating] = useState(false);
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategory, setItemCategory] = useState('plat');
@@ -166,6 +167,31 @@ export default function MenuPage() {
     } catch (e) {
       toast(e.message);
     }
+  }
+
+  // Traduit toute la carte vers les deux langues autres que celle dans laquelle elle est écrite.
+  // Le serveur saute les plats déjà à jour, on peut donc rappuyer après avoir ajouté trois plats
+  // sans retraduire — ni repayer — les cent autres.
+  async function translateMenu() {
+    setTranslating(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/menu/translate`, { method: 'POST', token });
+      await loadDashboard(restoId);
+      if (r.translated === 0) toast('Ta carte est déjà traduite.');
+      else toast(`${r.translated} plat(s) traduit(s).`);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setTranslating(false);
+    }
+  }
+
+  // Correction manuelle d'une traduction. Le serveur la marque comme retouchée : la génération
+  // automatique ne la réécrira plus jamais.
+  async function saveMenuItemTranslation(itemId, lang, value) {
+    await api(`/restaurants/${restoId}/menu/${itemId}/translations`, {
+      method: 'PATCH', token, body: { lang, name: value.name || '', desc: value.desc || '' }
+    });
   }
 
   async function saveMenuItem(itemId, patch) {
@@ -436,6 +462,23 @@ export default function MenuPage() {
 
   return (
     <div>
+      {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
+          enchaîne naturellement dessus. Le bouton est réutilisable — le serveur ne retraduit que
+          les plats dont le texte a bougé depuis la dernière fois. */}
+      {restaurant.menu.length > 0 && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🌍 Traduire ma carte</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            Tes clients néerlandophones et anglophones verront ta carte dans leur langue. Fairide traduit
+            les noms et les descriptions, en laissant tels quels les noms de plats qui ne se traduisent pas
+            (Tiramisu, Gyoza, Ramen...). Tu peux corriger chaque traduction en modifiant le plat concerné —
+            ce que tu corriges à la main n'est jamais réécrit.
+          </p>
+          <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
+            {translating ? 'Traduction en cours...' : '🌍 Traduire ma carte'}
+          </button>
+        </div>
+      )}
       <div className="card">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Importer un menu (PDF ou photo)</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
@@ -580,6 +623,7 @@ export default function MenuPage() {
                               sections={restaurant.sections || []} reorderMode={false} restoId={restoId}
                               selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
                               existingSubsections={sectionSubsections}
+                              onSaveTranslations={saveMenuItemTranslation}
                             />
                           ))}
                         </div>

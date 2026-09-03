@@ -8,13 +8,16 @@ import GalleryPickerModal from './GalleryPickerModal';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [] }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], onSaveTranslations }) {
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled: !reorderMode });
   const sortableStyle = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 1 : undefined };
   const [editing, setEditing] = useState(false);
+  // Brouillons de traduction : saisis localement, envoyés avec le reste du plat à l'enregistrement.
+  const [showTranslations, setShowTranslations] = useState(false);
+  const [translationDrafts, setTranslationDrafts] = useState({});
   const [name, setName] = useState(item.name);
   const [desc, setDesc] = useState(item.desc || '');
   const [price, setPrice] = useState(String(item.price));
@@ -42,6 +45,15 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     try {
       await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
+      // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
+      // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
+      // écrit, pas le précédent — sinon la correction naîtrait déjà marquée périmée.
+      if (onSaveTranslations) {
+        for (const [lang, value] of Object.entries(translationDrafts)) {
+          await onSaveTranslations(item.id, lang, value);
+        }
+      }
+      setTranslationDrafts({});
       setEditing(false);
     } finally {
       setSaving(false);
@@ -72,6 +84,43 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
         <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ingrédients, préparation..." /></div>
         <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+
+        {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
+            restaurateur n'a rien à y faire dans le cas normal — Claude les remplit quand il clique
+            sur « Traduire ma carte ». Elles ne sont là que pour qu'il puisse corriger un nom mal
+            rendu, ce qui reste rare mais doit rester possible : sans ce recours, une traduction
+            ratée serait définitive. Une correction enregistrée ici n'est plus jamais réécrite. */}
+        {item.translations && Object.keys(item.translations).length > 0 && (
+          <div className="field">
+            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setShowTranslations((v) => !v)}>
+              {showTranslations ? '▾' : '▸'} Traductions ({Object.keys(item.translations).join(', ').toUpperCase()})
+            </button>
+            {showTranslations && (
+              <div style={{ borderLeft: '2px solid var(--line)', paddingLeft: 12, marginTop: 8 }}>
+                <p className="small" style={{ margin: '0 0 10px' }}>
+                  Générées automatiquement à partir de ta carte. Corrige seulement ce qui te semble faux —
+                  ce que tu modifies ici ne sera plus jamais réécrit.
+                </p>
+                {Object.entries(item.translations).map(([lang, tr]) => (
+                  <div key={lang} style={{ marginBottom: 12 }}>
+                    <label style={{ textTransform: 'uppercase' }}>{lang}{tr.editedByOwner ? ' · corrigé par toi' : ''}</label>
+                    <input
+                      value={translationDrafts[lang]?.name ?? tr.name ?? ''}
+                      onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), name: e.target.value } }))}
+                      placeholder="Nom du plat"
+                      style={{ marginBottom: 6 }}
+                    />
+                    <input
+                      value={translationDrafts[lang]?.desc ?? tr.desc ?? ''}
+                      onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), desc: e.target.value } }))}
+                      placeholder="Description"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         <div className="field">
           <label>Catégorie</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
