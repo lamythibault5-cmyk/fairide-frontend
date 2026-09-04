@@ -1,18 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import VIDEO from '../assets/cuisine.mp4';
 import AFFICHE from '../assets/cuisine.jpg';
 
-// La séquence s'ouvre et se ferme sur un fondu au noir. Mesuré image par image, la différence entre
-// deux images consécutives vaut 3 à 5 sur toute la partie utile, et bondit à 138 à 1,2 s et 12,2 s :
-// ce sont les deux coupes. En bouclant le fichier entier, le fond clignoterait au noir toutes les
-// treize secondes. On ne joue donc que l'intervalle propre, rebouclé à la main.
-const DEBUT = 1.5;
-const FIN = 11.9;
-
-// Et on ralentit encore. Le plan est déjà deux fois plus calme que le précédent (mouvement moyen
-// mesuré : 14 contre 29), mais un fond n'a pas à être suivi du regard — il doit se remarquer sans
-// se regarder. À 0,75 il dérive au lieu de bouger.
-const VITESSE = 0.75;
+// Cette séquence-ci se boucle nativement : mesurée image par image, elle ne contient aucune coupe
+// (aucun écart au-dessus de 40, là où un fondu au noir en produit 138), et l'écart entre sa dernière
+// et sa première image vaut 45 contre 28 entre deux images voisines — le raccord passe donc pour un
+// mouvement de plus. Une version précédente ouvrait et fermait sur du noir et devait être rognée à
+// la main ; ce n'est pas le cas ici. À revérifier si l'on change le fichier (voir PROVENANCE.md).
+//
+// La lecture est en revanche ralentie de moitié. Le plan est un lent mouvement d'appareil continu :
+// mesuré à 25 de différence moyenne par demi-seconde de film, il défilerait plus vite que le
+// précédent. À 0,5× il repasse en dessous, et un fond n'a pas à être suivi du regard — il doit se
+// remarquer sans qu'on le regarde.
+const VITESSE = 0.5;
 
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
@@ -44,6 +44,21 @@ export default function CuisineBackdrop() {
   // télécharge quand même. Elle n'existe donc que si les trois conditions sont réunies, et l'état
   // initial (faux) garantit qu'un téléphone ne paie jamais les deux mégaoctets.
   const [videoOk, setVideoOk] = useState(false);
+  const video = useRef(null);
+
+  // Le navigateur suspend la lecture quand l'onglet passe en arrière-plan, et ne la reprend pas
+  // toujours au retour : observé ici, la vidéo restait en pause à 8,22 s sur une page pourtant
+  // redevenue visible. Un fond figé sur une image, ça ne se signale pas — personne ne saurait que
+  // c'est un défaut plutôt qu'un parti pris. On relance donc au retour à l'écran.
+  useEffect(() => {
+    if (!videoOk) return undefined;
+    const reprendre = () => {
+      const v = video.current;
+      if (v && v.paused && document.visibilityState === 'visible') v.play().catch(() => {});
+    };
+    document.addEventListener('visibilitychange', reprendre);
+    return () => document.removeEventListener('visibilitychange', reprendre);
+  }, [videoOk]);
 
   useEffect(() => {
     const large = window.matchMedia('(min-width: 900px)');
@@ -64,24 +79,18 @@ export default function CuisineBackdrop() {
     <div className="cuisine-fond" aria-hidden="true">
       {videoOk ? (
         <video
+          ref={video}
           className="cuisine-fond-media"
           src={VIDEO}
           poster={AFFICHE}
           autoPlay
           muted
+          loop
           playsInline
           preload="metadata"
-          onLoadedMetadata={(e) => {
-            e.currentTarget.playbackRate = VITESSE;
-            e.currentTarget.currentTime = DEBUT;
-          }}
-          onTimeUpdate={(e) => {
-            if (e.currentTarget.currentTime >= FIN) e.currentTarget.currentTime = DEBUT;
-          }}
-          onEnded={(e) => {
-            e.currentTarget.currentTime = DEBUT;
-            e.currentTarget.play().catch(() => {});
-          }}
+          // La vitesse se pose sur l'élément, pas dans le fichier : elle est perdue à chaque
+          // rechargement de la source, d'où le réglage à l'arrivée des métadonnées.
+          onLoadedMetadata={(e) => { e.currentTarget.playbackRate = VITESSE; }}
         />
       ) : (
         <img className="cuisine-fond-media" src={AFFICHE} alt="" decoding="async" />
