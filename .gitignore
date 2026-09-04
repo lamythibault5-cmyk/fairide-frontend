@@ -3,3 +3,6 @@ dist/
 .env
 .env.local
 .claude/
+
+# Bancs d essai jetables (sources video de plusieurs centaines de Mo)
+public/_probe/

@@ -38,12 +38,23 @@ export default function Layout() {
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
   const fondCuisine = !user && location.pathname === '/';
 
+  // Sous 900px la barre latérale devient la barre du BAS, et sa règle CSS y masque son propre logo :
+  // un utilisateur connecté n abordait donc plus aucune marque à l écran. On la remonte en haut à
+  // droite du contenu, à cette largeur seulement — au-dessus, la barre latérale la porte déjà.
+  const accueilConnecte = user?.isAdmin ? '/admin'
+    : role === 'restaurant' ? '/dashboard'
+    : role === 'driver' ? '/driver'
+    : '/restaurants';
   if (user && isDashboardPath(location.pathname)) {
     return (
       <>
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}`}>
           <DashboardSidebar />
           <main className="dashboard-main">
+            <Link className="dashboard-topbrand" to={accueilConnecte}>
+              <BrandMark size={26} />
+              <span>fairide</span>
+            </Link>
             <div className="page-fade" key={location.pathname}>
               <Outlet context={{ setRightSlot }} />
             </div>
