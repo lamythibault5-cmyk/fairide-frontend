@@ -1786,49 +1786,70 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .resa-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
 
 /* ---------------------------------------------------------------------------
-   Filigrane de plats derrière les blocs iris de la page d'accueil (PhotoWash)
+   Filigrane de plats sur la page d'accueil (PhotoWash) — deux variantes
    --------------------------------------------------------------------------- */
 
+.photo-wash {
+  pointer-events: none;
+  display: grid;
+  /* Quatre colonnes et non six : à six, chaque tuile tombait sous 160px et un plat n'y était plus
+     qu'une tache colorée. On reconnaît un poke bowl à 240px, pas à 150. Le filigrane a besoin
+     d'être lisible pour dire quelque chose — sinon autant poser une texture abstraite. */
+  grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr);
+}
+.photo-wash img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* --- Sur les aplats iris : le mélange ne peut qu'éclaircir --- */
 /* z-index: -1 dans un contexte isolé : la mosaïque se peint AU-DESSUS du fond iris du bloc et
    EN DESSOUS de son contenu, sans qu'aucun enfant existant n'ait à être repositionné. L'isolation
-   est ce qui empêche le -1 de filer derrière la page entière, et elle borne aussi le mélange :
-   `screen` ne se mélange qu'avec le fond du bloc, pas avec ce qu'il y a derrière. */
-.photo-wash {
-  position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: repeat(2, 1fr);
-  opacity: .30; mix-blend-mode: screen;
-  /* Le coin haut-gauche — accroche et sous-titre — est vidé, la mosaïque ne monte en intensité
-     qu'en s'en éloignant. Le contraste passerait sans ce masque ; il sert au confort, pas à la
-     conformité : lire un titre par-dessus une texture fatigue même quand le ratio est bon. */
-  -webkit-mask-image: radial-gradient(118% 98% at 10% 22%, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,1) 80%);
-  mask-image: radial-gradient(118% 98% at 10% 22%, rgba(0,0,0,0) 0%, rgba(0,0,0,.18) 36%, rgba(0,0,0,1) 80%);
+   empêche le -1 de filer derrière la page, et borne le mélange au fond du bloc. */
+.photo-wash-iris {
+  position: absolute; inset: 0; z-index: -1;
+  opacity: .40; mix-blend-mode: screen;
+  /* Le coin haut-gauche — accroche et sous-titre — reste dégagé, la mosaïque ne monte en intensité
+     qu'en s'en éloignant. Le masque sert au confort, pas à la conformité : lire un titre par-dessus
+     une texture fatigue même quand le ratio passe. */
+  -webkit-mask-image: radial-gradient(122% 104% at 8% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.24) 34%, rgba(0,0,0,1) 76%);
+  mask-image: radial-gradient(122% 104% at 8% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.24) 34%, rgba(0,0,0,1) 76%);
 }
-/* Assombries AVANT le mélange : c'est ce filtre qui plafonne ce que `screen` peut ajouter de clarté. */
-.photo-wash img { width: 100%; height: 100%; object-fit: cover; display: block; filter: brightness(.38) saturate(1.12); }
+/* Assombries AVANT le mélange : ce filtre plafonne ce que `screen` peut ajouter de clarté. */
+.photo-wash-iris img { filter: brightness(.34) saturate(1.25); }
 
-.landing-hero, .euro-block, .landing-cta { isolation: isolate; }
-.euro-block, .landing-cta { position: relative; overflow: hidden; }
+/* L'intensité diffère par bloc parce que le texte le plus pâle diffère par bloc. Le bloc « où va
+   ton euro » porte des légendes à 72 % d'opacité, les plus fragiles de la page ; l'appel final ne
+   descend pas sous 82 % ; la bannière, sous 78 %, supporte le plus. Valeurs mesurées, pas réglées
+   à l'œil — voir le commentaire de PhotoWash.jsx. */
+.euro-block .photo-wash-iris { opacity: .24; }
+.landing-cta .photo-wash-iris { opacity: .34; }
+
+/* --- Sur le fond clair de la page : le mélange ne peut qu'assombrir --- */
+/* Fixe, donc une seule hauteur d'écran à couvrir quelle que soit la longueur de la page, et les
+   plats glissent derrière le contenu pendant le défilement au lieu de le suivre. z-index 0 et non
+   -1 : le fond du <body> est un aplat opaque, une couche négative disparaîtrait derrière lui. */
+.photo-wash-page {
+  position: fixed; inset: 0; z-index: 0;
+  opacity: .46; mix-blend-mode: multiply;
+}
+/* Éclaircies et aplaties avant le mélange : `contrast` resserre la plage vers le clair, ce qui
+   plafonne ce que `multiply` peut retirer de luminosité au blanc de la page. */
+.photo-wash-page img { filter: saturate(.9) contrast(.3) brightness(1.4); }
+
+/* Le contenu passe au-dessus de la couche fixe. Sans cette règle, une couche en z-index 0 se
+   peindrait PAR-DESSUS le contenu non positionné, qui se peint plus tôt dans l'ordre du navigateur. */
+.decor-photos > *:not(.photo-wash-page) { position: relative; z-index: 1; }
 
 @media (max-width: 700px) {
-  .photo-wash { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); opacity: .26; }
+  .photo-wash { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); }
+  .photo-wash-iris { opacity: .34; }
+  .euro-block .photo-wash-iris { opacity: .21; }
+  .landing-cta .photo-wash-iris { opacity: .29; }
+  .photo-wash-page { opacity: .40; }
 }
 
-/* Sur un écran qui rend mal les mélanges, ou pour qui demande moins d'animation et de bruit visuel,
-   le décor s'efface complètement plutôt que de se dégrader en taches. */
-@media (prefers-reduced-motion: reduce) { .photo-wash { opacity: .16; } }
+/* Sur un écran qui rend mal les mélanges, ou pour qui demande moins de bruit visuel, le décor
+   s'efface plutôt que de se dégrader en taches. */
+@media (prefers-reduced-motion: reduce) { .photo-wash { opacity: .18; } }
 @media (prefers-contrast: more) { .photo-wash { display: none; } }
-
-/* L'intensité n'est pas la même partout, parce que le texte le plus pâle n'est pas le même partout.
-   Le bloc « où va ton euro » porte des légendes à 72 % d'opacité : mesuré, le filigrane à 30 % y
-   ramenait leur contraste exactement sur 4,50:1 — le seuil AA au pixel près, sans aucune marge.
-   Il y est donc réduit à 20 % (4,84:1). Le bloc d'appel final n'a pas de texte sous 82 %, il tient
-   à 26 %. La bannière, dont le plus pâle est à 78 %, garde les 30 %. */
-.euro-block .photo-wash { opacity: .20; }
-.landing-cta .photo-wash { opacity: .26; }
-@media (max-width: 700px) {
-  .euro-block .photo-wash { opacity: .18; }
-  .landing-cta .photo-wash { opacity: .23; }
-}
 
 /* Une rangée du menu Compte peut être un <button> (ouvrir l'assistant, partager) et non un lien.
    Le navigateur donne aux boutons leur propre fond, bordure, police et alignement : sans cette
@@ -1852,3 +1873,11 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-legal a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
 .account-legal a:hover { color: var(--iris); }
 .account-build { flex-basis: 100%; text-align: center; color: var(--ink-faint); font-size: 11.5px; }
+
+/* Les trois descriptions de la frise « Comment ça marche » sont le SEUL texte de la page posé à
+   même le fond, sans carte opaque pour l'en séparer — la frise est volontairement sans fond, un
+   trait de liaison la traverse. En gris moyen (--ink-soft) sur le filigrane à pleine intensité,
+   mesurées à 3,27:1, sous le seuil AA. En encre pleine elles remontent à 10,5:1.
+   C'est ce qui permet au décor d'exister partout : l'alternative était de l'affaiblir sur toute la
+   page pour trois lignes, alors qu'assombrir ces trois lignes ne coûte rien à personne. */
+.step-card .small { color: var(--ink); }

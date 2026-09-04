@@ -89,7 +89,12 @@ export default function Landing() {
   usePageMeta({ path: '/' });
 
   return (
-    <div className="decor-page">
+    <div className="decor-page decor-photos">
+      {/* Couche fixe derrière TOUTE la page : elle apparaît dans les marges, entre les cartes et
+          derrière les titres de section, là où le fond était un blanc nu. Les blocs iris ont la
+          leur, opaques par-dessus celle-ci. */}
+      <PhotoWash variante="page" depart={2} />
+
       <div className="landing-hero">
         <PhotoWash depart={0} />
         <HeroFrame />
