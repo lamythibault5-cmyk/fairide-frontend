@@ -2,31 +2,29 @@ import { useEffect, useRef, useState } from 'react';
 import VIDEO from '../assets/cuisine.mp4';
 import AFFICHE from '../assets/cuisine.jpg';
 
-// Cette séquence-ci se boucle nativement : mesurée image par image, elle ne contient aucune coupe
-// (aucun écart au-dessus de 40, là où un fondu au noir en produit 138), et l'écart entre sa dernière
-// et sa première image vaut 45 contre 28 entre deux images voisines — le raccord passe donc pour un
-// mouvement de plus. Une version précédente ouvrait et fermait sur du noir et devait être rognée à
-// la main ; ce n'est pas le cas ici. À revérifier si l'on change le fichier (voir PROVENANCE.md).
-//
-// La lecture est en revanche ralentie de moitié. Le plan est un lent mouvement d'appareil continu :
-// mesuré à 25 de différence moyenne par demi-seconde de film, il défilerait plus vite que le
-// précédent. À 0,5× il repasse en dessous, et un fond n'a pas à être suivi du regard — il doit se
-// remarquer sans qu'on le regarde.
-const VITESSE = 0.5;
-
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
-// POURQUOI UNE SEULE IMAGE ET NON UNE MOSAÏQUE. Deux versions précédentes posaient une grille de
+// POURQUOI UNE SEULE IMAGE ET NON UNE MOSAÏQUE. Des versions précédentes posaient une grille de
 // petites vignettes. Une grille de vignettes se lit comme une planche contact — c'est-à-dire comme
-// du stock —, quelle que soit la qualité de chaque vignette. Un seul plan, cadré large et animé
-// lentement, se lit comme une image de marque. C'est la différence entre montrer beaucoup et
-// montrer bien.
+// du stock —, quelle que soit la qualité de chaque vignette. Un seul plan, cadré large, se lit
+// comme une image de marque. C'est la différence entre montrer beaucoup et montrer bien.
 //
-// POURQUOI CES SOURCES. Les images de galleryImages.js sont du domaine public collecté sur Flickr :
+// LA BOUCLE EST FABRIQUÉE, PAS TROUVÉE. Aucune séquence de banque ne boucle d'elle-même : coupée
+// où elle s'arrête, elle saute visiblement au redémarrage. Le fichier livré a donc été monté avec
+// ffmpeg — sa queue est fondue par-dessus sa tête, ce qui fait coïncider sa dernière image avec sa
+// première. Mesuré : l'écart au raccord vaut 1,98, quand trois images consécutives en écartent déjà
+// 2,50. Le raccord est donc plus discret qu'un dixième de seconde de mouvement ordinaire. La
+// recette exacte est dans PROVENANCE.md — un fichier de remplacement devra repasser par là.
+//
+// PAS DE RALENTI. Les plans précédents étaient joués à 0,5× ou 0,75× pour les calmer. Celui-ci est
+// filmé sur pied, seule la personne bouge : mesuré à 7,3 de différence moyenne par demi-seconde,
+// contre 25 pour le plan d'avant. Il est déjà plus calme à vitesse réelle que le précédent ralenti
+// de moitié — et ralentir un geste humain le rend faux.
+//
+// POURQUOI CETTE SOURCE. Les images de galleryImages.js sont du domaine public collecté sur Flickr :
 // des photos d'amateurs, prises au téléphone, sans éclairage. Aucun arrangement ne les fera
-// ressembler à de la gastronomie. Ici : une séquence Pixabay (chef au travail) et une photo Pexels
-// (dressage en cuisine), toutes deux sous licence libre pour usage commercial sans attribution.
-// Provenance et licences détaillées dans src/assets/PROVENANCE.md.
+// ressembler à autre chose. Ici, une séquence Pexels tournée en 4K (4096 × 2160), sous licence
+// libre pour usage commercial sans attribution. Provenance et licences dans PROVENANCE.md.
 //
 // HÉBERGÉS PAR NOUS, ET C'EST VOULU. Une première version pointait directement sur les CDN de
 // Pixabay et Pexels. Ça marchait, mais ça ne dépendait pas de nous : Pexels bloque déjà le lien
@@ -88,9 +86,6 @@ export default function CuisineBackdrop() {
           loop
           playsInline
           preload="metadata"
-          // La vitesse se pose sur l'élément, pas dans le fichier : elle est perdue à chaque
-          // rechargement de la source, d'où le réglage à l'arrivée des métadonnées.
-          onLoadedMetadata={(e) => { e.currentTarget.playbackRate = VITESSE; }}
         />
       ) : (
         <img className="cuisine-fond-media" src={AFFICHE} alt="" decoding="async" />
