@@ -1819,7 +1819,31 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* La bannière laisse passer la vidéo, mais peu : son texte le plus pâle est à 78 % d'opacité et
    c'est lui qui fixe la limite. Au pire cas — une image de vidéo entièrement blanche — il tient à
    4,71:1. Descendre l'aplat plus bas le ferait passer sous le seuil. */
+/* TOUS les aplats iris de l accueil laissent passer le fond, pas seulement la banniere : sinon la
+   video n existe que dans les marges et chaque bloc bleu la coupe net. Le flou d arriere-plan est
+   ce qui rend la chose lisible — sans lui, le detail de la video vibre sous le texte.
+
+   Les taux different par bloc parce que le texte le plus pale differe par bloc, et c est lui qui
+   fixe la limite. Valeurs mesurees contre le PIRE fond possible : une image de video entierement
+   blanche, que le voile laisse passer a 255. Voir le detail sous chaque regle. */
+
+/* Banniere : son texte le plus pale est a 78 % d opacite. */
 .wrap-fond .landing-hero { background: rgba(59, 47, 181, .86); }
+
+/* Bloc « ou va ton euro » : ses legendes sont a 72 % d opacite, les plus fragiles de la page. */
+.wrap-fond .euro-block { background: rgba(59, 47, 181, .9); }
+
+/* Appel final : rien sous 82 %. */
+.wrap-fond .landing-cta { background: rgba(59, 47, 181, .86); }
+
+/* Carte « client » de la rangee Rejoindre, et bloc application. */
+.wrap-fond .join-card.join-card-iris { background: rgba(59, 47, 181, .88); border-color: transparent; }
+.wrap-fond .app-soon { background: rgba(59, 47, 181, .88); }
+
+.wrap-fond .euro-block, .wrap-fond .landing-cta,
+.wrap-fond .join-card.join-card-iris, .wrap-fond .app-soon, .wrap-fond .landing-hero {
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
 
 /* Le pied de page est le seul bloc de la page posé à même le fond sans carte pour l en séparer :
    ses liens en gris moyen y tombaient à 1,72:1, un gris sur un gris. Il reçoit donc le même
@@ -1845,7 +1869,10 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @media (prefers-contrast: more) {
   .cuisine-fond { display: none; }
   .wrap-fond .card { background: #fff; }
-  .wrap-fond .landing-hero { background: var(--iris); }
+  .wrap-fond .landing-hero, .wrap-fond .euro-block, .wrap-fond .landing-cta,
+  .wrap-fond .join-card.join-card-iris, .wrap-fond .app-soon {
+    background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
 }
 
 /* Une rangée du menu Compte peut être un <button> (ouvrir l'assistant, partager) et non un lien.
