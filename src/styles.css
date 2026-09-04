@@ -1786,84 +1786,67 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .resa-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
 
 /* ---------------------------------------------------------------------------
-   Filigrane de plats sur la page d'accueil (PhotoWash) — deux variantes
+   Fond de cuisine plein écran de l'accueil public (CuisineBackdrop)
    --------------------------------------------------------------------------- */
 
-/* La base ne pose QUE ce qui est commun. Les gabarits de grille appartiennent aux variantes : les
-   deux ne se remplissent pas pareil — l'une couvre un bloc de hauteur connue, l'autre toute la
-   page. Une déclaration `grid-template-rows` partagée figeait le nombre de rangées du fond de page
-   et écrasait sa mosaïque. */
-.photo-wash { pointer-events: none; display: grid; }
-.photo-wash img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Fixe et posé HORS du conteneur de contenu (voir Layout.jsx) : c'est ce qui lui fait couvrir tout
+   l'écran. Une version précédente le rendait à l'intérieur de .wrap, large de 960px au plus — il ne
+   s'affichait donc que derrière la colonne de contenu, jamais dans les marges. */
+.cuisine-fond { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.cuisine-fond-media { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* --- Sur les aplats iris : le mélange ne peut qu'éclaircir --- */
-/* z-index: -1 dans un contexte isolé : la mosaïque se peint AU-DESSUS du fond iris du bloc et
-   EN DESSOUS de son contenu, sans qu'aucun enfant existant n'ait à être repositionné. L'isolation
-   empêche le -1 de filer derrière la page, et borne le mélange au fond du bloc.
-   Quatre colonnes et non six : à six, chaque tuile tombait sous 160px et un plat n'y était plus
-   qu'une tache colorée. On reconnaît un poke bowl à 240px, pas à 150. */
-.photo-wash-iris {
-  position: absolute; inset: 0; z-index: -1;
-  grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr);
-  opacity: .40; mix-blend-mode: screen;
-  /* Le coin haut-gauche — accroche et sous-titre — reste dégagé, la mosaïque ne monte en intensité
-     qu'en s'en éloignant. Le masque sert au confort, pas à la conformité : lire un titre par-dessus
-     une texture fatigue même quand le ratio passe. */
-  -webkit-mask-image: radial-gradient(122% 104% at 8% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.24) 34%, rgba(0,0,0,1) 76%);
-  mask-image: radial-gradient(122% 104% at 8% 20%, rgba(0,0,0,0) 0%, rgba(0,0,0,.24) 34%, rgba(0,0,0,1) 76%);
+/* Le voile est ce qui rend tout le reste possible. Une vidéo change de luminosité d'une image à
+   l'autre : contrairement à une photo, son pire pixel ne se calcule pas. Le voile impose donc un
+   plancher indépendant de ce qui passe à l'écran — même devant une image entièrement noire, le fond
+   ne descend pas sous le blanc à 55 %, soit un gris 140. C'est ce plancher, et non la vidéo, qui
+   décide du contraste : encre pleine à 5,5:1 dessus. */
+.cuisine-fond-voile { position: absolute; inset: 0; background: rgba(255, 255, 255, .55); }
+
+/* Le contenu passe au-dessus du fond. Classe dédiée et non `.wrap` en général : élever tout .wrap
+   en créerait un contexte d'empilement sur chaque page du site, ce qui piégerait sous lui les
+   éléments à z-index élevé (les fenêtres modales sont à 100). L'accueil public n'en a aucune. */
+.wrap-fond { position: relative; z-index: 1; }
+
+/* Les cartes deviennent translucides : c'est ce qui fait exister le fond DERRIÈRE le contenu et pas
+   seulement autour. Le flou d'arrière-plan évite que la vidéo ne fasse vibrer le texte posé dessus.
+   84 % et pas moins : à 78 %, le gris secondaire (--ink-soft) tombait à 4,60:1, trop près du seuil.
+   Portée limitée à l'accueil public — .card sert partout ailleurs. */
+.wrap-fond .card {
+  background: rgba(255, 255, 255, .84);
+  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
 }
-/* Assombries AVANT le mélange : ce filtre plafonne ce que `screen` peut ajouter de clarté. */
-.photo-wash-iris img { filter: brightness(.34) saturate(1.25); }
 
-/* L'intensité diffère par bloc parce que le texte le plus pâle diffère par bloc. Le bloc « où va
-   ton euro » porte des légendes à 72 % d'opacité, les plus fragiles de la page ; l'appel final ne
-   descend pas sous 82 % ; la bannière, sous 78 %, supporte le plus. Valeurs mesurées, pas réglées
-   à l'œil — voir le commentaire de PhotoWash.jsx. */
-.euro-block .photo-wash-iris { opacity: .24; }
-.landing-cta .photo-wash-iris { opacity: .34; }
+/* La bannière laisse passer la vidéo, mais peu : son texte le plus pâle est à 78 % d'opacité et
+   c'est lui qui fixe la limite. Au pire cas — une image de vidéo entièrement blanche — il tient à
+   4,71:1. Descendre l'aplat plus bas le ferait passer sous le seuil. */
+.wrap-fond .landing-hero { background: rgba(59, 47, 181, .86); }
 
-/* --- Sur le fond clair de la page : le mélange ne peut qu'assombrir --- */
-/* En position absolue et non fixe : la couche fait toute la hauteur du document et DÉFILE avec le
-   contenu, si bien qu'on découvre de nouveaux plats en descendant. Une couche fixe montrait les
-   mêmes douze images du début à la fin, ce qui la faisait lire comme un papier peint immobile
-   derrière une page qui bouge.
-   z-index 0 et non -1 : le fond du <body> est un aplat opaque, une couche négative disparaîtrait
-   derrière lui. `overflow: hidden` coupe les rangées en trop — on en génère plus que nécessaire,
-   la hauteur de la page n'étant pas connue du CSS. */
-.photo-wash-page {
-  position: absolute; inset: 0; z-index: 0; overflow: hidden;
-  opacity: .70; mix-blend-mode: multiply;
-  /* Mosaïque éditoriale plutôt que damier régulier : les tuiles n'ont pas toutes la même hauteur,
-     et `dense` rebouche les trous que ça créerait. Une grille parfaitement régulière se lit comme
-     un motif — donc comme une texture ; un rythme irrégulier se lit comme des photos. */
-  grid-template-columns: repeat(3, 1fr); grid-auto-rows: 108px; grid-auto-flow: row dense;
+/* Le pied de page est le seul bloc de la page posé à même le fond sans carte pour l en séparer :
+   ses liens en gris moyen y tombaient à 1,72:1, un gris sur un gris. Il reçoit donc le même
+   panneau translucide que les cartes, ce qui le remonte à 4,90:1 et le rattache visuellement au
+   reste plutôt que de le laisser flotter sur la vidéo. */
+.wrap-fond .site-footer {
+  background: rgba(255, 255, 255, .84);
+  -webkit-backdrop-filter: blur(7px); backdrop-filter: blur(7px);
+  border-radius: var(--radius); padding: 26px 22px 18px; margin-top: 40px;
 }
-.photo-wash-page img { grid-row: span 2; }
-.photo-wash-page img:nth-child(5n + 1) { grid-row: span 3; }
-.photo-wash-page img:nth-child(7n + 4) { grid-row: span 4; }
-/* Éclaircies et aplaties avant le mélange : `contrast` resserre la plage vers le clair, ce qui
-   plafonne ce que `multiply` peut retirer de luminosité au blanc de la page. */
-.photo-wash-page img { filter: saturate(1.15) contrast(.42) brightness(1.28); }
+@media (max-width: 700px) { .wrap-fond .site-footer { background: rgba(255, 255, 255, .9); } }
+@media (prefers-contrast: more) { .wrap-fond .site-footer { background: #fff; } }
 
-/* Le contenu passe au-dessus de la couche. Sans cette règle, une couche en z-index 0 se peindrait
-   PAR-DESSUS le contenu non positionné, qui se peint plus tôt dans l'ordre du navigateur.
-   Restreint à .decor-photos : .decor-page sert aussi aux pages de connexion, dont l'empilement ne
-   doit pas bouger. */
-.decor-photos > *:not(.photo-wash-page) { position: relative; z-index: 1; }
-
+/* Sur téléphone le fond n'est qu'une photo (voir CuisineBackdrop.jsx : la vidéo n'y est jamais
+   téléchargée). On l'atténue : une image fixe très présente derrière une colonne de texte pleine
+   largeur fatigue plus qu'elle ne séduit. */
 @media (max-width: 700px) {
-  .photo-wash-iris { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(4, 1fr); opacity: .34; }
-  .euro-block .photo-wash-iris { opacity: .21; }
-  .landing-cta .photo-wash-iris { opacity: .29; }
-  /* Deux colonnes : à trois, une tuile fait 120px de large sur un téléphone et le plat redevient
-     une tache. Moins de colonnes, donc des plats plus grands — c'est l'inverse du réflexe. */
-  .photo-wash-page { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 96px; opacity: .62; }
+  .cuisine-fond-voile { background: rgba(255, 255, 255, .68); }
+  .wrap-fond .card { background: rgba(255, 255, 255, .9); }
 }
 
-/* Sur un écran qui rend mal les mélanges, ou pour qui demande moins de bruit visuel, le décor
-   s'efface plutôt que de se dégrader en taches. */
-@media (prefers-reduced-motion: reduce) { .photo-wash { opacity: .18; } }
-@media (prefers-contrast: more) { .photo-wash { display: none; } }
+/* Contraste renforcé : le décor s'efface complètement, l'interface redevient un aplat. */
+@media (prefers-contrast: more) {
+  .cuisine-fond { display: none; }
+  .wrap-fond .card { background: #fff; }
+  .wrap-fond .landing-hero { background: var(--iris); }
+}
 
 /* Une rangée du menu Compte peut être un <button> (ouvrir l'assistant, partager) et non un lien.
    Le navigateur donne aux boutons leur propre fond, bordure, police et alignement : sans cette

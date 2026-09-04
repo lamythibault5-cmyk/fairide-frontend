@@ -3,7 +3,6 @@ import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
-import PhotoWash from '../components/PhotoWash';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
@@ -89,17 +88,9 @@ export default function Landing() {
   usePageMeta({ path: '/' });
 
   return (
-    <div className="decor-page decor-photos">
-      {/* Couche derrière TOUTE la page : elle apparaît dans les marges, entre les cartes et
-          derrière les titres de section, là où le fond était un blanc nu. Elle défile avec le
-          contenu, si bien qu'on découvre d'autres plats en descendant.
-          54 tuiles : le CSS ne connaît pas la hauteur de la page, on en génère donc plus qu'il n'en
-          faut et `overflow: hidden` coupe le reste. Elles sont en chargement différé — celles du
-          bas ne sont téléchargées que si l'on descend jusque-là. */}
-      <PhotoWash variante="page" depart={2} combien={54} />
+    <div className="decor-page">
 
       <div className="landing-hero">
-        <PhotoWash depart={0} />
         <HeroFrame />
         <div className="be-flag" title="Fièrement belge">
           <span className="be-flag-stripe" style={{ background: '#000' }} />
@@ -141,7 +132,6 @@ export default function Landing() {
           visuelle : la piste vaut 1 € de commande, le segment plein vaut ce que la plateforme
           prélève. On peut la lire sans lire un seul chiffre. */}
       <Reveal className="euro-block">
-        <PhotoWash depart={5} />
         <span className="pill hero">{t('landing.euroEyebrow')}</span>
         <h2>{t('landing.euroTitle')}</h2>
         <div className="euro-rows">
@@ -208,7 +198,6 @@ export default function Landing() {
       <Reveal><PartnersMarquee /></Reveal>
 
       <Reveal className="landing-cta">
-        <PhotoWash depart={9} />
         <h2>{t('landing.ctaTitle')}</h2>
         <p>{t('landing.ctaText')}</p>
         <button className="btn-gold" onClick={() => navigate('/login')}>{t('landing.ctaButton')}</button>

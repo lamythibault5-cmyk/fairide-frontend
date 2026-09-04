@@ -6,6 +6,7 @@ import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
+import CuisineBackdrop from './CuisineBackdrop';
 import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
@@ -33,6 +34,9 @@ export default function Layout() {
   // volontairement côté serveur (requireRole('client')), ce qui bloque naturellement au bon endroit.
   const seesClientCart = !user?.isAdmin && (role === 'client' || (previewMode && role === 'restaurant'));
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
+  // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
+  // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
+  const fondCuisine = !user && location.pathname === '/';
 
   if (user && isDashboardPath(location.pathname)) {
     return (
@@ -60,6 +64,7 @@ export default function Layout() {
 
   return (
     <>
+      {fondCuisine && <CuisineBackdrop />}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}`}>
         <div className="hero-inner">
           {/* Le sélecteur de langue est le DERNIER élément de la rangée, et non plus celui du
@@ -123,7 +128,7 @@ export default function Layout() {
           )}
         </div>
       </div>
-      <div className="wrap" style={{ paddingTop: 24 }}>
+      <div className={`wrap${fondCuisine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
         <div className="page-fade" key={location.pathname}>
           <Outlet />
         </div>
