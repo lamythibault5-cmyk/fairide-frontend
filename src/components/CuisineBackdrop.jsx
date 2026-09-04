@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import VIDEO from '../assets/cuisine.mp4';
+import AFFICHE from '../assets/cuisine.jpg';
 
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
@@ -12,13 +14,18 @@ import { useEffect, useState } from 'react';
 // des photos d'amateurs, prises au téléphone, sans éclairage. Aucun arrangement ne les fera
 // ressembler à de la gastronomie. Ici : une séquence Pixabay (chef au travail) et une photo Pexels
 // (dressage en cuisine), toutes deux sous licence libre pour usage commercial sans attribution.
+// Provenance et licences détaillées dans src/assets/PROVENANCE.md.
 //
-// FRAGILITÉ ASSUMÉE, À CORRIGER UN JOUR. Ces deux fichiers sont servis par les CDN de Pixabay et
-// Pexels, pas par nous. Ça marche, mais ça ne dépend pas de nous : Pexels bloque déjà le lien direct
-// vers ses vidéos (403), rien ne garantit que Pixabay ne fera pas de même. Le jour où le fond
-// disparaîtra, ce sera ça. À héberger nous-mêmes dès qu'on aura les fichiers.
-const VIDEO = 'https://cdn.pixabay.com/video/2016/08/10/4352-178434910_small.mp4';
-const AFFICHE = 'https://images.pexels.com/photos/3933217/pexels-photo-3933217.jpeg?auto=compress&cs=tinysrgb&w=1600';
+// HÉBERGÉS PAR NOUS, ET C'EST VOULU. Une première version pointait directement sur les CDN de
+// Pixabay et Pexels. Ça marchait, mais ça ne dépendait pas de nous : Pexels bloque déjà le lien
+// direct vers ses vidéos (403 à la moindre requête), et rien ne garantissait que Pixabay ne ferait
+// pas de même. Le jour où ça arrive, la page d'accueil perd son fond sans que personne n'ait rien
+// changé, et sans que rien ne le signale. Les deux fichiers sont donc dans le dépôt.
+//
+// Importés depuis src/assets plutôt que posés dans public/ : Vite leur donne un nom haché sur le
+// contenu. Le jour où on remplace la séquence, l'URL change avec elle et les caches se vident
+// d'eux-mêmes — là où un chemin fixe aurait continué de servir l'ancienne vidéo à qui l'avait
+// déjà vue.
 
 export default function CuisineBackdrop() {
   // La vidéo n'est PAS rendue d'emblée, et pas seulement masquée en CSS : un <video> masqué se
