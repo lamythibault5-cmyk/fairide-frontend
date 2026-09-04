@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ContactSection from '../components/ContactSection';
 import usePageMeta from '../hooks/usePageMeta';
+import RetourCompte from '../components/RetourCompte';
 import { useAuth } from '../context/AuthContext';
 
 // Centre d'aide — la destination des rubriques d'assistance de « Mon compte ».
@@ -74,6 +75,7 @@ export default function HelpPage() {
 
   return (
     <div>
+      <RetourCompte />
       <h2 className="section-title" style={{ marginTop: 0 }}>{sujet ? sujet.titre : 'Aide et contact'}</h2>
 
       {sujet && <p className="small" style={{ margin: '-6px 0 16px' }}>{sujet.intro}</p>}

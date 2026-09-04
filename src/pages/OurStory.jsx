@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom';
 import usePageMeta from '../hooks/usePageMeta';
+import RetourCompte from '../components/RetourCompte';
 
 // Notre histoire — sortie de la page Compte, où elle occupait une carte de cinquante lignes que
 // personne n'avait demandé à lire. Elle s'intercalait entre les coordonnées de connexion et les
@@ -12,6 +12,7 @@ export default function OurStory() {
   usePageMeta({ title: 'Notre histoire — Fairide', path: '/notre-histoire' });
   return (
     <div>
+      <RetourCompte />
       <h2 className="section-title" style={{ marginTop: 0 }}>🧭 Notre histoire</h2>
       <div className="card">
         <p className="small" style={{ margin: '0 0 14px', opacity: 0.75 }}>Pourquoi Fairide existe, et ce vers quoi la plateforme avance.</p>
@@ -62,9 +63,6 @@ export default function OurStory() {
           <li>Rester fidèle, sur le long terme, à l'engagement d'une livraison à commission réduite.</li>
         </ul>
       </div>
-      <p className="small" style={{ marginTop: 14 }}>
-        <Link to="/account">← Retour à mon compte</Link>
-      </p>
     </div>
   );
 }

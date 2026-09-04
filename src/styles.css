@@ -1953,24 +1953,43 @@ button.account-link-row:last-child { border-bottom: none; }
   letter-spacing: -0.02em; color: var(--ink); line-height: 1;
 }
 
-/* Marque en haut à droite de l'espace connecté, sur mobile et tablette UNIQUEMENT.
-   Au-dessus de 900px la barre latérale porte déjà le logo ; en dessous, elle bascule en barre du
-   bas et sa propre règle le masque (.dashboard-sidebar-brand { display: none }). Résultat : plus
-   aucune marque à l'écran pour quelqu'un de connecté — l'application devenait anonyme dès qu'on
-   s'y identifiait, exactement là où il faut savoir chez qui on est.
-   Collante et sur fond opaque : le contenu passe dessous en défilant au lieu de la traverser. */
+/* Barre du haut de l'espace connecté.
+   À GAUCHE, le retour vers Mon compte quand on est dans une de ses sous-sections : y arriver par le
+   compte puis repartir par la barre du bas obligeait à retraverser toute la navigation.
+   À DROITE, la marque — sur mobile et tablette seulement. Sous 900px la barre latérale bascule en
+   barre du bas et sa propre règle masque son logo (.dashboard-sidebar-brand { display: none }) :
+   sans ceci, un utilisateur connecté n'avait plus aucune marque à l'écran. Au-dessus de 900px la
+   barre latérale la porte déjà — on ne la double pas.
+   Sur grand écran la barre n'existe que si elle a un retour à montrer : vide, elle ne prendrait
+   que de la place. */
+.dashboard-topbar { display: none; }
+.dashboard-topbar.has-retour { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
 .dashboard-topbrand { display: none; }
+.dashboard-retour { font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; padding: 6px 0; }
+.dashboard-retour:hover { text-decoration: underline; }
+
 @media (max-width: 900px) {
-  .dashboard-topbrand {
-    display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  /* .dashboard-main en prefixe : la regle bureau .dashboard-topbar.has-retour pese deux classes et
+     l emporterait sinon sur celle-ci, qui n en pese qu une — la barre restait en retrait de 16px. */
+  .dashboard-main .dashboard-topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
     position: sticky; top: 0; z-index: 30;
     /* Les marges négatives annulent le rembourrage de .dashboard-main sous 900px (18px en haut,
-       16px sur les côtés) pour que la barre touche les bords, comme une vraie barre d en-tête. */
-    margin: -18px -16px 10px; padding: 12px 16px 10px;
-    background: var(--cream); text-decoration: none;
+       16px sur les côtés) : la barre touche les bords, comme une vraie barre d'en-tête. Collante et
+       sur fond opaque, avec un filet en bas : le contenu passe dessous en défilant, et la limite
+       entre la barre et la page est nette au lieu de se deviner. */
+    margin: -18px -16px 14px; padding: 10px 16px; min-height: 48px;
+    background: var(--cream); border-bottom: 1px solid var(--line);
   }
+  .dashboard-topbrand { display: flex; align-items: center; gap: 8px; margin-left: auto; text-decoration: none; }
   .dashboard-topbrand span {
     font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px;
     color: var(--ink); letter-spacing: -0.03em; line-height: 1;
   }
+  .dashboard-retour { padding: 8px 0; }
 }
+
+/* Retour vers Mon compte sur les sous-sections hors espace connecté (aide, histoire). Même dessin
+   que .dashboard-retour, pour qu'on reconnaisse le même geste d'une page à l'autre. */
+.retour-compte { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
+.retour-compte:hover { text-decoration: underline; }

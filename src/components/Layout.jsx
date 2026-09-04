@@ -15,6 +15,14 @@ import FloatingCart from './FloatingCart';
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
 const DASHBOARD_PATHS = ['/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
+// Sous-sections de « Mon compte » : les pages qu on atteint depuis ses rangées. On y propose le chemin
+// du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
+// toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
+const SOUS_SECTIONS_COMPTE = ['/orders', '/favorites', '/invoices', '/map',
+  '/dashboard/reservations', '/dashboard/tables', '/dashboard/promotions', '/dashboard/invoices', '/dashboard/guide'];
+function estSousSectionCompte(pathname) {
+  return SOUS_SECTIONS_COMPTE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
@@ -51,10 +59,19 @@ export default function Layout() {
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}`}>
           <DashboardSidebar />
           <main className="dashboard-main">
-            <Link className="dashboard-topbrand" to={accueilConnecte}>
-              <BrandMark size={26} />
-              <span>fairide</span>
-            </Link>
+            {/* Barre du haut : le retour vers Mon compte à gauche quand on est dans une de ses
+                sous-sections, la marque à droite sur mobile et tablette (au-dessus de 900px la barre
+                latérale la porte déjà). Sur grand écran, la barre n existe que si elle a un retour
+                à montrer — vide, elle ne prendrait que de la place. */}
+            <div className={`dashboard-topbar${estSousSectionCompte(location.pathname) ? ' has-retour' : ''}`}>
+              {estSousSectionCompte(location.pathname) && (
+                <Link to="/account" className="dashboard-retour">← Mon compte</Link>
+              )}
+              <Link className="dashboard-topbrand" to={accueilConnecte}>
+                <BrandMark size={26} />
+                <span>fairide</span>
+              </Link>
+            </div>
             <div className="page-fade" key={location.pathname}>
               <Outlet context={{ setRightSlot }} />
             </div>
