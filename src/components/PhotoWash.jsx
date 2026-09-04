@@ -22,8 +22,11 @@ import { photosDepuis } from '../landingPhotos';
 export default function PhotoWash({ depart = 0, combien = 12, variante = 'iris' }) {
   return (
     <div className={`photo-wash photo-wash-${variante}`} aria-hidden="true">
-      {photosDepuis(depart, combien).map((p) => (
-        <img key={p.src} src={p.src} alt="" loading="lazy" decoding="async" draggable="false" />
+      {/* Clé par position et non par URL : le fond de page répète la liste pour couvrir toute sa
+          hauteur, deux tuiles portent donc la même source. La liste est figée et jamais réordonnée,
+          l'index est ici une identité stable. */}
+      {photosDepuis(depart, combien).map((p, i) => (
+        <img key={i} src={p.src} alt="" loading="lazy" decoding="async" draggable="false" />
       ))}
     </div>
   );

@@ -90,10 +90,13 @@ export default function Landing() {
 
   return (
     <div className="decor-page decor-photos">
-      {/* Couche fixe derrière TOUTE la page : elle apparaît dans les marges, entre les cartes et
-          derrière les titres de section, là où le fond était un blanc nu. Les blocs iris ont la
-          leur, opaques par-dessus celle-ci. */}
-      <PhotoWash variante="page" depart={2} />
+      {/* Couche derrière TOUTE la page : elle apparaît dans les marges, entre les cartes et
+          derrière les titres de section, là où le fond était un blanc nu. Elle défile avec le
+          contenu, si bien qu'on découvre d'autres plats en descendant.
+          54 tuiles : le CSS ne connaît pas la hauteur de la page, on en génère donc plus qu'il n'en
+          faut et `overflow: hidden` coupe le reste. Elles sont en chargement différé — celles du
+          bas ne sont téléchargées que si l'on descend jusque-là. */}
+      <PhotoWash variante="page" depart={2} combien={54} />
 
       <div className="landing-hero">
         <PhotoWash depart={0} />
