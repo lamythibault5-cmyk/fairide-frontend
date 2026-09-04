@@ -24,7 +24,6 @@ import RestaurantMenu from './pages/client/RestaurantMenu';
 import NotFound from './pages/NotFound';
 
 // --- Espace client (au-delà des pages publiques) ---
-const ClientHome = lazy(() => import('./pages/client/Home'));
 const Checkout = lazy(() => import('./pages/client/Checkout'));
 const Favorites = lazy(() => import('./pages/client/Favorites'));
 const Orders = lazy(() => import('./pages/client/Orders'));
@@ -92,7 +91,6 @@ export default function App() {
         <Route path="/login" element={<Auth />} />
         <Route path="/reset-password" element={<ResetPassword />} />
 
-        <Route path="/home" element={<ProtectedRoute role="client"><ClientHome /></ProtectedRoute>} />
         {/* Volontairement publiques (pas de ProtectedRoute) : consultables sans compte pour être
             indexables par les moteurs de recherche et partageables par lien — seule une action
             (commander, réserver, mettre en favori) exige de se connecter, voir RestaurantList/RestaurantMenu.

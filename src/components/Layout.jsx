@@ -13,7 +13,7 @@ import FloatingCart from './FloatingCart';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
-const DASHBOARD_PATHS = ['/home', '/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
+const DASHBOARD_PATHS = ['/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

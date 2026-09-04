@@ -5,7 +5,11 @@ import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
 
-const HOME_PATH_BY_ROLE = { client: '/home', restaurant: '/dashboard', driver: '/driver' };
+// Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
+// Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
+// qu'un titre de bienvenue et un bouton « Parcourir les restaurants », et son suivi de commande
+// était un sous-ensemble strict de /orders. Elle a été supprimée.
+const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', driver: '/driver' };
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
