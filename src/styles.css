@@ -1473,6 +1473,12 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 
 .tracking-map-wrap { position: relative; }
+.tracking-eta-pill {
+  position: absolute; top: 10px; left: 10px; z-index: 1100; pointer-events: none;
+  padding: 6px 10px; background: var(--iris); color: #fff; border-radius: 999px; font-size: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25); white-space: nowrap;
+}
+.tracking-eta-km { opacity: 0.85; }
 .tracking-map-controls {
   position: absolute; top: 8px; right: 8px; z-index: 500;
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
@@ -1519,96 +1525,80 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @media (prefers-reduced-motion: reduce) {
   .tracking-driver-pulse { animation: none; display: none; }
 }
-.food-catch-game { display: flex; flex-direction: column; align-items: center; gap: 4px; flex-shrink: 0; }
-.food-catch-best { font-weight: 700; font-size: 11px; color: var(--gold-deep); }
-.food-catch-score { font-weight: 700; font-size: 12px; color: var(--ink); }
-.food-catch-level { font-weight: 600; color: var(--ink-soft); }
-.food-catch-field {
-  position: relative; background: var(--cream-dim); border-radius: var(--radius-chip); overflow: hidden; border: 1px solid var(--line);
-  touch-action: none; cursor: pointer;
-  /* Isole le rendu du jeu du reste de la page (dont la carte à côté) : le navigateur sait que ce qui
-     bouge ici (60ms par tick) n'affecte jamais la mise en page en dehors de ce cadre, et n'a donc pas
-     besoin d'y repenser à chaque frame — nettement plus sensible sur mobile. */
-  contain: layout style paint;
+/* Mini-jeux (components/jeux/GameFrame.jsx + jeux.js). Un seul moteur, un canvas par jeu : le mouvement
+   est dessiné à chaque rafraîchissement d'écran, React ne voit passer que le score. Le bloc .jeu empile
+   tableau de bord (record, score, bouton 📖 des règles), terrain, puis les actions. */
+.jeu { display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; width: 100%; }
+/* Compact (140px de large), le tableau de bord tient sur deux lignes : record + 📖, puis score et niveau. */
+.jeu-hud { display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 6px; row-gap: 2px; width: 100%; font-size: 11px; font-weight: 700; }
+.jeu-score { grid-column: 1 / -1; }
+.jeu-regles-btn { grid-column: 2; grid-row: 1; }
+.jeu-best { color: var(--gold-deep); white-space: nowrap; }
+.jeu-score { color: var(--ink); white-space: nowrap; }
+.jeu-niveau { color: var(--ink-soft); font-weight: 600; }
+.jeu-regles-btn {
+  width: 26px; height: 26px; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 999px; font-size: 14px; line-height: 1; cursor: pointer;
+  transition: border-color .15s ease, transform .1s ease;
 }
-/* Positionnement par transform plutôt que left/top : left/top déclenche un recalcul de layout à chaque
-   frame (coûteux, surtout sur mobile en même temps que le rendu de la carte Leaflet à côté) ; transform
-   passe par le compositeur GPU, sans recalcul de layout. La transition sur .food-catch-item lisse le
-   saut de position d'un tick à l'autre (60ms, voir TICK_MS des 4 jeux) pour une chute qui a l'air fluide
-   sans avoir besoin d'un intervalle plus court (donc sans travail JS supplémentaire par seconde). */
-.food-catch-item {
-  position: absolute; left: 0; top: 0; font-size: 20px; line-height: 1; user-select: none;
-  will-change: transform; transition: transform 60ms linear;
+.jeu-regles-btn:hover { border-color: var(--iris); }
+.jeu-regles-btn:active { transform: scale(0.94); }
+.jeu-cadre {
+  position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
+  background: linear-gradient(180deg, #F7F5F0 0%, #E9E6DE 100%);
+  touch-action: none; user-select: none; -webkit-user-select: none;
 }
-.food-catch-basket {
-  position: absolute; left: 0; bottom: 4px; font-size: 24px; line-height: 1; text-align: center; user-select: none;
-  transition: transform .08s linear; will-change: transform;
+.jeu-canvas { display: block; cursor: pointer; }
+.jeu-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 8px;
+  background: rgba(20, 18, 31, 0.74); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
 }
-.food-catch-overlay {
-  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(20,18,31,0.45); padding: 10px; backdrop-filter: blur(1px);
+.jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; color: #fff; text-align: center; }
+.jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
+.jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
+.jeu-btn {
+  width: 100%; padding: 8px 10px; border: none; border-radius: 6px; background: var(--lime); color: var(--ink);
+  font-weight: 800; font-size: 12px; cursor: pointer; transition: filter .15s ease, transform .1s ease;
 }
-.food-catch-overlay-card {
-  display: flex; flex-direction: column; align-items: center; gap: 9px; width: 100%;
-  background: rgba(20,18,31,0.9); border-radius: var(--radius-chip); padding: 14px 10px; box-shadow: none;
-}
-.food-catch-overlay-title { color: #fff; font-weight: 700; font-size: 11.5px; text-align: center; line-height: 1.3; }
-.food-catch-paused-label { color: #fff; font-weight: 700; font-size: 13px; }
-.food-catch-lost-title { color: #fff; font-weight: 800; font-size: 15px; }
-.food-catch-lost-score { color: rgba(255,255,255,0.92); font-weight: 600; font-size: 11px; text-align: center; line-height: 1.4; }
-.food-catch-overlay-buttons { display: flex; flex-direction: column; gap: 6px; align-items: stretch; width: 100%; }
-.food-catch-start, .food-catch-overlay-buttons button {
-  padding: 8px 10px; font-size: 11.5px; font-weight: 700; background: var(--gold); color: var(--ink);
-  white-space: nowrap; border: none; border-radius: 6px; cursor: pointer; transition: filter .15s ease, transform .1s ease;
-}
-.food-catch-start:hover, .food-catch-overlay-buttons button:hover { filter: brightness(1.08); }
-.food-catch-start:active, .food-catch-overlay-buttons button:active { transform: scale(0.96); }
-.food-catch-btn-ghost { background: rgba(255,255,255,0.14) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.4) !important; }
-.food-catch-controls { display: flex; gap: 8px; }
-.food-catch-controls button {
-  padding: 6px 12px; font-size: 13px; background: var(--cream-dim); color: var(--ink); border: none; border-radius: 6px; cursor: pointer;
-}
-.food-catch-controls button:hover { background: var(--line); }
+.jeu-btn:hover { filter: brightness(1.06); }
+.jeu-btn:active { transform: scale(0.97); }
+.jeu-btn-ghost { background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
+/* Les règles : une liste courte, alignée à gauche, qui défile si le terrain est trop petit pour tout. */
+.jeu-regles { align-items: stretch; text-align: left; overflow-y: auto; }
+.jeu-regles .jeu-titre { text-align: center; }
+.jeu-regles ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; line-height: 1.45; }
+.jeu-controles { margin: 0; font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.85); }
+.jeu-actions { display: flex; gap: 8px; min-height: 26px; }
+.jeu-actions button { padding: 4px 10px; font-size: 11px; background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.jeu-actions button:hover { background: var(--line); }
+/* Plein écran : tout en plus grand… */
+.jeu--large .jeu-hud { font-size: 14px; grid-template-columns: auto 1fr auto; }
+.jeu--large .jeu-score { grid-column: auto; text-align: center; }
+.jeu--large .jeu-regles-btn { grid-column: auto; grid-row: auto; }
+.jeu--large .jeu-regles-btn { width: 34px; height: 34px; font-size: 18px; }
+.jeu--large .jeu-titre { font-size: 20px; }
+.jeu--large .jeu-sous { font-size: 14px; }
+.jeu--large .jeu-btn { font-size: 15px; padding: 11px 16px; }
+.jeu--large .jeu-regles ul, .jeu--large .jeu-controles { font-size: 14px; }
+.jeu--large .jeu-actions { min-height: 34px; }
+.jeu--large .jeu-actions button { font-size: 14px; padding: 8px 16px; }
+/* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
+.jeu--fill { flex: 1; min-height: 0; }
+.jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; }
 
-/* Cible cliquable du jeu réflexe (ReactionGame) — utilise .food-catch-field/.food-catch-item etc.
-   ci-dessus, communes aux 4 mini-jeux (voir GameSwitcher.jsx). */
-.reaction-target { position: absolute; left: 0; top: 0; font-size: 20px; padding: 0; background: none; border: none; line-height: 1; cursor: pointer; will-change: transform; }
-
-/* Variante "grand écran" des 4 mini-jeux (voir GameSwitcher.jsx `large`, déclenchée depuis le bouton
-   Agrandir de MapPage.jsx) : mêmes classes, juste une typographie et des éléments de jeu plus grands —
-   la logique (WIDTH/HEIGHT/BASKET_WIDTH/ITEM_SIZE...) est déjà pilotée par les props JS, ceci ne fait
-   que suivre visuellement côté CSS (tailles de police des emojis, qui ne sont pas pilotables en JS).
-*/
-.food-catch-game--large .food-catch-item { font-size: 34px; }
-.food-catch-game--large .food-catch-basket { font-size: 46px; }
-.food-catch-game--large .reaction-target { font-size: 34px; }
-.food-catch-game--large .food-catch-best { font-size: 14px; }
-.food-catch-game--large .food-catch-score { font-size: 16px; }
-.food-catch-game--large .food-catch-overlay-title { font-size: 18px; }
-.food-catch-game--large .food-catch-paused-label { font-size: 16px; }
-.food-catch-game--large .food-catch-lost-title { font-size: 20px; }
-.food-catch-game--large .food-catch-lost-score { font-size: 14px; }
-.food-catch-game--large .food-catch-start,
-.food-catch-game--large .food-catch-overlay-buttons button { font-size: 15px; padding: 11px 16px; }
-.food-catch-game--large .food-catch-controls button { font-size: 15px; padding: 8px 16px; }
-
+/* Sélecteur de jeu : six onglets emoji au-dessus du jeu (GameSwitcher.jsx). */
 .game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
-/* Colonne étroite à côté de la carte (110px) : la sélection tient en une grille 2×2 d'icônes, avec le
-   nom complet en info-bulle (title) plutôt qu'affiché — pas la place pour du texte à cet endroit. */
-.game-switcher-picker { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; width: 100%; }
+.game-switcher-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; }
 .game-switcher-tab {
-  display: flex; align-items: center; justify-content: center; gap: 6px;
-  padding: 6px; font-size: 16px; background: var(--cream-dim); border: 2px solid transparent; border-radius: var(--radius-chip);
-  cursor: pointer; transition: filter .15s ease, border-color .15s ease, background .15s ease;
+  display: flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 4px;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; transition: filter .15s ease, background .15s ease;
 }
 .game-switcher-tab:hover { filter: brightness(0.97); }
-.game-switcher-tab.active { background: var(--teal); border-color: var(--teal-deep); }
+.game-switcher-tab.active { background: var(--iris); border-color: var(--iris); }
+.game-switcher-tab-emoji { font-size: 16px; line-height: 1; }
 .game-switcher-tab-text { display: none; }
-
-/* Mode plein écran (voir .tracking-fullscreen-split ci-dessous) : assez de place pour une vraie rangée
-   de 4 boutons nom + sous-titre, plus lisible et plus explicite qu'une grille d'icônes. */
-.game-switcher--large { width: 100%; max-width: 560px; }
-.game-switcher--large .game-switcher-picker { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.game-switcher--large { width: 100%; max-width: 640px; }
+.game-switcher--large .game-switcher-picker { grid-template-columns: repeat(6, 1fr); gap: 8px; }
 .game-switcher--large .game-switcher-tab { flex-direction: column; gap: 2px; padding: 10px 6px; border-radius: var(--radius-chip); }
 .game-switcher--large .game-switcher-tab-emoji { font-size: 22px; }
 .game-switcher--large .game-switcher-tab-text { display: flex; flex-direction: column; align-items: center; }
@@ -1616,8 +1606,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .game-switcher--large .game-switcher-tab.active .game-switcher-tab-label { color: #fff; }
 .game-switcher--large .game-switcher-tab-sub { font-size: 10px; color: var(--ink-soft); text-align: center; }
 .game-switcher--large .game-switcher-tab.active .game-switcher-tab-sub { color: rgba(255,255,255,0.85); }
+.game-switcher--fill { flex: 1; min-height: 0; width: 100%; }
 @media (max-width: 560px) {
-  .game-switcher--large .game-switcher-picker { grid-template-columns: repeat(2, 1fr); }
+  .game-switcher--large .game-switcher-picker { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .game-switcher--large .game-switcher-tab { padding: 6px 4px; }
+  .game-switcher--large .game-switcher-tab-sub { display: none; }
 }
 
 /* Bouton "Agrandir" sous chaque carte de suivi (MapPage.jsx) qui ouvre la vue plein écran ci-dessous. */
@@ -1633,10 +1626,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    fait déjà .tracking-with-game en compact. */
 .tracking-fullscreen-overlay {
   position: fixed; inset: 0; background: rgba(20, 18, 31, 0.95); z-index: 200;
-  display: flex; flex-direction: column; padding: 16px; overflow-y: auto;
+  display: flex; flex-direction: column; padding: 16px; overflow: hidden;
 }
+.tracking-fullscreen-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; margin-bottom: 10px; }
+.tracking-fullscreen-toggle {
+  padding: 8px 14px; background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s ease;
+}
+.tracking-fullscreen-toggle:hover { background: rgba(255,255,255,0.26); }
+/* Carte masquée : le temps d'arrivée migre dans la barre, pour ne jamais le perdre de vue en jouant. */
+.tracking-fullscreen-eta { padding: 8px 12px; background: var(--iris); color: #fff; border-radius: 999px; font-weight: 700; font-size: 13px; }
 .tracking-fullscreen-close {
-  align-self: flex-end; width: 38px; height: 38px; flex-shrink: 0; margin-bottom: 10px;
+  width: 38px; height: 38px; flex-shrink: 0; margin-left: auto;
   background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
   border-radius: 6px; font-size: 18px; line-height: 1; cursor: pointer; transition: background .15s ease;
   padding: 0; display: flex; align-items: center; justify-content: center;
@@ -1646,17 +1647,28 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .tracking-fullscreen-map, .tracking-fullscreen-game {
   flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
+/* L attribut hidden (carte masquée) doit l emporter sur le display:flex ci-dessus, sinon la carte reste
+   dans la mise en page, invisible mais encombrante. Et la carte prend toute la largeur de sa colonne. */
+.tracking-fullscreen-map[hidden] { display: none; }
+.tracking-fullscreen-map > .tracking-map-wrap { width: 100%; }
 .tracking-fullscreen-map-caption { color: rgba(255,255,255,0.85); margin-top: 8px; text-align: center; }
 .tracking-fullscreen-game {
-  background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 20px; overflow-y: auto;
+  background: rgba(255,255,255,0.04); border-radius: var(--radius); padding: 16px 20px; overflow: hidden; min-height: 0;
 }
+.tracking-fullscreen-split.carte-masquee .tracking-fullscreen-game { flex: 1; }
 @media (max-width: 800px) {
   .tracking-fullscreen-split { flex-direction: column; gap: 14px; }
   /* Empilés, un partage 50/50 (flex:1) centre chaque bloc dans une moitié fixe de l'écran — la carte,
      plus courte que sa moitié, se retrouve entourée de vide, pendant que le jeu, plus grand que la
      sienne, déborde sous le viewport. On dimensionne donc chaque bloc à son contenu réel (déjà calculé
      pour tenir ensemble par useFullscreenSizes dans MapPage.jsx) plutôt que par un partage égal. */
-  .tracking-fullscreen-map, .tracking-fullscreen-game { flex: 0 0 auto; justify-content: flex-start; }
+  .tracking-fullscreen-map { flex: 0 0 auto; justify-content: flex-start; }
+  /* Barre : masquer + temps d arrivée + fermer doivent tenir sur une ligne de téléphone. */
+  .tracking-fullscreen-bar { gap: 8px; }
+  .tracking-fullscreen-toggle { padding: 7px 10px; font-size: 12px; }
+  .tracking-fullscreen-eta { padding: 7px 10px; font-size: 12px; }
+  .tracking-fullscreen-close { width: 34px; height: 34px; }
+  .tracking-fullscreen-game { flex: 1 1 0; min-height: 0; padding: 10px 12px; }
 }
 
 /* Impression des récaps de facturation (InvoicesPage restaurant/livreur) : n'affiche que le

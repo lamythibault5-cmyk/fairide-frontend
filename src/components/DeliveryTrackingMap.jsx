@@ -9,8 +9,20 @@ const BRUSSELS_CENTER = [50.8503, 4.3517];
 // court pour ne pas laisser quelqu'un attendre devant une carte morte.
 const STALE_AFTER_MS = 120000;
 
+// Le temps d'arrivée est recalculé quand le livreur a bougé d'au moins 25 m, ou toutes les 30 s : OSRM
+// est un service public gratuit, on ne le sollicite pas à chaque rafraîchissement de position.
+const ETA_DISTANCE_MIN_M = 25;
+const ETA_INTERVALLE_MIN_MS = 30000;
+
 function formatClock(date) {
   return date.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+}
+
+function distanceM(a, b) {
+  const R = 6371000; const toRad = (d) => (d * Math.PI) / 180;
+  const dLat = toRad(b[0] - a[0]); const dLng = toRad(b[1] - a[1]);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
 }
 
 function emojiIcon(emoji, bg) {
@@ -23,8 +35,7 @@ function emojiIcon(emoji, bg) {
 }
 
 // Icône du livreur avec un anneau qui pulse autour, pour que "en mouvement, en direct" se lise d'un
-// coup d'œil (même codage visuel que les apps de livraison grand public) — un simple <div> enfant animé
-// en CSS (.tracking-driver-pulse), pas de dépendance ni de logique JS supplémentaire.
+// coup d'œil (même codage visuel que les apps de livraison grand public).
 const DRIVER_ICON = L.divIcon({
   className: '',
   html: `
@@ -40,58 +51,49 @@ const DRIVER_ICON = L.divIcon({
 const RESTAURANT_ICON = emojiIcon('🏪', '#3B2FB5');
 const DELIVERY_ICON = emojiIcon('🏠', '#C8F03C');
 
+// Itinéraire routier ET durée estimée, d'un seul appel. `duration` est en secondes, `distance` en mètres.
 async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('routing-failed');
   const data = await res.json();
-  const coords = data.routes?.[0]?.geometry?.coordinates;
+  const route = data.routes?.[0];
+  const coords = route?.geometry?.coordinates;
   if (!coords || !coords.length) throw new Error('no-route');
-  return coords.map(([lng, lat]) => [lat, lng]);
+  return { latLngs: coords.map(([lng, lat]) => [lat, lng]), duration: route.duration, distance: route.distance };
 }
 
-// `lastUpdatedAt` (optionnel) : heure du dernier envoi de position par le livreur, telle que mesurée
-// par le serveur. Voir le bloc "Fraîcheur de la position" plus bas — c'est la source fiable, et le
-// composant s'en passe proprement tant que le backend ne la renvoie pas.
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, height = 260 }) {
+// `homeLat`/`homeLng` (optionnels) : la maison du client, affichée seule quand aucune livraison n'est en
+// cours — une carte vide centrée sur Bruxelles ne dit rien à personne, une carte centrée chez soi dit
+// « c'est ici qu'on te livrera ».
+// `onEta` (optionnel) : reçoit { minutes, km } à chaque nouvelle estimation, ou null — pour que le
+// parent puisse l'afficher même quand la carte est masquée.
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, onEta, height = 260 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const restaurantMarkerRef = useRef(null);
   const deliveryMarkerRef = useRef(null);
+  const homeMarkerRef = useRef(null);
   const driverMarkerRef = useRef(null);
   const lineRef = useRef(null);
+  const remainingLineRef = useRef(null);
   const animRef = useRef(null);
-  // Trace des positions déjà vues du livreur (pas juste le trajet prévu restaurant→adresse) : une ligne
-  // qui s'allonge en direct à chaque nouvelle position reçue, visible d'un coup d'œil même si le client
-  // ne regarde la carte que de temps en temps (typiquement en jouant à un des mini-jeux à côté).
   const driverTrailRef = useRef([]);
   const driverTrailLineRef = useRef(null);
-  // Dernier périmètre ajusté (droite puis, une fois reçu, le vrai trajet routier) — permet au bouton
-  // "Recentrer" de revenir dessus si l'utilisateur a zoomé/déplacé la carte pour explorer.
   const boundsRef = useRef(null);
-  // Périmètre livreur + adresse de livraison — le segment qui compte une fois la course commencée (le
-  // livreur peut s'écarter du trajet restaurant→adresse initialement tracé). Alimente le bouton "Voir
-  // le livreur", qui recadre sur ce segment plutôt que sur tout l'itinéraire depuis le restaurant.
   const driverBoundsRef = useRef(null);
+  // Suivi automatique : la carte se recadre sur le livreur à chaque position. Un glissement de
+  // l'utilisateur le coupe (il veut regarder ailleurs) ; « Voir le livreur » le réactive.
+  const autoSuiviRef = useRef(true);
+  const etaDernierRef = useRef({ pos: null, at: 0 });
   const [showRecenter, setShowRecenter] = useState(false);
   const [showFollowDriver, setShowFollowDriver] = useState(false);
   const [hasTrail, setHasTrail] = useState(false);
+  const [eta, setEta] = useState(null);
 
-  // Fraîcheur de la position du livreur. Deux sources possibles, très inégales :
-  //
-  //   1. `lastUpdatedAt` (à privilégier) : l'heure du DERNIER ENVOI par le livreur, mesurée par le
-  //      serveur. C'est la seule information qui distingue vraiment "livreur à l'arrêt mais connecté"
-  //      de "livreur hors ligne". La colonne existe déjà en base (orders.driver_location_updated_at,
-  //      mise à jour à chaque PATCH /orders/:id/location) mais n'est pas encore renvoyée au client :
-  //      une ligne à ajouter dans le mapper de commande côté backend, et cet affichage devient exact.
-  //
-  //   2. Repli, tant que (1) n'arrive pas : l'heure à laquelle CETTE page a vu la position changer.
-  //      C'est une information bien plus faible, et il ne faut pas lui faire dire ce qu'elle ne dit
-  //      pas. Une première version affichait "position figée, le livreur est peut-être hors réseau" :
-  //      c'était faux deux fois — une position vieille d'une demi-heure passait pour fraîche à
-  //      l'ouverture de la page, et un livreur simplement arrêté devant le restaurant déclenchait
-  //      l'alerte. On se contente donc de dater le dernier déplacement observé, sans rien affirmer
-  //      sur l'état du livreur.
+  // Fraîcheur de la position : voir le commentaire long de la version précédente — `lastUpdatedAt`
+  // (heure serveur du dernier envoi) est la seule source qui permette d'affirmer quelque chose ; le
+  // repli ne fait que dater le dernier déplacement observé par cette page.
   const [firstSeenMoveAt, setFirstSeenMoveAt] = useState(null);
   const [now, setNow] = useState(() => Date.now());
   const lastDriverPosRef = useRef(null);
@@ -105,53 +107,55 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     setFirstSeenMoveAt(new Date());
   }, [driverLat, driverLng]);
 
-  // Fait vieillir l'affichage même si plus aucune position n'arrive — sans cette horloge, le message
-  // resterait bloqué sur "à jour" indéfiniment puisque rien ne provoquerait de nouveau rendu.
   useEffect(() => {
     const clock = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(clock);
   }, []);
 
   const authoritativeAt = lastUpdatedAt ? new Date(lastUpdatedAt) : null;
-  // L'alerte "plus de nouvelles" n'est affichée QUE sur la source serveur : elle seule permet de
-  // l'affirmer sans se tromper.
   const isStale = authoritativeAt != null && now - authoritativeAt.getTime() > STALE_AFTER_MS;
   const shownAt = authoritativeAt || firstSeenMoveAt;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView(BRUSSELS_CENTER, 13);
-    // Fond de carte CARTO Voyager plutôt que les tuiles OSM brutes par défaut : rendu bien plus épuré
-    // (moins de bruit visuel, palette plus douce), tout en gardant les rues/quartiers lisibles — mêmes
-    // données OpenStreetMap en dessous, gratuit sans clé API pour un usage raisonnable comme ici.
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-      maxZoom: 19,
-      subdomains: 'abcd'
+    // Tuiles OpenStreetMap. La version précédente utilisait le fond CARTO « Voyager », devenu payant :
+    // chaque tuile affichait « API KEY REQUIRED » en travers. OSM est ce que les autres cartes de
+    // l'application utilisent déjà, gratuit et sans clé.
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
     }).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
-    // Voir RestaurantsMap.jsx : corrige la bande grise Leaflet quand le conteneur change de taille
-    // après l'initialisation (police, image, mise en page).
+    mapRef.current.on('dragstart', () => { autoSuiviRef.current = false; });
     const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
     resizeObserver.observe(containerRef.current);
     return () => {
       resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
-      // Les marqueurs/tracé appartenaient à cette instance de carte, maintenant détruite — sans ce
-      // reset, un remontage (StrictMode en dev, ou un vrai remontage du composant) verrait ces refs
-      // encore "remplies" et se contenterait de déplacer les anciens objets au lieu d'en recréer sur
-      // la nouvelle carte, qui resterait alors vide.
-      restaurantMarkerRef.current = null;
-      deliveryMarkerRef.current = null;
-      driverMarkerRef.current = null;
-      lineRef.current = null;
-      boundsRef.current = null;
-      driverBoundsRef.current = null;
-      driverTrailLineRef.current = null;
-      driverTrailRef.current = [];
+      restaurantMarkerRef.current = null; deliveryMarkerRef.current = null; homeMarkerRef.current = null;
+      driverMarkerRef.current = null; lineRef.current = null; remainingLineRef.current = null;
+      boundsRef.current = null; driverBoundsRef.current = null;
+      driverTrailLineRef.current = null; driverTrailRef.current = [];
     };
   }, []);
+
+  // Sans livraison : la maison, seule, à une échelle de quartier.
+  useEffect(() => {
+    if (!mapRef.current) return;
+    const enLivraison = restaurantLat && restaurantLng && deliveryLat && deliveryLng;
+    if (enLivraison || !homeLat || !homeLng) {
+      if (homeMarkerRef.current) { homeMarkerRef.current.remove(); homeMarkerRef.current = null; }
+      return;
+    }
+    if (!homeMarkerRef.current) {
+      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: DELIVERY_ICON }).addTo(mapRef.current).bindPopup('Chez toi');
+    } else {
+      homeMarkerRef.current.setLatLng([homeLat, homeLng]);
+    }
+    mapRef.current.setView([homeLat, homeLng], 15);
+  }, [homeLat, homeLng, restaurantLat, restaurantLng, deliveryLat, deliveryLng]);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -160,27 +164,19 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
 
     if (hasResto) {
       if (!restaurantMarkerRef.current) {
-        restaurantMarkerRef.current = L.marker([restaurantLat, restaurantLng], { icon: RESTAURANT_ICON })
-          .addTo(mapRef.current).bindPopup('Restaurant');
-      } else {
-        restaurantMarkerRef.current.setLatLng([restaurantLat, restaurantLng]);
-      }
+        restaurantMarkerRef.current = L.marker([restaurantLat, restaurantLng], { icon: RESTAURANT_ICON }).addTo(mapRef.current).bindPopup('Restaurant');
+      } else restaurantMarkerRef.current.setLatLng([restaurantLat, restaurantLng]);
     }
     if (hasDelivery) {
       if (!deliveryMarkerRef.current) {
-        deliveryMarkerRef.current = L.marker([deliveryLat, deliveryLng], { icon: DELIVERY_ICON })
-          .addTo(mapRef.current).bindPopup('Adresse de livraison');
-      } else {
-        deliveryMarkerRef.current.setLatLng([deliveryLat, deliveryLng]);
-      }
+        deliveryMarkerRef.current = L.marker([deliveryLat, deliveryLng], { icon: DELIVERY_ICON }).addTo(mapRef.current).bindPopup('Adresse de livraison');
+      } else deliveryMarkerRef.current.setLatLng([deliveryLat, deliveryLng]);
     }
     if (hasResto && hasDelivery) {
       const straightLine = [[restaurantLat, restaurantLng], [deliveryLat, deliveryLng]];
       if (!lineRef.current) {
-        lineRef.current = L.polyline(straightLine, { color: '#3B2FB5', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.65 }).addTo(mapRef.current);
-      } else {
-        lineRef.current.setLatLngs(straightLine);
-      }
+        lineRef.current = L.polyline(straightLine, { color: '#3B2FB5', weight: 4, dashArray: '2, 10', lineCap: 'round', opacity: 0.55 }).addTo(mapRef.current);
+      } else lineRef.current.setLatLngs(straightLine);
       const straightBounds = L.latLngBounds(straightLine);
       boundsRef.current = straightBounds;
       mapRef.current.fitBounds(straightBounds, { padding: [40, 40] });
@@ -188,29 +184,30 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
 
       let cancelled = false;
       fetchStreetRoute(restaurantLat, restaurantLng, deliveryLat, deliveryLng)
-        .then((routeLatLngs) => {
+        .then(({ latLngs }) => {
           if (cancelled || !lineRef.current) return;
-          lineRef.current.setLatLngs(routeLatLngs);
-          lineRef.current.setStyle({ dashArray: null, opacity: 0.8 });
-          const routeBounds = L.latLngBounds(routeLatLngs);
+          lineRef.current.setLatLngs(latLngs);
+          lineRef.current.setStyle({ dashArray: null, opacity: 0.45 });
+          const routeBounds = L.latLngBounds(latLngs);
           boundsRef.current = routeBounds;
-          mapRef.current.fitBounds(routeBounds, { padding: [40, 40] });
+          if (autoSuiviRef.current && !driverMarkerRef.current) mapRef.current.fitBounds(routeBounds, { padding: [40, 40] });
         })
-        .catch(() => {
-          // OSRM indisponible : on garde la ligne droite en secours
-        });
+        .catch(() => { /* OSRM indisponible : on garde la ligne droite */ });
       return () => { cancelled = true; };
-    } else {
-      setShowRecenter(false);
     }
+    // Plus de livraison (terminée pendant qu'on regardait) : on retire tout ce qui la concernait, sinon la
+    // carte « chez toi » garderait un restaurant et un trajet fantômes.
+    for (const ref of [restaurantMarkerRef, deliveryMarkerRef, lineRef, remainingLineRef]) {
+      if (ref.current) { ref.current.remove(); ref.current = null; }
+    }
+    boundsRef.current = null;
+    setShowRecenter(false);
+    return undefined;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantLat, restaurantLng, deliveryLat, deliveryLng]);
 
   useEffect(() => {
-    if (!mapRef.current || !driverLat || !driverLng) return;
-    // Allonge la trace en direct — n'empile pas un point identique au précédent (aucun mouvement réel
-    // entre deux rafraîchissements) et garde une fenêtre glissante raisonnable plutôt qu'illimitée,
-    // une livraison pouvant rester ouverte longtemps.
+    if (!mapRef.current || !driverLat || !driverLng) return undefined;
     const trail = driverTrailRef.current;
     const lastPoint = trail[trail.length - 1];
     if (!lastPoint || lastPoint[0] !== driverLat || lastPoint[1] !== driverLng) {
@@ -220,85 +217,110 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     if (trail.length > 1) {
       if (!driverTrailLineRef.current) {
         driverTrailLineRef.current = L.polyline(trail, { color: '#C8F03C', weight: 3, opacity: 0.8, lineCap: 'round' }).addTo(mapRef.current);
-      } else {
-        driverTrailLineRef.current.setLatLngs(trail);
-      }
+      } else driverTrailLineRef.current.setLatLngs(trail);
       setHasTrail(true);
     }
     if (!driverMarkerRef.current) {
-      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON })
-        .addTo(mapRef.current).bindPopup('Ton livreur');
+      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON }).addTo(mapRef.current).bindPopup('Ton livreur');
     } else {
       const marker = driverMarkerRef.current;
       const start = marker.getLatLng();
       const end = L.latLng(driverLat, driverLng);
       if (!start.equals(end)) {
         if (animRef.current) cancelAnimationFrame(animRef.current);
-        const duration = 1200;
-        const startTime = performance.now();
-        const step = (now) => {
-          const t = Math.min(1, (now - startTime) / duration);
-          const lat = start.lat + (end.lat - start.lat) * t;
-          const lng = start.lng + (end.lng - start.lng) * t;
-          marker.setLatLng([lat, lng]);
+        const duration = 1200; const startTime = performance.now();
+        const step = (t0) => {
+          const t = Math.min(1, (t0 - startTime) / duration);
+          marker.setLatLng([start.lat + (end.lat - start.lat) * t, start.lng + (end.lng - start.lng) * t]);
           if (t < 1) animRef.current = requestAnimationFrame(step);
         };
         animRef.current = requestAnimationFrame(step);
       }
     }
+    let cancelled = false;
     if (deliveryLat && deliveryLng) {
       driverBoundsRef.current = L.latLngBounds([[driverLat, driverLng], [deliveryLat, deliveryLng]]);
       setShowFollowDriver(true);
+      // La carte suit : recadrée sur ce qu'il reste à parcourir, tant que l'utilisateur n'a pas pris la main.
+      if (autoSuiviRef.current) mapRef.current.fitBounds(driverBoundsRef.current, { padding: [50, 50], maxZoom: 16 });
+
+      // Temps d'arrivée : le trajet RESTANT, du livreur à la porte, et sa durée. Tracé en plein par-dessus
+      // l'itinéraire complet en pointillé : ce qui est fait s'estompe, ce qui reste ressort.
+      const pos = [driverLat, driverLng]; const dernier = etaDernierRef.current;
+      const aBouge = !dernier.pos || distanceM(dernier.pos, pos) >= ETA_DISTANCE_MIN_M;
+      const assezVieux = Date.now() - dernier.at >= ETA_INTERVALLE_MIN_MS;
+      if (aBouge || assezVieux) {
+        etaDernierRef.current = { pos, at: Date.now() };
+        fetchStreetRoute(driverLat, driverLng, deliveryLat, deliveryLng)
+          .then(({ latLngs, duration, distance }) => {
+            if (cancelled || !mapRef.current) return;
+            if (!remainingLineRef.current) {
+              remainingLineRef.current = L.polyline(latLngs, { color: '#3B2FB5', weight: 5, opacity: 0.9, lineCap: 'round' }).addTo(mapRef.current);
+            } else remainingLineRef.current.setLatLngs(latLngs);
+            // Un scooter en ville ne roule pas comme la voiture d'OSRM : on majore de 15 %, et jamais
+            // moins d'une minute — « arrive dans 0 min » alors qu'il n'est pas là est un mensonge.
+            const minutes = Math.max(1, Math.round((duration * 1.15) / 60));
+            const info = { minutes, km: Math.round(distance / 100) / 10 };
+            setEta(info); onEta?.(info);
+          })
+          .catch(() => { /* pas d estimation plutôt qu une fausse */ });
+      }
     }
-    return () => {
-      if (animRef.current) cancelAnimationFrame(animRef.current);
-    };
+    return () => { cancelled = true; if (animRef.current) cancelAnimationFrame(animRef.current); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverLat, driverLng, deliveryLat, deliveryLng]);
 
+  // Plus de livreur (livraison terminée, autre commande) : l'estimation ne veut plus rien dire, et son
+  // marqueur, sa trace et le trajet restant non plus.
+  useEffect(() => {
+    if (driverLat != null && driverLng != null) return;
+    setEta(null); onEta?.(null);
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    for (const ref of [driverMarkerRef, driverTrailLineRef, remainingLineRef]) {
+      if (ref.current) { ref.current.remove(); ref.current = null; }
+    }
+    driverTrailRef.current = []; driverBoundsRef.current = null; etaDernierRef.current = { pos: null, at: 0 };
+    autoSuiviRef.current = true;
+    setHasTrail(false); setShowFollowDriver(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [driverLat, driverLng]);
+
   function recenter() {
-    if (mapRef.current && boundsRef.current) {
-      mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
-    }
+    autoSuiviRef.current = false;
+    if (mapRef.current && boundsRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
   }
-
-  // Recadre sur le segment qui compte une fois la course en cours : la position actuelle du livreur et
-  // l'adresse de livraison, donc le chemin qu'il reste à parcourir — plutôt que tout l'itinéraire depuis
-  // le restaurant, qui peut sortir du cadre une fois que le livreur a bien avancé.
   function followDriver() {
-    if (mapRef.current && driverBoundsRef.current) {
-      mapRef.current.fitBounds(driverBoundsRef.current, { padding: [50, 50] });
-    }
+    autoSuiviRef.current = true;
+    if (mapRef.current && driverBoundsRef.current) mapRef.current.fitBounds(driverBoundsRef.current, { padding: [50, 50], maxZoom: 16 });
   }
 
+  const enLivraison = !!(restaurantLat && deliveryLat);
   return (
     <div className="tracking-map-wrap">
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
+      {eta && (
+        <div className="tracking-eta-pill" aria-live="polite">
+          🛵 Arrive dans <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString('fr-BE')} km</span>
+        </div>
+      )}
       {(showRecenter || showFollowDriver) && (
         <div className="tracking-map-controls">
-          {showFollowDriver && (
-            <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>🛵 Voir le livreur</button>
-          )}
-          {showRecenter && (
-            <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>
-          )}
+          {showFollowDriver && <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>🛵 Suivre le livreur</button>}
+          {showRecenter && <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>}
         </div>
       )}
       {driverLat != null && driverLng != null && shownAt && (
         <div className={`tracking-map-freshness${isStale ? ' stale' : ''}`}>
           {isStale
             ? `⚠️ Aucune nouvelle position depuis ${formatClock(shownAt)}. Le suivi peut s'interrompre si le téléphone du livreur se met en veille.`
-            : authoritativeAt
-              ? `Position mise à jour à ${formatClock(shownAt)}`
-              : `Dernier déplacement observé à ${formatClock(shownAt)}`}
+            : authoritativeAt ? `Position mise à jour à ${formatClock(shownAt)}` : `Dernier déplacement observé à ${formatClock(shownAt)}`}
         </div>
       )}
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> Restaurant</span>
-        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Livreur</span>
-        <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> Toi</span>
-        {hasTrail && (
-          <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> Trajet parcouru</span>
-        )}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> Restaurant</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Livreur</span>}
+        <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> {enLivraison ? 'Toi' : 'Chez toi'}</span>
+        {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> Trajet parcouru</span>}
       </div>
     </div>
   );
