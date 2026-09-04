@@ -2,6 +2,18 @@ import { useEffect, useState } from 'react';
 import VIDEO from '../assets/cuisine.mp4';
 import AFFICHE from '../assets/cuisine.jpg';
 
+// La séquence s'ouvre et se ferme sur un fondu au noir. Mesuré image par image, la différence entre
+// deux images consécutives vaut 3 à 5 sur toute la partie utile, et bondit à 138 à 1,2 s et 12,2 s :
+// ce sont les deux coupes. En bouclant le fichier entier, le fond clignoterait au noir toutes les
+// treize secondes. On ne joue donc que l'intervalle propre, rebouclé à la main.
+const DEBUT = 1.5;
+const FIN = 11.9;
+
+// Et on ralentit encore. Le plan est déjà deux fois plus calme que le précédent (mouvement moyen
+// mesuré : 14 contre 29), mais un fond n'a pas à être suivi du regard — il doit se remarquer sans
+// se regarder. À 0,75 il dérive au lieu de bouger.
+const VITESSE = 0.75;
+
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
 // POURQUOI UNE SEULE IMAGE ET NON UNE MOSAÏQUE. Deux versions précédentes posaient une grille de
@@ -57,9 +69,19 @@ export default function CuisineBackdrop() {
           poster={AFFICHE}
           autoPlay
           muted
-          loop
           playsInline
           preload="metadata"
+          onLoadedMetadata={(e) => {
+            e.currentTarget.playbackRate = VITESSE;
+            e.currentTarget.currentTime = DEBUT;
+          }}
+          onTimeUpdate={(e) => {
+            if (e.currentTarget.currentTime >= FIN) e.currentTarget.currentTime = DEBUT;
+          }}
+          onEnded={(e) => {
+            e.currentTarget.currentTime = DEBUT;
+            e.currentTarget.play().catch(() => {});
+          }}
         />
       ) : (
         <img className="cuisine-fond-media" src={AFFICHE} alt="" decoding="async" />
