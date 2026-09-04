@@ -45,11 +45,12 @@ function navItemsForRole(role, t) {
   }
   if (role === 'driver') {
     return [
+      // Ce qu'un livreur regarde EN COURSE : ses commandes, la carte, ses pourboires. Avis et factures
+      // sont partis dans Mon compte — on les ouvre de temps en temps, pas au guidon. Même règle que
+      // pour le client : une rubrique ne figure qu'à UN endroit, jamais aux deux.
       { to: '/driver', end: true, icon: '📦', label: 'Mes commandes' },
       { to: '/driver/map', icon: '🗺️', label: t('nav.map') },
-      { to: '/driver/reviews', icon: '⭐', label: 'Avis' },
       { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
-      { to: '/driver/invoices', icon: '📄', label: t('nav.invoices') },
       { to: '/account', icon: '👤', label: t('nav.account') }
     ];
   }

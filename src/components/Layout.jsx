@@ -19,7 +19,8 @@ const DASHBOARD_PATHS = ['/restaurants', '/favorites', '/orders', '/map', '/invo
 // du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
 const SOUS_SECTIONS_COMPTE = ['/invoices',
-  '/dashboard/reservations', '/dashboard/tables', '/dashboard/promotions', '/dashboard/invoices', '/dashboard/guide'];
+  '/dashboard/reservations', '/dashboard/tables', '/dashboard/promotions', '/dashboard/invoices', '/dashboard/guide', '/dashboard/reviews',
+  '/driver/reviews', '/driver/invoices'];
 function estSousSectionCompte(pathname) {
   return SOUS_SECTIONS_COMPTE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

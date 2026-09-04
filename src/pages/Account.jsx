@@ -493,6 +493,7 @@ export default function Account() {
           <LigneCompte to="/dashboard/promotions" icone="🏷️" titre="Promotions" sous="Réductions et offres sur ta carte" />
           <LigneCompte to="/dashboard/invoices" icone="📄" titre="Factures" sous="Tes factures de commission" />
           <LigneCompte to="/dashboard/guide" icone="📘" titre="Mode d'emploi" sous="Comment gérer ton commerce sur Fairide" />
+          <LigneCompte to="/dashboard/reviews" icone="⭐" titre="Avis clients" sous={restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} sur 5 · ${restaurant.reviewCount} avis` : 'Pas encore d\x27avis'} />
         </div>
       )}
 
@@ -665,44 +666,8 @@ export default function Account() {
         </div>
       )}
 
-      {role === 'restaurant' && restaurant && (
-        <div className="card">
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>⭐ Avis clients</h3>
-              <div className="row" style={{ gap: 6 }}>
-                <StarsDisplay value={restaurant.rating} />
-                <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : "Pas encore d'avis"}</span>
-              </div>
-            </div>
-            <Link to="/dashboard/reviews" className="btn-ghost">Voir tous les avis →</Link>
-          </div>
-        </div>
-      )}
 
-      {role === 'restaurant' && restaurant && (
-        <div className="card">
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>📄 Factures</h3>
-              <p className="small" style={{ margin: 0 }}>Factures d'abonnement et de commission, par mois et par année.</p>
-            </div>
-            <Link to="/dashboard/invoices" className="btn-ghost">Voir mes factures →</Link>
-          </div>
-        </div>
-      )}
 
-      {role === 'restaurant' && (
-        <div className="card">
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>📘 Mode d'emploi</h3>
-              <p className="small" style={{ margin: 0 }}>Comment recevoir et traiter les commandes Fairide au quotidien, sans matériel imposé.</p>
-            </div>
-            <Link to="/dashboard/guide" className="btn-ghost">Voir le mode d'emploi →</Link>
-          </div>
-        </div>
-      )}
 
       {role === 'driver' && (
         <div className="card">
@@ -717,6 +682,15 @@ export default function Account() {
         </div>
       )}
 
+      {/* Rubriques du livreur qu'on ouvre de temps en temps, sorties de la barre du bas au profit de ce
+          qu'il consulte en course : commandes, carte, pourboires. Même règle que pour le client — une
+          rubrique ne figure qu'à UN endroit. */}
+      {role === 'driver' && (
+        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          <LigneCompte to="/driver/reviews" icone="⭐" titre="Mes avis" sous="Ce que les clients disent de tes livraisons" />
+          <LigneCompte to="/driver/invoices" icone="📄" titre="Mes factures" sous="Tes autofactures mensuelles" />
+        </div>
+      )}
       {role === 'driver' && <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />}
 
       <div className="card">
