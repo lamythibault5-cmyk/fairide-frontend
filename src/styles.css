@@ -1905,3 +1905,36 @@ button.account-link-row:last-child { border-bottom: none; }
    C'est ce qui permet au décor d'exister partout : l'alternative était de l'affaiblir sur toute la
    page pour trois lignes, alors qu'assombrir ces trois lignes ne coûte rien à personne. */
 .step-card .small { color: var(--ink); }
+
+/* Les blocs BLANCS de l'accueil laissent passer le fond eux aussi. Les cartes et le pied de page le
+   font déjà plus haut ; restaient trois aplats pleins : les cartes « Rejoindre », les pastilles de
+   communes et les numéros de la frise. */
+.wrap-fond .join-card,
+.wrap-fond .commune-pills .pill,
+.wrap-fond .step-num {
+  background: rgba(255, 255, 255, .86);
+  -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+}
+.wrap-fond .join-card { border-color: rgba(220, 216, 208, .8); }
+
+/* L'intitulé des cartes « Rejoindre » (CLIENT / COMMERCE / LIVREUR) était en --ink-faint : mesuré à
+   3,75:1 sur du BLANC PUR, donc déjà sous le seuil AA avant qu'on ne touche à quoi que ce soit. Le
+   rendre translucide l'aurait enfoncé. Il passe en --ink-soft, qui tient 5,76:1 sur blanc et 5,00:1
+   à travers la carte translucide — donc mieux qu'avant le changement, pas moins bien.
+   Portée limitée à l'accueil public : ailleurs, la carte reste opaque et le gris clair d'origine
+   fait partie du dessin. */
+.wrap-fond .join-card .join-eyebrow { color: var(--ink-soft); }
+
+@media (max-width: 700px) {
+  .wrap-fond .join-card,
+  .wrap-fond .commune-pills .pill,
+  .wrap-fond .step-num { background: rgba(255, 255, 255, .92); }
+}
+
+@media (prefers-contrast: more) {
+  .wrap-fond .join-card,
+  .wrap-fond .commune-pills .pill,
+  .wrap-fond .step-num {
+    background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
