@@ -18,7 +18,7 @@ const DASHBOARD_PATHS = ['/restaurants', '/favorites', '/orders', '/map', '/invo
 // Sous-sections de « Mon compte » : les pages qu on atteint depuis ses rangées. On y propose le chemin
 // du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
-const SOUS_SECTIONS_COMPTE = ['/orders', '/favorites', '/invoices', '/map',
+const SOUS_SECTIONS_COMPTE = ['/invoices',
   '/dashboard/reservations', '/dashboard/tables', '/dashboard/promotions', '/dashboard/invoices', '/dashboard/guide'];
 function estSousSectionCompte(pathname) {
   return SOUS_SECTIONS_COMPTE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
@@ -65,7 +65,7 @@ export default function Layout() {
                 à montrer — vide, elle ne prendrait que de la place. */}
             <div className={`dashboard-topbar${estSousSectionCompte(location.pathname) ? ' has-retour' : ''}`}>
               {estSousSectionCompte(location.pathname) && (
-                <Link to="/account" className="dashboard-retour">← Mon compte</Link>
+                <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">← Mon compte</Link>
               )}
               <Link className="dashboard-topbrand" to={accueilConnecte}>
                 <BrandMark size={26} />

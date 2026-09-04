@@ -15,6 +15,7 @@ export const translations = {
     nav: {
       restaurants: 'Restaurants',
       favorites: 'Favoris',
+      search: 'Recherche',
       orders: 'Mes commandes',
       myBusiness: 'Mon commerce',
       deliveries: 'Livraisons',
@@ -575,6 +576,7 @@ export const translations = {
     nav: {
       restaurants: 'Restaurants',
       favorites: 'Favorites',
+      search: 'Search',
       orders: 'My orders',
       myBusiness: 'My business',
       deliveries: 'Deliveries',
@@ -1135,6 +1137,7 @@ export const translations = {
     nav: {
       restaurants: 'Restaurants',
       favorites: 'Favorieten',
+      search: 'Zoeken',
       orders: 'Mijn bestellingen',
       myBusiness: 'Mijn zaak',
       deliveries: 'Leveringen',

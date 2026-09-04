@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -129,6 +129,18 @@ export default function RestaurantList() {
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  // « Recherche » dans la barre du bas mène ici avec ?recherche : c'est la même liste, mais on pose le
+  // curseur dans le champ et on l'amène à l'écran — sur téléphone, le clavier s'ouvre. Une page de
+  // recherche à part aurait dupliqué la liste et ses filtres pour un seul champ de plus.
+  const champRecherche = useRef(null);
+  const emplacementRecherche = useLocation();
+  useEffect(() => {
+    if (!new URLSearchParams(emplacementRecherche.search).has('recherche')) return;
+    const champ = champRecherche.current;
+    if (!champ) return;
+    champ.focus({ preventScroll: true });
+    champ.scrollIntoView({ block: 'center' });
+  }, [emplacementRecherche.search]);
   const [commune, setCommune] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [view, setView] = useState('list');
@@ -236,7 +248,7 @@ export default function RestaurantList() {
         />
       </div>
       <div className="restaurant-search-row">
-        <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input ref={champRecherche} placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}

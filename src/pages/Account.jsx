@@ -430,21 +430,16 @@ export default function Account() {
           déconnexion comme à la fermeture du navigateur. Sa place est donc ici.
           Le sélecteur reste en accès direct sur la bannière publique, pour un visiteur non connecté
           qui n'a pas encore de page Compte où aller. */}
-      {/* Raccourcis du client.
-          « Mes réservations » pointe sur la liste des commandes filtrée : les réservations SONT des
-          commandes sur place, les ranger ailleurs les dédoublerait.
-          « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du
-          profil juste au-dessus. Une page séparée n'aurait affiché que les mêmes quatre champs, à
-          tenir synchronisés pour rien. La ligne y descend et y met le curseur.
-          « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un
-          réglage : Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant.
-          Ce sont deux questions que le client se pose vraiment — y répondre noir sur blanc vaut
-          mieux que de laisser la rubrique absente et le doute entier. */}
+      {/* Raccourcis du client. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
+          (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. Les réservations se
+          filtrent depuis la page Commandes elle-même.
+          « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du profil
+          juste au-dessus. La ligne y descend et y met le curseur.
+          « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un réglage :
+          Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. Deux questions
+          que le client se pose vraiment — y répondre noir sur blanc vaut mieux que le doute. */}
       {role === 'client' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <LigneCompte to="/orders?type=dine_in" icone="📅" titre="Mes réservations" sous="Tes tables réservées sur place" />
-          <LigneCompte to="/orders" icone="📦" titre="Mes commandes" sous="Livraisons, à emporter et sur place" />
-          <LigneCompte to="/favorites" icone="❤️" titre="Mes favoris" sous="Les commerces que tu as enregistrés" />
           <LigneCompte to="/invoices" icone="📄" titre="Mes factures" sous="Les reçus de tes commandes payées" />
           <LigneCompte
             icone="📍" titre="Adresse de livraison" sous="Celle qui pré-remplit tes commandes"
@@ -461,7 +456,6 @@ export default function Account() {
           />
           <LigneCompte to="/aide?sujet=paiement" icone="💳" titre="Moyens de paiement" sous="Comment Fairide te fait payer" />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre="Titres restaurant" sous="Monizze, Edenred, Sodexo" />
-          <LigneCompte to="/map" icone="🗺️" titre="Carte des commerces" sous="Trouver un commerce autour de toi" />
           <LigneCompte to="/notre-histoire" icone="🧭" titre="Notre histoire" sous="Pourquoi Fairide existe" />
         </div>
       )}

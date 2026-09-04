@@ -146,12 +146,17 @@ export default function Orders() {
     return (
       <div>
         <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+      {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
+          « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
+      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>Toutes</button>
+        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>Réservations</button>
+      </div>
         <div className="empty">
           {typeFiltre === 'dine_in'
             ? "Aucune réservation de table pour l'instant."
             : t('orders.empty')}
         </div>
-        {typeFiltre && <button className="btn-ghost" onClick={() => setSearchParams({})}>Voir toutes mes commandes</button>}
       </div>
     );
   }
@@ -159,11 +164,12 @@ export default function Orders() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
-      {typeFiltre && (
-        <button className="btn-ghost" style={{ marginBottom: 10 }} onClick={() => setSearchParams({})}>
-          ← Voir toutes mes commandes
-        </button>
-      )}
+      {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
+          « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
+      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>Toutes</button>
+        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>Réservations</button>
+      </div>
       {listeAffichee.map((o) => (
         <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
