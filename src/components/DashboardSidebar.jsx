@@ -1,4 +1,4 @@
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
@@ -16,14 +16,12 @@ const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', dr
 function navItemsForRole(role, t) {
   if (role === 'client') {
     return [
-      // Six onglets : ce qu'on ouvre au quotidien. Les factures sont parties dans Mon compte — on
-      // les consulte rarement, et une rubrique ne figure qu'à UN endroit, jamais aux deux.
-      // « Recherche » mène à la même liste que « Restaurants », avec ?recherche : la page pose alors
-      // le curseur dans le champ. Une page de recherche à part aurait dupliqué la liste et ses filtres
-      // pour un seul champ de plus. Comme les deux partagent le chemin, l'état actif ne peut pas venir
-      // de NavLink (qui ne lit que le chemin) : chacun porte son propre test sur l'emplacement.
-      { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants'), actif: (l) => l.pathname.startsWith('/restaurants') && !l.search.includes('recherche') },
-      { to: '/restaurants?recherche=1', icon: '🔍', label: t('nav.search'), actif: (l) => l.pathname.startsWith('/restaurants') && l.search.includes('recherche') },
+      // Six onglets : ce qu'on ouvre au quotidien. Les factures sont parties dans Mon compte — on les
+      // consulte rarement, et une rubrique ne figure qu'à UN endroit, jamais aux deux.
+      // « Recherche » a sa propre page, transversale : commerces, plats, cuisines, communes, aide,
+      // commandes — pas seulement la liste des restaurants filtrée.
+      { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants') },
+      { to: '/recherche', icon: '🔍', label: t('nav.search') },
       { to: '/orders', icon: '📦', label: t('nav.orders') },
       { to: '/favorites', icon: '❤️', label: t('nav.favorites') },
       { to: '/map', icon: '🗺️', label: t('nav.map') },
@@ -83,7 +81,6 @@ export default function DashboardSidebar() {
   const { t } = useLanguage();
   const { previewMode, exitPreview } = usePreviewMode();
   const navigate = useNavigate();
-  const emplacement = useLocation();
   // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
   // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7
@@ -121,7 +118,7 @@ export default function DashboardSidebar() {
           lecteur d'écran ni au survol. */}
       <nav className="dashboard-nav">
         {items.map((item) => (
-          <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${(item.actif ? item.actif(emplacement) : isActive) ? ' active' : ''}`}>
+          <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
             <span className="dashboard-nav-icon">{item.icon}</span>
             <span>{item.label}</span>
           </NavLink>

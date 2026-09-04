@@ -14,7 +14,7 @@ import FloatingCart from './FloatingCart';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
-const DASHBOARD_PATHS = ['/restaurants', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
+const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', '/map', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
 // Sous-sections de « Mon compte » : les pages qu on atteint depuis ses rangées. On y propose le chemin
 // du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.

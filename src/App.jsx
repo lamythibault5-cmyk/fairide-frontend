@@ -24,6 +24,7 @@ import RestaurantMenu from './pages/client/RestaurantMenu';
 import NotFound from './pages/NotFound';
 
 // --- Espace client (au-delà des pages publiques) ---
+const SearchPage = lazy(() => import('./pages/client/SearchPage'));
 const Checkout = lazy(() => import('./pages/client/Checkout'));
 const Favorites = lazy(() => import('./pages/client/Favorites'));
 const Orders = lazy(() => import('./pages/client/Orders'));
@@ -99,6 +100,9 @@ export default function App() {
             statique : une page indexable ne doit pas attendre un second téléchargement pour s'afficher. */}
         <Route path="/restaurants" element={<RestaurantList />} />
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
+        {/* Publique comme la liste : chercher un commerce ou un plat ne demande pas de compte. Les
+            résultats personnels (commandes) n'apparaissent que connecté. */}
+        <Route path="/recherche" element={<SearchPage />} />
         <Route path="/checkout" element={<ProtectedRoute role="client"><Checkout /></ProtectedRoute>} />
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />

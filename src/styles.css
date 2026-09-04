@@ -1993,3 +1993,45 @@ button.account-link-row:last-child { border-bottom: none; }
    que .dashboard-retour, pour qu'on reconnaisse le même geste d'une page à l'autre. */
 .retour-compte { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
 .retour-compte:hover { text-decoration: underline; }
+
+/* Page Recherche — transversale : commerces, plats, cuisines, communes, aide, commandes.
+   Le champ est le sujet de la page : grand, seul sur sa ligne, curseur dedans à l'arrivée. */
+.recherche-champ {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; border: 1.5px solid var(--line); border-radius: var(--radius);
+  padding: 4px 8px 4px 16px; margin: 0 0 16px;
+  transition: border-color .15s ease;
+}
+.recherche-champ:focus-within { border-color: var(--iris); }
+.recherche-loupe { font-size: 18px; flex-shrink: 0; }
+.recherche-champ input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font: inherit; font-size: 17px; padding: 12px 0; color: var(--ink);
+}
+.recherche-champ input::placeholder { color: var(--ink-faint); }
+/* Le navigateur ajoute sa propre croix aux champs type=search : on garde la nôtre, une seule. */
+.recherche-champ input::-webkit-search-cancel-button { -webkit-appearance: none; appearance: none; }
+.recherche-effacer {
+  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; border: 0; cursor: pointer;
+  background: var(--cream-dim); color: var(--ink-soft); font-size: 14px; line-height: 1;
+  display: flex; align-items: center; justify-content: center;
+}
+.recherche-effacer:hover { background: var(--line); color: var(--ink); }
+
+.recherche-titre-groupe {
+  margin: 0 0 10px; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.recherche-groupe { padding: 16px 0 0; overflow: hidden; }
+.recherche-groupe .recherche-titre-groupe { padding: 0 18px; }
+.recherche-lignes { border-top: 1px solid var(--line); }
+.recherche-ligne .account-link-text .small { white-space: normal; }
+.recherche-vignette { flex-shrink: 0; width: 44px; height: 44px; border-radius: var(--radius-chip); object-fit: cover; background: var(--cream-dim); }
+
+.recherche-pastilles { display: flex; flex-wrap: wrap; gap: 8px; }
+.recherche-pastille { text-decoration: none; background: #fff; border: 1px solid var(--line); color: var(--ink); cursor: pointer; }
+.recherche-pastille:hover { border-color: var(--iris); color: var(--iris); }
+
+@media (max-width: 700px) {
+  .recherche-champ input { font-size: 16px; padding: 11px 0; }
+}

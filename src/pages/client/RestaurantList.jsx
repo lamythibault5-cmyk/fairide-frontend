@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -124,25 +124,16 @@ export default function RestaurantList() {
   const location = useLocation();
   usePageMeta({ title: 'Restaurants et commerces à Bruxelles — Fairide', path: '/restaurants' });
   const homeCommune = matchCommune(user?.addressCity);
+  // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :
+  // la liste s'ouvre déjà filtrée, sans que l'URL ne change de forme.
+  const filtresInitiaux = useLocation().state || {};
   const [restaurants, setRestaurants] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  // « Recherche » dans la barre du bas mène ici avec ?recherche : c'est la même liste, mais on pose le
-  // curseur dans le champ et on l'amène à l'écran — sur téléphone, le clavier s'ouvre. Une page de
-  // recherche à part aurait dupliqué la liste et ses filtres pour un seul champ de plus.
-  const champRecherche = useRef(null);
-  const emplacementRecherche = useLocation();
-  useEffect(() => {
-    if (!new URLSearchParams(emplacementRecherche.search).has('recherche')) return;
-    const champ = champRecherche.current;
-    if (!champ) return;
-    champ.focus({ preventScroll: true });
-    champ.scrollIntoView({ block: 'center' });
-  }, [emplacementRecherche.search]);
-  const [commune, setCommune] = useState('');
-  const [cuisine, setCuisine] = useState('');
+  const [search, setSearch] = useState(filtresInitiaux.search || '');
+  const [commune, setCommune] = useState(filtresInitiaux.commune || '');
+  const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
   const [view, setView] = useState('list');
   const toast = useToast();
 
@@ -248,7 +239,7 @@ export default function RestaurantList() {
         />
       </div>
       <div className="restaurant-search-row">
-        <input ref={champRecherche} placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
