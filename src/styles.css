@@ -1938,3 +1938,17 @@ button.account-link-row:last-child { border-bottom: none; }
     background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none;
   }
 }
+
+/* Marque en haut à gauche de la carte de connexion. L'en-tête du site en porte déjà une, mais la
+   carte, elle, démarrait à froid sur ses deux onglets : rien n'y disait chez qui on entre son mot
+   de passe. Un formulaire d'identification sans identité, c'est précisément ce à quoi ressemble une
+   page d'hameçonnage.
+   Volontairement petite (26px) et non cliquable : c'est une signature, pas une navigation — le lien
+   vers l'accueil est dans l'en-tête, à vingt pixels au-dessus, et le doubler n'ajouterait qu'une
+   cible de plus à traverser au clavier. */
+.auth-brand { display: flex; align-items: center; gap: 9px; margin: 0 0 16px; }
+.auth-brand .mark { border-radius: 24%; }
+.auth-brand span {
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px;
+  letter-spacing: -0.02em; color: var(--ink); line-height: 1;
+}

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import BrandMark from '../components/BrandMark';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -351,6 +352,10 @@ export default function Auth() {
       <div className={`decor-page auth-decor ${decorClass}`}>
         <div className="auth-box">
         <div className="card">
+          <div className="auth-brand">
+            <BrandMark size={26} />
+            <span>fairide</span>
+          </div>
           <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
           {forgotSubmitted ? (
             <>
@@ -391,6 +396,10 @@ export default function Auth() {
       <div className={`decor-page auth-decor ${decorClass}`}>
         <div className="auth-box">
         <div className="card">
+          <div className="auth-brand">
+            <BrandMark size={26} />
+            <span>fairide</span>
+          </div>
           <h2 style={{ marginTop: 0 }}>{t('auth.verifyTitle')}</h2>
           <p className="small" style={{ marginBottom: 14 }}>
             {t('auth.verifyText', { email: pendingEmail })}
@@ -433,6 +442,10 @@ export default function Auth() {
       )}
       <div className="auth-box">
       <div className="card">
+        <div className="auth-brand">
+          <BrandMark size={26} />
+          <span>fairide</span>
+        </div>
         <div className="auth-tabs">
           <div className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</div>
           <div className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</div>
