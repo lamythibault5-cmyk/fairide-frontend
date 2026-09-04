@@ -36,6 +36,21 @@ export default function AssistantWidget() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showTooltip]);
 
+  // « Chattez avec nous », dans Mon compte, doit ouvrir CET assistant plutôt que d'en dupliquer un
+  // second. Le widget est monté par le Layout, hors de l'arbre de la page : un événement global est
+  // le moyen le plus simple de le lui dire sans faire remonter son état jusqu'à un contexte partagé,
+  // ce qui ferait rerendre toute l'application à chaque ouverture.
+  useEffect(() => {
+    const ouvrir = () => {
+      setShowTooltip(false);
+      setPulse(false);
+      sessionStorage.setItem(SEEN_KEY, '1');
+      setOpen(true);
+    };
+    window.addEventListener('fairide:assistant-ouvrir', ouvrir);
+    return () => window.removeEventListener('fairide:assistant-ouvrir', ouvrir);
+  }, []);
+
   function dismissTooltip() {
     setShowTooltip(false);
     setPulse(false);

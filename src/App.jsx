@@ -76,6 +76,7 @@ const AdminSettingsPage = lazy(() => import('./pages/admin/AdminSettingsPage'));
 const LegalNotice = lazy(() => import('./pages/legal/LegalNotice'));
 const Terms = lazy(() => import('./pages/legal/Terms'));
 const Privacy = lazy(() => import('./pages/legal/Privacy'));
+const HelpPage = lazy(() => import('./pages/HelpPage'));
 
 export default function App() {
   return (
@@ -147,6 +148,7 @@ export default function App() {
         <Route path="/mentions-legales" element={<LegalNotice />} />
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
+        <Route path="/aide" element={<HelpPage />} />
 
         {/* Attrape-tout, obligatoirement en dernier : sans lui, une URL inconnue affichait la mise en
             page avec un contenu vide, sans message ni lien de sortie. */}

@@ -34,6 +34,28 @@ function genders(t) {
 export default function Account() {
   const { user, role, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
+
+  // Partage natif là où il existe (téléphones, Safari), presse-papiers ailleurs. Le refus de la
+  // feuille de partage lève AbortError : ce n'est pas une panne, c'est un utilisateur qui a changé
+  // d'avis — lui afficher une erreur serait lui reprocher son geste.
+  async function partagerFairide() {
+    const lien = window.location.origin;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Fairide',
+          text: 'Les commerces de ton quartier, livrés chez toi — 10 % de commission au lieu de 22 à 32 %.',
+          url: lien
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(lien);
+      toast(`Lien copié : ${lien}`);
+    } catch (e) {
+      if (e?.name === 'AbortError') return;
+      toast(`Partage indisponible ici. L'adresse est ${lien}`);
+    }
+  }
   const { t } = useLanguage();
   const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
   const DELETION_REASONS = deletionReasons(t);
@@ -380,7 +402,7 @@ export default function Account() {
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 2 }}>
               <label>{t('auth.street')}</label>
-              <input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
+              <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
             </div>
             <div className="field" style={{ flex: 1 }}>
               <label>{t('auth.number')}</label>
@@ -408,30 +430,38 @@ export default function Account() {
           déconnexion comme à la fermeture du navigateur. Sa place est donc ici.
           Le sélecteur reste en accès direct sur la bannière publique, pour un visiteur non connecté
           qui n'a pas encore de page Compte où aller. */}
-      {/* Raccourcis du client. Volontairement limités à des rubriques qui mènent quelque part :
-          Fairide n'a ni carte enregistrée (le paiement passe par Stripe à chaque commande) ni
-          titres-restaurant, donc pas de ligne pour eux — une rubrique qui n'ouvre rien coûte plus
-          de confiance qu'elle n'apporte de complétude.
+      {/* Raccourcis du client.
           « Mes réservations » pointe sur la liste des commandes filtrée : les réservations SONT des
-          commandes sur place, les ranger ailleurs les dédoublerait. */}
+          commandes sur place, les ranger ailleurs les dédoublerait.
+          « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du
+          profil juste au-dessus. Une page séparée n'aurait affiché que les mêmes quatre champs, à
+          tenir synchronisés pour rien. La ligne y descend et y met le curseur.
+          « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un
+          réglage : Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant.
+          Ce sont deux questions que le client se pose vraiment — y répondre noir sur blanc vaut
+          mieux que de laisser la rubrique absente et le doute entier. */}
       {role === 'client' && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          {[
-            { to: '/orders?type=dine_in', icone: '📅', titre: 'Mes réservations', sous: 'Tes tables réservées sur place' },
-            { to: '/orders', icone: '📦', titre: 'Mes commandes', sous: 'Livraisons, à emporter et sur place' },
-            { to: '/favorites', icone: '❤️', titre: 'Mes favoris', sous: 'Les commerces que tu as enregistrés' },
-            { to: '/invoices', icone: '📄', titre: 'Mes factures', sous: 'Les reçus de tes commandes payées' },
-            { to: '/map', icone: '🗺️', titre: 'Carte des commerces', sous: 'Trouver un commerce autour de toi' }
-          ].map((r) => (
-            <Link key={r.to} to={r.to} className="account-link-row">
-              <span className="account-link-icon" aria-hidden="true">{r.icone}</span>
-              <span className="account-link-text">
-                <b>{r.titre}</b>
-                <span className="small">{r.sous}</span>
-              </span>
-              <span className="account-link-chevron" aria-hidden="true">›</span>
-            </Link>
-          ))}
+          <LigneCompte to="/orders?type=dine_in" icone="📅" titre="Mes réservations" sous="Tes tables réservées sur place" />
+          <LigneCompte to="/orders" icone="📦" titre="Mes commandes" sous="Livraisons, à emporter et sur place" />
+          <LigneCompte to="/favorites" icone="❤️" titre="Mes favoris" sous="Les commerces que tu as enregistrés" />
+          <LigneCompte to="/invoices" icone="📄" titre="Mes factures" sous="Les reçus de tes commandes payées" />
+          <LigneCompte
+            icone="📍" titre="Adresse de livraison" sous="Celle qui pré-remplit tes commandes"
+            onClick={() => {
+              const champ = document.getElementById('champ-adresse');
+              if (!champ) return;
+              // Ici le défilement est animé, à l'inverse du centre d'aide : on reste sur la même
+              // page et il faut voir d'où l'on part pour comprendre où l'on arrive. Sauf pour qui
+              // demande moins de mouvement, à qui on doit un saut sec.
+              const anime = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+              champ.scrollIntoView({ block: 'center', behavior: anime ? 'smooth' : 'auto' });
+              champ.focus({ preventScroll: true });
+            }}
+          />
+          <LigneCompte to="/aide?sujet=paiement" icone="💳" titre="Moyens de paiement" sous="Comment Fairide te fait payer" />
+          <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre="Titres restaurant" sous="Monizze, Edenred, Sodexo" />
+          <LigneCompte to="/map" icone="🗺️" titre="Carte des commerces" sous="Trouver un commerce autour de toi" />
         </div>
       )}
 
@@ -513,22 +543,11 @@ export default function Account() {
           rien. Ici elles gardent leur nom en toutes lettres. */}
       {role === 'restaurant' && restaurant && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          {[
-            { to: '/dashboard/reservations', icone: '📅', titre: 'Réservations', sous: 'Ton agenda du jour, table par table' },
-            { to: '/dashboard/tables', icone: '🪑', titre: 'Plan de salle', sous: 'Tes tables et tes créneaux de réservation' },
-            { to: '/dashboard/promotions', icone: '🏷️', titre: 'Promotions', sous: 'Réductions et offres sur ta carte' },
-            { to: '/dashboard/invoices', icone: '📄', titre: 'Factures', sous: 'Tes factures de commission' },
-            { to: '/dashboard/guide', icone: '📘', titre: "Mode d'emploi", sous: 'Comment gérer ton commerce sur Fairide' }
-          ].map((r) => (
-            <Link key={r.to} to={r.to} className="account-link-row">
-              <span className="account-link-icon" aria-hidden="true">{r.icone}</span>
-              <span className="account-link-text">
-                <b>{r.titre}</b>
-                <span className="small">{r.sous}</span>
-              </span>
-              <span className="account-link-chevron" aria-hidden="true">›</span>
-            </Link>
-          ))}
+          <LigneCompte to="/dashboard/reservations" icone="📅" titre="Réservations" sous="Ton agenda du jour, table par table" />
+          <LigneCompte to="/dashboard/tables" icone="🪑" titre="Plan de salle" sous="Tes tables et tes créneaux de réservation" />
+          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre="Promotions" sous="Réductions et offres sur ta carte" />
+          <LigneCompte to="/dashboard/invoices" icone="📄" titre="Factures" sous="Tes factures de commission" />
+          <LigneCompte to="/dashboard/guide" icone="📘" titre="Mode d'emploi" sous="Comment gérer ton commerce sur Fairide" />
         </div>
       )}
 
@@ -882,9 +901,52 @@ export default function Account() {
         )}
       </div>
 
+      {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
+          signaler un bug qu'un client.
+          « Supprimer mon compte » n'y figure pas : sa section, avec sa confirmation par code, est
+          juste au-dessus. Y renvoyer par un lien ferait deux chemins vers le même endroit visible
+          à l'écran. La déconnexion non plus, pour la même raison — c'est le bouton qui suit. */}
+      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <LigneCompte to="/aide" icone="🛟" titre="Besoin d'aide ?" sous="Les réponses aux questions fréquentes" />
+        <LigneCompte
+          icone="💬" titre="Chatter avec nous" sous="L'assistant Fairide, tout de suite"
+          onClick={() => window.dispatchEvent(new Event('fairide:assistant-ouvrir'))}
+        />
+        <LigneCompte to="/aide?sujet=avis" icone="⭐" titre="Donner mon avis sur Fairide" sous="Ce qui te plaît, ce qui manque" />
+        <LigneCompte icone="🔗" titre="Partager Fairide" sous="Envoyer le lien à tes proches" onClick={partagerFairide} />
+        <LigneCompte to="/aide?sujet=bug" icone="🐞" titre="Signaler un bug" sous="Décris-nous ce qui ne va pas" />
+      </div>
+
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
+
+      <p className="account-legal">
+        <Link to="/confidentialite">Confidentialité</Link>
+        <Link to="/cgv">CGV</Link>
+        <Link to="/mentions-legales">Mentions légales</Link>
+        <span className="account-build">Build {__BUILD_ID__}</span>
+      </p>
     </div>
   );
+}
+
+// Une rangée du menu Compte. Tantôt un lien, tantôt une action (ouvrir l'assistant, partager) :
+// dans le second cas c'est un <button>, pas un <a href="#"> déguisé — un lien qui ne mène nulle
+// part est annoncé comme un lien par les lecteurs d'écran et s'ouvre dans un nouvel onglet au clic
+// du milieu, deux promesses qu'on ne tiendrait pas.
+function LigneCompte({ to, onClick, icone, titre, sous, danger = false }) {
+  const contenu = (
+    <>
+      <span className="account-link-icon" aria-hidden="true">{icone}</span>
+      <span className="account-link-text">
+        <b>{titre}</b>
+        <span className="small">{sous}</span>
+      </span>
+      <span className="account-link-chevron" aria-hidden="true">›</span>
+    </>
+  );
+  const classe = `account-link-row${danger ? ' account-link-danger' : ''}`;
+  if (to) return <Link to={to} className={classe}>{contenu}</Link>;
+  return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
 }
 
 // Un champ (email OU téléphone) avec son propre flux demande-code / confirme-code, indépendant de

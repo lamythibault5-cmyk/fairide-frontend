@@ -1829,3 +1829,26 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .euro-block .photo-wash { opacity: .18; }
   .landing-cta .photo-wash { opacity: .23; }
 }
+
+/* Une rangée du menu Compte peut être un <button> (ouvrir l'assistant, partager) et non un lien.
+   Le navigateur donne aux boutons leur propre fond, bordure, police et alignement : sans cette
+   remise à zéro, la même rangée n'aurait ni la même hauteur ni la même typographie selon qu'elle
+   navigue ou qu'elle agit — et `width: 100%` sans `box-sizing` la ferait déborder de sa carte,
+   le padding s'ajoutant à la largeur. */
+button.account-link-row {
+  width: 100%; box-sizing: border-box; background: none; border: 0;
+  border-bottom: 1px solid var(--line-soft, var(--line));
+  font: inherit; text-align: left; cursor: pointer;
+}
+button.account-link-row:last-child { border-bottom: none; }
+.account-link-danger b { color: var(--red); }
+
+/* Mentions légales et identifiant de build, en pied de page. Discrets par construction : on les
+   cherche quand on en a besoin, on ne doit pas les voir le reste du temps. */
+.account-legal {
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+  gap: 6px 16px; margin: 18px 0 6px; font-size: 12.5px;
+}
+.account-legal a { color: var(--ink-soft); text-decoration: underline; text-underline-offset: 2px; }
+.account-legal a:hover { color: var(--iris); }
+.account-build { flex-basis: 100%; text-align: center; color: var(--ink-faint); font-size: 11.5px; }

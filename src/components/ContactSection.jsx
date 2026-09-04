@@ -2,7 +2,10 @@ import { useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
-export default function ContactSection() {
+// `messageInitial` sert au centre d'aide : quand on arrive par « Signaler un bug », le message est
+// déjà amorcé avec ce qu'il faut nous dire. Une trame vaut mieux qu'un champ vide — c'est elle qui
+// fait la différence entre « ça marche pas » et un rapport exploitable.
+export default function ContactSection({ messageInitial = '' }) {
   const { t } = useLanguage();
   const INFO_CARDS = [
     { icon: '✉️', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
@@ -19,7 +22,7 @@ export default function ContactSection() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState(messageInitial);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
