@@ -304,7 +304,8 @@ export const translations = {
       toastNothingNew: 'Aucune nouvelle tâche — tout est déjà à jour.',
       runLine: '{created} créée(s) / {matched} détectée(s) · {date}',
       lastRun: 'Dernier passage : {date} — {created} tâche(s) créée(s) / {matched} détectée(s)',
-      neverRun: 'Jamais encore exécutée.'
+      neverRun: 'Jamais encore exécutée.',
+      runNow: '▶ Lancer maintenant'
     },
     adminFinance: {
       title: 'Finance',
@@ -334,7 +335,11 @@ export const translations = {
       deliveriesCount: '{n} livraison(s)',
       deliveryFeesAmount: 'Frais livraison {amount}',
       amountDue: '{amount} dû',
-      commissionPlusDelivery: 'Commission {commission} + livraison {delivery}'
+      commissionPlusDelivery: 'Commission {commission} + livraison {delivery}',
+      allTime: 'Tout',
+      days90: '90 jours',
+      fairideShareCol: 'Part Fairide',
+      reasonCol: 'Raison'
     },
     adminClients: {
       title: 'Clients',
@@ -357,7 +362,23 @@ export const translations = {
       deleteAccount: 'Supprimer le compte',
       confirmDelete: 'Supprimer définitivement {name} ?',
       deleteBody: 'Le compte {email} et tout son historique (commandes, réservations, avis, favoris) seront effacés. Les écritures comptables sont conservées mais détachées. Irréversible.',
-      toastDeleted: 'Compte supprimé ({n} commande(s) effacée(s)).'
+      toastDeleted: 'Compte supprimé ({n} commande(s) effacée(s)).',
+      toastSuspended: 'Client suspendu.',
+      filterActive30: 'Actifs 30 j',
+      filterNew7: 'Nouveaux 7 j',
+      filterRefunds: 'Avec remboursements',
+      filterBlocked: 'Suspendus',
+      kpiTotal: 'Clients',
+      kpiNew: 'Nouveaux (7 j)',
+      kpiActive: 'Actifs (30 j)',
+      kpiSpent: 'Dépenses cumulées',
+      activeBadge: 'Actif',
+      groupMonth: 'Mois d\'inscription',
+      groupTier: 'Niveau de dépense',
+      tierTop: 'Gros clients (≥ 200 €)',
+      tierRegular: 'Réguliers (50 à 200 €)',
+      tierOccasional: 'Occasionnels (< 50 €)',
+      tierNone: 'Jamais commandé'
     },
     adminPayments: {
       title: 'Paiements',
@@ -388,7 +409,12 @@ export const translations = {
       tab_overview: 'Vue d\'ensemble',
       tab_customerPayments: 'Paiements clients',
       tab_payouts: 'Payouts',
-      tab_reconciliation: 'Rapprochement'
+      tab_reconciliation: 'Rapprochement',
+      unknownMode: 'mode inconnu',
+      doneF: 'Effectués',
+      colMode: 'Mode',
+      colRefunded: 'Remboursé',
+      colRecipient: 'Destinataire'
     },
     adminSettings: {
       title: 'Paramètres',
@@ -471,7 +497,10 @@ export const translations = {
       linkedTo: 'Lié à : {type} {name}',
       createdBy: 'Créée par {email} le {date}',
       completedOn: 'Terminée le {date}',
-      createTaskBtn: '✅ Créer une tâche'
+      createTaskBtn: '✅ Créer une tâche',
+      allDue: 'Toutes échéances',
+      overdueF: 'En retard',
+      dueSoonF: 'Bientôt'
     },
     adminDrivers: {
       title: 'Livreurs',
@@ -502,7 +531,21 @@ export const translations = {
       registeredStripe: 'Inscrit le {date} · Stripe Connect : {status}',
       minutes: '{n} min',
       available: '🟢 Disponible',
-      offline: '⚫ Hors ligne'
+      offline: '⚫ Hors ligne',
+      toastSuspended: 'Livreur suspendu.',
+      filterPending: 'À valider',
+      filterApproved: 'Approuvés',
+      filterBlocked: 'Suspendus',
+      allActivities: 'Toutes activités',
+      kpiTotal: 'Livreurs',
+      kpiPending: 'À valider',
+      kpiAvailable: 'Disponibles',
+      kpiDelivering: 'En livraison',
+      kpiRevenue: 'Revenus versés',
+      vatFranchise: 'Franchise TVA',
+      vatSubject: 'Assujetti TVA',
+      vatUnknown: 'TVA non renseignée',
+      statsLine: '{n} livraison(s) · {revenue} de revenus · {cancel} annulation'
     },
     adminDocs: {
       expired: 'Expirés',
@@ -533,7 +576,11 @@ export const translations = {
       addedOn: 'Ajouté le {date}',
       linkedTo: 'Lié à : {label}',
       expiresOn: 'Expire le {date}',
-      addedBy: 'Ajouté par {email} le {date}'
+      addedBy: 'Ajouté par {email} le {date}',
+      allExpiry: 'Toutes échéances',
+      expiredF: 'Expirés',
+      expiringSoonF: 'Expire bientôt',
+      validF: 'Valides'
     },
     adminInvoices: {
       title: 'Factures',
@@ -598,7 +645,14 @@ export const translations = {
       generate: 'Générer',
       saveVatRegime: 'Enregistrer le régime TVA',
       creditNoteBody: 'La facture sera marquée annulée et une note de crédit du montant total sera émise. Cette action est définitive et tracée.',
-      toastSelfBillingGenerated: 'Autofacturation {n} générée.'
+      toastSelfBillingGenerated: 'Autofacturation {n} générée.',
+      vatFranchise: 'Franchise (art. 56bis CTVA)',
+      vatSubject: 'Assujetti TVA',
+      colNumber: 'N°',
+      colPeriod: 'Période',
+      colHt: 'HT',
+      colTtc: 'TTC',
+      colIssued: 'Émise le'
     },
     adminCrm: {
       title: 'CRM Restaurants',
@@ -635,7 +689,13 @@ export const translations = {
       nextFollowUpLine: '🔔 Prochaine relance : {date}',
       lossReasonLine: 'Motif de perte : {reason}',
       convertedLine: '✅ Converti en restaurant "{name}" le {date}',
-      createdOn: 'Créé le {date}'
+      createdOn: 'Créé le {date}',
+      allOwners: 'Tous les responsables',
+      filterFollowUpOverdue: 'Relances en retard',
+      colStage: 'Étape',
+      colOwner: 'Responsable',
+      colNextFollowUp: 'Prochaine relance',
+      colCreated: 'Créé le'
     },
     adminSupport: {
       title: 'Support / Helpdesk',
@@ -693,7 +753,8 @@ export const translations = {
       linkedOrder: 'Commande #{id}',
       escalatedReason: '⚠️ Escaladé : {reason}',
       resolutionLine: 'Résolution : {note}',
-      createTicketBtn: '🎫 Créer un ticket'
+      createTicketBtn: '🎫 Créer un ticket',
+      myTickets: 'Mes tickets'
     },
     adminAccounting: {
       title: 'Comptabilité',
@@ -763,7 +824,12 @@ export const translations = {
       tab_vat: 'TVA',
       tab_reconciliation: 'Rapprochement',
       tab_chart: 'Plan comptable',
-      runningBalance: 'Solde progressif'
+      runningBalance: 'Solde progressif',
+      kind_revenue: 'Revenu',
+      kind_expense: 'Charge',
+      kind_asset: 'Actif',
+      kind_liability: 'Passif',
+      kind_vat: 'TVA'
     },
     adminRestos: {
       title: 'Restaurants',
@@ -805,7 +871,18 @@ export const translations = {
       confirmDelete: 'Supprimer définitivement {name} ?',
       deleteBody: 'Le restaurant, sa carte, ses tables, toutes ses commandes et réservations, ses avis et ses factures de commission seront effacés. Le compte du restaurateur ({email}) est supprimé aussi s\'il n\'a pas d\'autre commerce. Les écritures comptables sont conservées mais détachées. Irréversible.',
       toastDeleted: 'Restaurant supprimé ({n} commande(s) effacée(s)).',
-      toastDeletedWithOwner: 'Restaurant et compte {email} supprimés ({n} commande(s) effacée(s)).'
+      toastDeletedWithOwner: 'Restaurant et compte {email} supprimés ({n} commande(s) effacée(s)).',
+      toastSuspended: 'Restaurant suspendu.',
+      filterPending: 'À valider',
+      filterApproved: 'Approuvés',
+      filterBlocked: 'Suspendus',
+      allCommunes: 'Toutes les communes',
+      allCuisines: 'Toutes les cuisines',
+      kpiTotal: 'Restaurants',
+      kpiPending: 'À valider',
+      kpiRevenue: 'CA cumulé',
+      kpiCommission: 'Commission générée',
+      groupBusiness: 'Statut commercial'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -853,7 +930,19 @@ export const translations = {
       moneyLine: '{paid} · commission {commission} · part livraison {share} · revenu Fairide {revenue}',
       clientLine: 'Client : {name}{phone}',
       driverLine: 'Livreur : {name}{phone}',
-      ordersCount: '({n} commandes)'
+      ordersCount: '({n} commandes)',
+      typeAll: 'Tous les types',
+      typeDelivery: 'Livraison',
+      typePickup: 'À emporter',
+      typeDineIn: 'Sur place (réservation)',
+      dateFrom: 'Du',
+      dateTo: 'Au',
+      minAmount: 'Min €',
+      maxAmount: 'Max €',
+      clearFilters: 'Effacer les filtres',
+      groupDay: 'Jour',
+      colPaid: 'Payée',
+      colFairide: 'Revenu Fairide'
     },
     adminDash: {
       title: 'Dashboard',
@@ -988,7 +1077,37 @@ export const translations = {
       refund: 'Remboursement',
       component: 'Composant',
       amount: 'Montant',
-      status: 'Statut'
+      status: 'Statut',
+      save: 'Enregistrer',
+      enable: 'Activer',
+      addPlain: 'Ajouter',
+      doneToast: 'Fait.',
+      confirmSuspend: 'Suspendre {name} ?',
+      allStatuses: 'Tous statuts',
+      viewCards: 'Fiches',
+      viewTable: 'Tableau',
+      groupBy: 'Regrouper par',
+      noGroup: 'Sans regroupement',
+      restaurants: 'Restaurants',
+      drivers: 'Livreurs',
+      reconciledF: 'Rapprochées',
+      paidF: 'Payées',
+      unpaidF: 'Non payées',
+      countOf: '{n} sur {total}',
+      commune: 'Commune',
+      cuisine: 'Cuisine',
+      rating: 'Note',
+      activity: 'Activité',
+      vat: 'TVA',
+      deliveries: 'Livraisons',
+      revenue: 'Revenus',
+      commission: 'Commission',
+      avgTime: 'Temps moyen',
+      cancellations: 'Annulations',
+      frequency: 'Fréquence / mois',
+      balanceCol: 'Solde',
+      spent: 'Dépensé',
+      client: 'Client'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -3333,7 +3452,8 @@ export const translations = {
       toastNothingNew: 'No new task — everything is already up to date.',
       runLine: '{created} created / {matched} detected · {date}',
       lastRun: 'Last run: {date} — {created} task(s) created / {matched} detected',
-      neverRun: 'Never run yet.'
+      neverRun: 'Never run yet.',
+      runNow: '▶ Run now'
     },
     adminFinance: {
       title: 'Finance',
@@ -3363,7 +3483,11 @@ export const translations = {
       deliveriesCount: '{n} delivery(ies)',
       deliveryFeesAmount: 'Delivery fees {amount}',
       amountDue: '{amount} due',
-      commissionPlusDelivery: 'Commission {commission} + delivery {delivery}'
+      commissionPlusDelivery: 'Commission {commission} + delivery {delivery}',
+      allTime: 'All time',
+      days90: '90 days',
+      fairideShareCol: 'Fairide share',
+      reasonCol: 'Reason'
     },
     adminClients: {
       title: 'Customers',
@@ -3386,7 +3510,23 @@ export const translations = {
       deleteAccount: 'Delete account',
       confirmDelete: 'Permanently delete {name}?',
       deleteBody: 'The account {email} and all its history (orders, reservations, reviews, favourites) will be erased. Accounting entries are kept but detached. This cannot be undone.',
-      toastDeleted: 'Account deleted ({n} order(s) erased).'
+      toastDeleted: 'Account deleted ({n} order(s) erased).',
+      toastSuspended: 'Customer suspended.',
+      filterActive30: 'Active 30 d',
+      filterNew7: 'New 7 d',
+      filterRefunds: 'With refunds',
+      filterBlocked: 'Suspended',
+      kpiTotal: 'Customers',
+      kpiNew: 'New (7 d)',
+      kpiActive: 'Active (30 d)',
+      kpiSpent: 'Total spent',
+      activeBadge: 'Active',
+      groupMonth: 'Sign-up month',
+      groupTier: 'Spending tier',
+      tierTop: 'Top customers (≥ €200)',
+      tierRegular: 'Regulars (€50 to €200)',
+      tierOccasional: 'Occasional (< €50)',
+      tierNone: 'Never ordered'
     },
     adminPayments: {
       title: 'Payments',
@@ -3417,7 +3557,12 @@ export const translations = {
       tab_overview: 'Overview',
       tab_customerPayments: 'Customer payments',
       tab_payouts: 'Payouts',
-      tab_reconciliation: 'Reconciliation'
+      tab_reconciliation: 'Reconciliation',
+      unknownMode: 'unknown mode',
+      doneF: 'Done',
+      colMode: 'Mode',
+      colRefunded: 'Refunded',
+      colRecipient: 'Recipient'
     },
     adminSettings: {
       title: 'Settings',
@@ -3500,7 +3645,10 @@ export const translations = {
       linkedTo: 'Linked to: {type} {name}',
       createdBy: 'Created by {email} on {date}',
       completedOn: 'Completed on {date}',
-      createTaskBtn: '✅ Create a task'
+      createTaskBtn: '✅ Create a task',
+      allDue: 'All deadlines',
+      overdueF: 'Overdue',
+      dueSoonF: 'Soon'
     },
     adminDrivers: {
       title: 'Couriers',
@@ -3531,7 +3679,21 @@ export const translations = {
       registeredStripe: 'Registered on {date} · Stripe Connect: {status}',
       minutes: '{n} min',
       available: '🟢 Available',
-      offline: '⚫ Offline'
+      offline: '⚫ Offline',
+      toastSuspended: 'Courier suspended.',
+      filterPending: 'To validate',
+      filterApproved: 'Approved',
+      filterBlocked: 'Suspended',
+      allActivities: 'All activities',
+      kpiTotal: 'Couriers',
+      kpiPending: 'To validate',
+      kpiAvailable: 'Available',
+      kpiDelivering: 'Delivering',
+      kpiRevenue: 'Earnings paid',
+      vatFranchise: 'VAT exempt',
+      vatSubject: 'VAT registered',
+      vatUnknown: 'VAT status missing',
+      statsLine: '{n} delivery(ies) · {revenue} earned · {cancel} cancellation'
     },
     adminDocs: {
       expired: 'Expired',
@@ -3562,7 +3724,11 @@ export const translations = {
       addedOn: 'Added on {date}',
       linkedTo: 'Linked to: {label}',
       expiresOn: 'Expires on {date}',
-      addedBy: 'Added by {email} on {date}'
+      addedBy: 'Added by {email} on {date}',
+      allExpiry: 'All expiry dates',
+      expiredF: 'Expired',
+      expiringSoonF: 'Expiring soon',
+      validF: 'Valid'
     },
     adminInvoices: {
       title: 'Invoices',
@@ -3627,7 +3793,14 @@ export const translations = {
       generate: 'Generate',
       saveVatRegime: 'Save the VAT regime',
       creditNoteBody: 'The invoice will be marked cancelled and a credit note for the full amount will be issued. This action is permanent and logged.',
-      toastSelfBillingGenerated: 'Self-billing invoice {n} generated.'
+      toastSelfBillingGenerated: 'Self-billing invoice {n} generated.',
+      vatFranchise: 'VAT exempt (art. 56bis)',
+      vatSubject: 'VAT registered',
+      colNumber: 'No.',
+      colPeriod: 'Period',
+      colHt: 'Excl. VAT',
+      colTtc: 'Incl. VAT',
+      colIssued: 'Issued on'
     },
     adminCrm: {
       title: 'Restaurant CRM',
@@ -3664,7 +3837,13 @@ export const translations = {
       nextFollowUpLine: '🔔 Next follow-up: {date}',
       lossReasonLine: 'Loss reason: {reason}',
       convertedLine: '✅ Converted to restaurant "{name}" on {date}',
-      createdOn: 'Created on {date}'
+      createdOn: 'Created on {date}',
+      allOwners: 'All owners',
+      filterFollowUpOverdue: 'Overdue follow-ups',
+      colStage: 'Stage',
+      colOwner: 'Owner',
+      colNextFollowUp: 'Next follow-up',
+      colCreated: 'Created on'
     },
     adminSupport: {
       title: 'Support / Helpdesk',
@@ -3722,7 +3901,8 @@ export const translations = {
       linkedOrder: 'Order #{id}',
       escalatedReason: '⚠️ Escalated: {reason}',
       resolutionLine: 'Resolution: {note}',
-      createTicketBtn: '🎫 Create a ticket'
+      createTicketBtn: '🎫 Create a ticket',
+      myTickets: 'My tickets'
     },
     adminAccounting: {
       title: 'Accounting',
@@ -3792,7 +3972,12 @@ export const translations = {
       tab_vat: 'VAT',
       tab_reconciliation: 'Reconciliation',
       tab_chart: 'Chart of accounts',
-      runningBalance: 'Running balance'
+      runningBalance: 'Running balance',
+      kind_revenue: 'Revenue',
+      kind_expense: 'Expense',
+      kind_asset: 'Asset',
+      kind_liability: 'Liability',
+      kind_vat: 'VAT'
     },
     adminRestos: {
       title: 'Restaurants',
@@ -3834,7 +4019,18 @@ export const translations = {
       confirmDelete: 'Permanently delete {name}?',
       deleteBody: 'The restaurant, its menu, tables, all its orders and reservations, reviews and commission invoices will be erased. The owner account ({email}) is deleted too if it has no other business. Accounting entries are kept but detached. This cannot be undone.',
       toastDeleted: 'Restaurant deleted ({n} order(s) erased).',
-      toastDeletedWithOwner: 'Restaurant and account {email} deleted ({n} order(s) erased).'
+      toastDeletedWithOwner: 'Restaurant and account {email} deleted ({n} order(s) erased).',
+      toastSuspended: 'Restaurant suspended.',
+      filterPending: 'To validate',
+      filterApproved: 'Approved',
+      filterBlocked: 'Suspended',
+      allCommunes: 'All municipalities',
+      allCuisines: 'All cuisines',
+      kpiTotal: 'Restaurants',
+      kpiPending: 'To validate',
+      kpiRevenue: 'Cumulative revenue',
+      kpiCommission: 'Commission generated',
+      groupBusiness: 'Business status'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -3882,7 +4078,19 @@ export const translations = {
       moneyLine: '{paid} · commission {commission} · delivery share {share} · Fairide revenue {revenue}',
       clientLine: 'Customer: {name}{phone}',
       driverLine: 'Courier: {name}{phone}',
-      ordersCount: '({n} orders)'
+      ordersCount: '({n} orders)',
+      typeAll: 'All types',
+      typeDelivery: 'Delivery',
+      typePickup: 'Takeaway',
+      typeDineIn: 'Dine-in (reservation)',
+      dateFrom: 'From',
+      dateTo: 'To',
+      minAmount: 'Min €',
+      maxAmount: 'Max €',
+      clearFilters: 'Clear filters',
+      groupDay: 'Day',
+      colPaid: 'Paid',
+      colFairide: 'Fairide revenue'
     },
     adminDash: {
       title: 'Dashboard',
@@ -4017,7 +4225,37 @@ export const translations = {
       refund: 'Refund',
       component: 'Component',
       amount: 'Amount',
-      status: 'Status'
+      status: 'Status',
+      save: 'Save',
+      enable: 'Enable',
+      addPlain: 'Add',
+      doneToast: 'Done.',
+      confirmSuspend: 'Suspend {name}?',
+      allStatuses: 'All statuses',
+      viewCards: 'Cards',
+      viewTable: 'Table',
+      groupBy: 'Group by',
+      noGroup: 'No grouping',
+      restaurants: 'Restaurants',
+      drivers: 'Couriers',
+      reconciledF: 'Reconciled',
+      paidF: 'Paid',
+      unpaidF: 'Unpaid',
+      countOf: '{n} of {total}',
+      commune: 'Municipality',
+      cuisine: 'Cuisine',
+      rating: 'Rating',
+      activity: 'Activity',
+      vat: 'VAT',
+      deliveries: 'Deliveries',
+      revenue: 'Earnings',
+      commission: 'Commission',
+      avgTime: 'Avg. time',
+      cancellations: 'Cancellations',
+      frequency: 'Frequency / month',
+      balanceCol: 'Balance',
+      spent: 'Spent',
+      client: 'Customer'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -6362,7 +6600,8 @@ export const translations = {
       toastNothingNew: 'Geen nieuwe taak — alles is al up-to-date.',
       runLine: '{created} aangemaakt / {matched} gedetecteerd · {date}',
       lastRun: 'Laatste uitvoering: {date} — {created} taak/taken aangemaakt / {matched} gedetecteerd',
-      neverRun: 'Nog nooit uitgevoerd.'
+      neverRun: 'Nog nooit uitgevoerd.',
+      runNow: '▶ Nu uitvoeren'
     },
     adminFinance: {
       title: 'Financiën',
@@ -6392,7 +6631,11 @@ export const translations = {
       deliveriesCount: '{n} levering(en)',
       deliveryFeesAmount: 'Leveringskosten {amount}',
       amountDue: '{amount} verschuldigd',
-      commissionPlusDelivery: 'Commissie {commission} + levering {delivery}'
+      commissionPlusDelivery: 'Commissie {commission} + levering {delivery}',
+      allTime: 'Alles',
+      days90: '90 dagen',
+      fairideShareCol: 'Aandeel Fairide',
+      reasonCol: 'Reden'
     },
     adminClients: {
       title: 'Klanten',
@@ -6415,7 +6658,23 @@ export const translations = {
       deleteAccount: 'Account verwijderen',
       confirmDelete: '{name} definitief verwijderen?',
       deleteBody: 'Het account {email} en zijn hele geschiedenis (bestellingen, reserveringen, beoordelingen, favorieten) worden gewist. Boekhoudkundige boekingen blijven bewaard maar losgekoppeld. Onomkeerbaar.',
-      toastDeleted: 'Account verwijderd ({n} bestelling(en) gewist).'
+      toastDeleted: 'Account verwijderd ({n} bestelling(en) gewist).',
+      toastSuspended: 'Klant geschorst.',
+      filterActive30: 'Actief 30 d',
+      filterNew7: 'Nieuw 7 d',
+      filterRefunds: 'Met terugbetalingen',
+      filterBlocked: 'Geschorst',
+      kpiTotal: 'Klanten',
+      kpiNew: 'Nieuw (7 d)',
+      kpiActive: 'Actief (30 d)',
+      kpiSpent: 'Totaal uitgegeven',
+      activeBadge: 'Actief',
+      groupMonth: 'Inschrijvingsmaand',
+      groupTier: 'Bestedingsniveau',
+      tierTop: 'Topklanten (≥ € 200)',
+      tierRegular: 'Vaste klanten (€ 50 tot € 200)',
+      tierOccasional: 'Occasioneel (< € 50)',
+      tierNone: 'Nooit besteld'
     },
     adminPayments: {
       title: 'Betalingen',
@@ -6446,7 +6705,12 @@ export const translations = {
       tab_overview: 'Overzicht',
       tab_customerPayments: 'Klantbetalingen',
       tab_payouts: 'Uitbetalingen',
-      tab_reconciliation: 'Afpunting'
+      tab_reconciliation: 'Afpunting',
+      unknownMode: 'onbekende wijze',
+      doneF: 'Uitgevoerd',
+      colMode: 'Wijze',
+      colRefunded: 'Terugbetaald',
+      colRecipient: 'Ontvanger'
     },
     adminSettings: {
       title: 'Instellingen',
@@ -6529,7 +6793,10 @@ export const translations = {
       linkedTo: 'Gekoppeld aan: {type} {name}',
       createdBy: 'Aangemaakt door {email} op {date}',
       completedOn: 'Afgerond op {date}',
-      createTaskBtn: '✅ Een taak aanmaken'
+      createTaskBtn: '✅ Een taak aanmaken',
+      allDue: 'Alle deadlines',
+      overdueF: 'Te laat',
+      dueSoonF: 'Binnenkort'
     },
     adminDrivers: {
       title: 'Koeriers',
@@ -6560,7 +6827,21 @@ export const translations = {
       registeredStripe: 'Ingeschreven op {date} · Stripe Connect: {status}',
       minutes: '{n} min',
       available: '🟢 Beschikbaar',
-      offline: '⚫ Offline'
+      offline: '⚫ Offline',
+      toastSuspended: 'Koerier geschorst.',
+      filterPending: 'Te valideren',
+      filterApproved: 'Goedgekeurd',
+      filterBlocked: 'Geschorst',
+      allActivities: 'Alle activiteiten',
+      kpiTotal: 'Koeriers',
+      kpiPending: 'Te valideren',
+      kpiAvailable: 'Beschikbaar',
+      kpiDelivering: 'Aan het leveren',
+      kpiRevenue: 'Uitbetaalde inkomsten',
+      vatFranchise: 'Btw-vrijstelling',
+      vatSubject: 'Btw-plichtig',
+      vatUnknown: 'Btw-status ontbreekt',
+      statsLine: '{n} levering(en) · {revenue} inkomsten · {cancel} annulering'
     },
     adminDocs: {
       expired: 'Verlopen',
@@ -6591,7 +6872,11 @@ export const translations = {
       addedOn: 'Toegevoegd op {date}',
       linkedTo: 'Gekoppeld aan: {label}',
       expiresOn: 'Verloopt op {date}',
-      addedBy: 'Toegevoegd door {email} op {date}'
+      addedBy: 'Toegevoegd door {email} op {date}',
+      allExpiry: 'Alle vervaldata',
+      expiredF: 'Vervallen',
+      expiringSoonF: 'Vervalt binnenkort',
+      validF: 'Geldig'
     },
     adminInvoices: {
       title: 'Facturen',
@@ -6656,7 +6941,14 @@ export const translations = {
       generate: 'Genereren',
       saveVatRegime: 'Btw-stelsel opslaan',
       creditNoteBody: 'De factuur wordt als geannuleerd gemarkeerd en er wordt een creditnota voor het volledige bedrag uitgegeven. Deze actie is definitief en wordt gelogd.',
-      toastSelfBillingGenerated: 'Zelffactuur {n} gegenereerd.'
+      toastSelfBillingGenerated: 'Zelffactuur {n} gegenereerd.',
+      vatFranchise: 'Vrijstelling (art. 56bis WBTW)',
+      vatSubject: 'Btw-plichtig',
+      colNumber: 'Nr.',
+      colPeriod: 'Periode',
+      colHt: 'Excl. btw',
+      colTtc: 'Incl. btw',
+      colIssued: 'Uitgegeven op'
     },
     adminCrm: {
       title: 'Restaurant-CRM',
@@ -6693,7 +6985,13 @@ export const translations = {
       nextFollowUpLine: '🔔 Volgende opvolging: {date}',
       lossReasonLine: 'Reden van verlies: {reason}',
       convertedLine: '✅ Omgezet naar restaurant "{name}" op {date}',
-      createdOn: 'Aangemaakt op {date}'
+      createdOn: 'Aangemaakt op {date}',
+      allOwners: 'Alle verantwoordelijken',
+      filterFollowUpOverdue: 'Achterstallige opvolgingen',
+      colStage: 'Fase',
+      colOwner: 'Verantwoordelijke',
+      colNextFollowUp: 'Volgende opvolging',
+      colCreated: 'Aangemaakt op'
     },
     adminSupport: {
       title: 'Support / Helpdesk',
@@ -6751,7 +7049,8 @@ export const translations = {
       linkedOrder: 'Bestelling #{id}',
       escalatedReason: '⚠️ Geëscaleerd: {reason}',
       resolutionLine: 'Oplossing: {note}',
-      createTicketBtn: '🎫 Een ticket aanmaken'
+      createTicketBtn: '🎫 Een ticket aanmaken',
+      myTickets: 'Mijn tickets'
     },
     adminAccounting: {
       title: 'Boekhouding',
@@ -6821,7 +7120,12 @@ export const translations = {
       tab_vat: 'Btw',
       tab_reconciliation: 'Afpunting',
       tab_chart: 'Rekeningstelsel',
-      runningBalance: 'Lopend saldo'
+      runningBalance: 'Lopend saldo',
+      kind_revenue: 'Opbrengst',
+      kind_expense: 'Kost',
+      kind_asset: 'Actief',
+      kind_liability: 'Passief',
+      kind_vat: 'Btw'
     },
     adminRestos: {
       title: 'Restaurants',
@@ -6863,7 +7167,18 @@ export const translations = {
       confirmDelete: '{name} definitief verwijderen?',
       deleteBody: 'Het restaurant, zijn kaart, tafels, alle bestellingen en reserveringen, beoordelingen en commissiefacturen worden gewist. Het account van de uitbater ({email}) wordt ook verwijderd als het geen andere zaak heeft. Boekhoudkundige boekingen blijven bewaard maar losgekoppeld. Onomkeerbaar.',
       toastDeleted: 'Restaurant verwijderd ({n} bestelling(en) gewist).',
-      toastDeletedWithOwner: 'Restaurant en account {email} verwijderd ({n} bestelling(en) gewist).'
+      toastDeletedWithOwner: 'Restaurant en account {email} verwijderd ({n} bestelling(en) gewist).',
+      toastSuspended: 'Restaurant geschorst.',
+      filterPending: 'Te valideren',
+      filterApproved: 'Goedgekeurd',
+      filterBlocked: 'Geschorst',
+      allCommunes: 'Alle gemeenten',
+      allCuisines: 'Alle keukens',
+      kpiTotal: 'Restaurants',
+      kpiPending: 'Te valideren',
+      kpiRevenue: 'Gecumuleerde omzet',
+      kpiCommission: 'Gegenereerde commissie',
+      groupBusiness: 'Commerciële status'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
@@ -6911,7 +7226,19 @@ export const translations = {
       moneyLine: '{paid} · commissie {commission} · aandeel levering {share} · Fairide-inkomsten {revenue}',
       clientLine: 'Klant: {name}{phone}',
       driverLine: 'Koerier: {name}{phone}',
-      ordersCount: '({n} bestellingen)'
+      ordersCount: '({n} bestellingen)',
+      typeAll: 'Alle types',
+      typeDelivery: 'Levering',
+      typePickup: 'Afhalen',
+      typeDineIn: 'Ter plaatse (reservering)',
+      dateFrom: 'Van',
+      dateTo: 'Tot',
+      minAmount: 'Min €',
+      maxAmount: 'Max €',
+      clearFilters: 'Filters wissen',
+      groupDay: 'Dag',
+      colPaid: 'Betaald',
+      colFairide: 'Fairide-inkomsten'
     },
     adminDash: {
       title: 'Dashboard',
@@ -7046,7 +7373,37 @@ export const translations = {
       refund: 'Terugbetaling',
       component: 'Onderdeel',
       amount: 'Bedrag',
-      status: 'Status'
+      status: 'Status',
+      save: 'Opslaan',
+      enable: 'Activeren',
+      addPlain: 'Toevoegen',
+      doneToast: 'Klaar.',
+      confirmSuspend: '{name} schorsen?',
+      allStatuses: 'Alle statussen',
+      viewCards: 'Kaarten',
+      viewTable: 'Tabel',
+      groupBy: 'Groeperen op',
+      noGroup: 'Geen groepering',
+      restaurants: 'Restaurants',
+      drivers: 'Koeriers',
+      reconciledF: 'Afgepunt',
+      paidF: 'Betaald',
+      unpaidF: 'Onbetaald',
+      countOf: '{n} van {total}',
+      commune: 'Gemeente',
+      cuisine: 'Keuken',
+      rating: 'Score',
+      activity: 'Activiteit',
+      vat: 'Btw',
+      deliveries: 'Leveringen',
+      revenue: 'Inkomsten',
+      commission: 'Commissie',
+      avgTime: 'Gem. tijd',
+      cancellations: 'Annuleringen',
+      frequency: 'Frequentie / maand',
+      balanceCol: 'Saldo',
+      spent: 'Uitgegeven',
+      client: 'Klant'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',

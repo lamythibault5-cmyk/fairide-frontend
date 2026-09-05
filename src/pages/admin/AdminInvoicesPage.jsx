@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -57,6 +58,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
   const [data, setData] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
+  const { sort, toggle } = useTableSort('issuedAt');
 
   function load() {
     setData(null);
@@ -84,20 +86,18 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
 
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noneForFilter')}</div>}
-      {data && data.rows.map((inv) => (
-        <div className="card order-card-clickable" key={inv.id} onClick={() => setSelectedId(inv.id)}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>
-            {statusPill(inv.status)}
-          </div>
-          <div className="small">{tr('adminInvoices.namePeriod', { name: inv.restaurantName, date: fmtDate(inv.periodStart) })}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{tr('adminInvoices.htVat', { ht: money(inv.subtotalHt), vat: money(inv.vatAmount) })}</span>
-            <b className="small">{money(inv.totalTtc)}</b>
-          </div>
-          <div className="small" style={{ opacity: 0.6, marginTop: 2 }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</div>
-        </div>
-      ))}
+      {data && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} onRowClick={(inv) => setSelectedId(inv.id)} showTotals format={{ subtotalHt: money, vatAmount: money, totalTtc: money }} columns={[
+          { key: 'invoiceNumber', label: tr('adminInvoices.colNumber'), get: (inv) => <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>, sortValue: (inv) => inv.invoiceNumber },
+          { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (inv) => inv.restaurantName },
+          { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
+          { key: 'status', label: tr('adminCommon.status'), get: (inv) => statusPill(inv.status), sortValue: (inv) => inv.status },
+          { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
+          { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => money(inv.vatAmount), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
+          { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
+          { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt }
+        ]} />
+      )}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
@@ -338,6 +338,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
 
 function DriverStatementsTab({ token, toast }) {
   const { t: tr } = useLanguage();
+  const { sort, toggle } = useTableSort('issuedAt');
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -369,16 +370,17 @@ function DriverStatementsTab({ token, toast }) {
       </div>
       {!data && <SkeletonCards count={3} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noStatements')}</div>}
-      {data && data.rows.map((st) => (
-        <div className="card" key={st.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b style={{ fontFamily: 'monospace' }}>{st.statementNumber}</b>
-            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadStatementPdf(st)}>{tr('adminInvoices.pdf')}</button>
-          </div>
-          <div className="small">{tr('adminInvoices.statementLine', { name: st.driverName, date: fmtDate(st.periodStart), n: st.deliveriesCount })}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{tr('adminInvoices.issuedOnM', { date: fmtDateTime(st.issuedAt) })}</span><b className="small">{money(st.totalAmount)}</b></div>
-        </div>
-      ))}
+      {data && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} showTotals format={{ totalAmount: money }} columns={[
+          { key: 'statementNumber', label: tr('adminInvoices.colNumber'), get: (st) => <b style={{ fontFamily: 'monospace' }}>{st.statementNumber}</b>, sortValue: (st) => st.statementNumber },
+          { key: 'driverName', label: tr('adminCommon.driver'), get: (st) => st.driverName },
+          { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (st) => fmtDate(st.periodStart), sortValue: (st) => st.periodStart },
+          { key: 'deliveriesCount', label: tr('adminCommon.deliveries'), get: (st) => st.deliveriesCount, align: 'right', sum: true },
+          { key: 'totalAmount', label: tr('adminCommon.amount'), get: (st) => <b>{money(st.totalAmount)}</b>, sortValue: (st) => st.totalAmount, align: 'right', sum: true },
+          { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (st) => fmtDate(st.issuedAt), sortValue: (st) => st.issuedAt },
+          { key: 'actions', label: '', get: (st) => <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadStatementPdf(st); }}>{tr('adminInvoices.pdf')}</button>, align: 'right' }
+        ]} />
+      )}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
@@ -441,10 +443,11 @@ function GenerateStatementModal({ onClose, onGenerated }) {
   );
 }
 
-const VAT_STATUS_LABELS = { franchise: 'Franchise (art. 56bis CTVA)', assujetti: 'Assujetti TVA' };
+const vatStatusLabels = (tr) => ({ franchise: tr('adminInvoices.vatFranchise'), assujetti: tr('adminInvoices.vatSubject') });
 
 function SelfBillingTab({ token, toast }) {
   const { t: tr } = useLanguage();
+  const { sort, toggle } = useTableSort('issuedAt');
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -485,26 +488,19 @@ function SelfBillingTab({ token, toast }) {
       </div>
       {!data && <SkeletonCards count={3} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noSelfBilling')}</div>}
-      {data && data.rows.map((inv) => (
-        <div className="card" key={inv.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>
-            <span className="pill">{VAT_STATUS_LABELS[inv.vatStatus] || inv.vatStatus}</span>
-          </div>
-          <div className="small">{tr('adminInvoices.namePeriod', { name: inv.driverName, date: fmtDate(inv.periodStart) })}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{inv.vatStatus === 'assujetti' ? tr('adminInvoices.htVat', { ht: money(inv.subtotalHt), vat: money(inv.vatAmount) }) : tr('adminInvoices.vatNotApplicable')}</span>
-            <b className="small">{money(inv.totalTtc)}</b>
-          </div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small" style={{ opacity: 0.6 }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</span>
-            <div className="row" style={{ gap: 6 }}>
-              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadInvoicePdf(inv)}>{tr('adminInvoices.pdf')}</button>
-              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => sendEmail(inv)}>{tr('adminInvoices.send')}</button>
-            </div>
-          </div>
-        </div>
-      ))}
+      {data && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} showTotals format={{ subtotalHt: money, vatAmount: money, totalTtc: money }} columns={[
+          { key: 'invoiceNumber', label: tr('adminInvoices.colNumber'), get: (inv) => <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>, sortValue: (inv) => inv.invoiceNumber },
+          { key: 'driverName', label: tr('adminCommon.driver'), get: (inv) => inv.driverName },
+          { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
+          { key: 'vatStatus', label: tr('adminCommon.vat'), get: (inv) => <span className="pill">{vatStatusLabels(tr)[inv.vatStatus] || inv.vatStatus}</span>, sortValue: (inv) => inv.vatStatus },
+          { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
+          { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '—'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
+          { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
+          { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt },
+          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button></span>, align: 'right' }
+        ]} />
+      )}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>

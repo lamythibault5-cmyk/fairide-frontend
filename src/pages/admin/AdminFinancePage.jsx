@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -9,10 +10,10 @@ import { money, fmtDate, fmtDateTime, downloadCsv } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const periods = (tr) => [
-  { key: '', label: 'Tout' },
+  { key: '', label: tr('adminFinance.allTime') },
   { key: '7', label: tr('adminCommon.days7') },
   { key: '30', label: tr('adminCommon.days30') },
-  { key: '90', label: '90 jours' }
+  { key: '90', label: tr('adminFinance.days90') }
 ];
 
 const tableTabs = (tr) => [
@@ -34,6 +35,7 @@ export default function AdminFinancePage() {
   const [tableTab, setTableTab] = useState('by-restaurant');
   const [page, setPage] = useState(0);
   const [table, setTable] = useState(null);
+  const { sort, toggle } = useTableSort('');
 
   const from = period ? new Date(Date.now() - Number(period) * 24 * 60 * 60 * 1000).toISOString() : '';
 
@@ -140,31 +142,46 @@ export default function AdminFinancePage() {
 
           {!table && <SkeletonCards count={3} />}
           {table && table.rows.length === 0 && <div className="empty">{tr('adminFinance.noData')}</div>}
-          {table && tableTab === 'by-restaurant' && table.rows.map((r) => (
-            <div className="card" key={r.id}>
-              <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.name}</b><span className="small">{tr('adminFinance.ordersCount', { n: r.orderCount })}</span></div>
-              <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">CA {money(r.gmv)}</span><b className="small">{tr('adminFinance.commissionDue', { commission: money(r.commission), due: money(r.restaurantDue) })}</b></div>
-            </div>
-          ))}
-          {table && tableTab === 'by-driver' && table.rows.map((r) => (
-            <div className="card" key={r.id}>
-              <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.name}</b><span className="small">{tr('adminFinance.deliveriesCount', { n: r.deliveryCount })}</span></div>
-              <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{tr('adminFinance.deliveryFeesAmount', { amount: money(r.deliveryFeesTotal) })}</span><b className="small">{tr('adminFinance.amountDue', { amount: money(r.driverDue) })}</b></div>
-            </div>
-          ))}
-          {table && tableTab === 'transactions' && table.rows.map((r) => (
-            <div className="card" key={r.id}>
-              <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.restaurantName}</b><span className="small">{fmtDateTime(r.createdAt)}</span></div>
-              <div className="small">{r.clientName}{r.driverName ? ` · ${r.driverName}` : ''}</div>
-              <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{tr('adminFinance.commissionPlusDelivery', { commission: money(r.commission), delivery: money(r.deliveryFairideShare) })}</span><b className="small">{money(r.total)}</b></div>
-            </div>
-          ))}
-          {table && tableTab === 'refunds' && table.rows.map((r) => (
-            <div className="card" key={r.id}>
-              <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.restaurantName}</b><span className="small">{fmtDate(r.createdAt)}</span></div>
-              <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{r.reason || r.responsibility}</span><b className="small" style={{ color: 'var(--red)' }}>{money(r.amount)}</b></div>
-            </div>
-          ))}
+          {table && table.rows.length > 0 && tableTab === 'by-restaurant' && (
+            <AdminDataTable rows={table.rows} sort={sort} onSort={toggle} showTotals format={{ gmv: money, commission: money, restaurantDue: money }} columns={[
+              { key: 'name', label: tr('adminCommon.restaurant'), get: (r) => <b>{r.name}</b>, sortValue: (r) => r.name },
+              { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
+              { key: 'gmv', label: 'GMV', get: (r) => money(r.gmv), sortValue: (r) => r.gmv, align: 'right', sum: true },
+              { key: 'commission', label: tr('adminCommon.commission'), get: (r) => money(r.commission), sortValue: (r) => r.commission, align: 'right', sum: true },
+              { key: 'restaurantDue', label: tr('adminFinance.dueResto'), get: (r) => money(r.restaurantDue), sortValue: (r) => r.restaurantDue, align: 'right', sum: true }
+            ]} />
+          )}
+          {table && table.rows.length > 0 && tableTab === 'by-driver' && (
+            <AdminDataTable rows={table.rows} sort={sort} onSort={toggle} showTotals format={{ deliveryFeesTotal: money, fairideShare: money, driverDue: money }} columns={[
+              { key: 'name', label: tr('adminCommon.driver'), get: (r) => <b>{r.name}</b>, sortValue: (r) => r.name },
+              { key: 'deliveryCount', label: tr('adminCommon.deliveries'), get: (r) => r.deliveryCount, align: 'right', sum: true },
+              { key: 'deliveryFeesTotal', label: tr('adminCommon.deliveryFees'), get: (r) => money(r.deliveryFeesTotal), sortValue: (r) => r.deliveryFeesTotal, align: 'right', sum: true },
+              { key: 'fairideShare', label: tr('adminFinance.fairideShareCol'), get: (r) => money(r.fairideShare), sortValue: (r) => r.fairideShare, align: 'right', sum: true },
+              { key: 'driverDue', label: tr('adminFinance.dueDriver'), get: (r) => money(r.driverDue), sortValue: (r) => r.driverDue, align: 'right', sum: true }
+            ]} />
+          )}
+          {table && table.rows.length > 0 && tableTab === 'transactions' && (
+            <AdminDataTable rows={table.rows} sort={sort} onSort={toggle} showTotals format={{ total: money, commission: money, deliveryFairideShare: money, restaurantDue: money, driverDue: money }} columns={[
+              { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => fmtDateTime(r.createdAt), sortValue: (r) => r.createdAt },
+              { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b>{r.restaurantName}</b>, sortValue: (r) => r.restaurantName },
+              { key: 'clientName', label: tr('adminCommon.client'), get: (r) => r.clientName },
+              { key: 'driverName', label: tr('adminCommon.driver'), get: (r) => r.driverName || '—' },
+              { key: 'total', label: tr('adminCommon.total'), get: (r) => money(r.total), sortValue: (r) => r.total, align: 'right', sum: true },
+              { key: 'commission', label: tr('adminCommon.commission'), get: (r) => money(r.commission), sortValue: (r) => r.commission, align: 'right', sum: true },
+              { key: 'deliveryFairideShare', label: tr('adminFinance.fairideShareCol'), get: (r) => money(r.deliveryFairideShare), sortValue: (r) => r.deliveryFairideShare, align: 'right', sum: true },
+              { key: 'restaurantDue', label: tr('adminFinance.dueResto'), get: (r) => money(r.restaurantDue), sortValue: (r) => r.restaurantDue, align: 'right', sum: true },
+              { key: 'driverDue', label: tr('adminFinance.dueDriver'), get: (r) => money(r.driverDue), sortValue: (r) => r.driverDue, align: 'right', sum: true }
+            ]} />
+          )}
+          {table && table.rows.length > 0 && tableTab === 'refunds' && (
+            <AdminDataTable rows={table.rows} sort={sort} onSort={toggle} showTotals format={{ amount: money }} columns={[
+              { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt },
+              { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b>{r.restaurantName}</b>, sortValue: (r) => r.restaurantName },
+              { key: 'responsibility', label: tr('adminFinance.responsibility'), get: (r) => r.responsibility },
+              { key: 'reason', label: tr('adminFinance.reasonCol'), get: (r) => r.reason || '—' },
+              { key: 'amount', label: tr('adminCommon.amount'), get: (r) => <span style={{ color: 'var(--red)' }}>{money(r.amount)}</span>, sortValue: (r) => r.amount, align: 'right', sum: true }
+            ]} />
+          )}
           {table && table.total > PAGE_SIZE && (
             <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
               <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>

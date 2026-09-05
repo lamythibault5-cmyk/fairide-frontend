@@ -88,7 +88,7 @@ export default function AdminDocumentsPage() {
           {Object.entries(DOCUMENT_VERIFICATION_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <div className="role-pick" style={{ margin: 0 }}>
-          {[{ key: '', label: 'Toutes échéances' }, { key: 'expired', label: 'Expirés' }, { key: 'expiring_soon', label: 'Expire bientôt' }, { key: 'valid', label: 'Valides' }].map((f) => (
+          {[{ key: '', label: tr('adminDocs.allExpiry') }, { key: 'expired', label: tr('adminDocs.expiredF') }, { key: 'expiring_soon', label: tr('adminDocs.expiringSoonF') }, { key: 'valid', label: tr('adminDocs.validF') }].map((f) => (
             <div key={f.key || 'all'} className={`chip${expiry === f.key ? ' active' : ''}`} onClick={() => setExpiry(f.key)}>{f.label}</div>
           ))}
         </div>
@@ -207,7 +207,7 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
         <div className="field"><label>{tr('adminDocs.notesOptional')}</label><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
         <div className="field"><label>{tr('adminDocs.file')}</label><input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          <button className="btn-teal" disabled={uploading} onClick={upload}>{uploading ? '...' : 'Ajouter'}</button>
+          <button className="btn-teal" disabled={uploading} onClick={upload}>{uploading ? '...' : tr('adminCommon.addPlain')}</button>
           <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
       </div>
@@ -317,7 +317,7 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
             </div>
             <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
+              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
               <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>

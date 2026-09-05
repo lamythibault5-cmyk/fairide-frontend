@@ -12,8 +12,9 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const filters = (tr) => [
   { key: '', label: tr('adminCommon.allF') },
@@ -24,6 +25,7 @@ const filters = (tr) => [
 ];
 
 const PAGE_SIZE = 50;
+const TYPE_LABELS = (tr) => ({ delivery: tr('adminOrders.typeDelivery'), pickup: tr('adminOrders.typePickup'), dine_in: tr('adminOrders.typeDineIn') });
 const KANBAN_COLORS = { nouveau: 'var(--orange)', preparation: 'var(--blue)', pret: 'var(--iris)', livraison: 'var(--purple)', livre: '#3FB950', refuse: 'var(--red)', annule: 'var(--ink-faint)' };
 
 export default function AdminOrdersPage() {
@@ -40,6 +42,10 @@ export default function AdminOrdersPage() {
   const [detail, setDetail] = useState(null);
   const [mode, setMode] = useViewMode('orders');
   const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
+  const [groupBy, setGroupBy] = useState('');
+  const { sort, toggle } = useTableSort('createdAt');
+  const EXTRA = ['type', 'from', 'to', 'min', 'max'];
+  function setParam(k, v) { const next = Object.fromEntries([...searchParams.entries()]); if (v) next[k] = v; else delete next[k]; setSearchParams(next); }
 
   const activeFilter = searchParams.get('status')
     || (searchParams.get('noDriver') ? 'noDriver' : searchParams.get('refunded') ? 'refunded' : searchParams.get('late') ? 'late' : '');
@@ -57,6 +63,11 @@ export default function AdminOrdersPage() {
     if (searchParams.get('restaurantId')) params.set('restaurantId', searchParams.get('restaurantId'));
     if (searchParams.get('driverId')) params.set('driverId', searchParams.get('driverId'));
     if (searchParams.get('clientId')) params.set('clientId', searchParams.get('clientId'));
+    if (searchParams.get('type')) params.set('orderType', searchParams.get('type'));
+    if (searchParams.get('from')) params.set('dateFrom', searchParams.get('from'));
+    if (searchParams.get('to')) params.set('dateTo', searchParams.get('to'));
+    if (searchParams.get('min')) params.set('minAmount', searchParams.get('min'));
+    if (searchParams.get('max')) params.set('maxAmount', searchParams.get('max'));
     if (q) params.set('q', q);
     api(`/admin/orders?${params.toString()}`, { token }).then((r) => { setOrders(r.rows); setTotal(r.total); }).catch((e) => toast(e.message));
   }
@@ -67,6 +78,7 @@ export default function AdminOrdersPage() {
   function setFilter(key) {
     const next = {};
     if (q) next.q = q;
+    for (const k of EXTRA) if (searchParams.get(k)) next[k] = searchParams.get(k);
     if (key === 'noDriver') next.noDriver = '1';
     else if (key === 'refunded') next.refunded = '1';
     else if (key === 'late') next.late = '1';
@@ -109,13 +121,36 @@ export default function AdminOrdersPage() {
       <AdminPageHeader module="orders" />
       <div className="row" style={{ gap: 8, marginBottom: 10 }}>
         <input placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1 }} />
-        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria'), list: tr('adminKanban.list'), kanban: tr('adminKanban.kanban') }} />
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={[{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }]} />
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
-      <div className="role-pick" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
+      <div className="role-pick" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
         {filters(tr).map((f) => (
           <div key={f.key || 'all'} className={`chip${activeFilter === f.key ? ' active' : ''}`} onClick={() => setFilter(f.key)}>{f.label}</div>
         ))}
+      </div>
+      <div className="admin-control-panel">
+        <select value={searchParams.get('type') || ''} onChange={(e) => setParam('type', e.target.value)} style={{ maxWidth: 170 }}>
+          <option value="">{tr('adminOrders.typeAll')}</option>
+          <option value="delivery">{tr('adminOrders.typeDelivery')}</option>
+          <option value="pickup">{tr('adminOrders.typePickup')}</option>
+          <option value="dine_in">{tr('adminOrders.typeDineIn')}</option>
+        </select>
+        <label className="small admin-inline-field">{tr('adminOrders.dateFrom')} <input type="date" value={searchParams.get('from') || ''} onChange={(e) => setParam('from', e.target.value)} /></label>
+        <label className="small admin-inline-field">{tr('adminOrders.dateTo')} <input type="date" value={searchParams.get('to') || ''} onChange={(e) => setParam('to', e.target.value)} /></label>
+        <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={searchParams.get('min') || ''} onChange={(e) => setParam('min', e.target.value)} style={{ width: 80 }} /></label>
+        <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={searchParams.get('max') || ''} onChange={(e) => setParam('max', e.target.value)} style={{ width: 80 }} /></label>
+        {EXTRA.some((k) => searchParams.get(k)) && <button type="button" className="btn-ghost" onClick={() => { const next = Object.fromEntries([...searchParams.entries()]); for (const k of EXTRA) delete next[k]; setSearchParams(next); }}>✕ {tr('adminOrders.clearFilters')}</button>}
+        {mode === 'table' && (
+          <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
+            <option value="">{tr('adminCommon.noGroup')}</option>
+            <option value="restaurant">{tr('adminCommon.groupBy')} : {tr('adminCommon.restaurant')}</option>
+            <option value="status">{tr('adminCommon.groupBy')} : {tr('adminCommon.status')}</option>
+            <option value="day">{tr('adminCommon.groupBy')} : {tr('adminOrders.groupDay')}</option>
+            <option value="type">{tr('adminCommon.groupBy')} : {tr('adminCommon.type')}</option>
+          </select>
+        )}
+        <span className="small" style={{ marginLeft: 'auto' }}>{tr('adminOrders.ordersCount', { n: total })}</span>
       </div>
 
       {!orders && <SkeletonCards count={4} />}
@@ -135,6 +170,24 @@ export default function AdminOrdersPage() {
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{fmtDateTime(o.createdAt)}</span><b style={{ display: 'inline' }}>{money(o.total)}</b></div>
             </>
           )}
+        />
+      )}
+      {orders && mode === 'table' && orders.length > 0 && (
+        <AdminDataTable
+          columns={[
+            { key: 'createdAt', label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt), sortValue: (o) => o.createdAt },
+            { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (o) => <b>{o.restaurantName}</b>, sortValue: (o) => o.restaurantName },
+            { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
+            { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '—' },
+            { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
+            { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
+            { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✅' : '⏳'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
+            { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
+            { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
+          ]}
+          rows={orders} sort={sort} onSort={toggle} onRowClick={openOrder} showTotals format={{ total: money, fairideTotalRevenue: money }}
+          groupBy={groupBy === 'restaurant' ? { get: (o) => o.restaurantName } : groupBy === 'status' ? { get: (o) => ORDER_STATUS_LABELS[o.status] || o.status } : groupBy === 'day' ? { get: (o) => new Date(o.createdAt).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) } : groupBy === 'type' ? { get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType } : null}
+          emptyLabel={tr('adminOrders.noneForFilter')}
         />
       )}
       {orders && mode === 'list' && orders.map((o) => (
@@ -219,7 +272,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     setBusy(true);
     try {
       await confirmAction.run();
-      toast(confirmAction.successMessage || 'Fait.');
+      toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
       toast(e.message);

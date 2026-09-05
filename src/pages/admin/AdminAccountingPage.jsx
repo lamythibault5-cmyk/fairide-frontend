@@ -165,7 +165,7 @@ function OverviewTab({ token, toast, periodKey }) {
   );
 }
 
-const ENTRY_TYPE_FILTERS = [{ key: '', label: 'Tous' }, ...Object.entries(ACCOUNTING_ENTRY_TYPE_LABELS).map(([key, label]) => ({ key, label }))];
+const entryTypeFilters = (tr) => [{ key: '', label: tr('adminCommon.allM') }, ...Object.entries(ACCOUNTING_ENTRY_TYPE_LABELS).map(([key, label]) => ({ key, label }))];
 
 // Regroupe les lignes en écritures (une écriture = toutes les lignes générées ensemble par un même
 // événement réel : paiement, remboursement, virement — voir accountingService.js, qui donne à chacune
@@ -219,7 +219,7 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
     <>
       <div className="row" style={{ justifyContent: 'space-between', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0, flexWrap: 'wrap' }}>
-          {ENTRY_TYPE_FILTERS.map((f) => <div key={f.key || 'all'} className={`chip${entryType === f.key ? ' active' : ''}`} onClick={() => setEntryType(f.key)}>{f.label}</div>)}
+          {entryTypeFilters(tr).map((f) => <div key={f.key || 'all'} className={`chip${entryType === f.key ? ' active' : ''}`} onClick={() => setEntryType(f.key)}>{f.label}</div>)}
         </div>
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
@@ -270,7 +270,7 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
 // Ordre d'affichage classique d'un plan comptable : actifs, passifs, TVA, revenus, charges — plutôt que
 // l'ordre alphabétique des codes, pour se lire comme un vrai plan comptable.
 const ACCOUNT_KIND_ORDER = ['asset', 'liability', 'vat', 'revenue', 'expense'];
-const ACCOUNT_KIND_LABELS = { revenue: 'Revenu', expense: 'Charge', asset: 'Actif', liability: 'Passif', vat: 'TVA' };
+const accountKindLabels = (tr) => ({ revenue: tr('adminAccounting.kind_revenue'), expense: tr('adminAccounting.kind_expense'), asset: tr('adminAccounting.kind_asset'), liability: tr('adminAccounting.kind_liability'), vat: tr('adminAccounting.kind_vat') });
 
 function LedgerTab({ token, toast, periodKey }) {
   const { t: tr } = useLanguage();
@@ -363,7 +363,7 @@ function BalanceTab({ token, toast, periodKey }) {
   function exportCsv() {
     if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`balance-comptes-${Date.now()}.csv`, data.rows, [
-      { label: tr('adminCommon.code'), get: (r) => r.code }, { label: tr('adminCommon.name'), get: (r) => r.name }, { label: tr('adminCommon.type'), get: (r) => ACCOUNT_KIND_LABELS[r.kind] },
+      { label: tr('adminCommon.code'), get: (r) => r.code }, { label: tr('adminCommon.name'), get: (r) => r.name }, { label: tr('adminCommon.type'), get: (r) => accountKindLabels(tr)[r.kind] },
       { label: tr('adminAccounting.debit'), get: (r) => r.debit }, { label: tr('adminAccounting.credit'), get: (r) => r.credit }, { label: tr('adminAccounting.balance'), get: (r) => r.balance }
     ]);
   }
@@ -397,7 +397,7 @@ function BalanceTab({ token, toast, periodKey }) {
               <tr key={r.code} style={{ opacity: r.active ? 1 : 0.5 }}>
                 <td className="small" style={{ fontFamily: 'monospace' }}>{r.code}</td>
                 <td className="small">{r.name}{!r.active ? tr('adminAccounting.disabledSuffix') : ''}</td>
-                <td className="small">{ACCOUNT_KIND_LABELS[r.kind]}</td>
+                <td className="small">{accountKindLabels(tr)[r.kind]}</td>
                 <td style={{ textAlign: 'right' }}>{r.debit > 0 ? money(r.debit) : ''}</td>
                 <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{r.credit > 0 ? money(r.credit) : ''}</td>
                 <td style={{ textAlign: 'right', fontWeight: 700 }}>{money(r.balance)}</td>
@@ -605,7 +605,7 @@ function ReconciliationTab({ token, toast, periodKey }) {
       </div>
       <div className="row" style={{ justifyContent: 'space-between', gap: 8, margin: '14px 0', flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
-          {[{ key: '', label: 'Toutes' }, { key: 'non_rapproche', label: 'Non rapprochées' }, { key: 'problematique', label: 'Problématiques' }, { key: 'rapproche', label: 'Rapprochées' }].map((f) => (
+          {[{ key: '', label: tr('adminCommon.allF') }, { key: 'non_rapproche', label: tr('adminCommon.notReconciled') }, { key: 'problematique', label: tr('adminCommon.problematic') }, { key: 'rapproche', label: tr('adminCommon.reconciledF') }].map((f) => (
             <div key={f.key || 'all'} className={`chip${filter === f.key ? ' active' : ''}`} onClick={() => setFilter(f.key)}>{f.label}</div>
           ))}
         </div>
@@ -687,9 +687,9 @@ function ChartOfAccountsTab({ token, toast }) {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div><b style={{ fontFamily: 'monospace' }}>{a.code}</b> <span style={{ marginLeft: 6 }}>{a.name}</span></div>
             <div className="row" style={{ gap: 8 }}>
-              <span className="pill">{ACCOUNT_KIND_LABELS[a.kind]}</span>
+              <span className="pill">{accountKindLabels(tr)[a.kind]}</span>
               <button className={a.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleActive(a)}>
-                {a.active ? tr('adminCommon.disable') : 'Activer'}
+                {a.active ? tr('adminCommon.disable') : tr('adminCommon.enable')}
               </button>
             </div>
           </div>

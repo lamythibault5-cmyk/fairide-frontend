@@ -2337,3 +2337,16 @@ button.account-link-row:last-child { border-bottom: none; }
   .dashboard-nav-link .nav-badge { position: absolute; top: 2px; right: 6px; height: 16px; min-width: 16px; font-size: 10px; padding: 0 4px; }
   .kanban-col { flex-basis: 230px; }
 }
+/* ---- Vue liste triable (AdminDataTable) ---- */
+.admin-table-sortable th { padding: 0; }
+.admin-th-sort { background: none; border: none; width: 100%; text-align: inherit; padding: 8px 12px; font: inherit; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); border-radius: 0; cursor: pointer; }
+.admin-th-sort span { opacity: .35; }
+.admin-th-sort.active { color: var(--iris); }
+.admin-th-sort.active span { opacity: 1; }
+.admin-table tbody tr.clickable { cursor: pointer; }
+.admin-table tbody tr.clickable:hover td { background: rgba(59,47,181,0.05); }
+.admin-table tbody tr.row-test-account td { background: rgba(176,69,155,0.05); }
+.admin-table tr.admin-table-group td { background: var(--cream-dim); border-top: 2px solid var(--line); }
+.admin-table td .pill { white-space: nowrap; }
+.admin-inline-field { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.admin-inline-field input { width: auto; padding: 6px 8px; font-size: 13px; }

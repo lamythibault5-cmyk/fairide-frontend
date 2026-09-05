@@ -26,7 +26,7 @@ function currentMonthValue() {
 
 export default function AdminSupportPage() {
   const { t: tr } = useLanguage();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const toast = useToast();
   const location = useLocation();
   const [periodType, setPeriodType] = useState('month');
@@ -37,6 +37,7 @@ export default function AdminSupportPage() {
   const [priority, setPriority] = useState('');
   const [category, setCategory] = useState('');
   const [escalatedOnly, setEscalatedOnly] = useState(false);
+  const [mine, setMine] = useState(false);
   const [qInput, setQInput] = useState(location.state?.presetSearch || '');
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);
@@ -62,13 +63,14 @@ export default function AdminSupportPage() {
     if (priority) params.set('priority', priority);
     if (category) params.set('category', category);
     if (escalatedOnly) params.set('escalated', '1');
+    if (mine && user?.email) params.set('assignedToEmail', user.email);
     if (q) params.set('q', q);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/support/tickets?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message));
   }
-  useEffect(load, [status, priority, category, escalatedOnly, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [status, priority, category, escalatedOnly, q]);
+  useEffect(load, [status, priority, category, escalatedOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(0); }, [status, priority, category, escalatedOnly, mine, q]);
 
   function exportCsv() {
     if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
@@ -137,6 +139,9 @@ export default function AdminSupportPage() {
         </select>
         <label className="row small" style={{ gap: 4, alignItems: 'center' }}>
           <input type="checkbox" checked={escalatedOnly} onChange={(e) => setEscalatedOnly(e.target.checked)} /> {tr('adminSupport.escalatedOnly')}
+        </label>
+        <label className="row small" style={{ gap: 4, alignItems: 'center' }}>
+          <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> {tr('adminSupport.myTickets')}
         </label>
       </div>
 
@@ -467,7 +472,7 @@ function TicketDetailModal({ id, onClose, onChanged }) {
             <div className="field"><label>{tr('adminSupport.assignedToEmail')}</label><input value={form.assignedToEmail} onChange={(e) => setForm({ ...form, assignedToEmail: e.target.value })} /></div>
             <div className="field"><label>{tr('adminSupport.tags')}</label><input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
+              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
               <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
@@ -560,7 +565,7 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
         <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr('adminSupport.phCannedTitle')} /></div>
         <div className="field"><label>{tr('adminSupport.text')}</label><textarea rows={3} value={body} onChange={(e) => setBody(e.target.value)} /></div>
         <div className="row" style={{ gap: 8, marginTop: 6 }}>
-          <button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : 'Ajouter'}</button>
+          <button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : tr('adminCommon.addPlain')}</button>
           <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.close')}</button>
         </div>
       </div>

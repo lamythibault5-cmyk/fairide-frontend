@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
+import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -14,6 +16,9 @@ import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+
+const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const STATUT_ADMIN = (tr) => ({ pending: tr('adminRestos.filterPending'), approved: tr('adminRestos.filterApproved'), blocked: tr('adminRestos.filterBlocked') });
 
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
@@ -27,6 +32,12 @@ export default function AdminRestaurantsPage() {
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useViewMode('restaurants', 'cards');
+  const [filtre, setFiltre] = useState('all');
+  const [commune, setCommune] = useState('');
+  const [cuisine, setCuisine] = useState('');
+  const [groupBy, setGroupBy] = useState('');
+  const { sort, toggle } = useTableSort('revenue');
 
   useEffect(() => {
     api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
@@ -47,14 +58,14 @@ export default function AdminRestaurantsPage() {
       setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? 'Restaurant suspendu.' : tr('adminCommon.toastStatusUpdated'));
+      toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
       toast(e.message);
     }
   }
 
   function askSuspend(r) {
-    setConfirmAction({ title: `Suspendre ${r.name} ?`, message: tr('adminRestos.suspendBody'), danger: true, run: () => setStatus(r.id, 'blocked') });
+    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: r.name }), message: tr('adminRestos.suspendBody'), danger: true, run: () => setStatus(r.id, 'blocked') });
   }
   function askReactivate(r) {
     setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
@@ -102,17 +113,67 @@ export default function AdminRestaurantsPage() {
   }
 
   const filtered = filterBySearch(restaurants, search, (r) => [r.name, r.commune, r.cuisine, r.ownerEmail]);
+  const communes = useMemo(() => [...new Set((restaurants || []).map((r) => r.commune).filter(Boolean))].sort(), [restaurants]);
+  const cuisines = useMemo(() => [...new Set((restaurants || []).map((r) => r.cuisine).filter(Boolean))].sort(), [restaurants]);
+  const colonnes = [
+    { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{isTestAccount(r.ownerEmail) && <TestBadge />}</>, sortValue: (r) => r.name },
+    { key: 'commune', label: tr('adminCommon.commune'), get: (r) => r.commune },
+    { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
+    { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
+    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${r.rating.toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
+    { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
+    { key: 'revenue', label: 'CA', get: (r) => money(r.revenue), sortValue: (r) => r.revenue, align: 'right', sum: true },
+    { key: 'commissionGenerated', label: tr('adminCommon.commission'), get: (r) => money(r.commissionGenerated), sortValue: (r) => r.commissionGenerated, align: 'right', sum: true },
+    { key: 'avgBasket', label: tr('adminCommon.avgBasket'), get: (r) => money(r.avgBasket), sortValue: (r) => r.avgBasket, align: 'right' },
+    { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (r) => pct(r.cancellationRate), sortValue: (r) => r.cancellationRate, align: 'right' },
+    { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt }
+  ];
+  const groupes = {
+    commune: { get: (r) => r.commune || '—' }, cuisine: { get: (r) => r.cuisine || '—' },
+    status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
+  };
+  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || r.adminStatus === filtre) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
 
   return (
     <div>
-      <AdminPageHeader module="restaurants" />
-      <div className="row" style={{ marginBottom: 14, gap: 8 }}>
-        <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
+      <AdminPageHeader module="restaurants" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
+      {restaurants && (
+        <div className="stat-grid">
+          <div className="stat-card highlight"><div className="num">{restaurants.length}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
+          <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
+          <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
+          <div className="stat-card"><div className="num">{money(kpi.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
+        </div>
+      )}
+      <div className="admin-control-panel">
+        <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <div className="role-pick" style={{ margin: 0 }}>
+          {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
+            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
+          ))}
+        </div>
+        <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCommunes')}</option>{communes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+        <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCuisines')}</option>{cuisines.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+        {mode === 'table' && (
+          <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
+            <option value="">{tr('adminCommon.noGroup')}</option>
+            <option value="commune">{tr('adminCommon.groupBy')} : {tr('adminCommon.commune')}</option>
+            <option value="cuisine">{tr('adminCommon.groupBy')} : {tr('adminCommon.cuisine')}</option>
+            <option value="status">{tr('adminCommon.groupBy')} : {tr('adminCommon.status')}</option>
+            <option value="business">{tr('adminCommon.groupBy')} : {tr('adminRestos.groupBusiness')}</option>
+          </select>
+        )}
+        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (restaurants || []).length })}</span>
       </div>
       {!restaurants && <SkeletonCards count={3} />}
-      {restaurants && filtered.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
-      {filtered && filtered.map((r) => {
+      {restaurants && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {restaurants && mode === 'table' && visibles.length > 0 && (
+        <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openRestaurant}
+          rowClassName={(r) => (isTestAccount(r.ownerEmail) ? 'row-test-account' : '')} showTotals format={{ revenue: money, commissionGenerated: money }} emptyLabel={tr('adminCommon.noResults')} />
+      )}
+      {restaurants && mode === 'cards' && visibles.map((r) => {
         const biz = BUSINESS_STATUS_LABELS[r.businessStatus];
         return (
           <div className={`card order-card-clickable${isTestAccount(r.ownerEmail) ? ' card-test-account' : ''}`} key={r.id} onClick={() => openRestaurant(r)}>
@@ -323,7 +384,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <div className="field" style={{ flex: 1 }}><label>TVA</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
+              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
               <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>

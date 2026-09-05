@@ -44,7 +44,7 @@ export default function AdminAutomationsPage() {
         </p>
       </div>
       <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 14 }}>
-        <button className="btn-teal" disabled={running} onClick={runNow}>{running ? '...' : '▶ Lancer maintenant'}</button>
+        <button className="btn-teal" disabled={running} onClick={runNow}>{running ? '...' : tr('adminAutomations.runNow')}</button>
       </div>
 
       {!rules && <SkeletonCards count={3} />}
@@ -105,7 +105,7 @@ function RuleCard({ rule, onChanged }) {
           <p className="small" style={{ margin: '2px 0 0', opacity: 0.75 }}>{meta.description}</p>
         </div>
         <button className={rule.enabled ? 'btn-danger-ghost' : 'btn-teal'} style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleEnabled}>
-          {rule.enabled ? tr('adminCommon.disable') : 'Activer'}
+          {rule.enabled ? tr('adminCommon.disable') : tr('adminCommon.enable')}
         </button>
       </div>
       {meta.params.length > 0 && (
@@ -116,7 +116,7 @@ function RuleCard({ rule, onChanged }) {
               <input type="number" step={pf.step || '1'} value={params[pf.key] ?? ''} onChange={(e) => setParams({ ...params, [pf.key]: Number(e.target.value) })} />
             </div>
           ))}
-          <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={!dirty || saving} onClick={saveParams}>{saving ? '...' : 'Enregistrer'}</button>
+          <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={!dirty || saving} onClick={saveParams}>{saving ? '...' : tr('adminCommon.save')}</button>
         </div>
       )}
       <p className="small" style={{ margin: '8px 0 0', opacity: 0.6 }}>

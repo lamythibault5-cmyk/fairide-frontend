@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
+import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -12,7 +14,10 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv } from './adminUtils';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
+
+const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const J30 = 30 * 86400000; const J7 = 7 * 86400000;
 
 export default function AdminClientsPage() {
   const { t: tr } = useLanguage();
@@ -25,6 +30,10 @@ export default function AdminClientsPage() {
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useViewMode('clients', 'cards');
+  const [filtre, setFiltre] = useState('all');
+  const [groupBy, setGroupBy] = useState('');
+  const { sort, toggle } = useTableSort('totalSpent');
 
   useEffect(() => {
     api('/admin/clients', { token }).then(setClients).catch((e) => toast(e.message));
@@ -43,14 +52,14 @@ export default function AdminClientsPage() {
       setClients((prev) => prev.map((c) => (c.id === id ? { ...c, adminStatus: status } : c)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'blocked' ? 'Client suspendu.' : tr('adminClients.toastReactivated'));
+      toast(status === 'blocked' ? tr('adminClients.toastSuspended') : tr('adminClients.toastReactivated'));
     } catch (e) {
       toast(e.message);
     }
   }
 
   function askSuspend(c) {
-    setConfirmAction({ title: `Suspendre ${c.name} ?`, message: tr('adminClients.suspendBody'), danger: true, run: () => setStatus(c.id, 'blocked') });
+    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: c.name }), message: tr('adminClients.suspendBody'), danger: true, run: () => setStatus(c.id, 'blocked') });
   }
   async function deleteClient(c) {
     const r = await api(`/admin/clients/${c.id}`, { method: 'DELETE', token });
@@ -93,17 +102,72 @@ export default function AdminClientsPage() {
   }
 
   const filtered = filterBySearch(clients, search, (c) => [c.name, c.email, c.phone]);
+  const maintenant = Date.now();
+  const colonnes = [
+    { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{isTestAccount(c.email) && <TestBadge />}</>, sortValue: (c) => c.name },
+    { key: 'email', label: tr('adminCommon.email'), get: (c) => c.email },
+    { key: 'phone', label: tr('adminCommon.phone'), get: (c) => c.phone || '—' },
+    { key: 'orderCount', label: tr('adminCommon.orders'), get: (c) => c.orderCount, align: 'right', sum: true },
+    { key: 'cancelledCount', label: tr('adminCommon.cancellations'), get: (c) => c.cancelledCount, align: 'right', sum: true },
+    { key: 'totalSpent', label: tr('adminCommon.spent'), get: (c) => money(c.totalSpent), sortValue: (c) => c.totalSpent, align: 'right', sum: true },
+    { key: 'avgBasket', label: tr('adminCommon.avgBasket'), get: (c) => money(c.avgBasket), sortValue: (c) => c.avgBasket, align: 'right' },
+    { key: 'purchaseFrequency', label: tr('adminCommon.frequency'), get: (c) => c.purchaseFrequency, align: 'right' },
+    { key: 'lastOrderAt', label: tr('adminCommon.lastOrder'), get: (c) => (c.lastOrderAt ? fmtDate(c.lastOrderAt) : '—'), sortValue: (c) => c.lastOrderAt || 0 },
+    { key: 'balance', label: tr('adminCommon.balanceCol'), get: (c) => money(c.balance), sortValue: (c) => c.balance, align: 'right', sum: true },
+    { key: 'adminStatus', label: tr('adminCommon.status'), get: (c) => (c.adminStatus === 'blocked' ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>), sortValue: (c) => c.adminStatus },
+    { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt), sortValue: (c) => c.createdAt }
+  ];
+  const groupes = {
+    status: { get: (c) => (c.adminStatus === 'blocked' ? tr('adminClients.suspended') : tr('adminClients.activeBadge')) },
+    month: { get: (c) => new Date(c.createdAt).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) },
+    tier: { get: (c) => (c.totalSpent >= 200 ? tr('adminClients.tierTop') : c.totalSpent >= 50 ? tr('adminClients.tierRegular') : c.orderCount > 0 ? tr('adminClients.tierOccasional') : tr('adminClients.tierNone')) }
+  };
+  const visibles = useMemo(() => sortRows((filtered || []).filter((c) => {
+    if (filtre === 'active30') return c.lastOrderAt && maintenant - c.lastOrderAt <= J30;
+    if (filtre === 'new7') return maintenant - c.createdAt <= J7;
+    if (filtre === 'blocked') return c.adminStatus === 'blocked';
+    if (filtre === 'refunds') return c.refundCount > 0;
+    return true;
+  }), colonnes, sort), [filtered, filtre, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
-      <AdminPageHeader module="clients" />
-      <div className="row" style={{ marginBottom: 14, gap: 8 }}>
-        <input placeholder={tr('adminClients.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
+      <AdminPageHeader module="clients" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
+      {clients && (
+        <div className="stat-grid">
+          <div className="stat-card highlight"><div className="num">{clients.length}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.new7}</div><div className="label">{tr('adminClients.kpiNew')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.active30}</div><div className="label">{tr('adminClients.kpiActive')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.orders')}</div></div>
+          <div className="stat-card"><div className="num">{money(kpi.spent)}</div><div className="label">{tr('adminClients.kpiSpent')}</div></div>
+          <div className="stat-card"><div className="num">{money(kpi.orders ? kpi.spent / kpi.orders : 0)}</div><div className="label">{tr('adminCommon.avgBasket')}</div></div>
+        </div>
+      )}
+      <div className="admin-control-panel">
+        <input placeholder={tr('adminClients.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <div className="role-pick" style={{ margin: 0 }}>
+          {[['all', tr('adminCommon.allM')], ['active30', tr('adminClients.filterActive30')], ['new7', tr('adminClients.filterNew7')], ['refunds', tr('adminClients.filterRefunds')], ['blocked', tr('adminClients.filterBlocked')]].map(([k, l]) => (
+            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>
+          ))}
+        </div>
+        {mode === 'table' && (
+          <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
+            <option value="">{tr('adminCommon.noGroup')}</option>
+            <option value="status">{tr('adminCommon.groupBy')} : {tr('adminCommon.status')}</option>
+            <option value="month">{tr('adminCommon.groupBy')} : {tr('adminClients.groupMonth')}</option>
+            <option value="tier">{tr('adminCommon.groupBy')} : {tr('adminClients.groupTier')}</option>
+          </select>
+        )}
+        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (clients || []).length })}</span>
       </div>
       {!clients && <SkeletonCards count={3} />}
-      {clients && filtered.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
-      {filtered && filtered.map((c) => (
+      {clients && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {clients && mode === 'table' && visibles.length > 0 && (
+        <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openClient}
+          rowClassName={(c) => (isTestAccount(c.email) ? 'row-test-account' : '')} showTotals format={{ totalSpent: money, balance: money }} emptyLabel={tr('adminCommon.noResults')} />
+      )}
+      {clients && mode === 'cards' && visibles.map((c) => (
         <div className={`card order-card-clickable${isTestAccount(c.email) ? ' card-test-account' : ''}`} key={c.id} onClick={() => openClient(c)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{c.name}</b>

@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
+import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -21,6 +23,10 @@ const activityLabels = (tr) => ({
   offline: { label: tr('adminDrivers.offline'), color: 'inherit' }
 });
 
+const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const STATUT_ADMIN = (tr) => ({ pending: tr('adminDrivers.filterPending'), approved: tr('adminDrivers.filterApproved'), blocked: tr('adminDrivers.filterBlocked') });
+const VAT_LABELS = (tr) => ({ franchise: tr('adminDrivers.vatFranchise'), assujetti: tr('adminDrivers.vatSubject') });
+
 export default function AdminDriversPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -32,6 +38,11 @@ export default function AdminDriversPage() {
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [mode, setMode] = useViewMode('drivers', 'cards');
+  const [filtre, setFiltre] = useState('all');
+  const [activite, setActivite] = useState('');
+  const [groupBy, setGroupBy] = useState('');
+  const { sort, toggle } = useTableSort('deliveriesCount');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
 
@@ -58,14 +69,14 @@ export default function AdminDriversPage() {
       setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? 'Livreur suspendu.' : tr('adminCommon.toastStatusUpdated'));
+      toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? tr('adminDrivers.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
       toast(e.message);
     }
   }
 
   function askSuspend(d) {
-    setConfirmAction({ title: `Suspendre ${d.name} ?`, message: tr('adminDrivers.suspendBody'), danger: true, run: () => setStatus(d.id, 'blocked') });
+    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: d.name }), message: tr('adminDrivers.suspendBody'), danger: true, run: () => setStatus(d.id, 'blocked') });
   }
   function askReactivate(d) {
     setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
@@ -96,17 +107,67 @@ export default function AdminDriversPage() {
   }
 
   const filtered = filterBySearch(drivers, search, (d) => [d.name, d.email, d.phone]);
+  const colonnes = [
+    { key: 'name', label: tr('adminCommon.name'), get: (d) => <><b>{d.name}</b>{isTestAccount(d.email) && <TestBadge />}</>, sortValue: (d) => d.name },
+    { key: 'email', label: tr('adminCommon.email'), get: (d) => d.email },
+    { key: 'adminStatus', label: tr('adminCommon.status'), get: (d) => <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>{STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus}</span>, sortValue: (d) => d.adminStatus },
+    { key: 'activityStatus', label: tr('adminCommon.activity'), get: (d) => <span className="pill" style={{ color: activityLabels(tr)[d.activityStatus]?.color }}>{activityLabels(tr)[d.activityStatus]?.label}</span>, sortValue: (d) => d.activityStatus },
+    { key: 'vatStatus', label: tr('adminCommon.vat'), get: (d) => VAT_LABELS(tr)[d.vatStatus] || '—', sortValue: (d) => d.vatStatus || '' },
+    { key: 'deliveriesCount', label: tr('adminCommon.deliveries'), get: (d) => d.deliveriesCount, align: 'right', sum: true },
+    { key: 'revenue', label: tr('adminCommon.revenue'), get: (d) => money(d.revenue), sortValue: (d) => d.revenue, align: 'right', sum: true },
+    { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (d) => pct(d.cancellationRate), sortValue: (d) => d.cancellationRate, align: 'right' },
+    { key: 'avgDeliveryMinutes', label: tr('adminCommon.avgTime'), get: (d) => (d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min` : '—'), sortValue: (d) => d.avgDeliveryMinutes, align: 'right' },
+    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${d.avgRating.toFixed(1)}★ (${d.reviewCount})` : '—'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
+    { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (d) => fmtDate(d.createdAt), sortValue: (d) => d.createdAt }
+  ];
+  const groupes = {
+    status: { get: (d) => STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus }, activity: { get: (d) => activityLabels(tr)[d.activityStatus]?.label || d.activityStatus },
+    vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') }
+  };
+  const visibles = useMemo(() => sortRows((filtered || []).filter((d) => (filtre === 'all' || d.adminStatus === filtre) && (!activite || d.activityStatus === activite)), colonnes, sort), [filtered, filtre, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
 
   return (
     <div>
-      <AdminPageHeader module="drivers" />
-      <div className="row" style={{ marginBottom: 14, gap: 8 }}>
-        <input placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
+      <AdminPageHeader module="drivers" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
+      {drivers && (
+        <div className="stat-grid">
+          <div className="stat-card highlight"><div className="num">{drivers.length}</div><div className="label">{tr('adminDrivers.kpiTotal')}</div></div>
+          <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminDrivers.kpiPending')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.available}</div><div className="label">{tr('adminDrivers.kpiAvailable')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.delivering}</div><div className="label">{tr('adminDrivers.kpiDelivering')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.deliveries}</div><div className="label">{tr('adminCommon.deliveries')}</div></div>
+          <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminDrivers.kpiRevenue')}</div></div>
+        </div>
+      )}
+      <div className="admin-control-panel">
+        <input placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <div className="role-pick" style={{ margin: 0 }}>
+          {[['all', tr('adminCommon.allM')], ['pending', tr('adminDrivers.filterPending')], ['approved', tr('adminDrivers.filterApproved')], ['blocked', tr('adminDrivers.filterBlocked')]].map(([k, l]) => (
+            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
+          ))}
+        </div>
+        <select value={activite} onChange={(e) => setActivite(e.target.value)} style={{ maxWidth: 180 }}>
+          <option value="">{tr('adminDrivers.allActivities')}</option>
+          {Object.entries(activityLabels(tr)).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        {mode === 'table' && (
+          <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
+            <option value="">{tr('adminCommon.noGroup')}</option>
+            <option value="status">{tr('adminCommon.groupBy')} : {tr('adminCommon.status')}</option>
+            <option value="activity">{tr('adminCommon.groupBy')} : {tr('adminCommon.activity')}</option>
+            <option value="vat">{tr('adminCommon.groupBy')} : {tr('adminCommon.vat')}</option>
+          </select>
+        )}
+        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (drivers || []).length })}</span>
       </div>
       {!drivers && <SkeletonCards count={3} />}
-      {drivers && filtered.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
-      {filtered && filtered.map((d) => {
+      {drivers && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {drivers && mode === 'table' && visibles.length > 0 && (
+        <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openDriver}
+          rowClassName={(d) => (isTestAccount(d.email) ? 'row-test-account' : '')} showTotals format={{ revenue: money }} emptyLabel={tr('adminCommon.noResults')} />
+      )}
+      {drivers && mode === 'cards' && visibles.map((d) => {
         const act = activityLabels(tr)[d.activityStatus];
         return (
           <div className={`card order-card-clickable${isTestAccount(d.email) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
@@ -116,13 +177,13 @@ export default function AdminDriversPage() {
                 {isTestAccount(d.email) && <TestBadge />}
                 <span className="pill" style={{ color: act?.color }}>{act?.label}</span>
                 <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
-                  {d.adminStatus === 'approved' ? tr('adminDrivers.approved') : d.adminStatus === 'blocked' ? '🚫 Suspendu' : tr('adminDrivers.pendingBadge')}
+                  {d.adminStatus === 'approved' ? tr('adminDrivers.approved') : d.adminStatus === 'blocked' ? tr('adminDrivers.filterBlocked') : tr('adminDrivers.pendingBadge')}
                 </span>
               </div>
             </div>
             <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}{d.linkedRestaurantName ? tr('adminDrivers.linkedToSuffix', { name: d.linkedRestaurantName }) : ''}</div>
             <div className="small">
-              {d.deliveriesCount} livraison(s) · {money(d.revenue)} de revenus · {pct(d.cancellationRate)} annulation
+              {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue), cancel: pct(d.cancellationRate) })}
               {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: d.avgRating.toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
             </div>
             <div className="small" style={{ opacity: 0.6 }}>

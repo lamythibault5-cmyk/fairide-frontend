@@ -108,7 +108,7 @@ export default function AdminTasksPage() {
           {Object.entries(TASK_PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <div className="role-pick" style={{ margin: 0 }}>
-          {[{ key: '', label: 'Toutes échéances' }, { key: 'overdue', label: 'En retard' }, { key: 'due_soon', label: 'Bientôt' }].map((f) => (
+          {[{ key: '', label: tr('adminTasks.allDue') }, { key: 'overdue', label: tr('adminTasks.overdueF') }, { key: 'due_soon', label: tr('adminTasks.dueSoonF') }].map((f) => (
             <div key={f.key || 'all'} className={`chip${due === f.key ? ' active' : ''}`} onClick={() => setDue(f.key)}>{f.label}</div>
           ))}
         </div>
@@ -324,7 +324,7 @@ function TaskDetailModal({ id, onClose, onChanged }) {
             </div>
             <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.assignedToEmail} onChange={(e) => setForm({ ...form, assignedToEmail: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
+              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
               <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>

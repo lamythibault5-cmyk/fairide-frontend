@@ -43,7 +43,7 @@ export default function AdminNotesPanel({ targetType, targetId, notes, onAdded, 
           </select>
         )}
         <input value={text} onChange={(e) => setText(e.target.value)} placeholder={tr('adminNotes.phAdd')} style={{ flex: 1 }} onKeyDown={(e) => e.key === 'Enter' && addNote()} />
-        <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={saving || !text.trim()} onClick={addNote}>{saving ? '...' : 'Ajouter'}</button>
+        <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={saving || !text.trim()} onClick={addNote}>{saving ? '...' : tr('adminCommon.addPlain')}</button>
       </div>
       {(!notes || notes.length === 0) && <div className="small" style={{ opacity: 0.6 }}>{tr('adminNotes.none')}</div>}
       {notes && notes.map((n) => (

@@ -4,6 +4,8 @@ import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import KanbanBoard from '../../components/admin/KanbanBoard';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
+import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -35,6 +37,11 @@ export default function AdminCrmPage() {
   const [stats, setStats] = useState(null);
   const [pendingLossStage, setPendingLossStage] = useState(null); // { prospectId, prospectName }
   const [lossReason, setLossReason] = useState('');
+  const [mode, setMode] = useViewMode('crm', 'kanban');
+  const [priorite, setPriorite] = useState('');
+  const [owner, setOwner] = useState('');
+  const [relanceRetard, setRelanceRetard] = useState(false);
+  const { sort, toggle } = useTableSort('nextFollowUpAt', 'asc');
 
   function load() {
     setProspects(null);
@@ -52,7 +59,9 @@ export default function AdminCrmPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodType, month, year]);
 
-  const filtered = filterBySearch(prospects, search, (p) => [p.name, p.commune, p.cuisine, p.contactName, p.contactEmail, p.ownerEmail]);
+  const owners = useMemo(() => [...new Set((prospects || []).map((p) => p.ownerEmail).filter(Boolean))].sort(), [prospects]);
+  const filtered = filterBySearch(prospects, search, (p) => [p.name, p.commune, p.cuisine, p.contactName, p.contactEmail, p.ownerEmail])
+    ?.filter((p) => (!priorite || p.priority === priorite) && (!owner || p.ownerEmail === owner) && (!relanceRetard || (p.nextFollowUpAt && p.nextFollowUpAt < Date.now() && !['actif', 'perdu'].includes(p.stage))));
   const linkedRestaurantIds = useMemo(() => new Set((prospects || []).filter((p) => p.convertedRestaurantId).map((p) => p.convertedRestaurantId)), [prospects]);
 
   async function changeStage(prospect, stage) {
@@ -110,13 +119,40 @@ export default function AdminCrmPage() {
         </div>
       )}
 
-      <div className="row" style={{ gap: 8, marginBottom: 14 }}>
-        <input placeholder={tr('adminCrm.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
+      <div className="admin-control-panel">
+        <input placeholder={tr('adminCrm.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <select value={priorite} onChange={(e) => setPriorite(e.target.value)} style={{ maxWidth: 150 }}>
+          <option value="">{tr('adminCommon.allPriorities')}</option>
+          {Object.entries(CRM_PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+        </select>
+        <select value={owner} onChange={(e) => setOwner(e.target.value)} style={{ maxWidth: 200 }}>
+          <option value="">{tr('adminCrm.allOwners')}</option>
+          {owners.map((o) => <option key={o} value={o}>{o}</option>)}
+        </select>
+        <label className="row small" style={{ gap: 4, alignItems: 'center' }}>
+          <input type="checkbox" checked={relanceRetard} onChange={(e) => setRelanceRetard(e.target.checked)} /> {tr('adminCrm.filterFollowUpOverdue')}
+        </label>
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={[{ key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }]} />
         <button className="btn-teal" onClick={() => setShowCreate(true)}>{tr('adminCrm.newProspectBtn')}</button>
       </div>
 
       {!prospects && <SkeletonCards count={4} />}
-      {prospects && (
+      {prospects && mode === 'table' && (
+        <AdminDataTable
+          columns={[
+            { key: 'name', label: tr('adminCommon.name'), get: (p) => <b>{p.name}</b>, sortValue: (p) => p.name },
+            { key: 'commune', label: tr('adminCommon.commune'), get: (p) => p.commune || '—' },
+            { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (p) => p.cuisine || '—' },
+            { key: 'stage', label: tr('adminCrm.colStage'), get: (p) => <span className="pill teal">{CRM_STAGE_LABELS[p.stage]}</span>, sortValue: (p) => CRM_STAGES.indexOf(p.stage) },
+            { key: 'priority', label: tr('adminCommon.priority'), get: (p) => <span style={{ color: CRM_PRIORITY_LABELS[p.priority]?.color }}>{CRM_PRIORITY_LABELS[p.priority]?.label}</span>, sortValue: (p) => ({ low: 0, medium: 1, high: 2 }[p.priority] ?? 0) },
+            { key: 'ownerEmail', label: tr('adminCrm.colOwner'), get: (p) => p.ownerEmail || '—' },
+            { key: 'nextFollowUpAt', label: tr('adminCrm.colNextFollowUp'), get: (p) => (p.nextFollowUpAt ? <span style={{ color: p.nextFollowUpAt < Date.now() ? 'var(--red)' : 'inherit' }}>{fmtDate(p.nextFollowUpAt)}</span> : '—'), sortValue: (p) => p.nextFollowUpAt || 9e15 },
+            { key: 'createdAt', label: tr('adminCrm.colCreated'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '—'), sortValue: (p) => p.createdAt || 0 }
+          ]}
+          rows={filtered || []} sort={sort} onSort={toggle} onRowClick={(p) => setSelectedId(p.id)} emptyLabel={tr('adminKanban.empty')}
+        />
+      )}
+      {prospects && mode === 'kanban' && (
         <KanbanBoard
           columns={CRM_STAGES.map((stage) => ({ key: stage, label: CRM_STAGE_LABELS[stage], color: stage === 'actif' ? '#3FB950' : stage === 'perdu' ? 'var(--red)' : 'var(--iris)' }))}
           items={filtered || []}
@@ -141,7 +177,7 @@ export default function AdminCrmPage() {
           )}
         />
       )}
-      <p className="small" style={{ margin: '6px 0 0' }}>{tr('adminKanban.dragHint')}</p>
+      {mode === 'kanban' && <p className="small" style={{ margin: '6px 0 0' }}>{tr('adminKanban.dragHint')}</p>}
 
       {selectedId && (
         <ProspectDetailModal id={selectedId} onClose={() => setSelectedId(null)} onChanged={load} linkedRestaurantIds={linkedRestaurantIds} />
@@ -353,7 +389,7 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
               <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.nextFollowUp')}</label><input type="date" value={form.nextFollowUpAt} onChange={(e) => setForm({ ...form, nextFollowUpAt: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
+              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
               <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>

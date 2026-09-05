@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -100,6 +101,7 @@ function OverviewTab({ token, toast, periodQuery }) {
 
 function PaymentsListTab({ token, toast }) {
   const { t: tr } = useLanguage();
+  const { sort, toggle } = useTableSort('createdAt');
   const [status, setStatus] = useState('');
   const [paymentMode, setPaymentMode] = useState('');
   const [q, setQ] = useState('');
@@ -141,25 +143,23 @@ function PaymentsListTab({ token, toast }) {
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       <div className="role-pick" style={{ marginBottom: 14 }}>
-        {[{ key: '', label: 'Toutes' }, { key: 'paid', label: 'Payées' }, { key: 'unpaid', label: 'Non payées' }].map((f) => (
+        {[{ key: '', label: tr('adminCommon.allF') }, { key: 'paid', label: tr('adminCommon.paidF') }, { key: 'unpaid', label: tr('adminCommon.unpaidF') }].map((f) => (
           <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>
         ))}
       </div>
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminPayments.noneForFilter')}</div>}
-      {data && data.rows.map((r) => (
-        <div className="card" key={r.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{r.restaurantName}</b>
-            <span className="pill" style={{ color: r.paid ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge')}</span>
-          </div>
-          <div className="small">{r.clientName} · {r.paymentMode || 'mode inconnu'}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{fmtDateTime(r.paidAt || r.createdAt)}{r.refundTotal > 0 ? tr('adminCommon.refundedSuffix', { amount: money(r.refundTotal) }) : ''}</span>
-            <b className="small">{money(r.total)}</b>
-          </div>
-        </div>
-      ))}
+      {data && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} showTotals format={{ total: money, refundTotal: money }} columns={[
+          { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => fmtDateTime(r.paidAt || r.createdAt), sortValue: (r) => r.paidAt || r.createdAt },
+          { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b>{r.restaurantName}</b>, sortValue: (r) => r.restaurantName },
+          { key: 'clientName', label: tr('adminCommon.client'), get: (r) => r.clientName },
+          { key: 'paymentMode', label: tr('adminPayments.colMode'), get: (r) => r.paymentMode || tr('adminPayments.unknownMode') },
+          { key: 'paid', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: r.paid ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge')}</span>, sortValue: (r) => (r.paid ? 1 : 0) },
+          { key: 'refundTotal', label: tr('adminPayments.colRefunded'), get: (r) => (r.refundTotal > 0 ? <span style={{ color: 'var(--red)' }}>{money(r.refundTotal)}</span> : '—'), sortValue: (r) => r.refundTotal || 0, align: 'right', sum: true },
+          { key: 'total', label: tr('adminCommon.amount'), get: (r) => money(r.total), sortValue: (r) => r.total, align: 'right', sum: true }
+        ]} />
+      )}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
@@ -175,6 +175,7 @@ const payoutComponentLabels = (tr) => ({ restaurant_share: tr('adminPayments.com
 
 function PayoutsTab({ token, toast, periodQuery }) {
   const { t: tr } = useLanguage();
+  const { sort, toggle } = useTableSort('createdAt');
   const [recipientType, setRecipientType] = useState('');
   const [status, setStatus] = useState('pending');
   const [page, setPage] = useState(0);
@@ -205,10 +206,10 @@ function PayoutsTab({ token, toast, periodQuery }) {
     <>
       <div className="row" style={{ justifyContent: 'space-between', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
-          {[{ key: '', label: 'Tous' }, { key: 'restaurant', label: 'Restaurants' }, { key: 'driver', label: 'Livreurs' }].map((f) => (
+          {[{ key: '', label: tr('adminCommon.allM') }, { key: 'restaurant', label: tr('adminCommon.restaurants') }, { key: 'driver', label: tr('adminCommon.drivers') }].map((f) => (
             <div key={f.key || 'all'} className={`chip${recipientType === f.key ? ' active' : ''}`} onClick={() => setRecipientType(f.key)}>{f.label}</div>
           ))}
-          {[{ key: '', label: 'Tous statuts' }, { key: 'pending', label: 'En attente' }, { key: 'done', label: 'Effectués' }].map((f) => (
+          {[{ key: '', label: tr('adminCommon.allStatuses') }, { key: 'pending', label: tr('adminCommon.pending') }, { key: 'done', label: tr('adminPayments.doneF') }].map((f) => (
             <div key={`s-${f.key || 'all'}`} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>
           ))}
         </div>
@@ -216,19 +217,17 @@ function PayoutsTab({ token, toast, periodQuery }) {
       </div>
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminPayments.noPayoutForFilter')}</div>}
-      {data && data.rows.map((r) => (
-        <div className="card" key={`${r.orderId}-${r.component}`}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{r.recipientName || '—'}</b>
-            <span className="pill" style={{ color: r.status === 'done' ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.status === 'done' ? tr('adminPayments.done') : tr('adminPayments.pendingBadge')}</span>
-          </div>
-          <div className="small">{tr('adminPayments.componentOrder', { component: payoutComponentLabels(tr)[r.component], id: r.orderId.slice(0, 8) })}</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{fmtDate(r.createdAt)}</span>
-            <b className="small">{money(r.amount)}</b>
-          </div>
-        </div>
-      ))}
+      {data && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows.map((r) => ({ ...r, id: `${r.orderId}-${r.component}` }))} sort={sort} onSort={toggle} showTotals format={{ amount: money }} columns={[
+          { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt },
+          { key: 'recipientName', label: tr('adminPayments.colRecipient'), get: (r) => <b>{r.recipientName || '—'}</b>, sortValue: (r) => r.recipientName || '' },
+          { key: 'recipientType', label: tr('adminCommon.type'), get: (r) => (r.recipientType === 'driver' ? tr('adminCommon.driver') : tr('adminCommon.restaurant')) },
+          { key: 'component', label: tr('adminCommon.component'), get: (r) => payoutComponentLabels(tr)[r.component] || r.component },
+          { key: 'orderId', label: tr('adminCommon.orders'), get: (r) => <span style={{ fontFamily: 'monospace' }}>{r.orderId.slice(0, 8)}</span> },
+          { key: 'status', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: r.status === 'done' ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.status === 'done' ? tr('adminPayments.done') : tr('adminPayments.pendingBadge')}</span>, sortValue: (r) => r.status },
+          { key: 'amount', label: tr('adminCommon.amount'), get: (r) => money(r.amount), sortValue: (r) => r.amount, align: 'right', sum: true }
+        ]} />
+      )}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
           <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
@@ -267,7 +266,7 @@ function ReconciliationTab({ token, toast, periodQuery }) {
         <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{data.counts.problematique}</div><div className="label">{tr('adminCommon.problematic')}</div></div>
       </div>
       <div className="role-pick" style={{ margin: '14px 0' }}>
-        {[{ key: '', label: 'Toutes' }, { key: 'non_rapproche', label: 'Non rapprochées' }, { key: 'problematique', label: 'Problématiques' }, { key: 'rapproche', label: 'Rapprochées' }].map((f) => (
+        {[{ key: '', label: tr('adminCommon.allF') }, { key: 'non_rapproche', label: tr('adminCommon.notReconciled') }, { key: 'problematique', label: tr('adminCommon.problematic') }, { key: 'rapproche', label: tr('adminCommon.reconciledF') }].map((f) => (
           <div key={f.key || 'all'} className={`chip${filter === f.key ? ' active' : ''}`} onClick={() => setFilter(f.key)}>{f.label}</div>
         ))}
       </div>

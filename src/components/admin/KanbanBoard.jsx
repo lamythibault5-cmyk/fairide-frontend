@@ -69,11 +69,13 @@ export function useViewMode(moduleKey, defaut = 'list') {
   return [mode, changer];
 }
 
-export function ViewSwitcher({ mode, onChange, labels }) {
+export function ViewSwitcher({ mode, onChange, labels, modes }) {
+  const liste = modes || [{ key: 'list', icon: '☰', label: labels.list }, { key: 'kanban', icon: '▦', label: labels.kanban }];
   return (
-    <div className="view-switcher" role="group" aria-label={labels.aria}>
-      <button type="button" className={mode === 'list' ? 'active' : ''} onClick={() => onChange('list')} title={labels.list} aria-pressed={mode === 'list'}>☰ <span>{labels.list}</span></button>
-      <button type="button" className={mode === 'kanban' ? 'active' : ''} onClick={() => onChange('kanban')} title={labels.kanban} aria-pressed={mode === 'kanban'}>▦ <span>{labels.kanban}</span></button>
+    <div className="view-switcher" role="group" aria-label={labels?.aria}>
+      {liste.map((m) => (
+        <button key={m.key} type="button" className={mode === m.key ? 'active' : ''} onClick={() => onChange(m.key)} title={m.label} aria-pressed={mode === m.key}>{m.icon} <span>{m.label}</span></button>
+      ))}
     </div>
   );
 }

@@ -95,7 +95,7 @@ export default function AdminSettingsPage() {
               </div>
             ))}
             <button className="btn-teal" disabled={!pricingDirty || savingPricing} onClick={() => setConfirmSave(true)}>
-              {savingPricing ? '...' : 'Enregistrer'}
+              {savingPricing ? '...' : tr('adminCommon.save')}
             </button>
           </div>
         )
