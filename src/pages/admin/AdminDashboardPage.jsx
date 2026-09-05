@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import useAdminOverview from '../../hooks/useAdminOverview';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import AdminBarChart from '../../components/admin/AdminBarChart';
 import { money, pct } from './adminUtils';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const periods = (tr) => [
   { key: 'today', label: tr('adminCommon.today') },
@@ -24,6 +25,7 @@ export default function AdminDashboardPage() {
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [data, setData] = useState(null);
+  const { overview } = useAdminOverview();
 
   function load() {
     if (period === 'custom' && (!customFrom || !customTo)) return;
@@ -88,11 +90,11 @@ export default function AdminDashboardPage() {
       <div className="row" style={{ gap: 16, flexWrap: 'wrap', marginTop: 20 }}>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.ordersPerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.orders }))} color="var(--blue)" />
         </div>
         <div className="card" style={{ flex: '1 1 300px' }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminDash.revenuePerDay')}</h3>
-          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
+          <AdminBarChart data={dailySeries.map((d) => ({ label: new Date(d.day).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short' }), value: d.revenue }))} formatValue={money} color="var(--teal)" />
         </div>
       </div>
 
@@ -126,6 +128,15 @@ export default function AdminDashboardPage() {
         <RealtimeCard num={realtime.noDriver} label={tr('adminDash.noDriver')} to="/admin/orders?noDriver=1" warn={realtime.noDriver > 0} />
         <RealtimeCard num={realtime.late} label={tr('adminCommon.late')} to="/admin/orders?late=1" warn={realtime.late > 0} />
         <RealtimeCard num={realtime.driversAvailable} label={tr('adminDash.availableDrivers')} to="/admin/drivers" />
+        {overview && (
+          <>
+            <RealtimeCard num={overview.reservations.today} label={tr('adminDash.reservationsToday')} to="/admin/orders?type=dine_in" />
+            <RealtimeCard num={overview.reservations.pending} label={tr('adminDash.reservationsPending')} to="/admin/orders?type=dine_in&status=nouveau" warn={overview.reservations.pending > 0} />
+            <RealtimeCard num={overview.support.open} label={tr('adminDash.openTickets')} to="/admin/support" warn={overview.support.slaBreached > 0} />
+            <RealtimeCard num={overview.tasks.overdue} label={tr('adminDash.overdueTasks')} to="/admin/tasks" warn={overview.tasks.overdue > 0} />
+            <RealtimeCard num={overview.restaurants.pending + overview.drivers.pending} label={tr('adminDash.pendingValidations')} to={overview.restaurants.pending > 0 ? '/admin/restaurants' : '/admin/drivers'} warn={overview.restaurants.pending + overview.drivers.pending > 0} />
+          </>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ import {
 } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
+import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -33,6 +35,8 @@ export default function AdminDocumentsPage() {
   const [data, setData] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [mode, setMode] = useViewMode('documents', 'cards');
+  const { sort, toggle } = useTableSort('createdAt');
 
   function loadOverview() {
     api('/admin/documents/overview', { token }).then(setOverview).catch((e) => toast(e.message));
@@ -72,6 +76,7 @@ export default function AdminDocumentsPage() {
 
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <input placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={[{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }]} />
         <button className="btn-teal" onClick={() => setShowUpload(true)}>{tr('adminDocs.addDocumentBtn')}</button>
       </div>
       <div className="row" style={{ gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
@@ -96,7 +101,17 @@ export default function AdminDocumentsPage() {
 
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminDocs.noneForFilter')}</div>}
-      {data && data.rows.map((d) => (
+      {data && mode === 'table' && data.rows.length > 0 && (
+        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} onRowClick={(d) => setSelectedId(d.id)} emptyLabel={tr('adminDocs.noneForFilter')} columns={[
+          { key: 'title', label: tr('adminDocs.colTitle'), get: (d) => <b>{d.title}</b>, sortValue: (d) => d.title },
+          { key: 'documentType', label: tr('adminCommon.type'), get: (d) => DOCUMENT_TYPE_LABELS[d.documentType] || d.documentType },
+          { key: 'targetName', label: tr('adminDocs.colTarget'), get: (d) => `${DOCUMENT_TARGET_TYPE_LABELS[d.targetType] || d.targetType} ${d.targetName || ''}`.trim() },
+          { key: 'verificationStatus', label: tr('adminDocs.colVerification'), get: (d) => <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span>, sortValue: (d) => d.verificationStatus },
+          { key: 'expiresAt', label: tr('adminDocs.colExpiry'), get: (d) => (d.expiresAt ? <span style={{ color: DOCUMENT_EXPIRY_LABELS[d.expiryState]?.color }}>{fmtDate(d.expiresAt)}</span> : '—'), sortValue: (d) => d.expiresAt || 9e15 },
+          { key: 'createdAt', label: tr('adminDocs.colAdded'), get: (d) => fmtDateTime(d.createdAt), sortValue: (d) => d.createdAt }
+        ]} />
+      )}
+      {data && mode === 'cards' && data.rows.map((d) => (
         <div className="card order-card-clickable" key={d.id} onClick={() => setSelectedId(d.id)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{d.title}</b>

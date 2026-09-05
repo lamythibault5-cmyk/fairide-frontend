@@ -580,7 +580,12 @@ export const translations = {
       allExpiry: 'Toutes échéances',
       expiredF: 'Expirés',
       expiringSoonF: 'Expire bientôt',
-      validF: 'Valides'
+      validF: 'Valides',
+      colTitle: 'Titre',
+      colTarget: 'Concerne',
+      colVerification: 'Vérification',
+      colExpiry: 'Expire le',
+      colAdded: 'Ajouté le'
     },
     adminInvoices: {
       title: 'Factures',
@@ -967,7 +972,12 @@ export const translations = {
       alertStale: '{n} commande(s) non payées depuis plus de 30 minutes (paiement problématique)',
       alertCancellation: 'Taux d\'annulation anormalement élevé sur cette période',
       ratesLine: 'Commission resto {rate}% · part Fairide livraison {share}%.',
-      vsPrevious: '{pct}% vs période préc.'
+      vsPrevious: '{pct}% vs période préc.',
+      reservationsToday: 'Réservations (24 h)',
+      reservationsPending: 'Réservations à confirmer',
+      openTickets: 'Tickets ouverts',
+      overdueTasks: 'Tâches en retard',
+      pendingValidations: 'Comptes à valider'
     },
     adminCommon: {
       close: 'Fermer',
@@ -3728,7 +3738,12 @@ export const translations = {
       allExpiry: 'All expiry dates',
       expiredF: 'Expired',
       expiringSoonF: 'Expiring soon',
-      validF: 'Valid'
+      validF: 'Valid',
+      colTitle: 'Title',
+      colTarget: 'Relates to',
+      colVerification: 'Verification',
+      colExpiry: 'Expires on',
+      colAdded: 'Added on'
     },
     adminInvoices: {
       title: 'Invoices',
@@ -4115,7 +4130,12 @@ export const translations = {
       alertStale: '{n} order(s) unpaid for more than 30 minutes (payment problem)',
       alertCancellation: 'Abnormally high cancellation rate over this period',
       ratesLine: 'Restaurant commission {rate}% · Fairide delivery share {share}%.',
-      vsPrevious: '{pct}% vs previous period'
+      vsPrevious: '{pct}% vs previous period',
+      reservationsToday: 'Reservations (24 h)',
+      reservationsPending: 'Reservations to confirm',
+      openTickets: 'Open tickets',
+      overdueTasks: 'Overdue tasks',
+      pendingValidations: 'Accounts to validate'
     },
     adminCommon: {
       close: 'Close',
@@ -6876,7 +6896,12 @@ export const translations = {
       allExpiry: 'Alle vervaldata',
       expiredF: 'Vervallen',
       expiringSoonF: 'Vervalt binnenkort',
-      validF: 'Geldig'
+      validF: 'Geldig',
+      colTitle: 'Titel',
+      colTarget: 'Betreft',
+      colVerification: 'Controle',
+      colExpiry: 'Vervalt op',
+      colAdded: 'Toegevoegd op'
     },
     adminInvoices: {
       title: 'Facturen',
@@ -7263,7 +7288,12 @@ export const translations = {
       alertStale: '{n} bestelling(en) al meer dan 30 minuten onbetaald (betalingsprobleem)',
       alertCancellation: 'Abnormaal hoge annuleringsgraad in deze periode',
       ratesLine: 'Restaurantcommissie {rate}% · Fairide-aandeel levering {share}%.',
-      vsPrevious: '{pct}% t.o.v. vorige periode'
+      vsPrevious: '{pct}% t.o.v. vorige periode',
+      reservationsToday: 'Reserveringen (24 u)',
+      reservationsPending: 'Reserveringen te bevestigen',
+      openTickets: 'Open tickets',
+      overdueTasks: 'Achterstallige taken',
+      pendingValidations: 'Accounts te valideren'
     },
     adminCommon: {
       close: 'Sluiten',
