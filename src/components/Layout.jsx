@@ -67,12 +67,12 @@ export default function Layout() {
                 (au-dessus de 900px la barre latérale la porte déjà, voir styles.css). Le retour vers
                 Mon compte, lui, est du contenu : un simple lien en tête de page, seulement dans les
                 sous-sections du compte. */}
-            <Link className="dashboard-marque" to={accueilConnecte} aria-label="Fairide — accueil">
+            <Link className="dashboard-marque" to={accueilConnecte} aria-label={t('nav.homeAria')}>
               <BrandMark size={22} />
               <span>fairide</span>
             </Link>
             {estSousSectionCompte(location.pathname) && (
-              <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">← Mon compte</Link>
+              <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">{t('nav.backToAccount')}</Link>
             )}
             <div className="page-fade" key={location.pathname}>
               <Outlet context={{ setRightSlot }} />

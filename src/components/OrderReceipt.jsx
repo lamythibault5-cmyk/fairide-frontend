@@ -1,7 +1,8 @@
 import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
+import { useLanguage, getLocale } from '../context/LanguageContext';
 
 function formatDateTime(ms) {
-  return new Date(ms).toLocaleString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 // Bon de livraison imprimable, pensé pour être glissé/scotché sur le sac avant que le livreur ne
@@ -11,6 +12,7 @@ function formatDateTime(ms) {
 // N'affiche jamais l'adresse de livraison : inutile ici (le livreur l'a déjà dans son appli) et ce
 // serait l'adresse d'un particulier visible par n'importe qui pendant tout le trajet.
 export default function OrderReceipt({ order, restaurant }) {
+  const { t } = useLanguage();
   if (!order) return null;
   const vatNumber = restaurant?.vatNumber;
   const companyNumber = restaurant?.companyNumber;
@@ -23,11 +25,11 @@ export default function OrderReceipt({ order, restaurant }) {
         <p className="receipt-center">
           {vatNumber && <>TVA {vatNumber}</>}
           {vatNumber && companyNumber && ' · '}
-          {companyNumber && <>N° entreprise {companyNumber}</>}
+          {companyNumber && <>{t('receipt.companyNumber', { n: companyNumber })}</>}
         </p>
       )}
       <div className="receipt-divider" />
-      <p className="receipt-center"><b>Commande #{order.id.slice(0, 8)}</b></p>
+      <p className="receipt-center"><b>{t('receipt.orderNumber', { id: order.id.slice(0, 8) })}</b></p>
       <p className="receipt-center">{formatDateTime(order.createdAt)} · {orderTypeLabel(order)}</p>
       <div className="receipt-divider" />
       <p style={{ margin: '4px 0' }}>
@@ -35,14 +37,14 @@ export default function OrderReceipt({ order, restaurant }) {
         {order.clientPhone && <> · {order.clientPhone}</>}
       </p>
       {order.orderType === 'dine_in' && <p style={{ margin: '4px 0' }}>Table pour {order.partySize} personne{order.partySize > 1 ? 's' : ''}</p>}
-      {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>Consigne : {deliveryInstructionLabel(order.deliveryInstructions)}</p>}
-      {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>Note : {order.deliveryNote}</p>}
+      {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.instruction', { label: deliveryInstructionLabel(order.deliveryInstructions, t) })}</p>}
+      {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.note', { note: order.deliveryNote })}</p>}
       <div className="receipt-divider" />
       {/* Réservation de table sans plat : sans ce cas, le reçu affichait une liste vide puis un
           « Total payé 0.00€ », qui se lit comme une commande impayée. */}
       {order.items.length === 0 && (
         <p className="receipt-center" style={{ margin: '8px 0' }}>
-          <b>Réservation de table sans commande</b><br />Le client commandera sur place.
+          <b>{t('receipt.reservationNoOrder')}</b><br />{t('receipt.willOrderOnSite')}
         </p>
       )}
       {order.items.map((i) => (
@@ -56,21 +58,20 @@ export default function OrderReceipt({ order, restaurant }) {
       ))}
       {order.items.length > 0 && <>
       <div className="receipt-divider" />
-      <div className="receipt-line"><span>Sous-total</span><span>{order.subtotal.toFixed(2)}€</span></div>
-      {order.promoDiscount > 0 && <div className="receipt-line"><span>Promo {order.promoLabel}</span><span>-{order.promoDiscount.toFixed(2)}€</span></div>}
-      {order.orderType === 'delivery' && <div className="receipt-line"><span>Livraison</span><span>{order.deliveryFee.toFixed(2)}€</span></div>}
-      {order.serviceFee > 0 && <div className="receipt-line"><span>Frais de service</span><span>{order.serviceFee.toFixed(2)}€</span></div>}
-      {order.balanceUsed > 0 && <div className="receipt-line"><span>Solde client utilisé</span><span>-{order.balanceUsed.toFixed(2)}€</span></div>}
+      <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{order.subtotal.toFixed(2)}€</span></div>
+      {order.promoDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promo', { label: order.promoLabel })}</span><span>-{order.promoDiscount.toFixed(2)}€</span></div>}
+      {order.orderType === 'delivery' && <div className="receipt-line"><span>{t('receipt.delivery')}</span><span>{order.deliveryFee.toFixed(2)}€</span></div>}
+      {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{order.serviceFee.toFixed(2)}€</span></div>}
+      {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{order.balanceUsed.toFixed(2)}€</span></div>}
       <div className="receipt-divider" />
-      <div className="receipt-line receipt-total"><span>Total payé</span><span>{order.total.toFixed(2)}€</span></div>
-      <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paid ? 'Payé via Fairide ✓' : 'Non payé'}</p>
+      <div className="receipt-line receipt-total"><span>{t('receipt.totalPaid')}</span><span>{order.total.toFixed(2)}€</span></div>
+      <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paid ? t('receipt.paidVia') : t('receipt.unpaid')}</p>
       </>}
       <div className="receipt-divider" />
       <p className="receipt-note">
-        Récapitulatif de commande fourni par Fairide — ne remplace pas le ticket de caisse de votre
-        propre système d'encaissement si vous y êtes soumis légalement.
+        {t('receipt.disclaimer')}
       </p>
-      <p className="receipt-center" style={{ marginTop: 10 }}>Merci et bonne dégustation !</p>
+      <p className="receipt-center" style={{ marginTop: 10 }}>{t('receipt.thanks')}</p>
     </div>
   );
 }

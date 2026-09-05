@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
 
 // Alerte du restaurateur à l'arrivée d'une commande.
 //
@@ -54,6 +55,7 @@ function playChime(ctx) {
 // CHAQUE ouverture du tableau de bord pour des commandes qui existaient déjà. Une alerte qui crie au
 // loup à chaque chargement est pire que pas d'alerte : on apprend à l'ignorer.
 export default function useNewOrderAlert(orders, ready) {
+  const { t } = useLanguage();
   const [soundEnabled, setSoundEnabledState] = useState(loadSoundPref);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
@@ -129,9 +131,9 @@ export default function useNewOrderAlert(orders, ready) {
       const arrived = newCount - prev;
       try {
         new Notification(
-          arrived > 1 ? `${arrived} nouvelles commandes Fairide` : 'Nouvelle commande Fairide',
+          arrived > 1 ? t('alertBar.notifTitleMany', { n: arrived }) : t('alertBar.notifTitleOne'),
           {
-            body: 'À accepter ou refuser dans ton tableau de bord.',
+            body: t('alertBar.notifBody'),
             icon: '/icons/icon.svg',
             // Un tag constant remplace la notification précédente au lieu d'en empiler une par sondage.
             tag: 'fairide-new-order'

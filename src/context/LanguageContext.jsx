@@ -3,6 +3,11 @@ import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/tra
 
 const LanguageContext = createContext(null);
 const STORAGE_KEY = 'fairide_language';
+export const LOCALES = { fr: 'fr-BE', en: 'en-GB', nl: 'nl-BE' };
+// Locale courante lisible hors composant (fonctions de formatage de date appelées au rendu) : mise à
+// jour par le fournisseur à chaque rendu, donc toujours celle de la langue affichée.
+let localeCourante = LOCALES.fr;
+export function getLocale() { return localeCourante; }
 
 // Persisté dans localStorage (pas sessionStorage) pour que le choix survive aussi bien à un
 // changement de page qu'à une fermeture/réouverture du navigateur.
@@ -52,8 +57,13 @@ export function LanguageProvider({ children }) {
     return value;
   }, [language]);
 
+  // Locale Intl pour les dates, heures et montants : un néerlandophone lit « maandag 7 oktober »,
+  // pas « lundi 7 octobre ». Belgique dans les trois cas (formats de date et d'euro belges).
+  const locale = LOCALES[language] || LOCALES[DEFAULT_LANGUAGE];
+  localeCourante = locale;
+
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, languages: SUPPORTED_LANGUAGES }}>
+    <LanguageContext.Provider value={{ language, locale, setLanguage, t, languages: SUPPORTED_LANGUAGES }}>
       {children}
     </LanguageContext.Provider>
   );

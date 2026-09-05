@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { useLanguage } from '../context/LanguageContext';
 
 // Confirmation générique avant toute action sensible ou irréversible — un seul composant réutilisé
 // partout plutôt qu'une modale par action.
@@ -9,6 +10,7 @@ import { createPortal } from 'react-dom';
 // une PWA installée et dans les webviews intégrées — précisément le contexte d'usage d'un
 // restaurateur au comptoir. Remonté d'un niveau pour que les deux espaces partagent la même modale.
 export default function ConfirmDialog({ open, title, message, confirmLabel = 'Confirmer', danger, loading, onConfirm, onCancel }) {
+  const { t } = useLanguage();
   if (!open) return null;
   return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
@@ -16,7 +18,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
         <h3 style={{ margin: '0 0 8px' }}>{title}</h3>
         {message && <p className="small" style={{ margin: '0 0 16px' }}>{message}</p>}
         <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
-          <button className="btn-ghost" onClick={onCancel} disabled={loading}>Annuler</button>
+          <button className="btn-ghost" onClick={onCancel} disabled={loading}>{t('common.cancel')}</button>
           {/* btn-gold et non btn-teal : il n'existe aucune règle CSS pour `.btn-teal` sur un <button>
               (seulement `a.btn-teal`, voir styles.css), ce bouton s'affichait donc sans aucun style,
               avec l'apparence par défaut du navigateur. Reliquat du retrait du teal de l'identité

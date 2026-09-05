@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
 import TrackingWithGames from '../../components/TrackingWithGames';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -32,6 +33,7 @@ function useHauteurCourse() {
 }
 
 export default function MapPage() {
+  const { t } = useLanguage();
   const { token, user } = useAuth();
   const toast = useToast();
   const [orders, setOrders] = useState(null);
@@ -95,7 +97,7 @@ export default function MapPage() {
         setSharingLocation(false);
         if (!deniedNotified) {
           deniedNotified = true;
-          toast('Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.');
+          toast(t('mapDriver.toastAllowGeo'));
         }
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
@@ -105,24 +107,24 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 
-  if (!orders) return <div className="empty">Chargement...</div>;
+  if (!orders) return <div className="empty">{t('mapDriver.loading')}</div>;
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Carte</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapDriver.title')}</h2>
       <p className="small" style={{ marginBottom: 16 }}>
-        Navigation vers ton prochain arrêt pour chaque course en cours, avec le temps qu'il te reste — utilise-la à la place d'une appli de guidage externe.
+        {t('mapDriver.intro')}
       </p>
       {!sharingLocation && (
-        <div className="empty" style={{ marginBottom: 16 }}>Active la géolocalisation pour voir le trajet depuis ta position.</div>
+        <div className="empty" style={{ marginBottom: 16 }}>{t('mapDriver.enableGeo')}</div>
       )}
       {active.length === 0 ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="empty" style={{ marginBottom: 10 }}>Aucune course en cours pour le moment — mais les jeux restent jouables !</div>
+          <div className="empty" style={{ marginBottom: 10 }}>{t('mapDriver.noneOngoing')}</div>
           <TrackingWithGames
             role="driver"
-            legende={position ? 'Te voilà. Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.' : 'Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.'}
-            etaSansEstimation="⏳ Pas de course"
+            legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
+            etaSansEstimation={t('mapDriver.noRide')}
             rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
           />
         </div>
@@ -143,11 +145,11 @@ export default function MapPage() {
           return (
             <div className="card" key={o.id} style={{ marginBottom: 16 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b>{pickedUp ? 'Vers le client' : 'Vers le restaurant'}</b>
+                <b>{pickedUp ? t('mapDriver.toCustomer') : t('mapDriver.toRestaurant')}</b>
                 <span className="small">{pickedUp ? `📍 ${o.address}` : `🏪 ${o.restaurantName}`}</span>
               </div>
               {!target.lat || !target.lng ? (
-                <div className="empty" style={{ margin: '10px 0' }}>Adresse non localisée pour cette course.</div>
+                <div className="empty" style={{ margin: '10px 0' }}>{t('mapDriver.addressNotLocated')}</div>
               ) : pickedUp ? (
                 // En course, pas de jeux : le livreur roule, la carte seule, en grand.
                 <div style={{ margin: '10px 0' }}>{carte({ height: hauteurCourse })}</div>
@@ -156,8 +158,8 @@ export default function MapPage() {
                 // à patienter sans quitter la carte — pas à jouer en roulant, la phrase 💡 le rappelle.
                 <TrackingWithGames
                   role="driver"
-                  legende={o.status === 'pret' ? '✅ Commande prête, à retirer au restaurant' : '⏳ Commande en préparation'}
-                  etaSansEstimation="🏪 Vers le restaurant"
+                  legende={o.status === 'pret' ? t('mapDriver.readyAtRestaurant') : t('mapDriver.preparing')}
+                  etaSansEstimation={t('mapDriver.toRestaurantIcon')}
                   rendreCarte={carte}
                 />
               )}

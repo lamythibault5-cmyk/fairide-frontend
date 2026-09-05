@@ -6,16 +6,18 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
 const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
 
 function formatClock(date) {
-  return date.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 export default function DriverDashboard() {
+  const { t } = useLanguage();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
@@ -45,7 +47,7 @@ export default function DriverDashboard() {
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('connect')) {
-      toast('Configuration des paiements en cours de validation (quelques secondes).');
+      toast(t('dashDriver.toastPaymentsValidating'));
       window.history.replaceState({}, '', '/driver');
       // Le statut Stripe Connect n'est pas suivi par webhook pour ce type de compte (voir backend) —
       // on le relit activement au retour de l'onboarding avant de rafraîchir l'utilisateur en contexte.
@@ -139,7 +141,7 @@ export default function DriverDashboard() {
         setSharingLocation(false);
         if (!deniedNotified) {
           deniedNotified = true;
-          toast('Autorise la géolocalisation dans ton navigateur pour partager ta position en direct avec le client.');
+          toast(t('dashDriver.toastAllowGeo'));
         }
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
@@ -170,11 +172,11 @@ export default function DriverDashboard() {
 
   async function deliver(id) {
     const code = (codeInputs[id] || '').trim();
-    if (!code) { toast('Demande le code de livraison au client.'); return; }
+    if (!code) { toast(t('dashDriver.toastAskCode')); return; }
     try {
       await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
-      toast('Livraison confirmée !');
+      toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
       toast(e.message);
@@ -187,17 +189,17 @@ export default function DriverDashboard() {
     const statusText = activeCount === 0
       ? null
       : user?.locationSharingEnabled === false
-        ? '📍 Partage de position désactivé.'
+        ? t('dashDriver.geoDisabled')
         : sharingLocation
-          ? `📍 Position partagée${lastPositionAt ? ` — dernier envoi à ${formatClock(lastPositionAt)}` : ''}.`
-          : '📍 En attente de l\'autorisation de géolocalisation...';
+          ? t('dashDriver.geoShared', { last: lastPositionAt ? t('dashDriver.geoLastSent', { time: formatClock(lastPositionAt) }) : '' })
+          : t('dashDriver.geoWaiting');
     setRightSlot(
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Aujourd'hui</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('dashDriver.today')}</h3>
         <div className="stat-grid">
-          <div className="stat-card"><div className="num">{available.length}</div><div className="label">Disponibles</div></div>
-          <div className="stat-card"><div className="num">{awaitingPickupCount}</div><div className="label">À récupérer</div></div>
-          <div className="stat-card highlight"><div className="num">{activeCount}</div><div className="label">En livraison</div></div>
+          <div className="stat-card"><div className="num">{available.length}</div><div className="label">{t('dashDriver.available')}</div></div>
+          <div className="stat-card"><div className="num">{awaitingPickupCount}</div><div className="label">{t('dashDriver.toPickUp')}</div></div>
+          <div className="stat-card highlight"><div className="num">{activeCount}</div><div className="label">{t('dashDriver.delivering')}</div></div>
         </div>
         {statusText && <p className="small" style={{ margin: '10px 0 0' }}>{statusText}</p>}
       </div>
@@ -215,31 +217,31 @@ export default function DriverDashboard() {
       {/* L'état du compte livreur, en rangées du même dessin que Mon compte (LigneCompte) : validation,
           paiements, disponibilité, partage de position. Une carte, une rangée par sujet, l'action à
           droite quand il y en a une — plus trois encadrés colorés empilés. */}
-      <div className="card account-groupe" aria-label="Mon compte livreur">
+      <div className="card account-groupe" aria-label={t('dashDriver.ariaAccount')}>
         {user?.adminStatus === 'blocked' && (
-          <LigneCompte accent="danger" icone="🚫" titre="Compte bloqué par Fairide" sous="Tu ne peux plus voir ni prendre de commandes" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+          <LigneCompte accent="danger" icone="🚫" titre={t('dashDriver.blockedTitle')} sous={t('dashDriver.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
             <p className="small" style={{ margin: 0 }}>
-              Ton compte livreur a été bloqué par l'équipe Fairide — tu ne peux plus voir ni prendre de commandes. Contacte le support pour plus d'informations.
+              {t('dashDriver.blockedText')}
             </p>
           </LigneCompte>
         )}
         {user?.adminStatus !== 'approved' && user?.adminStatus !== 'blocked' && (
-          <LigneCompte accent="warn" icone="🕐" titre="En attente de validation" sous="Généralement rapide — repasse un peu plus tard" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+          <LigneCompte accent="warn" icone="🕐" titre={t('dashDriver.pendingTitle')} sous={t('dashDriver.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
             <p className="small" style={{ margin: 0 }}>
-              Ton compte livreur doit être validé par l'équipe Fairide avant de pouvoir voir et prendre des commandes. C'est généralement rapide, repasse un peu plus tard.
+              {t('dashDriver.pendingText')}
             </p>
           </LigneCompte>
         )}
         {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
           <LigneCompte
             accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
-            titre={user?.stripeConnectStatus === 'restricted' ? 'Informations de paiement à compléter' : 'Paiements à configurer'}
+            titre={user?.stripeConnectStatus === 'restricted' ? t('dashDriver.paymentInfoTitle') : t('dashDriver.paymentsToConfigure')}
             sous={user?.stripeConnectStatus === 'restricted'
-              ? 'Stripe a besoin d\'informations pour te verser tes gains'
-              : 'Via Stripe, rapide et sécurisé — sans ça, pas de livraisons'}
+              ? t('dashDriver.stripeNeedsInfo')
+              : t('dashDriver.viaStripe')}
             action={(
               <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? 'Compléter' : 'Configurer')}
+                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : 'Configurer')}
               </button>
             )}
           />
@@ -247,8 +249,8 @@ export default function DriverDashboard() {
         {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
           <LigneCompte
             accent={user?.driverPaused ? 'warn' : 'ok'} icone={user?.driverPaused ? '⏸️' : '✅'}
-            titre={user?.driverPaused ? 'Compte en pause' : 'Disponible pour livrer'}
-            sous={user?.driverPaused ? 'Tu ne vois plus les commandes disponibles' : 'Mets-toi en pause quand tu arrêtes — tes courses en cours ne bougent pas'}
+            titre={user?.driverPaused ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}
+            sous={user?.driverPaused ? t('dashDriver.pausedSub') : t('dashDriver.availableSub')}
             action={(
               <button type="button" className={user?.driverPaused ? 'btn-teal' : 'btn-outline'} style={{ padding: '8px 12px', fontSize: 13 }} disabled={togglingPause} onClick={togglePause}>
                 {togglingPause ? '...' : user?.driverPaused ? '▶️ Reprendre' : '⏸️ Pause'}
@@ -259,23 +261,23 @@ export default function DriverDashboard() {
         {active.length > 0 && (
           <LigneCompte
             accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="📍"
-            titre="Partage de position"
+            titre={t('dashDriver.locationSharing')}
             sous={user?.locationSharingEnabled === false
-              ? 'Désactivé — réactivable dans Mon compte'
+              ? t('dashDriver.sharingDisabledSub')
               : sharingLocation
-                ? `Partagée avec le client${lastPositionAt ? ` · dernier envoi ${formatClock(lastPositionAt)}` : ''} · garde l'écran allumé`
-                : 'En attente de ton autorisation de géolocalisation…'}
+                ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
+                : t('dashDriver.sharingWaitingSub')}
             action={null}
           />
         )}
       </div>
 
       {user?.driverPaused ? (
-        <div className="empty">Ton compte est en pause — pas de nouvelles commandes tant que tu n'as pas repris.</div>
+        <div className="empty">{t('dashDriver.pausedText')}</div>
       ) : (
         <>
-          <h2 className="section-title" style={{ marginTop: 0 }}>Commandes disponibles</h2>
-          {available.length === 0 && <div className="empty">Aucune commande disponible pour l'instant.</div>}
+          <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
+          {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
           {available.map((o) => (
             <div className="card" key={o.id}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -283,71 +285,71 @@ export default function DriverDashboard() {
                 <span className="pill teal">{o.commune}</span>
               </div>
               <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
-                {o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}
+                {o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}
               </span>
               <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-              {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
-              <div className="small" style={{ marginBottom: 4 }}>🏁 Livraison : {o.address}</div>
-              {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
+              {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })}</div>
+              {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
               <DeliveryTiming order={o} />
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-                <span className="small">Course : {o.deliveryFee.toFixed(2)}€</span>
-                <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>Prendre la course</button>
+                <span className="small">{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</span>
+                <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
               </div>
             </div>
           ))}
         </>
       )}
 
-      <h2 className="section-title">En attente de retrait</h2>
-      {awaitingPickup.length === 0 && <div className="empty">Pas de commande à récupérer pour l'instant.</div>}
+      <h2 className="section-title">{t('dashDriver.awaitingPickup')}</h2>
+      {awaitingPickup.length === 0 && <div className="empty">{t('dashDriver.noneToPickUp')}</div>}
       {awaitingPickup.map((o) => (
         <div className="card" key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? 'Prête à récupérer' : 'En préparation'}</span>
+            <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
           </div>
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
-          <div className="small">🏁 Livraison : {o.address}</div>
-          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
+          {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+          <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+          {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 4 }}>Course : {o.deliveryFee.toFixed(2)}€</div>
+          <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</div>
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
-            <div className="small" style={{ marginBottom: 2 }}>Code à donner au restaurant lors du retrait</div>
+            <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
             <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
           </div>
           {o.status !== 'pret' && (
-            <p className="small">La commande est encore en préparation — direction le restaurant, elle sera bientôt prête.</p>
+            <p className="small">{t('dashDriver.stillPreparing')}</p>
           )}
         </div>
       ))}
 
       {/* L'état du partage de position est dans la rangée « Partage de position » en tête de page,
           avec le rappel « garde l'écran allumé » : sans app native, écran éteint = suivi interrompu. */}
-      <h2 className="section-title">Mes livraisons en cours</h2>
-      {active.length === 0 && <div className="empty">Pas de livraison en cours.</div>}
+      <h2 className="section-title">{t('dashDriver.myOngoing')}</h2>
+      {active.length === 0 && <div className="empty">{t('dashDriver.noneOngoing')}</div>}
       {active.map((o) => (
         <div className="card" key={o.id}>
           <b>{o.restaurantName}</b> → {o.clientName}
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          {o.restaurantAddress && <div className="small">🏪 Retrait : {o.restaurantAddress}</div>}
-          <div className="small">🏁 Livraison : {o.address}</div>
-          {o.travelMinutes && <div className="small">🚴 Trajet resto → client : ~{o.travelMinutes} min{o.distanceKm ? ` (${o.distanceKm} km)` : ''}</div>}
+          {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+          <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+          {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
           {o.deliveryInstructions && (
             <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
           )}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 2 }}>Course : {o.deliveryFee.toFixed(2)}€</div>
+          <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
             <input
-              placeholder="Code du client"
+              placeholder={t('dashDriver.phCustomerCode')}
               style={{ maxWidth: 140 }}
               value={codeInputs[o.id] || ''}
               onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
             />
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>Confirmer la livraison</button>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>{t('dashDriver.confirmDelivery')}</button>
           </div>
         </div>
       ))}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { StarsDisplay } from './Stars';
 import OptionsPickerModal from './OptionsPickerModal';
 import MenuCategorySections from './MenuCategorySections';
+import { useLanguage } from '../context/LanguageContext';
 
 const DELIVERY_FEE = 4.5;
 const SYSTEM_FEE_RATE = 0.10;
@@ -16,6 +17,7 @@ function lineKeyFor(itemId, optionItemIds) {
 // final — seule la confirmation elle-même est bloquée (voir confirmOpen), puisque c'est à cette étape
 // précise qu'un vrai paiement serait déclenché côté client.
 export default function RestaurantPreview({ restaurant }) {
+  const { t } = useLanguage();
   const [lines, setLines] = useState({});
   const [pickerItem, setPickerItem] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
@@ -57,7 +59,7 @@ export default function RestaurantPreview({ restaurant }) {
   return (
     <div>
       <div style={{ background: 'var(--ink)', color: 'var(--cream)', borderRadius: 10, padding: '10px 14px', marginBottom: 14, fontWeight: 600, fontSize: 13 }}>
-        🔍 Aperçu — c'est exactement ce que voient tes clients. Tu peux tester l'ajout au panier, mais aucune commande réelle ne sera passée.
+        {t('restoPreview.banner')}
       </div>
 
       <div className="card">
@@ -70,25 +72,25 @@ export default function RestaurantPreview({ restaurant }) {
         <h2 style={{ marginBottom: 2 }}>{restaurant.name}</h2>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>
           <StarsDisplay value={restaurant.rating} />
-          <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Nouveau'}</span>
+          <span className="small">{restaurant.reviewCount > 0 ? t('restoPreview.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restoPreview.newBadge')}</span>
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
         <p className="small" style={{ margin: '0 0 10px' }}>{restaurant.openingHours ? `🕐 ${restaurant.openingHours}` : ''}</p>
         {restaurant.hasPromo && (
           <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            🏷️ Des promos sont en cours sur certains plats — repère le badge rouge !
+            {t('restoPreview.promosBanner')}
           </div>
         )}
-        {restaurant.menu.length === 0 && <div className="empty">Ton menu est encore vide — tes clients ne verront rien tant que tu n'as pas ajouté de plats.</div>}
+        {restaurant.menu.length === 0 && <div className="empty">{t('restoPreview.emptyMenu')}</div>}
         <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} />
       </div>
 
       {count > 0 && (
         <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Panier (aperçu)</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('restoPreview.cartPreview')}</h3>
           <div className="role-pick" style={{ marginBottom: 12 }}>
-            <div className={`chip${fulfillmentType === 'delivery' ? ' active' : ''}`} onClick={() => setFulfillmentType('delivery')}>🚴 Livraison</div>
-            <div className={`chip${fulfillmentType === 'pickup' ? ' active' : ''}`} onClick={() => setFulfillmentType('pickup')}>🛍️ À emporter</div>
+            <div className={`chip${fulfillmentType === 'delivery' ? ' active' : ''}`} onClick={() => setFulfillmentType('delivery')}>{t('restoPreview.delivery')}</div>
+            <div className={`chip${fulfillmentType === 'pickup' ? ' active' : ''}`} onClick={() => setFulfillmentType('pickup')}>{t('restoPreview.takeaway')}</div>
           </div>
           {Object.entries(lines).map(([lineKey, line]) => {
             const item = restaurant.menu.find((m) => m.id === line.itemId);
@@ -111,18 +113,18 @@ export default function RestaurantPreview({ restaurant }) {
           })}
           <div className="divider" />
           <div className="breakdown">
-            <div className="line"><span>Sous-total</span><span>{subtotal.toFixed(2)}€</span></div>
+            <div className="line"><span>{t('restoPreview.subtotal')}</span><span>{subtotal.toFixed(2)}€</span></div>
             {fulfillmentType === 'delivery' ? (
-              <div className="line"><span>Livraison (exemple, dépend de la distance réelle)</span><span>{deliveryFee.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('restoPreview.deliveryExample')}</span><span>{deliveryFee.toFixed(2)}€</span></div>
             ) : (
-              <div className="line"><span>À emporter — pas de frais de livraison</span><span>0.00€</span></div>
+              <div className="line"><span>{t('restoPreview.takeawayNoFee')}</span><span>0.00€</span></div>
             )}
-            <div className="line"><span>Frais de système (exemple)</span><span>{serviceFee.toFixed(2)}€</span></div>
-            <div className="line total"><span>Total (exemple)</span><span>{total.toFixed(2)}€</span></div>
+            <div className="line"><span>{t('restoPreview.systemFeeExample')}</span><span>{serviceFee.toFixed(2)}€</span></div>
+            <div className="line total"><span>{t('restoPreview.totalExample')}</span><span>{total.toFixed(2)}€</span></div>
           </div>
           <div className="cart-bar" style={{ marginTop: 12 }}>
-            <span>{count} article(s) · aperçu uniquement</span>
-            <button className="btn-gold" onClick={() => setConfirmOpen(true)}>Confirmer la commande</button>
+            <span>{t('restoPreview.itemsPreviewOnly', { count })}</span>
+            <button className="btn-gold" onClick={() => setConfirmOpen(true)}>{t('restoPreview.confirmOrder')}</button>
           </div>
         </div>
       )}
@@ -130,11 +132,11 @@ export default function RestaurantPreview({ restaurant }) {
       {confirmOpen && (
         <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>🔒 Aperçu uniquement</h3>
+            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('restoPreview.previewOnlyTitle')}</h3>
             <p className="small" style={{ margin: '0 0 16px' }}>
-              C'est ici, exactement à cette étape, qu'un client réel passerait au paiement. En mode aperçu, aucune commande n'est créée et aucun paiement n'est déclenché — tu peux fermer et continuer à tester ton menu librement.
+              {t('restoPreview.previewOnlyBody')}
             </p>
-            <button className="btn-teal" onClick={() => setConfirmOpen(false)}>Compris</button>
+            <button className="btn-teal" onClick={() => setConfirmOpen(false)}>{t('restoPreview.gotIt')}</button>
           </div>
         </div>
       )}

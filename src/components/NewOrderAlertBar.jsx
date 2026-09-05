@@ -6,6 +6,7 @@
 //     n'existe pas, le son et les notifications système ne fonctionnent que si cet onglet reste
 //     ouvert : le dire explicitement évite qu'un restaurateur croie être couvert écran éteint.
 export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission }) {
+  const { t } = useLanguage();
   const active = newCount > 0;
   return (
     <div
@@ -18,14 +19,14 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
     >
       <strong style={{ fontSize: 15 }}>
         {active
-          ? `${newCount} commande${newCount > 1 ? 's' : ''} à traiter`
-          : 'Aucune commande en attente'}
+          ? t('alertBar.toHandle', { n: newCount })
+          : t('alertBar.nonePending')}
       </strong>
 
       <span className="small" style={{ flex: 1, minWidth: 220 }}>
         {permission === 'granted'
-          ? "Son et notifications actifs — tant que cet onglet reste ouvert."
-          : "Garde cet onglet ouvert pendant le service : c'est aujourd'hui le seul moyen d'être prévenu."}
+          ? t('alertBar.soundOnHelp')
+          : t('alertBar.keepTabOpen')}
       </span>
 
       <div className="row" style={{ gap: 8 }}>
@@ -36,7 +37,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           aria-pressed={soundEnabled}
           onClick={() => setSoundEnabled(!soundEnabled)}
         >
-          {soundEnabled ? '🔔 Son activé' : '🔕 Son coupé'}
+          {soundEnabled ? t('alertBar.soundOn') : t('alertBar.soundOff')}
         </button>
 
         {/* L'API Notification exige que la demande parte d'un geste de l'utilisateur : d'où un bouton
@@ -44,15 +45,17 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
             façon et que les utilisateurs refusent par réflexe. */}
         {permission === 'default' && (
           <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={requestPermission}>
-            Activer les notifications
+            {t('alertBar.enableNotifications')}
           </button>
         )}
         {permission === 'denied' && (
           <span className="small" style={{ color: 'var(--red)' }}>
-            Notifications bloquées par le navigateur
+            {t('alertBar.blocked')}
           </span>
         )}
       </div>
     </div>
   );
 }
+
+import { useLanguage } from '../context/LanguageContext';

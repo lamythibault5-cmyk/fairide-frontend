@@ -41,12 +41,7 @@ function genders(t) {
 const LANGUE_LABEL = { fr: 'Français', en: 'English', nl: 'Nederlands' };
 
 const ABONNEMENT_RESUME = {
-  trialing: '✅ Essai gratuit en cours',
-  active: '✅ Actif — ton restaurant est visible',
-  past_due: '⚠️ Paiement échoué — restaurant masqué',
-  paused: '⏸️ En pause — restaurant masqué',
-  canceled: '❌ Résilié — restaurant masqué',
-  inactive: '🔒 Pas encore visible aux clients'
+  trialing: 'subTrialing', active: 'subActive', past_due: 'subPastDueShort', paused: 'subPausedShort', canceled: 'subCanceledShort', inactive: 'subNotVisible'
 };
 
 export default function Account() {
@@ -62,19 +57,19 @@ export default function Account() {
       if (navigator.share) {
         await navigator.share({
           title: 'Fairide',
-          text: 'Les commerces de ton quartier, livrés chez toi — 10 % de commission au lieu de 22 à 32 %.',
+          text: t('accountUi.shareText'),
           url: lien
         });
         return;
       }
       await navigator.clipboard.writeText(lien);
-      toast(`Lien copié : ${lien}`);
+      toast(t('accountUi.toastLinkCopied', { link: lien }));
     } catch (e) {
       if (e?.name === 'AbortError') return;
-      toast(`Partage indisponible ici. L'adresse est ${lien}`);
+      toast(t('accountUi.toastShareUnavailable', { link: lien }));
     }
   }
-  const { t, language } = useLanguage();
+  const { t, language, locale } = useLanguage();
   const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
@@ -166,7 +161,7 @@ export default function Account() {
       if (list[0]) setRestoId(list[0].id);
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('subscribed')) {
-      toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
+      toast(t('accountUi.toastSubActivating'));
       window.history.replaceState({}, '', '/account');
       setOuvertes((prev) => new Set(prev).add('abonnement'));
     }
@@ -202,14 +197,14 @@ export default function Account() {
 
   async function saveServices() {
     if (!offersDelivery && !offersPickup && !offersDineIn) {
-      toast('Sélectionne au moins un service.');
+      toast(t('accountUi.toastOneService'));
       return;
     }
     setSavingServices(true);
     try {
       await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn } });
       refreshRestaurant();
-      toast('Services mis à jour.');
+      toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -233,7 +228,7 @@ export default function Account() {
     try {
       await api(`/restaurants/${restoId}/subscription/pause`, { method: 'POST', token });
       refreshRestaurant();
-      toast('Abonnement mis en pause — ton restaurant n\'est plus visible aux clients.');
+      toast(t('accountUi.toastSubPaused'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -246,7 +241,7 @@ export default function Account() {
     try {
       await api(`/restaurants/${restoId}/subscription/resume`, { method: 'POST', token });
       refreshRestaurant();
-      toast('Abonnement repris — ton restaurant est de nouveau visible aux clients.');
+      toast(t('accountUi.toastSubResumed'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -260,7 +255,7 @@ export default function Account() {
       await api(`/restaurants/${restoId}/subscription/cancel`, { method: 'POST', token });
       refreshRestaurant();
       setConfirmCancelSub(false);
-      toast('Abonnement résilié — ton restaurant n\'est plus visible aux clients.');
+      toast(t('accountUi.toastSubCanceled'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -410,8 +405,8 @@ export default function Account() {
       </div>
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
-      <div className="card account-groupe" aria-label="Mon profil">
-        <LigneCompte icone="👤" titre="Mes infos" sous={adresseResume || 'Prénom, nom, date de naissance, adresse'} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
+      <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
+        <LigneCompte icone="👤" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
           <form onSubmit={saveInfo}>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
@@ -512,22 +507,22 @@ export default function Account() {
           </div>
         </LigneCompte>
 
-        <LigneCompte icone="🔒" titre="Coordonnées de connexion" sous={user.phone ? `${user.email} · ${user.phone}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone ? `${user.email} · ${user.phone}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
           <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
-            Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d'email ou de téléphone.
+            {t('accountUi.contactCodeInfo')}
           </p>
           <ContactChangeField
-            field="email" label="Adresse email" currentValue={user.email} type="email" placeholder="nouvelle@adresse.com"
+            field="email" label={t('accountUi.emailAddress')} currentValue={user.email} type="email" placeholder={t('accountUi.phNewEmail')}
             requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
           />
           <div className="divider" style={{ margin: '4px 0' }} />
           <ContactChangeField
-            field="phone" label="Numéro de téléphone" currentValue={user.phone} type="tel" placeholder="04xx xx xx xx"
+            field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
             requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
           />
         </LigneCompte>
 
-        <LigneCompte icone="🔑" titre={t('account.passwordTitle')} sous="Choisis-en un nouveau, 8 caractères minimum" ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+        <LigneCompte icone="🔑" titre={t('account.passwordTitle')} sous={t('accountUi.newPasswordSub')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
           <form onSubmit={savePassword}>
             <div className="field">
               <label>{t('account.currentPassword')}</label>
@@ -550,7 +545,7 @@ export default function Account() {
         </LigneCompte>
 
         {role === 'driver' && (
-          <LigneCompte icone="📡" titre={t('account.geoTitle')} sous={locationSharingEnabled ? 'Partage activé pendant tes courses' : 'Partage désactivé'} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
+          <LigneCompte icone="📡" titre={t('account.geoTitle')} sous={locationSharingEnabled ? t('accountUi.sharingOn') : t('accountUi.sharingOff')} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
             <p className="small" style={{ margin: '0 0 10px' }}>{t('account.geoExplain')}</p>
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
               <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
@@ -561,9 +556,9 @@ export default function Account() {
       </div>
 
       {/* ——— Solde et avantages. ——— */}
-      <div className="card account-groupe" aria-label="Solde et avantages">
+      <div className="card account-groupe" aria-label={t('accountUi.balanceBenefits')}>
         {role === 'client' && (
-          <LigneCompte icone="💰" titre="Mon solde Fairide" sous={`${solde}€ · valider un code cadeau`} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
+          <LigneCompte icone="💰" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
               <div className="num">{solde}€</div>
               <div className="label">{t('account.balance')}</div>
@@ -605,7 +600,7 @@ export default function Account() {
           </LigneCompte>
         )}
 
-        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats ? `Ton code : ${referralStats.code} · ${referralStats.earnedTotal.toFixed(2)}€ gagnés` : 'Invite un ami, gagne du crédit'} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
           <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
           {referralStats && (
             <>
@@ -639,63 +634,58 @@ export default function Account() {
           Client : « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un
           réglage — Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. */}
       {role === 'client' && (
-        <div className="card account-groupe" aria-label="Mes commandes et Fairide">
-          <LigneCompte to="/invoices" icone="📄" titre="Mes factures" sous="Les reçus de tes commandes payées" />
-          <LigneCompte icone="📍" titre="Adresse de livraison" sous={adresseResume || 'Celle qui pré-remplit tes commandes'} onClick={ouvrirAdresse} />
-          <LigneCompte to="/aide?sujet=paiement" icone="💳" titre="Moyens de paiement" sous="Comment Fairide te fait payer" />
-          <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre="Titres restaurant" sous="Monizze, Edenred, Sodexo" />
-          <LigneCompte to="/notre-histoire" icone="🧭" titre="Notre histoire" sous="Pourquoi Fairide existe" />
+        <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
+          <LigneCompte to="/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.invoicesSub')} />
+          <LigneCompte icone="📍" titre={t('accountUi.deliveryAddress')} sous={adresseResume || t('accountUi.addressSub')} onClick={ouvrirAdresse} />
+          <LigneCompte to="/aide?sujet=paiement" icone="💳" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
+          <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
+          <LigneCompte to="/notre-histoire" icone="🧭" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />
         </div>
       )}
 
       {role === 'restaurant' && restaurant && (
-        <div className="card account-groupe" aria-label="Mon commerce">
-          <LigneCompte icone="💳" titre="Abonnement" sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] || restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+        <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
+          <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-              {now.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
+              {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
             {restaurant.subscriptionStatus === 'trialing' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Ton restaurant est visible aux clients. Le premier mois est offert pour tout restaurant, dans tous les cas
-                {restaurant.freeTrialMonths > 1 ? ` — et comme ton restaurant fait partie des premiers inscrits sur Fairide, tu profites en réalité de ${restaurant.freeTrialMonths} mois offerts au total` : ''}
-                {restaurant.subscriptionCurrentPeriodEnd ? ` (premier prélèvement de 20€ le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}).` : '.'}
+                {t('accountUi.subTrialIntro')}
+                {restaurant.freeTrialMonths > 1 ? t('accountUi.subEarlyBird', { n: restaurant.freeTrialMonths }) : ''}
+                {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subFirstCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : '.'}
               </p>
             )}
             {restaurant.subscriptionStatus === 'active' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Ton restaurant est visible aux clients.
-                {restaurant.subscriptionCurrentPeriodEnd ? ` Prochain prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
+                {t('accountUi.subVisibleIntro')}
+                {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subNextCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : ''}
               </p>
             )}
             {restaurant.subscriptionStatus === 'past_due' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n'est plus visible aux clients tant que ce n'est pas régularisé.
+                {t('accountUi.subPastDue')}
               </p>
             )}
             {restaurant.subscriptionStatus === 'paused' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Ton restaurant n'est plus visible aux clients et ne reçoit plus de commandes. Aucun prélèvement tant qu'il reste en pause.
+                {t('accountUi.subPaused')}
               </p>
             )}
             {restaurant.subscriptionStatus === 'canceled' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>Ton restaurant n'est plus visible aux clients.</p>
+              <p className="small" style={{ margin: '0 0 12px' }}>{t('accountUi.subCanceled')}</p>
             )}
             {restaurant.subscriptionStatus === 'inactive' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
-                Le premier mois est offert pour tout restaurant, dans tous les cas — et Fairide offre aussi 3 mois aux 50 premiers
-                restaurants inscrits sur la plateforme, puis 2 mois aux 100 suivants.
-                {restaurant.freeTrialMonths > 1
-                  ? ` Ton restaurant fait partie de ceux-là : tu profites de ${restaurant.freeTrialMonths} mois offerts au total.`
-                  : ''}
-                {' '}Ton abonnement n'entre en vigueur qu'une fois ton compte validé par l'équipe Fairide — le temps de vérifier
-                la conformité de ton commerce et que le contrat soit accepté par les deux parties. Tu ne seras débité qu'au mois suivant l'activation.
+                {t('accountUi.subInactiveIntro')}
+                {restaurant.freeTrialMonths > 1 ? t('accountUi.subEarlyBird2', { n: restaurant.freeTrialMonths }) : ''}
+                {' '}{t('accountUi.subPendingValidation')}
               </p>
             )}
 
             {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
               <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
-                🔒 Disponible après validation de ton compte par l'équipe Fairide.
+                {t('accountUi.subLocked')}
               </p>
             )}
             {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
@@ -705,15 +695,15 @@ export default function Account() {
                   <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
                 </div>
                 <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                  {subscribing ? '...' : `S'abonner — 20€/mois (${restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : '1er mois offert'})`}
+                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: restaurant.freeTrialMonths > 1 ? t('accountUi.freeMonths', { n: restaurant.freeTrialMonths }) : t('accountUi.firstMonthFree') })}
                 </button>
               </div>
             )}
             {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : '⏸️ Mettre en pause'}</button>
+                <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : t('accountUi.pauseSub')}</button>
                 {!confirmCancelSub && (
-                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
                 )}
               </div>
             )}
@@ -721,47 +711,46 @@ export default function Account() {
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                 <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
                 {!confirmCancelSub && (
-                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
                 )}
               </div>
             )}
             {confirmCancelSub && (
               <div style={{ marginTop: 10 }}>
                 <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
-                  Es-tu sûr ? Ton restaurant disparaîtra immédiatement des résultats clients. Il faudra un nouvel abonnement pour redevenir visible.
+                  {t('accountUi.cancelSubConfirm')}
                 </p>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
-                    {cancelingSub ? '...' : 'Oui, résilier'}
+                    {cancelingSub ? '...' : t('accountUi.yesCancel')}
                   </button>
-                  <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
+                  <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>{t('accountUi.cancel')}</button>
                 </div>
               </div>
             )}
           </LigneCompte>
 
           <LigneCompte
-            icone="🛎️" titre="Services proposés"
-            sous={[offersDelivery && 'Livraison', offersPickup && 'À emporter', offersDineIn && 'Réservation'].filter(Boolean).join(' · ') || 'Aucun service actif'}
+            icone="🛎️" titre={t('accountUi.servicesOffered')}
+            sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup'), offersDineIn && t('accountUi.reservation')].filter(Boolean).join(' · ') || 'Aucun service actif'}
             ouverte={ouvertes.has('services')} onClick={() => basculer('services')}
           >
             <p className="small" style={{ margin: '0 0 12px' }}>
-              Choisis les modes de commande que ton restaurant propose à ses clients — n'importe quelle combinaison, au moins un doit rester actif.
-              Si seule la réservation est activée, tes clients ne pourront pas commander en ligne : ils ne verront que la carte et un bouton pour réserver une table.
+              {t('accountUi.servicesIntro')}
             </p>
             <div className="service-table-wrap">
               <table className="service-table">
                 <thead>
-                  <tr><th>Service</th><th className="col-actif">Proposé</th><th>Ce que ça change pour le client</th></tr>
+                  <tr><th>{t('accountUi.service')}</th><th className="col-actif">{t('accountUi.offered')}</th><th>{t('accountUi.whatChanges')}</th></tr>
                 </thead>
                 <tbody>
                   {[
-                    { cle: 'delivery', icone: '🚴', nom: 'Livraison', valeur: offersDelivery, set: setOffersDelivery,
-                      effet: 'Il commande en ligne et se fait livrer à son adresse.' },
-                    { cle: 'pickup', icone: '🥡', nom: 'À emporter', valeur: offersPickup, set: setOffersPickup,
-                      effet: 'Il commande et paie en ligne, puis vient chercher sa commande.' },
-                    { cle: 'dine_in', icone: '🍽️', nom: 'Réservation de table', valeur: offersDineIn, set: setOffersDineIn,
-                      effet: 'Il réserve une table en indiquant le nombre de personnes, sans commander en ligne.' }
+                    { cle: 'delivery', icone: '🚴', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
+                      effet: t('accountUi.svcDeliveryDesc') },
+                    { cle: 'pickup', icone: '🥡', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
+                      effet: t('accountUi.svcPickupDesc') },
+                    { cle: 'dine_in', icone: '🍽️', nom: t('accountUi.svcReservation'), valeur: offersDineIn, set: setOffersDineIn,
+                      effet: t('accountUi.svcReservationDesc') }
                   ].map((s) => (
                     <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
                       <td><b>{s.icone} {s.nom}</b></td>
@@ -773,7 +762,7 @@ export default function Account() {
                           <span className="sr-only">{s.nom}</span>
                         </label>
                       </td>
-                      <td className="small">{s.valeur ? s.effet : <i>Non proposé — ce mode n'apparaît pas sur ta fiche.</i>}</td>
+                      <td className="small">{s.valeur ? s.effet : <i>{t('accountUi.notOffered')}</i>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -783,61 +772,61 @@ export default function Account() {
                 d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
             <p className="small service-summary">
               {!offersDelivery && !offersPickup && !offersDineIn
-                ? '⚠️ Au moins un service doit rester proposé.'
+                ? t('accountUi.oneServiceWarn')
                 : !offersDelivery && !offersPickup
-                  ? '🍽️ Tes clients verront ta carte mais ne pourront rien commander en ligne : seulement réserver une table.'
+                  ? t('accountUi.onlyReservationInfo')
                   : offersDelivery && offersPickup && offersDineIn
-                    ? '✅ Tes clients peuvent se faire livrer, venir chercher leur commande, ou réserver une table.'
-                    : `Tes clients pourront : ${[offersDelivery && 'se faire livrer', offersPickup && 'venir chercher leur commande', offersDineIn && 'réserver une table'].filter(Boolean).join(', ')}.`}
+                    ? t('accountUi.allServicesInfo')
+                    : t('accountUi.someServicesInfo', { list: [offersDelivery && t('accountUi.svcListDelivery'), offersPickup && t('accountUi.svcListPickup'), offersDineIn && t('accountUi.svcListReservation')].filter(Boolean).join(', ') })}
             </p>
             <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
           </LigneCompte>
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas : neuf onglets n'y
               tenaient pas, et sous 520px ils deviennent des icônes muettes. Ici elles gardent leur nom. */}
-          <LigneCompte to="/dashboard/reservations" icone="📅" titre="Réservations" sous="Agenda, demandes à confirmer, notes, acomptes, statistiques" />
-          <LigneCompte to="/dashboard/reservations?onglet=salle" icone="🪑" titre="Plan de salle" sous="Tes tables, leurs zones et leur acompte" />
-          <LigneCompte to="/dashboard/reservations?onglet=reglages" icone="⚙️" titre="Règles de réservation" sous="Jour même, préavis, acompte, annulation, confirmation" />
-          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre="Promotions" sous="Réductions et offres sur ta carte" />
-          <LigneCompte to="/dashboard/invoices" icone="📄" titre="Factures" sous="Tes factures de commission" />
-          <LigneCompte to="/dashboard/guide" icone="📘" titre="Mode d'emploi" sous="Comment gérer ton commerce sur Fairide" />
-          <LigneCompte to="/dashboard/reviews" icone="⭐" titre="Avis clients" sous={restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} sur 5 · ${restaurant.reviewCount} avis` : 'Pas encore d\x27avis'} />
+          <LigneCompte to="/dashboard/reservations" icone="📅" titre={t('accountUi.reservations')} sous={t('accountUi.reservationsSub')} />
+          <LigneCompte to="/dashboard/reservations?onglet=salle" icone="🪑" titre={t('accountUi.floorPlan')} sous={t('accountUi.floorPlanSub')} />
+          <LigneCompte to="/dashboard/reservations?onglet=reglages" icone="⚙️" titre={t('accountUi.reservationRules')} sous={t('accountUi.reservationRulesSub')} />
+          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
+          <LigneCompte to="/dashboard/invoices" icone="📄" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
+          <LigneCompte to="/dashboard/guide" icone="📘" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />
+          <LigneCompte to="/dashboard/reviews" icone="⭐" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
         </div>
       )}
 
       {/* Rubriques du livreur qu'on ouvre de temps en temps, sorties de la barre du bas au profit de ce
           qu'il consulte en course : commandes, carte, pourboires. */}
       {role === 'driver' && (
-        <div className="card account-groupe" aria-label="Mes courses">
-          <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? `${driverDeliveries.filter((o) => o.status === 'livre').length} livraisons effectuées` : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
+        <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
+          <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
             <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
           </LigneCompte>
-          <LigneCompte to="/driver/reviews" icone="⭐" titre="Mes avis" sous="Ce que les clients disent de tes livraisons" />
-          <LigneCompte to="/driver/invoices" icone="📄" titre="Mes factures" sous="Tes autofactures mensuelles" />
+          <LigneCompte to="/driver/reviews" icone="⭐" titre={t('accountUi.myReviews')} sous={t('accountUi.myReviewsSub')} />
+          <LigneCompte to="/driver/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
         </div>
       )}
 
       {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
           « Mes infos », avec le reste de ce qui concerne la personne. */}
-      <div className="card account-groupe" aria-label="Assistance">
-        <LigneCompte to="/aide" icone="🛟" titre="Besoin d'aide ?" sous="Les réponses aux questions fréquentes" />
+      <div className="card account-groupe" aria-label={t('accountUi.support')}>
+        <LigneCompte to="/aide" icone="🛟" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
         <LigneCompte
-          icone="💬" titre="Chatter avec nous" sous="L'assistant Fairide, tout de suite"
+          icone="💬" titre={t('accountUi.chat')} sous={t('accountUi.chatSub')}
           onClick={() => window.dispatchEvent(new Event('fairide:assistant-ouvrir'))}
         />
-        <LigneCompte to="/aide?sujet=avis" icone="⭐" titre="Donner mon avis sur Fairide" sous="Ce qui te plaît, ce qui manque" />
-        <LigneCompte icone="🔗" titre="Partager Fairide" sous="Envoyer le lien à tes proches" onClick={partagerFairide} />
-        <LigneCompte to="/aide?sujet=bug" icone="🐞" titre="Signaler un bug" sous="Décris-nous ce qui ne va pas" />
-        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="🧭" titre="Notre histoire" sous="Pourquoi Fairide existe" />}
+        <LigneCompte to="/aide?sujet=avis" icone="⭐" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
+        <LigneCompte icone="🔗" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
+        <LigneCompte to="/aide?sujet=bug" icone="🐞" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
+        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="🧭" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
 
       <p className="account-legal">
-        <Link to="/confidentialite">Confidentialité</Link>
+        <Link to="/confidentialite">{t('accountUi.privacy')}</Link>
         <Link to="/cgv">CGV</Link>
-        <Link to="/mentions-legales">Mentions légales</Link>
+        <Link to="/mentions-legales">{t('accountUi.legalNotice')}</Link>
         <span className="account-build">Build {__BUILD_ID__}</span>
       </p>
     </div>
@@ -848,6 +837,7 @@ export default function Account() {
 // saveInfo() ci-dessus : la nouvelle valeur n'est jamais envoyée telle quelle à confirmContactChange
 // tant qu'un code valide n'est pas fourni, donc rien à gérer côté état global du formulaire principal.
 function ContactChangeField({ field, label, currentValue, type, placeholder, requestContactChange, confirmContactChange, toast }) {
+  const { t } = useLanguage();
   const [editing, setEditing] = useState(false);
   const [newValue, setNewValue] = useState('');
   const [codeSent, setCodeSent] = useState(false);
@@ -863,12 +853,12 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   }
 
   async function sendCode() {
-    if (!newValue.trim()) { toast('Renseigne la nouvelle valeur.'); return; }
+    if (!newValue.trim()) { toast(t('accountUi.toastNewValue')); return; }
     setSending(true);
     try {
       await requestContactChange(field, newValue.trim());
       setCodeSent(true);
-      toast('Code envoyé par email à ton adresse actuelle.');
+      toast(t('accountUi.toastCodeSent'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -877,11 +867,11 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   }
 
   async function confirm() {
-    if (!code.trim()) { toast('Code requis.'); return; }
+    if (!code.trim()) { toast(t('accountUi.toastCodeRequired')); return; }
     setConfirming(true);
     try {
       await confirmContactChange(field, newValue.trim(), code.trim());
-      toast(`${label} mis à jour.`);
+      toast(t('accountUi.toastFieldUpdated', { label }));
       cancel();
     } catch (e) {
       toast(e.message);
@@ -897,7 +887,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
           <div className="small" style={{ opacity: 0.7 }}>{label}</div>
           <div>{currentValue || '—'}</div>
         </div>
-        <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditing(true)}>Changer</button>
+        <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditing(true)}>{t('accountUi.change')}</button>
       </div>
     );
   }
@@ -910,21 +900,21 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
           <div className="field" style={{ flex: 1, margin: 0, minWidth: 180 }}>
             <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />
           </div>
-          <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : 'Envoyer le code'}</button>
-          <button type="button" className="btn-ghost" onClick={cancel}>Annuler</button>
+          <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : t('accountUi.sendCode')}</button>
+          <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>
         </div>
       ) : (
         <div>
           <p className="small" style={{ margin: '0 0 8px' }}>
-            Code envoyé par email à ton adresse actuelle{field === 'phone' ? " (pas encore de SMS chez Fairide)" : ''} pour confirmer le passage à <b>{newValue}</b>.
+            {t('accountUi.codeSentConfirmSwitch', { sms: field === 'phone' ? t('accountUi.noSmsYet') : '' })} <b>{newValue}</b>.
           </p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>
               <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
             </div>
             <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : 'Confirmer'}</button>
-            <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>Renvoyer</button>
-            <button type="button" className="btn-ghost" onClick={cancel}>Annuler</button>
+            <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>{t('accountUi.resend')}</button>
+            <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>
           </div>
         </div>
       )}
@@ -935,7 +925,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
 // Résumé compact de l'activité du livreur, dans sa rangée dépliable de la page Mon compte — les détails
 // (avis, historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée.
 function DriverActivity({ deliveries, reviews, t }) {
-  if (!deliveries) return <p className="small">Chargement…</p>;
+  if (!deliveries) return <p className="small">{t('accountUi.loading')}</p>;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');
   const totalDeliveryFees = delivered.reduce((a, o) => a + o.deliveryFee, 0);

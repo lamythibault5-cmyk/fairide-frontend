@@ -57,9 +57,9 @@ export default function TemplatePicker({ template, quickItems, onSubmit, onCance
   return (
     <div>
       <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <button type="button" className="btn-ghost" onClick={selectAll}>Tout sélectionner</button>
-        {quickItems && <button type="button" className="btn-ghost" onClick={selectQuick}>Essentiels seulement ({quickItems.length})</button>}
-        <button type="button" className="btn-ghost" onClick={selectNone}>Tout désélectionner</button>
+        <button type="button" className="btn-ghost" onClick={selectAll}>{t('templatePicker.selectAll')}</button>
+        {quickItems && <button type="button" className="btn-ghost" onClick={selectQuick}>{t('templatePicker.essentialsOnly', { n: quickItems.length })}</button>}
+        <button type="button" className="btn-ghost" onClick={selectNone}>{t('templatePicker.deselectAll')}</button>
       </div>
       {Object.entries(template).map(([cat, items]) => {
         if (!items.length) return null;
@@ -81,9 +81,9 @@ export default function TemplatePicker({ template, quickItems, onSubmit, onCance
       })}
       <div className="row" style={{ gap: 8, marginTop: 10 }}>
         <button className="btn-teal" disabled={submitting || selected.size === 0} onClick={submit}>
-          {submitting ? '...' : (submitLabel || `Ajouter ${selected.size} plat(s) au menu`)}
+          {submitting ? '...' : (submitLabel || t('templatePicker.addN', { n: selected.size }))}
         </button>
-        <button className="btn-ghost" onClick={onCancel}>Annuler</button>
+        <button className="btn-ghost" onClick={onCancel}>{t('templatePicker.cancel')}</button>
       </div>
     </div>
   );

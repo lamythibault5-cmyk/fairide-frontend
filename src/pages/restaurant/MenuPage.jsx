@@ -115,7 +115,7 @@ export default function MenuPage() {
     if (!selectedIds.size) return;
     setConfirm({
       title: `Supprimer ${selectedIds.size} plat(s) ?`,
-      message: 'Cette action est irréversible.',
+      message: t('menuPage.irreversible'),
       confirmLabel: 'Supprimer',
       onConfirm: doBulkDelete
     });
@@ -127,7 +127,7 @@ export default function MenuPage() {
     setBulkDeleting(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk-delete`, { method: 'POST', token, body: { itemIds: Array.from(selectedIds) } });
-      toast(`${selectedIds.size} plat(s) supprimé(s).`);
+      toast(t('menuPage.toastDishesDeleted', { n: selectedIds.size }));
       setSelectedIds(new Set());
       setSelectSectionId(null);
       loadDashboard(restoId);
@@ -159,12 +159,12 @@ export default function MenuPage() {
 
   async function addMenuItem() {
     const price = parseFloat(itemPrice);
-    if (!itemName.trim() || !price) { toast('Nom et prix requis.'); return; }
+    if (!itemName.trim() || !price) { toast(t('menuPage.toastNamePrice')); return; }
     try {
       await api(`/restaurants/${restoId}/menu`, { method: 'POST', token, body: { name: itemName.trim(), price, category: itemCategory, imageUrl: itemImageUrl.trim() } });
       setItemName(''); setItemPrice(''); setItemImageUrl('');
       loadDashboard(restoId);
-      toast('Plat ajouté au menu.');
+      toast(t('menuPage.toastDishAdded'));
     } catch (e) {
       toast(e.message);
     }
@@ -178,8 +178,8 @@ export default function MenuPage() {
     try {
       const r = await api(`/restaurants/${restoId}/menu/translate`, { method: 'POST', token });
       await loadDashboard(restoId);
-      if (r.translated === 0) toast('Ta carte est déjà traduite.');
-      else toast(`${r.translated} plat(s) traduit(s).`);
+      if (r.translated === 0) toast(t('menuPage.toastAlreadyTranslated'));
+      else toast(t('menuPage.toastTranslated', { n: r.translated }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -199,7 +199,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/menu/${itemId}`, { method: 'PATCH', token, body: patch });
       await loadDashboard(restoId);
-      toast('Plat mis à jour.');
+      toast(t('menuPage.toastDishUpdated'));
     } catch (e) {
       toast(e.message);
       throw e;
@@ -229,7 +229,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/option-groups`, { method: 'POST', token, body: payload });
       await loadDashboard(restoId);
-      toast('Groupe d\'options créé.');
+      toast(t('menuPage.toastGroupCreated'));
     } catch (e) {
       toast(e.message);
       throw e;
@@ -240,7 +240,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'PATCH', token, body: payload });
       await loadDashboard(restoId);
-      toast('Groupe d\'options mis à jour.');
+      toast(t('menuPage.toastGroupUpdated'));
     } catch (e) {
       toast(e.message);
       throw e;
@@ -251,7 +251,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/option-groups/${groupId}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
-      toast('Groupe d\'options supprimé.');
+      toast(t('menuPage.toastGroupDeleted'));
     } catch (e) {
       toast(e.message);
     }
@@ -261,7 +261,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/sections`, { method: 'POST', token, body: { name } });
       await loadDashboard(restoId);
-      toast('Section créée.');
+      toast(t('menuPage.toastSectionCreated'));
     } catch (e) {
       toast(e.message);
       throw e;
@@ -272,7 +272,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/sections/${sectionId}`, { method: 'PATCH', token, body: { name } });
       await loadDashboard(restoId);
-      toast('Section renommée.');
+      toast(t('menuPage.toastSectionRenamed'));
     } catch (e) {
       toast(e.message);
       throw e;
@@ -289,7 +289,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'PATCH', token, body: { imageUrl } });
       await loadDashboard(restoId);
-      toast(imageUrl ? 'Photo de section enregistrée.' : 'Photo de section retirée.');
+      toast(imageUrl ? t('menuPage.toastSectionPhotoSaved') : t('menuPage.toastSectionPhotoRemoved'));
       if (imageUrl && sectionItems.length > 0) {
         setSectionApplyPanel({ section: { ...section, imageUrl }, items: sectionItems });
         setApplySelectedIds(new Set(sectionItems.map((i) => i.id)));
@@ -309,7 +309,7 @@ export default function MenuPage() {
         method: 'POST', token, body: { itemIds: [...applySelectedIds] }
       });
       await loadDashboard(restoId);
-      toast(`Photo appliquée à ${res.count} plat(s).`);
+      toast(t('menuPage.toastPhotoApplied', { n: res.count }));
       setSectionApplyPanel(null);
     } catch (e) {
       toast(e.message);
@@ -360,9 +360,9 @@ export default function MenuPage() {
     // Section vide : rien à perdre, donc pas de confirmation — comme avant.
     if (count === 0) { doDeleteSection(section); return; }
     setConfirm({
-      title: `Supprimer la section « ${categoryLabel(section.name, t)} » ?`,
-      message: `Elle contient ${count} plat(s), qui seront supprimés avec elle. Cette action est irréversible.`,
-      confirmLabel: 'Supprimer la section',
+      title: t('menuPage.deleteSectionConfirmTitle', { name: categoryLabel(section.name, t) }),
+      message: t('menuPage.deleteSectionConfirmBody', { n: count }),
+      confirmLabel: t('menuPage.deleteSection'),
       onConfirm: () => doDeleteSection(section)
     });
   }
@@ -373,7 +373,7 @@ export default function MenuPage() {
     try {
       await api(`/restaurants/${restoId}/sections/${section.id}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
-      toast('Section supprimée.');
+      toast(t('menuPage.toastSectionDeleted'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -383,13 +383,13 @@ export default function MenuPage() {
   }
 
   async function addStarterTemplateItems(items) {
-    if (!items.length) { toast('Choisis au moins un plat.'); return; }
+    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setAddingTemplate(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       setTemplateOpen(false);
       loadDashboard(restoId);
-      toast(`${items.length} plat(s) ajouté(s) au menu.`);
+      toast(t('menuPage.toastDishesAdded', { n: items.length }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -398,14 +398,14 @@ export default function MenuPage() {
   }
 
   async function applyStarterItems(items) {
-    if (!items.length) { toast('Choisis au moins un plat.'); return; }
+    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setApplyingStarter(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       setStartChoiceMade(true);
       setStarterPickerOpen(false);
       loadDashboard(restoId);
-      toast(`${items.length} plat(s) ajouté(s) — modifie ou supprime ce dont tu n'as pas besoin.`);
+      toast(t('menuPage.toastDishesAddedEdit', { n: items.length }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -430,15 +430,13 @@ export default function MenuPage() {
   }
 
   async function submitImportedItems(items, replaceExisting) {
-    if (!items.length) { toast('Choisis au moins un plat.'); return; }
+    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setSubmittingImport(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting } });
       setImportedItems(null);
       loadDashboard(restoId);
-      toast(replaceExisting
-        ? `Menu remplacé — ${items.length} plat(s) importé(s) du document.`
-        : `${items.length} plat(s) ajouté(s) au menu depuis le document importé.`);
+      toast(replaceExisting ? t('menuPage.toastMenuReplaced', { n: items.length }) : t('menuPage.toastImportedAdded', { n: items.length }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -448,12 +446,12 @@ export default function MenuPage() {
 
   async function addClassics(list, category, setBusy) {
     const items = missingClassicItems(restaurant.menu, list).map((it) => ({ ...it, category }));
-    if (!items.length) { toast('Déjà tous présents dans ton menu.'); return; }
+    if (!items.length) { toast(t('menuPage.toastAllPresent')); return; }
     setBusy(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
       loadDashboard(restoId);
-      toast(`${items.length} produit(s) ajouté(s).`);
+      toast(t('menuPage.toastProductsAdded', { n: items.length }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -468,22 +466,19 @@ export default function MenuPage() {
           les plats dont le texte a bougé depuis la dernière fois. */}
       {restaurant.menu.length > 0 && (
         <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🌍 Traduire ma carte</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.translateTitle')}</h3>
           <p className="small" style={{ margin: '0 0 12px' }}>
-            Tes clients néerlandophones et anglophones verront ta carte dans leur langue. Fairide traduit
-            les noms et les descriptions, en laissant tels quels les noms de plats qui ne se traduisent pas
-            (Tiramisu, Gyoza, Ramen...). Tu peux corriger chaque traduction en modifiant le plat concerné —
-            ce que tu corriges à la main n'est jamais réécrit.
+            {t('menuPage.translateIntro')}
           </p>
           <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
-            {translating ? 'Traduction en cours...' : '🌍 Traduire ma carte'}
+            {translating ? t('menuPage.translating') : '🌍 Traduire ma carte'}
           </button>
         </div>
       )}
       <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📄 Importer un menu (PDF ou photo)</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.importTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Envoie une carte existante — Fairide la lit et propose les plats à ajouter. Tu relis et corriges avant que rien ne soit ajouté à ton menu. La lecture peut prendre quelques minutes (1-2 min) selon la taille du document.
+          {t('menuPage.importIntro')}
         </p>
         <input
           ref={importFileRef}
@@ -494,7 +489,7 @@ export default function MenuPage() {
         />
         {!importedItems && (
           <button type="button" className="btn-teal" disabled={importing} onClick={() => importFileRef.current?.click()}>
-            {importing ? 'Lecture du menu en cours...' : '+ Choisir un fichier'}
+            {importing ? t('menuPage.readingMenu') : t('menuPage.chooseFile')}
           </button>
         )}
         {importedItems && (
@@ -512,17 +507,16 @@ export default function MenuPage() {
 
       {restaurant.menu.length === 0 && !startChoiceMade && (
         <div className="card" style={{ border: '2px solid var(--teal)' }}>
-          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚀 Démarrez en 1 clic</h3>
+          <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('menuPage.quickStartTitle')}</h3>
           <p className="small" style={{ margin: '0 0 12px' }}>
-            Votre type de commerce est <b>{restaurant.cuisine}</b>. Fairide peut générer un menu complet tout de suite,
-            avec photos incluses automatiquement — choisissez plat par plat ce que vous gardez, section par section.
+            {t('menuPage.quickStart1')} <b>{restaurant.cuisine}</b>{t('menuPage.quickStart2')}
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
-                🍽 Choisir mes plats de départ ({fullTemplateItems(restaurant.cuisine).length} suggestions)
+                {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
               </button>
-              <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>✏️ Je crée moi-même mon menu</button>
+              <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>{t('menuPage.createMyself')}</button>
             </div>
           ) : (
             <TemplatePicker
@@ -537,12 +531,12 @@ export default function MenuPage() {
       )}
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Ton menu</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Clique sur un plat pour le modifier. Sur chaque section : ☑️ pour sélectionner plusieurs plats et les supprimer d'un coup, ↕️ pour les réorganiser, 🖼️ pour choisir une photo utilisée pour tous les plats de la section qui n'ont pas déjà la leur, ✏️ pour la renommer, 🗑️ pour la supprimer.
+          {t('menuPage.menuHelp')}
         </p>
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
-          <div className="small" style={{ marginBottom: 10 }}>Pas encore de section — crée-en une pour commencer à ajouter des plats.</div>
+          <div className="small" style={{ marginBottom: 10 }}>{t('menuPage.noSection')}</div>
         )}
         {(restaurant.sections || []).map((section) => {
           const rawItems = restaurant.menu.filter((i) => (i.category || 'plat') === section.name);
@@ -561,7 +555,7 @@ export default function MenuPage() {
                     <div className="row" style={{ gap: 6 }}>
                       <input style={{ width: 180 }} value={editSectionName} onChange={(e) => setEditSectionName(e.target.value)} />
                       <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={() => handleSectionRename(section.id)}>OK</button>
-                      <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setEditingSectionId(null)}>Annuler</button>
+                      <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setEditingSectionId(null)}>{t('menuPage.cancel')}</button>
                     </div>
                   ) : (
                     <span>{categoryLabel(section.name, t)}</span>
@@ -570,19 +564,19 @@ export default function MenuPage() {
                 {editingSectionId !== section.id && (
                   <div className="row" style={{ gap: 4 }}>
                     {reorderSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleReorderSection(section.id)}>✅ Terminé</button>
+                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : selectSectionId === section.id ? (
-                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>✅ Terminé</button>
+                      <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : !reorderSectionId && !selectSectionId && (
                       <>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title="Sélectionner plusieurs plats">☑️</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title="Réorganiser les plats">↕️</button>
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title="Choisir une photo pour toute la section">🖼️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}>☑️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}>↕️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title={t('menuPage.sectionPhoto')}>🖼️</button>
                         {section.imageUrl && (
-                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title="Retirer la photo de section">🖼️✕</button>
+                          <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => saveSectionImage(section, '')} title={t('menuPage.removeSectionPhoto')}>🖼️✕</button>
                         )}
-                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title="Renommer la section">✏️</button>
-                        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title="Supprimer la section">🗑️</button>
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => { setEditingSectionId(section.id); setEditSectionName(section.name); }} title={t('menuPage.renameSection')}>✏️</button>
+                        <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px' }} onClick={() => deleteSection(section)} title={t('menuPage.deleteSection')}>🗑️</button>
                       </>
                     )}
                   </div>
@@ -590,14 +584,14 @@ export default function MenuPage() {
               </div>
               {selectSectionId === section.id && (
                 <div className="row" style={{ gap: 8, alignItems: 'center', margin: '6px 0 10px', flexWrap: 'wrap' }}>
-                  <span className="small">{selectedIds.size} plat(s) sélectionné(s)</span>
+                  <span className="small">{t('menuPage.nSelected', { n: selectedIds.size })}</span>
                   <button type="button" className="btn-danger-ghost" disabled={!selectedIds.size || bulkDeleting} onClick={bulkDeleteSelected}>
-                    {bulkDeleting ? '...' : '🗑️ Supprimer la sélection'}
+                    {bulkDeleting ? '...' : t('menuPage.deleteSelection')}
                   </button>
                 </div>
               )}
               {reorderSectionId === section.id && (
-                <p className="small" style={{ margin: '2px 0 10px' }}>Glisse un plat par sa poignée ⠿ (souris ou doigt) pour changer son ordre, puis clique sur "Terminé".</p>
+                <p className="small" style={{ margin: '2px 0 10px' }}>{t('menuPage.dragHelp')}</p>
               )}
               <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(section, items, e)}>
                 <SortableContext items={items.map((i) => i.id)} strategy={rectSortingStrategy}>
@@ -636,10 +630,10 @@ export default function MenuPage() {
               <div className="menu-grid dashboard-menu-grid">
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
                   <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
-                    <div className="field"><label>Nom</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder="Poke bowl saumon" /></div>
-                    <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                    <div className="field"><label>{t('menuPage.name')}</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
+                    <div className="field"><label>{t('menuPage.price')}</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
-                      <label>Image (optionnel)</label>
+                      <label>{t('menuPage.imageOptional')}</label>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         {itemName.trim() && (
                           resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections) ? (
@@ -648,21 +642,21 @@ export default function MenuPage() {
                             <span className="dish-thumb-empty">{categoryEmoji(itemCategory)}</span>
                           )
                         )}
-                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />
+                        <input style={{ flex: 1 }} value={itemImageUrl} onChange={(e) => setItemImageUrl(e.target.value)} placeholder={t('menuPage.phPhotoUrl')} />
                       </div>
                       <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setAddItemGalleryOpen(true)}>
-                        📷 Depuis ma galerie
+                        {t('menuPage.fromGallery')}
                       </button>
                     </div>
                     <div className="row" style={{ gap: 8 }}>
-                      <button className="btn-teal" onClick={addMenuItem}>Ajouter</button>
-                      <button className="btn-ghost" onClick={() => setAddSectionId(null)}>Fermer</button>
+                      <button className="btn-teal" onClick={addMenuItem}>{t('menuPage.add')}</button>
+                      <button className="btn-ghost" onClick={() => setAddSectionId(null)}>{t('menuPage.close')}</button>
                     </div>
                     {addItemGalleryOpen && (
                       <GalleryPickerModal
                         restoId={restoId}
                         suggestions={galleryForSection(restaurant.cuisine, itemCategory)}
-                        suggestionsTitle={`Photos suggérées — ${categoryLabel(itemCategory, t)}`}
+                        suggestionsTitle={t('menuPage.suggestedPhotos', { section: categoryLabel(itemCategory, t) })}
                         onSelect={(url) => { setItemImageUrl(url); setAddItemGalleryOpen(false); }}
                         onCancel={() => setAddItemGalleryOpen(false)}
                       />
@@ -670,7 +664,7 @@ export default function MenuPage() {
                   </div>
                 ) : (
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
-                    + Ajouter un élément
+                    {t('menuPage.addItem')}
                   </button>
                 ))}
               </div>
@@ -679,21 +673,21 @@ export default function MenuPage() {
         })}
         {!reorderSectionId && !selectSectionId && (creatingSection ? (
           <div className="row" style={{ gap: 8 }}>
-            <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder="Menu enfants, Formules midi..." />
-            <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>Créer</button>
-            <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setCreatingSection(false)}>Annuler</button>
+            <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder={t('menuPage.phSectionName')} />
+            <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>{t('menuPage.create')}</button>
+            <button className="btn-ghost" style={{ padding: '4px 10px' }} onClick={() => setCreatingSection(false)}>{t('menuPage.cancel')}</button>
           </div>
         ) : (
-          <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>+ Nouvelle section</button>
+          <button type="button" className="btn-ghost" onClick={() => setCreatingSection(true)}>{t('menuPage.newSection')}</button>
         ))}
       </div>
 
       {sectionGalleryFor && (
         <GalleryPickerModal
           restoId={restoId}
-          title={`Photo de la section "${categoryLabel(sectionGalleryFor.name, t)}"`}
+          title={t('menuPage.sectionPhotoTitle', { section: categoryLabel(sectionGalleryFor.name, t) })}
           suggestions={galleryForSection(restaurant.cuisine, sectionGalleryFor.name)}
-          suggestionsTitle={`Photos suggérées — ${categoryLabel(sectionGalleryFor.name, t)}`}
+          suggestionsTitle={t('menuPage.suggestedPhotos', { section: categoryLabel(sectionGalleryFor.name, t) })}
           currentImageUrl={sectionGalleryFor.imageUrl}
           onSelect={(url) => saveSectionImage(sectionGalleryFor, url)}
           onCancel={() => setSectionGalleryFor(null)}
@@ -703,18 +697,16 @@ export default function MenuPage() {
       {sectionApplyPanel && createPortal(
         <div className="modal-overlay" onClick={() => setSectionApplyPanel(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>Appliquer cette photo à quels plats ?</h3>
+            <h3 style={{ margin: '0 0 4px', fontSize: 16 }}>{t('menuPage.applyPhotoTo')}</h3>
             <p className="small" style={{ margin: '0 0 12px' }}>
-              La photo est déjà celle par défaut de la section "{categoryLabel(sectionApplyPanel.section.name, t)}" pour les plats
-              sans photo propre. Tu peux en plus l'appliquer directement sur des plats précis (utile pour remplacer une photo
-              déjà présente) — décoche ceux à laisser tels quels, ou ignore pour ne rien changer aux plats.
+              {t('menuPage.applyPanelHelp', { section: categoryLabel(sectionApplyPanel.section.name, t) })}
             </p>
             <div className="row" style={{ gap: 8, marginBottom: 10 }}>
               <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set(sectionApplyPanel.items.map((i) => i.id)))}>
-                Tout sélectionner
+                {t('menuPage.selectAll')}
               </button>
               <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setApplySelectedIds(new Set())}>
-                Tout désélectionner
+                {t('menuPage.deselectAll')}
               </button>
             </div>
             <div style={{ maxHeight: 260, overflowY: 'auto', marginBottom: 14 }}>
@@ -728,16 +720,16 @@ export default function MenuPage() {
                   />
                   <span>{item.name}</span>
                   {item.imageUrl && item.imageUrl !== sectionApplyPanel.section.imageUrl && (
-                    <span className="small" style={{ opacity: 0.7 }}>(a déjà sa propre photo)</span>
+                    <span className="small" style={{ opacity: 0.7 }}>{t('menuPage.hasOwnPhoto')}</span>
                   )}
                 </label>
               ))}
             </div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn-teal" disabled={applyingImage || applySelectedIds.size === 0} onClick={applyImageToItems}>
-                {applyingImage ? '...' : `Appliquer à ${applySelectedIds.size} plat(s)`}
+                {applyingImage ? '...' : t('menuPage.applyToN', { n: applySelectedIds.size })}
               </button>
-              <button className="btn-ghost" disabled={applyingImage} onClick={() => setSectionApplyPanel(null)}>Ignorer</button>
+              <button className="btn-ghost" disabled={applyingImage} onClick={() => setSectionApplyPanel(null)}>{t('menuPage.skip')}</button>
             </div>
           </div>
         </div>,
@@ -755,24 +747,24 @@ export default function MenuPage() {
         <>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
             <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
-              {addingClassicDrinks ? '...' : '+ Ajouter les boissons classiques'}
+              {addingClassicDrinks ? '...' : t('menuPage.addClassicDrinks')}
             </button>
             <button type="button" className="btn-ghost" disabled={addingClassicDesserts} onClick={() => addClassics(CLASSIC_DESSERTS, 'dessert', setAddingClassicDesserts)}>
-              {addingClassicDesserts ? '...' : '+ Ajouter les desserts classiques'}
+              {addingClassicDesserts ? '...' : t('menuPage.addClassicDesserts')}
             </button>
           </div>
 
           {!templateOpen && (
-            <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>+ Piocher d'autres plats types dans le menu de démarrage</button>
+            <button type="button" className="btn-ghost" onClick={() => setTemplateOpen(true)}>{t('menuPage.pickMoreTemplate')}</button>
           )}
           {templateOpen && (
             <div className="card">
-              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>Plats types — {restaurant.cuisine}</h3>
-              <p className="small" style={{ margin: '0 0 10px' }}>Coche les plats à ajouter à ton menu (avec photos automatiques) — tu pourras ensuite les modifier ou les supprimer.</p>
+              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.typicalDishes', { cuisine: restaurant.cuisine })}</h3>
+              <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.pickHelp')}</p>
               <TemplatePicker
                 template={getStarterTemplate(restaurant.cuisine)}
                 submitting={addingTemplate}
-                submitLabel="Ajouter la sélection"
+                submitLabel={t('menuPage.addSelection')}
                 onSubmit={addStarterTemplateItems}
                 onCancel={() => setTemplateOpen(false)}
               />

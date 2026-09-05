@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import ContactSection from '../components/ContactSection';
 import usePageMeta from '../hooks/usePageMeta';
 import RetourCompte from '../components/RetourCompte';
+import Rich from '../components/Rich';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Centre d'aide — la destination des rubriques d'assistance de « Mon compte ».
 //
@@ -13,35 +15,28 @@ import { useAuth } from '../context/AuthContext';
 // ne se pose pas — et mieux que de poser une rubrique qui n'ouvre rien.
 //
 // Publique à dessein : quelqu'un qui hésite à commander doit pouvoir lire comment on le fait payer
-// avant de créer un compte.
+// avant de créer un compte. Le texte est dans translations.js (espace `help`), en trois langues.
 
 // Chaque entrée du menu Compte arrive ici avec son sujet, ce qui pré-remplit le message du
 // formulaire. Sans ça, « Signaler un bug » et « Donner mon avis » aboutiraient au même champ vide
 // et l'utilisateur devrait réexpliquer ce sur quoi il vient pourtant de cliquer.
-const SUJETS = {
-  bug: {
-    titre: 'Signaler un bug',
-    intro: "Décris ce que tu faisais, ce que tu attendais, et ce qui s'est passé à la place. Si tu peux, précise ton appareil et ton navigateur : c'est souvent ce qui permet de reproduire le problème.",
-    message: "Bonjour,\n\nJ'ai rencontré un problème sur Fairide.\n\nCe que je faisais :\nCe que j'attendais :\nCe qui s'est passé :\nMon appareil / navigateur :\n"
-  },
-  avis: {
-    titre: 'Donner mon avis sur Fairide',
-    intro: "Ce qui te plaît, ce qui t'agace, ce qui manque. On lit tout — c'est comme ça que la plateforme avance.",
-    message: 'Bonjour,\n\nVoici mon avis sur Fairide :\n\n'
-  }
-};
+const SUJETS = ['bug', 'avis'];
+// Les réponses, dans l'ordre : identifiant d'ancre (cible des liens de Mon compte) et nombre de paragraphes.
+const REPONSES = [['paiement', 3], ['titres-restaurant', 2], ['adresse', 1], ['commande', 1]];
+const CLE_REPONSE = { paiement: 'payment', 'titres-restaurant': 'vouchers', adresse: 'address', commande: 'order' };
 
 export default function HelpPage() {
   const [params] = useSearchParams();
   const { user } = useAuth();
-  const sujet = SUJETS[params.get('sujet')] || null;
-  usePageMeta({ title: 'Aide et contact — Fairide', path: '/aide' });
+  const { t } = useLanguage();
+  const sujet = SUJETS.includes(params.get('sujet')) ? params.get('sujet') : null;
+  usePageMeta({ title: t('help.pageTitle'), path: '/aide' });
 
   // Arrivée depuis « Moyens de paiement » ou « Titres restaurant » : on amène directement à la
   // bonne réponse. Le navigateur ne le fait pas seul, l'ancre étant rendue après la navigation.
   const ancre = params.get('sujet');
   useEffect(() => {
-    if (!ancre || SUJETS[ancre]) return;
+    if (!ancre || SUJETS.includes(ancre)) return;
     const cible = document.getElementById(ancre);
     if (!cible) return;
 
@@ -73,79 +68,36 @@ export default function HelpPage() {
     return () => minuteurs.forEach(clearTimeout);
   }, [ancre]);
 
+  // Le lien « Mes commandes » mène un client à ses commandes, tout autre visiteur à son compte.
+  const lienCommandes = user?.role === 'client' ? '/orders' : '/account';
+
   return (
     <div>
       <RetourCompte />
-      <h2 className="section-title" style={{ marginTop: 0 }}>{sujet ? sujet.titre : 'Aide et contact'}</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{sujet ? t(`help.${sujet}Title`) : t('help.title')}</h2>
 
-      {sujet && <p className="small" style={{ margin: '-6px 0 16px' }}>{sujet.intro}</p>}
+      {sujet && <p className="small" style={{ margin: '-6px 0 16px' }}>{t(`help.${sujet}Intro`)}</p>}
 
-      {!sujet && (
-        <>
-          <div className="card" id="paiement">
-            <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>💳 Moyens de paiement</h3>
-            <p className="small" style={{ margin: '0 0 10px' }}>
-              <b>Fairide n'enregistre aucune carte bancaire.</b> Il n'y a donc pas de moyen de paiement
-              à gérer ici, et rien à supprimer si tu changes de carte. À chaque commande, tu es
-              redirigé vers une page de paiement <b>Stripe</b>, qui traite seule tes coordonnées
-              bancaires — nous ne les voyons jamais et ne les stockons nulle part.
+      {!sujet && REPONSES.map(([id, n]) => (
+        <div className="card" id={id} key={id}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>{t(`help.${CLE_REPONSE[id]}Title`)}</h3>
+          {Array.from({ length: n }, (_, i) => (
+            <p key={i} className="small" style={{ margin: i === n - 1 ? 0 : '0 0 10px' }}>
+              <Rich text={t(`help.${CLE_REPONSE[id]}${i + 1}`).replace('{ordersLink}', lienCommandes)} />
             </p>
-            <p className="small" style={{ margin: '0 0 10px' }}>
-              Si ton navigateur ou ton téléphone propose d'enregistrer ta carte au moment de payer,
-              c'est Stripe, Apple&nbsp;Pay ou Google&nbsp;Pay qui la conserve — pas Fairide.
-            </p>
-            <p className="small" style={{ margin: 0 }}>
-              Tu disposes en revanche d'un <b>solde Fairide</b>, alimenté par les codes promo et le
-              parrainage. Il se déduit automatiquement de tes commandes et se consulte en haut de
-              {' '}<Link to="/account">Mon compte</Link>.
-            </p>
-          </div>
-
-          <div className="card" id="titres-restaurant">
-            <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>🎫 Titres-restaurant</h3>
-            <p className="small" style={{ margin: '0 0 10px' }}>
-              <b>Fairide n'accepte pas encore les titres-restaurant</b> — ni Monizze, ni Edenred, ni
-              Sodexo. On préfère l'écrire noir sur blanc plutôt que de te le faire découvrir au
-              moment de payer.
-            </p>
-            <p className="small" style={{ margin: 0 }}>
-              C'est une demande fréquente en Belgique et elle est notée. Si c'est bloquant pour toi,
-              dis-le dans le formulaire ci-dessous : le nombre de demandes décidera de l'ordre des
-              priorités.
-            </p>
-          </div>
-
-          <div className="card" id="adresse">
-            <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>📍 Adresse de livraison</h3>
-            <p className="small" style={{ margin: 0 }}>
-              Fairide retient <b>une</b> adresse, celle de ton profil. Elle pré-remplit le formulaire
-              au moment de commander, et tu peux la corriger à ce moment-là sans toucher à ton profil
-              — pratique pour te faire livrer une fois ailleurs. Pour changer l'adresse retenue,
-              modifie-la dans <Link to="/account">Mon compte</Link>.
-            </p>
-          </div>
-
-          <div className="card" id="commande">
-            <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>📦 Un souci avec une commande ?</h3>
-            <p className="small" style={{ margin: 0 }}>
-              Le suivi en direct, le détail et le reçu de chaque commande sont dans
-              {' '}<Link to={user?.role === 'client' ? '/orders' : '/account'}>Mes commandes</Link>.
-              Pour un problème sur une commande précise, indique son numéro dans le formulaire :
-              c'est ce qui permet de la retrouver tout de suite.
-            </p>
-          </div>
-        </>
-      )}
+          ))}
+        </div>
+      ))}
 
       {sujet && (
         <p className="small" style={{ margin: '0 0 16px' }}>
-          <Link to="/aide">← Voir toutes les réponses</Link>
+          <Rich text={`[${t('help.seeAllAnswers')}](/aide)`} />
         </p>
       )}
 
       {/* La clé force le remontage en changeant de sujet : sans elle, passer de « bug » à « avis »
           garderait la trame précédente, puisqu'un état initial ne se relit pas. */}
-      <ContactSection key={ancre || 'general'} messageInitial={sujet?.message} />
+      <ContactSection key={ancre || 'general'} messageInitial={sujet ? t(`help.${sujet}Message`) : undefined} />
     </div>
   );
 }

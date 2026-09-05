@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ResetPassword() {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
   const [password, setPassword] = useState('');
@@ -16,13 +18,13 @@ export default function ResetPassword() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!token) { toast('Lien invalide — demande un nouveau lien de réinitialisation.'); return; }
+    if (!token) { toast(t('resetPassword.toastInvalid')); return; }
     if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
-      toast('Le mot de passe doit faire au moins 5 caractères et contenir une majuscule et une minuscule.');
+      toast(t('resetPassword.toastWeak'));
       return;
     }
     if (password !== passwordConfirm) {
-      toast('Les deux mots de passe ne correspondent pas.');
+      toast(t('resetPassword.toastMismatch'));
       return;
     }
     setLoading(true);
@@ -40,28 +42,28 @@ export default function ResetPassword() {
     <div className="decor-page auth-decor">
       <div className="auth-box">
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Nouveau mot de passe</h2>
+          <h2 style={{ marginTop: 0 }}>{t('resetPassword.title')}</h2>
           {!token && (
-            <p className="small" style={{ color: 'var(--red)' }}>Ce lien est invalide. Demande un nouveau lien de réinitialisation depuis la page de connexion.</p>
+            <p className="small" style={{ color: 'var(--red)' }}>{t('resetPassword.invalidLink')}</p>
           )}
           {token && done && (
             <>
-              <p className="small" style={{ marginBottom: 14 }}>Ton mot de passe a été mis à jour. Tu peux maintenant te connecter.</p>
-              <button className="btn-gold btn-block" onClick={() => navigate('/login')}>Se connecter</button>
+              <p className="small" style={{ marginBottom: 14 }}>{t('resetPassword.updated')}</p>
+              <button className="btn-gold btn-block" onClick={() => navigate('/login')}>{t('resetPassword.login')}</button>
             </>
           )}
           {token && !done && (
             <form onSubmit={submit}>
               <div className="field">
-                <label>Nouveau mot de passe</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="5 caractères min., 1 majuscule, 1 minuscule" />
+                <label>{t('resetPassword.title')}</label>
+                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('resetPassword.phPassword')} />
               </div>
               <div className="field">
-                <label>Confirme le nouveau mot de passe</label>
-                <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder="Retape le même mot de passe" />
+                <label>{t('resetPassword.confirm')}</label>
+                <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('resetPassword.phConfirm')} />
               </div>
               <button type="submit" className="btn-gold btn-block" disabled={loading}>
-                {loading ? '...' : 'Réinitialiser mon mot de passe'}
+                {loading ? '...' : t('resetPassword.submit')}
               </button>
             </form>
           )}

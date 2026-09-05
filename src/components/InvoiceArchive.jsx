@@ -3,6 +3,7 @@ import { api, apiDownload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from './Skeleton';
+import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // Archive des factures émises, partagée par le restaurateur (factures de commission) et le livreur
 // (autofacturations). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
@@ -12,18 +13,20 @@ import { SkeletonCards } from './Skeleton';
 function formatPeriod(start, end) {
   const s = new Date(start);
   const e = new Date(end);
-  const mois = s.toLocaleDateString('fr-BE', { month: 'long', year: 'numeric' });
-  const jours = `${s.toLocaleDateString('fr-BE')} → ${e.toLocaleDateString('fr-BE')}`;
+  const mois = s.toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
+  const jours = `${s.toLocaleDateString(getLocale())} → ${e.toLocaleDateString(getLocale())}`;
   return { mois, jours };
 }
 
-const STATUS_LABEL = {
-  emise: { texte: 'Émise', pill: 'pill' },
-  payee: { texte: 'Payée', pill: 'pill teal' },
-  annulee: { texte: 'Annulée', pill: 'pill' }
-};
+// Résolu au rendu (t n'existe pas au niveau module).
+const statusLabels = (t) => ({
+  emise: { texte: t('invoiceArchive.statusIssued'), pill: 'pill' },
+  payee: { texte: t('invoiceArchive.statusPaid'), pill: 'pill teal' },
+  annulee: { texte: t('invoiceArchive.statusCancelled'), pill: 'pill' }
+});
 
 export default function InvoiceArchive({ endpoint, pdfPath, titre, description, colonneMontant }) {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [data, setData] = useState(null);
@@ -58,7 +61,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
 
       {invoices.length === 0 && (
         <div className="empty">
-          Aucune facture émise pour l'instant. Elles apparaîtront ici dès la première période facturée.
+          {t('invoiceArchive.none')}
         </div>
       )}
 
@@ -67,20 +70,20 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
           <table className="invoice-table">
             <thead>
               <tr>
-                <th>Numéro</th>
-                <th>Période</th>
-                <th>Émise le</th>
-                <th className="num">Montant HT</th>
+                <th>{t('invoiceArchive.number')}</th>
+                <th>{t('invoiceArchive.period')}</th>
+                <th>{t('invoiceArchive.issuedOn')}</th>
+                <th className="num">{t('invoiceArchive.amountExVat')}</th>
                 <th className="num">TVA</th>
                 <th className="num">{colonneMontant}</th>
-                <th>Statut</th>
-                <th aria-label="Téléchargement" />
+                <th>{t('invoiceArchive.status')}</th>
+                <th aria-label={t('invoiceArchive.download')} />
               </tr>
             </thead>
             <tbody>
               {invoices.map((inv) => {
                 const p = formatPeriod(inv.periodStart, inv.periodEnd);
-                const st = STATUS_LABEL[inv.status] || STATUS_LABEL.emise;
+                const st = statusLabels(t)[inv.status] || STATUS_LABEL.emise;
                 return (
                   <tr key={inv.id}>
                     <td><b>{inv.invoiceNumber}</b></td>
@@ -88,14 +91,14 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
                       <div style={{ textTransform: 'capitalize' }}>{p.mois}</div>
                       <div className="small">{p.jours}</div>
                     </td>
-                    <td>{new Date(inv.issuedAt).toLocaleDateString('fr-BE')}</td>
+                    <td>{new Date(inv.issuedAt).toLocaleDateString(getLocale())}</td>
                     <td className="num">{inv.subtotalHt.toFixed(2)}€</td>
                     <td className="num">
                       {inv.vatAmount.toFixed(2)}€
                       {/* En franchise de TVA, un taux à 0 n'est pas une erreur d'affichage mais le régime
                           du livreur : on le nomme, sinon la ligne paraît incomplète. */}
                       {inv.vatStatus === 'franchise'
-                        ? <div className="small">Franchise</div>
+                        ? <div className="small">{t('invoiceArchive.vatExempt')}</div>
                         : <div className="small">{(inv.vatRate * 100).toFixed(0)}%</div>}
                     </td>
                     <td className="num"><b>{inv.totalTtc.toFixed(2)}€</b></td>
@@ -123,13 +126,11 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
           vide sous un tableau de factures, ou pire, laisser croire que le PDF est complet. */}
       {data.fairide && (data.fairide.configured ? (
         <p className="small" style={{ marginTop: 14, opacity: 0.8 }}>
-          Émetteur : {data.fairide.legalName}
-          {data.fairide.vatNumber ? ` · TVA ${data.fairide.vatNumber}` : ''}
+          {t('invoiceArchive.issuer', { name: data.fairide.legalName })}{data.fairide.vatNumber ? t('invoiceArchive.vatSuffix', { vat: data.fairide.vatNumber }) : ''}
         </p>
       ) : (
         <p className="small" style={{ marginTop: 14 }}>
-          ⚠️ L'identité légale de Fairide n'est pas encore complètement renseignée : certaines mentions
-          obligatoires peuvent manquer sur les PDF.
+          {t('invoiceArchive.legalIncomplete')}
         </p>
       ))}
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import GameFrame from './jeux/GameFrame';
+import GameFrame, { tJeu } from './jeux/GameFrame';
 import { JEUX } from './jeux/jeux';
+import { useLanguage } from '../context/LanguageContext';
 
 // Le choix du mini-jeu à côté de la carte de suivi. Six jeux, chacun avec son meilleur score
 // (localStorage, une clé par jeu — voir jeux.js) ; changer de jeu démonte l'ancien proprement grâce au
@@ -16,6 +17,7 @@ import { JEUX } from './jeux/jeux';
 const CLE_INDEX = 'fairide_game_switcher_index';
 
 export default function GameSwitcher({ width = 140, height = 280, fill = false, large = false, pourquoi }) {
+  const { t } = useLanguage();
   const [index, setIndex] = useState(() => {
     const sauve = Number(localStorage.getItem(CLE_INDEX));
     return Number.isInteger(sauve) && sauve >= 0 && sauve < JEUX.length ? sauve : 0;
@@ -30,25 +32,25 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
     <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}`} style={fill || large ? undefined : { width }}>
       {pourquoi && (
         <div className="game-switcher-entete">
-          <span className="game-switcher-entete-titre">🎮 Mini-jeux</span>
-          <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label="Pourquoi des jeux ?" title="Pourquoi des jeux ?">💡</button>
+          <span className="game-switcher-entete-titre">{t('games.title')}</span>
+          <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label={t('games.why')} title={t('games.why')}>💡</button>
         </div>
       )}
       {pourquoi && pourquoiOuvert && (
         <div className="game-switcher-pourquoi-bulle" role="note">
-          <b>💡 Pourquoi des jeux ?</b> {pourquoi}
-          <button type="button" className="game-switcher-pourquoi-ok" onClick={() => setPourquoiOuvert(false)}>Compris</button>
+          <b>{t('games.whyTitle')}</b> {pourquoi}
+          <button type="button" className="game-switcher-pourquoi-ok" onClick={() => setPourquoiOuvert(false)}>{t('games.gotIt')}</button>
         </div>
       )}
-      <div className="game-switcher-picker" role="tablist" aria-label="Choisir un mini-jeu">
+      <div className="game-switcher-picker" role="tablist" aria-label={t('games.choose')}>
         {JEUX.map((g, i) => (
-          <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label} — ${g.sub}`}
+          <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label} — ${tJeu(t, g, 'sub', g.sub)}`}
             className={`game-switcher-tab${i === index ? ' active' : ''}`} onClick={() => choisir(i)}>
             <span className="game-switcher-tab-emoji" aria-hidden="true">{g.emoji}</span>
             {large && (
               <span className="game-switcher-tab-text">
                 <span className="game-switcher-tab-label">{g.label}</span>
-                <span className="game-switcher-tab-sub">{g.sub}</span>
+                <span className="game-switcher-tab-sub">{tJeu(t, g, 'sub', g.sub)}</span>
               </span>
             )}
           </button>

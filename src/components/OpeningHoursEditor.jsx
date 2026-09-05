@@ -1,4 +1,5 @@
 import { DAY_ORDER, DAY_LABELS_FR } from '../openingHours';
+import { useLanguage } from '../context/LanguageContext';
 
 const MAX_SHIFTS_PER_DAY = 5;
 
@@ -8,6 +9,7 @@ const MAX_SHIFTS_PER_DAY = 5;
 // `value` est l'objet horaires ({mon: [{open,close}], ...} — jour absent ou tableau vide = fermé),
 // `onChange` reçoit le nouvel objet complet à chaque modification.
 export default function OpeningHoursEditor({ value, onChange }) {
+  const { t } = useLanguage();
   const hours = value || {};
 
   function shiftsFor(day) {
@@ -53,11 +55,11 @@ export default function OpeningHoursEditor({ value, onChange }) {
               <span className="opening-hours-day-label">{DAY_LABELS_FR[day]}</span>
               <label className="opening-hours-closed-toggle">
                 <input type="checkbox" checked={closed} onChange={(e) => toggleClosed(day, e.target.checked)} />
-                Fermé
+                {t('hoursEditor.closed')}
               </label>
               {day === 'mon' && (
                 <button type="button" className="btn-ghost opening-hours-apply-all" onClick={applyMondayToAll}>
-                  Appliquer à tous les jours
+                  {t('hoursEditor.applyAllDays')}
                 </button>
               )}
             </div>
@@ -69,12 +71,12 @@ export default function OpeningHoursEditor({ value, onChange }) {
                     <span>à</span>
                     <input type="time" value={shift.close} onChange={(e) => updateShift(day, index, 'close', e.target.value)} />
                     {shifts.length > 1 && (
-                      <button type="button" className="opening-hours-remove-shift" onClick={() => removeShift(day, index)} aria-label="Retirer ce service">✕</button>
+                      <button type="button" className="opening-hours-remove-shift" onClick={() => removeShift(day, index)} aria-label={t('hoursEditor.removeService')}>✕</button>
                     )}
                   </div>
                 ))}
                 {shifts.length < MAX_SHIFTS_PER_DAY && (
-                  <button type="button" className="btn-ghost opening-hours-add-shift" onClick={() => addShift(day)}>+ Ajouter un service</button>
+                  <button type="button" className="btn-ghost opening-hours-add-shift" onClick={() => addShift(day)}>{t('hoursEditor.addService')}</button>
                 )}
               </div>
             )}

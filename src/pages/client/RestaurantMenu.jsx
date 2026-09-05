@@ -15,10 +15,13 @@ import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
 import { localizedItem } from '../../menuTranslation';
+
+// Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
+const DAY_RESA = { mon: 'monday', tue: 'tuesday', wed: 'wednesday', thu: 'thursday', fri: 'friday', sat: 'saturday', sun: 'sunday' };
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -144,16 +147,16 @@ export default function RestaurantMenu() {
 
   function addToCart(item) {
     if (!user) {
-      toast('Connecte-toi ou crée un compte pour commander.');
+      toast(t('restoMenuUi.toastLogin'));
       navigate('/login?audience=client', { state: { from: location.pathname } });
       return;
     }
     if (onlineOrderingDisabled) {
-      toast('Ce restaurant ne propose pas la commande en ligne — réserve une table pour découvrir la carte sur place.');
+      toast(t('restoMenuUi.toastNoOnline'));
       return;
     }
     if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
-      toast('Ce commerce est actuellement fermé.');
+      toast(t('restoMenuUi.toastClosed'));
       return;
     }
     if (cart.hasConflict(id)) {
@@ -210,17 +213,17 @@ export default function RestaurantMenu() {
         {restaurant.hours && (
           openStatus.isExceptionalClosure ? (
             <div className="closed-banner">
-              <div className="closed-banner-title">🏖️ Fermeture exceptionnelle</div>
+              <div className="closed-banner-title">{t('restoMenuUi.exceptionalClosure')}</div>
               {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
               <p className="small" style={{ margin: '4px 0 0' }}>
-                {openStatus.reopensDate ? `Réouverture prévue le ${formatDateFr(openStatus.reopensDate)}` : 'Date de réouverture pas encore communiquée'}
+                {openStatus.reopensDate ? t('restoMenuUi.reopenOn', { date: formatDateFr(openStatus.reopensDate) }) : t('restoMenuUi.reopenUnknown')}
               </p>
             </div>
           ) : openStatus.isOpen ? (
             <div style={{ margin: '0 0 10px' }}>
-              <p className="small" style={{ margin: 0 }}>🕐 Ouvert maintenant · {formatDaySchedule(restaurant.hours, openStatus.todayKey)}</p>
+              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.openNow', { schedule: formatDaySchedule(restaurant.hours, openStatus.todayKey) })}</p>
               <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => setHoursExpanded((v) => !v)}>
-                {hoursExpanded ? 'Masquer les horaires' : 'Voir tous les horaires'}
+                {hoursExpanded ? t('restoMenuUi.hideHours') : t('restoMenuUi.showHours')}
               </button>
               {hoursExpanded && (
                 <div className="closed-banner-schedule">
@@ -230,12 +233,12 @@ export default function RestaurantMenu() {
             </div>
           ) : (
             <div className="closed-banner">
-              <div className="closed-banner-title">🔒 Actuellement fermé</div>
+              <div className="closed-banner-title">{t('restoMenuUi.currentlyClosed')}</div>
               {openStatus.opensToday ? (
-                <p className="small" style={{ margin: 0 }}>Ouvre dans {formatCountdown(openStatus.opensAt - now)} (à {openStatus.opensAt.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })})</p>
+                <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
               ) : (
                 <p className="small" style={{ margin: 0 }}>
-                  Prochaine ouverture : {DAY_LABELS_FR[openStatus.opensDayKey]}, {formatDaySchedule(restaurant.hours, openStatus.opensDayKey)}
+                  {t('restoMenuUi.nextOpening', { day: t(`resa.${DAY_RESA[openStatus.opensDayKey]}`) || DAY_LABELS_FR[openStatus.opensDayKey], schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey) })}
                 </p>
               )}
               <div className="closed-banner-schedule">
@@ -258,11 +261,7 @@ export default function RestaurantMenu() {
         )}
         {(restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
           <div style={{ background: 'var(--teal)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            {restaurant.freeDelivery
-              ? `🚴 Livraison offerte par ${restaurant.name}`
-              : restaurant.freeDeliveryMinOrder != null
-              ? `🚴 Livraison offerte par ${restaurant.name} dès ${restaurant.freeDeliveryMinOrder.toFixed(2)}€ d'achat`
-              : `🚴 -${restaurant.deliveryFeeDiscount.toFixed(2)}€ sur les frais de livraison, offert par ${restaurant.name}`}
+            {restaurant.freeDelivery ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name }) : restaurant.freeDeliveryMinOrder != null ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) }) : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}
           </div>
         )}
         {restaurant.offersDineIn && (
@@ -284,7 +283,7 @@ export default function RestaurantMenu() {
 
       {onlineOrderingDisabled && (
         <div className="card">
-          <p className="small" style={{ margin: 0 }}>🍽️ Ce restaurant fonctionne uniquement sur réservation — la commande en ligne n'est pas disponible ici. Réserve une table pour découvrir la carte sur place.</p>
+          <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.reservationOnlyInfo')}</p>
         </div>
       )}
 

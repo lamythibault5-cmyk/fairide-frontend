@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import TrackingWithGames from '../../components/TrackingWithGames';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
 // accessible en permanence depuis la nav plutôt que caché dans le détail d'une commande. Sans livraison,
@@ -53,6 +54,7 @@ function useMaison(user, orders) {
 }
 
 export default function MapPage() {
+  const { t } = useLanguage();
   const { token, role, user } = useAuth();
   const toast = useToast();
   const { previewMode } = usePreviewMode();
@@ -76,24 +78,24 @@ export default function MapPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!orders) return <div className="empty">Chargement...</div>;
+  if (!orders) return <div className="empty">{t('mapClient.loading')}</div>;
   const inDelivery = orders.filter(
     (o) => o.status === 'livraison' && o.orderType === 'delivery' && o.restaurantLat && o.deliveryLat
   );
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Carte</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapClient.title')}</h2>
       <p className="small" style={{ marginBottom: 16 }}>
-        Suis en direct ta livraison en cours : la position de ton livreur, le trajet qu'il lui reste et son heure d'arrivée estimée.
+        {t('mapClient.intro')}
       </p>
       {inDelivery.length === 0 ? (
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="empty" style={{ marginBottom: 10 }}>Aucune livraison en cours pour le moment — mais les jeux restent jouables !</div>
+          <div className="empty" style={{ marginBottom: 10 }}>{t('mapClient.noneOngoing')}</div>
           <TrackingWithGames
             role="client"
-            legende={`${maison ? 'Voici chez toi. ' : ''}Dès qu'une livraison démarre, ton livreur apparaît ici en direct.`}
-            etaSansEstimation="⏳ Rien en cours"
+            legende={`${maison ? t('mapClient.hereIsHome') : ''}${t('mapClient.whenStarts')}`}
+            etaSansEstimation={t('mapClient.nothingOngoing')}
             rendreCarte={({ height, onEta }) => <DeliveryTrackingMap height={height} onEta={onEta} homeLat={maison?.lat} homeLng={maison?.lng} />}
           />
         </div>
@@ -107,8 +109,8 @@ export default function MapPage() {
             <div className="small" style={{ margin: '4px 0' }}>📍 {o.address}</div>
             <TrackingWithGames
               role="client"
-              legende={o.driverLat ? `🛵 Position de ${o.driverName || 'ton livreur'} en direct` : 'En attente de la position du livreur'}
-              etaSansEstimation={o.driverLat ? '🛵 Livreur en route' : '⏳ Livreur attendu'}
+              legende={o.driverLat ? t('mapClient.livePosition', { name: o.driverName || t('mapClient.yourCourier') }) : t('mapClient.waitingPosition')}
+              etaSansEstimation={o.driverLat ? t('mapClient.courierOnWay') : '⏳ Livreur attendu'}
               rendreCarte={({ height, onEta }) => (
                 <DeliveryTrackingMap
                   restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import GameSwitcher from './GameSwitcher';
+import { useLanguage } from '../context/LanguageContext';
 
 // Le bloc « carte + mini-jeux » commun aux trois pages Carte (client, restaurateur, livreur) : la carte
 // dans sa colonne, les jeux à côté, un bouton pour agrandir, et la vue plein écran avec « Masquer la
@@ -11,11 +12,7 @@ import GameSwitcher from './GameSwitcher';
 // et voie le livreur arriver au lieu de devoir penser à ressortir son téléphone. Le bouton 💡 du
 // sélecteur de jeux l'explique en une phrase, adaptée au rôle (voir POURQUOI).
 
-const POURQUOI = {
-  client: 'Pour rester sur la carte et voir ton livreur arriver sans attendre pour rien — et sans oublier de regarder ton téléphone pour savoir s\'il arrive bientôt.',
-  restaurant: 'Pour garder un œil sur la livraison sans rester planté devant la carte : tu vois le livreur avancer et son heure d\'arrivée chez le client, sans avoir à revenir vérifier.',
-  driver: 'Pour patienter au restaurant pendant que la commande se prépare, sans quitter la carte ni rater le départ. Jamais en roulant, évidemment.'
-};
+const POURQUOI = { client: 'whyClient', restaurant: 'whyRestaurant', driver: 'whyDriver' };
 
 // En dessous de 560px, .tracking-with-game empile la carte au-dessus du jeu (styles.css) : le jeu n'est
 // plus coincé dans une colonne de 140px, on lui donne alors un terrain plus large, plus agréable au pouce.
@@ -31,7 +28,7 @@ function useLargeurFenetre() {
   return largeur;
 }
 
-export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation = '🛵 Livreur en route', hauteur = 300 }) {
+export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300 }) {
   const [pleinEcran, setPleinEcran] = useState(false);
   const empile = useLargeurFenetre() <= EMPILE_BREAKPOINT;
   return (
@@ -41,9 +38,9 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
           {rendreCarte({ height: hauteur })}
           {legende && <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>{legende}</div>}
         </div>
-        <GameSwitcher pourquoi={POURQUOI[role]} width={empile ? 240 : 140} height={empile ? 300 : 280} />
+        <GameSwitcher pourquoi={t(`tracking.${POURQUOI[role]}`)} width={empile ? 240 : 140} height={empile ? 300 : 280} />
       </div>
-      <button type="button" className="tracking-expand-btn" onClick={() => setPleinEcran(true)}>⛶ Agrandir la carte et les jeux</button>
+      <button type="button" className="tracking-expand-btn" onClick={() => setPleinEcran(true)}>{t('tracking.enlarge')}</button>
       {pleinEcran && (
         <TrackingFullscreen role={role} rendreCarte={rendreCarte} legende={legende} etaSansEstimation={etaSansEstimation} onClose={() => setPleinEcran(false)} />
       )}
@@ -77,6 +74,7 @@ function useFullscreenSizes() {
 }
 
 function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, onClose }) {
+  const { t } = useLanguage();
   const [carteMasquee, setCarteMasquee] = useState(false);
   const [eta, setEta] = useState(null);
 
@@ -97,14 +95,14 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, onC
     <div className="tracking-fullscreen-overlay">
       <div className="tracking-fullscreen-bar">
         <button type="button" className="tracking-fullscreen-toggle" onClick={() => setCarteMasquee((m) => !m)} aria-pressed={carteMasquee}>
-          {carteMasquee ? '🗺️ Afficher la carte' : '🙈 Masquer la carte'}
+          {carteMasquee ? t('tracking.showMap') : t('tracking.hideMap')}
         </button>
         {carteMasquee && (
           <span className="tracking-fullscreen-eta" aria-live="polite">
-            {eta ? `${role === 'driver' ? '🏁 Arrivée' : '🛵 Arrive'} dans ~${eta.minutes} min` : etaSansEstimation}
+            {eta ? (role === 'driver' ? t('tracking.etaDriver', { min: eta.minutes }) : t('tracking.etaClient', { min: eta.minutes })) : (etaSansEstimation || t('tracking.courierOnWay'))}
           </span>
         )}
-        <button type="button" className="tracking-fullscreen-close" onClick={onClose} aria-label="Fermer">✕</button>
+        <button type="button" className="tracking-fullscreen-close" onClick={onClose} aria-label={t('tracking.close')}>✕</button>
       </div>
       <div className={`tracking-fullscreen-split${carteMasquee ? ' carte-masquee' : ''}`}>
         <div className="tracking-fullscreen-map" hidden={carteMasquee}>
@@ -112,7 +110,7 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, onC
           {legende && <div className="small tracking-fullscreen-map-caption">{legende}</div>}
         </div>
         <div className="tracking-fullscreen-game">
-          <GameSwitcher fill large pourquoi={POURQUOI[role]} />
+          <GameSwitcher fill large pourquoi={t(`tracking.${POURQUOI[role]}`)} />
         </div>
       </div>
     </div>,

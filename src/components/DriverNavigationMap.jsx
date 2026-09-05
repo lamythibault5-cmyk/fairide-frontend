@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // Variante de DeliveryTrackingMap orientée navigation pour le livreur lui-même : au lieu de montrer le
 // trajet fixe restaurant → client avec un livreur observé de l'extérieur, celle-ci trace le trajet depuis
@@ -36,6 +37,7 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
 }
 
 export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280 }) {
+  const { t } = useLanguage();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);
@@ -156,18 +158,18 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
       {eta && (
         <div className="tracking-eta-pill" aria-live="polite">
-          🏁 Arrivée dans <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString('fr-BE')} km</span>
+          {t('navMap.arrivalIn')} <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString(getLocale())} km</span>
         </div>
       )}
       {recentrable && (
         <div className="tracking-map-controls">
-          <button type="button" className="tracking-map-follow-driver" onClick={recentrer}>🎯 Recentrer</button>
+          <button type="button" className="tracking-map-follow-driver" onClick={recentrer}>{t('navMap.recenter')}</button>
         </div>
       )}
       </div>
       <div className="tracking-map-legend">
-        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Toi</span>
-        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || 'Prochain arrêt'}</span>}
+        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> {t('navMap.you')}</span>
+        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || t('navMap.nextStop')}</span>}
       </div>
     </div>
   );

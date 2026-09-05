@@ -1,4 +1,4 @@
-import { useLanguage } from './context/LanguageContext';
+import { useLanguage, getLocale } from './context/LanguageContext';
 
 export const DELIVERY_INSTRUCTION_OPTIONS = [
   { value: 'sonner', label: '🔔 Sonner et attendre', icon: '🔔' },
@@ -127,14 +127,14 @@ export function orderTypeLabel(order, t) {
 }
 
 function formatTime(ms) {
-  return new Date(ms).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+  return new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function formatDateTime(ms) {
   const isToday = new Date(ms).toDateString() === new Date().toDateString();
   return isToday
     ? formatTime(ms)
-    : new Date(ms).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    : new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 export function DeliveryTiming({ order }) {

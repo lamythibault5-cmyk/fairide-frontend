@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useLanguage } from '../context/LanguageContext';
 
 // Galerie personnelle du restaurant : upload depuis la pellicule/galerie du téléphone ou le disque de
 // l'ordi/tablette (comportement natif de <input type="file" accept="image/*">, rien à coder de plus
@@ -13,6 +14,7 @@ import { useToast } from '../context/ToastContext';
 // suggestions : pool de photos pré-sélectionnées (ex: par type de commerce pour la photo d'accueil) affiché
 // dans une section à part au-dessus de la galerie perso — pas de suppression possible sur ces vignettes.
 export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect, onCancel, suggestions = [], title = 'Ma galerie photos', suggestionsTitle = 'Suggestions' }) {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [images, setImages] = useState(null);
@@ -87,20 +89,20 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
     return createPortal(
       <div className="modal-overlay" onClick={onCancel}>
         <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>Garder l'ancienne photo ?</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('gallery.keepOldTitle')}</h3>
           <p className="small" style={{ margin: '0 0 14px' }}>
-            Tu es sur le point de remplacer la photo actuelle de ce plat. Veux-tu la garder dans ta galerie pour pouvoir la réutiliser plus tard ?
+            {t('gallery.keepOldBody')}
           </p>
           <div className="row" style={{ gap: 14, alignItems: 'center', marginBottom: 16 }}>
-            <img src={currentImageUrl} alt="Photo actuelle" className="dish-thumb" />
+            <img src={currentImageUrl} alt={t('gallery.currentPhoto')} className="dish-thumb" />
             <span style={{ fontSize: 20 }}>→</span>
-            <img src={pendingUrl} alt="Nouvelle photo" className="dish-thumb" />
+            <img src={pendingUrl} alt={t('gallery.newPhoto')} className="dish-thumb" />
           </div>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <button type="button" className="btn-teal" disabled={keeping} onClick={keepOldAndSwitch}>
-              {keeping ? '...' : '✅ Oui, la garder dans ma galerie'}
+              {keeping ? '...' : t('gallery.yesKeep')}
             </button>
-            <button type="button" className="btn-ghost" disabled={keeping} onClick={discardOldAndSwitch}>Non merci</button>
+            <button type="button" className="btn-ghost" disabled={keeping} onClick={discardOldAndSwitch}>{t('gallery.noThanks')}</button>
           </div>
         </div>
       </div>,
@@ -119,7 +121,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
             <div className="gallery-picker-grid" style={{ marginBottom: 16 }}>
               {suggestions.map((url) => (
                 <div key={url} className="gallery-picker-tile">
-                  <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(url)} title="Utiliser cette photo">
+                  <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(url)} title={t('gallery.useThis')}>
                     <img loading="lazy" src={url} alt="" />
                   </button>
                 </div>
@@ -130,7 +132,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
         )}
 
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Ajoute des photos depuis ton téléphone (pellicule ou appareil photo) ou ton ordinateur, puis choisis-en une.
+          {t('gallery.intro')}
         </p>
 
         <input
@@ -141,17 +143,17 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
           onChange={handleFileChange}
         />
         <button type="button" className="btn-teal" disabled={uploading} onClick={() => fileInputRef.current?.click()} style={{ marginBottom: 14 }}>
-          {uploading ? 'Envoi en cours...' : '+ Ajouter une photo'}
+          {uploading ? t('gallery.uploading') : t('gallery.addPhoto')}
         </button>
 
-        {images === null && <div className="empty">Chargement...</div>}
-        {images !== null && images.length === 0 && <div className="empty">Ta galerie est vide pour l'instant.</div>}
+        {images === null && <div className="empty">{t('gallery.loading')}</div>}
+        {images !== null && images.length === 0 && <div className="empty">{t('gallery.empty')}</div>}
 
         {images !== null && images.length > 0 && (
           <div className="gallery-picker-grid">
             {images.map((img) => (
               <div key={img.id} className="gallery-picker-tile">
-                <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(img.imageUrl)} title="Utiliser cette photo">
+                <button type="button" className="gallery-picker-image-btn" onClick={() => chooseImage(img.imageUrl)} title={t('gallery.useThis')}>
                   <img loading="lazy" src={img.imageUrl} alt="" />
                 </button>
                 <button
@@ -159,7 +161,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
                   className="gallery-picker-delete"
                   disabled={deletingId === img.id}
                   onClick={() => handleDelete(img.id)}
-                  title="Supprimer de la galerie"
+                  title={t('gallery.removeFromGallery')}
                 >
                   {deletingId === img.id ? '...' : '🗑️'}
                 </button>
@@ -169,7 +171,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
         )}
 
         <div className="row" style={{ gap: 8, marginTop: 14 }}>
-          <button type="button" className="btn-ghost" onClick={onCancel}>Fermer</button>
+          <button type="button" className="btn-ghost" onClick={onCancel}>{t('gallery.close')}</button>
         </div>
       </div>
     </div>,

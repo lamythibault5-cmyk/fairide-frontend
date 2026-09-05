@@ -112,7 +112,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
           <button className="map-detail-close" onClick={() => setSelected(null)} aria-label={t('map.backToMapAria')}>✕</button>
           {selected.coverImageUrl && <img loading="lazy" src={selected.coverImageUrl} alt={selected.name} className="map-detail-cover" />}
           <div className="map-detail-body">
-            {selected.hasPromo && <span className="promo-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 6 }}>🏷️ Promo</span>}
+            {selected.hasPromo && <span className="promo-badge" style={{ position: 'static', display: 'inline-block', marginBottom: 6 }}>{t('restoMap.promo')}</span>}
             <div className="pill-row">
               <span className="pill teal">{cuisineEmoji(selected.cuisine)} {restaurantTypeLabel(selected.cuisine, t)}</span>
               <span className="pill gold">{selected.commune}{selected.neighborhood ? ' · ' + selected.neighborhood : ''}</span>

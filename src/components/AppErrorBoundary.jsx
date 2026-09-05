@@ -33,16 +33,15 @@ export default class AppErrorBoundary extends Component {
     return (
       <div className="center-page" style={{ padding: '60px 20px' }}>
         <div style={{ fontSize: 40 }}>😕</div>
-        <h2>Cette page n'a pas pu s'afficher</h2>
+        <h2>{t('errorPage.title')}</h2>
         <p className="small" style={{ maxWidth: 420, margin: '0 auto 20px' }}>
-          Un problème technique est survenu de notre côté. Rien n'est perdu : recharge la page pour
-          reprendre où tu en étais. Si cela se reproduit, écris-nous et nous corrigerons.
+          {t('errorPage.body')}
         </p>
         <div className="row" style={{ gap: 10, justifyContent: 'center' }}>
-          <button className="btn-gold" onClick={() => window.location.reload()}>Recharger la page</button>
+          <button className="btn-gold" onClick={() => window.location.reload()}>{t('errorPage.reload')}</button>
           {/* Lien natif plutôt que <Link> : la limite d'erreur enveloppe le routeur, dont l'état
               vient justement de planter — un rechargement complet est le seul retour fiable. */}
-          <a className="btn-outline" href="/" style={{ textDecoration: 'none' }}>Retour à l'accueil</a>
+          <a className="btn-outline" href="/" style={{ textDecoration: 'none' }}>{t('errorPage.backHome')}</a>
         </div>
       </div>
     );

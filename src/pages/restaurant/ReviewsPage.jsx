@@ -4,11 +4,13 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { StarsDisplay } from '../../components/Stars';
+import { useLanguage } from '../../context/LanguageContext';
 
 // La réponse du restaurateur est publique (visible aux clients sur la fiche resto, voir
 // RestaurantMenu.jsx) — pensée pour se justifier publiquement en cas d'avis contestable, pas comme
 // un canal de discussion privé.
 export default function ReviewsPage() {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const { restaurant, reviews, loadDashboard, restoId } = useOutletContext();
@@ -25,7 +27,7 @@ export default function ReviewsPage() {
     setSaving(true);
     try {
       await api(`/reviews/${reviewId}/reply`, { method: 'PATCH', token, body: { reply: replyDrafts[reviewId] || '' } });
-      toast('Réponse enregistrée.');
+      toast(t('reviewsResto.toastSaved'));
       setEditingId(null);
       await loadDashboard(restoId);
     } catch (e) {
@@ -37,12 +39,12 @@ export default function ReviewsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Avis clients</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('reviewsResto.title')}</h2>
       <div className="row" style={{ gap: 6, marginBottom: 14 }}>
         <StarsDisplay value={restaurant.rating} />
-        <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : "Pas encore d'avis"}</span>
+        <span className="small">{restaurant.reviewCount > 0 ? t('reviewsResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('reviewsResto.noReviewsYet')}</span>
       </div>
-      {(!reviews || reviews.reviews.length === 0) && <div className="empty">Pas encore d'avis client.</div>}
+      {(!reviews || reviews.reviews.length === 0) && <div className="empty">{t('reviewsResto.none')}</div>}
       {reviews && reviews.reviews.length > 0 && (
         <div className="card">
           {reviews.reviews.map((r) => (
@@ -55,13 +57,13 @@ export default function ReviewsPage() {
 
               {r.restaurantReply && editingId !== r.id && (
                 <div style={{ marginTop: 8, paddingLeft: 10, borderLeft: '2px solid var(--teal)' }}>
-                  <div className="small" style={{ fontWeight: 700 }}>Ta réponse</div>
+                  <div className="small" style={{ fontWeight: 700 }}>{t('reviewsResto.yourReply')}</div>
                   <p className="small" style={{ margin: '2px 0 0' }}>{r.restaurantReply}</p>
-                  <button type="button" className="btn-ghost" style={{ marginTop: 4, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>Modifier</button>
+                  <button type="button" className="btn-ghost" style={{ marginTop: 4, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.edit')}</button>
                 </div>
               )}
               {!r.restaurantReply && editingId !== r.id && (
-                <button type="button" className="btn-ghost" style={{ marginTop: 6, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>Répondre</button>
+                <button type="button" className="btn-ghost" style={{ marginTop: 6, fontSize: 12, padding: '2px 8px' }} onClick={() => startReply(r)}>{t('reviewsResto.reply')}</button>
               )}
               {editingId === r.id && (
                 <div style={{ marginTop: 8 }}>
@@ -69,12 +71,12 @@ export default function ReviewsPage() {
                     rows={3}
                     value={replyDrafts[r.id] || ''}
                     onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))}
-                    placeholder="Réponds publiquement pour apporter des précisions ou une justification..."
+                    placeholder={t('reviewsResto.phReply')}
                     style={{ width: '100%' }}
                   />
                   <div className="row" style={{ gap: 8, marginTop: 6 }}>
                     <button type="button" className="btn-teal" disabled={saving} onClick={() => saveReply(r.id)}>{saving ? '...' : 'Enregistrer'}</button>
-                    <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>Annuler</button>
+                    <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>{t('reviewsResto.cancel')}</button>
                   </div>
                 </div>
               )}

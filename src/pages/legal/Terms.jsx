@@ -1,69 +1,25 @@
 import usePageMeta from '../../hooks/usePageMeta';
+import Rich from '../../components/Rich';
+import { useLanguage } from '../../context/LanguageContext';
+
+// Texte dans translations.js (espace `terms`), en trois langues : neuf articles numérotés.
+const ARTICLES = ['object', 'account', 'orders', 'balance', 'fees', 'cancellation', 'reviews', 'liability', 'law'];
 
 export default function Terms() {
-  usePageMeta({ title: 'Conditions générales — Fairide', path: '/cgv' });
+  const { t } = useLanguage();
+  usePageMeta({ title: t('terms.pageTitle'), path: '/cgv' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>
-        ⚠️ Document de travail — à faire relire et compléter par un professionnel avant publication réelle.
+        {t('terms.draftWarning')}
       </div>
-      <h2 style={{ marginTop: 0 }}>Conditions générales d'utilisation et de vente</h2>
-
-      <h3>1. Objet</h3>
-      <p className="small">
-        Fairide est une plateforme mettant en relation des clients, des commerces locaux partenaires (restaurants, supermarchés, commerces de proximité)
-        et des livreurs indépendants, pour la commande et la livraison de produits. Fairide n'est ni un restaurant, ni un service de livraison :
-        elle fournit uniquement l'outil technique de mise en relation et de paiement.
-      </p>
-
-      <h3>2. Compte utilisateur</h3>
-      <p className="small">
-        L'inscription nécessite des informations exactes (identité, coordonnées, adresse). Chaque utilisateur est responsable de la confidentialité
-        de ses identifiants et des actions effectuées depuis son compte.
-      </p>
-
-      <h3>3. Commandes et paiement</h3>
-      <p className="small">
-        Les prix affichés incluent le prix des produits fixé par le commerce partenaire et des frais de livraison. Le paiement est réalisé en ligne
-        via notre prestataire de paiement (Stripe) au moment de la commande. Une commande n'est confirmée qu'une fois le paiement validé.
-      </p>
-
-      <h3>4. Solde Fairide</h3>
-      <p className="small">
-        Un client peut disposer d'un solde crédité par Fairide (promotion, code parrainage, geste commercial). Ce solde n'est pas convertible en
-        espèces, n'est pas transférable, et ne peut être utilisé que pour des commandes sur la plateforme.
-      </p>
-
-      <h3>5. Commission et frais</h3>
-      <p className="small">
-        Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, plafonnée à 10% (hors TVA) du montant des produits.
-        Les commerces partenaires s'acquittent également d'un abonnement mensuel de 20€ leur donnant accès à la plateforme.
-        Les frais de livraison affichés au client sont calculés selon la distance entre le commerce et l'adresse de livraison, et
-        reviennent intégralement au livreur. Un frais de système supplémentaire, égal à 10% du montant de la livraison, est prélevé
-        auprès du client pour couvrir le traitement des paiements et les services de la plateforme — il ne réduit pas la part du livreur.
-      </p>
-
-      <h3>6. Annulation et remboursement</h3>
-      <p className="small">
-        Un commerce partenaire peut refuser une commande avant de la préparer ; dans ce cas, le client est intégralement remboursé
-        (montant payé et solde éventuellement utilisé). Passé ce stade, l'annulation n'est plus possible.
-      </p>
-
-      <h3>7. Avis clients</h3>
-      <p className="small">
-        Les avis publiés doivent être sincères et respectueux. Fairide se réserve le droit de retirer tout avis manifestement abusif,
-        diffamatoire ou hors sujet.
-      </p>
-
-      <h3>8. Responsabilité</h3>
-      <p className="small">
-        Fairide met tout en œuvre pour assurer le bon fonctionnement de la plateforme mais ne garantit pas une disponibilité continue du service.
-        Fairide n'est pas responsable de la qualité des produits fournis par les commerces partenaires ni des délais de livraison,
-        qui dépendent de tiers indépendants.
-      </p>
-
-      <h3>9. Droit applicable</h3>
-      <p className="small">Les présentes conditions sont soumises au droit belge. Tout litige relève des tribunaux compétents de [ville].</p>
+      <h2 style={{ marginTop: 0 }}>{t('terms.title')}</h2>
+      {ARTICLES.map((a, i) => (
+        <div key={a}>
+          <h3>{i + 1}. {t(`terms.${a}Title`)}</h3>
+          <p className="small"><Rich text={t(`terms.${a}`)} /></p>
+        </div>
+      ))}
     </div>
   );
 }

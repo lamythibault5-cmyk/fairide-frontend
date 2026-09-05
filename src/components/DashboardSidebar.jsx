@@ -32,7 +32,7 @@ function navItemsForRole(role, t) {
     return [
       { to: '/dashboard', end: true, icon: '🏪', label: t('nav.myBusiness') },
       { to: '/dashboard/orders', icon: '📦', label: t('nav.orders') },
-      { to: '/dashboard/preview', icon: '👁️', label: 'Aperçu client' },
+      { to: '/dashboard/preview', icon: '👁️', label: t('nav.customerPreview') },
       { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. Neuf onglets ne tiennent pas dans une barre
@@ -108,8 +108,8 @@ export default function DashboardSidebar() {
       </Link>
       {previewMode && role === 'restaurant' && (
         <div className="preview-mode-sidebar-banner">
-          <span>👁️ Mode aperçu client</span>
-          <button type="button" onClick={leavePreview}>Quitter</button>
+          <span>{t('nav.previewModeBanner')}</span>
+          <button type="button" onClick={leavePreview}>{t('nav.leave')}</button>
         </div>
       )}
       {isAdminAccount && <AdminGlobalSearch />}
@@ -128,7 +128,7 @@ export default function DashboardSidebar() {
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
           <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
-          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? 'aperçu client' : isAdminAccount ? 'admin' : role}</span>
+          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? t('nav.customerPreviewLower') : isAdminAccount ? 'admin' : t(`account.role${role.charAt(0).toUpperCase()}${role.slice(1)}`)}</span>
           <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
       </div>

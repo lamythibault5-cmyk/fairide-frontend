@@ -10,12 +10,14 @@ import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : formulaire de création, bannières (validation/abonnement/Stripe),
 // et la carte "Aujourd'hui" de la colonne de droite.
 export default function DashboardLayout() {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
@@ -59,16 +61,16 @@ export default function DashboardLayout() {
     const saved = revenue * 0.30 - commissionPaid;
     setRightSlot(
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Aujourd'hui</h3>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('dashResto.today')}</h3>
         <div className="row" style={{ gap: 6, marginBottom: 10 }}>
           <StarsDisplay value={restaurant.rating} size={16} />
-          <span className="small">{restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} (${restaurant.reviewCount} avis)` : 'Pas encore d\'avis'}</span>
+          <span className="small">{restaurant.reviewCount > 0 ? t('dashResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('dashResto.noReviewsYet')}</span>
         </div>
         <div className="stat-grid">
-          <div className="stat-card"><div className="num">{orders.length}</div><div className="label">Commandes</div></div>
-          <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">Livrées</div></div>
-          <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">CA plats</div></div>
-          <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">Économisé vs les grandes plateformes</div></div>
+          <div className="stat-card"><div className="num">{orders.length}</div><div className="label">{t('dashResto.orders')}</div></div>
+          <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('dashResto.delivered')}</div></div>
+          <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">{t('dashResto.foodRevenue')}</div></div>
+          <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">{t('dashResto.savedVsPlatforms')}</div></div>
         </div>
       </div>
     );
@@ -84,7 +86,7 @@ export default function DashboardLayout() {
       else if (list.length === 0) setNewRestoOpen(true);
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('connect')) {
-      toast('Configuration des paiements en cours de validation (quelques secondes).');
+      toast(t('dashResto.toastPaymentsValidating'));
       window.history.replaceState({}, '', '/dashboard');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,13 +132,13 @@ export default function DashboardLayout() {
   }
 
   async function createResto() {
-    if (!name.trim()) { toast('Donne un nom à ton restaurant.'); return; }
+    if (!name.trim()) { toast(t('dashResto.toastNameRequired')); return; }
     if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim()) {
-      toast("Donne l'adresse complète du restaurant (rue, numéro, code postal) pour les livreurs et la carte.");
+      toast(t('dashResto.toastAddressRequired'));
       return;
     }
     if (!hours || !Object.values(hours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
-      toast('Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.');
+      toast(t('dashResto.toastHoursRequired'));
       return;
     }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
@@ -155,9 +157,9 @@ export default function DashboardLayout() {
       setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
       pickResto(r.id);
       if (r.wantsOwnDriver) {
-        toast("Restaurant créé ! Ajoute maintenant l'email de ton livreur dans la section Livraison pour activer ton propre livreur.");
+        toast(t('dashResto.toastCreatedOwnDriver'));
       } else {
-        toast('Restaurant créé !');
+        toast(t('dashResto.toastCreated'));
       }
     } catch (e) {
       toast(e.message);
@@ -183,88 +185,87 @@ export default function DashboardLayout() {
         <h2 style={{ margin: '0 0 14px' }}>{myRestos[0].name}</h2>
       ) : (
         <div className="card">
-          <h2 style={{ marginTop: 0 }}>Mon restaurant</h2>
+          <h2 style={{ marginTop: 0 }}>{t('dashResto.myRestaurant')}</h2>
           {myRestos.length > 1 && (
             <div className="row" style={{ marginBottom: 10 }}>
               <select style={{ flex: 1 }} value={restoId || ''} onChange={(e) => e.target.value && pickResto(e.target.value)}>
-                <option value="">— Choisir un restaurant —</option>
+                <option value="">{t('dashResto.chooseRestaurant')}</option>
                 {myRestos.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
           )}
           {!newRestoOpen && myRestos.length === 0 && (
-            <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>+ Créer mon restaurant</button>
+            <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>{t('dashResto.createMine')}</button>
           )}
         </div>
       )}
       {newRestoOpen && (
         <div style={{ marginTop: 10 }}>
           <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
-            Une fois créé, Fairide te propose de générer ton menu et ta photo de couverture automatiquement — tu n'as que le strict nécessaire à remplir ici.
+            {t('dashResto.createIntro')}
           </p>
           <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
-            À noter : ton abonnement Fairide (premier mois offert) ne pourra être activé qu'une fois ton compte validé par notre équipe —
-            le temps de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties.
+            {t('dashResto.createNote')}
           </p>
 
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Identité</h4>
-          <div className="field"><label>Nom du commerce</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
+          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
+          <div className="field"><label>{t('dashResto.businessName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field">
-            <label>Type de commerce</label>
+            <label>{t('dashResto.businessType')}</label>
             <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
               {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
             </select>
           </div>
           {cuisine === 'Autre' && (
-            <div className="field"><label>Précise le type</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+            <div className="field"><label>{t('dashResto.specifyType')}</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
           )}
 
           <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Adresse (pour les livreurs et la carte)</h4>
+          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.addressForDrivers')}</h4>
           <div className="field">
-            <label>Commune</label>
+            <label>{t('dashResto.municipality')}</label>
             <select value={commune} onChange={(e) => setCommune(e.target.value)}>
               {COMMUNES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
-          <div className="field"><label>Rue / Avenue</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
+          <div className="field"><label>{t('dashResto.street')}</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Numéro</label>
+              <label>{t('dashResto.number')}</label>
               <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Code postal</label>
+              <label>{t('dashResto.postalCode')}</label>
               <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
             </div>
           </div>
-          <div className="field"><label>Quartier (optionnel)</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
+          <div className="field"><label>{t('dashResto.neighbourhoodOptional')}</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
 
           <div className="divider" />
-          <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Horaires d'ouverture</h4>
-          <p className="small" style={{ margin: '0 0 10px' }}>Obligatoire : ton commerce ne sera visible et accessible aux clients que pendant ces horaires.</p>
+          <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.openingHours')}</h4>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('dashResto.openingHoursRequired')}</p>
           <OpeningHoursEditor value={hours} onChange={setHours} />
 
           <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Présentation (tout est optionnel)</h4>
-          <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Une phrase pour présenter ton commerce" /></div>
-          <div className="field"><label>Image de couverture (URL) — une photo par défaut est utilisée sinon</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.presentationOptional')}</h4>
+          <div className="field"><label>{t('dashResto.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
+          <div className="field"><label>{t('dashResto.coverUrl')}</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
 
           <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Livraison</h4>
+          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.delivery')}</h4>
           <div className="field">
-            <label>Qui livre tes commandes ?</label>
+            <label>{t('dashResto.whoDelivers')}</label>
             <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
-              <option value="fairide">Les livreurs Fairide (pool général)</option>
-              <option value="own">Mon/mes propre(s) livreur(s)</option>
+              <option value="fairide">{t('dashResto.fairidePool')}</option>
+              <option value="own">{t('dashResto.ownDrivers')}</option>
             </select>
             {deliveryModePref === 'own' && (
               <p className="small" style={{ margin: '6px 0 0' }}>
-                Tu pourras lier l'email de ton livreur juste après la création (il doit avoir un compte livreur Fairide). Ton livreur suit exactement le même processus que les autres — retrait/livraison par code, position en direct.
+                {t('dashResto.ownDriversHelp')}
               </p>
             )}
           </div>
-          <button className="btn-teal" onClick={createResto}>Créer mon restaurant</button>
+          <button className="btn-teal" onClick={createResto}>{t('dashResto.createMyRestaurant')}</button>
         </div>
       )}
 
@@ -272,34 +273,31 @@ export default function DashboardLayout() {
           validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
           reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
       {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active') && (
-        <div className="card account-groupe" aria-label="Statut de mon commerce">
+        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
-            <LigneCompte accent="danger" icone="🚫" titre="Compte bloqué par Fairide" sous="Ton restaurant n'est pas visible aux clients" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="danger" icone="🚫" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
-                Ton restaurant a été bloqué par l'équipe Fairide et n'est pas visible aux clients, quel que soit ton statut d'abonnement. Contacte le support pour plus d'informations.
+                {t('dashResto.blockedText')}
               </p>
             </LigneCompte>
           )}
           {restaurant.adminStatus !== 'approved' && restaurant.adminStatus !== 'blocked' && (
-            <LigneCompte accent="warn" icone="🕐" titre="En attente de validation" sous="Tu peux déjà compléter ton menu en attendant" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="warn" icone="🕐" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
-                Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — mais pas besoin d'attendre pour continuer :
-                tu peux dès maintenant compléter ton menu. Ton abonnement (premier mois offert) ne pourra être activé qu'une fois ton compte
-                validé — le temps pour Fairide de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties.
-                Dès que ton compte est validé, tu pourras t'abonner et ton restaurant deviendra visible immédiatement. C'est généralement rapide, repasse un peu plus tard.
+                {t('dashResto.pendingText')}
               </p>
             </LigneCompte>
           )}
           {restaurant.stripeConnectStatus !== 'active' && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
-              titre={restaurant.stripeConnectStatus === 'restricted' ? 'Informations de paiement à compléter' : 'Paiements à configurer'}
+              titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
               sous={restaurant.stripeConnectStatus === 'restricted'
-                ? 'Stripe a besoin d\'informations pour te verser tes paiements'
-                : 'Via Stripe, rapide et sécurisé — sans ça, pas de commandes'}
+                ? t('dashResto.stripeNeedsInfoResto')
+                : t('dashResto.viaStripeResto')}
               action={(
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? 'Compléter' : 'Configurer')}
+                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.complete') : 'Configurer')}
                 </button>
               )}
             />

@@ -1,11 +1,13 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { api, setSessionExpiredHandler } from '../api';
 import { useToast } from './ToastContext';
+import { useLanguage } from './LanguageContext';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
 
 export function AuthProvider({ children }) {
+  const { t } = useLanguage();
   const toast = useToast();
   const [session, setSession] = useState(() => {
     try {
@@ -41,7 +43,7 @@ export function AuthProvider({ children }) {
       if (expiredRef.current) return;
       expiredRef.current = true;
       setSession(null);
-      toast('Ta session a expiré. Reconnecte-toi pour continuer.');
+      toast(t('auth.sessionExpired'));
     });
     return () => setSessionExpiredHandler(null);
   }, [toast]);

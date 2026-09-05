@@ -1,4 +1,5 @@
 import { orderTypeLabel, deliveryInstructionLabel } from './orderStatus';
+import { getLocale } from './context/LanguageContext';
 
 // Génère le ticket d'une commande au format ESC/POS, le langage que comprennent les imprimantes
 // thermiques. Le contenu reprend celui de OrderReceipt.jsx (impression navigateur) : c'est le même
@@ -89,7 +90,7 @@ class Ticket {
 }
 
 function formatDateTime(ms) {
-  return new Date(ms).toLocaleString('fr-BE', {
+  return new Date(ms).toLocaleString(getLocale(), {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
   });
 }

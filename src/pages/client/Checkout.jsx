@@ -9,7 +9,7 @@ import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { categoryKind, resolveItemImage } from '../../menuCategories';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -86,6 +86,7 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const libellesDates = { today: t('checkout.dateToday'), tomorrow: t('checkout.dateTomorrow') };
   // Arrivée via "Réserver une table" depuis la page du restaurant : réservation seule, sans articles
   // au panier — le client valide juste ses infos de réservation, envoyées au restaurant sans paiement.
   const reservationOnly = !!location.state?.reservationOnly;
@@ -101,9 +102,9 @@ export default function Checkout() {
   const [useBalance, setUseBalance] = useState(true);
   const [fulfillmentType, setFulfillmentType] = useState(reservationOnly ? 'dine_in' : 'delivery');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions()[0].value : '');
+  const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions(7, libellesDates)[0].value : '');
   const [scheduleTime, setScheduleTime] = useState('');
-  const [dateOptions] = useState(getScheduleDateOptions);
+  const [dateOptions] = useState(() => getScheduleDateOptions(7, libellesDates));
   const [partySize, setPartySize] = useState(2);
   const [reservationName, setReservationName] = useState(user.name || '');
   const [reservationNote, setReservationNote] = useState('');
@@ -143,7 +144,7 @@ export default function Checkout() {
     fulfillmentInitRef.current = true;
     if (reservationOnly) {
       if (!restaurant.offersDineIn) {
-        toast('Ce restaurant ne propose pas la réservation de table.');
+        toast(t('checkout.toastNoReservation'));
         navigate(`/restaurants/${restaurantId}`);
       }
       return;
@@ -154,7 +155,7 @@ export default function Checkout() {
     // parcours de réservation. Le panier est conservé : il redeviendra valable si le restaurant
     // rouvre la commande en ligne.
     if (!restaurant.offersDelivery && !restaurant.offersPickup) {
-      toast('Ce restaurant ne prend plus de commande en ligne — seule la réservation de table est possible.');
+      toast(t('checkout.toastNoOnlineOrder'));
       navigate(`/restaurants/${restaurantId}`);
       return;
     }
@@ -207,13 +208,13 @@ export default function Checkout() {
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (useBalance ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
   const scheduledPreview = scheduleDate && scheduleTime
-    ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+    ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
   const isPureReservation = pendingOrder?.orderType === 'dine_in' && pendingOrder.items.length === 0;
   // Réservation : les jours proposés vont jusqu'à l'horizon du restaurant, les heures sont ses
   // créneaux réellement libres. Le créneau choisi porte son instant exact (heure de Bruxelles) et
   // l'acompte qui s'y applique (il dépend de la table qui serait attribuée).
-  const dateOptionsResa = fulfillmentType === 'dine_in' ? getScheduleDateOptions(restaurant?.reservationMaxDays || 7) : dateOptions;
+  const dateOptionsResa = fulfillmentType === 'dine_in' ? getScheduleDateOptions(restaurant?.reservationMaxDays || 7, libellesDates) : dateOptions;
   const creneauChoisi = dispo?.creneaux?.find((c) => c.heure === scheduleTime) || null;
   const acompteDu = creneauChoisi ? creneauChoisi.acompte : (dispo?.acompte?.montant || 0);
 
@@ -618,9 +619,9 @@ export default function Checkout() {
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.atDeliveryColon')}</b> {deliveryInstructionLabel(pendingOrder.deliveryInstructions, t)}</p>
                 {pendingOrder.deliveryNote && <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.driverNoteColon')}</b> {pendingOrder.deliveryNote}</p>}
                 {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.scheduledDeliveryFor')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.scheduledDeliveryFor')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.estimatedArrival')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.estimatedArrival')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}
@@ -628,9 +629,9 @@ export default function Checkout() {
               <>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.pickupAtColon')}</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
                 {pendingOrder.scheduledFor ? (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.readyForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.readyForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 ) : pendingOrder.estimatedDeliveryAt && (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.pickupEstimateColon')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.pickupEstimateColon')}</b> {new Date(pendingOrder.estimatedDeliveryAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' })}</p>
                 )}
               </>
             )}
@@ -640,7 +641,7 @@ export default function Checkout() {
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.reservedNameOfColon')}</b> {pendingOrder.reservationName}</p>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.partySizeColon')}</b> {pendingOrder.partySize}</p>
                 {pendingOrder.scheduledFor && (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 )}
                 {pendingOrder.reservationNote && (
                   <p className="small" style={{ margin: '4px 0 0' }}><b>{t('checkout.noteColon')}</b> {pendingOrder.reservationNote}</p>

@@ -92,7 +92,7 @@ export default function Landing() {
 
       <div className="landing-hero">
         <HeroFrame />
-        <div className="be-flag" title="Fièrement belge">
+        <div className="be-flag" title={t('landing.proudlyBelgian')}>
           <span className="be-flag-stripe" style={{ background: '#000' }} />
           <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
           <span className="be-flag-stripe" style={{ background: '#ED2939' }} />

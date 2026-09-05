@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Recherche transversale — un seul champ, tout ce que Fairide sait chercher.
 //
@@ -29,32 +30,33 @@ function contient(texte, requete) {
 
 // Réponses du centre d'aide, avec les mots par lesquels on les cherche vraiment. Le titre seul ne
 // suffirait pas : personne ne tape « moyens de paiement », on tape « carte » ou « bancontact ».
-const SUJETS_AIDE = [
-  { to: '/aide?sujet=paiement', titre: 'Moyens de paiement', sous: 'Carte bancaire, Stripe, solde Fairide', mots: 'paiement payer carte bancaire visa mastercard bancontact stripe apple pay google pay solde argent rembourser remboursement' },
-  { to: '/aide?sujet=titres-restaurant', titre: 'Titres-restaurant', sous: 'Monizze, Edenred, Sodexo', mots: 'titres restaurant ticket cheque repas monizze edenred sodexo pluxee' },
-  { to: '/aide', titre: 'Adresse de livraison', sous: 'Celle qui pré-remplit tes commandes', mots: 'adresse livraison livrer domicile rue changer' },
-  { to: '/aide', titre: 'Un souci avec une commande ?', sous: 'Suivi, retard, erreur, remboursement', mots: 'probleme souci commande retard erreur manquant froid remboursement suivi livreur' },
-  { to: '/aide?sujet=bug', titre: 'Signaler un bug', sous: 'Quelque chose ne marche pas', mots: 'bug bogue erreur plante marche pas probleme technique' },
-  { to: '/aide?sujet=avis', titre: 'Donner mon avis sur Fairide', sous: 'Ce qui te plaît, ce qui manque', mots: 'avis suggestion idee amelioration retour' },
-  { to: '/aide', titre: 'Aide et contact', sous: 'Toutes les réponses, et nous écrire', mots: 'aide contact question support telephone email joindre' }
+const sujetsAide = (t) => [
+  { to: '/aide?sujet=paiement', titre: t('search.paymentMethods'), sous: t('search.paymentMethodsSub'), mots: 'paiement payer carte bancaire visa mastercard bancontact stripe apple pay google pay solde argent rembourser remboursement' },
+  { to: '/aide?sujet=titres-restaurant', titre: t('search.vouchers'), sous: t('search.vouchersSub'), mots: 'titres restaurant ticket cheque repas monizze edenred sodexo pluxee' },
+  { to: '/aide', titre: t('search.deliveryAddress'), sous: t('search.deliveryAddressSub'), mots: 'adresse livraison livrer domicile rue changer' },
+  { to: '/aide', titre: t('search.orderIssue'), sous: t('search.orderIssueSub'), mots: 'probleme souci commande retard erreur manquant froid remboursement suivi livreur' },
+  { to: '/aide?sujet=bug', titre: t('search.reportBug'), sous: t('search.reportBugSub'), mots: 'bug bogue erreur plante marche pas probleme technique error crash fout probleem werkt niet' },
+  { to: '/aide?sujet=avis', titre: t('search.feedback'), sous: t('search.feedbackSub'), mots: 'avis suggestion idee amelioration retour' },
+  { to: '/aide', titre: t('search.helpContact'), sous: t('search.helpContactSub'), mots: 'aide contact question support telephone email joindre' }
 ];
 
-const RUBRIQUES_COMPTE = [
-  { to: '/orders', titre: 'Mes commandes', sous: 'Livraisons, à emporter et sur place', mots: 'commande commandes historique suivi', connecte: true },
-  { to: '/orders?type=dine_in', titre: 'Mes réservations', sous: 'Tes tables réservées', mots: 'reservation reservations table reserver', connecte: true },
-  { to: '/favorites', titre: 'Mes favoris', sous: 'Les commerces que tu as enregistrés', mots: 'favoris favori coeur enregistre', connecte: true },
-  { to: '/invoices', titre: 'Mes factures', sous: 'Les reçus de tes commandes payées', mots: 'facture factures recu recus justificatif', connecte: true },
-  { to: '/account', titre: 'Mon compte', sous: 'Profil, adresse, mot de passe, langue', mots: 'compte profil mot de passe email telephone langue adresse parrainage code promo supprimer', connecte: true },
-  { to: '/map', titre: 'Carte des commerces', sous: 'Trouver un commerce autour de toi', mots: 'carte plan autour de moi proche geolocalisation', connecte: true },
-  { to: '/notre-histoire', titre: 'Notre histoire', sous: 'Pourquoi Fairide existe', mots: 'histoire mission valeurs commission equitable fairide qui sommes nous', connecte: false }
+const rubriquesCompte = (t) => [
+  { to: '/orders', titre: t('search.myOrders'), sous: t('search.myOrdersSub'), mots: 'commande commandes historique suivi order orders history tracking bestelling bestellingen geschiedenis', connecte: true },
+  { to: '/orders?type=dine_in', titre: t('search.myReservations'), sous: t('search.myReservationsSub'), mots: 'reservation reservations table reserver', connecte: true },
+  { to: '/favorites', titre: t('search.myFavourites'), sous: t('search.myFavouritesSub'), mots: 'favoris favori coeur enregistre', connecte: true },
+  { to: '/invoices', titre: t('search.myInvoices'), sous: t('search.myInvoicesSub'), mots: 'facture factures recu recus justificatif', connecte: true },
+  { to: '/account', titre: t('search.myAccount'), sous: t('search.myAccountSub'), mots: 'compte profil mot de passe email telephone langue adresse parrainage code promo supprimer', connecte: true },
+  { to: '/map', titre: t('search.businessMap'), sous: t('search.businessMapSub'), mots: 'carte plan autour de moi proche geolocalisation map near me nearby kaart in de buurt', connecte: true },
+  { to: '/notre-histoire', titre: t('search.ourStory'), sous: t('search.ourStorySub'), mots: 'histoire mission valeurs commission equitable fairide qui sommes nous', connecte: false }
 ];
 
 // Libellés lisibles des statuts de commande, pour le sous-titre des résultats.
-const STATUTS = { nouveau: 'nouvelle', preparation: 'en préparation', pret: 'prête', livraison: 'en livraison', livre: 'livrée', refuse: 'refusée', annule: 'annulée' };
+const statuts = (t) => ({ nouveau: t('search.stNew'), preparation: t('search.stPreparing'), pret: t('search.stReady'), livraison: t('search.stDelivering'), livre: t('search.stDelivered'), refuse: t('search.stRefused'), annule: t('search.stCancelled') });
 
 const MAX_PAR_GROUPE = 6;
 
 export default function SearchPage() {
+  const { t } = useLanguage();
   const { user, token } = useAuth();
   const navigate = useNavigate();
   usePageMeta({ title: 'Recherche — Fairide', path: '/recherche' });
@@ -98,8 +100,8 @@ export default function SearchPage() {
 
     const cuisines = RESTAURANT_TYPES.filter((c) => contient(c.value, q)).slice(0, MAX_PAR_GROUPE);
     const communes = COMMUNES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
-    const aide = SUJETS_AIDE.filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
-    const rubriques = RUBRIQUES_COMPTE
+    const aide = sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
+    const rubriques = rubriquesCompte(t)
       .filter((s) => (!s.connecte || user) && (contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)))
       .slice(0, MAX_PAR_GROUPE);
     const mesCommandes = commandes
@@ -129,7 +131,7 @@ export default function SearchPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Recherche</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('search.title')}</h2>
 
       <form className="recherche-champ" onSubmit={soumettre} role="search">
         <span className="recherche-loupe" aria-hidden="true">🔍</span>
@@ -138,13 +140,13 @@ export default function SearchPage() {
           type="search"
           value={requete}
           onChange={(e) => setRequete(e.target.value)}
-          placeholder="Un plat, un commerce, une commune, une question…"
-          aria-label="Rechercher sur Fairide"
+          placeholder={t('search.phSearch')}
+          aria-label={t('search.ariaSearch')}
           autoComplete="off"
           enterKeyHint="search"
         />
         {requete && (
-          <button type="button" className="recherche-effacer" onClick={() => { setRequete(''); champ.current?.focus(); }} aria-label="Effacer">✕</button>
+          <button type="button" className="recherche-effacer" onClick={() => { setRequete(''); champ.current?.focus(); }} aria-label={t('search.clear')}>✕</button>
         )}
       </form>
 
@@ -154,7 +156,7 @@ export default function SearchPage() {
       {!actif && (
         <>
           <div className="card">
-            <h3 className="recherche-titre-groupe">Par envie</h3>
+            <h3 className="recherche-titre-groupe">{t('search.byCraving')}</h3>
             <div className="recherche-pastilles">
               {RESTAURANT_TYPES.slice(0, 14).map((c) => (
                 <Link key={c.value} to="/restaurants" state={{ cuisine: c.value }} className="pill recherche-pastille">
@@ -164,7 +166,7 @@ export default function SearchPage() {
             </div>
           </div>
           <div className="card">
-            <h3 className="recherche-titre-groupe">Par commune</h3>
+            <h3 className="recherche-titre-groupe">{t('search.byMunicipality')}</h3>
             <div className="recherche-pastilles">
               {COMMUNES.map((c) => (
                 <Link key={c} to="/restaurants" state={{ commune: c }} className="pill recherche-pastille">{c}</Link>
@@ -172,9 +174,9 @@ export default function SearchPage() {
             </div>
           </div>
           <div className="card">
-            <h3 className="recherche-titre-groupe">Une question ?</h3>
+            <h3 className="recherche-titre-groupe">{t('search.aQuestion')}</h3>
             <div className="recherche-pastilles">
-              {SUJETS_AIDE.slice(0, 4).map((s) => (
+              {sujetsAide(t).slice(0, 4).map((s) => (
                 <Link key={s.to + s.titre} to={s.to} className="pill recherche-pastille">{s.titre}</Link>
               ))}
             </div>
@@ -182,51 +184,51 @@ export default function SearchPage() {
         </>
       )}
 
-      {actif && chargement && <p className="small">Recherche…</p>}
+      {actif && chargement && <p className="small">{t('search.searching')}</p>}
 
       {actif && !chargement && resultats.total === 0 && (
         <div className="card">
-          <p style={{ margin: '0 0 6px', fontWeight: 600 }}>Rien pour « {requete} ».</p>
+          <p style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('search.nothingFor', { q: requete })}</p>
           <p className="small" style={{ margin: 0 }}>
-            Essaie un autre mot, le nom d'une commune, ou pose ta question dans <Link to="/aide">l'aide</Link>.
+            {t('search.tryOther')} <Link to="/aide">{t('search.theHelp')}</Link>.
           </p>
         </div>
       )}
 
       {actif && !chargement && resultats.total > 0 && (
         <>
-          <Groupe titre="Commerces" quand={resultats.commerces.length}>
+          <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
             {resultats.commerces.map((r) => (
               <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="🏪" titre={r.name}
                 sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
             ))}
           </Groupe>
-          <Groupe titre="Plats" quand={resultats.plats.length}>
+          <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
               <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} to={`/restaurants/${restaurant.id}`} image={plat.imageUrl} icone={plat.healthy ? '🥗' : '🍽️'}
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>
-          <Groupe titre="Types de cuisine" quand={resultats.cuisines.length}>
+          <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={c.emoji} titre={c.value} sous="Voir les commerces de ce type" />
+              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={c.emoji} titre={c.value} sous={t('search.seeTypeBusinesses')} />
             ))}
           </Groupe>
-          <Groupe titre="Communes" quand={resultats.communes.length}>
+          <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>
             {resultats.communes.map((c) => (
-              <Ligne key={c} to="/restaurants" state={{ commune: c }} icone="📍" titre={c} sous="Voir les commerces de cette commune" />
+              <Ligne key={c} to="/restaurants" state={{ commune: c }} icone="📍" titre={c} sous={t('search.seeMunicipalityBusinesses')} />
             ))}
           </Groupe>
-          <Groupe titre="Mes commandes" quand={resultats.mesCommandes.length}>
+          <Groupe titre={t('search.myOrders')} quand={resultats.mesCommandes.length}>
             {resultats.mesCommandes.map((o) => (
               <Ligne key={o.id} to="/orders" icone="📦" titre={o.restaurantName || o.restaurant?.name || 'Commande'}
-                sous={[STATUTS[o.status] || o.status, o.total != null ? `${Number(o.total).toFixed(2)}€` : null].filter(Boolean).join(' · ')} />
+                sous={[statuts(t)[o.status] || o.status, o.total != null ? `${Number(o.total).toFixed(2)}€` : null].filter(Boolean).join(' · ')} />
             ))}
           </Groupe>
-          <Groupe titre="Aide" quand={resultats.aide.length}>
+          <Groupe titre={t('search.help')} quand={resultats.aide.length}>
             {resultats.aide.map((s) => <Ligne key={s.to + s.titre} to={s.to} icone="🛟" titre={s.titre} sous={s.sous} />)}
           </Groupe>
-          <Groupe titre="Mon compte" quand={resultats.rubriques.length}>
+          <Groupe titre={t('search.myAccount')} quand={resultats.rubriques.length}>
             {resultats.rubriques.map((s) => <Ligne key={s.to} to={s.to} icone="👤" titre={s.titre} sous={s.sous} />)}
           </Groupe>
         </>

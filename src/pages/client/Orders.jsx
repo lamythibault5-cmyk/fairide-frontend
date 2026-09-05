@@ -4,7 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
@@ -158,7 +158,7 @@ export default function Orders() {
   // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
   const typeFiltre = searchParams.get('type');
   const listeAffichee = typeFiltre ? orders.filter((o) => o.orderType === typeFiltre) : orders;
-  const titre = typeFiltre === 'dine_in' ? 'Mes réservations' : t('orders.title');
+  const titre = typeFiltre === 'dine_in' ? t('orders.myReservations') : t('orders.title');
 
   if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
@@ -168,12 +168,12 @@ export default function Orders() {
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
-        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>Toutes</button>
-        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>Réservations</button>
+        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
+        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
       </div>
         <div className="empty">
           {typeFiltre === 'dine_in'
-            ? "Aucune réservation de table pour l'instant."
+            ? t('orders.noReservations')
             : t('orders.empty')}
         </div>
       </div>
@@ -186,8 +186,8 @@ export default function Orders() {
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
-        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>Toutes</button>
-        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>Réservations</button>
+        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
+        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
       </div>
       {listeAffichee.map((o) => (
         <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
@@ -265,7 +265,7 @@ export default function Orders() {
                 </button>
               )}
               {o.reservationCancelDeadline && Date.now() < o.reservationCancelDeadline && (
-                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { date: new Date(o.reservationCancelDeadline).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</div>
+                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { date: new Date(o.reservationCancelDeadline).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</div>
               )}
               {(!o.reservationCancelDeadline || Date.now() < o.reservationCancelDeadline) ? (
                 <button className="btn-ghost" style={{ marginTop: 4, color: 'var(--red)' }} disabled={cancellingId === o.id} onClick={() => cancelOrder(o.id)}>

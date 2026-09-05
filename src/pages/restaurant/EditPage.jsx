@@ -7,7 +7,9 @@ import { COMMUNES, RESTAURANT_TYPES, fullTemplateItems } from '../../menuCategor
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { formatDateFr } from '../../openingHours';
+import { useLanguage } from '../../context/LanguageContext';
 
+// Valeurs envoyées au backend (en français, stockées telles quelles) ; le libellé affiché est traduit.
 const RESTO_DELETION_REASONS = [
   'Je ferme mon commerce',
   'Je change de plateforme de livraison',
@@ -16,8 +18,10 @@ const RESTO_DELETION_REASONS = [
   'Erreur de création, je recommence',
   'Autre raison'
 ];
+const RESTO_DELETION_KEYS = ['reasonClosing', 'reasonSwitching', 'reasonFewOrders', 'reasonCommissions', 'reasonMistake', 'reasonOther'];
 
 export default function EditPage() {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const { restaurant, drivers, restoId, loadDashboard } = useOutletContext();
@@ -110,15 +114,15 @@ export default function EditPage() {
 
   async function saveRestoInfo() {
     if (!editName.trim()) {
-      toast('Le nom du restaurant est requis.');
+      toast(t('editResto.toastNameRequired'));
       return;
     }
     if (!editLegalName.trim() || !editCompanyNumber.trim() || !editVatNumber.trim() || !editResponsibleName.trim()) {
-      toast("Les informations légales du commerce sont requises (nom légal, n° d'entreprise, n° TVA, responsable).");
+      toast(t('editResto.toastLegalRequired'));
       return;
     }
     if (!editHours || !Object.values(editHours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
-      toast('Indique tes horaires d\'ouverture : ton commerce ne sera visible que pendant ces créneaux.');
+      toast(t('editResto.toastHoursRequired'));
       return;
     }
     setSavingResto(true);
@@ -134,7 +138,7 @@ export default function EditPage() {
         }
       });
       await loadDashboard(restoId);
-      toast('Restaurant mis à jour.');
+      toast(t('editResto.toastUpdated'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -143,8 +147,8 @@ export default function EditPage() {
   }
 
   async function addClosure() {
-    if (!newClosureStart) { toast('Indique une date de début.'); return; }
-    if (newClosureEnd && newClosureEnd < newClosureStart) { toast('La date de fin doit être après la date de début.'); return; }
+    if (!newClosureStart) { toast(t('editResto.toastStartDate')); return; }
+    if (newClosureEnd && newClosureEnd < newClosureStart) { toast(t('editResto.toastEndAfterStart')); return; }
     setAddingClosure(true);
     try {
       await api(`/restaurants/${restoId}/closures`, {
@@ -155,7 +159,7 @@ export default function EditPage() {
       setNewClosureStart('');
       setNewClosureEnd('');
       setNewClosureReason('');
-      toast('Fermeture ajoutée à ton agenda.');
+      toast(t('editResto.toastClosureAdded'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -207,7 +211,7 @@ export default function EditPage() {
     try {
       await api(`/restaurants/${restoId}/request-cuisine-change`, { method: 'POST', token });
       setCuisineCodeSent(true);
-      toast('Code envoyé par email.');
+      toast(t('editResto.toastCodeSent'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -217,7 +221,7 @@ export default function EditPage() {
 
   async function confirmCuisineChange() {
     if (changingCuisine) return; // évite un double-clic qui rejouerait tout le flux (wipe + réinsertion)
-    if (!cuisineCode) { toast('Entre le code reçu par email.'); return; }
+    if (!cuisineCode) { toast(t('editResto.toastEnterCode')); return; }
     const finalCuisine = newCuisine === 'Autre' ? newCustomCuisine.trim() || 'Autre' : newCuisine;
     setChangingCuisine(true);
     try {
@@ -234,7 +238,7 @@ export default function EditPage() {
       setCuisineCode('');
       setCuisineCodeSent(false);
       setReplaceMenuChoice('keep');
-      toast('Type de commerce mis à jour.');
+      toast(t('editResto.toastTypeUpdated'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -247,7 +251,7 @@ export default function EditPage() {
     try {
       await api(`/restaurants/${restoId}/request-deletion`, { method: 'POST', token });
       setDeleteCodeSent(true);
-      toast('Code envoyé par email.');
+      toast(t('editResto.toastCodeSent'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -256,11 +260,11 @@ export default function EditPage() {
   }
 
   async function deleteRestaurant() {
-    if (!deleteCode) { toast('Entre le code reçu par email.'); return; }
+    if (!deleteCode) { toast(t('editResto.toastEnterCode')); return; }
     setDeleting(true);
     try {
       await api(`/restaurants/${restoId}`, { method: 'DELETE', token, body: { code: deleteCode, reason: deleteReason, comment: deleteComment.trim() } });
-      toast('Restaurant supprimé.');
+      toast(t('editResto.toastDeleted'));
       window.location.href = '/dashboard';
     } catch (e) {
       toast(e.message);
@@ -269,13 +273,13 @@ export default function EditPage() {
   }
 
   async function linkDriver() {
-    if (!driverEmailInput.trim()) { toast('Entre l\'email du livreur.'); return; }
+    if (!driverEmailInput.trim()) { toast(t('editResto.toastDriverEmail')); return; }
     setLinkingDriver(true);
     try {
       const driver = await api(`/restaurants/${restoId}/drivers`, { method: 'POST', token, body: { email: driverEmailInput.trim() } });
       await loadDashboard(restoId);
       setDriverEmailInput('');
-      toast(`${driver.name} est maintenant ton livreur dédié.`);
+      toast(t('editResto.toastDriverLinked', { name: driver.name }));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -288,7 +292,7 @@ export default function EditPage() {
     try {
       await api(`/restaurants/${restoId}/drivers/${driverId}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
-      toast('Livreur retiré.');
+      toast(t('editResto.toastDriverRemoved'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -301,7 +305,7 @@ export default function EditPage() {
     try {
       await api(`/restaurants/${restoId}/delivery-mode`, { method: 'PATCH', token, body: { mode } });
       await loadDashboard(restoId);
-      toast(mode === 'own' ? 'Livraison interne activée — tes commandes ne sont proposées qu\'à ton/tes livreur(s) dédié(s).' : 'Retour au pool de livreurs Fairide.');
+      toast(mode === 'own' ? t('editResto.toastInternalOn') : t('editResto.toastBackToPool'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -315,14 +319,14 @@ export default function EditPage() {
   async function saveDeliveryOffer() {
     const discount = Number(deliveryFeeDiscountEdit);
     if (!freeDeliveryEdit && (Number.isNaN(discount) || discount < 0 || discount > 50)) {
-      toast('Indique un montant valide entre 0€ et 50€.');
+      toast(t('editResto.toastAmount0_50'));
       return;
     }
     let minOrder = null;
     if (!freeDeliveryEdit && freeDeliveryMinOrderEnabled) {
       minOrder = Number(freeDeliveryMinOrderEdit);
       if (Number.isNaN(minOrder) || minOrder < 5 || minOrder > 200) {
-        toast('Indique un montant minimum valide entre 5€ et 200€.');
+        toast(t('editResto.toastAmount5_200'));
         return;
       }
     }
@@ -333,7 +337,7 @@ export default function EditPage() {
         body: { freeDelivery: freeDeliveryEdit, deliveryFeeDiscount: freeDeliveryEdit ? 0 : discount, freeDeliveryMinOrder: minOrder }
       });
       await loadDashboard(restoId);
-      toast('Offre de livraison mise à jour.');
+      toast(t('editResto.toastOfferUpdated'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -343,53 +347,53 @@ export default function EditPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Modifier mon restaurant</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('editResto.title')}</h2>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Infos du restaurant</h3>
-        <div className="field"><label>Nom du restaurant (affiché aux clients)</label><input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder="Ex: Chez Momo" /></div>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('editResto.infoTitle')}</h3>
+        <div className="field"><label>{t('editResto.nameLabel')}</label><input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('editResto.phName')} /></div>
 
         <div className="divider" />
-        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Informations légales</h4>
-        <div className="field"><label>Nom légal / entreprise</label><input value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" /></div>
+        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.legalTitle')}</h4>
+        <div className="field"><label>{t('editResto.legalName')}</label><input value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder={t('editResto.phLegalName')} /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>N° d'entreprise (BCE)</label>
+            <label>{t('editResto.companyNumber')}</label>
             <input value={editCompanyNumber} onChange={(e) => setEditCompanyNumber(e.target.value)} placeholder="0123.456.789" />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>N° TVA</label>
-            <input value={editVatNumber} onChange={(e) => setEditVatNumber(e.target.value)} placeholder="BE0123.456.789" />
+            <label>{t('editResto.vatNumber')}</label>
+            <input value={editVatNumber} onChange={(e) => setEditVatNumber(e.target.value)} placeholder={t('editResto.phVat')} />
           </div>
         </div>
-        <div className="field"><label>Responsable</label><input value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder="Nom du responsable légal" /></div>
+        <div className="field"><label>{t('editResto.manager')}</label><input value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder={t('editResto.phManager')} /></div>
 
         <div className="divider" />
-        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>Adresse</h4>
+        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.address')}</h4>
         <div className="field">
-          <label>Commune</label>
+          <label>{t('editResto.municipality')}</label>
           <select value={editCommune} onChange={(e) => setEditCommune(e.target.value)}>
             {COMMUNES.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
-        <div className="field"><label>Quartier (optionnel)</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder="Ex: Châtelain, Flagey..." /></div>
-        <div className="field"><label>Rue / Avenue (pour les livreurs et la carte)</label><input value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder="Rue du Midi" /></div>
+        <div className="field"><label>{t('editResto.neighbourhoodOptional')}</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder={t('editResto.phNeighbourhood')} /></div>
+        <div className="field"><label>{t('editResto.streetForDrivers')}</label><input value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Numéro</label>
+            <label>{t('editResto.number')}</label>
             <input value={editAddressNumber} onChange={(e) => setEditAddressNumber(e.target.value)} placeholder="12" />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>Code postal</label>
+            <label>{t('editResto.postalCode')}</label>
             <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
           </div>
         </div>
-        <div className="field"><label>Description</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
+        <div className="field"><label>{t('editResto.description')}</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
         <div className="field">
-          <label>Photo d'accueil (visible dans la liste et en haut de ta page)</label>
+          <label>{t('editResto.coverLabel')}</label>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {editCover && <img src={editCover} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />}
-            <button type="button" className="btn-ghost" onClick={openCoverPicker}>📷 Choisir une photo</button>
+            <button type="button" className="btn-ghost" onClick={openCoverPicker}>{t('editResto.choosePhoto')}</button>
           </div>
         </div>
         {coverPickerOpen && (
@@ -397,18 +401,18 @@ export default function EditPage() {
             restoId={restoId}
             currentImageUrl={editCover}
             suggestions={coverSuggestions}
-            title="Photo d'accueil"
-            suggestionsTitle={`Suggestions pour ${restaurant.cuisine}`}
+            title={t('editResto.coverTitle')}
+            suggestionsTitle={t('editResto.suggestionsFor', { cuisine: restaurant.cuisine })}
             onSelect={(url) => { setEditCover(url); setCoverPickerOpen(false); }}
             onCancel={() => setCoverPickerOpen(false)}
           />
         )}
         <div className="field">
-          <label>Logo (affiché sur ta page, par-dessus la photo d'accueil)</label>
+          <label>{t('editResto.logoLabel')}</label>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {editLogo && <img src={editLogo} alt="" className="dish-thumb" style={{ flexShrink: 0, borderRadius: '50%' }} />}
-            <button type="button" className="btn-ghost" onClick={openLogoPicker}>🖼️ Choisir un logo</button>
-            {editLogo && <button type="button" className="btn-danger-ghost" onClick={() => setEditLogo('')}>Retirer</button>}
+            <button type="button" className="btn-ghost" onClick={openLogoPicker}>{t('editResto.chooseLogo')}</button>
+            {editLogo && <button type="button" className="btn-danger-ghost" onClick={() => setEditLogo('')}>{t('editResto.remove')}</button>}
           </div>
         </div>
         {logoPickerOpen && (
@@ -416,24 +420,24 @@ export default function EditPage() {
             restoId={restoId}
             currentImageUrl={editLogo}
             suggestions={logoSuggestions}
-            title="Logo du restaurant"
-            suggestionsTitle={`Suggestions pour ${restaurant.name}`}
+            title={t('editResto.logoTitle')}
+            suggestionsTitle={t('editResto.suggestionsFor', { cuisine: restaurant.name })}
             onSelect={(url) => { setEditLogo(url); setLogoPickerOpen(false); }}
             onCancel={() => setLogoPickerOpen(false)}
           />
         )}
-        <label>Horaires d'ouverture</label>
+        <label>{t('editResto.openingHours')}</label>
         <OpeningHoursEditor value={editHours} onChange={setEditHours} />
         <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
-          <span className="small">Restaurant ouvert (visible aux clients)</span>
+          <span className="small">{t('editResto.openVisible')}</span>
         </label>
         <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
 
         <div className="divider" />
-        <label>Fermetures exceptionnelles (vacances, travaux...)</label>
+        <label>{t('editResto.closuresTitle')}</label>
         <p className="small" style={{ margin: '0 0 10px' }}>
-          En dehors de tes horaires habituels ci-dessus — le commerce apparaît fermé aux clients pendant toute la période, avec le motif que tu indiques.
+          {t('editResto.closuresIntro')}
         </p>
         {(restaurant.closures || []).length > 0 && (
           <div style={{ marginBottom: 12 }}>
@@ -441,7 +445,7 @@ export default function EditPage() {
               <div key={c.id} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--line)' }}>
                 <div>
                   <div className="small" style={{ fontWeight: 600 }}>
-                    {formatDateFr(c.startDate)}{c.endDate ? ` → ${formatDateFr(c.endDate)}` : ' → date de reprise indéterminée'}
+                    {formatDateFr(c.startDate)}{c.endDate ? ` → ${formatDateFr(c.endDate)}` : t('editResto.reopenUnknown')}
                   </div>
                   {c.reason && <div className="small">{c.reason}</div>}
                 </div>
@@ -454,69 +458,69 @@ export default function EditPage() {
         )}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Du</label>
+            <label>{t('editResto.from')}</label>
             <input type="date" value={newClosureStart} onChange={(e) => setNewClosureStart(e.target.value)} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>Au (optionnel)</label>
+            <label>{t('editResto.toOptional')}</label>
             <input type="date" value={newClosureEnd} onChange={(e) => setNewClosureEnd(e.target.value)} />
           </div>
           <div className="field" style={{ marginBottom: 0, flex: 1, minWidth: 200 }}>
-            <label>Motif (visible par les clients)</label>
-            <input value={newClosureReason} onChange={(e) => setNewClosureReason(e.target.value)} placeholder="Ex : Congés annuels, travaux..." />
+            <label>{t('editResto.reasonVisible')}</label>
+            <input value={newClosureReason} onChange={(e) => setNewClosureReason(e.target.value)} placeholder={t('editResto.phClosureReason')} />
           </div>
           <button className="btn-teal" disabled={addingClosure} onClick={addClosure}>{addingClosure ? '...' : '+ Ajouter'}</button>
         </div>
 
         <div className="divider" />
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: cuisineChangeOpen ? 10 : 0 }}>
-          <span className="small">Type de commerce : <b>{restaurant.cuisine}</b></span>
-          {!cuisineChangeOpen && <button className="btn-ghost" onClick={openCuisineChange}>Changer de type</button>}
+          <span className="small">{t('editResto.businessTypeColon')} <b>{restaurant.cuisine}</b></span>
+          {!cuisineChangeOpen && <button className="btn-ghost" onClick={openCuisineChange}>{t('editResto.changeType')}</button>}
         </div>
         {cuisineChangeOpen && (
           <div>
             <p className="small" style={{ marginBottom: 8 }}>
-              Changer de type demande une confirmation par email (fonctionne aussi pour les comptes connectés via Google).
+              {t('editResto.changeTypeHelp')}
             </p>
             <div className="field">
-              <label>Nouveau type</label>
+              <label>{t('editResto.newType')}</label>
               <select value={newCuisine} onChange={(e) => setNewCuisine(e.target.value)}>
                 {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
               </select>
             </div>
             {newCuisine === 'Autre' && (
-              <div className="field"><label>Précise le type</label><input value={newCustomCuisine} onChange={(e) => setNewCustomCuisine(e.target.value)} placeholder="Ex: Grec, Mexicain..." /></div>
+              <div className="field"><label>{t('editResto.specifyType')}</label><input value={newCustomCuisine} onChange={(e) => setNewCustomCuisine(e.target.value)} placeholder={t('editResto.phType')} /></div>
             )}
             <div className="field">
-              <label>Que faire de ton menu actuel ?</label>
+              <label>{t('editResto.whatAboutMenu')}</label>
               <select value={replaceMenuChoice} onChange={(e) => setReplaceMenuChoice(e.target.value)}>
-                <option value="keep">Garder mes plats actuels tels quels</option>
-                <option value="replace">Remplacer par les plats types du nouveau type</option>
+                <option value="keep">{t('editResto.keepDishes')}</option>
+                <option value="replace">{t('editResto.replaceDishes')}</option>
               </select>
             </div>
             {!cuisineCodeSent && (
               <div className="row" style={{ gap: 8 }}>
                 <button className="btn-outline" disabled={sendingCuisineCode} onClick={sendCuisineCode}>
-                  {sendingCuisineCode ? '...' : 'Recevoir un code de confirmation'}
+                  {sendingCuisineCode ? '...' : t('editResto.getConfirmCode')}
                 </button>
-                <button className="btn-ghost" onClick={() => setCuisineChangeOpen(false)}>Annuler</button>
+                <button className="btn-ghost" onClick={() => setCuisineChangeOpen(false)}>{t('editResto.cancel')}</button>
               </div>
             )}
             {cuisineCodeSent && (
               <>
                 <p className="small" style={{ margin: '10px 0' }}>
-                  Un code de confirmation vient de t'être envoyé par email. Entre-le ci-dessous pour finaliser le changement.
+                  {t('editResto.codeSentHelp')}
                 </p>
                 <div className="field">
-                  <label>Code reçu par email</label>
+                  <label>{t('editResto.codeByEmail')}</label>
                   <input value={cuisineCode} onChange={(e) => setCuisineCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-teal" disabled={changingCuisine} onClick={confirmCuisineChange}>
-                    {changingCuisine ? '...' : 'Confirmer le changement'}
+                    {changingCuisine ? '...' : t('editResto.confirmChange')}
                   </button>
-                  <button className="btn-ghost" disabled={sendingCuisineCode} onClick={sendCuisineCode}>Renvoyer le code</button>
-                  <button className="btn-ghost" onClick={() => { setCuisineChangeOpen(false); setCuisineCodeSent(false); setCuisineCode(''); }}>Annuler</button>
+                  <button className="btn-ghost" disabled={sendingCuisineCode} onClick={sendCuisineCode}>{t('editResto.resendCode')}</button>
+                  <button className="btn-ghost" onClick={() => { setCuisineChangeOpen(false); setCuisineCodeSent(false); setCuisineCode(''); }}>{t('editResto.cancel')}</button>
                 </div>
               </>
             )}
@@ -525,46 +529,46 @@ export default function EditPage() {
 
         <div className="divider" />
         {!confirmDelete && (
-          <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>🗑️ Supprimer ce restaurant</button>
+          <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>{t('editResto.deleteTitle')}</button>
         )}
         {confirmDelete && (
           <div>
             <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
-              Es-tu sûr ? Cette action est irréversible (plats supprimés aussi). Impossible si des commandes existent déjà.
+              {t('editResto.deleteConfirm')}
             </p>
             <div className="field">
-              <label>Pourquoi supprimes-tu ce restaurant ?</label>
+              <label>{t('editResto.deleteWhy')}</label>
               <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
-                {RESTO_DELETION_REASONS.map((r) => <option key={r} value={r}>{r}</option>)}
+                {RESTO_DELETION_REASONS.map((r, i) => <option key={r} value={r}>{t(`editResto.${RESTO_DELETION_KEYS[i]}`)}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>Un commentaire (optionnel)</label>
-              <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder="Aide-nous à nous améliorer..." />
+              <label>{t('editResto.commentOptional')}</label>
+              <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('editResto.phComment')} />
             </div>
             {!deleteCodeSent && (
               <div className="row" style={{ gap: 8 }}>
                 <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingDeleteCode} onClick={sendDeleteCode}>
-                  {sendingDeleteCode ? '...' : 'Recevoir un code de validation de suppression'}
+                  {sendingDeleteCode ? '...' : t('editResto.getDeleteCode')}
                 </button>
-                <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>Annuler</button>
+                <button className="btn-ghost" onClick={() => setConfirmDelete(false)}>{t('editResto.cancel')}</button>
               </div>
             )}
             {deleteCodeSent && (
               <>
                 <p className="small" style={{ marginBottom: 10 }}>
-                  Ta demande a été transmise à l'équipe Fairide. Elle va te recontacter par email avec ton code de confirmation — entre-le ci-dessous dès que tu l'as reçu pour finaliser la suppression.
+                  {t('editResto.deleteRequestSent')}
                 </p>
                 <div className="field">
-                  <label>Code reçu par email</label>
+                  <label>{t('editResto.codeByEmail')}</label>
                   <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
-                    {deleting ? '...' : 'Oui, supprimer définitivement'}
+                    {deleting ? '...' : t('editResto.yesDelete')}
                   </button>
-                  <button className="btn-ghost" disabled={sendingDeleteCode} onClick={sendDeleteCode}>Renvoyer le code</button>
-                  <button className="btn-ghost" onClick={() => { setConfirmDelete(false); setDeleteCodeSent(false); setDeleteCode(''); }}>Annuler</button>
+                  <button className="btn-ghost" disabled={sendingDeleteCode} onClick={sendDeleteCode}>{t('editResto.resendCode')}</button>
+                  <button className="btn-ghost" onClick={() => { setConfirmDelete(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('editResto.cancel')}</button>
                 </div>
               </>
             )}
@@ -573,21 +577,21 @@ export default function EditPage() {
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🛵 Livraison</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('editResto.deliveryTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
           {restaurant.deliveryMode === 'own'
-            ? "Livraison interne activée — seuls tes livreurs dédiés voient et prennent tes commandes. Même processus que les autres livreurs Fairide (retrait/livraison par code, position en direct)."
-            : "Livraison via le pool de livreurs Fairide — n'importe quel livreur validé peut prendre tes commandes."}
+            ? t('editResto.internalOnInfo')
+            : t('editResto.poolInfo')}
         </p>
 
         {drivers.length === 0 && (
-          <p className="small" style={{ margin: '0 0 10px' }}>Aucun livreur dédié pour l'instant.</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('editResto.noDedicatedDriver')}</p>
         )}
         {drivers.map((d) => (
           <div key={d.id} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
             <span>
               {d.name} <span className="small">· {d.email}</span>
-              {d.adminStatus !== 'approved' && <span className="pill" style={{ marginLeft: 6 }}>{d.adminStatus === 'blocked' ? '🚫 Bloqué' : '🕐 En attente de validation Fairide'}</span>}
+              {d.adminStatus !== 'approved' && <span className="pill" style={{ marginLeft: 6 }}>{d.adminStatus === 'blocked' ? t('editResto.blocked') : t('editResto.pendingValidation')}</span>}
             </span>
             <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={unlinkingDriverId === d.id} onClick={() => unlinkDriver(d.id)}>
               {unlinkingDriverId === d.id ? '...' : 'Retirer'}
@@ -600,48 +604,48 @@ export default function EditPage() {
             style={{ flex: 1, minWidth: 200 }}
             value={driverEmailInput}
             onChange={(e) => setDriverEmailInput(e.target.value)}
-            placeholder="Email du livreur (doit déjà avoir un compte livreur Fairide)"
+            placeholder={t('editResto.phDriverEmail')}
           />
-          <button className="btn-ghost" disabled={linkingDriver} onClick={linkDriver}>{linkingDriver ? '...' : '+ Lier ce livreur'}</button>
+          <button className="btn-ghost" disabled={linkingDriver} onClick={linkDriver}>{linkingDriver ? '...' : t('editResto.linkDriver')}</button>
         </div>
 
         <div className="divider" />
         {restaurant.deliveryMode === 'fairide' ? (
-          <button className="btn-teal" disabled={switchingMode || drivers.length === 0} onClick={() => switchDeliveryMode('own')} title={drivers.length === 0 ? 'Lie au moins un livreur pour activer ce mode' : ''}>
-            {switchingMode ? '...' : 'Passer en livraison interne (mon/mes livreur(s))'}
+          <button className="btn-teal" disabled={switchingMode || drivers.length === 0} onClick={() => switchDeliveryMode('own')} title={drivers.length === 0 ? t('editResto.linkOneDriver') : ''}>
+            {switchingMode ? '...' : t('editResto.switchInternal')}
           </button>
         ) : (
           <button className="btn-ghost" disabled={switchingMode} onClick={() => switchDeliveryMode('fairide')}>
-            {switchingMode ? '...' : 'Repasser au pool de livreurs Fairide'}
+            {switchingMode ? '...' : t('editResto.switchPool')}
           </button>
         )}
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🏷️ Frais de livraison</h3>
+        <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('editResto.deliveryFeesTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Prends à ta charge tout ou partie des frais de livraison pour te démarquer — visible comme une offre sur ta fiche dans la liste des restaurants. Ton livreur et Fairide touchent toujours leur part complète ; seule ta propre part est réduite du montant offert.
+          {t('editResto.deliveryFeesIntro')}
         </p>
         <label className="row" style={{ gap: 8, marginBottom: 10, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={freeDeliveryEdit} onChange={(e) => setFreeDeliveryEdit(e.target.checked)} />
-          <span>🚴 Offrir la livraison (gratuite pour le client)</span>
+          <span>{t('editResto.freeDelivery')}</span>
         </label>
         {!freeDeliveryEdit && (
           <div className="field" style={{ maxWidth: 220 }}>
-            <label>Réduction fixe sur les frais de livraison (€)</label>
-            <input type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder="Ex: 2" />
+            <label>{t('editResto.fixedDiscount')}</label>
+            <input type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder={t('editResto.phEx2')} />
           </div>
         )}
         {!freeDeliveryEdit && (
           <>
             <label className="row" style={{ gap: 8, margin: '12px 0 10px', cursor: 'pointer' }}>
               <input type="checkbox" style={{ width: 'auto' }} checked={freeDeliveryMinOrderEnabled} onChange={(e) => setFreeDeliveryMinOrderEnabled(e.target.checked)} />
-              <span>🚴 Offrir la livraison à partir d'un certain montant de commande</span>
+              <span>{t('editResto.freeDeliveryFrom')}</span>
             </label>
             {freeDeliveryMinOrderEnabled && (
               <div className="field" style={{ maxWidth: 220 }}>
-                <label>Montant minimum de commande (€)</label>
-                <input type="number" min="5" max="200" step="1" value={freeDeliveryMinOrderEdit} onChange={(e) => setFreeDeliveryMinOrderEdit(e.target.value)} placeholder="Ex: 25" />
+                <label>{t('editResto.minOrderAmount')}</label>
+                <input type="number" min="5" max="200" step="1" value={freeDeliveryMinOrderEdit} onChange={(e) => setFreeDeliveryMinOrderEdit(e.target.value)} placeholder={t('editResto.phEx25')} />
               </div>
             )}
           </>

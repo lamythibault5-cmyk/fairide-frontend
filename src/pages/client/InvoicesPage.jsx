@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Liste les commandes payées avec un lien vers leur facture Stripe (générée automatiquement au
 // paiement, voir invoice_creation dans routes/payments.js) — rien à générer/héberger nous-mêmes.
@@ -22,6 +23,7 @@ function isInPeriod(order, period) {
 }
 
 export default function InvoicesPage() {
+  const { t } = useLanguage();
   const { token, role } = useAuth();
   const toast = useToast();
   const { previewMode } = usePreviewMode();
@@ -55,7 +57,7 @@ export default function InvoicesPage() {
   }
 
   async function downloadSelected() {
-    if (selected.size === 0) { toast('Sélectionne au moins une facture.'); return; }
+    if (selected.size === 0) { toast(t('invoicesClient.toastSelectOne')); return; }
     setDownloading(true);
     try {
       const res = await fetch(`${API_BASE}/orders/invoices/download`, {
@@ -65,7 +67,7 @@ export default function InvoicesPage() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Échec du téléchargement.');
+        throw new Error(data.error || t('invoicesClient.downloadFailed'));
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -87,24 +89,24 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Mes factures</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
 
       {downloadable.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>
-          <p className="small" style={{ margin: '0 0 10px' }}>Sélectionne une période ou coche des factures individuellement, puis télécharge-les groupées dans un seul fichier.</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('invoicesClient.intro')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('week')}>Cette semaine</button>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('month')}>Ce mois-ci</button>
-            <button type="button" className="btn-ghost" onClick={() => selectPeriod('year')}>Cette année</button>
-            <button type="button" className="btn-ghost" onClick={() => setSelected(new Set())}>Tout désélectionner</button>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('week')}>{t('invoicesClient.thisWeek')}</button>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('month')}>{t('invoicesClient.thisMonth')}</button>
+            <button type="button" className="btn-ghost" onClick={() => selectPeriod('year')}>{t('invoicesClient.thisYear')}</button>
+            <button type="button" className="btn-ghost" onClick={() => setSelected(new Set())}>{t('invoicesClient.deselectAll')}</button>
           </div>
           <button type="button" className="btn-teal" disabled={selected.size === 0 || downloading} onClick={downloadSelected}>
-            {downloading ? '...' : `⬇️ Télécharger la sélection (${selected.size})`}
+            {downloading ? '...' : t('invoicesClient.downloadSelection', { n: selected.size })}
           </button>
         </div>
       )}
 
-      {orders.length === 0 && <div className="empty">Aucune commande payée pour l'instant.</div>}
+      {orders.length === 0 && <div className="empty">{t('invoicesClient.none')}</div>}
       {orders.map((o) => (
         <div key={o.id} className="card" style={{ marginBottom: 10 }}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
@@ -114,13 +116,13 @@ export default function InvoicesPage() {
               )}
               <div>
                 <div style={{ fontWeight: 700 }}>{o.restaurantName}</div>
-                <div className="small">{new Date(o.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</div>
+                <div className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</div>
               </div>
             </div>
             {o.invoiceUrl ? (
-              <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">📄 Voir la facture</a>
+              <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
             ) : (
-              <span className="small" style={{ opacity: 0.6 }}>Facture indisponible</span>
+              <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
             )}
           </div>
         </div>

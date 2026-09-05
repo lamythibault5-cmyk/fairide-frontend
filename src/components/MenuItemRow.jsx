@@ -83,9 +83,9 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   if (editing && !reorderMode && !selectMode) {
     return (
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
-        <div className="field"><label>Nom</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="field"><label>Description</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Ingrédients, préparation..." /></div>
-        <div className="field"><label>Prix (€)</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+        <div className="field"><label>{t('menuItem.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field"><label>{t('menuItem.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
+        <div className="field"><label>{t('menuItem.price')}</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
             restaurateur n'a rien à y faire dans le cas normal — Claude les remplit quand il clique
@@ -95,27 +95,26 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {item.translations && Object.keys(item.translations).length > 0 && (
           <div className="field">
             <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setShowTranslations((v) => !v)}>
-              {showTranslations ? '▾' : '▸'} Traductions ({Object.keys(item.translations).join(', ').toUpperCase()})
+              {showTranslations ? '▾' : '▸'} {t('menuItem.translations', { langs: Object.keys(item.translations).join(', ').toUpperCase() })}
             </button>
             {showTranslations && (
               <div style={{ borderLeft: '2px solid var(--line)', paddingLeft: 12, marginTop: 8 }}>
                 <p className="small" style={{ margin: '0 0 10px' }}>
-                  Générées automatiquement à partir de ta carte. Corrige seulement ce qui te semble faux —
-                  ce que tu modifies ici ne sera plus jamais réécrit.
+                  {t('menuItem.translationsHelp')}
                 </p>
                 {Object.entries(item.translations).map(([lang, tr]) => (
                   <div key={lang} style={{ marginBottom: 12 }}>
-                    <label style={{ textTransform: 'uppercase' }}>{lang}{tr.editedByOwner ? ' · corrigé par toi' : ''}</label>
+                    <label style={{ textTransform: 'uppercase' }}>{lang}{tr.editedByOwner ? t('menuItem.fixedByYou') : ''}</label>
                     <input
                       value={translationDrafts[lang]?.name ?? tr.name ?? ''}
                       onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), name: e.target.value } }))}
-                      placeholder="Nom du plat"
+                      placeholder={t('menuItem.phName')}
                       style={{ marginBottom: 6 }}
                     />
                     <input
                       value={translationDrafts[lang]?.desc ?? tr.desc ?? ''}
                       onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), desc: e.target.value } }))}
-                      placeholder="Description"
+                      placeholder={t('menuItem.description')}
                     />
                   </div>
                 ))}
@@ -124,7 +123,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           </div>
         )}
         <div className="field">
-          <label>Catégorie</label>
+          <label>{t('menuItem.category')}</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
             {(sections.length ? sections.map((s) => s.name) : CATEGORIES.map((c) => c.value)).map((name) => (
               <option key={name} value={name}>{categoryLabel(name, t)}</option>
@@ -132,11 +131,11 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           </select>
         </div>
         <div className="field">
-          <label>Sous-section (optionnel — ex: "Boissons froides" dans "Boissons")</label>
+          <label>{t('menuItem.subsection')}</label>
           <input
             value={subsection}
             onChange={(e) => setSubsection(e.target.value)}
-            placeholder="Laisser vide pour ne pas sous-grouper ce plat"
+            placeholder={t('menuItem.phSubsection')}
             list="subsection-suggestions"
           />
           {existingSubsections.length > 0 && (
@@ -146,18 +145,18 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           )}
         </div>
         <div className="field">
-          <label>Image (optionnel)</label>
+          <label>{t('menuItem.imageOptional')}</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             {resolveItemImage({ name, category, imageUrl }, sections) ? (
               <img loading="lazy" src={resolveItemImage({ name, category, imageUrl }, sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             ) : (
               <span className="dish-thumb-empty">{categoryEmoji(category)}</span>
             )}
-            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder="Colle une URL de photo (optionnel)" />
+            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder={t('menuItem.phPhotoUrl')} />
           </div>
           {restoId && (
             <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setGalleryOpen(true)}>
-              📷 Depuis ma galerie
+              {t('menuItem.fromGallery')}
             </button>
           )}
         </div>
@@ -167,7 +166,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           <GalleryPickerModal
             restoId={restoId}
             suggestions={galleryForSection(cuisine, category)}
-            suggestionsTitle={`Photos suggérées — ${categoryLabel(category, t)}`}
+            suggestionsTitle={t('menuItem.suggestedPhotos', { section: categoryLabel(category, t) })}
             currentImageUrl={imageUrl}
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}
@@ -178,20 +177,20 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         <div className="field">
           <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
             <input type="checkbox" style={{ width: 'auto' }} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
-            <span className="small">🥗 Marquer ce plat comme healthy (affiche l'emoji à côté du nom et fait apparaître le restaurant dans la section "Healthy")</span>
+            <span className="small">{t('menuItem.healthyLabel')}</span>
           </label>
         </div>
         {categoryKind(category) && (
           <div className="field">
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
               <input type="checkbox" style={{ width: 'auto' }} checked={suggestAtCheckout} onChange={(e) => setSuggestAtCheckout(e.target.checked)} />
-              <span className="small">⭐ Suggérer ce plat juste avant le paiement (au lieu du choix automatique)</span>
+              <span className="small">{t('menuItem.upsellLabel')}</span>
             </label>
           </div>
         )}
         {allOptionGroups.length > 0 && (
           <div className="field">
-            <label>Groupes d'options</label>
+            <label>{t('menuItem.optionGroups')}</label>
             {allOptionGroups.map((g) => (
               <label key={g.id} className="row" style={{ gap: 8, marginBottom: 4, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={groupIds.has(g.id)} onChange={() => toggleGroup(g.id)} />
@@ -206,7 +205,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {item.activePromo && (
           <div className="row" style={{ gap: 8, marginBottom: 12 }}>
             <span className="pill teal">🏷️ {item.activePromo.label}</span>
-            <span className="small">— gère les promotions depuis la page "Promotions"</span>
+            <span className="small">{t('menuItem.promoHint')}</span>
           </div>
         )}
 
@@ -216,7 +215,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             {togglingAvailable ? '...' : item.available === false ? '✅ Rendre disponible' : '🚫 Marquer indisponible'}
           </button>
           <button className="btn-danger-ghost" disabled={deleting} onClick={remove}>{deleting ? '...' : 'Supprimer'}</button>
-          <button className="btn-ghost" onClick={() => setEditing(false)}>Fermer</button>
+          <button className="btn-ghost" onClick={() => setEditing(false)}>{t('menuItem.close')}</button>
         </div>
       </div>
     );
@@ -240,7 +239,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           type="button"
           className="menu-item-drag-handle"
           style={{ touchAction: 'none' }}
-          aria-label="Déplacer ce plat"
+          aria-label={t('menuItem.moveDish')}
           {...attributes}
           {...listeners}
         >

@@ -49,7 +49,7 @@ function offerLabelFor(r) {
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
 function deliveryOfferLabelFor(r) {
   if (r.freeDelivery) return '🚴 Livraison offerte';
-  if (r.freeDeliveryMinOrder != null) return `🚴 Offerte dès ${r.freeDeliveryMinOrder.toFixed(2)}€`;
+  if (r.freeDeliveryMinOrder != null) return t('restoListUi.freeFrom', { min: r.freeDeliveryMinOrder.toFixed(2) });
   if (r.deliveryFeeDiscount > 0) return `🚴 -${r.deliveryFeeDiscount.toFixed(2)}€ livraison`;
   return null;
 }
@@ -72,7 +72,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         <span className="pill teal">{r.commune}</span>
         {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
         {deliveryOfferLabel && <span className="pill teal">{deliveryOfferLabel}</span>}
-        {isClosed && <span className="pill closed-pill">🔒 Fermé</span>}
+        {isClosed && <span className="pill closed-pill">{t('restoListUi.closed')}</span>}
       </div>
       <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>
         <span className="rest-card-name-text">{r.name}</span>
@@ -122,7 +122,7 @@ export default function RestaurantList() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  usePageMeta({ title: 'Restaurants et commerces à Bruxelles — Fairide', path: '/restaurants' });
+  usePageMeta({ title: t('restoListUi.pageTitle'), path: '/restaurants' });
   const homeCommune = matchCommune(user?.addressCity);
   // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :
   // la liste s'ouvre déjà filtrée, sans que l'URL ne change de forme.

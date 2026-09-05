@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Le moteur commun des mini-jeux : boucle, saisie, rendu, tableau de bord, règles.
 //
@@ -18,7 +19,16 @@ function lireMeilleur(cle) {
   try { return Number(localStorage.getItem(cle)) || 0; } catch { return 0; }
 }
 
+// Texte d'un jeu dans la langue de l'interface (jeux.js garde le français comme source) ; repli sur
+// le français si une clé manque, plutôt que d'afficher la clé.
+export function tJeu(t, jeu, champ, defaut) {
+  const cle = `jeux.${jeu.key}_${champ}`;
+  const v = t(cle);
+  return v === cle ? defaut : v;
+}
+
 export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false }) {
+  const { t } = useLanguage();
   const [taille, setTaille] = useState({ w: width, h: height });
   const [status, setStatus] = useState('idle'); // idle | playing | paused | lost
   const [score, setScore] = useState(0);
@@ -166,8 +176,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     <div className={`jeu${large ? ' jeu--large' : ''}${fill ? ' jeu--fill' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best">🥇 {meilleur}</span>
-        <span className="jeu-score">🏆 {score} <span className="jeu-niveau">· Niv. {niveau() + 1}</span></span>
-        <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={`Règles de ${jeu.label}`} title="Comment jouer">📖</button>
+        <span className="jeu-score">🏆 {score} <span className="jeu-niveau">{t('gameFrame.level', { n: niveau() + 1 })}</span></span>
+        <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
       </div>
 
       {/* En `fill`, c'est le cadre (et non tout le bloc, qui contient aussi le tableau de bord et les
@@ -189,37 +199,37 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
             <div className="jeu-carte">
               <span className="jeu-titre">{jeu.emoji} {jeu.label}</span>
               <span className="jeu-sous">{jeu.sub}</span>
-              <button type="button" className="jeu-btn" onClick={commencer}>▶️ Commencer</button>
-              <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>📖 Comment jouer</button>
+              <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
+              <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
             </div>
           </div>
         )}
         {status === 'paused' && !reglesOuvertes && (
           <div className="jeu-overlay">
             <div className="jeu-carte">
-              <span className="jeu-titre">⏸️ En pause</span>
-              <button type="button" className="jeu-btn" onClick={() => setStatus('playing')}>▶️ Continuer</button>
-              <button type="button" className="jeu-btn jeu-btn-ghost" onClick={commencer}>🔄 Recommencer</button>
+              <span className="jeu-titre">{t('gameFrame.paused')}</span>
+              <button type="button" className="jeu-btn" onClick={() => setStatus('playing')}>{t('gameFrame.resume')}</button>
+              <button type="button" className="jeu-btn jeu-btn-ghost" onClick={commencer}>{t('gameFrame.restart')}</button>
             </div>
           </div>
         )}
         {status === 'lost' && !reglesOuvertes && (
           <div className="jeu-overlay">
             <div className="jeu-carte">
-              <span className="jeu-titre">{jeu.perdu}</span>
-              <span className="jeu-sous">Score : {score}{nouveauRecord ? ' — 🎉 nouveau record !' : ''}</span>
-              <button type="button" className="jeu-btn" onClick={commencer}>🔄 Rejouer</button>
+              <span className="jeu-titre">{tJeu(t, jeu, 'perdu', jeu.perdu)}</span>
+              <span className="jeu-sous">{t('gameFrame.score', { score, record: nouveauRecord ? t('gameFrame.newRecord') : '' })}</span>
+              <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.playAgain')}</button>
             </div>
           </div>
         )}
         {reglesOuvertes && (
-          <div className="jeu-overlay" role="dialog" aria-label={`Règles de ${jeu.label}`}>
+          <div className="jeu-overlay" role="dialog" aria-label={t('gameFrame.rulesOf', { game: jeu.label })}>
             <div className="jeu-carte jeu-regles">
               <span className="jeu-titre">{jeu.emoji} {jeu.label}</span>
               <ul>
-                {jeu.regles.map((r) => <li key={r}>{r}</li>)}
+                {jeu.regles.map((r, i) => <li key={r}>{tJeu(t, jeu, `regles_${i}`, r)}</li>)}
               </ul>
-              <p className="jeu-controles"><b>Commandes.</b> {jeu.controles}</p>
+              <p className="jeu-controles"><b>{t('gameFrame.controls')}</b> {jeu.controles}</p>
               {/* Ouvrir les règles en pleine partie a mis le jeu en pause : les refermer reprend la partie,
                   sans repasser par l'écran « En pause » qui ferait un clic de plus pour rien. */}
               <button type="button" className="jeu-btn" onClick={() => { setReglesOuvertes(false); if (status === 'paused') setStatus('playing'); }}>
@@ -231,7 +241,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       </div>
 
       <div className="jeu-actions">
-        {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label="Mettre en pause">⏸️ Pause</button>}
+        {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label={t('gameFrame.pauseAria')}>{t('gameFrame.pause')}</button>}
       </div>
     </div>
   );

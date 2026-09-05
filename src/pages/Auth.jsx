@@ -199,7 +199,7 @@ export default function Auth() {
       return;
     }
     if (mode === 'register' && role === 'restaurant' && (!legalName.trim() || !companyNumber.trim() || !vatNumber.trim() || !responsibleName.trim())) {
-      toast("Les informations légales de ton commerce sont requises (nom légal, n° d'entreprise, n° TVA, responsable).");
+      toast(t('auth.toastLegalRequired'));
       return;
     }
     setLoading(true);
@@ -374,7 +374,7 @@ export default function Auth() {
               <form onSubmit={submitForgotPassword}>
                 <div className="field">
                   <label htmlFor="auth-f-1">{t('auth.email')}</label>
-                  <input id="auth-f-1" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder="toi@exemple.com" />
+                  <input id="auth-f-1" type="email" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} placeholder={t('auth.phEmail')} />
                 </div>
                 <button type="submit" className="btn-gold btn-block" disabled={forgotLoading}>
                   {forgotLoading ? t('common.loading') : t('auth.sendLink')}
@@ -510,7 +510,7 @@ export default function Auth() {
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
                   <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
-                    value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder="Ex: HORECA BRUSSELS SRL" />
+                    value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder={t('auth.phLegalName')} />
                   {fieldError('legalName')}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
@@ -545,7 +545,7 @@ export default function Auth() {
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-8">{t('auth.street')}</label>
                     <input id="auth-f-8" className={errors.addressStreet ? 'input-invalid' : undefined}
-                      value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Rue du Midi" />
+                      value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('auth.phStreet')} />
                     {fieldError('addressStreet')}
                   </div>
                   <div className="field" style={{ flex: 1 }}>
@@ -565,7 +565,7 @@ export default function Auth() {
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-11">{t('auth.city')}</label>
                     <input id="auth-f-11" className={errors.addressCity ? 'input-invalid' : undefined}
-                      value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder="Bruxelles" />
+                      value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('auth.phCity')} />
                     {fieldError('addressCity')}
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export default function Auth() {
                 <div className="field">
                   <label htmlFor="auth-f-17">{t('auth.email')}</label>
                   <input id="auth-f-17" type="email" className={errors.email ? 'input-invalid' : undefined}
-                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
                   {fieldError('email')}
                 </div>
                 <div className="field">
@@ -645,7 +645,7 @@ export default function Auth() {
             <form onSubmit={submit}>
               <div className="field">
                 <label htmlFor="auth-f-17">{t('auth.email')}</label>
-                <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="toi@exemple.com" />
+                <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
               </div>
               <div className="field">
                 <label htmlFor="auth-f-18">{t('auth.password')}</label>

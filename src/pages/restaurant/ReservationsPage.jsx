@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { statusLabel } from '../../orderStatus';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Réservations : tout ce que le restaurateur fait avec ses tables, en un seul endroit.
 //
@@ -18,25 +19,25 @@ import { statusLabel } from '../../orderStatus';
 
 const PLAGE_DEFAUT = { debut: 11, fin: 23 };
 const JOURS = [
-  { cle: 'mon', label: 'Lundi' }, { cle: 'tue', label: 'Mardi' }, { cle: 'wed', label: 'Mercredi' },
-  { cle: 'thu', label: 'Jeudi' }, { cle: 'fri', label: 'Vendredi' }, { cle: 'sat', label: 'Samedi' },
-  { cle: 'sun', label: 'Dimanche' }
+  { cle: 'mon', label: 'monday' }, { cle: 'tue', label: 'tuesday' }, { cle: 'wed', label: 'wednesday' },
+  { cle: 'thu', label: 'thursday' }, { cle: 'fri', label: 'friday' }, { cle: 'sat', label: 'saturday' },
+  { cle: 'sun', label: 'sunday' }
 ];
-const JOURS_COURTS = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-const SOURCES = { client: 'En ligne', restaurant: 'Saisie', phone: 'Téléphone', walk_in: 'Passage' };
-const ACOMPTE_LABEL = { pending: 'à payer', paid: 'encaissé', refunded: 'remboursé', kept: 'conservé' };
+const JOURS_COURTS = ['wdSun', 'wdMon', 'wdTue', 'wdWed', 'wdThu', 'wdFri', 'wdSat'];
+const SOURCES = { client: 'srcClient', restaurant: 'srcRestaurant', phone: 'srcPhone', walk_in: 'srcWalkIn' };
+const ACOMPTE_LABEL = { pending: 'depPending', paid: 'depPaid', refunded: 'depRefunded', kept: 'depKept' };
 const ONGLETS = [
-  { cle: 'agenda', label: '📅 Agenda' },
-  { cle: 'reglages', label: '⚙️ Réglages' },
-  { cle: 'salle', label: '🪑 Plan de salle' },
-  { cle: 'stats', label: '📊 Statistiques' }
+  { cle: 'agenda', label: 'tabAgenda' },
+  { cle: 'reglages', label: 'tabSettings' },
+  { cle: 'salle', label: 'tabFloor' },
+  { cle: 'stats', label: 'tabStats' }
 ];
 
 function isoDuJour(d) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Brussels' }).format(d);
 }
 function heureLocale(ms) {
-  return new Intl.DateTimeFormat('fr-BE', { timeZone: 'Europe/Brussels', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms));
+  return new Intl.DateTimeFormat(getLocale(), { timeZone: 'Europe/Brussels', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms));
 }
 // Minutes depuis minuit, à l'heure de Bruxelles — le navigateur du restaurateur peut être ailleurs,
 // et une réservation doit s'afficher à l'heure de sa salle, pas à celle de son téléphone.
@@ -53,9 +54,9 @@ function decalerJour(iso, jours) {
   const [a, mo, j] = iso.split('-').map(Number);
   return isoDuJour(new Date(Date.UTC(a, mo - 1, j + jours, 12)));
 }
-function libelleJour(iso, court = false) {
+function libelleJour(iso, court = false, locale = getLocale()) {
   const [a, mo, j] = iso.split('-').map(Number);
-  return new Intl.DateTimeFormat('fr-BE', court ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' })
+  return new Intl.DateTimeFormat(locale, court ? { weekday: 'short', day: 'numeric', month: 'short' } : { weekday: 'long', day: 'numeric', month: 'long' })
     .format(new Date(Date.UTC(a, mo - 1, j, 12)));
 }
 function lundiDe(iso) {
@@ -68,6 +69,7 @@ function euros(n) { return `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 function estClose(r) { return ['refuse', 'annule', 'livre'].includes(r.status); }
 
 export default function ReservationsPage() {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const { restaurant, restoId, loadDashboard } = useOutletContext();
@@ -86,14 +88,14 @@ export default function ReservationsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>📅 Réservations</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('resa.title')}</h2>
 
-      <div className="resa-onglets" role="tablist" aria-label="Sections des réservations">
+      <div className="resa-onglets" role="tablist" aria-label={t('resa.ariaSections')}>
         {ONGLETS.map((o) => (
           <button key={o.cle} type="button" role="tab" aria-selected={onglet === o.cle}
             className={`resa-onglet${onglet === o.cle ? ' actif' : ''}`}
             onClick={() => setSearchParams(o.cle === 'agenda' ? {} : { onglet: o.cle })}>
-            {o.label}
+            {t(`resa.${o.label}`)}
           </button>
         ))}
       </div>
@@ -101,9 +103,8 @@ export default function ReservationsPage() {
       {!restaurant?.offersDineIn && (
         <div className="card" style={{ borderColor: 'var(--gold)' }}>
           <p className="small" style={{ margin: 0 }}>
-            La réservation de table est désactivée pour ton commerce : aucun nouveau client ne peut
-            réserver en ligne (tu peux toujours saisir tes réservations ici). Réactive-la dans
-            <b> Mon compte → Services proposés</b>.
+            {t('resa.disabledIntro')}
+            <b> {t('resa.disabledPath')}</b>.
           </p>
         </div>
       )}
@@ -120,6 +121,7 @@ export default function ReservationsPage() {
 // AGENDA — jour (grille salle × heures + liste) ou semaine (sept colonnes), saisie manuelle, actions.
 // ------------------------------------------------------------------------------------------------
 function Agenda({ token, toast, restoId, tables, restaurant }) {
+  const { t, locale } = useLanguage();
   const [date, setDate] = useState(() => isoDuJour(new Date()));
   const [vue, setVue] = useState('jour');
   const [donnees, setDonnees] = useState(null);
@@ -167,7 +169,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
     for (let m = plage.debut; m < plage.fin; m += 60) out.push(m / 60);
     return out;
   }, [plage]);
-  const tablesActives = (tables || []).filter((t) => t.active);
+  const tablesActives = (tables || []).filter((tb) => tb.active);
   const couverts = actives.reduce((a, r) => a + (r.partySize || 0), 0);
   const largeurMinutes = Math.max(1, plage.fin - plage.debut);
   const estAujourdhui = date === isoDuJour(new Date());
@@ -199,27 +201,27 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
       <div className="card">
         <div className="row" style={{ gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
           <button type="button" className="btn-outline" style={{ padding: '7px 12px' }}
-            onClick={() => setDate((d) => decalerJour(d, -navPas))} aria-label={vue === 'jour' ? 'Jour précédent' : 'Semaine précédente'}>←</button>
+            onClick={() => setDate((d) => decalerJour(d, -navPas))} aria-label={vue === 'jour' ? t('resa.prevDay') : t('resa.prevWeek')}>←</button>
           <div style={{ textAlign: 'center', flex: 1, minWidth: 0 }}>
             <b style={{ display: 'block', textTransform: 'capitalize' }}>
-              {vue === 'jour' ? libelleJour(date) : `Semaine du ${libelleJour(lundi, true)}`}
+              {vue === 'jour' ? libelleJour(date, false, locale) : `${t('resa.weekOf')} ${libelleJour(lundi, true, locale)}`}
             </b>
             {!estAujourdhui && (
               <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }}
-                onClick={() => setDate(isoDuJour(new Date()))}>revenir à aujourd'hui</button>
+                onClick={() => setDate(isoDuJour(new Date()))}>{t('resa.backToToday')}</button>
             )}
           </div>
           <button type="button" className="btn-outline" style={{ padding: '7px 12px' }}
-            onClick={() => setDate((d) => decalerJour(d, navPas))} aria-label={vue === 'jour' ? 'Jour suivant' : 'Semaine suivante'}>→</button>
+            onClick={() => setDate((d) => decalerJour(d, navPas))} aria-label={vue === 'jour' ? t('resa.nextDay') : t('resa.nextWeek')}>→</button>
         </div>
         <div className="row" style={{ gap: 8, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
           <input type="date" value={date} onChange={(e) => e.target.value && setDate(e.target.value)} style={{ flex: '1 1 150px', maxWidth: 200 }} />
-          <div className="resa-bascule" role="group" aria-label="Vue">
-            <button type="button" className={vue === 'jour' ? 'actif' : ''} onClick={() => setVue('jour')}>Jour</button>
-            <button type="button" className={vue === 'semaine' ? 'actif' : ''} onClick={() => setVue('semaine')}>Semaine</button>
+          <div className="resa-bascule" role="group" aria-label={t('resa.ariaView')}>
+            <button type="button" className={vue === 'jour' ? 'actif' : ''} onClick={() => setVue('jour')}>{t('resa.day')}</button>
+            <button type="button" className={vue === 'semaine' ? 'actif' : ''} onClick={() => setVue('semaine')}>{t('resa.week')}</button>
           </div>
           <button type="button" className="btn-teal" style={{ marginLeft: 'auto' }} onClick={() => setFormulaire((f) => !f)}>
-            {formulaire ? 'Fermer' : '＋ Ajouter une réservation'}
+            {formulaire ? t('resa.close') : t('resa.addReservation')}
           </button>
         </div>
       </div>
@@ -230,7 +232,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
           onCree={(r) => { setFormulaire(false); setDate(isoDuJour(new Date(r.startAt))); setVue('jour'); setOuverte(r.id); recharger(); }} />
       )}
 
-      {chargement && <p className="small">Chargement…</p>}
+      {chargement && <p className="small">{t('resa.loading')}</p>}
 
       {!chargement && vue === 'semaine' && semaine && (
         <VueSemaine lundi={lundi} reservations={semaine.reservations} onJour={(iso) => { setDate(iso); setVue('jour'); }} />
@@ -241,8 +243,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
           {tablesActives.length === 0 && (
             <div className="card">
               <p className="small" style={{ margin: 0 }}>
-                Aucune table déclarée : la grille ne peut rien afficher et les réservations en ligne sont
-                acceptées <b>sans limite</b>. Ajoute tes tables dans l'onglet <b>Plan de salle</b>.
+                {t('resa.noTablesGrid1')} <b>{t('resa.noTablesGrid2')}</b>{t('resa.noTablesGrid3')} <b>{t('resa.floorPlan')}</b>.
               </p>
             </div>
           )}
@@ -250,23 +251,21 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
           {tablesActives.length > 0 && (
             <div className="card">
               <p className="small" style={{ margin: '0 0 10px' }}>
-                <b>{actives.length}</b> réservation{actives.length > 1 ? 's' : ''} ·
-                {' '}<b>{couverts}</b> couvert{couverts > 1 ? 's' : ''} ·
-                {' '}{tablesActives.length} table{tablesActives.length > 1 ? 's' : ''}
-                {enAttente > 0 && <> · <span className="status-badge status-nouveau">{enAttente} à confirmer</span></>}
+                {t('resa.daySummary', { n: actives.length, c: couverts, k: tablesActives.length })}
+                {enAttente > 0 && <> · <span className="status-badge status-nouveau">{t('resa.toConfirmCount', { n: enAttente })}</span></>}
               </p>
               <div className="resa-grid-wrap">
                 <div className="resa-grid" style={{ '--resa-heures': heures.length }}>
                   <div className="resa-grid-coin" />
                   {heures.map((h) => <div key={h} className="resa-grid-heure">{String(h).padStart(2, '0')}h</div>)}
-                  {tablesActives.map((t) => (
-                    <Fragment key={t.id}>
+                  {tablesActives.map((tb) => (
+                    <Fragment key={tb.id}>
                       <div className="resa-grid-table">
-                        <b title={t.name}>{t.name}</b>
-                        <span className="small">{t.seats} pl.{t.zone ? ` · ${t.zone}` : ''}</span>
+                        <b title={tb.name}>{tb.name}</b>
+                        <span className="small">{t('resa.seatsShort', { n: tb.seats })}{tb.zone ? ` · ${tb.zone}` : ''}</span>
                       </div>
                       <div className="resa-grid-piste">
-                        {actives.filter((r) => r.tableId === t.id).map((r) => {
+                        {actives.filter((r) => r.tableId === tb.id).map((r) => {
                           const d = minutesDansLeJour(r, date);
                           const g = Math.max(d, plage.debut);
                           const f = Math.min(d + r.durationMinutes, plage.fin);
@@ -275,7 +274,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
                             <button type="button" key={r.id}
                               className={`resa-bloc resa-bloc-${r.status}${r.arrival === 'arrive' ? ' resa-bloc-arrive' : ''}${r.arrival === 'no_show' ? ' resa-bloc-absent' : ''}${ouverte === r.id ? ' resa-bloc-choisi' : ''}`}
                               style={{ left: `${((g - plage.debut) / largeurMinutes) * 100}%`, width: `${((f - g) / largeurMinutes) * 100}%` }}
-                              title={`${r.reservationName} · ${r.partySize} pers. · ${heureLocale(r.startAt)}`}
+                              title={t('resa.blocTitle', { name: r.reservationName, n: r.partySize, time: heureLocale(r.startAt) })}
                               onClick={() => setOuverte(ouverte === r.id ? null : r.id)}>
                               <b>{r.reservationName}</b>
                               <span>{r.partySize}p{r.depositAmount > 0 ? ' · 💳' : ''}{r.note ? ' · 💬' : ''}</span>
@@ -289,16 +288,15 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
               </div>
               {actives.some((r) => !r.tableId) && (
                 <p className="small" style={{ margin: '10px 0 0', padding: '8px 10px', background: 'var(--cream-dim)', borderRadius: 9 }}>
-                  ⚠️ {actives.filter((r) => !r.tableId).length} réservation(s) sans table attribuée — ouvre-les
-                  ci-dessous pour leur choisir une table.
+                  {t('resa.withoutTableWarn', { n: actives.filter((r) => !r.tableId).length })}
                 </p>
               )}
             </div>
           )}
 
           <div className="card">
-            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Dans l'ordre d'arrivée</h3>
-            {duJour.length === 0 && <p className="small" style={{ margin: 0 }}>Aucune réservation ce jour-là.</p>}
+            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('resa.inArrivalOrder')}</h3>
+            {duJour.length === 0 && <p className="small" style={{ margin: 0 }}>{t('resa.noneThatDay')}</p>}
             {duJour.slice().sort((a, b) => a.startAt - b.startAt).map((r) => (
               <LigneReservation key={r.id} r={r} tables={tables || []} ouverte={ouverte === r.id}
                 onToggle={() => setOuverte(ouverte === r.id ? null : r.id)}
@@ -312,6 +310,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
 }
 
 function VueSemaine({ lundi, reservations, onJour }) {
+  const { t, locale } = useLanguage();
   const jours = Array.from({ length: 7 }, (_, i) => decalerJour(lundi, i));
   const aujourdhui = isoDuJour(new Date());
   return (
@@ -323,9 +322,9 @@ function VueSemaine({ lundi, reservations, onJour }) {
           const attente = duJour.filter((r) => r.status === 'nouveau').length;
           return (
             <button type="button" key={iso} className={`resa-semaine-jour${iso === aujourdhui ? ' aujourdhui' : ''}`} onClick={() => onJour(iso)}>
-              <b style={{ textTransform: 'capitalize' }}>{libelleJour(iso, true)}</b>
-              <span className="small">{duJour.length ? `${duJour.length} résa · ${couverts} couv.` : 'Rien'}</span>
-              {attente > 0 && <span className="status-badge status-nouveau">{attente} à confirmer</span>}
+              <b style={{ textTransform: 'capitalize' }}>{libelleJour(iso, true, locale)}</b>
+              <span className="small">{duJour.length ? t('resa.weekSummary', { n: duJour.length, c: couverts }) : t('resa.nothing')}</span>
+              {attente > 0 && <span className="status-badge status-nouveau">{t('resa.toConfirmCount', { n: attente })}</span>}
               <span className="resa-semaine-liste">
                 {duJour.slice(0, 5).map((r) => <span key={r.id}>{heureLocale(r.startAt)} {r.reservationName} ({r.partySize})</span>)}
                 {duJour.length > 5 && <span>+{duJour.length - 5}…</span>}
@@ -339,7 +338,8 @@ function VueSemaine({ lundi, reservations, onJour }) {
 }
 
 function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId, onMaj, onRecharger }) {
-  const table = tables.find((t) => t.id === r.tableId);
+  const { t } = useLanguage();
+  const table = tables.find((tb) => tb.id === r.tableId);
   const [enCours, setEnCours] = useState(null);
   const [noteInterne, setNoteInterne] = useState(r.internalNote || '');
   const [message, setMessage] = useState('');
@@ -374,55 +374,55 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
         <div className="resa-ligne-corps">
           <b>{r.reservationName}{r.arrival === 'arrive' ? ' ✅' : r.arrival === 'no_show' ? ' ❌' : ''}</b>
           <span className="small">
-            {r.partySize} personne{r.partySize > 1 ? 's' : ''}
-            {table ? ` · ${table.name}` : ' · sans table attribuée'}
-            {r.itemCount > 0 ? ` · ${r.itemCount} plat${r.itemCount > 1 ? 's' : ''} commandé${r.itemCount > 1 ? 's' : ''}` : ''}
-            {r.depositAmount > 0 ? ` · 💳 ${euros(r.depositAmount)} ${ACOMPTE_LABEL[r.depositStatus] || ''}` : ''}
+            {t('resa.nPeople', { n: r.partySize })}
+            {table ? ` · ${table.name}` : t('resa.noTableAssigned')}
+            {r.itemCount > 0 ? t('resa.dishesOrdered', { n: r.itemCount }) : ''}
+            {r.depositAmount > 0 ? ` · 💳 ${euros(r.depositAmount)} ${ACOMPTE_LABEL[r.depositStatus] ? t(`resa.${ACOMPTE_LABEL[r.depositStatus]}`) : ''}` : ''}
             {r.note ? ' · 💬' : ''}{r.internalNote ? ' · 📝' : ''}
           </span>
         </div>
-        <span className={`status-badge status-${r.status}`}>{statusLabel(r.status, 'dine_in')}</span>
+        <span className={`status-badge status-${r.status}`}>{statusLabel(r.status, 'dine_in', t)}</span>
       </button>
 
       {ouverte && (
         <div className="resa-detail">
           <div className="resa-detail-infos">
-            <span className="pill">{SOURCES[r.source] || 'En ligne'}</span>
+            <span className="pill">{t(`resa.${SOURCES[r.source] || 'srcClient'}`)}</span>
             {r.clientPhone && <a className="pill" href={`tel:${r.clientPhone}`}>📞 {r.clientPhone}</a>}
             {r.clientEmail && <a className="pill" href={`mailto:${r.clientEmail}`}>✉️ {r.clientEmail}</a>}
-            {r.code && r.paid && <span className="pill">Code {r.code}</span>}
-            {r.arrival === 'arrive' && <span className="pill teal">Client arrivé</span>}
-            {r.arrival === 'no_show' && <span className="pill" style={{ background: 'rgba(217,45,60,0.12)', color: 'var(--red)' }}>Absent (no-show)</span>}
+            {r.code && r.paid && <span className="pill">{t('resa.codeLabel', { code: r.code })}</span>}
+            {r.arrival === 'arrive' && <span className="pill teal">{t('resa.guestArrived')}</span>}
+            {r.arrival === 'no_show' && <span className="pill" style={{ background: 'rgba(217,45,60,0.12)', color: 'var(--red)' }}>{t('resa.noShowBadge')}</span>}
           </div>
-          {r.note && <p className="small resa-note-client">💬 <b>Demande du client :</b> {r.note}</p>}
+          {r.note && <p className="small resa-note-client">💬 <b>{t('resa.guestRequest')}</b> {r.note}</p>}
 
           {/* Décisions : confirmer/refuser tant que c'est une demande ; arrivée/absence/annulation ensuite. */}
           {aVenir && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
               {r.status === 'nouveau' && (
                 <>
-                  <button type="button" className="btn-teal" disabled={!!enCours} onClick={() => action('accept', () => ordre('accept'))}>{enCours === 'accept' ? '…' : '✅ Confirmer'}</button>
-                  <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('refuse', () => ordre('refuse'))}>{enCours === 'refuse' ? '…' : 'Refuser'}</button>
+                  <button type="button" className="btn-teal" disabled={!!enCours} onClick={() => action('accept', () => ordre('accept'))}>{enCours === 'accept' ? '…' : t('resa.confirm')}</button>
+                  <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('refuse', () => ordre('refuse'))}>{enCours === 'refuse' ? '…' : t('resa.refuse')}</button>
                 </>
               )}
               {r.status !== 'nouveau' && !r.arrival && (
                 <>
-                  <button type="button" className="btn-teal" disabled={!!enCours} onClick={() => action('arrive', () => ordre('arrival', { arrival: 'arrive' }))}>{enCours === 'arrive' ? '…' : '✅ Client arrivé'}</button>
+                  <button type="button" className="btn-teal" disabled={!!enCours} onClick={() => action('arrive', () => ordre('arrival', { arrival: 'arrive' }))}>{enCours === 'arrive' ? '…' : t('resa.guestArrivedBtn')}</button>
                   <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('no_show', () => ordre('arrival', { arrival: 'no_show' }))}>{enCours === 'no_show' ? '…' : '❌ Absent'}</button>
                 </>
               )}
-              <button type="button" className="btn-ghost" onClick={() => setDeplacement((d) => !d)}>🕐 Déplacer / modifier</button>
+              <button type="button" className="btn-ghost" onClick={() => setDeplacement((d) => !d)}>{t('resa.moveEdit')}</button>
             </div>
           )}
           {finie && r.arrival && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              <button type="button" className="btn-ghost" disabled={!!enCours} onClick={() => action('attendu', () => ordre('arrival', { arrival: 'attendu' }))}>Annuler ce pointage</button>
+              <button type="button" className="btn-ghost" disabled={!!enCours} onClick={() => action('attendu', () => ordre('arrival', { arrival: 'attendu' }))}>{t('resa.undoCheckin')}</button>
             </div>
           )}
           {r.status === 'livre' && !r.arrival && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
-              <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('arrive', () => ordre('arrival', { arrival: 'arrive' }))}>✅ Était présent</button>
-              <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('no_show', () => ordre('arrival', { arrival: 'no_show' }))}>❌ Absent</button>
+              <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('arrive', () => ordre('arrival', { arrival: 'arrive' }))}>{t('resa.wasPresent')}</button>
+              <button type="button" className="btn-outline" disabled={!!enCours} onClick={() => action('no_show', () => ordre('arrival', { arrival: 'no_show' }))}>{t('resa.absent')}</button>
             </div>
           )}
 
@@ -430,38 +430,38 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
             <div className="resa-deplacer">
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: '1 1 130px' }}>
-                  <label>Jour</label>
+                  <label>{t('resa.day')}</label>
                   <input type="date" value={jour} onChange={(e) => setJour(e.target.value)} />
                 </div>
                 <div style={{ flex: '0 0 100px' }}>
-                  <label>Heure</label>
+                  <label>{t('resa.time')}</label>
                   <input type="time" step="900" value={heure} onChange={(e) => setHeure(e.target.value)} />
                 </div>
                 <div style={{ flex: '0 0 96px' }}>
-                  <label>Durée</label>
+                  <label>{t('resa.duration')}</label>
                   <select value={duree} onChange={(e) => setDuree(Number(e.target.value))}>
-                    {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{m >= 60 ? `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ''}` : `${m} min`}</option>)}
+                    {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{m % 60 ? t('resa.durationHM', { h: Math.floor(m / 60), m: m % 60 }) : t('resa.durationH', { h: m / 60 })}</option>)}
                   </select>
                 </div>
                 <div style={{ flex: '0 0 90px' }}>
-                  <label>Pers.</label>
+                  <label>{t('resa.ppl')}</label>
                   <input type="number" min="1" max="200" value={couverts} onChange={(e) => setCouverts(e.target.value)} />
                 </div>
                 <div style={{ flex: '1 1 140px' }}>
-                  <label>Table</label>
+                  <label>{t('resa.table')}</label>
                   <select value={r.tableId || ''} disabled={!!enCours}
                     onChange={(e) => action('table', () => champ({ tableId: e.target.value || null, notifier: false }))}>
-                    <option value="">Automatique</option>
-                    {tables.filter((t) => t.active).map((t) => <option key={t.id} value={t.id}>{t.name} ({t.seats} pl.{t.zone ? `, ${t.zone}` : ''})</option>)}
+                    <option value="">{t('resa.automatic')}</option>
+                    {tables.filter((tb) => tb.active).map((tb) => <option key={tb.id} value={tb.id}>{tb.name} ({t('resa.seatsShort', { n: tb.seats })}{tb.zone ? `, ${tb.zone}` : ''})</option>)}
                   </select>
                 </div>
               </div>
               <div className="row" style={{ gap: 6, marginTop: 8 }}>
                 <button type="button" className="btn-teal" disabled={!!enCours}
                   onClick={() => action('deplacer', () => champ({ startAt: new Date(`${jour}T${heure}:00`).toISOString(), durationMinutes: duree, partySize: Number(couverts) }))}>
-                  {enCours === 'deplacer' ? '…' : 'Enregistrer (le client est prévenu)'}
+                  {enCours === 'deplacer' ? '…' : t('resa.saveGuestNotified')}
                 </button>
-                <button type="button" className="btn-ghost" onClick={() => setDeplacement(false)}>Fermer</button>
+                <button type="button" className="btn-ghost" onClick={() => setDeplacement(false)}>{t('resa.close')}</button>
               </div>
             </div>
           )}
@@ -469,37 +469,37 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
           {/* Note interne : pour la salle, jamais montrée au client (allergie signalée par téléphone,
               anniversaire, client difficile…). */}
           <div style={{ marginTop: 10 }}>
-            <label htmlFor={`note-${r.id}`}>📝 Note interne (invisible pour le client)</label>
-            <textarea id={`note-${r.id}`} rows={2} value={noteInterne} placeholder="Ex. : anniversaire, chaise bébé, allergie arachides…"
+            <label htmlFor={`note-${r.id}`}>{t('resa.internalNoteLabel')}</label>
+            <textarea id={`note-${r.id}`} rows={2} value={noteInterne} placeholder={t('resa.phInternalNote')}
               onChange={(e) => setNoteInterne(e.target.value)} />
             {noteInterne !== (r.internalNote || '') && (
               <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 12px' }} disabled={!!enCours}
-                onClick={() => action('note', () => champ({ internalNote: noteInterne }))}>{enCours === 'note' ? '…' : 'Enregistrer la note'}</button>
+                onClick={() => action('note', () => champ({ internalNote: noteInterne }))}>{enCours === 'note' ? '…' : t('resa.saveNote')}</button>
             )}
           </div>
 
           {/* Acompte encore détenu par Fairide sur une réservation close : à trancher. */}
           {r.depositAmount > 0 && r.depositStatus === 'paid' && (finie || r.status === 'annule') && (
             <div className="row" style={{ gap: 6, marginTop: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="small">💳 Acompte de {euros(r.depositAmount)} encaissé, encore à décider :</span>
-              <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={!!enCours} onClick={() => action('keep', () => ordre('deposit', { action: 'keep' }))}>Le conserver</button>
-              <button type="button" className="btn-ghost" style={{ padding: '6px 12px' }} disabled={!!enCours} onClick={() => action('refund', () => ordre('deposit', { action: 'refund' }))}>Le rembourser</button>
+              <span className="small">{t('resa.depositToDecide', { amount: euros(r.depositAmount) })}</span>
+              <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={!!enCours} onClick={() => action('keep', () => ordre('deposit', { action: 'keep' }))}>{t('resa.keepIt')}</button>
+              <button type="button" className="btn-ghost" style={{ padding: '6px 12px' }} disabled={!!enCours} onClick={() => action('refund', () => ordre('deposit', { action: 'refund' }))}>{t('resa.refundIt')}</button>
             </div>
           )}
 
           {aVenir && r.status !== 'nouveau' && (
             <details className="resa-annuler" style={{ marginTop: 10 }}>
-              <summary className="small">Annuler cette réservation</summary>
-              <input value={message} placeholder="Message pour le client (optionnel)" onChange={(e) => setMessage(e.target.value)} style={{ marginTop: 6 }} />
+              <summary className="small">{t('resa.cancelThis')}</summary>
+              <input value={message} placeholder={t('resa.phCancelMessage')} onChange={(e) => setMessage(e.target.value)} style={{ marginTop: 6 }} />
               {r.depositAmount > 0 && r.depositStatus === 'paid' && (
                 <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 6 }}>
                   <input type="checkbox" style={{ width: 'auto' }} checked={garderAcompte} onChange={(e) => setGarderAcompte(e.target.checked)} />
-                  <span className="small">Conserver l'acompte ({euros(r.depositAmount)}) — sinon il est remboursé</span>
+                  <span className="small">{t('resa.keepDepositElseRefund', { amount: euros(r.depositAmount) })}</span>
                 </label>
               )}
               <button type="button" className="btn-outline" style={{ marginTop: 6, color: 'var(--red)' }} disabled={!!enCours}
                 onClick={() => action('annuler', () => ordre('cancel-reservation', { message, keepDeposit: garderAcompte }))}>
-                {enCours === 'annuler' ? '…' : 'Confirmer l\'annulation'}
+                {enCours === 'annuler' ? '…' : t('resa.confirmCancel')}
               </button>
             </details>
           )}
@@ -510,6 +510,7 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
 }
 
 function NouvelleReservation({ token, toast, restoId, tables, dateInitiale, onCree, restaurant }) {
+  const { t } = useLanguage();
   const [nom, setNom] = useState('');
   const [telephone, setTelephone] = useState('');
   const [email, setEmail] = useState('');
@@ -525,7 +526,7 @@ function NouvelleReservation({ token, toast, restoId, tables, dateInitiale, onCr
 
   async function soumettre(e) {
     e.preventDefault();
-    if (!nom.trim()) { toast('Indique le nom de la réservation.'); return; }
+    if (!nom.trim()) { toast(t('resa.toastNameRequired')); return; }
     setEnvoi(true);
     try {
       const r = await api(`/restaurants/${restoId}/reservations`, {
@@ -536,72 +537,71 @@ function NouvelleReservation({ token, toast, restoId, tables, dateInitiale, onCr
           internalNote: noteInterne, source
         }
       });
-      toast('Réservation ajoutée à l\'agenda.');
+      toast(t('resa.toastAdded'));
       onCree(r);
     } catch (err) { toast(err.message); } finally { setEnvoi(false); }
   }
 
   return (
     <form className="card" onSubmit={soumettre}>
-      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Nouvelle réservation</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.newReservation')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>
-        Pour une demande reçue par téléphone, par e-mail ou au comptoir. Confirmée d'office ; si tu
-        indiques un e-mail, le client reçoit la même confirmation qu'en ligne.
+        {t('resa.newIntro')}
       </p>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <div className="field" style={{ flex: '2 1 180px' }}>
-          <label htmlFor="nr-nom">Nom</label>
-          <input id="nr-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder="Dupont" required />
+          <label htmlFor="nr-nom">{t('resa.name')}</label>
+          <input id="nr-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('resa.phName')} required />
         </div>
         <div className="field" style={{ flex: '1 1 140px' }}>
-          <label htmlFor="nr-tel">Téléphone</label>
+          <label htmlFor="nr-tel">{t('resa.phone')}</label>
           <input id="nr-tel" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="+32…" />
         </div>
         <div className="field" style={{ flex: '2 1 180px' }}>
-          <label htmlFor="nr-email">E-mail (optionnel)</label>
+          <label htmlFor="nr-email">{t('resa.emailOptional')}</label>
           <input id="nr-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
       </div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
         <div className="field" style={{ flex: '0 0 90px' }}>
-          <label htmlFor="nr-pers">Pers.</label>
+          <label htmlFor="nr-pers">{t('resa.ppl')}</label>
           <input id="nr-pers" type="number" min="1" max="200" value={couverts} onChange={(e) => setCouverts(e.target.value)} />
         </div>
         <div className="field" style={{ flex: '1 1 140px' }}>
-          <label htmlFor="nr-jour">Jour</label>
+          <label htmlFor="nr-jour">{t('resa.day')}</label>
           <input id="nr-jour" type="date" value={jour} onChange={(e) => setJour(e.target.value)} />
         </div>
         <div className="field" style={{ flex: '0 0 110px' }}>
-          <label htmlFor="nr-heure">Heure</label>
+          <label htmlFor="nr-heure">{t('resa.time')}</label>
           <input id="nr-heure" type="time" step={pas * 60} value={heure} onChange={(e) => setHeure(e.target.value)} />
         </div>
         <div className="field" style={{ flex: '0 0 110px' }}>
-          <label htmlFor="nr-duree">Durée</label>
+          <label htmlFor="nr-duree">{t('resa.duration')}</label>
           <select id="nr-duree" value={duree} onChange={(e) => setDuree(Number(e.target.value))}>
-            {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{`${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60}` : ''}`}</option>)}
+            {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{m % 60 ? t('resa.durationHM', { h: Math.floor(m / 60), m: m % 60 }) : t('resa.durationH', { h: m / 60 })}</option>)}
           </select>
         </div>
         <div className="field" style={{ flex: '1 1 150px' }}>
-          <label htmlFor="nr-table">Table</label>
+          <label htmlFor="nr-table">{t('resa.table')}</label>
           <select id="nr-table" value={tableId} onChange={(e) => setTableId(e.target.value)}>
-            <option value="">Automatique (la plus petite libre)</option>
-            {tables.map((t) => <option key={t.id} value={t.id}>{t.name} ({t.seats} pl.{t.zone ? `, ${t.zone}` : ''})</option>)}
+            <option value="">{t('resa.automaticSmallest')}</option>
+            {tables.map((tb) => <option key={tb.id} value={tb.id}>{tb.name} ({t('resa.seatsShort', { n: tb.seats })}{tb.zone ? `, ${tb.zone}` : ''})</option>)}
           </select>
         </div>
         <div className="field" style={{ flex: '1 1 130px' }}>
-          <label htmlFor="nr-source">Reçue par</label>
+          <label htmlFor="nr-source">{t('resa.receivedVia')}</label>
           <select id="nr-source" value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="phone">Téléphone</option>
-            <option value="walk_in">Passage au comptoir</option>
-            <option value="restaurant">Autre (e-mail, réseaux…)</option>
+            <option value="phone">{t('resa.phone')}</option>
+            <option value="walk_in">{t('resa.walkIn')}</option>
+            <option value="restaurant">{t('resa.otherSource')}</option>
           </select>
         </div>
       </div>
       <div className="field">
-        <label htmlFor="nr-note">📝 Note interne</label>
-        <input id="nr-note" value={noteInterne} onChange={(e) => setNoteInterne(e.target.value)} placeholder="Anniversaire, chaise bébé, allergie…" />
+        <label htmlFor="nr-note">{t('resa.internalNoteShort')}</label>
+        <input id="nr-note" value={noteInterne} onChange={(e) => setNoteInterne(e.target.value)} placeholder={t('resa.phInternalNoteShort')} />
       </div>
-      <button className="btn-teal" disabled={envoi}>{envoi ? '…' : 'Ajouter à l\'agenda'}</button>
+      <button className="btn-teal" disabled={envoi}>{envoi ? '…' : t('resa.addToAgenda')}</button>
     </form>
   );
 }
@@ -610,6 +610,7 @@ function NouvelleReservation({ token, toast, restoId, tables, dateInitiale, onCr
 // RÉGLAGES — ce que le client peut réserver en ligne, et à quelles conditions.
 // ------------------------------------------------------------------------------------------------
 function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) {
+  const { t } = useLanguage();
   const [heuresPropres, setHeuresPropres] = useState(false);
   const [heures, setHeures] = useState({});
   const [pas, setPas] = useState(30);
@@ -674,7 +675,7 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
         }
       });
       loadDashboard?.(restoId);
-      toast('Réglages de réservation enregistrés.');
+      toast(t('resa.toastSettingsSaved'));
     } catch (err) { toast(err.message); } finally { setEnregistre(false); }
   }
 
@@ -682,31 +683,29 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
   async function copierLien() {
     try { await navigator.clipboard.writeText(lien); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { toast(lien); }
   }
-  const tablesAvecAcompte = (tables || []).filter((t) => t.active && t.depositAmount !== null);
-  if (!restaurant) return <p className="small">Chargement…</p>;
+  const tablesAvecAcompte = (tables || []).filter((tb) => tb.active && tb.depositAmount !== null);
+  if (!restaurant) return <p className="small">{t('resa.loading')}</p>;
 
   return (
     <>
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Quand acceptes-tu des réservations ?</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.whenTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>
-          Par défaut, tes horaires d'ouverture. Beaucoup de salles ne prennent des tables qu'aux
-          services du midi et du soir alors que la cuisine tourne en continu pour l'emporter — dans
-          ce cas, définis tes propres services.
+          {t('resa.whenIntro')}
         </p>
         <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 10 }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={heuresPropres} onChange={(e) => setHeuresPropres(e.target.checked)} />
-          <span className="small">Des horaires de réservation différents de mes horaires d'ouverture</span>
+          <span className="small">{t('resa.ownHours')}</span>
         </label>
         {heuresPropres && (
           <div style={{ marginBottom: 12 }}>
             {JOURS.map((j) => (
               <div key={j.cle} className="opening-hours-day-row" style={{ marginBottom: 8 }}>
                 <div className="opening-hours-day-header">
-                  <span className="opening-hours-day-label">{j.label}</span>
-                  <button type="button" className="btn-ghost" style={{ padding: '3px 8px', fontSize: 12 }} onClick={() => ajouterPlage(j.cle)}>+ service</button>
+                  <span className="opening-hours-day-label">{t(`resa.${j.label}`)}</span>
+                  <button type="button" className="btn-ghost" style={{ padding: '3px 8px', fontSize: 12 }} onClick={() => ajouterPlage(j.cle)}>{t('resa.addService')}</button>
                 </div>
-                {(heures[j.cle] || []).length === 0 && <p className="small" style={{ margin: '4px 0 0' }}>Aucune réservation ce jour-là.</p>}
+                {(heures[j.cle] || []).length === 0 && <p className="small" style={{ margin: '4px 0 0' }}>{t('resa.noneThatDay')}</p>}
                 {(heures[j.cle] || []).map((p, i) => (
                   <div key={i} className="row" style={{ gap: 6, marginTop: 6, alignItems: 'center' }}>
                     <input type="time" value={p.open} style={{ maxWidth: 118 }} onChange={(e) => majPlage(j.cle, i, 'open', e.target.value)} />
@@ -721,128 +720,125 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
         )}
         <div className="row" style={{ gap: 10, alignItems: 'flex-end', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 120px' }}>
-            <label htmlFor="resa-pas">Créneaux toutes les</label>
+            <label htmlFor="resa-pas">{t('resa.slotsEvery')}</label>
             <select id="resa-pas" value={pas} onChange={(e) => setPas(e.target.value)}>
-              <option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60">1 heure</option>
+              <option value="15">{t('resa.min15')}</option><option value="30">{t('resa.min30')}</option><option value="60">{t('resa.h1')}</option>
             </select>
           </div>
           <div style={{ flex: '1 1 120px' }}>
-            <label htmlFor="resa-duree">Durée maximale</label>
+            <label htmlFor="resa-duree">{t('resa.maxDuration')}</label>
             <select id="resa-duree" value={dureeMax} onChange={(e) => setDureeMax(e.target.value)}>
-              <option value="60">1 heure</option><option value="90">1 h 30</option><option value="120">2 heures</option>
-              <option value="180">3 heures</option><option value="240">4 heures</option>
+              <option value="60">{t('resa.h1')}</option><option value="90">{t('resa.h1_30')}</option><option value="120">{t('resa.h2')}</option>
+              <option value="180">{t('resa.h3')}</option><option value="240">{t('resa.h4')}</option>
             </select>
           </div>
           <div style={{ flex: '1 1 120px' }}>
-            <label htmlFor="resa-horizon">Réservable jusqu'à</label>
+            <label htmlFor="resa-horizon">{t('resa.bookableUpTo')}</label>
             <select id="resa-horizon" value={horizon} onChange={(e) => setHorizon(e.target.value)}>
-              <option value="7">7 jours à l'avance</option><option value="14">14 jours</option><option value="30">30 jours</option>
-              <option value="60">60 jours</option><option value="90">90 jours</option>
+              <option value="7">{t('resa.days7')}</option><option value="14">{t('resa.days14')}</option><option value="30">{t('resa.days30')}</option>
+              <option value="60">{t('resa.days60')}</option><option value="90">{t('resa.days90')}</option>
             </select>
           </div>
         </div>
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Délais et confirmation</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.delaysTitle')}</h3>
         <label className="row resa-regle" style={{ gap: 8, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={jourMeme} onChange={(e) => setJourMeme(e.target.checked)} />
-          <span><b>Réservation le jour même</b><br /><span className="small">Décoché, tes clients réservent au plus tôt pour demain — et t'appellent pour ce soir.</span></span>
+          <span><b>{t('resa.sameDay')}</b><br /><span className="small">{t('resa.sameDayHelp')}</span></span>
         </label>
         <div className="row" style={{ gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 10 }}>
           <div style={{ flex: '1 1 160px' }}>
-            <label htmlFor="resa-preavis">Préavis minimum</label>
+            <label htmlFor="resa-preavis">{t('resa.minNotice')}</label>
             <select id="resa-preavis" value={preavis} onChange={(e) => setPreavis(e.target.value)}>
-              <option value="0">Aucun</option><option value="30">30 minutes</option><option value="60">1 heure</option>
-              <option value="120">2 heures</option><option value="180">3 heures</option><option value="360">6 heures</option>
-              <option value="720">12 heures</option><option value="1440">24 heures</option><option value="2880">48 heures</option>
+              <option value="0">{t('resa.none')}</option><option value="30">{t('resa.min30')}</option><option value="60">{t('resa.h1')}</option>
+              <option value="120">{t('resa.h2')}</option><option value="180">{t('resa.h3')}</option><option value="360">{t('resa.h6')}</option>
+              <option value="720">{t('resa.h12')}</option><option value="1440">{t('resa.h24')}</option><option value="2880">{t('resa.h48')}</option>
             </select>
           </div>
           <div style={{ flex: '1 1 160px' }}>
-            <label htmlFor="resa-annul">Annulation gratuite jusqu'à</label>
+            <label htmlFor="resa-annul">{t('resa.freeCancelUntil')}</label>
             <select id="resa-annul" value={annulation} onChange={(e) => setAnnulation(e.target.value)}>
-              <option value="0">Jusqu'à l'heure de la réservation</option><option value="2">2 h avant</option><option value="6">6 h avant</option>
-              <option value="12">12 h avant</option><option value="24">24 h avant</option><option value="48">48 h avant</option><option value="72">72 h avant</option>
+              <option value="0">{t('resa.untilReservationTime')}</option><option value="2">{t('resa.before2h')}</option><option value="6">{t('resa.before6h')}</option>
+              <option value="12">{t('resa.before12h')}</option><option value="24">{t('resa.before24h')}</option><option value="48">{t('resa.before48h')}</option><option value="72">{t('resa.before72h')}</option>
             </select>
           </div>
           <div style={{ flex: '1 1 160px' }}>
-            <label htmlFor="resa-max">Groupe maximum en ligne</label>
-            <input id="resa-max" type="number" min="1" max="200" value={maxGroupe} placeholder="Ma plus grande table" onChange={(e) => setMaxGroupe(e.target.value)} />
+            <label htmlFor="resa-max">{t('resa.maxPartyOnline')}</label>
+            <input id="resa-max" type="number" min="1" max="200" value={maxGroupe} placeholder={t('resa.phMaxParty')} onChange={(e) => setMaxGroupe(e.target.value)} />
           </div>
         </div>
-        <p className="small" style={{ margin: '6px 0 0' }}>Passé le délai d'annulation, le client ne peut plus annuler en ligne et l'acompte éventuel te reste acquis. Au-delà du groupe maximum, il est invité à t'appeler.</p>
+        <p className="small" style={{ margin: '6px 0 0' }}>{t('resa.delaysHelp')}</p>
         <label className="row resa-regle" style={{ gap: 8, cursor: 'pointer', marginTop: 12 }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={confirmationAuto} onChange={(e) => setConfirmationAuto(e.target.checked)} />
-          <span><b>Confirmation automatique</b><br /><span className="small">Coché, la table est confirmée dès la demande (si une table est libre). Décoché, chaque demande attend ton accord dans l'agenda — le client est prévenu par e-mail de ta décision.</span></span>
+          <span><b>{t('resa.autoConfirm')}</b><br /><span className="small">{t('resa.autoConfirmHelp')}</span></span>
         </label>
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>💳 Acompte</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.depositTitle')}</h3>
         <p className="small" style={{ margin: '0 0 10px' }}>
-          Encaissé au moment de la réservation, gardé par Fairide, puis <b>viré sur ton compte</b> quand le
-          client arrive (tu le déduis de l'addition) ou ne se présente pas. Il lui est rendu s'il annule
-          dans les délais, ou si tu refuses la table. Une commande de plats prépayée n'y est jamais soumise.
+          {t('resa.depositIntro1')} <b>{t('resa.depositIntro2')}</b> {t('resa.depositIntro3')}
         </p>
         <label className="row resa-regle" style={{ gap: 8, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={acompte} onChange={(e) => setAcompte(e.target.checked)} />
-          <span><b>Demander un acompte</b></span>
+          <span><b>{t('resa.askDeposit')}</b></span>
         </label>
         {acompte && (
           <>
             <div className="row" style={{ gap: 10, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: 10 }}>
               <div style={{ flex: '1 1 120px' }}>
-                <label htmlFor="ac-montant">Montant</label>
+                <label htmlFor="ac-montant">{t('resa.amount')}</label>
                 <input id="ac-montant" type="number" min="0" max="500" step="0.5" value={acompteMontant} onChange={(e) => setAcompteMontant(e.target.value)} />
               </div>
               <div style={{ flex: '1 1 150px' }}>
-                <label htmlFor="ac-mode">Calculé</label>
+                <label htmlFor="ac-mode">{t('resa.computed')}</label>
                 <select id="ac-mode" value={acompteMode} onChange={(e) => setAcompteMode(e.target.value)}>
-                  <option value="per_person">par personne</option>
-                  <option value="per_booking">par réservation</option>
+                  <option value="per_person">{t('resa.perPerson')}</option>
+                  <option value="per_booking">{t('resa.perBooking')}</option>
                 </select>
               </div>
               <div style={{ flex: '1 1 150px' }}>
-                <label htmlFor="ac-seuil">À partir de</label>
+                <label htmlFor="ac-seuil">{t('resa.from')}</label>
                 <select id="ac-seuil" value={acompteSeuil} onChange={(e) => setAcompteSeuil(e.target.value)}>
-                  {[1, 2, 4, 6, 8, 10, 12, 15, 20].map((n) => <option key={n} value={n}>{n === 1 ? 'toute réservation' : `${n} personnes`}</option>)}
+                  {[1, 2, 4, 6, 8, 10, 12, 15, 20].map((n) => <option key={n} value={n}>{n === 1 ? t('resa.anyReservation') : t('resa.nPeople', { n })}</option>)}
                 </select>
               </div>
             </div>
             <p className="small" style={{ margin: '8px 0 0' }}>
-              Exemple : une table de 4 paiera <b>{euros(acompteMode === 'per_person' ? Number(acompteMontant) * 4 : Number(acompteMontant))}</b>
-              {Number(acompteSeuil) > 4 ? ' — non, rien : sous le seuil.' : '.'}
-              {' '}Un montant différent <b>selon le type de table</b> (terrasse, salon privé…) se règle dans l'onglet <b>Plan de salle</b>, table par table.
-              {tablesAvecAcompte.length > 0 && <> Actuellement : {tablesAvecAcompte.map((t) => `${t.name} ${t.depositAmount === 0 ? 'sans acompte' : euros(t.depositAmount)}`).join(', ')}.</>}
+              {t('resa.exampleTable4')} <b>{euros(acompteMode === 'per_person' ? Number(acompteMontant) * 4 : Number(acompteMontant))}</b>
+              {Number(acompteSeuil) > 4 ? t('resa.belowThreshold') : '.'}
+              {' '}{t('resa.differentAmount1')} <b>{t('resa.differentAmount2')}</b> {t('resa.differentAmount3')} <b>{t('resa.floorPlan')}</b>{t('resa.tableByTable')}
+              {tablesAvecAcompte.length > 0 && <> {t('resa.currently')} {tablesAvecAcompte.map((tb) => `${tb.name} ${tb.depositAmount === 0 ? t('resa.noDeposit') : euros(tb.depositAmount)}`).join(', ')}.</>}
             </p>
             <div className="field" style={{ marginTop: 10 }}>
-              <label htmlFor="ac-note">Précision affichée au client (optionnel)</label>
-              <input id="ac-note" value={acompteNote} maxLength={300} placeholder="Ex. : déduit de l'addition, non remboursable en cas d'absence." onChange={(e) => setAcompteNote(e.target.value)} />
+              <label htmlFor="ac-note">{t('resa.depositNoteLabel')}</label>
+              <input id="ac-note" value={acompteNote} maxLength={300} placeholder={t('resa.phDepositNote')} onChange={(e) => setAcompteNote(e.target.value)} />
             </div>
           </>
         )}
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Message d'accueil</h3>
-        <p className="small" style={{ margin: '0 0 8px' }}>Affiché au client au moment de réserver : tenue, retard toléré, animaux, poussettes…</p>
-        <textarea rows={2} maxLength={500} value={accueil} onChange={(e) => setAccueil(e.target.value)} placeholder="Ex. : table gardée 15 minutes, merci de prévenir en cas de retard. Chiens bienvenus en terrasse." />
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.welcomeTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 8px' }}>{t('resa.welcomeHelp')}</p>
+        <textarea rows={2} maxLength={500} value={accueil} onChange={(e) => setAccueil(e.target.value)} placeholder={t('resa.phWelcome')} />
       </div>
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🔗 Ton lien de réservation</h3>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.linkTitle')}</h3>
         <p className="small" style={{ margin: '0 0 8px' }}>
-          À mettre sur ton site, ta fiche Google (bouton « Réserver »), Instagram ou Facebook : le client
-          arrive sur ta fiche Fairide et réserve avec tes règles ci-dessus.
+          {t('resa.linkHelp')}
         </p>
         <div className="row" style={{ gap: 8, alignItems: 'center' }}>
           <input readOnly value={lien} onFocus={(e) => e.target.select()} style={{ flex: 1, minWidth: 0 }} />
-          <button type="button" className="btn-outline" onClick={copierLien}>{copie ? 'Copié ✓' : 'Copier'}</button>
+          <button type="button" className="btn-outline" onClick={copierLien}>{copie ? t('resa.copied') : t('resa.copy')}</button>
         </div>
       </div>
 
       <div className="resa-enregistrer">
-        <button className="btn-teal" disabled={enregistre} onClick={enregistrer}>{enregistre ? '…' : 'Enregistrer les réglages'}</button>
+        <button className="btn-teal" disabled={enregistre} onClick={enregistrer}>{enregistre ? '…' : t('resa.saveSettings')}</button>
       </div>
     </>
   );
@@ -852,23 +848,24 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
 // PLAN DE SALLE — les tables, leur zone (type) et leur acompte propre.
 // ------------------------------------------------------------------------------------------------
 function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
+  const { t } = useLanguage();
   const [nom, setNom] = useState('');
   const [places, setPlaces] = useState(2);
   const [zone, setZone] = useState('');
   const [ajout, setAjout] = useState(false);
   const [enCours, setEnCours] = useState(null);
   const acompteActif = !!restaurant?.reservationDepositEnabled;
-  const zones = useMemo(() => [...new Set((tables || []).map((t) => t.zone).filter(Boolean))], [tables]);
+  const zones = useMemo(() => [...new Set((tables || []).map((tb) => tb.zone).filter(Boolean))], [tables]);
 
   async function ajouterTable(e) {
     e.preventDefault();
-    if (!nom.trim()) { toast('Donne un nom à la table.'); return; }
+    if (!nom.trim()) { toast(t('resa.toastTableName')); return; }
     setAjout(true);
     try {
       const t = await api(`/restaurants/${restoId}/tables`, { method: 'POST', token, body: { name: nom.trim(), seats: Number(places), zone: zone.trim() } });
       setTables((l) => [...(l || []), t]);
       setNom(''); setPlaces(2);
-      toast('Table ajoutée.');
+      toast(t('resa.toastTableAdded'));
     } catch (err) { toast(err.message); } finally { setAjout(false); }
   }
   async function modifier(id, champs) {
@@ -884,31 +881,30 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
       const r = await api(`/restaurants/${restoId}/tables/${id}`, { method: 'DELETE', token });
       if (r.desactivee) {
         setTables((l) => l.map((x) => (x.id === id ? r.table : x)));
-        toast('Table désactivée : elle a déjà servi à une réservation, on la garde pour l’historique.');
+        toast(t('resa.toastTableDisabled'));
       } else {
         setTables((l) => l.filter((x) => x.id !== id));
-        toast('Table supprimée.');
+        toast(t('resa.toastTableDeleted'));
       }
     } catch (err) { toast(err.message); } finally { setEnCours(null); }
   }
   const local = (id, champs) => setTables((l) => l.map((x) => (x.id === id ? { ...x, ...champs } : x)));
 
-  const actives = (tables || []).filter((t) => t.active);
-  const totalPlaces = actives.reduce((a, t) => a + Number(t.seats || 0), 0);
-  const plusGrande = actives.reduce((m, t) => Math.max(m, Number(t.seats || 0)), 0);
+  const actives = (tables || []).filter((tb) => tb.active);
+  const totalPlaces = actives.reduce((a, tb) => a + Number(tb.seats || 0), 0);
+  const plusGrande = actives.reduce((m, tb) => Math.max(m, Number(tb.seats || 0)), 0);
 
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>Tes tables</h3>
+      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.yourTables')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>
-        Une réservation occupe une table entière, la plus petite qui accueille le groupe. La <b>zone</b>
-        {' '}(Salle, Terrasse, Salon privé…) sert à t'y retrouver et à fixer un acompte différent par type de
-        table : laisse la colonne Acompte vide pour suivre la règle générale, mets 0 pour n'en jamais demander.
+        {t('resa.zoneIntro1')} <b>zone</b>
+        {' '}{t('resa.zoneIntro2')}
       </p>
-      {tables === null && <p className="small">Chargement…</p>}
+      {tables === null && <p className="small">{t('resa.loading')}</p>}
       {tables !== null && tables.length === 0 && (
         <p className="small" style={{ margin: '0 0 12px', padding: '9px 11px', background: 'var(--cream-dim)', borderRadius: 9 }}>
-          ⚠️ Aucune table déclarée : les réservations restent acceptées mais <b>sans aucune limite</b>.
+          {t('resa.noTablesWarn1')} <b>{t('resa.noTablesWarn2')}</b>.
         </p>
       )}
       {tables !== null && tables.length > 0 && (
@@ -916,43 +912,43 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
           <div className="service-table-wrap">
             <table className="service-table plan-table">
               <thead>
-                <tr><th>Table</th><th>Zone</th><th className="col-actif">Places</th>{acompteActif && <th className="col-actif">Acompte</th>}<th className="col-actif">Ouverte</th><th className="col-actif"> </th></tr>
+                <tr><th>{t('resa.table')}</th><th>{t('resa.zone')}</th><th className="col-actif">{t('resa.seats')}</th>{acompteActif && <th className="col-actif">{t('resa.deposit')}</th>}<th className="col-actif">{t('resa.open')}</th><th className="col-actif"> </th></tr>
               </thead>
               <tbody>
-                {tables.map((t) => (
-                  <tr key={t.id} className={t.active ? '' : 'service-off'}>
+                {tables.map((tb) => (
+                  <tr key={tb.id} className={tb.active ? '' : 'service-off'}>
                     <td>
-                      <input value={t.name} disabled={enCours === t.id} style={{ padding: '5px 8px', fontSize: 13 }}
-                        onChange={(e) => local(t.id, { name: e.target.value })}
-                        onBlur={(e) => e.target.value.trim() !== '' && modifier(t.id, { name: e.target.value.trim() })} />
+                      <input value={tb.name} disabled={enCours === tb.id} style={{ padding: '5px 8px', fontSize: 13 }}
+                        onChange={(e) => local(tb.id, { name: e.target.value })}
+                        onBlur={(e) => e.target.value.trim() !== '' && modifier(tb.id, { name: e.target.value.trim() })} />
                     </td>
                     <td>
-                      <input value={t.zone || ''} list="resa-zones" placeholder="Salle" disabled={enCours === t.id} style={{ maxWidth: 120, padding: '5px 8px', fontSize: 13 }}
-                        onChange={(e) => local(t.id, { zone: e.target.value })}
-                        onBlur={(e) => modifier(t.id, { zone: e.target.value.trim() })} />
+                      <input value={tb.zone || ''} list="resa-zones" placeholder={t('resa.phZone')} disabled={enCours === tb.id} style={{ maxWidth: 120, padding: '5px 8px', fontSize: 13 }}
+                        onChange={(e) => local(tb.id, { zone: e.target.value })}
+                        onBlur={(e) => modifier(tb.id, { zone: e.target.value.trim() })} />
                     </td>
                     <td className="col-actif">
-                      <input type="number" min="1" max="30" value={t.seats} disabled={enCours === t.id} style={{ width: 62, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
-                        onChange={(e) => local(t.id, { seats: e.target.value })}
-                        onBlur={(e) => Number(e.target.value) >= 1 && modifier(t.id, { seats: Number(e.target.value) })} />
+                      <input type="number" min="1" max="30" value={tb.seats} disabled={enCours === tb.id} style={{ width: 62, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
+                        onChange={(e) => local(tb.id, { seats: e.target.value })}
+                        onBlur={(e) => Number(e.target.value) >= 1 && modifier(tb.id, { seats: Number(e.target.value) })} />
                     </td>
                     {acompteActif && (
                       <td className="col-actif">
-                        <input type="number" min="0" max="500" step="0.5" value={t.depositAmount ?? ''} placeholder="règle" disabled={enCours === t.id}
-                          title="Vide : règle générale. 0 : jamais d'acompte sur cette table."
+                        <input type="number" min="0" max="500" step="0.5" value={tb.depositAmount ?? ''} placeholder={t('resa.phRule')} disabled={enCours === tb.id}
+                          title={t('resa.titleDepositCell')}
                           style={{ width: 72, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
-                          onChange={(e) => local(t.id, { depositAmount: e.target.value === '' ? null : e.target.value })}
-                          onBlur={(e) => modifier(t.id, { depositAmount: e.target.value === '' ? null : Number(e.target.value) })} />
+                          onChange={(e) => local(tb.id, { depositAmount: e.target.value === '' ? null : e.target.value })}
+                          onBlur={(e) => modifier(tb.id, { depositAmount: e.target.value === '' ? null : Number(e.target.value) })} />
                       </td>
                     )}
                     <td className="col-actif">
                       <label className="service-toggle">
-                        <input type="checkbox" checked={t.active} disabled={enCours === t.id} onChange={(e) => modifier(t.id, { active: e.target.checked })} />
-                        <span className="sr-only">Table {t.name} ouverte à la réservation</span>
+                        <input type="checkbox" checked={tb.active} disabled={enCours === tb.id} onChange={(e) => modifier(tb.id, { active: e.target.checked })} />
+                        <span className="sr-only">{t('resa.tableOpenSr', { name: tb.name })}</span>
                       </label>
                     </td>
                     <td className="col-actif">
-                      <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} disabled={enCours === t.id} onClick={() => supprimer(t.id)}>🗑️</button>
+                      <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} disabled={enCours === tb.id} onClick={() => supprimer(tb.id)}>🗑️</button>
                     </td>
                   </tr>
                 ))}
@@ -961,27 +957,25 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
           </div>
           <datalist id="resa-zones">{zones.map((z) => <option key={z} value={z} />)}</datalist>
           <p className="small" style={{ margin: '10px 0 0' }}>
-            <b>{actives.length}</b> table{actives.length > 1 ? 's' : ''} ouverte{actives.length > 1 ? 's' : ''} ·
-            {' '}<b>{totalPlaces}</b> place{totalPlaces > 1 ? 's' : ''} au total ·
-            {' '}plus grand groupe acceptable : <b>{plusGrande || 0}</b>
-            {zones.length > 0 && <> · zones : {zones.join(', ')}</>}
+            {t('resa.tablesSummary', { n: actives.length, seats: totalPlaces, max: plusGrande || 0 })}
+            {zones.length > 0 && t('resa.zonesList', { zones: zones.join(', ') })}
           </p>
         </>
       )}
       <form onSubmit={ajouterTable} className="row" style={{ gap: 8, marginTop: 14, alignItems: 'flex-end', flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 150px' }}>
-          <label htmlFor="table-nom">Nom de la table</label>
-          <input id="table-nom" value={nom} placeholder="Table 1, Terrasse 2…" onChange={(e) => setNom(e.target.value)} />
+          <label htmlFor="table-nom">{t('resa.tableName')}</label>
+          <input id="table-nom" value={nom} placeholder={t('resa.phTableName')} onChange={(e) => setNom(e.target.value)} />
         </div>
         <div style={{ flex: '1 1 120px' }}>
-          <label htmlFor="table-zone">Zone</label>
-          <input id="table-zone" value={zone} list="resa-zones" placeholder="Salle" onChange={(e) => setZone(e.target.value)} />
+          <label htmlFor="table-zone">{t('resa.zone')}</label>
+          <input id="table-zone" value={zone} list="resa-zones" placeholder={t('resa.phZone')} onChange={(e) => setZone(e.target.value)} />
         </div>
         <div style={{ flex: '0 0 96px' }}>
-          <label htmlFor="table-places">Places</label>
+          <label htmlFor="table-places">{t('resa.seats')}</label>
           <input id="table-places" type="number" min="1" max="30" value={places} onChange={(e) => setPlaces(e.target.value)} />
         </div>
-        <button className="btn-teal" disabled={ajout}>{ajout ? '…' : 'Ajouter'}</button>
+        <button className="btn-teal" disabled={ajout}>{ajout ? '…' : t('resa.add')}</button>
       </form>
     </div>
   );
@@ -991,6 +985,7 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
 // STATISTIQUES — volume, couverts, absents, acomptes, et la forme de la semaine.
 // ------------------------------------------------------------------------------------------------
 function Statistiques({ token, toast, restoId }) {
+  const { t } = useLanguage();
   const [periode, setPeriode] = useState('30');
   const [stats, setStats] = useState(null);
   const [chargement, setChargement] = useState(true);
@@ -1021,48 +1016,48 @@ function Statistiques({ token, toast, restoId }) {
     <>
       <div className="card">
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <b style={{ flex: 1 }}>Période</b>
+          <b style={{ flex: 1 }}>{t('resa.period')}</b>
           <select value={periode} onChange={(e) => setPeriode(e.target.value)} style={{ maxWidth: 220 }}>
-            <option value="7">7 derniers jours</option>
-            <option value="30">30 derniers jours</option>
-            <option value="90">90 derniers jours</option>
-            <option value="mois">Mois en cours</option>
-            <option value="avenir">30 prochains jours</option>
+            <option value="7">{t('resa.last7')}</option>
+            <option value="30">{t('resa.last30')}</option>
+            <option value="90">{t('resa.last90')}</option>
+            <option value="mois">{t('resa.thisMonth')}</option>
+            <option value="avenir">{t('resa.next30')}</option>
           </select>
         </div>
       </div>
-      {chargement && <p className="small">Chargement…</p>}
+      {chargement && <p className="small">{t('resa.loading')}</p>}
       {!chargement && stats && (
         <>
           <div className="resa-stats">
-            <Stat valeur={stats.total} label="réservations" />
-            <Stat valeur={stats.couverts} label="couverts" />
-            <Stat valeur={stats.couvertsMoyens ?? '–'} label="couverts par table" />
-            <Stat valeur={stats.enAttente} label="à confirmer" accent={stats.enAttente > 0 ? 'warn' : undefined} />
-            <Stat valeur={stats.absents} label={`absents${stats.tauxAbsence !== null ? ` · ${stats.tauxAbsence} %` : ''}`} accent={stats.absents > 0 ? 'danger' : undefined} />
-            <Stat valeur={stats.annulees + stats.refusees} label="annulées / refusées" />
-            <Stat valeur={euros(stats.acompteEncaisse)} label="acomptes encaissés" />
-            <Stat valeur={euros(stats.acompteConserve)} label="acomptes conservés" />
+            <Stat valeur={stats.total} label={t('resa.statReservations')} />
+            <Stat valeur={stats.couverts} label={t('resa.statCovers')} />
+            <Stat valeur={stats.couvertsMoyens ?? '–'} label={t('resa.statCoversPerTable')} />
+            <Stat valeur={stats.enAttente} label={t('resa.statToConfirm')} accent={stats.enAttente > 0 ? 'warn' : undefined} />
+            <Stat valeur={stats.absents} label={`${t('resa.statAbsent')}${stats.tauxAbsence !== null ? ` · ${stats.tauxAbsence} %` : ''}`} accent={stats.absents > 0 ? 'danger' : undefined} />
+            <Stat valeur={stats.annulees + stats.refusees} label={t('resa.statCancelled')} />
+            <Stat valeur={euros(stats.acompteEncaisse)} label={t('resa.statDepositsCollected')} />
+            <Stat valeur={euros(stats.acompteConserve)} label={t('resa.statDepositsKept')} />
           </div>
           <div className="card">
-            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Couverts par jour de la semaine</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('resa.coversByWeekday')}</h3>
             <div className="resa-barres">
               {ordreJours.map((d) => (
-                <div key={d} className="resa-barre-col" title={`${stats.parJourSemaine[d].reservations} réservation(s), ${stats.parJourSemaine[d].couverts} couverts`}>
+                <div key={d} className="resa-barre-col" title={t('resa.barTitle', { n: stats.parJourSemaine[d].reservations, c: stats.parJourSemaine[d].couverts })}>
                   <span className="small">{stats.parJourSemaine[d].couverts || ''}</span>
                   <div className="resa-barre" style={{ height: `${(stats.parJourSemaine[d].couverts / maxJour) * 100}%` }} />
-                  <span className="small">{JOURS_COURTS[d]}</span>
+                  <span className="small">{t(`resa.${JOURS_COURTS[d]}`)}</span>
                 </div>
               ))}
             </div>
           </div>
           <div className="card">
-            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Couverts par heure d'arrivée</h3>
-            {heuresUtiles.length === 0 && <p className="small" style={{ margin: 0 }}>Aucune réservation sur la période.</p>}
+            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('resa.coversByHour')}</h3>
+            {heuresUtiles.length === 0 && <p className="small" style={{ margin: 0 }}>{t('resa.noneInPeriod')}</p>}
             {heuresUtiles.length > 0 && (
               <div className="resa-barres">
                 {heuresUtiles.map((h) => (
-                  <div key={h.heure} className="resa-barre-col" title={`${h.reservations} réservation(s), ${h.couverts} couverts`}>
+                  <div key={h.heure} className="resa-barre-col" title={t('resa.barTitle', { n: h.reservations, c: h.couverts })}>
                     <span className="small">{h.couverts || ''}</span>
                     <div className="resa-barre" style={{ height: `${(h.couverts / maxHeure) * 100}%` }} />
                     <span className="small">{h.heure}h</span>
@@ -1072,10 +1067,10 @@ function Statistiques({ token, toast, restoId }) {
             )}
           </div>
           <div className="card">
-            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>D'où viennent tes réservations</h3>
+            <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('resa.sourcesTitle')}</h3>
             <p className="small" style={{ margin: 0 }}>
-              {Object.entries(SOURCES).map(([cle, label]) => `${label} : ${stats.parSource[cle] || 0}`).join(' · ')}
-              {stats.acompteRembourse > 0 && <> · acomptes remboursés : {euros(stats.acompteRembourse)}</>}
+              {Object.entries(SOURCES).map(([cle, label]) => `${t('resa.' + label)} : ${stats.parSource[cle] || 0}`).join(' · ')}
+              {stats.acompteRembourse > 0 && t('resa.depositsRefunded', { amount: euros(stats.acompteRembourse) })}
             </p>
           </div>
         </>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { categoryEmoji, suggestItemImages } from '../menuCategories';
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
+import { useLanguage } from '../context/LanguageContext';
 
 function draftKeyFor(restoId) {
   return `fairide_menu_import_draft_${restoId}`;
@@ -24,6 +25,7 @@ function loadDraft(restoId) {
 // reste modifiable (l'IA peut se tromper sur un prix mal imprimé ou une catégorie ambiguë) et chaque
 // ligne peut être décochée, exactement comme pour un template de démarrage classique.
 export default function MenuImportReview({ items: initialItems, existingItemCount, restoId, restaurant, onSubmit, onCancel, submitting }) {
+  const { t } = useLanguage();
   const [items, setItems] = useState(() => {
     const draft = loadDraft(restoId);
     if (draft?.items) return draft.items;
@@ -106,7 +108,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
     };
     return (
       <div>
-        <button type="button" className="btn-ghost" style={{ marginBottom: 10 }} onClick={() => setPreviewOpen(false)}>← Retour à la relecture</button>
+        <button type="button" className="btn-ghost" style={{ marginBottom: 10 }} onClick={() => setPreviewOpen(false)}>{t('menuImport.backToReview')}</button>
         <RestaurantPreview restaurant={draftRestaurant} />
       </div>
     );
@@ -116,48 +118,48 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
     <div>
       <div className="row" style={{ gap: 8, justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <p className="small" style={{ margin: 0 }}>
-          {items.length} plat(s) lu(s) dans le document — vérifie et corrige avant d'ajouter au menu (décoche ce que tu ne veux pas garder). Aucune photo n'est ajoutée automatiquement : tu peux en choisir une pour chaque plat en cliquant sur sa vignette — les photos déjà présentes dans ta galerie y sont directement disponibles.
+          {t('menuImport.readIntro', { n: items.length })}
         </p>
         <button type="button" className="btn-outline" style={{ flexShrink: 0, whiteSpace: 'nowrap' }} onClick={() => setPreviewOpen(true)}>
-          👁️ Aperçu client
+          {t('menuImport.customerPreview')}
         </button>
       </div>
       {existingItemCount > 0 && (
         <div className="field" style={{ marginBottom: 14 }}>
-          <label>Que faire des {existingItemCount} plat(s) déjà dans ton menu ?</label>
+          <label>{t('menuImport.whatAboutExisting', { n: existingItemCount })}</label>
           <div className="role-pick" style={{ marginBottom: 0 }}>
             <div className={`chip${mode === 'append' ? ' active' : ''}`} onClick={() => setMode('append')}>
-              Garder et tout ajouter
+              {t('menuImport.keepAndAdd')}
             </div>
             <div className={`chip${mode === 'replace' ? ' active' : ''}`} onClick={() => setMode('replace')}>
-              Remplacer par ce document
+              {t('menuImport.replaceWithDoc')}
             </div>
           </div>
           {mode === 'replace' && (
             <p className="small" style={{ color: 'var(--red)', margin: '8px 0 0' }}>
-              ⚠️ Les {existingItemCount} plat(s) actuel(s) de ton menu seront définitivement supprimés et remplacés par la sélection ci-dessous.
+              {t('menuImport.replaceWarn', { n: existingItemCount })}
             </p>
           )}
         </div>
       )}
       <div className="card" style={{ marginBottom: 8, padding: 12, border: '1px dashed var(--line)', background: 'var(--cream-dim)' }}>
         <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>
-          <span className="small" style={{ fontWeight: 700, marginTop: 10, flexShrink: 0 }}>Exemple ↓</span>
+          <span className="small" style={{ fontWeight: 700, marginTop: 10, flexShrink: 0 }}>{t('menuImport.example')}</span>
           <span className="dish-thumb-empty">🍽️</span>
           <div style={{ flex: 1, display: 'grid', gap: 6 }}>
             <div className="row" style={{ gap: 8 }}>
-              <input style={{ flex: 2 }} disabled placeholder="Nom du plat" />
-              <input style={{ flex: 1 }} disabled placeholder="Prix" />
+              <input style={{ flex: 2 }} disabled placeholder={t('menuImport.phName')} />
+              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phPrice')} />
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <input style={{ flex: 1 }} disabled placeholder="Section (ex: Entrées, Plats, Boissons...)" />
-              <input style={{ flex: 1 }} disabled placeholder="Sous-section (ex: Sauces, Crudités, Chaudes...)" />
+              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phSection')} />
+              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phSubsection')} />
             </div>
-            <input disabled placeholder="Description (optionnel)" />
+            <input disabled placeholder={t('menuImport.phDescription')} />
           </div>
         </div>
         <p className="small" style={{ margin: '10px 0 0' }}>
-          La <b>section</b> regroupe les plats sous un même titre affiché sur ton menu (Entrées, Plats, Desserts, Boissons, ou un nom que tu choisis toi-même comme "Pizzas"). La <b>sous-section</b> crée un sous-groupe à l'intérieur d'une section — par exemple <b>"Sauces"</b> ou <b>"Crudités"</b> dans une section "Plats", ou <b>"Chaudes"</b> / <b>"Froides"</b> / <b>"Boissons alcoolisées"</b> dans une section "Boissons". Laisse-la vide pour un plat qui n'a pas besoin d'être sous-groupé.
+          {t('menuImport.the')} <b>section</b> {t('menuImport.sectionExplain')} <b>sous-section</b> {t('menuImport.subsectionExplain')} <b>{t('menuImport.exSauces')}</b> ou <b>{t('menuImport.exCrudites')}</b> {t('menuImport.inMains')} <b>{t('menuImport.exHot')}</b> / <b>{t('menuImport.exCold')}</b> / <b>{t('menuImport.exAlcohol')}</b> {t('menuImport.inDrinks')}
         </p>
       </div>
       {items.map((it) => (
@@ -167,7 +169,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
             <button
               type="button"
               onClick={() => setPickerKey(it.key)}
-              title={it.imageUrl ? 'Changer la photo' : 'Choisir une photo (aucune trouvée automatiquement)'}
+              title={it.imageUrl ? t('menuImport.changePhoto') : t('menuImport.choosePhotoNone')}
               style={{ flexShrink: 0, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
             >
               {it.imageUrl ? (
@@ -178,43 +180,43 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
             </button>
             <div style={{ flex: 1, display: 'grid', gap: 6 }}>
               <div className="row" style={{ gap: 8 }}>
-                <input style={{ flex: 2 }} value={it.name} onChange={(e) => updateField(it.key, 'name', e.target.value)} placeholder="Nom du plat" />
-                <input style={{ flex: 1 }} type="number" step="0.5" value={it.price} onChange={(e) => updateField(it.key, 'price', e.target.value)} placeholder="Prix" />
+                <input style={{ flex: 2 }} value={it.name} onChange={(e) => updateField(it.key, 'name', e.target.value)} placeholder={t('menuImport.phName')} />
+                <input style={{ flex: 1 }} type="number" step="0.5" value={it.price} onChange={(e) => updateField(it.key, 'price', e.target.value)} placeholder={t('menuImport.phPrice')} />
               </div>
               <div className="row" style={{ gap: 8 }}>
-                <input style={{ flex: 1 }} value={it.category} onChange={(e) => updateField(it.key, 'category', e.target.value)} placeholder="Section (ex: Entrées)" />
-                <input style={{ flex: 1 }} value={it.subsection} onChange={(e) => updateField(it.key, 'subsection', e.target.value)} placeholder="Sous-section (optionnel, ex: Viandes)" />
+                <input style={{ flex: 1 }} value={it.category} onChange={(e) => updateField(it.key, 'category', e.target.value)} placeholder={t('menuImport.phSectionShort')} />
+                <input style={{ flex: 1 }} value={it.subsection} onChange={(e) => updateField(it.key, 'subsection', e.target.value)} placeholder={t('menuImport.phSubsectionShort')} />
               </div>
-              <input value={it.desc} onChange={(e) => updateField(it.key, 'desc', e.target.value)} placeholder="Description (optionnel)" />
+              <input value={it.desc} onChange={(e) => updateField(it.key, 'desc', e.target.value)} placeholder={t('menuImport.phDescription')} />
             </div>
-            <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', marginTop: 4 }} onClick={() => removeRow(it.key)} title="Retirer cette ligne">🗑️</button>
+            <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', marginTop: 4 }} onClick={() => removeRow(it.key)} title={t('menuImport.removeLine')}>🗑️</button>
           </div>
         </div>
       ))}
       <div className="row" style={{ gap: 8, marginTop: 10 }}>
         <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting || includedCount === 0} onClick={() => setConfirmOpen(true)}>
-          {submitting ? '...' : mode === 'replace' ? `Remplacer le menu par ces ${includedCount} plat(s)` : `Ajouter ${includedCount} plat(s) au menu`}
+          {submitting ? '...' : mode === 'replace' ? t('menuImport.replaceMenuBtn', { n: includedCount }) : t('menuImport.addDishesBtn', { n: includedCount })}
         </button>
-        <button className="btn-ghost" onClick={cancel}>Annuler</button>
+        <button className="btn-ghost" onClick={cancel}>{t('menuImport.cancel')}</button>
       </div>
       {confirmOpen && (
         <div className="modal-overlay" onClick={() => setConfirmOpen(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()}>
             <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>
-              {mode === 'replace' ? '⚠️ Remplacer ton menu actuel ?' : 'Ajouter ces plats à ton menu ?'}
+              {mode === 'replace' ? t('menuImport.replaceConfirmTitle') : t('menuImport.addConfirmTitle')}
             </h3>
             <p className="small" style={{ margin: '0 0 16px' }}>
               {mode === 'replace'
-                ? `Les ${existingItemCount} plat(s) actuel(s) de ton menu seront définitivement supprimés et remplacés par les ${includedCount} plat(s) sélectionné(s) dans ce document. Cette action est irréversible.`
+                ? t('menuImport.replaceConfirmBody', { existing: existingItemCount, n: includedCount })
                 : existingItemCount > 0
-                ? `Les ${existingItemCount} plat(s) déjà dans ton menu sont conservés — les ${includedCount} plat(s) sélectionné(s) dans ce document viendront s'y ajouter.`
-                : `Les ${includedCount} plat(s) sélectionné(s) dans ce document seront ajoutés à ton menu.`}
+                ? t('menuImport.addConfirmBodyExisting', { existing: existingItemCount, n: includedCount })
+                : t('menuImport.addConfirmBody', { n: includedCount })}
             </p>
             <div className="row" style={{ gap: 8 }}>
               <button className={mode === 'replace' ? 'btn-danger' : 'btn-teal'} disabled={submitting} onClick={submit}>
                 {submitting ? '...' : mode === 'replace' ? 'Oui, remplacer' : 'Oui, ajouter'}
               </button>
-              <button className="btn-ghost" disabled={submitting} onClick={() => setConfirmOpen(false)}>Annuler</button>
+              <button className="btn-ghost" disabled={submitting} onClick={() => setConfirmOpen(false)}>{t('menuImport.cancel')}</button>
             </div>
           </div>
         </div>
@@ -224,8 +226,8 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
           restoId={restoId}
           currentImageUrl={pickerItem.imageUrl}
           suggestions={suggestItemImages(pickerItem)}
-          suggestionsTitle="Photos suggérées pour ce plat"
-          title={`Photo — ${pickerItem.name || 'ce plat'}`}
+          suggestionsTitle={t('menuImport.suggestedForDish')}
+          title={t('menuImport.photoOf', { name: pickerItem.name || t('menuImport.thisDish') })}
           onSelect={(url) => { updateField(pickerKey, 'imageUrl', url); setPickerKey(null); }}
           onCancel={() => setPickerKey(null)}
         />

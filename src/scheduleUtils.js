@@ -1,3 +1,4 @@
+import { getLocale } from './context/LanguageContext';
 function dateKey(d) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
@@ -5,15 +6,15 @@ function dateKey(d) {
 // Dates sélectionnables pour "programmer" une commande : aujourd'hui + les 7 prochains jours (même
 // fenêtre que la validation côté serveur). Une réservation de table suit l'horizon du restaurant
 // (reservationMaxDays), d'où le paramètre.
-export function getScheduleDateOptions(days = 7) {
+export function getScheduleDateOptions(days = 7, labels = { today: "Aujourd'hui", tomorrow: 'Demain' }) {
   const now = new Date();
   const opts = [];
   for (let day = 0; day <= days; day++) {
     const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + day);
     let label;
-    if (day === 0) label = "Aujourd'hui";
-    else if (day === 1) label = 'Demain';
-    else label = d.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long' });
+    if (day === 0) label = labels.today;
+    else if (day === 1) label = labels.tomorrow;
+    else label = d.toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
     opts.push({ value: dateKey(d), label });
   }
   return opts;

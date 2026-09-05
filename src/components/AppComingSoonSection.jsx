@@ -14,6 +14,7 @@ const STORE_BADGES = [
 ];
 
 function PhoneMockup() {
+  const { t } = useLanguage();
   return (
     <div className="app-soon-phone">
       <div className="app-soon-phone-notch" />
@@ -22,7 +23,7 @@ function PhoneMockup() {
           <BrandMark size={22} />
           <span>Fairide</span>
         </div>
-        <div className="app-soon-phone-search">🔍 Rechercher un commerce…</div>
+        <div className="app-soon-phone-search">{t('landing.mockSearchPlaceholder')}</div>
         <div className="app-soon-phone-chips">
           {['🍕', '🍔', '🍣', '🥗', '🧋'].map((e, i) => <span key={i}>{e}</span>)}
         </div>

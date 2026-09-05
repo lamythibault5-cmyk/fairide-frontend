@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useLanguage, getLocale } from '../context/LanguageContext';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -15,7 +16,7 @@ const ETA_DISTANCE_MIN_M = 25;
 const ETA_INTERVALLE_MIN_MS = 30000;
 
 function formatClock(date) {
-  return date.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
 function distanceM(a, b) {
@@ -72,6 +73,7 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
 // client, le commerce du restaurateur. `legendeDestination` : ce que la légende appelle l'adresse de
 // livraison (« Toi » pour le client, « Client » pour le restaurateur).
 export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel = 'Chez toi', homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination = 'Toi', onEta, height = 260 }) {
+  const { t } = useLanguage();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const restaurantMarkerRef = useRef(null);
@@ -172,7 +174,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     }
     if (hasDelivery) {
       if (!deliveryMarkerRef.current) {
-        deliveryMarkerRef.current = L.marker([deliveryLat, deliveryLng], { icon: DELIVERY_ICON }).addTo(mapRef.current).bindPopup('Adresse de livraison');
+        deliveryMarkerRef.current = L.marker([deliveryLat, deliveryLng], { icon: DELIVERY_ICON }).addTo(mapRef.current).bindPopup(t('trackingMap.deliveryAddress'));
       } else deliveryMarkerRef.current.setLatLng([deliveryLat, deliveryLng]);
     }
     if (hasResto && hasDelivery) {
@@ -224,7 +226,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       setHasTrail(true);
     }
     if (!driverMarkerRef.current) {
-      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON }).addTo(mapRef.current).bindPopup('Ton livreur');
+      driverMarkerRef.current = L.marker([driverLat, driverLng], { icon: DRIVER_ICON }).addTo(mapRef.current).bindPopup(t('trackingMap.yourCourier'));
     } else {
       const marker = driverMarkerRef.current;
       const start = marker.getLatLng();
@@ -306,30 +308,28 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
       {eta && (
         <div className="tracking-eta-pill" aria-live="polite">
-          🛵 Arrive dans <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString('fr-BE')} km</span>
+          {t('trackingMap.arrivesIn')} <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString(getLocale())} km</span>
         </div>
       )}
       {(showRecenter || showFollowDriver) && (
         <div className="tracking-map-controls">
-          {showFollowDriver && <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>🛵 Suivre le livreur</button>}
-          {showRecenter && <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>}
+          {showFollowDriver && <button type="button" className="tracking-map-follow-driver" onClick={followDriver}>{t('trackingMap.followCourier')}</button>}
+          {showRecenter && <button type="button" className="tracking-map-recenter" onClick={recenter}>{t('trackingMap.overview')}</button>}
         </div>
       )}
       </div>
       {driverLat != null && driverLng != null && shownAt && (
         <div className={`tracking-map-freshness${isStale ? ' stale' : ''}`}>
-          {isStale
-            ? `⚠️ Aucune nouvelle position depuis ${formatClock(shownAt)}. Le suivi peut s'interrompre si le téléphone du livreur se met en veille.`
-            : authoritativeAt ? `Position mise à jour à ${formatClock(shownAt)}` : `Dernier déplacement observé à ${formatClock(shownAt)}`}
+          {isStale ? t('trackingMap.stale', { time: formatClock(shownAt) }) : authoritativeAt ? t('trackingMap.updatedAt', { time: formatClock(shownAt) }) : t('trackingMap.lastMoveAt', { time: formatClock(shownAt) })}
         </div>
       )}
       <div className="tracking-map-legend">
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> Restaurant</span>}
-        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Livreur</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> {t('trackingMap.restaurant')}</span>}
+        {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> {t('trackingMap.courier')}</span>}
         {enLivraison
           ? <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> {legendeDestination}</span>
           : <span><span className="tracking-map-legend-icon" style={{ background: homeColor }}>{homeEmoji}</span> {homeLabel}</span>}
-        {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> Trajet parcouru</span>}
+        {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> {t('trackingMap.routeDone')}</span>}
       </div>
     </div>
   );

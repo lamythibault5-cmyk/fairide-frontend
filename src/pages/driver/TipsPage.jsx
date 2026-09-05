@@ -3,8 +3,10 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 export default function TipsPage() {
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [orders, setOrders] = useState(null);
@@ -22,15 +24,15 @@ export default function TipsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Pourboires</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{t('tipsDriver.title')}</h2>
       <div className="card" style={{ marginBottom: 16 }}>
         <div className="stat-grid">
-          <div className="stat-card highlight"><div className="num">{totalTips.toFixed(2)}€</div><div className="label">Total reçu</div></div>
-          <div className="stat-card"><div className="num">{tipped.length}</div><div className="label">Livraisons avec pourboire</div></div>
+          <div className="stat-card highlight"><div className="num">{totalTips.toFixed(2)}€</div><div className="label">{t('tipsDriver.totalReceived')}</div></div>
+          <div className="stat-card"><div className="num">{tipped.length}</div><div className="label">{t('tipsDriver.deliveriesWithTip')}</div></div>
         </div>
       </div>
       {tipped.length === 0 ? (
-        <div className="empty">Pas encore de pourboire reçu.</div>
+        <div className="empty">{t('tipsDriver.none')}</div>
       ) : (
         tipped.map((o) => (
           <div className="card" key={o.id}>
@@ -39,7 +41,7 @@ export default function TipsPage() {
               <span className="pill gold">+{o.tipAmount.toFixed(2)}€</span>
             </div>
             <div className="small" style={{ margin: '4px 0' }}>{o.clientName}</div>
-            <div className="small">{new Date(o.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+            <div className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric' })}</div>
           </div>
         ))
       )}
