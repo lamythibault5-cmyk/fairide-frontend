@@ -48,7 +48,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const el = conteneur.current; if (!el) return undefined;
     const mesurer = () => {
       const r = el.getBoundingClientRect();
-      const w = Math.max(120, Math.floor(r.width)); const h = Math.max(160, Math.floor(r.height));
+      const w = Math.max(120, Math.floor(r.width)); const h = Math.max(120, Math.floor(r.height));
       setTaille((t) => (t.w === w && t.h === h ? t : { w, h }));
     };
     mesurer();

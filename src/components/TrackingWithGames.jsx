@@ -17,8 +17,23 @@ const POURQUOI = {
   driver: 'Pour patienter au restaurant pendant que la commande se prépare, sans quitter la carte ni rater le départ. Jamais en roulant, évidemment.'
 };
 
+// En dessous de 560px, .tracking-with-game empile la carte au-dessus du jeu (styles.css) : le jeu n'est
+// plus coincé dans une colonne de 140px, on lui donne alors un terrain plus large, plus agréable au pouce.
+const EMPILE_BREAKPOINT = 560;
+
+function useLargeurFenetre() {
+  const [largeur, setLargeur] = useState(() => window.innerWidth);
+  useEffect(() => {
+    const onResize = () => setLargeur(window.innerWidth);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return largeur;
+}
+
 export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation = '🛵 Livreur en route', hauteur = 300 }) {
   const [pleinEcran, setPleinEcran] = useState(false);
+  const empile = useLargeurFenetre() <= EMPILE_BREAKPOINT;
   return (
     <>
       <div className="tracking-with-game" style={{ margin: '10px 0' }}>
@@ -26,7 +41,7 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
           {rendreCarte({ height: hauteur })}
           {legende && <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>{legende}</div>}
         </div>
-        <GameSwitcher pourquoi={POURQUOI[role]} />
+        <GameSwitcher pourquoi={POURQUOI[role]} width={empile ? 240 : 140} height={empile ? 300 : 280} />
       </div>
       <button type="button" className="tracking-expand-btn" onClick={() => setPleinEcran(true)}>⛶ Agrandir la carte et les jeux</button>
       {pleinEcran && (
@@ -56,7 +71,7 @@ function useFullscreenSizes() {
   return {
     narrow,
     mapHeight: narrow
-      ? Math.round(Math.max(170, Math.min(280, size.height * 0.3)))
+      ? Math.round(Math.max(160, Math.min(280, size.height * 0.28)))
       : Math.round(Math.max(320, Math.min(760, size.height - 210)))
   };
 }

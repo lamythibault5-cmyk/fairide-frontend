@@ -93,7 +93,7 @@ export default function MapPage() {
           <TrackingWithGames
             role="client"
             legende={`${maison ? 'Voici chez toi. ' : ''}Dès qu'une livraison démarre, ton livreur apparaît ici en direct.`}
-            etaSansEstimation="⏳ Aucune livraison en cours"
+            etaSansEstimation="⏳ Rien en cours"
             rendreCarte={({ height, onEta }) => <DeliveryTrackingMap height={height} onEta={onEta} homeLat={maison?.lat} homeLng={maison?.lng} />}
           />
         </div>
@@ -108,7 +108,7 @@ export default function MapPage() {
             <TrackingWithGames
               role="client"
               legende={o.driverLat ? `🛵 Position de ${o.driverName || 'ton livreur'} en direct` : 'En attente de la position du livreur'}
-              etaSansEstimation={o.driverLat ? '🛵 Livreur en route' : '⏳ En attente du livreur'}
+              etaSansEstimation={o.driverLat ? '🛵 Livreur en route' : '⏳ Livreur attendu'}
               rendreCarte={({ height, onEta }) => (
                 <DeliveryTrackingMap
                   restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}

@@ -25,7 +25,9 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
   const jeu = JEUX[index];
 
   return (
-    <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}`}>
+    // Compact : le bloc a la largeur du terrain, sinon la bulle 💡 l'élargirait à la longueur de sa phrase
+    // et écraserait la carte à côté.
+    <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}`} style={fill || large ? undefined : { width }}>
       {pourquoi && (
         <div className="game-switcher-entete">
           <span className="game-switcher-entete-titre">🎮 Mini-jeux</span>

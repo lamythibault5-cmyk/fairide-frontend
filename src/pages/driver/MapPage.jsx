@@ -108,7 +108,7 @@ export default function MapPage() {
           <TrackingWithGames
             role="driver"
             legende={position ? 'Te voilà. Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.' : 'Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.'}
-            etaSansEstimation="⏳ Aucune course en cours"
+            etaSansEstimation="⏳ Pas de course"
             rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
           />
         </div>

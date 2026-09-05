@@ -152,6 +152,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
 
   return (
     <div className="tracking-map-wrap">
+      <div className="tracking-map-cadre">
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
       {eta && (
         <div className="tracking-eta-pill" aria-live="polite">
@@ -163,6 +164,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
           <button type="button" className="tracking-map-follow-driver" onClick={recentrer}>🎯 Recentrer</button>
         </div>
       )}
+      </div>
       <div className="tracking-map-legend">
         <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Toi</span>
         {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || 'Prochain arrêt'}</span>}

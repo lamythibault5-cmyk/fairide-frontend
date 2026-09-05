@@ -1473,8 +1473,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 
 .tracking-map-wrap { position: relative; }
+.tracking-map-cadre { position: relative; }
 .tracking-eta-pill {
-  position: absolute; top: 10px; left: 10px; z-index: 1100; pointer-events: none;
+  /* En bas à gauche : en haut à droite vivent les boutons de la carte, et sur un téléphone les deux se
+     chevauchaient. */
+  position: absolute; bottom: 30px; left: 10px; z-index: 1100; pointer-events: none; /* au-dessus de la mention Leaflet / OSM */
   padding: 6px 10px; background: var(--iris); color: #fff; border-radius: 999px; font-size: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.25); white-space: nowrap;
 }
@@ -1588,9 +1591,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 /* Sélecteur de jeu : six onglets emoji au-dessus du jeu (GameSwitcher.jsx). */
 .game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
-/* Compact : largeur fixée à celle du terrain (140px), sinon la bulle 💡 élargirait le bloc à la longueur
-   de sa phrase et écraserait la carte. */
-.game-switcher:not(.game-switcher--large) { width: 140px; }
+.game-switcher { max-width: 100%; }
 .game-switcher-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; }
 .game-switcher-tab {
   display: flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 4px;
@@ -1609,7 +1610,10 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .game-switcher--large .game-switcher-tab.active .game-switcher-tab-label { color: #fff; }
 .game-switcher--large .game-switcher-tab-sub { font-size: 10px; color: var(--ink-soft); text-align: center; }
 .game-switcher--large .game-switcher-tab.active .game-switcher-tab-sub { color: rgba(255,255,255,0.85); }
-.game-switcher--fill { flex: 1; min-height: 0; width: 100%; }
+.game-switcher--fill { flex: 1; min-height: 0; width: 100%; position: relative; }
+/* En plein écran la bulle 💡 se pose PAR-DESSUS les onglets au lieu de pousser le terrain : sur un
+   téléphone, elle le réduirait à rien. */
+.game-switcher--fill .game-switcher-pourquoi-bulle { position: absolute; z-index: 5; left: 0; right: 0; top: 44px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
 /* En-tête « 🎮 Mini-jeux » + 💡 : pourquoi des jeux sur une carte, en une phrase, pour qui se le demande. */
 .game-switcher-entete { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
 .game-switcher-entete-titre { font-size: 11px; font-weight: 800; color: var(--ink); white-space: nowrap; }

@@ -300,6 +300,9 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
   const enLivraison = !!(restaurantLat && deliveryLat);
   return (
     <div className="tracking-map-wrap">
+      {/* .tracking-map-cadre : la pastille et les boutons se positionnent par rapport à la carte seule,
+          pas au bloc entier (légende, fraîcheur) — sinon la pastille « en bas » tombait sous la carte. */}
+      <div className="tracking-map-cadre">
       <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
       {eta && (
         <div className="tracking-eta-pill" aria-live="polite">
@@ -312,6 +315,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
           {showRecenter && <button type="button" className="tracking-map-recenter" onClick={recenter}>🎯 Vue d'ensemble</button>}
         </div>
       )}
+      </div>
       {driverLat != null && driverLng != null && shownAt && (
         <div className={`tracking-map-freshness${isStale ? ' stale' : ''}`}>
           {isStale
