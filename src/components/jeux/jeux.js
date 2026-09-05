@@ -227,45 +227,60 @@ export const JEUX = [
       'Chaque salto complet réussi rapporte un point, et chaque bout de route parcouru aussi. Retomber de travers, c’est la chute.'
     ],
     controles: 'Maintiens le doigt (ou la souris, ou la touche Espace) : accélère au sol, tourne en l’air.',
+    // ANCIENNE VERSION, ET CE QUI N'ALLAIT PAS. Le relief était défini en fraction de la HAUTEUR du
+    // cadre : dans la colonne étroite (140×280), les bosses faisaient jusqu'à 58° de pente ; en plein
+    // écran, presque rien. Et le décollage exigeait une pente montante raide, si bien qu'on quittait la
+    // route avec un angle d'environ -60° pour retomber sur une descente à +60° : sans un salto complet
+    // quasi parfait, c'était la chute à CHAQUE bosse. Le joueur ne comprenait pas ce qu'il devait faire.
+    // ICI : relief et gravité en fraction de la LARGEUR (même jeu dans toutes les tailles), décollage
+    // purement balistique (on quitte la route quand la trajectoire libre passe au-dessus), et, en l'air,
+    // le vélo se redresse tout seul quand on relâche : rouler sans tenter de figure ne fait jamais
+    // tomber ; c'est le salto raté qui coûte la partie.
     creer(api) {
       let w = api.w; let h = api.h;
       let dist = 0; let y = 0; let vy = 0; let vx = 0; let angle = 0; let rotation = 0; let auSol = true;
       let prochainJalon = 0;
-      const sol = (x) => h * 0.72 + Math.sin(x / (w * 0.28)) * h * 0.11 + Math.sin(x / (w * 0.125) + 1.7) * h * 0.05;
+      const sol = (x) => h * 0.72 + Math.sin(x / (w * 0.30)) * w * 0.09 + Math.sin(x / (w * 0.13) + 1.7) * w * 0.035;
       const pente = (x) => (sol(x + 2) - sol(x - 2)) / 4;
       const xEcran = () => w * 0.3;
+      const normaliser = (a) => { let r = a % (Math.PI * 2); if (r > Math.PI) r -= Math.PI * 2; if (r < -Math.PI) r += Math.PI * 2; return r; };
       return {
         reset() { dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.9; angle = Math.atan(pente(xEcran())); rotation = 0; auSol = true; prochainJalon = w * 3; },
         redimensionner(nw, nh) { w = nw; h = nh; },
         update(dt, input) {
           const n = input.niveau;
-          const base = w * (0.9 + n * 0.1); const maxi = base * 1.7;
-          const cibleV = input.enfonce ? maxi : base;
-          vx += (cibleV - vx) * Math.min(1, dt * (input.enfonce ? 2.2 : 1.4));
+          const base = w * (0.9 + n * 0.1); const maxi = base * 1.8;
+          // Au sol, l'appui accélère ; en l'air, la vitesse horizontale est acquise (on ne pédale pas dans le vide).
+          if (auSol) {
+            const cibleV = input.enfonce ? maxi : base;
+            vx += (cibleV - vx) * Math.min(1, dt * (input.enfonce ? 2.2 : 1.4));
+          }
           dist += vx * dt;
           const xm = xEcran() + dist;
-          const g = h * 2.4;
+          const g = w * 2.6;
+          const ySol = sol(xm); const p = pente(xm);
           if (auSol) {
-            const p = pente(xm);
-            const ySol = sol(xm);
-            // Décollage : si la chute libre nous laisserait AU-DESSUS du sol qui descend, on quitte la route.
+            // Décollage : si la trajectoire libre (vitesse verticale héritée de la pente) passe au-dessus
+            // du sol, on quitte la route ; sinon on la suit.
             const yLibre = y + vy * dt + 0.5 * g * dt * dt;
-            if (yLibre < ySol - 1.5 && p < -0.12) { auSol = false; vy = vy; }
+            if (yLibre < ySol - 1) auSol = false;
             else { y = ySol; vy = p * vx; angle = Math.atan(p); rotation = 0; }
           }
           if (!auSol) {
             vy += g * dt; y += vy * dt;
-            // Roue arrière : tirer sur le guidon fait tourner en arrière (sens trigonométrique à l’écran).
-            const va = input.enfonce ? -5.6 : 0;
-            angle += va * dt; rotation += Math.abs(va * dt);
-            const ySol = sol(xm);
+            if (input.enfonce) {
+              // Roue arrière : tirer sur le guidon fait tourner en arrière (sens trigonométrique à l'écran).
+              const va = -5.2; angle += va * dt; rotation += Math.abs(va * dt);
+            } else {
+              // Relâché : le vélo se redresse vers la position droite la plus proche (un salto entamé se termine).
+              const droit = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
+              angle += (droit - angle) * Math.min(1, dt * 4);
+            }
             if (y >= ySol) {
-              const p = pente(xm);
               const attendu = Math.atan(p);
-              let ecart = (angle - attendu) % (Math.PI * 2);
-              if (ecart > Math.PI) ecart -= Math.PI * 2; if (ecart < -Math.PI) ecart += Math.PI * 2;
-              if (Math.abs(ecart) > Math.PI * 0.42) return api.perdre();
-              const saltos = Math.floor(rotation / (Math.PI * 2));
+              if (Math.abs(normaliser(angle - attendu)) > Math.PI * 0.42) return api.perdre();
+              // Un salto compte dès 7/8 de tour : le redressement automatique finit le dernier bout.
+              const saltos = Math.floor((rotation + Math.PI * 0.25) / (Math.PI * 2));
               if (saltos > 0) api.marquer(saltos);
               y = ySol; vy = p * vx; angle = attendu; auSol = true; rotation = 0;
             }
@@ -290,6 +305,12 @@ export const JEUX = [
           for (let sx = 0; sx <= w; sx += 4) { const yy = sol(sx + dist); if (sx === 0) ctx.moveTo(sx, yy); else ctx.lineTo(sx, yy); }
           ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.stroke();
           const t = Math.max(26, Math.min(44, w * 0.2));
+          // Ombre au sol pendant le saut : on lit la hauteur et l'endroit où l'on va retomber.
+          if (!auSol) {
+            const ySolIci = sol(xEcran() + dist);
+            ctx.fillStyle = 'rgba(20,18,31,.18)';
+            ctx.beginPath(); ctx.ellipse(xEcran(), ySolIci - 2, t * 0.38, t * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+          }
           emoji(ctx, '🚴', xEcran(), y - t * 0.42, t, angle);
         }
       };

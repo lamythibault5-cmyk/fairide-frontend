@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useToast } from '../context/ToastContext';
 
 // Alerte du restaurateur à l'arrivée d'une commande.
 //
@@ -31,9 +32,9 @@ function loadSoundPref() {
 
 // Carillon synthétisé plutôt qu'un fichier audio : rien à télécharger, rien à héberger, et le son
 // fonctionne même hors ligne. Trois notes montantes, assez distinctes du reste des sons d'un comptoir.
-function playChime(ctx) {
+function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
   const now = ctx.currentTime;
-  [880, 1108.73, 1318.51].forEach((freq, i) => {
+  notes.forEach((freq, i) => {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
@@ -56,6 +57,7 @@ function playChime(ctx) {
 // loup à chaque chargement est pire que pas d'alerte : on apprend à l'ignorer.
 export default function useNewOrderAlert(orders, ready) {
   const { t } = useLanguage();
+  const toast = useToast();
   const [soundEnabled, setSoundEnabledState] = useState(loadSoundPref);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
@@ -146,6 +148,29 @@ export default function useNewOrderAlert(orders, ready) {
     // compteur restant à 0), la référence n'était donc jamais posée — et la toute première commande
     // reçue repartait par la branche `prev === null`, sans un son.
   }, [newCount, ring, ready]);
+
+  // Annulation par le client (possible tant que la commande n'est pas acceptée) : on compare les
+  // statuts d'un sondage à l'autre. Une commande vue « nouveau » et revue « annule » déclenche un son
+  // descendant (distinct du carillon d'arrivée), un toast et une notification système.
+  const prevStatusRef = useRef(null);
+  useEffect(() => {
+    if (!ready) return;
+    const prev = prevStatusRef.current;
+    const actuel = new Map(orders.map((o) => [o.id, o.status]));
+    prevStatusRef.current = actuel;
+    if (!prev) return;
+    const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)));
+    if (!annulees.length) return;
+    const ctx = ctxRef.current;
+    if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440]); } catch { /* contexte fermé */ } }
+    toast(annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t('alertBar.cancelToastOne', { client: annulees[0].clientName || '' }));
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      try {
+        new Notification(t('alertBar.cancelNotifTitle'), { body: t('alertBar.cancelNotifBody'), icon: '/icons/icon.svg', tag: 'fairide-order-cancelled' });
+      } catch { /* notifications refusées entre-temps */ }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, ready]);
 
   // Rappel tant que la commande n'est pas traitée : c'est ce qui rattrape le restaurateur parti en
   // cuisine au moment du premier son.

@@ -2401,3 +2401,17 @@ button.account-link-row:last-child { border-bottom: none; }
    glisser/molette que la rangée animée, sans mouvement de fond. */
 .auto-scroll-row.auto-scroll-static { cursor: default; }
 .auto-scroll-row.auto-scroll-static:active { cursor: grabbing; }
+/* Podium des mini-jeux (GameSocial.jsx) : sous le cadre du jeu, à sa largeur. */
+.podium { width: 100%; max-width: 100%; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; font-size: 11px; }
+.podium--large { font-size: 13px; max-width: 420px; }
+.podium-titre { display: flex; justify-content: space-between; align-items: center; font-weight: 700; margin-bottom: 4px; }
+.podium-editer { background: none; border: none; cursor: pointer; padding: 0 2px; font-size: 12px; }
+.podium-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.podium-liste li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; }
+.podium-liste li.moi { background: rgba(200,240,60,0.25); border-radius: 6px; padding: 1px 4px; margin: 0 -4px; }
+.podium-pseudo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.podium-score { color: var(--iris); }
+.podium-vide, .podium-moi { margin: 2px 0 0; opacity: 0.8; }
+.pseudo-modal { max-width: 420px; }
+.pseudo-public { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; cursor: pointer; }
+.pseudo-public input { margin-top: 3px; }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import GameFrame, { tJeu } from './jeux/GameFrame';
 import { JEUX } from './jeux/jeux';
+import { Podium, PseudoModal, useGameSocial } from './jeux/GameSocial';
 import { useLanguage } from '../context/LanguageContext';
 
 // Le choix du mini-jeu à côté de la carte de suivi. Six jeux, chacun avec son meilleur score
@@ -23,6 +24,7 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
     return Number.isInteger(sauve) && sauve >= 0 && sauve < JEUX.length ? sauve : 0;
   });
   const [pourquoiOuvert, setPourquoiOuvert] = useState(false);
+  const social = useGameSocial();
   function choisir(i) { setIndex(i); try { localStorage.setItem(CLE_INDEX, String(i)); } catch { /* sans stockage, le choix vaut pour la page */ } }
   const jeu = JEUX[index];
 
@@ -56,7 +58,12 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
           </button>
         ))}
       </div>
-      <GameFrame key={jeu.key} jeu={jeu} width={width} height={height} fill={fill} large={large} />
+      <GameFrame key={jeu.key} jeu={jeu} width={width} height={height} fill={fill} large={large}
+        onStartRequest={social.demanderDepart} onScore={(score) => social.envoyerScore(jeu.key, score)} />
+      <Podium jeu={jeu} entrees={social.podium[jeu.key] || []} profil={social.profil} connecte={social.connecte} moiId={social.moiId} onEditer={social.ouvrirProfil} large={large || fill} />
+      {social.modal && (
+        <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />
+      )}
     </div>
   );
 }

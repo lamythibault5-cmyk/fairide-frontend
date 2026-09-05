@@ -120,7 +120,8 @@ export default function Orders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Le client peut annuler tant que la commande n'est pas payée, quel que soit son statut par ailleurs.
+  // Le client peut annuler tant que le restaurant n'a pas accepté la commande (statut « nouveau »), payée
+  // ou non : le paiement est alors remboursé. Dès la préparation, plus d'annulation en ligne.
   async function cancelOrder(orderId) {
     setCancellingId(orderId);
     try {
@@ -289,15 +290,21 @@ export default function Orders() {
               )}
             </>
           )}
-          {o.orderType !== 'dine_in' && !o.paid && o.status !== 'annule' && o.status !== 'refuse' && (
-            <button
-              className="btn-ghost"
-              style={{ marginTop: 8, color: 'var(--red)' }}
-              disabled={cancellingId === o.id}
-              onClick={() => cancelOrder(o.id)}
-            >
-              {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
-            </button>
+          {o.orderType !== 'dine_in' && o.status === 'nouveau' && (
+            <>
+              <button
+                className="btn-ghost"
+                style={{ marginTop: 8, color: 'var(--red)' }}
+                disabled={cancellingId === o.id}
+                onClick={() => cancelOrder(o.id)}
+              >
+                {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
+              </button>
+              <div className="small" style={{ marginTop: 4 }}>{t('orders.cancelHint')}</div>
+            </>
+          )}
+          {o.orderType !== 'dine_in' && ['preparation', 'pret', 'livraison'].includes(o.status) && (
+            <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div>
           )}
 
           {o.status === 'livre' && !o.reviewed && reviewingId !== o.id && (

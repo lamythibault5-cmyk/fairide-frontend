@@ -27,8 +27,12 @@ export function tJeu(t, jeu, champ, defaut) {
   return v === cle ? defaut : v;
 }
 
-export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false }) {
+// onStartRequest(demarrer) : le parent décide quand la partie commence (il peut d'abord demander un
+// pseudo, voir GameSocial.jsx) et appelle demarrer() lui-même. onScore(score) : fin de partie.
+export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false, onStartRequest, onScore }) {
   const { t } = useLanguage();
+  const onScoreRef = useRef(onScore);
+  onScoreRef.current = onScore;
   const [taille, setTaille] = useState({ w: width, h: height });
   const [status, setStatus] = useState('idle'); // idle | playing | paused | lost
   const [score, setScore] = useState(0);
@@ -99,6 +103,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         }
         setNouveauRecord(record);
         setStatus('lost');
+        onScoreRef.current?.(scoreRef.current);
       },
       niveau,
       score: () => scoreRef.current
@@ -163,12 +168,13 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   function surPointeurMouv(e) { const p = coord(e); input.current.x = p.x; input.current.y = p.y; }
   function surPointeurHaut() { input.current.enfonce = false; }
 
-  function commencer() {
+  function demarrer() {
     scoreRef.current = 0; setScore(0); setNouveauRecord(false);
     input.current = { x: null, y: null, enfonce: false, tapes: [] };
     instance.current?.reset();
     setStatus('playing');
   }
+  function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
   function ouvrirRegles() { if (statusRef.current === 'playing') setStatus('paused'); setReglesOuvertes(true); }
 
   const { w, h } = taille;
@@ -229,11 +235,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <ul>
                 {jeu.regles.map((r, i) => <li key={r}>{tJeu(t, jeu, `regles_${i}`, r)}</li>)}
               </ul>
-              <p className="jeu-controles"><b>{t('gameFrame.controls')}</b> {jeu.controles}</p>
+              <p className="jeu-controles"><b>{t('gameFrame.controls')}</b> {tJeu(t, jeu, 'regles_3', jeu.controles)}</p>
               {/* Ouvrir les règles en pleine partie a mis le jeu en pause : les refermer reprend la partie,
                   sans repasser par l'écran « En pause » qui ferait un clic de plus pour rien. */}
               <button type="button" className="jeu-btn" onClick={() => { setReglesOuvertes(false); if (status === 'paused') setStatus('playing'); }}>
-                {status === 'paused' ? '▶️ Reprendre' : 'Compris'}
+                {status === 'paused' ? t('gameFrame.resume') : t('games.gotIt')}
               </button>
             </div>
           </div>

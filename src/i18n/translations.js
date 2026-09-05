@@ -4,6 +4,25 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    gameSocial: {
+      podiumTitle: '🏆 Podium',
+      empty: 'Aucun score public pour l\'instant — sois le premier !',
+      you: '(toi)',
+      yourBest: 'Ton meilleur : {n}',
+      editPseudo: 'Modifier mon pseudo',
+      modalTitle: 'Choisis ton pseudo',
+      modalIntro: 'Il apparaîtra sur le podium si tu fais partie des 3 meilleurs joueurs d\'un jeu.',
+      pseudoLabel: 'Pseudo',
+      pseudoPlaceholder: 'Ex : SpeedyLéa',
+      publicLabel: 'Afficher mon pseudo publiquement',
+      publicHelp: 'Visible par tous les utilisateurs si tu es dans le top 3 de n\'importe quel jeu. Sans ça, tes scores restent privés et tu n\'apparais sur aucun podium.',
+      saveAndPlay: 'Enregistrer et jouer',
+      save: 'Enregistrer',
+      close: 'Fermer',
+      pseudoTooShort: 'Le pseudo doit faire au moins 2 caractères.',
+      saveError: 'Impossible d\'enregistrer le pseudo pour l\'instant.',
+      hidden: 'pseudo privé'
+    },
     addressReco: {
       searching: 'Reconnaissance de l\'adresse…',
       notFound: 'Adresse non reconnue : vérifie la rue et le code postal. Tu pourras préciser la commune à l\'étape suivante.',
@@ -1364,7 +1383,11 @@ export const translations = {
       soundOff: '🔕 Son coupé',
       notifTitleMany: '{n} nouvelles commandes Fairide',
       notifTitleOne: 'Nouvelle commande Fairide',
-      notifBody: 'À accepter ou refuser dans ton tableau de bord.'
+      notifBody: 'À accepter ou refuser dans ton tableau de bord.',
+      cancelToastOne: '❌ {client} a annulé sa commande avant acceptation.',
+      cancelToastMany: '❌ {n} commandes annulées par des clients.',
+      cancelNotifTitle: 'Commande annulée — Fairide',
+      cancelNotifBody: 'Un client a annulé une commande avant que tu ne l\'acceptes. Rien à préparer.'
     },
     errorPage: {
       title: 'Cette page n\'a pas pu s\'afficher',
@@ -2933,7 +2956,9 @@ export const translations = {
       reminderBanner: 'Rappel : ta table chez {name} c\'est {when} à {time} ({n} pers.).',
       reminderToday: 'aujourd\'hui',
       reminderTomorrow: 'demain',
-      reminderCode: 'Code : {code}'
+      reminderCode: 'Code : {code}',
+      cancelHint: 'Annulable tant que le restaurant n\'a pas accepté ta commande — remboursement automatique si elle est payée.',
+      cancelLocked: 'Le restaurant a accepté ta commande et la prépare : elle ne peut plus être annulée en ligne.'
     },
     review: {
       foodRatingLabel: 'Note pour la nourriture',
@@ -3206,6 +3231,25 @@ export const translations = {
     }
   },
   en: {
+    gameSocial: {
+      podiumTitle: '🏆 Podium',
+      empty: 'No public score yet — be the first!',
+      you: '(you)',
+      yourBest: 'Your best: {n}',
+      editPseudo: 'Edit my nickname',
+      modalTitle: 'Choose your nickname',
+      modalIntro: 'It will appear on the podium if you are among the 3 best players of a game.',
+      pseudoLabel: 'Nickname',
+      pseudoPlaceholder: 'E.g. SpeedyLea',
+      publicLabel: 'Show my nickname publicly',
+      publicHelp: 'Visible to all users if you are in the top 3 of any game. Otherwise your scores stay private and you appear on no podium.',
+      saveAndPlay: 'Save and play',
+      save: 'Save',
+      close: 'Close',
+      pseudoTooShort: 'The nickname must be at least 2 characters long.',
+      saveError: 'The nickname could not be saved right now.',
+      hidden: 'private nickname'
+    },
     addressReco: {
       searching: 'Recognising the address…',
       notFound: 'Address not recognised: check the street and postal code. You can set the municipality at the next step.',
@@ -4566,7 +4610,11 @@ export const translations = {
       soundOff: '🔕 Sound off',
       notifTitleMany: '{n} new Fairide orders',
       notifTitleOne: 'New Fairide order',
-      notifBody: 'To accept or refuse in your dashboard.'
+      notifBody: 'To accept or refuse in your dashboard.',
+      cancelToastOne: '❌ {client} cancelled their order before acceptance.',
+      cancelToastMany: '❌ {n} orders cancelled by customers.',
+      cancelNotifTitle: 'Order cancelled — Fairide',
+      cancelNotifBody: 'A customer cancelled an order before you accepted it. Nothing to prepare.'
     },
     errorPage: {
       title: 'This page could not be displayed',
@@ -6135,7 +6183,9 @@ export const translations = {
       reminderBanner: 'Reminder: your table at {name} is {when} at {time} ({n} guests).',
       reminderToday: 'today',
       reminderTomorrow: 'tomorrow',
-      reminderCode: 'Code: {code}'
+      reminderCode: 'Code: {code}',
+      cancelHint: 'Can be cancelled until the restaurant accepts your order — automatic refund if already paid.',
+      cancelLocked: 'The restaurant has accepted your order and is preparing it: it can no longer be cancelled online.'
     },
     review: {
       foodRatingLabel: 'Food rating',
@@ -6408,6 +6458,25 @@ export const translations = {
     }
   },
   nl: {
+    gameSocial: {
+      podiumTitle: '🏆 Podium',
+      empty: 'Nog geen publieke score — wees de eerste!',
+      you: '(jij)',
+      yourBest: 'Jouw beste: {n}',
+      editPseudo: 'Mijn schuilnaam wijzigen',
+      modalTitle: 'Kies je schuilnaam',
+      modalIntro: 'Hij verschijnt op het podium als je bij de 3 beste spelers van een spel hoort.',
+      pseudoLabel: 'Schuilnaam',
+      pseudoPlaceholder: 'Bv. SnelleLea',
+      publicLabel: 'Mijn schuilnaam publiek tonen',
+      publicHelp: 'Zichtbaar voor alle gebruikers als je in de top 3 van eender welk spel staat. Anders blijven je scores privé en sta je op geen enkel podium.',
+      saveAndPlay: 'Opslaan en spelen',
+      save: 'Opslaan',
+      close: 'Sluiten',
+      pseudoTooShort: 'De schuilnaam moet minstens 2 tekens lang zijn.',
+      saveError: 'De schuilnaam kon nu niet worden opgeslagen.',
+      hidden: 'privé schuilnaam'
+    },
     addressReco: {
       searching: 'Adres herkennen…',
       notFound: 'Adres niet herkend: controleer straat en postcode. Je kunt de gemeente in de volgende stap kiezen.',
@@ -7768,7 +7837,11 @@ export const translations = {
       soundOff: '🔕 Geluid uit',
       notifTitleMany: '{n} nieuwe Fairide-bestellingen',
       notifTitleOne: 'Nieuwe Fairide-bestelling',
-      notifBody: 'Te aanvaarden of te weigeren in je dashboard.'
+      notifBody: 'Te aanvaarden of te weigeren in je dashboard.',
+      cancelToastOne: '❌ {client} heeft zijn bestelling geannuleerd vóór aanvaarding.',
+      cancelToastMany: '❌ {n} bestellingen geannuleerd door klanten.',
+      cancelNotifTitle: 'Bestelling geannuleerd — Fairide',
+      cancelNotifBody: 'Een klant heeft een bestelling geannuleerd vóór je ze aanvaardde. Niets te bereiden.'
     },
     errorPage: {
       title: 'Deze pagina kon niet worden weergegeven',
@@ -9337,7 +9410,9 @@ export const translations = {
       reminderBanner: 'Herinnering: je tafel bij {name} is {when} om {time} ({n} pers.).',
       reminderToday: 'vandaag',
       reminderTomorrow: 'morgen',
-      reminderCode: 'Code: {code}'
+      reminderCode: 'Code: {code}',
+      cancelHint: 'Annuleerbaar tot het restaurant je bestelling aanvaardt — automatische terugbetaling als ze al betaald is.',
+      cancelLocked: 'Het restaurant heeft je bestelling aanvaard en bereidt ze: ze kan niet meer online geannuleerd worden.'
     },
     review: {
       foodRatingLabel: 'Beoordeling voor het eten',
