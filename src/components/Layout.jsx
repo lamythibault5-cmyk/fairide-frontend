@@ -60,19 +60,18 @@ export default function Layout() {
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}`}>
           <DashboardSidebar />
           <main className="dashboard-main">
-            {/* Barre du haut : le retour vers Mon compte à gauche quand on est dans une de ses
-                sous-sections, la marque à droite sur mobile et tablette (au-dessus de 900px la barre
-                latérale la porte déjà). Sur grand écran, la barre n existe que si elle a un retour
-                à montrer — vide, elle ne prendrait que de la place. */}
-            <div className={`dashboard-topbar${estSousSectionCompte(location.pathname) ? ' has-retour' : ''}`}>
-              {estSousSectionCompte(location.pathname) && (
-                <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">← Mon compte</Link>
-              )}
-              <Link className="dashboard-topbrand" to={accueilConnecte}>
-                <BrandMark size={26} />
-                <span>fairide</span>
-              </Link>
-            </div>
+            {/* La marque, incrustée en haut à droite de l écran sur mobile et tablette : une pastille
+                fixe qui flotte au-dessus du contenu, pas une barre qui prendrait une ligne entière
+                (au-dessus de 900px la barre latérale la porte déjà, voir styles.css). Le retour vers
+                Mon compte, lui, est du contenu : un simple lien en tête de page, seulement dans les
+                sous-sections du compte. */}
+            <Link className="dashboard-marque" to={accueilConnecte} aria-label="Fairide — accueil">
+              <BrandMark size={22} />
+              <span>fairide</span>
+            </Link>
+            {estSousSectionCompte(location.pathname) && (
+              <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">← Mon compte</Link>
+            )}
             <div className="page-fade" key={location.pathname}>
               <Outlet context={{ setRightSlot }} />
             </div>

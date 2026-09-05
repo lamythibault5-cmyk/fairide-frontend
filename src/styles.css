@@ -1994,41 +1994,41 @@ button.account-link-row:last-child { border-bottom: none; }
   letter-spacing: -0.02em; color: var(--ink); line-height: 1;
 }
 
-/* Barre du haut de l'espace connecté.
-   À GAUCHE, le retour vers Mon compte quand on est dans une de ses sous-sections : y arriver par le
-   compte puis repartir par la barre du bas obligeait à retraverser toute la navigation.
-   À DROITE, la marque — sur mobile et tablette seulement. Sous 900px la barre latérale bascule en
-   barre du bas et sa propre règle masque son logo (.dashboard-sidebar-brand { display: none }) :
-   sans ceci, un utilisateur connecté n'avait plus aucune marque à l'écran. Au-dessus de 900px la
-   barre latérale la porte déjà — on ne la double pas.
-   Sur grand écran la barre n'existe que si elle a un retour à montrer : vide, elle ne prendrait
-   que de la place. */
-.dashboard-topbar { display: none; }
-.dashboard-topbar.has-retour { display: flex; align-items: center; justify-content: space-between; margin: 0 0 14px; }
-.dashboard-topbrand { display: none; }
-.dashboard-retour { font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; padding: 6px 0; }
+/* La marque dans l'espace connecté, sous 900px.
+
+   À cette largeur la barre latérale devient la barre du bas et masque son propre logo
+   (.dashboard-sidebar-brand { display: none }) : sans ceci, un utilisateur connecté n'aurait plus
+   aucune marque à l'écran. Une première version la posait dans une barre d'en-tête collante, qui
+   prenait une ligne entière au-dessus de chaque page pour deux mots. Ici c'est une pastille FIXE en
+   haut à droite, incrustée dans l'écran : le contenu passe dessous en défilant, le fond translucide
+   flouté la garde lisible sur n'importe quoi. Au-dessus de 900px, la barre latérale porte la marque
+   et la pastille disparaît.
+
+   z-index 150 : au-dessus du contenu et des cartes Leaflet (dont les contrôles sont confinés par
+   isolation: isolate, voir plus bas), mais SOUS la vue plein écran carte + jeux (z 200), qui doit
+   recouvrir tout. */
+.dashboard-marque { display: none; }
+.dashboard-retour { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
 .dashboard-retour:hover { text-decoration: underline; }
 
 @media (max-width: 900px) {
-  /* .dashboard-main en prefixe : la regle bureau .dashboard-topbar.has-retour pese deux classes et
-     l emporterait sinon sur celle-ci, qui n en pese qu une — la barre restait en retrait de 16px. */
-  .dashboard-main .dashboard-topbar {
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    position: sticky; top: 0; z-index: 30;
-    /* Les marges négatives annulent le rembourrage de .dashboard-main sous 900px (18px en haut,
-       16px sur les côtés) : la barre touche les bords, comme une vraie barre d'en-tête. Collante et
-       sur fond opaque, avec un filet en bas : le contenu passe dessous en défilant, et la limite
-       entre la barre et la page est nette au lieu de se deviner. */
-    margin: -18px -16px 14px; padding: 10px 16px; min-height: 48px;
-    background: var(--cream); border-bottom: 1px solid var(--line);
+  .dashboard-marque {
+    position: fixed; top: 10px; right: 12px; z-index: 150;
+    display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px;
+    background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(220, 216, 208, 0.7); border-radius: 999px;
+    box-shadow: 0 2px 10px rgba(20, 18, 31, 0.06); text-decoration: none;
   }
-  .dashboard-topbrand { display: flex; align-items: center; gap: 8px; margin-left: auto; text-decoration: none; }
-  .dashboard-topbrand span {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px;
+  .dashboard-marque span {
+    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
     color: var(--ink); letter-spacing: -0.03em; line-height: 1;
   }
-  .dashboard-retour { padding: 8px 0; }
 }
+
+/* Les cartes Leaflet et leurs pastilles forment chacune leur propre contexte d'empilement : leurs
+   contrôles (z 800-1000) et le temps d'arrivée (z 1100) ne passent plus au-dessus du reste de la page
+   (marque fixe, menus) quand on défile. */
+.leaflet-container, .tracking-map-wrap { isolation: isolate; }
 
 /* Retour vers Mon compte sur les sous-sections hors espace connecté (aide, histoire). Même dessin
    que .dashboard-retour, pour qu'on reconnaisse le même geste d'une page à l'autre. */
