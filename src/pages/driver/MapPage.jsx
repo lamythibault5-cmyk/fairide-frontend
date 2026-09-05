@@ -18,12 +18,26 @@ const MIN_MAP_REFRESH_INTERVAL_MS = 8000;
 // à la place d'une appli de guidage externe pendant une course. Reprend le même partage de position que
 // le tableau de bord principal (voir Dashboard.jsx) puisque cette page peut être la seule montée pendant
 // que le livreur roule.
+// En course, la carte est l'outil de guidage : on lui donne environ la moitié de l'écran (au moins 320px,
+// au plus 560px), plutôt qu'une vignette fixe qui force à zoomer sur un téléphone en roulant.
+function useHauteurCourse() {
+  const calc = () => Math.round(Math.max(320, Math.min(560, window.innerHeight * 0.55)));
+  const [hauteur, setHauteur] = useState(calc);
+  useEffect(() => {
+    const onResize = () => setHauteur(calc());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return hauteur;
+}
+
 export default function MapPage() {
   const { token, user } = useAuth();
   const toast = useToast();
   const [orders, setOrders] = useState(null);
   const [position, setPosition] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
+  const hauteurCourse = useHauteurCourse();
 
   useEffect(() => {
     function load() {
@@ -136,7 +150,7 @@ export default function MapPage() {
                 <div className="empty" style={{ margin: '10px 0' }}>Adresse non localisée pour cette course.</div>
               ) : pickedUp ? (
                 // En course, pas de jeux : le livreur roule, la carte seule, en grand.
-                <div style={{ margin: '10px 0' }}>{carte({ height: 320 })}</div>
+                <div style={{ margin: '10px 0' }}>{carte({ height: hauteurCourse })}</div>
               ) : (
                 // Commande pas encore retirée : le livreur attend au restaurant (ou y va). Les jeux servent
                 // à patienter sans quitter la carte — pas à jouer en roulant, la phrase 💡 le rappelle.
