@@ -45,7 +45,9 @@ export default function Layout() {
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
-  const fondCuisine = !user && location.pathname === '/';
+  // …et sur la page de connexion / inscription, qui est la porte d entrée du même visiteur. Jamais
+  // pour quelqu un de connecté : `!user` prime, quelle que soit l adresse.
+  const fondCuisine = !user && (location.pathname === '/' || location.pathname === '/login');
 
   // Sous 900px la barre latérale devient la barre du BAS, et sa règle CSS y masque son propre logo :
   // un utilisateur connecté n abordait donc plus aucune marque à l écran. On la remonte en haut à

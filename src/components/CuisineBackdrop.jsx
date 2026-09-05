@@ -4,30 +4,34 @@ import AFFICHE from '../assets/cuisine.jpg';
 
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
-// UN MONTAGE, PAS UN PLAN. Huit séquences enchaînées par fondus de 1,6 s : une salade préparée dans
-// une cuisine claire, un chef en veste blanche qui dresse, du sel qui tombe dans la fumée sur fond
-// sombre, un saladier retourné à la pince, un flambé en cuisine professionnelle, du sel sur un bol
-// fumant, une macro de tranche de tomate, un chef qui assaisonne un poisson. 51,2 secondes, une
-// transition toutes les 6,4 secondes.
+// UN MONTAGE, PAS UN PLAN. Douze séquences de 8 s enchaînées par fondus de 2,0 s : un cuisinier au
+// fourneau, un chef en veste blanche qui dresse, du sel qui tombe dans la fumée sur fond sombre, un
+// bol de légumes frais qu'on mélange, un saladier retourné à la pince, un flambé en cuisine
+// professionnelle, du sel sur un bol fumant, une pizza qu'on garnit, une macro de tranche de tomate,
+// un chef qui prépare un plat, une poêle fumante, un chef qui assaisonne un poisson. 72 secondes,
+// une transition toutes les 6 secondes.
 //
 // Une version antérieure tenait sur un seul plan — une personne prépare une salade, sans autre
-// événement. Reposant, mais on en faisait le tour en cinq secondes. L'ordre des plans n'est pas
-// indifférent : les deux plans sombres de sel et de fumée encadrent le flambé, pour qu'on monte vers
-// le pic et qu'on en redescende au lieu d'enchaîner deux temps forts.
+// événement. Reposant, mais on en faisait le tour en cinq secondes. Puis huit plans à fondus de
+// 1,6 s ; les fondus sont passés à 2,0 s pour des transitions plus douces, et quatre plans se sont
+// ajoutés. L'ordre alterne cuisine claire et plans sombres, et espace les temps forts (flambé, poêle
+// fumante) au lieu de les enchaîner.
 //
-// LE RYTHME EST MESURÉ, PAS ESTIMÉ. 12,9 de différence moyenne par demi-seconde — contre 7,3 pour le
-// plan unique, 14,1 pour le montage à six, et 25 pour un plan qu'il avait fallu ralentir de moitié.
-// Deux plans de plus et le rythme BAISSE : les nouveaux sont des plans lents, du sel qui tombe. Les
-// pointes restent locales — fondus et flammes — donc voulues. Lu à 1×, sans ralenti : ralentir un
-// geste humain le rend faux.
+// LE RYTHME EST MESURÉ, PAS ESTIMÉ. 18,8 de différence moyenne par demi-seconde — contre 12,9 pour
+// le montage à huit plans, 7,3 pour le plan unique, et 25 pour un plan qu'il avait fallu ralentir de
+// moitié. Les plans ajoutés bougent plus que les plans de sel qu'ils entourent. Lu à 1×, sans
+// ralenti : ralentir un geste humain le rend faux.
 //
 // LA BOUCLE EST FABRIQUÉE, PAS TROUVÉE. Aucune séquence de banque ne boucle d'elle-même : coupée où
 // elle s'arrête, elle saute visiblement au redémarrage. Le fichier livré est monté avec ffmpeg — sa
 // queue est fondue par-dessus sa tête, ce qui fait coïncider sa dernière image avec sa première.
-// Mesuré : l'écart au raccord vaut 3,07, quand trois images consécutives en écartent 7,02 en moyenne
-// (relevé hors fondu, en huit points du montage). Le raccord est deux fois plus discret qu'un
-// dixième de seconde de mouvement ordinaire. La recette exacte est dans PROVENANCE.md — un fichier
-// de remplacement devra repasser par là.
+// Mesuré : l'écart au raccord vaut 0,95, quand deux images consécutives en écartent 2,90 en moyenne
+// (relevé hors fondu, au milieu de chaque plan). Le raccord vaut le tiers d'un vingt-cinquième de
+// seconde de mouvement ordinaire. La recette exacte est dans PROVENANCE.md — un fichier de
+// remplacement devra repasser par là.
+//
+// LE MÊME FOND SUR LA PAGE DE CONNEXION. C'est la porte d'entrée du même visiteur ; Layout.jsx ne le
+// monte que pour quelqu'un de non connecté, sur / et /login.
 //
 // POURQUOI CES SOURCES. Les images de galleryImages.js sont du domaine public collecté sur Flickr :
 // des photos d'amateurs, prises au téléphone, sans éclairage. Aucun arrangement ne les fera
