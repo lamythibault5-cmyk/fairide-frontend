@@ -88,6 +88,15 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   );
 }
 
+// Un plat est « bio » ou « vegan » si le restaurateur l'a coché (menu_items.organic / .vegan), ou si son
+// nom ou sa description le dit (« Vin bio », « Burger vegan ») — pour que les rangées et les filtres
+// vivent avant que toutes les cartes soient annotées.
+const texteDuPlat = (m) => `${m.name || ''} ${m.desc || ''}`.toLowerCase();
+export const platBio = (m) => !!m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[^a-zà-ÿ])|organic/i.test(texteDuPlat(m));
+export const platVegan = (m) => !!m.vegan || /v[eé]gan/i.test(texteDuPlat(m));
+const restoBio = (r) => (r.menu || []).some(platBio);
+const restoVegan = (r) => (r.menu || []).some(platVegan);
+
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
   if (list.length === 0) return null;
   if (loop && list.length > 1) {
@@ -134,6 +143,8 @@ export default function RestaurantList() {
   const [search, setSearch] = useState(filtresInitiaux.search || '');
   const [commune, setCommune] = useState(filtresInitiaux.commune || '');
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
+  const [bio, setBio] = useState(!!filtresInitiaux.bio);
+  const [vegan, setVegan] = useState(!!filtresInitiaux.vegan);
   const [view, setView] = useState('list');
   const toast = useToast();
 
@@ -171,12 +182,14 @@ export default function RestaurantList() {
 
   const cuisineOptions = [{ value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') }, ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))];
 
-  const hasActiveFilter = !!(search || cuisine || commune);
+  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan);
 
   const list = restaurants
     .filter((r) => {
       if (commune && r.commune !== commune) return false;
       if (cuisine && r.cuisine !== cuisine) return false;
+      if (bio && !restoBio(r)) return false;
+      if (vegan && !restoVegan(r)) return false;
       if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     })
@@ -207,9 +220,8 @@ export default function RestaurantList() {
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const texte = (m) => `${m.name || ''} ${m.desc || ''}`.toLowerCase();
-  const bioList = parMention((m) => m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[^a-zà-ÿ])|organic/i.test(texte(m)));
-  const veganList = parMention((m) => m.vegan || /v[eé]gan/i.test(texte(m)));
+  const bioList = parMention(platBio);
+  const veganList = parMention(platVegan);
   const healthyList = nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
@@ -255,6 +267,10 @@ export default function RestaurantList() {
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
+        <div className="diet-filters" role="group" aria-label={t('restaurantList.dietFiltersAria')}>
+          <button type="button" className={`diet-chip${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('restaurantList.filterBio')}</button>
+          <button type="button" className={`diet-chip${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('restaurantList.filterVegan')}</button>
+        </div>
       </div>
       <div className="role-pick" style={{ marginBottom: 14 }}>
         <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>{t('restaurantList.viewList')}</div>

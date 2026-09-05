@@ -2383,3 +2383,10 @@ button.account-link-row:last-child { border-bottom: none; }
 @media (max-width: 520px) {
   .dashboard-nav.admin .dashboard-nav-link { flex: 0 0 auto; min-width: 48px; padding: 8px 6px; }
 }
+/* Filtres alimentaires de la barre de recherche (Bio, Vegan) : des interrupteurs, cumulables avec la
+   recherche, la commune et le type de commerce. */
+.diet-filters { display: flex; gap: 6px; flex: none; }
+.diet-chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 9px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.diet-chip:hover { border-color: var(--iris); }
+.diet-chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+@media (max-width: 560px) { .diet-filters { width: 100%; } .diet-chip { flex: 1; } }

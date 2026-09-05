@@ -2695,7 +2695,10 @@ export const translations = {
       sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarchés',
       sectionBio: 'Bio',
-      sectionVegan: 'Vegan'
+      sectionVegan: 'Vegan',
+      filterBio: '🌿 Bio',
+      filterVegan: '🌱 Vegan',
+      dietFiltersAria: 'Filtres alimentaires'
     },
     map: {
       home: 'Chez toi',
@@ -5870,7 +5873,10 @@ export const translations = {
       sectionHealthy: 'Healthy',
       sectionGrocery: 'Grocery stores',
       sectionBio: 'Organic',
-      sectionVegan: 'Vegan'
+      sectionVegan: 'Vegan',
+      filterBio: '🌿 Organic',
+      filterVegan: '🌱 Vegan',
+      dietFiltersAria: 'Dietary filters'
     },
     map: {
       home: 'Your home',
@@ -9045,7 +9051,10 @@ export const translations = {
       sectionHealthy: 'Healthy',
       sectionGrocery: 'Supermarkten',
       sectionBio: 'Bio',
-      sectionVegan: 'Vegan'
+      sectionVegan: 'Vegan',
+      filterBio: '🌿 Bio',
+      filterVegan: '🌱 Vegan',
+      dietFiltersAria: 'Voedingsfilters'
     },
     map: {
       home: 'Bij jou thuis',
