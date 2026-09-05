@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import GalleryPickerModal from './GalleryPickerModal';
-import { galleryForCuisine } from '../galleryImages';
+import { galleryForSection } from '../menuCategories';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
@@ -166,8 +166,8 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {galleryOpen && (
           <GalleryPickerModal
             restoId={restoId}
-            suggestions={galleryForCuisine(cuisine)}
-            suggestionsTitle="Photos suggérées pour ton type de commerce"
+            suggestions={galleryForSection(cuisine, category)}
+            suggestionsTitle={`Photos suggérées — ${categoryLabel(category, t)}`}
             currentImageUrl={imageUrl}
             onSelect={(url) => { setImageUrl(url); setGalleryOpen(false); }}
             onCancel={() => setGalleryOpen(false)}

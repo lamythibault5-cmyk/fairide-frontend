@@ -16,7 +16,7 @@ import MenuItemRow from '../../components/MenuItemRow';
 import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
-import { galleryForCuisine } from '../../galleryImages';
+import { galleryForSection } from '../../menuCategories';
 import MenuImportReview from '../../components/MenuImportReview';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -661,8 +661,8 @@ export default function MenuPage() {
                     {addItemGalleryOpen && (
                       <GalleryPickerModal
                         restoId={restoId}
-                        suggestions={galleryForCuisine(restaurant.cuisine)}
-                        suggestionsTitle="Photos suggérées pour ton type de commerce"
+                        suggestions={galleryForSection(restaurant.cuisine, itemCategory)}
+                        suggestionsTitle={`Photos suggérées — ${categoryLabel(itemCategory, t)}`}
                         onSelect={(url) => { setItemImageUrl(url); setAddItemGalleryOpen(false); }}
                         onCancel={() => setAddItemGalleryOpen(false)}
                       />
@@ -692,8 +692,8 @@ export default function MenuPage() {
         <GalleryPickerModal
           restoId={restoId}
           title={`Photo de la section "${categoryLabel(sectionGalleryFor.name, t)}"`}
-          suggestions={galleryForCuisine(restaurant.cuisine)}
-          suggestionsTitle="Photos suggérées pour ton type de commerce"
+          suggestions={galleryForSection(restaurant.cuisine, sectionGalleryFor.name)}
+          suggestionsTitle={`Photos suggérées — ${categoryLabel(sectionGalleryFor.name, t)}`}
           currentImageUrl={sectionGalleryFor.imageUrl}
           onSelect={(url) => saveSectionImage(sectionGalleryFor, url)}
           onCancel={() => setSectionGalleryFor(null)}
