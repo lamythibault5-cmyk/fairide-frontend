@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -43,7 +44,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminDash.title')}</h2>
+      <AdminPageHeader module="dashboard" />
       <p className="small" style={{ marginTop: -8, marginBottom: 12 }}>
         {tr('adminDash.ratesLine', { rate: (data.commissionRate * 100).toFixed(0), share: (data.deliveryFairideRate * 100).toFixed(0) })}
       </p>

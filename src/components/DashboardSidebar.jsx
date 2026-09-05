@@ -4,6 +4,8 @@ import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
+import useAdminOverview from '../hooks/useAdminOverview';
+import { ADMIN_GROUPS, ADMIN_MODULES, moduleBadge } from '../pages/admin/adminModules';
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
 // Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
@@ -55,26 +57,44 @@ function navItemsForRole(role, t) {
   return [{ to: '/account', icon: '👤', label: t('nav.account') }];
 }
 
-// ERP interne : mêmes 7 sections que demandées, affichées à la place de la nav du rôle pour tout compte
-// admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
-const ADMIN_NAV_ITEMS = [
-  { to: '/admin', end: true, icon: '📊', label: 'Dashboard' },
-  { to: '/admin/orders', icon: '📦', label: 'Commandes' },
-  { to: '/admin/crm', icon: '🤝', label: 'CRM' },
-  { to: '/admin/restaurants', icon: '🏪', label: 'Restaurants' },
-  { to: '/admin/drivers', icon: '🛵', label: 'Livreurs' },
-  { to: '/admin/clients', icon: '👥', label: 'Clients' },
-  { to: '/admin/support', icon: '🎫', label: 'Support' },
-  { to: '/admin/documents', icon: '📁', label: 'Documents' },
-  { to: '/admin/tasks', icon: '✅', label: 'Tâches' },
-  { to: '/admin/automations', icon: '⚡', label: 'Automatisations' },
-  { to: '/admin/finance', icon: '💶', label: 'Finance' },
-  { to: '/admin/payments', icon: '💳', label: 'Paiements' },
-  { to: '/admin/accounting', icon: '📚', label: 'Comptabilité' },
-  { to: '/admin/invoices', icon: '🧾', label: 'Factures' },
-  { to: '/admin/settings', icon: '⚙️', label: 'Paramètres' },
-  { to: '/account', icon: '👤', label: 'Mon compte' }
-];
+// ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
+// sur l'accueil, avec le compteur « à traiter » de chacune. Affichées à la place de la nav du rôle pour
+// tout compte admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
+function AdminNav({ t }) {
+  const { overview } = useAdminOverview();
+  return (
+    <nav className="dashboard-nav">
+      <NavLink to="/admin" end title={t('adminHome.apps')} aria-label={t('adminHome.apps')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+        <span className="dashboard-nav-icon">🏠</span>
+        <span>{t('adminHome.apps')}</span>
+      </NavLink>
+      {ADMIN_GROUPS.map((groupe) => {
+        const mods = ADMIN_MODULES.filter((m) => m.group === groupe);
+        if (!mods.length) return null;
+        return (
+          <div key={groupe} className="dashboard-nav-section">
+            <div className="dashboard-nav-group">{t(`adminHome.group_${groupe}`)}</div>
+            {mods.map((m) => {
+              const badge = moduleBadge(m, overview);
+              const label = t(`adminModules.${m.key}`);
+              return (
+                <NavLink key={m.key} to={m.path} title={label} aria-label={label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+                  <span className="dashboard-nav-icon">{m.icon}</span>
+                  <span>{label}</span>
+                  {badge && <span className={`nav-badge tone-${badge.tone}`}>{badge.count}</span>}
+                </NavLink>
+              );
+            })}
+          </div>
+        );
+      })}
+      <NavLink to="/account" title={t('nav.account')} aria-label={t('nav.account')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
+        <span className="dashboard-nav-icon">👤</span>
+        <span>{t('nav.account')}</span>
+      </NavLink>
+    </nav>
+  );
+}
 
 export default function DashboardSidebar() {
   const { user, role, logout } = useAuth();
@@ -91,7 +111,7 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? ADMIN_NAV_ITEMS : navItemsForRole(effectiveRole, t);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
   const brandHome = isAdminAccount ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
 
@@ -116,6 +136,7 @@ export default function DashboardSidebar() {
       {/* title et aria-label portent le libellé en toutes lettres : sous 520px la barre du bas
           n'affiche plus que les icônes (voir styles.css), et une icône seule ne dit rien à un
           lecteur d'écran ni au survol. */}
+      {isAdminAccount ? <AdminNav t={t} /> : (
       <nav className="dashboard-nav">
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
@@ -124,6 +145,7 @@ export default function DashboardSidebar() {
           </NavLink>
         ))}
       </nav>
+      )}
       <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">

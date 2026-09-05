@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import KanbanBoard from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -26,7 +28,7 @@ export default function AdminCrmPage() {
   const [prospects, setProspects] = useState(null);
   const [search, setSearch] = useState(location.state?.presetSearch || '');
   const [selectedId, setSelectedId] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showCreate, setShowCreate] = useState(() => new URLSearchParams(location.search).get('new') === '1');
   const [periodType, setPeriodType] = useState('month');
   const [month, setMonth] = useState(currentMonthValue());
   const [year, setYear] = useState(new Date().getFullYear());
@@ -76,7 +78,7 @@ export default function AdminCrmPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminCrm.title')}</h2>
+      <AdminPageHeader module="crm" />
 
       <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
@@ -115,46 +117,31 @@ export default function AdminCrmPage() {
 
       {!prospects && <SkeletonCards count={4} />}
       {prospects && (
-        <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
-          {CRM_STAGES.map((stage) => {
-            const items = (filtered || []).filter((p) => p.stage === stage);
-            return (
-              <div key={stage} style={{ minWidth: 250, flex: '0 0 250px' }}>
-                <div className="row" style={{ justifyContent: 'space-between', marginBottom: 8 }}>
-                  <b style={{ fontSize: 13, textTransform: 'uppercase', opacity: 0.7 }}>{CRM_STAGE_LABELS[stage]}</b>
-                  <span className="pill">{items.length}</span>
-                </div>
-                {items.map((p) => (
-                  <div className="card" key={p.id} style={{ marginBottom: 8, cursor: 'pointer' }}>
-                    <div onClick={() => setSelectedId(p.id)}>
-                      <div className="row" style={{ justifyContent: 'space-between' }}>
-                        <b style={{ fontSize: 13 }}>{p.name}</b>
-                        <span className="small" style={{ color: CRM_PRIORITY_LABELS[p.priority]?.color }}>{CRM_PRIORITY_LABELS[p.priority]?.label}</span>
-                      </div>
-                      <div className="small">{[p.commune, p.cuisine].filter(Boolean).join(' · ')}</div>
-                      {p.ownerEmail && <div className="small" style={{ opacity: 0.7 }}>👤 {p.ownerEmail}</div>}
-                      {p.nextFollowUpAt && (
-                        <div className="small" style={{ color: p.nextFollowUpAt < Date.now() ? 'var(--red)' : 'inherit' }}>
-                          {tr('adminCrm.followUpOn', { date: fmtDate(p.nextFollowUpAt) })}
-                        </div>
-                      )}
-                    </div>
-                    <select
-                      value={p.stage}
-                      onChange={(e) => changeStage(p, e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{ marginTop: 6, fontSize: 12, padding: '4px 6px' }}
-                    >
-                      {CRM_STAGES.map((s) => <option key={s} value={s}>{CRM_STAGE_LABELS[s]}</option>)}
-                    </select>
-                  </div>
-                ))}
-                {items.length === 0 && <div className="small" style={{ opacity: 0.4, padding: '4px 0' }}>—</div>}
+        <KanbanBoard
+          columns={CRM_STAGES.map((stage) => ({ key: stage, label: CRM_STAGE_LABELS[stage], color: stage === 'actif' ? '#3FB950' : stage === 'perdu' ? 'var(--red)' : 'var(--iris)' }))}
+          items={filtered || []}
+          columnOf={(p) => p.stage}
+          onOpen={(p) => setSelectedId(p.id)}
+          onMove={(p, stage) => changeStage(p, stage)}
+          emptyLabel={tr('adminKanban.empty')}
+          renderCard={(p) => (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between' }}>
+                <b style={{ display: 'inline' }}>{p.name}</b>
+                <span className="small" style={{ color: CRM_PRIORITY_LABELS[p.priority]?.color }}>{CRM_PRIORITY_LABELS[p.priority]?.label}</span>
               </div>
-            );
-          })}
-        </div>
+              <div className="small">{[p.commune, p.cuisine].filter(Boolean).join(' · ')}</div>
+              {p.ownerEmail && <div className="small" style={{ opacity: 0.7 }}>👤 {p.ownerEmail}</div>}
+              {p.nextFollowUpAt && (
+                <div className="small" style={{ color: p.nextFollowUpAt < Date.now() ? 'var(--red)' : 'inherit' }}>
+                  {tr('adminCrm.followUpOn', { date: fmtDate(p.nextFollowUpAt) })}
+                </div>
+              )}
+            </>
+          )}
+        />
       )}
+      <p className="small" style={{ margin: '6px 0 0' }}>{tr('adminKanban.dragHint')}</p>
 
       {selectedId && (
         <ProspectDetailModal id={selectedId} onClose={() => setSelectedId(null)} onChanged={load} linkedRestaurantIds={linkedRestaurantIds} />

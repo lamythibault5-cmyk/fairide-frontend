@@ -13,6 +13,8 @@ import {
   TICKET_CATEGORIES, TICKET_CATEGORY_LABELS, TICKET_PRIORITY_LABELS, TICKET_STATUS_LABELS, TICKET_STATUSES
 } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 
 const PAGE_SIZE = 25;
 const periodTypes = (tr) => [{ key: 'month', label: tr('adminCommon.month') }, { key: 'quarter', label: tr('adminCommon.quarter') }, { key: 'year', label: tr('adminCommon.year') }];
@@ -40,7 +42,8 @@ export default function AdminSupportPage() {
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [mode, setMode] = useViewMode('support');
+  const [showCreate, setShowCreate] = useState(() => new URLSearchParams(location.search).get('new') === '1');
 
   const periodParams = new URLSearchParams();
   periodParams.set('period', periodType);
@@ -80,7 +83,7 @@ export default function AdminSupportPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminSupport.title')}</h2>
+      <AdminPageHeader module="support" />
 
       <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
@@ -114,6 +117,7 @@ export default function AdminSupportPage() {
 
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <input placeholder={tr('adminSupport.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria'), list: tr('adminKanban.list'), kanban: tr('adminKanban.kanban') }} />
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
         <button className="btn-teal" onClick={() => setShowCreate(true)}>{tr('adminSupport.newTicketBtn')}</button>
       </div>
@@ -138,7 +142,24 @@ export default function AdminSupportPage() {
 
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminSupport.noneForFilter')}</div>}
-      {data && data.rows.map((t) => (
+      {data && mode === 'kanban' && (
+        <KanbanBoard
+          columns={TICKET_STATUSES.map((st) => ({ key: st, label: TICKET_STATUS_LABELS[st].label, color: TICKET_STATUS_LABELS[st].color === 'inherit' ? 'var(--line)' : TICKET_STATUS_LABELS[st].color }))}
+          items={data.rows}
+          columnOf={(t) => t.status}
+          onOpen={(t) => setSelectedId(t.id)}
+          onMove={async (t, st) => { try { await api(`/admin/support/tickets/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); load(); } catch (err) { toast(err.message); } }}
+          emptyLabel={tr('adminKanban.empty')}
+          renderCard={(t) => (
+            <>
+              <b>{t.subject}</b>
+              <div className="small">{t.ticketNumber} · <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>{t.escalated ? ' · ⚠️' : ''}</div>
+              <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '—'}</div>
+            </>
+          )}
+        />
+      )}
+      {data && mode === 'list' && data.rows.map((t) => (
         <div className="card order-card-clickable" key={t.id} onClick={() => setSelectedId(t.id)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{t.subject}</b>

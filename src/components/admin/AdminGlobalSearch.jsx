@@ -30,6 +30,7 @@ export default function AdminGlobalSearch() {
   const [results, setResults] = useState(null);
   const debouncedQ = useDebouncedValue(q, 300);
   const boxRef = useRef(null);
+  const inputRef = useRef(null);
 
   useEffect(() => {
     if (debouncedQ.trim().length < 2) { setResults(null); return; }
@@ -38,8 +39,14 @@ export default function AdminGlobalSearch() {
 
   useEffect(() => {
     function onClickOutside(e) { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); }
+    // Ctrl+K / ⌘K : la recherche depuis n'importe quelle page, comme dans Odoo.
+    function onKey(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); inputRef.current?.focus(); setOpen(true); }
+      if (e.key === 'Escape') setOpen(false);
+    }
     document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('mousedown', onClickOutside); document.removeEventListener('keydown', onKey); };
   }, []);
 
   // Pas de fiche pré-ouverte automatiquement : navigue vers la page et pré-remplit sa recherche locale
@@ -59,12 +66,14 @@ export default function AdminGlobalSearch() {
   return (
     <div ref={boxRef} style={{ position: 'relative', padding: '0 16px 12px' }}>
       <input
+        ref={inputRef}
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
         placeholder={tr('adminSearch.phSearch')}
-        style={{ fontSize: 13 }}
+        style={{ fontSize: 13, paddingRight: 56 }}
       />
+      {!q && <span className="admin-search-hint" aria-hidden="true">Ctrl K</span>}
       {open && q.trim().length >= 2 && (
         <div className="card" style={{ position: 'absolute', top: '100%', left: 16, right: 16, zIndex: 50, maxHeight: 320, overflowY: 'auto', boxShadow: 'var(--shadow)' }}>
           {!results && <div className="small" style={{ padding: 8 }}>{tr('adminSearch.searching')}</div>}

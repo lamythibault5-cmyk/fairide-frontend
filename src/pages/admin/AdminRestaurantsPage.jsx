@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -104,7 +105,7 @@ export default function AdminRestaurantsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminRestos.title')}</h2>
+      <AdminPageHeader module="restaurants" />
       <div className="row" style={{ marginBottom: 14, gap: 8 }}>
         <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>

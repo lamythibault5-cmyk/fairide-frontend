@@ -58,6 +58,9 @@ const DriverInvoicesPage = lazy(() => import('./pages/driver/InvoicesPage'));
 // --- Console d'administration ---
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
 const AdminDashboardPage = lazy(() => import('./pages/admin/AdminDashboardPage'));
+const AdminHomePage = lazy(() => import('./pages/admin/AdminHomePage'));
+const AdminPromotionsPage = lazy(() => import('./pages/admin/AdminPromotionsPage'));
+const AdminReviewsPage = lazy(() => import('./pages/admin/AdminReviewsPage'));
 const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminCrmPage = lazy(() => import('./pages/admin/AdminCrmPage'));
 const AdminRestaurantsPage = lazy(() => import('./pages/admin/AdminRestaurantsPage'));
@@ -133,7 +136,10 @@ export default function App() {
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
-          <Route index element={<AdminDashboardPage />} />
+          <Route index element={<AdminHomePage />} />
+          <Route path="dashboard" element={<AdminDashboardPage />} />
+          <Route path="promotions" element={<AdminPromotionsPage />} />
+          <Route path="reviews" element={<AdminReviewsPage />} />
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />

@@ -12,6 +12,7 @@ import {
   DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS, DOCUMENT_VERIFICATION_LABELS, DOCUMENT_EXPIRY_LABELS, DOCUMENT_TARGET_TYPE_LABELS
 } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -57,7 +58,7 @@ export default function AdminDocumentsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminCommon.documents')}</h2>
+      <AdminPageHeader module="documents" />
 
       {!overview && <SkeletonCards count={1} />}
       {overview && (

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -29,7 +31,8 @@ export default function AdminTasksPage() {
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [mode, setMode] = useViewMode('tasks');
+  const [showCreate, setShowCreate] = useState(() => new URLSearchParams(location.search).get('new') === '1');
 
   function loadOverview() {
     api('/admin/tasks/overview', { token }).then(setOverview).catch((e) => toast(e.message));
@@ -75,7 +78,7 @@ export default function AdminTasksPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminTasks.title')}</h2>
+      <AdminPageHeader module="tasks" />
 
       {!overview && <SkeletonCards count={1} />}
       {overview && (
@@ -90,6 +93,7 @@ export default function AdminTasksPage() {
 
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <input placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria'), list: tr('adminKanban.list'), kanban: tr('adminKanban.kanban') }} />
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
         <button className="btn-teal" onClick={() => setShowCreate(true)}>{tr('adminTasks.newTaskBtn')}</button>
       </div>
@@ -115,7 +119,24 @@ export default function AdminTasksPage() {
 
       {!data && <SkeletonCards count={4} />}
       {data && data.rows.length === 0 && <div className="empty">{tr('adminTasks.noneForFilter')}</div>}
-      {data && data.rows.map((t) => (
+      {data && mode === 'kanban' && (
+        <KanbanBoard
+          columns={TASK_STATUSES.map((st) => ({ key: st, label: TASK_STATUS_LABELS[st].label, color: TASK_STATUS_LABELS[st].color === 'inherit' ? 'var(--line)' : TASK_STATUS_LABELS[st].color }))}
+          items={data.rows}
+          columnOf={(t) => t.status}
+          onOpen={(t) => setSelectedId(t.id)}
+          onMove={async (t, st) => { try { await api(`/admin/tasks/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); refreshAll(); } catch (err) { toast(err.message); } }}
+          emptyLabel={tr('adminKanban.empty')}
+          renderCard={(t) => (
+            <>
+              <b>{t.title}</b>
+              <div className="small"><span style={{ color: TASK_PRIORITY_LABELS[t.priority]?.color }}>{TASK_PRIORITY_LABELS[t.priority]?.label}</span>{t.assignedToEmail ? ` · ${t.assignedToEmail}` : ''}</div>
+              {t.dueAt && <div className="small" style={{ color: t.dueState === 'overdue' ? 'var(--red)' : undefined }}>⏰ {fmtDateTime(t.dueAt)}</div>}
+            </>
+          )}
+        />
+      )}
+      {data && mode === 'list' && data.rows.map((t) => (
         <div className="card order-card-clickable" key={t.id} onClick={() => setSelectedId(t.id)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div className="row" style={{ gap: 8, alignItems: 'center' }}>

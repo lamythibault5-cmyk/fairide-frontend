@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -10,6 +11,7 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
+import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -22,6 +24,7 @@ const filters = (tr) => [
 ];
 
 const PAGE_SIZE = 50;
+const KANBAN_COLORS = { nouveau: 'var(--orange)', preparation: 'var(--blue)', pret: 'var(--iris)', livraison: 'var(--purple)', livre: '#3FB950', refuse: 'var(--red)', annule: 'var(--ink-faint)' };
 
 export default function AdminOrdersPage() {
   const { t: tr } = useLanguage();
@@ -35,6 +38,8 @@ export default function AdminOrdersPage() {
   const q = useDebouncedValue(qInput, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
+  const [mode, setMode] = useViewMode('orders');
+  const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
 
   const activeFilter = searchParams.get('status')
     || (searchParams.get('noDriver') ? 'noDriver' : searchParams.get('refunded') ? 'refunded' : searchParams.get('late') ? 'late' : '');
@@ -101,9 +106,10 @@ export default function AdminOrdersPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminCommon.orders')}</h2>
+      <AdminPageHeader module="orders" />
       <div className="row" style={{ gap: 8, marginBottom: 10 }}>
         <input placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1 }} />
+        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria'), list: tr('adminKanban.list'), kanban: tr('adminKanban.kanban') }} />
         <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       <div className="role-pick" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
@@ -114,7 +120,24 @@ export default function AdminOrdersPage() {
 
       {!orders && <SkeletonCards count={4} />}
       {orders && orders.length === 0 && <div className="empty">{tr('adminOrders.noneForFilter')}</div>}
-      {orders && orders.map((o) => (
+      {orders && mode === 'kanban' && (
+        <KanbanBoard
+          columns={ORDER_STATUSES.filter((st) => !activeFilter || !ORDER_STATUSES.includes(activeFilter) || st === activeFilter).map((st) => ({ key: st, label: ORDER_STATUS_LABELS[st] || st, color: KANBAN_COLORS[st] }))}
+          items={orders}
+          columnOf={(o) => o.status}
+          onOpen={openOrder}
+          onMove={(o, st) => setKanbanMove({ order: o, status: st })}
+          emptyLabel={tr('adminKanban.empty')}
+          renderCard={(o) => (
+            <>
+              <b>{o.restaurantName}</b>
+              <div className="small">{o.clientName}{o.driverName ? ` · 🛵 ${o.driverName}` : ''}</div>
+              <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{fmtDateTime(o.createdAt)}</span><b style={{ display: 'inline' }}>{money(o.total)}</b></div>
+            </>
+          )}
+        />
+      )}
+      {orders && mode === 'list' && orders.map((o) => (
         <div className="card order-card-clickable" key={o.id} onClick={() => openOrder(o)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
@@ -141,6 +164,17 @@ export default function AdminOrdersPage() {
         </div>
       )}
 
+      <ConfirmDialog
+        open={!!kanbanMove}
+        title={tr('adminOrders.confirmChangeStatus')}
+        message={kanbanMove ? tr('adminOrders.confirmChangeStatusBody', { from: kanbanMove.order.status, to: kanbanMove.status }) : ''}
+        danger={kanbanMove?.status === 'annule'}
+        onConfirm={async () => {
+          try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
+          catch (e) { toast(e.message); } finally { setKanbanMove(null); }
+        }}
+        onCancel={() => setKanbanMove(null)}
+      />
       {selected && (
         <OrderDetailModal
           selected={selected}

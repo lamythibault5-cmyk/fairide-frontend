@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -36,7 +37,7 @@ export default function AdminAutomationsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminAutomations.title')}</h2>
+      <AdminPageHeader module="automations" />
       <div className="card" style={{ marginBottom: 16, borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>
           {tr('adminAutomations.intro')}
