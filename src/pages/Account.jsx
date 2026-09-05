@@ -7,6 +7,12 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { StarsDisplay } from '../components/Stars';
 
+// La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
+// même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
+// DÉPLIE sur place pour montrer un formulaire — les infos, le mot de passe, la langue, le solde, le
+// parrainage… Repliées par défaut : la page se lit d'un coup d'œil, chaque réglage est à un geste, et
+// on n'a plus sept formulaires ouverts les uns sous les autres.
+//
 // Les valeurs restent en français (stockées telles quelles côté backend) — seul le libellé affiché
 // est traduit, même principe que ROLES/GENDERS dans Auth.jsx.
 function deletionReasons(t) {
@@ -30,6 +36,17 @@ function genders(t) {
     { value: 'Préfère ne pas dire', label: t('auth.genderPreferNot') }
   ];
 }
+
+const LANGUE_LABEL = { fr: 'Français', en: 'English', nl: 'Nederlands' };
+
+const ABONNEMENT_RESUME = {
+  trialing: '✅ Essai gratuit en cours',
+  active: '✅ Actif — ton restaurant est visible',
+  past_due: '⚠️ Paiement échoué — restaurant masqué',
+  paused: '⏸️ En pause — restaurant masqué',
+  canceled: '❌ Résilié — restaurant masqué',
+  inactive: '🔒 Pas encore visible aux clients'
+};
 
 export default function Account() {
   const { user, role, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
@@ -56,7 +73,7 @@ export default function Account() {
       toast(`Partage indisponible ici. L'adresse est ${lien}`);
     }
   }
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
@@ -106,6 +123,25 @@ export default function Account() {
   const [newPassword, setNewPassword] = useState('');
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Les rangées dépliées. Plusieurs peuvent l'être à la fois : replier la précédente quand on en
+  // ouvre une autre ferait disparaître ce qu'on était en train de comparer.
+  const [ouvertes, setOuvertes] = useState(() => new Set());
+  function basculer(cle) {
+    setOuvertes((prev) => { const n = new Set(prev); if (n.has(cle)) n.delete(cle); else n.add(cle); return n; });
+  }
+  // « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du profil. La
+  // ligne déplie « Mes infos » et met le curseur dans la rue, une fois le formulaire rendu.
+  function ouvrirAdresse() {
+    setOuvertes((prev) => new Set(prev).add('infos'));
+    setTimeout(() => {
+      const champ = document.getElementById('champ-adresse');
+      if (!champ) return;
+      const anime = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      champ.scrollIntoView({ block: 'center', behavior: anime ? 'smooth' : 'auto' });
+      champ.focus({ preventScroll: true });
+    }, 60);
+  }
+
   useEffect(() => {
     if (role !== 'driver') return;
     Promise.all([
@@ -131,6 +167,7 @@ export default function Account() {
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast('Merci ! Ton abonnement est en cours d\'activation (quelques secondes).');
       window.history.replaceState({}, '', '/account');
+      setOuvertes((prev) => new Set(prev).add('abonnement'));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
@@ -351,203 +388,298 @@ export default function Account() {
     }
   }
 
+  const nomComplet = [user.firstName, user.lastName].filter(Boolean).join(' ');
+  const initiales = (nomComplet || user.email || '?').split(/[\s@]+/).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
+  const adresseResume = user.addressStreet && user.addressCity ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',') : null;
+  const solde = Number(user.balance || 0).toFixed(2);
+
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('account.title')}</h2>
 
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between', marginBottom: 10 }}>
-          <span className="pill teal">{ROLE_LABEL[role] || role}</span>
-          <span className="small">{user.email}</span>
+      {/* Qui est connecté : nom, e-mail, rôle. Une carte d'identité, pas un formulaire — les
+          modifications se font dans les rangées en dessous. */}
+      <div className="card account-identite">
+        <span className="account-avatar" aria-hidden="true">{initiales}</span>
+        <div className="account-identite-texte">
+          <b>{nomComplet || user.email}</b>
+          {nomComplet && <span className="small">{user.email}</span>}
         </div>
+        <span className="pill teal">{ROLE_LABEL[role] || role}</span>
+      </div>
 
+      {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
+      <div className="card account-groupe" aria-label="Mon profil">
+        <LigneCompte icone="👤" titre="Mes infos" sous={adresseResume || 'Prénom, nom, date de naissance, adresse'} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
+          <form onSubmit={saveInfo}>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('auth.firstName')}</label>
+                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('auth.lastName')}</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('auth.gender')}</label>
+                <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                  {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
+                </select>
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('account.birthDate')}</label>
+                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 2 }}>
+                <label>{t('auth.street')}</label>
+                <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
+              </div>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('auth.number')}</label>
+                <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
+              </div>
+            </div>
+            <div className="row" style={{ gap: 8 }}>
+              <div className="field" style={{ flex: 1 }}>
+                <label>{t('auth.postalCode')}</label>
+                <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
+              </div>
+              <div className="field" style={{ flex: 2 }}>
+                <label>{t('auth.city')}</label>
+                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+              </div>
+            </div>
+            <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
+          </form>
+
+          {/* Supprimer le compte : au bout des infos personnelles, puisque c'est d'elles qu'il s'agit.
+              Séparé par un filet et discret tant qu'on ne l'a pas demandé — on ne met pas un bouton
+              rouge en pleine page pour un geste qu'on fait une fois. */}
+          <div className="account-zone-danger">
+            <b className="account-zone-danger-titre">{t('account.deleteTitle')}</b>
+            {!confirmDeleteOpen && (
+              <button type="button" className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>{t('account.deleteButton')}</button>
+            )}
+            {confirmDeleteOpen && (
+              <div>
+                <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>{t('account.deleteWarning')}</p>
+                {!deleteCodeSent && (
+                  <>
+                    <div className="field">
+                      <label>{t('account.deleteWhy')}</label>
+                      <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+                        {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                      </select>
+                    </div>
+                    <div className="field">
+                      <label>{t('account.deleteComment')}</label>
+                      <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
+                    </div>
+                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                      <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
+                        {sendingCode ? '...' : t('account.deleteRequestCode')}
+                      </button>
+                      <button type="button" className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>{t('common.cancel')}</button>
+                    </div>
+                  </>
+                )}
+                {deleteCodeSent && (
+                  <>
+                    <p className="small" style={{ marginBottom: 10 }}>
+                      {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
+                    </p>
+                    <div className="field">
+                      <label>{t('account.deleteCodeLabel')}</label>
+                      <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
+                    </div>
+                    <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                      <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
+                        {deleting ? '...' : t('account.deleteConfirmFinal')}
+                      </button>
+                      <button type="button" className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>{t('auth.resendCode')}</button>
+                      <button type="button" className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('common.cancel')}</button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </LigneCompte>
+
+        <LigneCompte icone="🔒" titre="Coordonnées de connexion" sous={user.phone ? `${user.email} · ${user.phone}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+          <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
+            Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d'email ou de téléphone.
+          </p>
+          <ContactChangeField
+            field="email" label="Adresse email" currentValue={user.email} type="email" placeholder="nouvelle@adresse.com"
+            requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+          />
+          <div className="divider" style={{ margin: '4px 0' }} />
+          <ContactChangeField
+            field="phone" label="Numéro de téléphone" currentValue={user.phone} type="tel" placeholder="04xx xx xx xx"
+            requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
+          />
+        </LigneCompte>
+
+        <LigneCompte icone="🔑" titre={t('account.passwordTitle')} sous="Choisis-en un nouveau, 8 caractères minimum" ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+          <form onSubmit={savePassword}>
+            <div className="field">
+              <label>{t('account.currentPassword')}</label>
+              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+            </div>
+            <div className="field">
+              <label>{t('account.newPassword')}</label>
+              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
+            </div>
+            <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
+          </form>
+        </LigneCompte>
+
+        {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en permanence
+            — mais une barre de navigation n'est pas l'endroit d'un réglage. Le choix est mémorisé dans
+            localStorage (voir LanguageContext) : on ne le règle qu'une fois. Sa place est donc ici. */}
+        <LigneCompte icone="🌍" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
+          <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
+          <LanguageSwitcher />
+        </LigneCompte>
+
+        {role === 'driver' && (
+          <LigneCompte icone="📡" titre={t('account.geoTitle')} sous={locationSharingEnabled ? 'Partage activé pendant tes courses' : 'Partage désactivé'} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
+            <p className="small" style={{ margin: '0 0 10px' }}>{t('account.geoExplain')}</p>
+            <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+              <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
+              <span className="small">{t('account.geoToggleLabel')}</span>
+            </label>
+          </LigneCompte>
+        )}
+      </div>
+
+      {/* ——— Solde et avantages. ——— */}
+      <div className="card account-groupe" aria-label="Solde et avantages">
         {role === 'client' && (
-          <>
+          <LigneCompte icone="💰" titre="Mon solde Fairide" sous={`${solde}€ · valider un code cadeau`} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-              <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
+              <div className="num">{solde}€</div>
               <div className="label">{t('account.balance')}</div>
             </div>
-            <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8, marginBottom: 14 }}>
+            <form onSubmit={handleRedeemCode} className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1, margin: 0 }}>
                 <input value={redeemCode} onChange={(e) => setRedeemCode(e.target.value.toUpperCase())} placeholder={t('account.redeemPlaceholder')} />
               </div>
               <button type="submit" className="btn-teal" disabled={redeeming}>{redeeming ? '...' : t('account.redeemButton')}</button>
             </form>
-          </>
+          </LigneCompte>
         )}
 
-        <form onSubmit={saveInfo}>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('auth.firstName')}</label>
-              <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        {(role === 'restaurant' || role === 'driver') && (
+          <LigneCompte icone="💰" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
+            <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
+            <div className="stat-card highlight" style={{ marginBottom: 14 }}>
+              <div className="num">{solde}€</div>
+              <div className="label">{t('account.convert.balanceLabel')}</div>
             </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('auth.lastName')}</label>
-              <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
-            </div>
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('auth.gender')}</label>
-              <select value={gender} onChange={(e) => setGender(e.target.value)}>
-                {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-              </select>
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('account.birthDate')}</label>
-              <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
-            </div>
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 2 }}>
-              <label>{t('auth.street')}</label>
-              <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('auth.number')}</label>
-              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
-            </div>
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label>{t('auth.postalCode')}</label>
-              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
-            </div>
-            <div className="field" style={{ flex: 2 }}>
-              <label>{t('auth.city')}</label>
-              <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
-            </div>
-          </div>
-          <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
-        </form>
+            <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
+              <div className="field" style={{ flex: 1, margin: 0 }}>
+                <input type="number" step="0.01" min="5" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')} />
+              </div>
+              <button type="submit" className="btn-teal" disabled={converting}>{converting ? '...' : t('account.convert.button')}</button>
+            </form>
+            {generatedCodes && generatedCodes.length > 0 && (
+              <div>
+                <div className="small" style={{ margin: '4px 0 6px', fontWeight: 600 }}>{t('account.convert.myCodes')}</div>
+                {generatedCodes.map((c) => (
+                  <div key={c.code} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
+                    <span style={{ fontWeight: 700, letterSpacing: 1 }}>{c.code}</span>
+                    <span className="small">{c.amount.toFixed(2)}€</span>
+                    <span className={`pill ${c.used ? '' : 'teal'}`}>{c.used ? t('account.convert.used') : t('account.convert.unused')}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </LigneCompte>
+        )}
+
+        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats ? `Ton code : ${referralStats.code} · ${referralStats.earnedTotal.toFixed(2)}€ gagnés` : 'Invite un ami, gagne du crédit'} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+          <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
+          {referralStats && (
+            <>
+              <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
+                <div className="field" style={{ flex: 1, margin: 0 }}>
+                  <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} />
+                </div>
+                <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="stat-card" style={{ flex: 1 }}>
+                  <div className="num">{referralStats.referredCount}</div>
+                  <div className="label">{t('account.referral.statInvited')}</div>
+                </div>
+                <div className="stat-card highlight" style={{ flex: 1 }}>
+                  <div className="num">{referralStats.earnedTotal.toFixed(2)}€</div>
+                  <div className="label">{t('account.referral.statEarned')}</div>
+                </div>
+              </div>
+              {referralStats.pendingCount > 0 && (
+                <p className="small" style={{ margin: '10px 0 0' }}>{t('account.referral.pending', { count: referralStats.pendingCount })}</p>
+              )}
+              <p className="small" style={{ margin: '10px 0 0', opacity: 0.75 }}>{t('account.referral.spendOnly')}</p>
+            </>
+          )}
+        </LigneCompte>
       </div>
 
-      {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en
-          permanence — mais une barre de navigation n'est pas l'endroit d'un réglage, et sur
-          téléphone elle y disputait la place aux onglets. Le choix est mémorisé dans
-          localStorage (voir LanguageContext) : on ne le règle qu'une fois, et il survit à la
-          déconnexion comme à la fermeture du navigateur. Sa place est donc ici.
-          Le sélecteur reste en accès direct sur la bannière publique, pour un visiteur non connecté
-          qui n'a pas encore de page Compte où aller. */}
-      {/* Raccourcis du client. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
-          (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. Les réservations se
-          filtrent depuis la page Commandes elle-même.
-          « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du profil
-          juste au-dessus. La ligne y descend et y met le curseur.
-          « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un réglage :
-          Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. Deux questions
-          que le client se pose vraiment — y répondre noir sur blanc vaut mieux que le doute. */}
+      {/* ——— Selon le rôle. Une rubrique ne figure qu'à UN endroit : ce qui est dans la barre du bas
+          (restaurants, recherche, commandes, favoris, carte) n'est pas repris ici. ———
+          Client : « Moyens de paiement » et « Titres restaurant » mènent à une réponse écrite, pas à un
+          réglage — Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. */}
       {role === 'client' && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card account-groupe" aria-label="Mes commandes et Fairide">
           <LigneCompte to="/invoices" icone="📄" titre="Mes factures" sous="Les reçus de tes commandes payées" />
-          <LigneCompte
-            icone="📍" titre="Adresse de livraison" sous="Celle qui pré-remplit tes commandes"
-            onClick={() => {
-              const champ = document.getElementById('champ-adresse');
-              if (!champ) return;
-              // Ici le défilement est animé, à l'inverse du centre d'aide : on reste sur la même
-              // page et il faut voir d'où l'on part pour comprendre où l'on arrive. Sauf pour qui
-              // demande moins de mouvement, à qui on doit un saut sec.
-              const anime = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-              champ.scrollIntoView({ block: 'center', behavior: anime ? 'smooth' : 'auto' });
-              champ.focus({ preventScroll: true });
-            }}
-          />
+          <LigneCompte icone="📍" titre="Adresse de livraison" sous={adresseResume || 'Celle qui pré-remplit tes commandes'} onClick={ouvrirAdresse} />
           <LigneCompte to="/aide?sujet=paiement" icone="💳" titre="Moyens de paiement" sous="Comment Fairide te fait payer" />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre="Titres restaurant" sous="Monizze, Edenred, Sodexo" />
           <LigneCompte to="/notre-histoire" icone="🧭" titre="Notre histoire" sous="Pourquoi Fairide existe" />
         </div>
       )}
 
-      <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🌍 {t('account.language')}</h3>
-        <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
-        <LanguageSwitcher />
-      </div>
-
-      <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🔒 Coordonnées de connexion</h3>
-        <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
-          Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d'email ou de téléphone.
-        </p>
-        <ContactChangeField
-          field="email" label="Adresse email" currentValue={user.email} type="email" placeholder="nouvelle@adresse.com"
-          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
-        />
-        <div className="divider" style={{ margin: '4px 0' }} />
-        <ContactChangeField
-          field="phone" label="Numéro de téléphone" currentValue={user.phone} type="tel" placeholder="04xx xx xx xx"
-          requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
-        />
-      </div>
-
-
-      {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas : neuf onglets n'y
-          tenaient pas, et sous 520px ils deviennent des icônes muettes où l'on ne distingue plus
-          rien. Ici elles gardent leur nom en toutes lettres. */}
       {role === 'restaurant' && restaurant && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <LigneCompte to="/dashboard/reservations" icone="📅" titre="Réservations" sous="Ton agenda du jour, table par table" />
-          <LigneCompte to="/dashboard/tables" icone="🪑" titre="Plan de salle" sous="Tes tables et tes créneaux de réservation" />
-          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre="Promotions" sous="Réductions et offres sur ta carte" />
-          <LigneCompte to="/dashboard/invoices" icone="📄" titre="Factures" sous="Tes factures de commission" />
-          <LigneCompte to="/dashboard/guide" icone="📘" titre="Mode d'emploi" sous="Comment gérer ton commerce sur Fairide" />
-          <LigneCompte to="/dashboard/reviews" icone="⭐" titre="Avis clients" sous={restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} sur 5 · ${restaurant.reviewCount} avis` : 'Pas encore d\x27avis'} />
-        </div>
-      )}
-
-      {role === 'restaurant' && restaurant && (
-        <div className="card" style={{ border: `2px solid ${['active', 'trialing'].includes(restaurant.subscriptionStatus) ? 'var(--teal)' : 'var(--red)'}` }}>
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>💳 Abonnement</h3>
-          <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-            {now.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
-          </p>
-
-          {restaurant.subscriptionStatus === 'trialing' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>✅ Essai gratuit en cours</h4>
+        <div className="card account-groupe" aria-label="Mon commerce">
+          <LigneCompte icone="💳" titre="Abonnement" sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] || restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+            <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
+              {now.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString('fr-BE', { hour: '2-digit', minute: '2-digit' })}
+            </p>
+            {restaurant.subscriptionStatus === 'trialing' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Ton restaurant est visible aux clients. Le premier mois est offert pour tout restaurant, dans tous les cas
                 {restaurant.freeTrialMonths > 1 ? ` — et comme ton restaurant fait partie des premiers inscrits sur Fairide, tu profites en réalité de ${restaurant.freeTrialMonths} mois offerts au total` : ''}
                 {restaurant.subscriptionCurrentPeriodEnd ? ` (premier prélèvement de 20€ le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}).` : '.'}
               </p>
-            </>
-          )}
-          {restaurant.subscriptionStatus === 'active' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>✅ Abonnement actif</h4>
+            )}
+            {restaurant.subscriptionStatus === 'active' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Ton restaurant est visible aux clients.
                 {restaurant.subscriptionCurrentPeriodEnd ? ` Prochain prélèvement (20€) le ${new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })}.` : ''}
               </p>
-            </>
-          )}
-          {restaurant.subscriptionStatus === 'past_due' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>⚠️ Paiement de l'abonnement échoué</h4>
+            )}
+            {restaurant.subscriptionStatus === 'past_due' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n'est plus visible aux clients tant que ce n'est pas régularisé.
               </p>
-            </>
-          )}
-          {restaurant.subscriptionStatus === 'paused' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>⏸️ Abonnement en pause</h4>
+            )}
+            {restaurant.subscriptionStatus === 'paused' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Ton restaurant n'est plus visible aux clients et ne reçoit plus de commandes. Aucun prélèvement tant qu'il reste en pause.
               </p>
-            </>
-          )}
-          {restaurant.subscriptionStatus === 'canceled' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>❌ Abonnement résilié</h4>
+            )}
+            {restaurant.subscriptionStatus === 'canceled' && (
               <p className="small" style={{ margin: '0 0 12px' }}>Ton restaurant n'est plus visible aux clients.</p>
-            </>
-          )}
-          {restaurant.subscriptionStatus === 'inactive' && (
-            <>
-              <h4 style={{ margin: '0 0 6px', fontSize: 15 }}>🔒 Restaurant pas encore visible aux clients</h4>
+            )}
+            {restaurant.subscriptionStatus === 'inactive' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 Un abonnement Fairide à 20€/mois est nécessaire pour apparaître dans les résultats et recevoir des commandes.
                 Le premier mois est offert pour tout restaurant, dans tous les cas — et Fairide offre aussi 3 mois aux 50 premiers
@@ -558,274 +690,135 @@ export default function Account() {
                 {' '}Ton abonnement n'entre en vigueur qu'une fois ton compte validé par l'équipe Fairide — le temps de vérifier
                 la conformité de ton commerce et que le contrat soit accepté par les deux parties. Tu ne seras débité qu'au mois suivant l'activation.
               </p>
-            </>
-          )}
+            )}
 
-          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
-            <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
-              🔒 Disponible après validation de ton compte par l'équipe Fairide.
-            </p>
-          )}
-          {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
-            <div>
-              <div className="field" style={{ maxWidth: 260 }}>
-                <label>{t('auth.promoCode')}</label>
-                <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-              </div>
-              <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                {subscribing ? '...' : `S'abonner — 20€/mois (${restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : '1er mois offert'})`}
-              </button>
-            </div>
-          )}
-          {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : '⏸️ Mettre en pause'}</button>
-              {!confirmCancelSub && (
-                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
-              )}
-            </div>
-          )}
-          {restaurant.subscriptionStatus === 'paused' && (
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
-              {!confirmCancelSub && (
-                <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
-              )}
-            </div>
-          )}
-          {confirmCancelSub && (
-            <div style={{ marginTop: 10 }}>
-              <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
-                Es-tu sûr ? Ton restaurant disparaîtra immédiatement des résultats clients. Il faudra un nouvel abonnement pour redevenir visible.
+            {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
+              <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
+                🔒 Disponible après validation de ton compte par l'équipe Fairide.
               </p>
-              <div className="row" style={{ gap: 8 }}>
-                <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
-                  {cancelingSub ? '...' : 'Oui, résilier'}
+            )}
+            {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
+              <div>
+                <div className="field" style={{ maxWidth: 260 }}>
+                  <label>{t('auth.promoCode')}</label>
+                  <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+                </div>
+                <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
+                  {subscribing ? '...' : `S'abonner — 20€/mois (${restaurant.freeTrialMonths > 1 ? `${restaurant.freeTrialMonths} mois offerts` : '1er mois offert'})`}
                 </button>
-                <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
               </div>
+            )}
+            {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : '⏸️ Mettre en pause'}</button>
+                {!confirmCancelSub && (
+                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+                )}
+              </div>
+            )}
+            {restaurant.subscriptionStatus === 'paused' && (
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
+                {!confirmCancelSub && (
+                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>Résilier l'abonnement</button>
+                )}
+              </div>
+            )}
+            {confirmCancelSub && (
+              <div style={{ marginTop: 10 }}>
+                <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
+                  Es-tu sûr ? Ton restaurant disparaîtra immédiatement des résultats clients. Il faudra un nouvel abonnement pour redevenir visible.
+                </p>
+                <div className="row" style={{ gap: 8 }}>
+                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
+                    {cancelingSub ? '...' : 'Oui, résilier'}
+                  </button>
+                  <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>Annuler</button>
+                </div>
+              </div>
+            )}
+          </LigneCompte>
+
+          <LigneCompte
+            icone="🛎️" titre="Services proposés"
+            sous={[offersDelivery && 'Livraison', offersPickup && 'À emporter', offersDineIn && 'Réservation'].filter(Boolean).join(' · ') || 'Aucun service actif'}
+            ouverte={ouvertes.has('services')} onClick={() => basculer('services')}
+          >
+            <p className="small" style={{ margin: '0 0 12px' }}>
+              Choisis les modes de commande que ton restaurant propose à ses clients — n'importe quelle combinaison, au moins un doit rester actif.
+              Si seule la réservation est activée, tes clients ne pourront pas commander en ligne : ils ne verront que la carte et un bouton pour réserver une table.
+            </p>
+            <div className="service-table-wrap">
+              <table className="service-table">
+                <thead>
+                  <tr><th>Service</th><th className="col-actif">Proposé</th><th>Ce que ça change pour le client</th></tr>
+                </thead>
+                <tbody>
+                  {[
+                    { cle: 'delivery', icone: '🚴', nom: 'Livraison', valeur: offersDelivery, set: setOffersDelivery,
+                      effet: 'Il commande en ligne et se fait livrer à son adresse.' },
+                    { cle: 'pickup', icone: '🥡', nom: 'À emporter', valeur: offersPickup, set: setOffersPickup,
+                      effet: 'Il commande et paie en ligne, puis vient chercher sa commande.' },
+                    { cle: 'dine_in', icone: '🍽️', nom: 'Réservation de table', valeur: offersDineIn, set: setOffersDineIn,
+                      effet: 'Il réserve une table en indiquant le nombre de personnes, sans commander en ligne.' }
+                  ].map((s) => (
+                    <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
+                      <td><b>{s.icone} {s.nom}</b></td>
+                      <td className="col-actif">
+                        {/* Le libellé rend toute la cellule cliquable, et nomme la case pour un lecteur d'écran :
+                            une case seule n'annoncerait que « coché », sans dire de quel service il s'agit. */}
+                        <label className="service-toggle">
+                          <input type="checkbox" checked={s.valeur} disabled={savingServices} onChange={(e) => s.set(e.target.checked)} />
+                          <span className="sr-only">{s.nom}</span>
+                        </label>
+                      </td>
+                      <td className="small">{s.valeur ? s.effet : <i>Non proposé — ce mode n'apparaît pas sur ta fiche.</i>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          )}
-        </div>
-      )}
+            {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
+                d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
+            <p className="small service-summary">
+              {!offersDelivery && !offersPickup && !offersDineIn
+                ? '⚠️ Au moins un service doit rester proposé.'
+                : !offersDelivery && !offersPickup
+                  ? '🍽️ Tes clients verront ta carte mais ne pourront rien commander en ligne : seulement réserver une table.'
+                  : offersDelivery && offersPickup && offersDineIn
+                    ? '✅ Tes clients peuvent se faire livrer, venir chercher leur commande, ou réserver une table.'
+                    : `Tes clients pourront : ${[offersDelivery && 'se faire livrer', offersPickup && 'venir chercher leur commande', offersDineIn && 'réserver une table'].filter(Boolean).join(', ')}.`}
+            </p>
+            <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
+          </LigneCompte>
 
-      {role === 'restaurant' && restaurant && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🛎️ Services proposés</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            Choisis les modes de commande que ton restaurant propose à ses clients — n'importe quelle combinaison, au moins un doit rester actif.
-            Si seule la réservation est activée, tes clients ne pourront pas commander en ligne : ils ne verront que la carte et un bouton pour réserver une table.
-          </p>
-          <div className="service-table-wrap">
-            <table className="service-table">
-              <thead>
-                <tr><th>Service</th><th className="col-actif">Proposé</th><th>Ce que ça change pour le client</th></tr>
-              </thead>
-              <tbody>
-                {[
-                  { cle: 'delivery', icone: '🚴', nom: 'Livraison', valeur: offersDelivery, set: setOffersDelivery,
-                    effet: 'Il commande en ligne et se fait livrer à son adresse.' },
-                  { cle: 'pickup', icone: '🥡', nom: 'À emporter', valeur: offersPickup, set: setOffersPickup,
-                    effet: 'Il commande et paie en ligne, puis vient chercher sa commande.' },
-                  { cle: 'dine_in', icone: '🍽️', nom: 'Réservation de table', valeur: offersDineIn, set: setOffersDineIn,
-                    effet: 'Il réserve une table en indiquant le nombre de personnes, sans commander en ligne.' }
-                ].map((s) => (
-                  <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
-                    <td><b>{s.icone} {s.nom}</b></td>
-                    <td className="col-actif">
-                      {/* Le libellé rend toute la cellule cliquable, et nomme la case pour un lecteur d'écran :
-                          une case seule n'annoncerait que « coché », sans dire de quel service il s'agit. */}
-                      <label className="service-toggle">
-                        <input
-                          type="checkbox"
-                          checked={s.valeur}
-                          disabled={savingServices}
-                          onChange={(e) => s.set(e.target.checked)}
-                        />
-                        <span className="sr-only">{s.nom}</span>
-                      </label>
-                    </td>
-                    <td className="small">{s.valeur ? s.effet : <i>Non proposé — ce mode n'apparaît pas sur ta fiche.</i>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
-              d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
-          <p className="small service-summary">
-            {!offersDelivery && !offersPickup && !offersDineIn
-              ? '⚠️ Au moins un service doit rester proposé.'
-              : !offersDelivery && !offersPickup
-                ? '🍽️ Tes clients verront ta carte mais ne pourront rien commander en ligne : seulement réserver une table.'
-                : offersDelivery && offersPickup && offersDineIn
-                  ? '✅ Tes clients peuvent se faire livrer, venir chercher leur commande, ou réserver une table.'
-                  : `Tes clients pourront : ${[offersDelivery && 'se faire livrer', offersPickup && 'venir chercher leur commande', offersDineIn && 'réserver une table'].filter(Boolean).join(', ')}.`}
-          </p>
-          <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
-        </div>
-      )}
-
-
-
-
-      {role === 'driver' && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.geoTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>
-            {t('account.geoExplain')}
-          </p>
-          <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
-            <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
-            <span className="small">{t('account.geoToggleLabel')}</span>
-          </label>
+          {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas : neuf onglets n'y
+              tenaient pas, et sous 520px ils deviennent des icônes muettes. Ici elles gardent leur nom. */}
+          <LigneCompte to="/dashboard/reservations" icone="📅" titre="Réservations" sous="Ton agenda du jour, table par table" />
+          <LigneCompte to="/dashboard/tables" icone="🪑" titre="Plan de salle" sous="Tes tables et tes créneaux de réservation" />
+          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre="Promotions" sous="Réductions et offres sur ta carte" />
+          <LigneCompte to="/dashboard/invoices" icone="📄" titre="Factures" sous="Tes factures de commission" />
+          <LigneCompte to="/dashboard/guide" icone="📘" titre="Mode d'emploi" sous="Comment gérer ton commerce sur Fairide" />
+          <LigneCompte to="/dashboard/reviews" icone="⭐" titre="Avis clients" sous={restaurant.reviewCount > 0 ? `${restaurant.rating.toFixed(1)} sur 5 · ${restaurant.reviewCount} avis` : 'Pas encore d\x27avis'} />
         </div>
       )}
 
       {/* Rubriques du livreur qu'on ouvre de temps en temps, sorties de la barre du bas au profit de ce
-          qu'il consulte en course : commandes, carte, pourboires. Même règle que pour le client — une
-          rubrique ne figure qu'à UN endroit. */}
+          qu'il consulte en course : commandes, carte, pourboires. */}
       {role === 'driver' && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div className="card account-groupe" aria-label="Mes courses">
+          <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? `${driverDeliveries.filter((o) => o.status === 'livre').length} livraisons effectuées` : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
+            <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
+          </LigneCompte>
           <LigneCompte to="/driver/reviews" icone="⭐" titre="Mes avis" sous="Ce que les clients disent de tes livraisons" />
           <LigneCompte to="/driver/invoices" icone="📄" titre="Mes factures" sous="Tes autofactures mensuelles" />
         </div>
       )}
-      {role === 'driver' && <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />}
-
-      <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.referral.title')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
-        {referralStats && (
-          <>
-            <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 12 }}>
-              <div className="field" style={{ flex: 1, margin: 0 }}>
-                <input readOnly value={referralStats.code} style={{ fontWeight: 700, letterSpacing: 1 }} />
-              </div>
-              <button type="button" className="btn-teal" onClick={copyReferralCode}>{t('account.referral.copy')}</button>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="stat-card" style={{ flex: 1 }}>
-                <div className="num">{referralStats.referredCount}</div>
-                <div className="label">{t('account.referral.statInvited')}</div>
-              </div>
-              <div className="stat-card highlight" style={{ flex: 1 }}>
-                <div className="num">{referralStats.earnedTotal.toFixed(2)}€</div>
-                <div className="label">{t('account.referral.statEarned')}</div>
-              </div>
-            </div>
-            {referralStats.pendingCount > 0 && (
-              <p className="small" style={{ margin: '10px 0 0' }}>{t('account.referral.pending', { count: referralStats.pendingCount })}</p>
-            )}
-            <p className="small" style={{ margin: '10px 0 0', opacity: 0.75 }}>{t('account.referral.spendOnly')}</p>
-          </>
-        )}
-      </div>
-
-      {(role === 'restaurant' || role === 'driver') && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('account.convert.title')}</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
-          <div className="stat-card highlight" style={{ marginBottom: 14 }}>
-            <div className="num">{Number(user.balance || 0).toFixed(2)}€</div>
-            <div className="label">{t('account.convert.balanceLabel')}</div>
-          </div>
-          <form onSubmit={handleConvert} className="row" style={{ gap: 8, marginBottom: generatedCodes?.length ? 14 : 0 }}>
-            <div className="field" style={{ flex: 1, margin: 0 }}>
-              <input type="number" step="0.01" min="5" value={convertAmount} onChange={(e) => setConvertAmount(e.target.value)} placeholder={t('account.convert.amountPlaceholder')} />
-            </div>
-            <button type="submit" className="btn-teal" disabled={converting}>{converting ? '...' : t('account.convert.button')}</button>
-          </form>
-          {generatedCodes && generatedCodes.length > 0 && (
-            <div>
-              <div className="small" style={{ margin: '4px 0 6px', fontWeight: 600 }}>{t('account.convert.myCodes')}</div>
-              {generatedCodes.map((c) => (
-                <div key={c.code} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
-                  <span style={{ fontWeight: 700, letterSpacing: 1 }}>{c.code}</span>
-                  <span className="small">{c.amount.toFixed(2)}€</span>
-                  <span className={`pill ${c.used ? '' : 'teal'}`}>{c.used ? t('account.convert.used') : t('account.convert.unused')}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('account.passwordTitle')}</h3>
-        <form onSubmit={savePassword}>
-          <div className="field">
-            <label>{t('account.currentPassword')}</label>
-            <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-          </div>
-          <div className="field">
-            <label>{t('account.newPassword')}</label>
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
-          </div>
-          <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
-        </form>
-      </div>
-
-      <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15, color: 'var(--red)' }}>{t('account.deleteTitle')}</h3>
-        {!confirmDeleteOpen && (
-          <button className="btn-danger-ghost" onClick={() => setConfirmDeleteOpen(true)}>{t('account.deleteButton')}</button>
-        )}
-        {confirmDeleteOpen && (
-          <div>
-            <p className="small" style={{ color: 'var(--red)', marginBottom: 10 }}>
-              {t('account.deleteWarning')}
-            </p>
-
-            {!deleteCodeSent && (
-              <>
-                <div className="field">
-                  <label>{t('account.deleteWhy')}</label>
-                  <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
-                    {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                  </select>
-                </div>
-                <div className="field">
-                  <label>{t('account.deleteComment')}</label>
-                  <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
-                </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
-                    {sendingCode ? '...' : t('account.deleteRequestCode')}
-                  </button>
-                  <button className="btn-ghost" onClick={() => setConfirmDeleteOpen(false)}>{t('common.cancel')}</button>
-                </div>
-              </>
-            )}
-
-            {deleteCodeSent && (
-              <>
-                <p className="small" style={{ marginBottom: 10 }}>
-                  {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
-                </p>
-                <div className="field">
-                  <label>{t('account.deleteCodeLabel')}</label>
-                  <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
-                </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
-                    {deleting ? '...' : t('account.deleteConfirmFinal')}
-                  </button>
-                  <button className="btn-ghost" disabled={sendingCode} onClick={handleSendDeleteCode}>{t('auth.resendCode')}</button>
-                  <button className="btn-ghost" onClick={() => { setConfirmDeleteOpen(false); setDeleteCodeSent(false); setDeleteCode(''); }}>{t('common.cancel')}</button>
-                </div>
-              </>
-            )}
-          </div>
-        )}
-      </div>
 
       {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
-          signaler un bug qu'un client.
-          « Supprimer mon compte » n'y figure pas : sa section, avec sa confirmation par code, est
-          juste au-dessus. Y renvoyer par un lien ferait deux chemins vers le même endroit visible
-          à l'écran. La déconnexion non plus, pour la même raison — c'est le bouton qui suit. */}
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+          signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
+          « Mes infos », avec le reste de ce qui concerne la personne. */}
+      <div className="card account-groupe" aria-label="Assistance">
         <LigneCompte to="/aide" icone="🛟" titre="Besoin d'aide ?" sous="Les réponses aux questions fréquentes" />
         <LigneCompte
           icone="💬" titre="Chatter avec nous" sous="L'assistant Fairide, tout de suite"
@@ -849,11 +842,13 @@ export default function Account() {
   );
 }
 
-// Une rangée du menu Compte. Tantôt un lien, tantôt une action (ouvrir l'assistant, partager) :
-// dans le second cas c'est un <button>, pas un <a href="#"> déguisé — un lien qui ne mène nulle
-// part est annoncé comme un lien par les lecteurs d'écran et s'ouvre dans un nouvel onglet au clic
-// du milieu, deux promesses qu'on ne tiendrait pas.
-function LigneCompte({ to, onClick, icone, titre, sous, danger = false }) {
+// Une rangée du menu Compte. Tantôt un lien, tantôt une action (ouvrir l'assistant, partager), tantôt
+// une rangée qui se déplie (`children` + `ouverte`) pour montrer un formulaire sur place. Dans les deux
+// derniers cas c'est un <button>, pas un <a href="#"> déguisé — un lien qui ne mène nulle part est
+// annoncé comme un lien par les lecteurs d'écran et s'ouvre dans un nouvel onglet au clic du milieu,
+// deux promesses qu'on ne tiendrait pas.
+function LigneCompte({ to, onClick, icone, titre, sous, danger = false, ouverte = false, children }) {
+  const pliable = children !== undefined;
   const contenu = (
     <>
       <span className="account-link-icon" aria-hidden="true">{icone}</span>
@@ -861,12 +856,18 @@ function LigneCompte({ to, onClick, icone, titre, sous, danger = false }) {
         <b>{titre}</b>
         <span className="small">{sous}</span>
       </span>
-      <span className="account-link-chevron" aria-hidden="true">›</span>
+      <span className={`account-link-chevron${pliable ? ' account-link-chevron--pliable' : ''}`} aria-hidden="true">›</span>
     </>
   );
-  const classe = `account-link-row${danger ? ' account-link-danger' : ''}`;
+  const classe = `account-link-row${danger ? ' account-link-danger' : ''}${ouverte ? ' ouverte' : ''}`;
   if (to) return <Link to={to} className={classe}>{contenu}</Link>;
-  return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
+  if (!pliable) return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
+  return (
+    <div className={`account-pliable${ouverte ? ' ouverte' : ''}`}>
+      <button type="button" className={classe} onClick={onClick} aria-expanded={ouverte}>{contenu}</button>
+      {ouverte && <div className="account-panneau">{children}</div>}
+    </div>
+  );
 }
 
 // Un champ (email OU téléphone) avec son propre flux demande-code / confirme-code, indépendant de
@@ -957,27 +958,23 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
   );
 }
 
-// Résumé compact de l'activité du livreur sur la page Mon compte — les détails (avis, historique de
-// livraisons, pourboires) vivent chacun sur leur propre page dédiée (Avis, Pourboires, Mes commandes),
-// pas besoin de les dupliquer ici.
+// Résumé compact de l'activité du livreur, dans sa rangée dépliable de la page Mon compte — les détails
+// (avis, historique de livraisons, pourboires) vivent chacun sur leur propre page dédiée.
 function DriverActivity({ deliveries, reviews, t }) {
-  if (!deliveries) return null;
+  if (!deliveries) return <p className="small">Chargement…</p>;
 
   const delivered = deliveries.filter((o) => o.status === 'livre');
   const totalDeliveryFees = delivered.reduce((a, o) => a + o.deliveryFee, 0);
   const totalTips = delivered.filter((o) => o.tipPaid && o.tipAmount > 0).reduce((a, o) => a + o.tipAmount, 0);
 
   return (
-    <>
-      <h2 className="section-title">{t('account.driverActivityTitle')}</h2>
-      <div className="stat-grid">
-        <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('account.deliveriesDone')}</div></div>
-        <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">{t('account.estimatedEarnings')}</div></div>
-        <div className="stat-card">
-          <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
-          <div className="label">{reviews?.count > 0 ? t('restaurantMenu.ratingReviews', { rating: reviews.avg.toFixed(1), count: reviews.count }) : t('account.noReviewsYet')}</div>
-        </div>
+    <div className="stat-grid" style={{ marginTop: 0 }}>
+      <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('account.deliveriesDone')}</div></div>
+      <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">{t('account.estimatedEarnings')}</div></div>
+      <div className="stat-card">
+        <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
+        <div className="label">{reviews?.count > 0 ? t('restaurantMenu.ratingReviews', { rating: reviews.avg.toFixed(1), count: reviews.count }) : t('account.noReviewsYet')}</div>
       </div>
-    </>
+    </div>
   );
 }

@@ -1929,6 +1929,42 @@ button.account-link-row {
 button.account-link-row:last-child { border-bottom: none; }
 .account-link-danger b { color: var(--red); }
 
+/* La page Mon compte : des groupes de rangées dans des cartes sans rembourrage, et des rangées qui se
+   DÉPLIENT (Account.jsx, LigneCompte avec children). Le filet entre rangées est porté par les enfants
+   directs du groupe — une rangée simple, ou le bloc « rangée + panneau » d'une rangée dépliable — pour
+   qu'il tombe toujours au même endroit, panneau ouvert ou fermé. */
+.account-groupe { padding: 0; overflow: hidden; }
+.account-groupe > * { border-bottom: 1px solid var(--line-soft, var(--line)); }
+.account-groupe > :last-child { border-bottom: none; }
+.account-groupe .account-link-row { border-bottom: none; }
+.account-link-chevron--pliable { transition: transform .18s ease; }
+.account-link-row.ouverte .account-link-chevron--pliable { transform: rotate(90deg); }
+.account-pliable.ouverte > .account-link-row { background: var(--cream-dim); }
+.account-panneau { padding: 14px 15px 16px; }
+.account-panneau .field:last-of-type { margin-bottom: 12px; }
+.account-panneau > form > .btn-teal, .account-panneau > form > .btn-outline, .account-panneau > .btn-teal { margin-top: 2px; }
+/* Sur téléphone, les paires prénom/nom, genre/date, etc. passent l'une sous l'autre. */
+@media (max-width: 480px) {
+  .account-panneau .row:not(.account-inline) { flex-wrap: wrap; }
+  .account-panneau .row:not(.account-inline) > .field { flex: 1 1 100% !important; }
+}
+
+/* Supprimer le compte, au bout de « Mes infos » : un filet, un titre rouge discret, et le bouton. */
+.account-zone-danger { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
+.account-zone-danger-titre { display: block; margin: 0 0 8px; font-size: 13px; color: var(--red); }
+
+/* La carte d'identité en tête : initiales, nom, e-mail, rôle. */
+.account-identite { display: flex; align-items: center; gap: 12px; }
+.account-avatar {
+  flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%;
+  background: var(--iris); color: #fff; display: flex; align-items: center; justify-content: center;
+  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 0.02em;
+}
+.account-identite-texte { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.account-identite-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-identite-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-identite .pill { flex-shrink: 0; }
+
 /* Mentions légales et identifiant de build, en pied de page. Discrets par construction : on les
    cherche quand on en a besoin, on ne doit pas les voir le reste du temps. */
 .account-legal {
