@@ -23,6 +23,8 @@ import usePageMeta from '../../hooks/usePageMeta';
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
 const GROCERY_TYPES = ['Supermarché', 'Night Shop', 'Boulangerie', 'Boucherie'];
 const DISCOVER_RADIUS_KM = 10;
+// Taille minimale d'une rangée thématique avant complément (voir completer()).
+const MIN_PAR_RANGEE = 6;
 const DISCOVER_MAX = 8;
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
@@ -90,7 +92,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
 }
 
 
-function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
+function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false }) {
   if (list.length === 0) return null;
   if (loop && list.length > 1) {
     return (
@@ -100,6 +102,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) 
           items={list}
           keyFor={(r) => r.id}
           className="rest-grid-loop"
+          autoplay={autoplay}
           renderItem={(r, i, key) => (
             <RestaurantCard key={key} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
           )}
@@ -196,10 +199,22 @@ export default function RestaurantList() {
 
   // Page d'accueil "par sections" (façon Uber Eats/Deliveroo) affichée uniquement sans filtre actif —
   // dès qu'on cherche/filtre, on retombe sur la liste plate ci-dessus, plus adaptée à une recherche.
+  // Une rangée trop courte tourne mal en boucle (2 cartes qui se répètent) : en dessous de MIN_PAR_RANGEE
+  // commerces, on la complète avec d'autres commerces de la liste, les mieux notés d'abord, sans doublon.
+  // Une rangée vide reste vide : on ne fabrique pas une section « Bio » sans le moindre produit bio.
+  const completer = (liste) => {
+    if (liste.length === 0 || liste.length >= MIN_PAR_RANGEE) return liste;
+    const dejaLa = new Set(liste.map((r) => r.id));
+    const renfort = [...restaurants]
+      .filter((r) => !dejaLa.has(r.id))
+      .sort((a, b) => (Number(b.avgRating || b.rating) || 0) - (Number(a.avgRating || a.rating) || 0))
+      .slice(0, MIN_PAR_RANGEE - liste.length);
+    return [...liste, ...renfort];
+  };
   const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
-  const groceryList = restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine));
-  const nearbyList = homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : [];
-  const offersList = restaurants.filter((r) => r.hasPromo);
+  const groceryList = completer(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)));
+  const nearbyList = completer(homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : []);
+  const offersList = completer(restaurants.filter((r) => r.hasPromo));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
@@ -213,13 +228,13 @@ export default function RestaurantList() {
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const bioList = parMention(platBio);
-  const veganList = parMention(platVegan);
-  const healthyList = nonGrocery
+  const bioList = completer(parMention(platBio));
+  const veganList = completer(parMention(platVegan));
+  const healthyList = completer(nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
-    .map(({ r }) => r);
+    .map(({ r }) => r));
   // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
   // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
   // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
@@ -296,7 +311,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionBio')} icon="🌿" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="🌱" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}

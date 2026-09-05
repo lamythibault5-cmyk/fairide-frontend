@@ -2397,3 +2397,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .address-reco-candidate:hover { border-color: var(--iris); }
 .address-reco-candidate.active { border-color: var(--iris); background: rgba(59,47,181,0.08); }
 .recherche-regimes { margin: -6px 0 14px; align-items: center; flex-wrap: wrap; }
+/* Rangée bouclée mais immobile (toutes les rangées thématiques, « À découvrir » exceptée) : même
+   glisser/molette que la rangée animée, sans mouvement de fond. */
+.auto-scroll-row.auto-scroll-static { cursor: default; }
+.auto-scroll-row.auto-scroll-static:active { cursor: grabbing; }

@@ -39,7 +39,14 @@ const DRAG_SLOP_PX = 8;
 
 const RESUME_AFTER_GESTURE_MS = 700;
 
-export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, mobileSpeed = 64, className = '' }) {
+// Nombre minimal de cartes sur la piste : en dessous, la moitié de piste serait plus étroite que la
+// fenêtre et le repli laisserait voir un trou. Une rangée de 2 commerces est donc recopiée 4 fois.
+const MIN_CARDS_ON_TRACK = 8;
+
+// autoplay=false : la rangée ne bouge pas d'elle-même, mais reste une boucle infinie au doigt, à la
+// souris (glisser) et à la molette horizontale — c'est le mode des rangées thématiques ; seule
+// « À découvrir » défile en continu.
+export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, mobileSpeed = 64, className = '', autoplay = true }) {
   const viewportRef = useRef(null);
   const trackRef = useRef(null);
   // Unique coordonnée du système : de combien la piste est décalée vers la gauche, en pixels, en pleine
@@ -54,14 +61,15 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
   const movedRef = useRef(false);
 
   const canLoop = items.length > 1;
-  const doubled = canLoop ? [...items, ...items] : items;
+  const copies = canLoop ? Math.max(2, Math.ceil(MIN_CARDS_ON_TRACK / items.length)) : 1;
+  const doubled = Array.from({ length: copies }, () => items).flat();
 
   useEffect(() => {
     const viewport = viewportRef.current;
     const track = trackRef.current;
     if (!viewport || !track) return undefined;
 
-    const measure = () => { halfWidthRef.current = track.scrollWidth / 2; };
+    const measure = () => { halfWidthRef.current = track.scrollWidth / copies; };
     measure();
     // La largeur ne bouge qu'au redimensionnement (le seuil 640px change la largeur des cartes) et à
     // l'arrivée de la police (les chips n'ont pas de largeur fixe). Mesurer dans la boucle forcerait un
@@ -72,8 +80,9 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(measure).catch(() => {});
 
     const compact = window.matchMedia(`(max-width: ${COMPACT_BREAKPOINT}px)`);
-    let targetSpeed = compact.matches ? mobileSpeed : speed;
-    const onTierChange = () => { targetSpeed = compact.matches ? mobileSpeed : speed; };
+    const vitesseCible = () => (autoplay ? (compact.matches ? mobileSpeed : speed) : 0);
+    let targetSpeed = vitesseCible();
+    const onTierChange = () => { targetSpeed = vitesseCible(); };
     compact.addEventListener('change', onTierChange);
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -174,6 +183,15 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
       e.stopPropagation();
     }
 
+    // Molette ou pavé tactile horizontal : on décale la piste directement. Le vertical n'est pas touché,
+    // la page continue de défiler normalement.
+    function onWheel(e) {
+      if (Math.abs(e.deltaX) <= Math.abs(e.deltaY) || !canLoop) return;
+      e.preventDefault();
+      offsetRef.current = wrap(offsetRef.current + e.deltaX);
+      paint();
+    }
+
     function onEnter() { if (!dragRef.current) { clearResume(); pausedRef.current = true; } }
     function onLeave() { if (!dragRef.current) scheduleResume(); }
 
@@ -184,6 +202,7 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
     viewport.addEventListener('click', onClickCapture, true);
     viewport.addEventListener('mouseenter', onEnter);
     viewport.addEventListener('mouseleave', onLeave);
+    viewport.addEventListener('wheel', onWheel, { passive: false });
 
     return () => {
       cancelAnimationFrame(raf);
@@ -197,12 +216,13 @@ export default function AutoScrollRow({ items, renderItem, keyFor, speed = 70, m
       viewport.removeEventListener('click', onClickCapture, true);
       viewport.removeEventListener('mouseenter', onEnter);
       viewport.removeEventListener('mouseleave', onLeave);
+      viewport.removeEventListener('wheel', onWheel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.length, canLoop, speed, mobileSpeed]);
+  }, [items.length, canLoop, copies, speed, mobileSpeed, autoplay]);
 
   return (
-    <div ref={viewportRef} className={`auto-scroll-row ${className}`}>
+    <div ref={viewportRef} className={`auto-scroll-row ${className}${autoplay ? '' : ' auto-scroll-static'}`}>
       <div ref={trackRef} className="auto-scroll-track">
         {doubled.map((item, i) => renderItem(item, i, keyFor ? `${keyFor(item)}-${i}` : i))}
       </div>
