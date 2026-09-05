@@ -3581,6 +3581,204 @@ const ITEM_IMAGE_OVERRIDES = {
   "matcha latte glacé": U('1749280447307-31a68eb38673'),
   "pâtes du moment": U('1551183053-bf91a1d81141'),
   "tiramisu": U('1571877227200-a0d98ea607e9'),
+
+  // --- Classiques Fairide (CLASSIC_DRINKS / CLASSIC_DESSERTS) proposables en un clic sur tout commerce ---
+  "fanta orange": U('1624517452488-04869289c4ca'), // mot-clé « fanta »
+  "fuze tea pêche": U('1601390395693-364c0e22031a'), // mot-clé « fuze tea »
+  "jus de pomme": U('1727989815707-1b9e8f376775'), // mot-clé « jus de pomme »
+  "cheesecake": U('1533134242443-d4fd215305ad'), // mot-clé « cheesecake »
+  "brownie au chocolat": U('1517427294546-5aa121f68e8a'), // mot-clé « chocolat »
+  "cookie aux pépites de chocolat": U('1499636136210-6f4ee915583e'), // mot-clé « cookie aux pépites »
+  "crème brûlée": U('1676300184943-09b2a08319a3'), // mot-clé « crème brûlée »
+  "tarte aux pommes": U('1621743478914-cc8a86d7e7b5'), // mot-clé « tarte aux pommes »,
+
+  // --- Plats des commerçants en production (septembre 2026) qui n'avaient encore aucune photo ---
+  "salade de pâtes au thon": U('1473093295043-cdd812d0e601'), // mot-clé « salade »
+  "wrap thon crudités": U('1563282397-cdc218eccfda'), // mot-clé « wrap »
+  "soupe de légumes": U('1741796105489-33ea406ac1b7'), // mot-clé « légume »
+  "panini 3 fromages": U('1559054663-e8d23213f55c'), // mot-clé « panini »
+  "soupe de potiron": U('1476718406336-bb5a9690ee2a'), // mot-clé « soupe »
+  "baguette poulet-crudités": U('1509722747041-616f39b57569'), // mot-clé « poulet »
+  "baguette saumon fumé": U('1738173689012-95fa988f684d'), // mot-clé « saumon »
+  "baguette mozzarella-tomates-pesto": U('1621852004158-f3bc188ace2d'), // mot-clé « pesto »
+  "panini végétarien": U('1621852004158-f3bc188ace2d'), // mot-clé « panini »
+  "baguette œuf-thon": U('1554433607-66b5efe9d304'), // mot-clé « thon »
+  "jus d'orange 1l": U('1600271886742-f049cd451bba'), // mot-clé « jus d'orange »
+  "cacahuètes salées 200g": U('1599490659213-e2b9527bd087'), // mot-clé « cacahuète »
+  "pâtes fraîches carbonara": U('1551183053-bf91a1d81141'), // mot-clé « carbonara »
+  "plateau de charcuterie familial (2-4 pers.)": U('1616631124348-c63521eb484c'), // mot-clé « tea »
+  "poulet rôti familial et pommes de terre (4-6 pers.)": U('1615557960916-5f4791effe9d'), // mot-clé « poulet »
+  "menu enfant nuggets-frites": U('1619881590738-a111d176d906'), // mot-clé « nuggets »
+  "grand saladier de frites (4-6 pers.)": U('1573080496219-bb080dd4f877'), // mot-clé « frite »
+  "tarte tatin familiale (6 parts)": U('1621743478914-cc8a86d7e7b5'), // mot-clé « tarte »
+  "pichet de jus d'orange (1l)": U('1600271886742-f049cd451bba'), // mot-clé « jus d'orange »
+  "lasagne familiale, grand plat (6 pers.)": U('1621996346565-e3dbc646d9a9'), // mot-clé « lasagne »
+  "escalope milanaise, frites": U('1599921841143-819065a55cc6'), // mot-clé « frite »
+  "menu enfant pâtes bolognaise": U('1622973536968-3ead9e780960'), // mot-clé « bolognaise »
+  "légumes vapeur à partager": U('1592578630143-fac65cda7a67'), // mot-clé « légume »
+  "bouteille de softs (1,5l)": U('1554866585-cd94860890b7'), // mot-clé « softs »
+  "soupe maison, grand pot (4-6 pers.)": U('1578861256505-d3be7cb037d3'), // mot-clé « soupe »
+  "filet de poulet grillé, légumes": U('1763219802762-1d34ee0907c5'), // mot-clé « poulet »
+  "menu enfant croque-monsieur": U('1528736235302-52922df5c122'), // mot-clé « croque »
+  "riz à partager": U('1586201375761-83865001e31c'), // mot-clé « riz »
+  "bouteille de vin": U('1587920710219-f6f9804dc10d'), // mot-clé « vin »
+  "plateau de crudités et dips (2-4 pers.)": U('1592578630143-fac65cda7a67'), // mot-clé « tea »
+  "eau plate (1,5l)": U('1534616042650-80f5c9b61f09'), // mot-clé « eau plate »
+  "café gourmand": U('1509042239860-f550ce710b93'), // mot-clé « café »
+  "chili con carne familial, marmite (6 pers.)": U('1666819632298-fe15dc7d4c34'), // mot-clé « chili con carne »
+  "velouté de légumes de saison": U('1578861256505-d3be7cb037d3'), // mot-clé « velouté »
+  "filet de cabillaud vapeur, légumes de saison": U('1733554080207-754bfedf4864'), // mot-clé « légume »
+  "curry de légumes, lait de coco et riz complet": U('1587040690786-b091531837a2'), // mot-clé « légume »
+  "riz complet": U('1586201375761-83865001e31c'), // mot-clé « riz »
+  "tarte aux fruits sans sucre ajouté": U('1620980776848-84ac10194945'), // mot-clé « tarte »
+  "jus de légumes pressés": U('1604908554105-088645debe26'), // mot-clé « légume »
+  "carpaccio de betterave, chèvre et noix": U('1649597357231-4e721665af6e'), // mot-clé « carpaccio »
+  "poulet fermier rôti, purée de patate douce": U('1763219802762-1d34ee0907c5'), // mot-clé « poulet »
+  "légumes vapeur de saison": U('1781682627658-9ea34602351e'), // mot-clé « légume »
+  "kombucha maison": U('1783099993801-c31173919b72'), // mot-clé « kombucha »
+  "tartare d'avocat aux crevettes": U('1613585179558-1d34e3a1c78d'), // mot-clé « crevette »
+  "saumon grillé, quinoa citronné": U('1734771372365-33adb771970a'), // mot-clé « quinoa »
+  "lasagne de légumes sans gluten": U('1621996346565-e3dbc646d9a9'), // mot-clé « lasagne »
+  "thé détox": U('1491720731493-223f97d92c21'), // mot-clé « thé »
+  "salade de quinoa aux herbes fraîches": U('1630156948734-9f84d5ce6aee'), // mot-clé « quinoa »
+  "steak de thon mi-cuit au sésame": U('1682457569891-53e4f6ef9271'), // mot-clé « thon »
+  "buddha plate composée": U('1600335895229-6e75511892c8'), // mot-clé « buddha »
+  "quinoa aux herbes": U('1630156948734-9f84d5ce6aee'), // mot-clé « quinoa »
+  "eau infusée concombre-menthe": U('1571501210610-779f6db4cc8e'), // mot-clé « the »
+  "houmous maison et légumes croquants": U('1673960854897-749f9d9ebafc'), // mot-clé « houmous »
+  "risotto de légumes verts": U('1682428617976-f25633ed8469'), // mot-clé « risotto »
+  "yaourt grec, miel et noix": U('1571212515416-fef01fc43637'), // mot-clé « yaourt »
+  "vin bio (verre)": U('1587920710219-f6f9804dc10d'), // mot-clé « vin »
+  "soupe miso maison": U('1680137248903-7af5d51a3350'), // mot-clé « soupe »
+  "escalope de poulet grillée, légumes rôtis": U('1763219802762-1d34ee0907c5'), // mot-clé « poulet »
+  "bœuf mijoté aux légumes racines": U('1445979323117-80453f573b71'), // mot-clé « légume »
+  "jus frais": U('1622597467821-df79dcb4f94d'), // mot-clé « jus »
+  "gaufre sucre": U('1568051243851-f9b136146e97'), // mot-clé « gaufre »
+  "saumon fumé panini": U('1639744093483-86714cd62a3b'), // mot-clé « panini »
+  "végétarien houmous crudités": U('1673960854897-749f9d9ebafc'), // mot-clé « houmous »
+  "wrap poulet épicé": U('1752095809096-f09d22c466c5'), // mot-clé « poulet »
+  "spéculoos cheesecake": U('1533134242443-d4fd215305ad'), // mot-clé « cheesecake »
+  "chèvre miel panini": U('1528736235302-52922df5c122'), // mot-clé « panini »
+  "wrap poulet crudités": U('1626700051175-6818013e1d4f'), // mot-clé « poulet »
+  "panini mozza tomate": U('1705537459006-f4acbd93c5a3'), // mot-clé « panini »
+  "chorizo a la sidra": U('1624772398061-bbfa87ec6b5a'), // mot-clé « riz »
+  "vin rouge rioja (verre)": U('1587920710219-f6f9804dc10d'), // mot-clé « vin »
+  "aceitunas marinadas": U('1706378398576-57a21244ef7a'), // mot-clé « tuna »
+  "croquetas de jamón (4 pcs)": U('1785031620399-c56a45c4af63'), // mot-clé « croque »
+  "sauce andalouse": U('1518013431117-eb1465fa5752'), // mot-clé « sauce andalouse »
+  "salade liégeoise": U('1600335895229-6e75511892c8'), // mot-clé « salade »
+  "boulets sauce tomate, frites": U('1768187067375-4cd5a79fec41'), // mot-clé « frite »
+  "riz sauté aux légumes": U('1603133872878-684f208fb84b'), // mot-clé « riz sauté »
+  "bo bun poulet grillé": U('1742893368398-128bded9c656'), // mot-clé « bo bun »
+  "bo bun crevettes": U('1763703544688-2ac7839b0659'), // mot-clé « crevette »
+  "curry de poulet vietnamien": U('1543353071-873f17a7a088'), // mot-clé « poulet »
+  "café vietnamien glacé": U('1578314675249-a6910f80cc4e'), // mot-clé « café »
+  "nouilles sautées au poulet": U('1555126634-323283e090fa'), // mot-clé « nouilles »
+  "bo bun tofu grillé": U('1555126634-323283e090fa'), // mot-clé « bo bun »
+  "riz frit au porc": U('1603133872878-684f208fb84b'), // mot-clé « riz »
+  "rouleaux de printemps frais poulet (2 pcs)": U('1679310290259-78d9eaa32700'), // mot-clé « rouleaux de printemps »
+  "nachos supreme": U('1582169296194-e4d644c48063'), // mot-clé « nachos »
+  "chili con carne, riz": U('1666819632298-fe15dc7d4c34'), // mot-clé « chili con carne »
+  "oeufs brouillés toast": U('1618666185600-1f9f09d5eb2c'), // mot-clé « oeufs »
+  "kafta grillée (assiette)": U('1719282431565-3b30bb7d2658'), // mot-clé « kafta »
+  "dürüm pitta/kebab": U('1664455248787-bed872761fa2'), // mot-clé « kebab »
+  "kapsalon kebab": U('1708782342481-5907b4da60ad'), // mot-clé « kebab »
+  "assiette kebab/pitta": U('1710913585547-3fc546b6ddd0'), // mot-clé « kebab »
+  "bicky hamburger": U('1571091718767-18b5b1457add'), // mot-clé « hamburger »
+  "salade nature": U('1600335895229-6e75511892c8'), // mot-clé « salade »
+  "dürüm poulet mariné": U('1760888548893-bc2f7e09e972'), // mot-clé « poulet »
+  "kapsalon poulet": U('1684262388062-b9c20672a0e0'), // mot-clé « poulet »
+  "bicky cheeseburger": U('1571091718767-18b5b1457add'), // mot-clé « cheeseburger »
+  "salade feta": U('1600335895229-6e75511892c8'), // mot-clé « salade »
+  "baklava - 2 pcs": U('1761828122856-8703baac8e86'), // mot-clé « baklava »
+  "menu pain turc": U('1701611516807-1c027db1671c'), // mot-clé « pain »
+  "bicky chicken": U('1607013251379-e6eecfffe234'), // mot-clé « chicken »
+  "salade poulet": U('1646487793655-bbf280273d2f'), // mot-clé « poulet »
+  "menu pita/kebab": U('1743674453093-592bed88018e'), // mot-clé « kebab »
+  "pain turc kebab": U('1772758632504-361aa9d14a19'), // mot-clé « kebab »
+  "salade thon": U('1600335895229-6e75511892c8'), // mot-clé « salade »
+  "dürüm köfte": U('1529006557810-274b9b2fc783'), // mot-clé « köfte »
+  "pain turc poulet": U('1777315387813-12a78fcf22f5'), // mot-clé « poulet »
+  "mitraillette köfte": U('1529006557810-274b9b2fc783'), // mot-clé « köfte »
+  "kapsalon köfte": U('1529006557810-274b9b2fc783'), // mot-clé « köfte »
+  "menu bicky": U('1610440042657-612c34d95e9f'), // mot-clé « bicky »
+  "pain turc boeuf": U('1745126009946-1b35b1a16fec'), // mot-clé « pain »
+  "köfte": U('1529006557810-274b9b2fc783'), // mot-clé « köfte »
+  "pain supplémentaire": U('1608198093002-ad4e005484ec'), // mot-clé « pain »
+  "dürüm mexicano": U('1529042410759-befb1204b468'), // mot-clé « mexicano »
+  "mitraillette mexicano": U('1529042410759-befb1204b468'), // mot-clé « mexicano »
+  "dürüm poulycroc": U('1607013251379-e6eecfffe234'), // mot-clé « poulycroc »
+  "falafel - 5 pcs": U('1593001872095-7d5b3868fb1d'), // mot-clé « falafel »
+  "nuggets - 6 pcs": U('1619881590738-a111d176d906'), // mot-clé « nuggets »
+  "glace tourbillon popcorn caramel": U('1636564499112-6113e73c504a'), // mot-clé « popcorn »
+  "moyenne frite": U('1573080496219-bb080dd4f877'), // mot-clé « frite »
+  "sprite zero": U('1621330716555-5cad596c4562'), // mot-clé « sprite »
+  "curry": U('1543353071-873f17a7a088'), // mot-clé « curry »
+  "lipton ice tea zero": U('1499638673689-79a0b5115d87'), // mot-clé « ice tea »
+  "chicken bacon burger": U('1586190848861-99aa4a171e90'), // mot-clé « bacon burger »
+  "petit filet de poisson": U('1579208030886-b937da0925dc'), // mot-clé « poisson »
+  "pommes": U('1519996529931-28324d5a630e'), // mot-clé « pommes »
+  "fristi": U('1550583724-b2692b85b150'), // mot-clé « fristi »,
+
+  // --- Plats des commerçants en production (suite) : noms sans mot-clé, photos cherchées une à une ---
+  "baguette dinde-crudités": U('1705537459006-f4acbd93c5a3'),
+  "baguette brie-tomates séchées": U('1639744093483-86714cd62a3b'),
+  "assortiment de bruschette (4 pcs)": U('1506280754576-f6fa8a873550'),
+  "assortiment de mini-desserts (12 pcs)": U('1780397421668-096302f05715'),
+  "blanquette de veau familiale (6 pers.)": U('1697155406127-76096502d69d'),
+  "crumble familial, grand plat": U('1696629958314-3d1cf2cbce69'),
+  "couscous familial (6 pers.)": U('1661083098412-054431ab7112'),
+  "coupe glacée géante à partager (2-4 pers.)": U('1635491231222-8e524584da52'),
+  "assiette de fromages à partager": U('1627935722051-395636b0d8a5'),
+  "paella familiale (6 pers.)": U('1623961990059-28356e226a77'),
+  "gratin dauphinois et rôti de porc, format familial (6 pers.)": U('1768204039572-9e62db7b39fd'),
+  "galette de légumineuses, sauce tahini": U('1630156948734-9f84d5ce6aee'),
+  "mousse à l'avocat et cacao": U('1644797591725-09b2f20177dd'),
+  "purée de patate douce": U('1633436375153-d7045cb93e38'),
+  "crumble aux fruits rouges sans gluten": U('1773399159524-8bb2293c5144'),
+  "filet de dorade, sauce citronnée": U('1644784643137-b9073dd262f6'),
+  "fruit frais": U('1659821638991-c43fc142ec14'),
+  "tortilla española": U('1788462613199-779ba2bf4b70'),
+  "jamón serrano (planche)": U('1524438418049-ab2acb7aa48f'),
+  "paella de mariscos (par pers., min. 2)": U('1623961990059-28356e226a77'),
+  "arroz negro": U('1772729310482-a3192476a714'),
+  "flan casero": U('1752245055475-8b7c3b4756ac'),
+  "ensaladilla rusa": U('1757715375767-35ddb5ca9118'),
+  "queso manchego mariné": U('1623855244697-5d8fbe9c7892'),
+  "empanadas (3 pcs)": U('1624128082323-beb6b8b508db'),
+  "anguilles au vert": U('1786201188616-d40ca9185ae6'),
+  "grimbergen blonde": U('1618183479302-1e0aa382c36b'),
+  "bánh mì porc": U('1715925717150-2a6d181d8846'),
+  "bœuf sauté aux oignons": U('1664138788119-bd4f073259d5'),
+  "chè (dessert de haricots sucrés)": U('1596723455658-72ebb0d12edd'),
+  "phở végétarien": U('1533787761082-492a5b83e614'),
+  "bánh mì végétarien": U('1700937244987-92488ab2ada5'),
+  "bánh mì bœuf": U('1715925717159-92e29c32ad06'),
+  "sopes (2 pcs)": U('1644085128237-9ba593123ac3'),
+  "enchiladas verdes": U('1636777408340-e053c0b5ba2a'),
+  "frappuccino": U('1572490122747-3968b75cc699'),
+  "bagel avocat": U('1727245243403-b177f3670c2e'),
+  "ristretto": U('1572286258217-40142c1c6a70'),
+  "scone confiture": U('1630940083223-0e18f416670c'),
+  "menu dürüm": U('1580121676785-ea9ca33e3fb2'),
+  "sauce au choix": U('1518013431117-eb1465fa5752'),
+  "soft 33 cl": U('1554866585-cd94860890b7'),
+  "menu mitraillette": U('1753798130695-3c060be80e83'),
+  "eau 50 cl": U('1534616042650-80f5c9b61f09'),
+  "dürüm boeuf": U('1664455248787-bed872761fa2'),
+  "kapsalon boeuf": U('1717250180703-c3bac5b6af5f'),
+  "assiette boeuf": U('1710913585547-3fc546b6ddd0'),
+  "feta": U('1661349008073-136bed6e6788'),
+  "mitraillette boeuf": U('1753798130695-3c060be80e83'),
+  "kapsalon mixte": U('1708782342481-5907b4da60ad'),
+  "fromage": U('1635407862451-58962c048a76'),
+  "soft 1,5 l": U('1567103472667-6898f3a79cf2'),
+  "menu kapsalon": U('1684262388062-b9c20672a0e0'),
+  "viande supplémentaire": U('1532636875304-0c89119d9b4d'),
+  "dürüm merguez": U('1653983194833-7a10838b12f4'),
+  "mitraillette merguez": U('1676471980189-08de3e001215'),
+  "assiette merguez": U('1598401863352-3de5501f4890'),
+  "gyros pitta": U('1745126009946-1b35b1a16fec'),
 };
 
 // Choix stable (pas aléatoire) d'une photo dans un pool `images`, basé sur le nom du plat — deux plats
