@@ -58,6 +58,15 @@ export default function AdminRestaurantsPage() {
   function askReactivate(r) {
     setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
   }
+  async function deleteRestaurant(r) {
+    const res = await api(`/admin/restaurants/${r.id}`, { method: 'DELETE', token, body: { deleteOwner: true } });
+    setRestaurants((prev) => prev.filter((x) => x.id !== r.id));
+    if (selected?.id === r.id) { setSelected(null); setDetail(null); }
+    toast(res.ownerDeleted ? tr('adminRestos.toastDeletedWithOwner', { n: res.deletedOrders, email: res.ownerEmail || '' }) : tr('adminRestos.toastDeleted', { n: res.deletedOrders }));
+  }
+  function askDelete(r) {
+    setConfirmAction({ title: tr('adminRestos.confirmDelete', { name: r.name }), message: tr('adminRestos.deleteBody', { email: r.ownerEmail || '' }), danger: true, run: () => deleteRestaurant(r).catch((e) => toast(e.message)) });
+  }
 
   async function runConfirmed() {
     if (!confirmAction) return;
@@ -126,6 +135,7 @@ export default function AdminRestaurantsPage() {
               {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
               {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
             </div>
           </div>
         );
@@ -137,6 +147,7 @@ export default function AdminRestaurantsPage() {
           onClose={() => setSelected(null)}
           onSuspend={() => askSuspend(detail)}
           onReactivate={() => askReactivate(detail)}
+          onDelete={() => askDelete(detail)}
           onChanged={refreshDetail}
         />
       )}
@@ -153,7 +164,7 @@ export default function AdminRestaurantsPage() {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onChanged }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -231,6 +242,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
               {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
               {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>
             </div>
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>

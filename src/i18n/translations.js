@@ -660,7 +660,12 @@ export const translations = {
       subscriptionLine: 'Abonnement : {sub} · Mode de livraison : {mode}',
       minutes: '{n} min',
       crmOwnerLine: 'Responsable : {owner} · Source : {source}',
-      convertedOn: 'Converti le {date}'
+      convertedOn: 'Converti le {date}',
+      deleteRestaurant: 'Supprimer définitivement',
+      confirmDelete: 'Supprimer définitivement {name} ?',
+      deleteBody: 'Le restaurant, sa carte, ses tables, toutes ses commandes et réservations, ses avis et ses factures de commission seront effacés. Le compte du restaurateur ({email}) est supprimé aussi s\'il n\'a pas d\'autre commerce. Les écritures comptables sont conservées mais détachées. Irréversible.',
+      toastDeleted: 'Restaurant supprimé ({n} commande(s) effacée(s)).',
+      toastDeletedWithOwner: 'Restaurant et compte {email} supprimés ({n} commande(s) effacée(s)).'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -3543,7 +3548,12 @@ export const translations = {
       subscriptionLine: 'Subscription: {sub} · Delivery mode: {mode}',
       minutes: '{n} min',
       crmOwnerLine: 'Owner: {owner} · Source: {source}',
-      convertedOn: 'Converted on {date}'
+      convertedOn: 'Converted on {date}',
+      deleteRestaurant: 'Delete permanently',
+      confirmDelete: 'Permanently delete {name}?',
+      deleteBody: 'The restaurant, its menu, tables, all its orders and reservations, reviews and commission invoices will be erased. The owner account ({email}) is deleted too if it has no other business. Accounting entries are kept but detached. This cannot be undone.',
+      toastDeleted: 'Restaurant deleted ({n} order(s) erased).',
+      toastDeletedWithOwner: 'Restaurant and account {email} deleted ({n} order(s) erased).'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -6426,7 +6436,12 @@ export const translations = {
       subscriptionLine: 'Abonnement: {sub} · Leveringswijze: {mode}',
       minutes: '{n} min',
       crmOwnerLine: 'Verantwoordelijke: {owner} · Bron: {source}',
-      convertedOn: 'Omgezet op {date}'
+      convertedOn: 'Omgezet op {date}',
+      deleteRestaurant: 'Definitief verwijderen',
+      confirmDelete: '{name} definitief verwijderen?',
+      deleteBody: 'Het restaurant, zijn kaart, tafels, alle bestellingen en reserveringen, beoordelingen en commissiefacturen worden gewist. Het account van de uitbater ({email}) wordt ook verwijderd als het geen andere zaak heeft. Boekhoudkundige boekingen blijven bewaard maar losgekoppeld. Onomkeerbaar.',
+      toastDeleted: 'Restaurant verwijderd ({n} bestelling(en) gewist).',
+      toastDeletedWithOwner: 'Restaurant en account {email} verwijderd ({n} bestelling(en) gewist).'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
