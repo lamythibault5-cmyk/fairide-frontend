@@ -1,11 +1,14 @@
 import { useOutletContext } from 'react-router-dom';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
+import TrackingWithGames from '../../components/TrackingWithGames';
 import { orderTypeLabel, orderTypeColor } from '../../orderStatus';
 
-// Suivi en direct des livraisons en cours (livreur à deux roues en route vers le client),
-// pour que le commerçant puisse voir où en est chaque livraison sans appeler le livreur.
+// Suivi en direct des livraisons en cours (livreur à deux roues en route vers le client), pour que le
+// commerçant puisse voir où en est chaque livraison sans appeler le livreur. Même bloc carte + jeux que
+// chez le client (TrackingWithGames) : on peut laisser l'écran ouvert au comptoir et voir la livraison
+// avancer sans rester planté devant. Sans livraison : le commerce, seul, sur la carte.
 export default function MapPage() {
-  const { orders } = useOutletContext();
+  const { orders, restaurant } = useOutletContext();
 
   const inDelivery = (orders || []).filter(
     (o) => o.status === 'livraison' && o.orderType === 'delivery' && o.restaurantLat && o.deliveryLat
@@ -15,10 +18,20 @@ export default function MapPage() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Carte</h2>
       <p className="small" style={{ marginBottom: 16 }}>
-        Suis en direct tes livraisons en cours : la position de ton livreur (vélo, scooter...) et le trajet jusqu'au client.
+        Suis en direct tes livraisons en cours : la position du livreur, le trajet qu'il lui reste et son heure d'arrivée estimée chez le client.
       </p>
       {inDelivery.length === 0 ? (
-        <div className="empty">Aucune livraison en cours pour le moment.</div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="empty" style={{ marginBottom: 10 }}>Aucune livraison en cours pour le moment — mais les jeux restent jouables !</div>
+          <TrackingWithGames
+            role="restaurant"
+            legende={`${restaurant?.lat ? 'Voici ton commerce. ' : ''}Dès qu'un livreur part avec une commande, il apparaît ici en direct.`}
+            etaSansEstimation="⏳ Aucune livraison en cours"
+            rendreCarte={({ height, onEta }) => (
+              <DeliveryTrackingMap height={height} onEta={onEta} homeLat={restaurant?.lat} homeLng={restaurant?.lng} homeLabel="Ton commerce" homeEmoji="🏪" homeColor="#3B2FB5" />
+            )}
+          />
+        </div>
       ) : (
         inDelivery.map((o) => (
           <div className={`card order-type-${orderTypeColor(o)}`} key={o.id} style={{ marginBottom: 16 }}>
@@ -30,16 +43,21 @@ export default function MapPage() {
             {o.driverName && (
               <div className="small">🛵 {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</div>
             )}
-            <div style={{ margin: '10px 0' }}>
-              <DeliveryTrackingMap
-                restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
-                deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
-                driverLat={o.driverLat} driverLng={o.driverLng}
-              />
-              <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-                {o.driverLat ? 'Position du livreur en direct' : 'En attente de la position du livreur'}
-              </div>
-            </div>
+            <TrackingWithGames
+              role="restaurant"
+              legende={o.driverLat ? `🛵 Position de ${o.driverName || 'ton livreur'} en direct` : 'En attente de la position du livreur'}
+              etaSansEstimation={o.driverLat ? '🛵 Livreur en route' : '⏳ En attente du livreur'}
+              rendreCarte={({ height, onEta }) => (
+                <DeliveryTrackingMap
+                  restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
+                  deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
+                  driverLat={o.driverLat} driverLng={o.driverLng}
+                  lastUpdatedAt={o.driverLocationUpdatedAt}
+                  legendeDestination="Client"
+                  height={height} onEta={onEta}
+                />
+              )}
+            />
           </div>
         ))
       )}

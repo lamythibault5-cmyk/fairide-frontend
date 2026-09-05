@@ -8,20 +8,36 @@ import { JEUX } from './jeux/jeux';
 // est toujours celui du jeu affiché, pas un par onglet — six petits livres côte à côte ne se liraient
 // pas.
 //
+// `pourquoi` : une phrase qui explique ce que des jeux font sur une carte de livraison (rester devant la
+// carte sans attendre pour rien, voir le livreur arriver). Derrière un 💡 : la personne qui se pose la
+// question la trouve, celle qui ne se la pose pas n'a pas un paragraphe sous les yeux.
 // `fill` : le cadre prend toute la place de son conteneur (plein écran, carte masquée). Sinon la
 // taille est fixe, pensée pour la colonne à côté de la carte.
 const CLE_INDEX = 'fairide_game_switcher_index';
 
-export default function GameSwitcher({ width = 140, height = 280, fill = false, large = false }) {
+export default function GameSwitcher({ width = 140, height = 280, fill = false, large = false, pourquoi }) {
   const [index, setIndex] = useState(() => {
     const sauve = Number(localStorage.getItem(CLE_INDEX));
     return Number.isInteger(sauve) && sauve >= 0 && sauve < JEUX.length ? sauve : 0;
   });
+  const [pourquoiOuvert, setPourquoiOuvert] = useState(false);
   function choisir(i) { setIndex(i); try { localStorage.setItem(CLE_INDEX, String(i)); } catch { /* sans stockage, le choix vaut pour la page */ } }
   const jeu = JEUX[index];
 
   return (
     <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}`}>
+      {pourquoi && (
+        <div className="game-switcher-entete">
+          <span className="game-switcher-entete-titre">🎮 Mini-jeux</span>
+          <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label="Pourquoi des jeux ?" title="Pourquoi des jeux ?">💡</button>
+        </div>
+      )}
+      {pourquoi && pourquoiOuvert && (
+        <div className="game-switcher-pourquoi-bulle" role="note">
+          <b>💡 Pourquoi des jeux ?</b> {pourquoi}
+          <button type="button" className="game-switcher-pourquoi-ok" onClick={() => setPourquoiOuvert(false)}>Compris</button>
+        </div>
+      )}
       <div className="game-switcher-picker" role="tablist" aria-label="Choisir un mini-jeu">
         {JEUX.map((g, i) => (
           <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label} — ${g.sub}`}

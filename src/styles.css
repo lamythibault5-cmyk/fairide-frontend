@@ -1588,6 +1588,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 /* Sélecteur de jeu : six onglets emoji au-dessus du jeu (GameSwitcher.jsx). */
 .game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+/* Compact : largeur fixée à celle du terrain (140px), sinon la bulle 💡 élargirait le bloc à la longueur
+   de sa phrase et écraserait la carte. */
+.game-switcher:not(.game-switcher--large) { width: 140px; }
 .game-switcher-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; }
 .game-switcher-tab {
   display: flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 4px;
@@ -1607,6 +1610,28 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .game-switcher--large .game-switcher-tab-sub { font-size: 10px; color: var(--ink-soft); text-align: center; }
 .game-switcher--large .game-switcher-tab.active .game-switcher-tab-sub { color: rgba(255,255,255,0.85); }
 .game-switcher--fill { flex: 1; min-height: 0; width: 100%; }
+/* En-tête « 🎮 Mini-jeux » + 💡 : pourquoi des jeux sur une carte, en une phrase, pour qui se le demande. */
+.game-switcher-entete { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
+.game-switcher-entete-titre { font-size: 11px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+.game-switcher-pourquoi {
+  width: 26px; height: 26px; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 999px; font-size: 14px; line-height: 1; cursor: pointer;
+  transition: border-color .15s ease, transform .1s ease;
+}
+.game-switcher-pourquoi:hover { border-color: var(--iris); }
+.game-switcher-pourquoi[aria-expanded="true"] { background: var(--iris); border-color: var(--iris); }
+.game-switcher-pourquoi-bulle {
+  width: 100%; padding: 8px 10px; font-size: 11px; line-height: 1.45; color: var(--ink);
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-chip);
+}
+.game-switcher-pourquoi-ok {
+  display: block; margin-top: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;
+  background: var(--lime); color: var(--ink); border: none; border-radius: 6px; cursor: pointer;
+}
+.game-switcher--large .game-switcher-entete-titre { font-size: 14px; }
+.game-switcher--large .game-switcher-pourquoi { width: 34px; height: 34px; font-size: 18px; }
+.game-switcher--large .game-switcher-pourquoi-bulle { font-size: 14px; padding: 12px 14px; }
+.game-switcher--large .game-switcher-pourquoi-ok { font-size: 13px; padding: 7px 14px; margin-top: 8px; }
 @media (max-width: 560px) {
   .game-switcher--large .game-switcher-picker { grid-template-columns: repeat(3, 1fr); gap: 6px; }
   .game-switcher--large .game-switcher-tab { padding: 6px 4px; }

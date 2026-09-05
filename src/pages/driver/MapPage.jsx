@@ -3,6 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
+import TrackingWithGames from '../../components/TrackingWithGames';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
 // pour les deux pages qui partagent la position.
@@ -96,36 +97,56 @@ export default function MapPage() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>Carte</h2>
       <p className="small" style={{ marginBottom: 16 }}>
-        Navigation vers ton prochain arrêt pour chaque course en cours — utilise-la à la place d'une appli de guidage externe.
+        Navigation vers ton prochain arrêt pour chaque course en cours, avec le temps qu'il te reste — utilise-la à la place d'une appli de guidage externe.
       </p>
       {!sharingLocation && (
         <div className="empty" style={{ marginBottom: 16 }}>Active la géolocalisation pour voir le trajet depuis ta position.</div>
       )}
       {active.length === 0 ? (
-        <div className="empty">Aucune course en cours pour le moment.</div>
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="empty" style={{ marginBottom: 10 }}>Aucune course en cours pour le moment — mais les jeux restent jouables !</div>
+          <TrackingWithGames
+            role="driver"
+            legende={position ? 'Te voilà. Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.' : 'Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.'}
+            etaSansEstimation="⏳ Aucune course en cours"
+            rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
+          />
+        </div>
       ) : (
         active.map((o) => {
           const pickedUp = o.status === 'livraison';
           const target = pickedUp
             ? { lat: o.deliveryLat, lng: o.deliveryLng, label: o.address, emoji: '🏠', color: '#C8F03C' }
             : { lat: o.restaurantLat, lng: o.restaurantLng, label: o.restaurantName, emoji: '🏪', color: '#3B2FB5' };
+          const carte = ({ height, onEta }) => (
+            <DriverNavigationMap
+              originLat={position?.lat} originLng={position?.lng}
+              targetLat={target.lat} targetLng={target.lng}
+              targetLabel={target.label} targetEmoji={target.emoji} targetColor={target.color}
+              height={height} onEta={onEta}
+            />
+          );
           return (
             <div className="card" key={o.id} style={{ marginBottom: 16 }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{pickedUp ? 'Vers le client' : 'Vers le restaurant'}</b>
                 <span className="small">{pickedUp ? `📍 ${o.address}` : `🏪 ${o.restaurantName}`}</span>
               </div>
-              <div style={{ margin: '10px 0' }}>
-                {target.lat && target.lng ? (
-                  <DriverNavigationMap
-                    originLat={position?.lat} originLng={position?.lng}
-                    targetLat={target.lat} targetLng={target.lng}
-                    targetLabel={target.label} targetEmoji={target.emoji} targetColor={target.color}
-                  />
-                ) : (
-                  <div className="empty">Adresse non localisée pour cette course.</div>
-                )}
-              </div>
+              {!target.lat || !target.lng ? (
+                <div className="empty" style={{ margin: '10px 0' }}>Adresse non localisée pour cette course.</div>
+              ) : pickedUp ? (
+                // En course, pas de jeux : le livreur roule, la carte seule, en grand.
+                <div style={{ margin: '10px 0' }}>{carte({ height: 320 })}</div>
+              ) : (
+                // Commande pas encore retirée : le livreur attend au restaurant (ou y va). Les jeux servent
+                // à patienter sans quitter la carte — pas à jouer en roulant, la phrase 💡 le rappelle.
+                <TrackingWithGames
+                  role="driver"
+                  legende={o.status === 'pret' ? '✅ Commande prête, à retirer au restaurant' : '⏳ Commande en préparation'}
+                  etaSansEstimation="🏪 Vers le restaurant"
+                  rendreCarte={carte}
+                />
+              )}
             </div>
           );
         })

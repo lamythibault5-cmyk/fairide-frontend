@@ -68,7 +68,10 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
 // « c'est ici qu'on te livrera ».
 // `onEta` (optionnel) : reçoit { minutes, km } à chaque nouvelle estimation, ou null — pour que le
 // parent puisse l'afficher même quand la carte est masquée.
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, onEta, height = 260 }) {
+// `homeLabel`/`homeEmoji`/`homeColor` : le « chez soi » n'est pas le même pour tout le monde — la maison du
+// client, le commerce du restaurateur. `legendeDestination` : ce que la légende appelle l'adresse de
+// livraison (« Toi » pour le client, « Client » pour le restaurateur).
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel = 'Chez toi', homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination = 'Toi', onEta, height = 260 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const restaurantMarkerRef = useRef(null);
@@ -150,7 +153,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       return;
     }
     if (!homeMarkerRef.current) {
-      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: DELIVERY_ICON }).addTo(mapRef.current).bindPopup('Chez toi');
+      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: emojiIcon(homeEmoji, homeColor) }).addTo(mapRef.current).bindPopup(homeLabel);
     } else {
       homeMarkerRef.current.setLatLng([homeLat, homeLng]);
     }
@@ -319,7 +322,9 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       <div className="tracking-map-legend">
         {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#3B2FB5' }}>🏪</span> Restaurant</span>}
         {enLivraison && <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Livreur</span>}
-        <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> {enLivraison ? 'Toi' : 'Chez toi'}</span>
+        {enLivraison
+          ? <span><span className="tracking-map-legend-icon" style={{ background: '#C8F03C' }}>🏠</span> {legendeDestination}</span>
+          : <span><span className="tracking-map-legend-icon" style={{ background: homeColor }}>{homeEmoji}</span> {homeLabel}</span>}
         {hasTrail && <span><span className="tracking-map-legend-line" style={{ background: '#C8F03C' }} /> Trajet parcouru</span>}
       </div>
     </div>

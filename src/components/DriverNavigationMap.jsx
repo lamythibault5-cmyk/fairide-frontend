@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -6,7 +6,11 @@ import 'leaflet/dist/leaflet.css';
 // trajet fixe restaurant → client avec un livreur observé de l'extérieur, celle-ci trace le trajet depuis
 // la position actuelle du livreur (origin) jusqu'à son prochain arrêt (target — le restaurant tant que la
 // commande n'est pas retirée, l'adresse du client une fois retirée), pour remplacer une appli de guidage
-// externe pendant une course.
+// externe pendant une course. Sans arrêt à atteindre (aucune course), elle montre juste le livreur.
+//
+// Le temps d'arrivée vient du même appel OSRM que l'itinéraire (`duration`, en secondes), majoré de 15 %
+// — un scooter en ville ne roule pas comme la voiture d'OSRM. `onEta` (optionnel) le remonte au parent,
+// qui l'affiche même quand la carte est masquée.
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
 function emojiIcon(emoji, bg) {
@@ -25,19 +29,26 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
   const res = await fetch(url);
   if (!res.ok) throw new Error('routing-failed');
   const data = await res.json();
-  const coords = data.routes?.[0]?.geometry?.coordinates;
+  const route = data.routes?.[0];
+  const coords = route?.geometry?.coordinates;
   if (!coords || !coords.length) throw new Error('no-route');
-  return coords.map(([lng, lat]) => [lat, lng]);
+  return { latLngs: coords.map(([lng, lat]) => [lat, lng]), duration: route.duration, distance: route.distance };
 }
 
-export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', height = 280 }) {
+export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280 }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);
   const targetMarkerRef = useRef(null);
   const lineRef = useRef(null);
   const animRef = useRef(null);
+  const boundsRef = useRef(null);
+  // Suivi automatique : la carte se recadre à chaque position. Un glissement du livreur le coupe (il
+  // regarde plus loin sur le trajet) ; « Recentrer » le relance.
+  const autoSuiviRef = useRef(true);
   const targetIconRef = useRef(emojiIcon(targetEmoji, targetColor));
+  const [eta, setEta] = useState(null);
+  const [recentrable, setRecentrable] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -47,6 +58,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       maxZoom: 19
     }).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
+    mapRef.current.on('dragstart', () => { autoSuiviRef.current = false; setRecentrable(true); });
     // Voir RestaurantsMap.jsx : corrige la bande grise Leaflet quand le conteneur change de taille
     // après l'initialisation (police, image, mise en page).
     const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
@@ -55,6 +67,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       resizeObserver.disconnect();
       mapRef.current?.remove();
       mapRef.current = null;
+      originMarkerRef.current = null; targetMarkerRef.current = null; lineRef.current = null; boundsRef.current = null;
     };
   }, []);
 
@@ -66,11 +79,18 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       } else {
         targetMarkerRef.current.setLatLng([targetLat, targetLng]);
       }
+    } else {
+      // Plus d'arrêt à atteindre : on retire la cible, le trajet et l'estimation.
+      if (targetMarkerRef.current) { targetMarkerRef.current.remove(); targetMarkerRef.current = null; }
+      if (lineRef.current) { lineRef.current.remove(); lineRef.current = null; }
+      boundsRef.current = null;
+      setEta(null); onEta?.(null);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetLat, targetLng, targetLabel]);
 
   useEffect(() => {
-    if (!mapRef.current || !originLat || !originLng) return;
+    if (!mapRef.current || !originLat || !originLng) return undefined;
     if (!originMarkerRef.current) {
       originMarkerRef.current = L.marker([originLat, originLng], { icon: ORIGIN_ICON }).addTo(mapRef.current).bindPopup('Toi');
     } else {
@@ -90,29 +110,63 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
       }
     }
 
-    if (!targetLat || !targetLng) return undefined;
+    if (!targetLat || !targetLng) {
+      // Aucune course : juste le livreur, à l'échelle du quartier.
+      if (autoSuiviRef.current) mapRef.current.setView([originLat, originLng], 15);
+      return undefined;
+    }
     const straightLine = [[originLat, originLng], [targetLat, targetLng]];
     if (!lineRef.current) {
       lineRef.current = L.polyline(straightLine, { color: targetColor, weight: 4, dashArray: '6, 8', opacity: 0.7 }).addTo(mapRef.current);
     } else {
       lineRef.current.setLatLngs(straightLine);
     }
-    mapRef.current.fitBounds(L.latLngBounds(straightLine), { padding: [40, 40] });
+    boundsRef.current = L.latLngBounds(straightLine);
+    if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
 
     let cancelled = false;
     fetchStreetRoute(originLat, originLng, targetLat, targetLng)
-      .then((routeLatLngs) => {
+      .then(({ latLngs, duration, distance }) => {
         if (cancelled || !lineRef.current) return;
-        lineRef.current.setLatLngs(routeLatLngs);
+        lineRef.current.setLatLngs(latLngs);
         lineRef.current.setStyle({ dashArray: null, opacity: 0.85 });
-        mapRef.current.fitBounds(L.latLngBounds(routeLatLngs), { padding: [40, 40] });
+        boundsRef.current = L.latLngBounds(latLngs);
+        if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
+        // Jamais moins d'une minute : « 0 min » alors qu'on n'est pas arrivé est un mensonge.
+        const info = { minutes: Math.max(1, Math.round((duration * 1.15) / 60)), km: Math.round(distance / 100) / 10 };
+        setEta(info); onEta?.(info);
       })
       .catch(() => {
-        // OSRM indisponible : on garde la ligne droite en secours
+        // OSRM indisponible : on garde la ligne droite en secours, sans estimation plutôt qu'une fausse
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [originLat, originLng, targetLat, targetLng]);
 
-  return <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />;
+  function recentrer() {
+    autoSuiviRef.current = true; setRecentrable(false);
+    if (!mapRef.current) return;
+    if (boundsRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
+    else if (originLat && originLng) mapRef.current.setView([originLat, originLng], 15);
+  }
+
+  return (
+    <div className="tracking-map-wrap">
+      <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
+      {eta && (
+        <div className="tracking-eta-pill" aria-live="polite">
+          🏁 Arrivée dans <b>~{eta.minutes} min</b> <span className="tracking-eta-km">· {eta.km.toLocaleString('fr-BE')} km</span>
+        </div>
+      )}
+      {recentrable && (
+        <div className="tracking-map-controls">
+          <button type="button" className="tracking-map-follow-driver" onClick={recentrer}>🎯 Recentrer</button>
+        </div>
+      )}
+      <div className="tracking-map-legend">
+        <span><span className="tracking-map-legend-icon" style={{ background: '#14121F' }}>🛵</span> Toi</span>
+        {targetLat && targetLng && <span><span className="tracking-map-legend-icon" style={{ background: targetColor }}>{targetEmoji}</span> {targetLabel || 'Prochain arrêt'}</span>}
+      </div>
+    </div>
+  );
 }
