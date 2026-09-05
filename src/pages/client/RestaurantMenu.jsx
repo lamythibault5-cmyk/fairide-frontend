@@ -16,12 +16,11 @@ import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, DAY_LABELS_FR } from '../../openingHours';
+import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
 import { localizedItem } from '../../menuTranslation';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
-const DAY_RESA = { mon: 'monday', tue: 'tuesday', wed: 'wednesday', thu: 'thursday', fri: 'friday', sat: 'saturday', sun: 'sunday' };
 
 export default function RestaurantMenu() {
   const { id } = useParams();
@@ -221,13 +220,13 @@ export default function RestaurantMenu() {
             </div>
           ) : openStatus.isOpen ? (
             <div style={{ margin: '0 0 10px' }}>
-              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.openNow', { schedule: formatDaySchedule(restaurant.hours, openStatus.todayKey) })}</p>
+              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.openNow', { schedule: formatDaySchedule(restaurant.hours, openStatus.todayKey, t) })}</p>
               <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => setHoursExpanded((v) => !v)}>
                 {hoursExpanded ? t('restoMenuUi.hideHours') : t('restoMenuUi.showHours')}
               </button>
               {hoursExpanded && (
                 <div className="closed-banner-schedule">
-                  {formatFullSchedule(restaurant.hours).map((line) => <span key={line}>{line}</span>)}
+                  {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
                 </div>
               )}
             </div>
@@ -235,14 +234,14 @@ export default function RestaurantMenu() {
             <div className="closed-banner">
               <div className="closed-banner-title">{t('restoMenuUi.currentlyClosed')}</div>
               {openStatus.opensToday ? (
-                <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
+                <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
               ) : (
                 <p className="small" style={{ margin: 0 }}>
-                  {t('restoMenuUi.nextOpening', { day: t(`resa.${DAY_RESA[openStatus.opensDayKey]}`) || DAY_LABELS_FR[openStatus.opensDayKey], schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey) })}
+                  {t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
                 </p>
               )}
               <div className="closed-banner-schedule">
-                {formatFullSchedule(restaurant.hours).map((line) => <span key={line}>{line}</span>)}
+                {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
               </div>
             </div>
           )

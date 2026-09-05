@@ -471,7 +471,7 @@ export default function MenuPage() {
             {t('menuPage.translateIntro')}
           </p>
           <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
-            {translating ? t('menuPage.translating') : '🌍 Traduire ma carte'}
+            {translating ? t('menuPage.translating') : t('menuPage.translateButton')}
           </button>
         </div>
       )}

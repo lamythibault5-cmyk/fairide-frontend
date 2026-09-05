@@ -297,7 +297,7 @@ export default function DashboardLayout() {
                 : t('dashResto.viaStripeResto')}
               action={(
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.complete') : 'Configurer')}
+                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.complete') : t('dashResto.configure'))}
                 </button>
               )}
             />

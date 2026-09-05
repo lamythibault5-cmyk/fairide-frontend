@@ -110,7 +110,7 @@ export default function MapPage() {
             <TrackingWithGames
               role="client"
               legende={o.driverLat ? t('mapClient.livePosition', { name: o.driverName || t('mapClient.yourCourier') }) : t('mapClient.waitingPosition')}
-              etaSansEstimation={o.driverLat ? t('mapClient.courierOnWay') : '⏳ Livreur attendu'}
+              etaSansEstimation={o.driverLat ? t('mapClient.courierOnWay') : t('mapClient.courierAwaited')}
               rendreCarte={({ height, onEta }) => (
                 <DeliveryTrackingMap
                   restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}

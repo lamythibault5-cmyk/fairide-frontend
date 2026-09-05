@@ -94,7 +94,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
   useEffect(() => {
     if (!mapRef.current || !originLat || !originLng) return undefined;
     if (!originMarkerRef.current) {
-      originMarkerRef.current = L.marker([originLat, originLng], { icon: ORIGIN_ICON }).addTo(mapRef.current).bindPopup('Toi');
+      originMarkerRef.current = L.marker([originLat, originLng], { icon: ORIGIN_ICON }).addTo(mapRef.current).bindPopup(t('navMap.you'));
     } else {
       const marker = originMarkerRef.current;
       const start = marker.getLatLng();

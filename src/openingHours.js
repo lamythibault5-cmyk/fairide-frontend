@@ -6,6 +6,14 @@ export const DAY_KEYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 export const DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 export const DAY_LABELS_FR = { mon: 'Lundi', tue: 'Mardi', wed: 'Mercredi', thu: 'Jeudi', fri: 'Vendredi', sat: 'Samedi', sun: 'Dimanche' };
 
+// Libellés dans la langue affichée : `t` vient de useLanguage() (clés hours.*) ; sans t, français.
+export function dayLabel(dayKey, t) {
+  return t ? t(`hours.${dayKey}`) : DAY_LABELS_FR[dayKey];
+}
+function libelle(t, cle, defaut) {
+  return t ? t(`hours.${cle}`) : defaut;
+}
+
 function brusselsParts(date) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Brussels', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false
@@ -96,28 +104,30 @@ function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
 }
 
 // "2h 15min" / "45min" / "moins d'une minute"
-export function formatCountdown(ms) {
+export function formatCountdown(ms, t) {
   const totalMinutes = Math.max(0, Math.round(ms / 60000));
   const h = Math.floor(totalMinutes / 60);
   const m = totalMinutes % 60;
-  if (h === 0 && m === 0) return "moins d'une minute";
+  if (h === 0 && m === 0) return libelle(t, 'lessThanMinute', "moins d'une minute");
   if (h === 0) return `${m}min`;
   if (m === 0) return `${h}h`;
   return `${h}h ${m}min`;
 }
 
-function formatShift(shift) {
-  return `${shift.open}–${shift.close === '00:00' ? 'minuit' : shift.close}`;
+function formatShift(shift, t) {
+  return `${shift.open}–${shift.close === '00:00' ? libelle(t, 'midnight', 'minuit') : shift.close}`;
 }
 
 // "11:30–14:30 et 18:00–22:00" / "Fermé"
-export function formatDaySchedule(hours, dayKey) {
+export function formatDaySchedule(hours, dayKey, t) {
   const shifts = hours && Array.isArray(hours[dayKey]) ? hours[dayKey] : [];
-  if (!shifts.length) return 'Fermé';
-  return shifts.map(formatShift).join(' et ');
+  if (!shifts.length) return libelle(t, 'closed', 'Fermé');
+  return shifts.map((s) => formatShift(s, t)).join(libelle(t, 'and', ' et '));
 }
 
 // Horaires complets de la semaine, une ligne par jour — pour l'affichage "sinon juste son horaire".
-export function formatFullSchedule(hours) {
-  return DAY_ORDER.map((key) => `${DAY_LABELS_FR[key]} : ${formatDaySchedule(hours, key)}`);
+export function formatFullSchedule(hours, t) {
+  return DAY_ORDER.map((key) => `${dayLabel(key, t)} : ${formatDaySchedule(hours, key, t)}`);
 }
+
+import { useLanguage } from './context/LanguageContext';

@@ -72,8 +72,11 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
 // `homeLabel`/`homeEmoji`/`homeColor` : le « chez soi » n'est pas le même pour tout le monde — la maison du
 // client, le commerce du restaurateur. `legendeDestination` : ce que la légende appelle l'adresse de
 // livraison (« Toi » pour le client, « Client » pour le restaurateur).
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel = 'Chez toi', homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination = 'Toi', onEta, height = 260 }) {
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination, onEta, height = 260 }) {
   const { t } = useLanguage();
+  // Libellés par défaut résolus ici (pas dans la signature) : t n'existe qu'à l'intérieur du composant.
+  homeLabel = homeLabel ?? t('trackingMap.home');
+  legendeDestination = legendeDestination ?? t('trackingMap.you');
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const restaurantMarkerRef = useRef(null);

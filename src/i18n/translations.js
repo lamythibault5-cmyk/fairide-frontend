@@ -4,6 +4,19 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    hours: {
+      mon: 'Lundi',
+      tue: 'Mardi',
+      wed: 'Mercredi',
+      thu: 'Jeudi',
+      fri: 'Vendredi',
+      sat: 'Samedi',
+      sun: 'Dimanche',
+      closed: 'Fermé',
+      midnight: 'minuit',
+      and: ' et ',
+      lessThanMinute: 'moins d\'une minute'
+    },
     adminSearch: {
       searching: 'Recherche...',
       phSearch: '🔍 Rechercher...',
@@ -985,7 +998,9 @@ export const translations = {
       yourCourier: 'Ton livreur',
       stale: '⚠️ Aucune nouvelle position depuis {time}. Le suivi peut s\'interrompre si le téléphone du livreur se met en veille.',
       updatedAt: 'Position mise à jour à {time}',
-      lastMoveAt: 'Dernier déplacement observé à {time}'
+      lastMoveAt: 'Dernier déplacement observé à {time}',
+      home: 'Chez toi',
+      you: 'Toi'
     },
     gameFrame: {
       start: '▶️ Commencer',
@@ -1034,7 +1049,9 @@ export const translations = {
       livePosition: '🛵 Position de {name} en direct',
       waitingPosition: 'En attente de la position du livreur',
       courierOnWay: '🛵 Livreur en route',
-      orderNumber: 'Commande #{id}'
+      orderNumber: 'Commande #{id}',
+      courierAwaited: '⏳ Livreur attendu',
+      clientLegend: 'Client'
     },
     reviewsDriver: {
       title: 'Avis',
@@ -1109,7 +1126,8 @@ export const translations = {
       yourCourier: 'ton livreur',
       livePosition: '🛵 Position de {name} en direct',
       waitingPosition: 'En attente de la position du livreur',
-      courierOnWay: '🛵 Livreur en route'
+      courierOnWay: '🛵 Livreur en route',
+      courierAwaited: '⏳ Livreur attendu'
     },
     invoicesClient: {
       title: 'Mes factures',
@@ -1129,7 +1147,9 @@ export const translations = {
       closed: '🔒 Fermé',
       supermarket: 'Supermarché',
       freeFrom: '🚴 Offerte dès {min}€',
-      pageTitle: 'Restaurants et commerces à Bruxelles — Fairide'
+      pageTitle: 'Restaurants et commerces à Bruxelles — Fairide',
+      freeDeliveryPill: '🚴 Livraison offerte',
+      deliveryDiscountPill: '🚴 -{amount}€ livraison'
     },
     restoMenuUi: {
       exceptionalClosure: '🏖️ Fermeture exceptionnelle',
@@ -1350,7 +1370,8 @@ export const translations = {
       typeCart: 'X€ offerts dès Y€ de commande (toute la commande)',
       wholeOrder: 'Toute la commande',
       disable: 'Désactiver',
-      createPromo: 'Créer la promotion'
+      createPromo: 'Créer la promotion',
+      enable: 'Activer'
     },
     menuImport: {
       backToReview: '← Retour à la relecture',
@@ -1518,7 +1539,8 @@ export const translations = {
       chooseStarterDishes: '🍽 Choisir mes plats de départ ({n} suggestions)',
       nSelected: '{n} plat(s) sélectionné(s)',
       applyPanelHelp: 'La photo est déjà celle par défaut de la section "{section}" pour les plats sans photo propre. Tu peux en plus l\'appliquer directement sur des plats précis (utile pour remplacer une photo déjà présente) — décoche ceux à laisser tels quels, ou ignore pour ne rien changer aux plats.',
-      typicalDishes: 'Plats types — {cuisine}'
+      typicalDishes: 'Plats types — {cuisine}',
+      translateButton: '🌍 Traduire ma carte'
     },
     editResto: {
       title: 'Modifier mon restaurant',
@@ -1725,7 +1747,8 @@ export const translations = {
       deliveryAt: '🏁 Livraison : {address}',
       tripEstimate: '🚴 Trajet resto → client : ~{min} min{km}',
       rideFee: 'Course : {fee}€',
-      geoLastSentDot: ' · dernier envoi {time}'
+      geoLastSentDot: ' · dernier envoi {time}',
+      configure: 'Configurer'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -1783,7 +1806,8 @@ export const translations = {
       paymentsToConfigure: 'Paiements à configurer',
       stripeNeedsInfoResto: 'Stripe a besoin d\'informations pour te verser tes paiements',
       viaStripeResto: 'Via Stripe, rapide et sécurisé — sans ça, pas de commandes',
-      complete: 'Compléter'
+      complete: 'Compléter',
+      configure: 'Configurer'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -2764,6 +2788,19 @@ export const translations = {
     }
   },
   en: {
+    hours: {
+      mon: 'Monday',
+      tue: 'Tuesday',
+      wed: 'Wednesday',
+      thu: 'Thursday',
+      fri: 'Friday',
+      sat: 'Saturday',
+      sun: 'Sunday',
+      closed: 'Closed',
+      midnight: 'midnight',
+      and: ' and ',
+      lessThanMinute: 'less than a minute'
+    },
     adminSearch: {
       searching: 'Searching...',
       phSearch: '🔍 Search...',
@@ -3745,7 +3782,9 @@ export const translations = {
       yourCourier: 'Your courier',
       stale: '⚠️ No new position since {time}. Tracking may stop if the courier\'s phone goes to sleep.',
       updatedAt: 'Position updated at {time}',
-      lastMoveAt: 'Last movement seen at {time}'
+      lastMoveAt: 'Last movement seen at {time}',
+      home: 'Your home',
+      you: 'You'
     },
     gameFrame: {
       start: '▶️ Start',
@@ -3794,7 +3833,9 @@ export const translations = {
       livePosition: '🛵 {name}\'s live position',
       waitingPosition: 'Waiting for the courier\'s position',
       courierOnWay: '🛵 Courier on the way',
-      orderNumber: 'Order #{id}'
+      orderNumber: 'Order #{id}',
+      courierAwaited: '⏳ Waiting for a courier',
+      clientLegend: 'Customer'
     },
     reviewsDriver: {
       title: 'Reviews',
@@ -3869,7 +3910,8 @@ export const translations = {
       yourCourier: 'your courier',
       livePosition: '🛵 {name}\'s live position',
       waitingPosition: 'Waiting for the courier\'s position',
-      courierOnWay: '🛵 Courier on the way'
+      courierOnWay: '🛵 Courier on the way',
+      courierAwaited: '⏳ Waiting for a courier'
     },
     invoicesClient: {
       title: 'My invoices',
@@ -3889,7 +3931,9 @@ export const translations = {
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
       freeFrom: '🚴 Free from €{min}',
-      pageTitle: 'Restaurants and businesses in Brussels — Fairide'
+      pageTitle: 'Restaurants and businesses in Brussels — Fairide',
+      freeDeliveryPill: '🚴 Free delivery',
+      deliveryDiscountPill: '🚴 -€{amount} delivery'
     },
     restoMenuUi: {
       exceptionalClosure: '🏖️ Exceptional closure',
@@ -4110,7 +4154,8 @@ export const translations = {
       typeCart: '€X off from €Y of order (whole order)',
       wholeOrder: 'Whole order',
       disable: 'Disable',
-      createPromo: 'Create the promotion'
+      createPromo: 'Create the promotion',
+      enable: 'Enable'
     },
     menuImport: {
       backToReview: '← Back to review',
@@ -4278,7 +4323,8 @@ export const translations = {
       chooseStarterDishes: '🍽 Choose my starter dishes ({n} suggestions)',
       nSelected: '{n} dish(es) selected',
       applyPanelHelp: 'The photo is already the default of the section "{section}" for dishes without their own photo. You can also apply it directly to specific dishes (useful to replace an existing photo) — untick those to leave as they are, or skip to change nothing on the dishes.',
-      typicalDishes: 'Typical dishes — {cuisine}'
+      typicalDishes: 'Typical dishes — {cuisine}',
+      translateButton: '🌍 Translate my menu'
     },
     editResto: {
       title: 'Edit my restaurant',
@@ -4485,7 +4531,8 @@ export const translations = {
       deliveryAt: '🏁 Delivery: {address}',
       tripEstimate: '🚴 Restaurant → customer: ~{min} min{km}',
       rideFee: 'Ride: €{fee}',
-      geoLastSentDot: ' · last sent {time}'
+      geoLastSentDot: ' · last sent {time}',
+      configure: 'Set up'
     },
     dashResto: {
       today: 'Today',
@@ -4543,7 +4590,8 @@ export const translations = {
       paymentsToConfigure: 'Payments to set up',
       stripeNeedsInfoResto: 'Stripe needs information to pay out your earnings',
       viaStripeResto: 'Via Stripe, fast and secure — without it, no orders',
-      complete: 'Complete'
+      complete: 'Complete',
+      configure: 'Set up'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -5524,6 +5572,19 @@ export const translations = {
     }
   },
   nl: {
+    hours: {
+      mon: 'Maandag',
+      tue: 'Dinsdag',
+      wed: 'Woensdag',
+      thu: 'Donderdag',
+      fri: 'Vrijdag',
+      sat: 'Zaterdag',
+      sun: 'Zondag',
+      closed: 'Gesloten',
+      midnight: 'middernacht',
+      and: ' en ',
+      lessThanMinute: 'minder dan een minuut'
+    },
     adminSearch: {
       searching: 'Zoeken...',
       phSearch: '🔍 Zoeken...',
@@ -6505,7 +6566,9 @@ export const translations = {
       yourCourier: 'Je koerier',
       stale: '⚠️ Geen nieuwe positie sinds {time}. De opvolging kan stoppen als de telefoon van de koerier in slaapstand gaat.',
       updatedAt: 'Positie bijgewerkt om {time}',
-      lastMoveAt: 'Laatste beweging gezien om {time}'
+      lastMoveAt: 'Laatste beweging gezien om {time}',
+      home: 'Bij jou thuis',
+      you: 'Jij'
     },
     gameFrame: {
       start: '▶️ Starten',
@@ -6554,7 +6617,9 @@ export const translations = {
       livePosition: '🛵 Live positie van {name}',
       waitingPosition: 'Wacht op de positie van de koerier',
       courierOnWay: '🛵 Koerier onderweg',
-      orderNumber: 'Bestelling #{id}'
+      orderNumber: 'Bestelling #{id}',
+      courierAwaited: '⏳ Wachten op een koerier',
+      clientLegend: 'Klant'
     },
     reviewsDriver: {
       title: 'Beoordelingen',
@@ -6629,7 +6694,8 @@ export const translations = {
       yourCourier: 'je koerier',
       livePosition: '🛵 Live positie van {name}',
       waitingPosition: 'Wacht op de positie van de koerier',
-      courierOnWay: '🛵 Koerier onderweg'
+      courierOnWay: '🛵 Koerier onderweg',
+      courierAwaited: '⏳ Wachten op een koerier'
     },
     invoicesClient: {
       title: 'Mijn facturen',
@@ -6649,7 +6715,9 @@ export const translations = {
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
       freeFrom: '🚴 Gratis vanaf €{min}',
-      pageTitle: 'Restaurants en zaken in Brussel — Fairide'
+      pageTitle: 'Restaurants en zaken in Brussel — Fairide',
+      freeDeliveryPill: '🚴 Gratis levering',
+      deliveryDiscountPill: '🚴 -€{amount} levering'
     },
     restoMenuUi: {
       exceptionalClosure: '🏖️ Uitzonderlijke sluiting',
@@ -6870,7 +6938,8 @@ export const translations = {
       typeCart: '€X korting vanaf €Y bestelling (hele bestelling)',
       wholeOrder: 'Hele bestelling',
       disable: 'Uitschakelen',
-      createPromo: 'Promotie aanmaken'
+      createPromo: 'Promotie aanmaken',
+      enable: 'Activeren'
     },
     menuImport: {
       backToReview: '← Terug naar de controle',
@@ -7038,7 +7107,8 @@ export const translations = {
       chooseStarterDishes: '🍽 Mijn startgerechten kiezen ({n} suggesties)',
       nSelected: '{n} gerecht(en) geselecteerd',
       applyPanelHelp: 'De foto is al de standaardfoto van de sectie "{section}" voor gerechten zonder eigen foto. Je kunt ze bovendien rechtstreeks op bepaalde gerechten toepassen (handig om een bestaande foto te vervangen) — vink af wat je ongemoeid laat, of sla over om niets aan de gerechten te wijzigen.',
-      typicalDishes: 'Typische gerechten — {cuisine}'
+      typicalDishes: 'Typische gerechten — {cuisine}',
+      translateButton: '🌍 Mijn kaart vertalen'
     },
     editResto: {
       title: 'Mijn restaurant wijzigen',
@@ -7245,7 +7315,8 @@ export const translations = {
       deliveryAt: '🏁 Levering: {address}',
       tripEstimate: '🚴 Traject restaurant → klant: ~{min} min{km}',
       rideFee: 'Rit: €{fee}',
-      geoLastSentDot: ' · laatst verzonden {time}'
+      geoLastSentDot: ' · laatst verzonden {time}',
+      configure: 'Instellen'
     },
     dashResto: {
       today: 'Vandaag',
@@ -7303,7 +7374,8 @@ export const translations = {
       paymentsToConfigure: 'Betalingen in te stellen',
       stripeNeedsInfoResto: 'Stripe heeft gegevens nodig om je betalingen uit te keren',
       viaStripeResto: 'Via Stripe, snel en veilig — zonder geen bestellingen',
-      complete: 'Aanvullen'
+      complete: 'Aanvullen',
+      configure: 'Instellen'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',

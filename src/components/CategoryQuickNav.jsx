@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { categoryLabel } from '../menuCategories';
+import { sectionLabel } from '../menuCategories';
 
 // Barre de navigation rapide entre sections du menu (Entrées, Plats, Desserts, Boissons...), fixée en
 // haut de l'écran pendant qu'on parcourt le menu. Met en évidence la section actuellement lue, fait
@@ -16,7 +16,7 @@ import { categoryLabel } from '../menuCategories';
 const ACTIVE_THRESHOLD_PX = 70;
 
 export default function CategoryQuickNav({ categories }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [active, setActive] = useState(categories[0]?.id);
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
@@ -86,7 +86,7 @@ export default function CategoryQuickNav({ categories }) {
             className={active === c.id ? 'active' : ''}
             onClick={() => jumpTo(c.id)}
           >
-            {categoryLabel(c.name, t)}
+            {sectionLabel(c, language, t)}
           </button>
         ))}
       </div>

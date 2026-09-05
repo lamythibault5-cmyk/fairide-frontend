@@ -106,7 +106,7 @@ export default function PromotionsPage() {
             </div>
             <div className="row" style={{ gap: 6 }}>
               <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={togglingId === p.id} onClick={() => toggleActive(p)}>
-                {togglingId === p.id ? '...' : p.active ? t('promosPage.disable') : 'Activer'}
+                {togglingId === p.id ? '...' : p.active ? t('promosPage.disable') : t('promosPage.enable')}
               </button>
               <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={deletingId === p.id} onClick={() => deletePromo(p)}>
                 {deletingId === p.id ? '...' : 'Supprimer'}

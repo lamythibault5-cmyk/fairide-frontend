@@ -28,7 +28,7 @@ const actionLabels = (tr) => ({
   automation_run_triggered: tr('adminHistory.a_manual_run')
 });
 
-function describeDetails(action, details) {
+function describeDetails(action, details, tr) {
   if (!details) return '';
   if (action === 'order_status_override') return `→ ${details.status}`;
   if (action === 'order_driver_reassign') return `→ ${details.driverName}`;
@@ -56,7 +56,7 @@ export default function AdminActionHistory({ actions }) {
       {(!actions || actions.length === 0) && <div className="small" style={{ opacity: 0.6 }}>{tr('adminHistory.none')}</div>}
       {actions && actions.map((a) => (
         <div key={a.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', gap: 8 }}>
-          <span className="small">{actionLabels(tr)[a.action] || a.action} {describeDetails(a.action, a.details)}</span>
+          <span className="small">{actionLabels(tr)[a.action] || a.action} {describeDetails(a.action, a.details, tr)}</span>
           <span className="small" style={{ opacity: 0.5, whiteSpace: 'nowrap' }}>{a.adminEmail} · {fmtDateTime(a.createdAt)}</span>
         </div>
       ))}

@@ -258,7 +258,7 @@ function UsersSubsection({ title, subtitle, groups, departed, emptyText }) {
   );
 }
 
-function statusPill(status) {
+function statusPill(status, tr) {
   if (status === 'approved') return <span className="pill teal">{tr('adminSettings.validated')}</span>;
   if (status === 'blocked') return <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminSettings.blocked')}</span>;
   return <span className="pill">{tr('adminSettings.pendingBadge')}</span>;
@@ -299,9 +299,9 @@ function UserTypeGroup({ type, items, departed }) {
                     {isTestAccount(it.email) && <TestBadge />}
                     {it.phone && <div className="small">📞 {it.phone}</div>}
                     <div className="row" style={{ gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                      {type === 'driver' && statusPill(it.adminStatus)}
+                      {type === 'driver' && statusPill(it.adminStatus, tr)}
                       {type === 'restaurant' && (
-                        it.restaurantName ? <>🏪 {it.restaurantName} {statusPill(it.restaurantAdminStatus)}</> : <span className="small" style={{ opacity: 0.6 }}>{tr('adminSettings.noRestaurantYet')}</span>
+                        it.restaurantName ? <>🏪 {it.restaurantName} {statusPill(it.restaurantAdminStatus, tr)}</> : <span className="small" style={{ opacity: 0.6 }}>{tr('adminSettings.noRestaurantYet')}</span>
                       )}
                     </div>
                   </>

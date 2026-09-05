@@ -7,7 +7,7 @@ const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
 
 export function AuthProvider({ children }) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const toast = useToast();
   const [session, setSession] = useState(() => {
     try {
@@ -31,6 +31,15 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [session]);
+
+  // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
+  // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
+  useEffect(() => {
+    if (!session?.token || !session.user || session.user.language === language) return;
+    api('/auth/me', { method: 'PATCH', token: session.token, body: { language }, logoutOn401: false })
+      .then((user) => setSession((prev) => (prev ? { ...prev, user } : prev)))
+      .catch(() => {});
+  }, [language, session?.token]);
 
   // Session expirée (401 sur une requête authentifiée, voir api.js) : on vide la session, ce qui
   // suffit à renvoyer vers /login puisque ProtectedRoute redirige dès que `user` est nul — pas de

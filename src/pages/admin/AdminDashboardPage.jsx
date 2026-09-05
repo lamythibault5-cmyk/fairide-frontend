@@ -137,6 +137,7 @@ function AlertLine({ to, text }) {
 }
 
 function KpiCard({ label, kpi, format = (v) => v, highlight, invert }) {
+  const { t: tr } = useLanguage();
   const { value, changePct } = kpi;
   const isUp = changePct !== null && changePct > 0;
   const isGood = invert ? !isUp : isUp;

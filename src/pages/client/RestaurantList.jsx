@@ -47,16 +47,16 @@ function offerLabelFor(r) {
 // Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
 // livraison" dans son dashboard) — affiché comme un pill à côté de la commune, pas confondu avec le
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
-function deliveryOfferLabelFor(r) {
-  if (r.freeDelivery) return '🚴 Livraison offerte';
+function deliveryOfferLabelFor(r, t) {
+  if (r.freeDelivery) return t('restoListUi.freeDeliveryPill');
   if (r.freeDeliveryMinOrder != null) return t('restoListUi.freeFrom', { min: r.freeDeliveryMinOrder.toFixed(2) });
-  if (r.deliveryFeeDiscount > 0) return `🚴 -${r.deliveryFeeDiscount.toFixed(2)}€ livraison`;
+  if (r.deliveryFeeDiscount > 0) return t('restoListUi.deliveryDiscountPill', { amount: r.deliveryFeeDiscount.toFixed(2) });
   return null;
 }
 
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const offerLabel = offerLabelFor(r);
-  const deliveryOfferLabel = deliveryOfferLabelFor(r);
+  const deliveryOfferLabel = deliveryOfferLabelFor(r, t);
   const isClosed = r.hours && !getOpenStatus(r.hours, new Date(), r.closures).isOpen;
   return (
     <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>

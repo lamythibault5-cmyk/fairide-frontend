@@ -241,7 +241,7 @@ export default function DriverDashboard() {
               : t('dashDriver.viaStripe')}
             action={(
               <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : 'Configurer')}
+                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.configure'))}
               </button>
             )}
           />

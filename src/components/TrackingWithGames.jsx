@@ -29,6 +29,7 @@ function useLargeurFenetre() {
 }
 
 export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300 }) {
+  const { t } = useLanguage();
   const [pleinEcran, setPleinEcran] = useState(false);
   const empile = useLargeurFenetre() <= EMPILE_BREAKPOINT;
   return (

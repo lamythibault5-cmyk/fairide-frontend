@@ -1,4 +1,4 @@
-import { DAY_ORDER, DAY_LABELS_FR } from '../openingHours';
+import { DAY_ORDER, dayLabel } from '../openingHours';
 import { useLanguage } from '../context/LanguageContext';
 
 const MAX_SHIFTS_PER_DAY = 5;
@@ -52,7 +52,7 @@ export default function OpeningHoursEditor({ value, onChange }) {
         return (
           <div key={day} className="opening-hours-day-row">
             <div className="opening-hours-day-header">
-              <span className="opening-hours-day-label">{DAY_LABELS_FR[day]}</span>
+              <span className="opening-hours-day-label">{dayLabel(day, t)}</span>
               <label className="opening-hours-closed-toggle">
                 <input type="checkbox" checked={closed} onChange={(e) => toggleClosed(day, e.target.checked)} />
                 {t('hoursEditor.closed')}

@@ -198,7 +198,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           <div className="jeu-overlay">
             <div className="jeu-carte">
               <span className="jeu-titre">{jeu.emoji} {jeu.label}</span>
-              <span className="jeu-sous">{jeu.sub}</span>
+              <span className="jeu-sous">{tJeu(t, jeu, 'sub', jeu.sub)}</span>
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
               <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
             </div>

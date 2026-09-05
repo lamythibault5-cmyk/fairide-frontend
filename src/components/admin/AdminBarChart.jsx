@@ -1,7 +1,9 @@
 // Graphique en barres maison, sans dépendance (aucune lib de charts dans le projet, bundle déjà signalé
+import { useLanguage } from '../../context/LanguageContext';
 // comme gros par le build) — juste assez pour visualiser une série journalière (commandes/GMV/revenu) sur
 // le dashboard et la page Finance. `data` : [{ label, value }]. `formatValue` formate l'infobulle/l'axe.
 export default function AdminBarChart({ data, formatValue = (v) => v, color = 'var(--teal)', height = 140 }) {
+  const { t: tr } = useLanguage();
   if (!data || data.length === 0) {
     return <div className="empty" style={{ padding: '24px 0' }}>{tr('adminCommon.noDataPeriod')}</div>;
   }

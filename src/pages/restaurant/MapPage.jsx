@@ -48,14 +48,14 @@ export default function MapPage() {
             <TrackingWithGames
               role="restaurant"
               legende={o.driverLat ? t('mapResto.livePosition', { name: o.driverName || t('mapResto.yourCourier') }) : t('mapResto.waitingPosition')}
-              etaSansEstimation={o.driverLat ? t('mapResto.courierOnWay') : '⏳ Livreur attendu'}
+              etaSansEstimation={o.driverLat ? t('mapResto.courierOnWay') : t('mapResto.courierAwaited')}
               rendreCarte={({ height, onEta }) => (
                 <DeliveryTrackingMap
                   restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
                   deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
                   driverLat={o.driverLat} driverLng={o.driverLng}
                   lastUpdatedAt={o.driverLocationUpdatedAt}
-                  legendeDestination="Client"
+                  legendeDestination={t('mapResto.clientLegend')}
                   height={height} onEta={onEta}
                 />
               )}

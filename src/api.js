@@ -1,3 +1,5 @@
+import { getLanguage } from './context/LanguageContext';
+
 export const API_BASE = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 
 // Erreur enrichie du code HTTP : jusqu'ici toute réponse non-OK devenait un Error générique, ce qui
@@ -42,7 +44,9 @@ function handleResponse(res, data, hadToken, logoutOn401) {
 }
 
 export async function api(path, { method = 'GET', body, token, logoutOn401 = true } = {}) {
-  const headers = { 'Content-Type': 'application/json' };
+  // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
+  // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
+  const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
   if (token) headers.Authorization = 'Bearer ' + token;
   let res;
   try {

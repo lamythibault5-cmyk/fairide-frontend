@@ -1,4 +1,4 @@
-import { categoryEmoji, categoryImage, categoryLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
+import { categoryEmoji, categoryImage, sectionLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
 
@@ -45,7 +45,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, hideAdd })
       {sections.map((section) => {
         const items = menu.filter((i) => (i.category || 'plat') === section.name);
         if (!items.length) return null;
-        const label = categoryLabel(section.name, t);
+        const label = sectionLabel(section, language, t);
         const image = section.imageUrl || categoryImage(section.name);
         const subsectionGroups = groupBySubsection(items, section.name, t);
         return (

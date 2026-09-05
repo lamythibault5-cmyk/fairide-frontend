@@ -10,6 +10,17 @@ export const CATEGORIES = [
 // Ne traduit que les 4 catégories par défaut (clés internes stables) — une section personnalisée
 // tapée par le restaurateur (ex. "Nos spécialités") est stockée telle quelle et doit s'afficher
 // telle quelle, pas comme une clé i18n cassée (menuCategories.category.Nos spécialités).
+// Libellé d'une section telle que renvoyée par l'API ({ name, translations: { en, nl } }) dans la
+// langue affichée : les 4 sections par défaut passent par les clés i18n, une section personnalisée
+// (« Nos burgers ») par la traduction produite avec la carte (POST /menu/translate, voir
+// restaurant_sections.translations côté backend), à défaut par son nom d'origine.
+export function sectionLabel(section, language, t) {
+  if (!section) return '';
+  const tr = section.translations?.[language];
+  if (typeof tr === 'string' && tr.trim() && !CATEGORIES.some((c) => c.value === section.name)) return tr;
+  return categoryLabel(section.name, t);
+}
+
 export function categoryLabel(value, t) {
   const isDefault = CATEGORIES.some((c) => c.value === value);
   if (t && isDefault) return t(`menuCategories.category.${value}`);
