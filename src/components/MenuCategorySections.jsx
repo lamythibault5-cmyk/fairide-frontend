@@ -20,6 +20,8 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
       <div className="name">
         {name}
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}🌿</span>}
+        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
       </div>
       <div className="small desc">{item.available === false ? t('menuCategories.unavailable') : desc}</div>
       <div className="bottom-row">

@@ -27,6 +27,8 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [imageUrl, setImageUrl] = useState(item.imageUrl || '');
   const [suggestAtCheckout, setSuggestAtCheckout] = useState(!!item.suggestAtCheckout);
   const [healthy, setHealthy] = useState(!!item.healthy);
+  const [organic, setOrganic] = useState(!!item.organic);
+  const [vegan, setVegan] = useState(!!item.vegan);
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -45,7 +47,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
       // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
@@ -179,6 +181,14 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             <input type="checkbox" style={{ width: 'auto' }} checked={healthy} onChange={(e) => setHealthy(e.target.checked)} />
             <span className="small">{t('menuItem.healthyLabel')}</span>
           </label>
+          <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 6 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={organic} onChange={(e) => setOrganic(e.target.checked)} />
+            <span className="small">{t('menuItem.organicLabel')}</span>
+          </label>
+          <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 6 }}>
+            <input type="checkbox" style={{ width: 'auto' }} checked={vegan} onChange={(e) => setVegan(e.target.checked)} />
+            <span className="small">{t('menuItem.veganLabel')}</span>
+          </label>
         </div>
         {categoryKind(category) && (
           <div className="field">
@@ -260,6 +270,8 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       <div className="name">
         {item.name}
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
+        {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}🌿</span>}
+        {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
       </div>
       <div className="small desc">
         {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}

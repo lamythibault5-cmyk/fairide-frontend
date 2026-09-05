@@ -1837,7 +1837,9 @@ export const translations = {
       moveDish: 'Déplacer ce plat',
       fixedByYou: ' · corrigé par toi',
       suggestedPhotos: 'Photos suggérées — {section}',
-      translations: 'Traductions ({langs})'
+      translations: 'Traductions ({langs})',
+      organicLabel: '🌿 Plat bio (ingrédients issus de l\'agriculture biologique) — fait apparaître le restaurant dans la rangée « Bio » de l\'accueil',
+      veganLabel: '🌱 Plat vegan (aucun produit d\'origine animale) — fait apparaître le restaurant dans la rangée « Vegan » de l\'accueil'
     },
     menuPage: {
       translateTitle: '🌍 Traduire ma carte',
@@ -2672,7 +2674,9 @@ export const translations = {
         Autre: 'Autre'
       },
       unavailable: 'Indisponible pour le moment',
-      healthy: 'Plat healthy'
+      healthy: 'Plat healthy',
+      organic: 'Plat bio',
+      vegan: 'Plat vegan'
     },
     restaurantList: {
       searchPlaceholder: 'Chercher un restaurant ou un plat',
@@ -2689,7 +2693,9 @@ export const translations = {
       sectionOffers: 'Offres',
       sectionDiscover: 'À découvrir',
       sectionHealthy: 'Healthy',
-      sectionGrocery: 'Supermarchés'
+      sectionGrocery: 'Supermarchés',
+      sectionBio: 'Bio',
+      sectionVegan: 'Vegan'
     },
     map: {
       home: 'Chez toi',
@@ -5006,7 +5012,9 @@ export const translations = {
       moveDish: 'Move this dish',
       fixedByYou: ' · fixed by you',
       suggestedPhotos: 'Suggested photos — {section}',
-      translations: 'Translations ({langs})'
+      translations: 'Translations ({langs})',
+      organicLabel: '🌿 Organic dish (organically grown ingredients) — lists the restaurant in the “Organic” row of the home page',
+      veganLabel: '🌱 Vegan dish (no animal products) — lists the restaurant in the “Vegan” row of the home page'
     },
     menuPage: {
       translateTitle: '🌍 Translate my menu',
@@ -5841,7 +5849,9 @@ export const translations = {
         Autre: 'Other'
       },
       unavailable: 'Currently unavailable',
-      healthy: 'Healthy dish'
+      healthy: 'Healthy dish',
+      organic: 'Organic dish',
+      vegan: 'Vegan dish'
     },
     restaurantList: {
       searchPlaceholder: 'Search for a restaurant or a dish',
@@ -5858,7 +5868,9 @@ export const translations = {
       sectionOffers: 'Offers',
       sectionDiscover: 'Discover',
       sectionHealthy: 'Healthy',
-      sectionGrocery: 'Grocery stores'
+      sectionGrocery: 'Grocery stores',
+      sectionBio: 'Organic',
+      sectionVegan: 'Vegan'
     },
     map: {
       home: 'Your home',
@@ -8175,7 +8187,9 @@ export const translations = {
       moveDish: 'Dit gerecht verplaatsen',
       fixedByYou: ' · door jou gecorrigeerd',
       suggestedPhotos: 'Voorgestelde foto\'s — {section}',
-      translations: 'Vertalingen ({langs})'
+      translations: 'Vertalingen ({langs})',
+      organicLabel: '🌿 Biologisch gerecht (biologische ingrediënten) — toont het restaurant in de rij “Bio” op de startpagina',
+      veganLabel: '🌱 Veganistisch gerecht (geen dierlijke producten) — toont het restaurant in de rij “Vegan” op de startpagina'
     },
     menuPage: {
       translateTitle: '🌍 Mijn kaart vertalen',
@@ -9010,7 +9024,9 @@ export const translations = {
         Autre: 'Andere'
       },
       unavailable: 'Momenteel niet beschikbaar',
-      healthy: 'Gezond gerecht'
+      healthy: 'Gezond gerecht',
+      organic: 'Biologisch gerecht',
+      vegan: 'Veganistisch gerecht'
     },
     restaurantList: {
       searchPlaceholder: 'Zoek een restaurant of een gerecht',
@@ -9027,7 +9043,9 @@ export const translations = {
       sectionOffers: 'Aanbiedingen',
       sectionDiscover: 'Ontdekken',
       sectionHealthy: 'Healthy',
-      sectionGrocery: 'Supermarkten'
+      sectionGrocery: 'Supermarkten',
+      sectionBio: 'Bio',
+      sectionVegan: 'Vegan'
     },
     map: {
       home: 'Bij jou thuis',

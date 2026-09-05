@@ -199,6 +199,17 @@ export default function RestaurantList() {
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
   // apparaît avant une enseigne dont toute la carte est healthy, alors que les deux sont légitimement
   // dans la section. Les commerces de courses (Supermarchés) sont exclus, ils ont déjà leur section.
+  // Bio et Vegan : la case cochée par le restaurateur (menu_items.organic / .vegan) fait foi ; à défaut,
+  // le nom ou la description du plat suffit (« Burger vegan », « Vin bio ») pour que les rangées vivent
+  // avant que toutes les cartes soient annotées. Un commerce peut apparaître dans plusieurs rangées.
+  const parMention = (test) => nonGrocery
+    .map((r) => ({ r, n: (r.menu || []).filter(test).length }))
+    .filter(({ n }) => n > 0)
+    .sort((a, b) => b.n - a.n)
+    .map(({ r }) => r);
+  const texte = (m) => `${m.name || ''} ${m.desc || ''}`.toLowerCase();
+  const bioList = parMention((m) => m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[^a-zà-ÿ])|organic/i.test(texte(m)));
+  const veganList = parMention((m) => m.vegan || /v[eé]gan/i.test(texte(m)));
   const healthyList = nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
@@ -270,12 +281,14 @@ export default function RestaurantList() {
       )}
       {!loading && view === 'list' && !hasActiveFilter && (
         <>
-          <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
-          <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
-          <Section title={t('restaurantList.sectionHealthy')} icon="🥗" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
-          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} />
+          <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionHealthy')} icon="🥗" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionBio')} icon="🌿" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionVegan')} icon="🌱" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
+          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}
         </>
