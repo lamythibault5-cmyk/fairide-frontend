@@ -11,11 +11,13 @@ import {
   fmtDate, fmtDateTime, useDebouncedValue,
   DOCUMENT_TYPES, DOCUMENT_TYPE_LABELS, DOCUMENT_VERIFICATION_LABELS, DOCUMENT_EXPIRY_LABELS, DOCUMENT_TARGET_TYPE_LABELS
 } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
 
 export default function AdminDocumentsPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -55,33 +57,33 @@ export default function AdminDocumentsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Documents</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminCommon.documents')}</h2>
 
       {!overview && <SkeletonCards count={1} />}
       {overview && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
-          <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">Documents</div></div>
-          <div className="stat-card"><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">Expirés</div></div>
-          <div className="stat-card"><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">Expirent sous {overview.expiryWarningDays} jours</div></div>
-          <div className="stat-card"><div className="num">{overview.pendingVerification}</div><div className="label">En attente de vérification</div></div>
+          <div className="stat-card highlight"><div className="num">{overview.total}</div><div className="label">{tr('adminCommon.documents')}</div></div>
+          <div className="stat-card"><div className="num" style={{ color: overview.expired > 0 ? 'var(--red)' : 'inherit' }}>{overview.expired}</div><div className="label">{tr('adminDocs.expired')}</div></div>
+          <div className="stat-card"><div className="num" style={{ color: overview.expiringSoon > 0 ? 'var(--gold-deep)' : 'inherit' }}>{overview.expiringSoon}</div><div className="label">{tr('adminDocs.expiringWithin', { n: overview.expiryWarningDays })}</div></div>
+          <div className="stat-card"><div className="num">{overview.pendingVerification}</div><div className="label">{tr('adminDocs.pendingVerification')}</div></div>
         </div>
       )}
 
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <input placeholder="Chercher un titre..." value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-        <button className="btn-teal" onClick={() => setShowUpload(true)}>+ Ajouter un document</button>
+        <input placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <button className="btn-teal" onClick={() => setShowUpload(true)}>{tr('adminDocs.addDocumentBtn')}</button>
       </div>
       <div className="row" style={{ gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
         <select value={targetType} onChange={(e) => setTargetType(e.target.value)} style={{ maxWidth: 150 }}>
-          <option value="">Toutes fiches</option>
+          <option value="">{tr('adminDocs.allTargets')}</option>
           {Object.entries(DOCUMENT_TARGET_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
         </select>
         <select value={documentType} onChange={(e) => setDocumentType(e.target.value)} style={{ maxWidth: 170 }}>
-          <option value="">Tous types</option>
+          <option value="">{tr('adminDocs.allTypes')}</option>
           {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</option>)}
         </select>
         <select value={verificationStatus} onChange={(e) => setVerificationStatus(e.target.value)} style={{ maxWidth: 170 }}>
-          <option value="">Toutes vérifications</option>
+          <option value="">{tr('adminDocs.allVerifications')}</option>
           {Object.entries(DOCUMENT_VERIFICATION_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
         <div className="role-pick" style={{ margin: 0 }}>
@@ -92,7 +94,7 @@ export default function AdminDocumentsPage() {
       </div>
 
       {!data && <SkeletonCards count={4} />}
-      {data && data.rows.length === 0 && <div className="empty">Aucun document pour ce filtre.</div>}
+      {data && data.rows.length === 0 && <div className="empty">{tr('adminDocs.noneForFilter')}</div>}
       {data && data.rows.map((d) => (
         <div className="card order-card-clickable" key={d.id} onClick={() => setSelectedId(d.id)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -104,15 +106,15 @@ export default function AdminDocumentsPage() {
           </div>
           <div className="small">{DOCUMENT_TYPE_LABELS[d.documentType]} · {DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} {d.targetName || ''}</div>
           <div className="small" style={{ opacity: 0.6 }}>
-            {d.expiresAt ? `Expire le ${fmtDate(d.expiresAt)} · ` : ''}Ajouté le {fmtDateTime(d.createdAt)}
+            {d.expiresAt ? tr('adminDocs.expiresOnPrefix', { date: fmtDate(d.expiresAt) }) : ''}{tr('adminDocs.addedOn', { date: fmtDateTime(d.createdAt) })}
           </div>
         </div>
       ))}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
-          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)} ({data.total})</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
+          <span className="small">{tr('adminCommon.pageOfCount', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE), n: data.total })}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
         </div>
       )}
 
@@ -123,6 +125,7 @@ export default function AdminDocumentsPage() {
 }
 
 function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTargetId, presetTargetLabel }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [targetType, setTargetType] = useState(presetTargetType || 'restaurant');
@@ -146,16 +149,16 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
   }, [targetType]);
 
   async function upload() {
-    if (!targetId) { toast('Choisis une fiche liée.'); return; }
-    if (!title.trim()) { toast('Titre requis.'); return; }
-    if (!file) { toast('Fichier requis.'); return; }
+    if (!targetId) { toast(tr('adminDocs.toastChooseTarget')); return; }
+    if (!title.trim()) { toast(tr('adminCommon.toastTitleRequired')); return; }
+    if (!file) { toast(tr('adminDocs.toastFileRequired')); return; }
     setUploading(true);
     try {
       await apiUpload('/admin/documents', {
         file, token, fieldName: 'file',
         fields: { targetType, targetId, documentType, title: title.trim(), expiresAt, notes }
       });
-      toast('Document ajouté.');
+      toast(tr('adminDocs.toastAdded'));
       onUploaded();
     } catch (e) {
       toast(e.message);
@@ -167,44 +170,44 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
-        <h3 style={{ margin: '0 0 10px' }}>Ajouter un document</h3>
+        <h3 style={{ margin: '0 0 10px' }}>{tr('adminDocs.addDocument')}</h3>
         {!presetTargetId && (
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>Type de fiche</label>
+              <label>{tr('adminDocs.targetType')}</label>
               <select value={targetType} onChange={(e) => setTargetType(e.target.value)}>
                 {Object.entries(DOCUMENT_TARGET_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
               </select>
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>Fiche</label>
+              <label>{tr('adminDocs.target')}</label>
               {TARGET_TYPES_WITH_PICKER[targetType] ? (
                 <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
-                  <option value="">Choisir...</option>
+                  <option value="">{tr('adminCommon.choose')}</option>
                   {entities && entities.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
                 </select>
               ) : (
-                <input value={targetId} onChange={(e) => setTargetId(e.target.value)} placeholder="ID de la fiche" />
+                <input value={targetId} onChange={(e) => setTargetId(e.target.value)} placeholder={tr('adminDocs.phTargetId')} />
               )}
             </div>
           </div>
         )}
-        {presetTargetId && <p className="small" style={{ margin: '0 0 10px' }}>Lié à : {presetTargetLabel}</p>}
+        {presetTargetId && <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminDocs.linkedTo', { label: presetTargetLabel })}</p>}
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Type de document</label>
+            <label>{tr('adminDocs.documentType')}</label>
             <select value={documentType} onChange={(e) => setDocumentType(e.target.value)}>
               {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</option>)}
             </select>
           </div>
-          <div className="field" style={{ flex: 1 }}><label>Expiration (optionnel)</label><input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminDocs.expiryOptional')}</label><input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></div>
         </div>
-        <div className="field"><label>Titre</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-        <div className="field"><label>Notes (optionnel)</label><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-        <div className="field"><label>Fichier</label><input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
+        <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+        <div className="field"><label>{tr('adminDocs.notesOptional')}</label><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+        <div className="field"><label>{tr('adminDocs.file')}</label><input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={uploading} onClick={upload}>{uploading ? '...' : 'Ajouter'}</button>
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
       </div>
     </div>,
@@ -213,6 +216,7 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
 }
 
 function DocumentDetailModal({ id, onClose, onChanged }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [d, setD] = useState(null);
@@ -235,7 +239,7 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
     setSaving(true);
     try {
       await api(`/admin/documents/${id}`, { method: 'PATCH', token, body: form });
-      toast('Document mis à jour.');
+      toast(tr('adminDocs.toastUpdated'));
       setEditing(false);
       load(); onChanged();
     } catch (e) {
@@ -257,7 +261,7 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
   async function remove() {
     try {
       await api(`/admin/documents/${id}`, { method: 'DELETE', token });
-      toast('Document supprimé.');
+      toast(tr('adminDocs.toastDeleted'));
       onChanged();
       onClose();
     } catch (e) {
@@ -270,18 +274,18 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
-        {!d && <div className="small">Chargement...</div>}
+        {!d && <div className="small">{tr('adminCommon.loading')}</div>}
         {d && !editing && (
           <>
             <h3 style={{ margin: '0 0 8px' }}>{d.title}</h3>
             <p className="small" style={{ margin: '2px 0' }}>{DOCUMENT_TYPE_LABELS[d.documentType]} · {DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} {d.targetName || ''}</p>
-            {d.expiresAt && <p className="small" style={{ margin: '2px 0', color: d.expiryState === 'expired' ? 'var(--red)' : d.expiryState === 'expiring_soon' ? 'var(--gold-deep)' : 'inherit' }}>Expire le {fmtDate(d.expiresAt)}</p>}
+            {d.expiresAt && <p className="small" style={{ margin: '2px 0', color: d.expiryState === 'expired' ? 'var(--red)' : d.expiryState === 'expiring_soon' ? 'var(--gold-deep)' : 'inherit' }}>{tr('adminDocs.expiresOn', { date: fmtDate(d.expiresAt) })}</p>}
             {d.notes && <p className="small" style={{ margin: '2px 0' }}>{d.notes}</p>}
-            <p className="small" style={{ margin: '2px 0', opacity: 0.6 }}>Ajouté par {d.uploadedByEmail} le {fmtDateTime(d.createdAt)}</p>
-            <a href={d.fileUrl} target="_blank" rel="noreferrer" className="btn-outline" style={{ display: 'inline-block', marginTop: 6, padding: '6px 14px', fontSize: 13 }}>📎 Voir le fichier</a>
+            <p className="small" style={{ margin: '2px 0', opacity: 0.6 }}>{tr('adminDocs.addedBy', { email: d.uploadedByEmail, date: fmtDateTime(d.createdAt) })}</p>
+            <a href={d.fileUrl} target="_blank" rel="noreferrer" className="btn-outline" style={{ display: 'inline-block', marginTop: 6, padding: '6px 14px', fontSize: 13 }}>{tr('adminDocs.viewFile')}</a>
 
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>Vérification</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{tr('adminDocs.verification')}</h4>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               {Object.entries(DOCUMENT_VERIFICATION_LABELS).map(([k, v]) => (
                 <button key={k} className="btn-outline" style={{ padding: '4px 10px', fontSize: 12, opacity: d.verificationStatus === k ? 1 : 0.6, borderColor: v.color !== 'inherit' ? v.color : undefined }} onClick={() => setVerification(k)}>
@@ -292,37 +296,37 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
 
             <div className="divider" />
             <div className="row" style={{ gap: 8 }}>
-              <button className="btn-outline" onClick={startEdit}>✏️ Modifier</button>
-              <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>Supprimer</button>
+              <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>
+              <button className="btn-danger-ghost" onClick={() => setConfirmDelete(true)}>{tr('adminCommon.delete')}</button>
               <CreateTaskButton targetType="document" targetId={id} label={d.title} />
             </div>
           </>
         )}
         {d && editing && form && (
           <div>
-            <div className="field"><label>Titre</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.title')}</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>Type</label>
+                <label>{tr('adminCommon.type')}</label>
                 <select value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}>
                   {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</option>)}
                 </select>
               </div>
-              <div className="field" style={{ flex: 1 }}><label>Expiration</label><input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminDocs.expiry')}</label><input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
             </div>
-            <div className="field"><label>Notes</label><textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
-              <button className="btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
+              <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
         )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>Fermer</button>
+        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
       </div>
       <ConfirmDialog
         open={confirmDelete}
-        title="Supprimer ce document ?"
-        message="Cette action est définitive."
+        title={tr('adminCommon.confirmDeleteDocument')}
+        message={tr('adminCommon.irreversible')}
         danger
         onConfirm={remove}
         onCancel={() => setConfirmDelete(false)}

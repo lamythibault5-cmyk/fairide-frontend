@@ -1,31 +1,32 @@
 import { fmtDateTime } from '../../pages/admin/adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
-const ACTION_LABELS = {
-  order_status_override: 'Statut modifié manuellement',
-  order_driver_reassign: 'Livreur réassigné',
-  order_refund: 'Remboursement',
-  restaurant_status_change: 'Statut restaurant modifié',
-  restaurant_edit: 'Informations modifiées',
-  driver_status_change: 'Statut livreur modifié',
-  client_status_change: 'Statut client modifié',
-  note_added: 'Note ajoutée',
-  settings_change: 'Tarification modifiée',
-  crm_prospect_created: 'Prospect créé',
-  crm_prospect_updated: 'Prospect modifié',
-  crm_stage_change: 'Étape CRM modifiée',
-  crm_prospect_converted: 'Converti en partenaire',
-  ticket_created: 'Ticket créé',
-  ticket_updated: 'Ticket modifié',
-  ticket_status_change: 'Statut ticket modifié',
-  ticket_escalated: 'Ticket escaladé',
-  ticket_replied: 'Réponse envoyée',
-  task_created: 'Tâche créée',
-  task_updated: 'Tâche modifiée',
-  task_status_change: 'Statut tâche modifié',
-  task_deleted: 'Tâche supprimée',
-  automation_rule_updated: 'Règle automatisation modifiée',
-  automation_run_triggered: 'Exécution manuelle déclenchée'
-};
+const actionLabels = (tr) => ({
+  order_status_override: tr('adminHistory.a_order_status_changed'),
+  order_driver_reassign: tr('adminHistory.a_driver_reassigned'),
+  order_refund: tr('adminHistory.a_refund'),
+  restaurant_status_change: tr('adminHistory.a_restaurant_status'),
+  restaurant_edit: tr('adminHistory.a_info_updated'),
+  driver_status_change: tr('adminHistory.a_driver_status'),
+  client_status_change: tr('adminHistory.a_client_status'),
+  note_added: tr('adminHistory.a_note_added'),
+  settings_change: tr('adminHistory.a_pricing_updated'),
+  crm_prospect_created: tr('adminHistory.a_prospect_created'),
+  crm_prospect_updated: tr('adminHistory.a_prospect_updated'),
+  crm_stage_change: tr('adminHistory.a_crm_stage'),
+  crm_prospect_converted: tr('adminHistory.a_converted'),
+  ticket_created: tr('adminHistory.a_ticket_created'),
+  ticket_updated: tr('adminHistory.a_ticket_updated'),
+  ticket_status_change: tr('adminHistory.a_ticket_status'),
+  ticket_escalated: tr('adminHistory.a_ticket_escalated'),
+  ticket_replied: tr('adminHistory.a_reply_sent'),
+  task_created: tr('adminHistory.a_task_created'),
+  task_updated: tr('adminHistory.a_task_updated'),
+  task_status_change: tr('adminHistory.a_task_status'),
+  task_deleted: tr('adminHistory.a_task_deleted'),
+  automation_rule_updated: tr('adminHistory.a_automation_updated'),
+  automation_run_triggered: tr('adminHistory.a_manual_run')
+});
 
 function describeDetails(action, details) {
   if (!details) return '';
@@ -38,7 +39,7 @@ function describeDetails(action, details) {
   if (action === 'crm_stage_change') return `→ ${details.stage}${details.lossReason ? ` (${details.lossReason})` : ''}`;
   if (action === 'crm_prospect_converted') return `→ ${details.restaurantName}`;
   if (action === 'ticket_status_change') return `→ ${details.status}`;
-  if (action === 'ticket_escalated') return details.escalated ? `⚠️ ${details.reason || ''}` : 'désescaladé';
+  if (action === 'ticket_escalated') return details.escalated ? `⚠️ ${details.reason || ''}` : tr('adminHistory.deescalated');
   if (action === 'ticket_replied') return `"${details.text}"`;
   if (action === 'task_status_change') return `→ ${details.status}`;
   if (action === 'task_created' || action === 'task_deleted') return details.title ? `"${details.title}"` : '';
@@ -48,13 +49,14 @@ function describeDetails(action, details) {
 // Historique des actions admin, réutilisé sur toutes les fiches — même backend transverse (admin_actions),
 // voir GET /admin/actions.
 export default function AdminActionHistory({ actions }) {
+  const { t: tr } = useLanguage();
   return (
     <div>
-      <h4 style={{ margin: '0 0 8px' }}>🕐 Historique des actions</h4>
-      {(!actions || actions.length === 0) && <div className="small" style={{ opacity: 0.6 }}>Aucune action admin pour l'instant.</div>}
+      <h4 style={{ margin: '0 0 8px' }}>{tr('adminHistory.title')}</h4>
+      {(!actions || actions.length === 0) && <div className="small" style={{ opacity: 0.6 }}>{tr('adminHistory.none')}</div>}
       {actions && actions.map((a) => (
         <div key={a.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', gap: 8 }}>
-          <span className="small">{ACTION_LABELS[a.action] || a.action} {describeDetails(a.action, a.details)}</span>
+          <span className="small">{actionLabels(tr)[a.action] || a.action} {describeDetails(a.action, a.details)}</span>
           <span className="small" style={{ opacity: 0.5, whiteSpace: 'nowrap' }}>{a.adminEmail} · {fmtDateTime(a.createdAt)}</span>
         </div>
       ))}

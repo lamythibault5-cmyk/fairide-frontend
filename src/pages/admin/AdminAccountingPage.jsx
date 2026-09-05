@@ -4,13 +4,15 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { money, pct, fmtDate, fmtDateTime, downloadCsv, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 const TABS = ['Vue d\'ensemble', 'Journal', 'Grand livre', 'Balance', 'TVA', 'Rapprochement', 'Plan comptable'];
-const PERIOD_TYPES = [
-  { key: 'month', label: 'Mois' },
-  { key: 'quarter', label: 'Trimestre' },
-  { key: 'year', label: 'Année' },
-  { key: 'custom', label: 'Personnalisée' }
+const tabLabels = (tr) => ({ "Vue d'ensemble": tr('adminAccounting.tab_overview'), "Journal": tr('adminAccounting.tab_journal'), "Grand livre": tr('adminAccounting.tab_ledger'), "Balance": tr('adminAccounting.tab_balance'), "TVA": tr('adminAccounting.tab_vat'), "Rapprochement": tr('adminAccounting.tab_reconciliation'), "Plan comptable": tr('adminAccounting.tab_chart') });
+const periodTypes = (tr) => [
+  { key: 'month', label: tr('adminCommon.month') },
+  { key: 'quarter', label: tr('adminCommon.quarter') },
+  { key: 'year', label: tr('adminCommon.year') },
+  { key: 'custom', label: tr('adminCommon.custom') }
 ];
 const PAGE_SIZE = 50;
 
@@ -73,7 +75,7 @@ function PeriodPicker(period) {
   return (
     <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
       <div className="role-pick" style={{ margin: 0 }}>
-        {PERIOD_TYPES.map((p) => (
+        {periodTypes(tr).map((p) => (
           <div key={p.key} className={`chip${period.periodType === p.key ? ' active' : ''}`} onClick={() => period.setPeriodType(p.key)}>{p.label}</div>
         ))}
       </div>
@@ -99,6 +101,7 @@ function PeriodPicker(period) {
 }
 
 export default function AdminAccountingPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [tab, setTab] = useState('Vue d\'ensemble');
@@ -110,10 +113,10 @@ export default function AdminAccountingPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Comptabilité</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminAccounting.title')}</h2>
       <PeriodPicker {...period} />
       <div className="role-pick" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
-        {TABS.map((t) => <div key={t} className={`chip${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>{t}</div>)}
+        {TABS.map((t) => <div key={t} className={`chip${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>{tabLabels(tr)[t] || t}</div>)}
       </div>
       {tab === 'Vue d\'ensemble' && <OverviewTab token={token} toast={toast} periodKey={periodKey} />}
       {tab === 'Journal' && <JournalTab token={token} toast={toast} dateFrom={dateFrom} dateTo={dateTo} />}
@@ -127,6 +130,7 @@ export default function AdminAccountingPage() {
 }
 
 function OverviewTab({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -140,21 +144,21 @@ function OverviewTab({ token, toast, periodKey }) {
   return (
     <>
       <div className="stat-grid">
-        <div className="stat-card highlight"><div className="num">{money(data.fairideRevenue)}</div><div className="label">Revenu Fairide (brut)</div></div>
-        <div className="stat-card"><div className="num">{money(data.commission)}</div><div className="label">Commissions restaurants</div></div>
-        <div className="stat-card"><div className="num">{money(data.deliveryShare)}</div><div className="label">Revenus frais de livraison</div></div>
-        <div className="stat-card"><div className="num">{money(data.serviceFee)}</div><div className="label">Frais de service</div></div>
-        <div className="stat-card"><div className="num">{money(data.otherRevenue)}</div><div className="label">Autres charges/revenus</div></div>
-        <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{money(data.refunds)}</div><div className="label">Remboursements</div></div>
-        <div className="stat-card highlight"><div className="num">{money(data.netRevenue)}</div><div className="label">Résultat net Fairide</div></div>
-        <div className="stat-card"><div className="num">{money(data.vatCollected)}</div><div className="label">TVA collectée</div></div>
-        <div className="stat-card"><div className="num">{money(data.restaurantDueBalance)}</div><div className="label">Solde dû restaurants</div></div>
-        <div className="stat-card"><div className="num">{money(data.restaurantPaid)}</div><div className="label">Versé aux restaurants</div></div>
-        <div className="stat-card"><div className="num">{money(data.driverDueBalance)}</div><div className="label">Solde dû livreurs</div></div>
-        <div className="stat-card"><div className="num">{money(data.driverPaid)}</div><div className="label">Versé aux livreurs</div></div>
+        <div className="stat-card highlight"><div className="num">{money(data.fairideRevenue)}</div><div className="label">{tr('adminAccounting.grossRevenue')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.commission)}</div><div className="label">{tr('adminAccounting.restoCommissions')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.deliveryShare)}</div><div className="label">{tr('adminAccounting.deliveryFeeRevenue')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.serviceFee)}</div><div className="label">{tr('adminAccounting.serviceFees')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.otherRevenue)}</div><div className="label">{tr('adminAccounting.otherItems')}</div></div>
+        <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{money(data.refunds)}</div><div className="label">{tr('adminCommon.refunds')}</div></div>
+        <div className="stat-card highlight"><div className="num">{money(data.netRevenue)}</div><div className="label">{tr('adminAccounting.netResult')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.vatCollected)}</div><div className="label">{tr('adminAccounting.vatCollected')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.restaurantDueBalance)}</div><div className="label">{tr('adminAccounting.dueRestaurants')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.restaurantPaid)}</div><div className="label">{tr('adminAccounting.paidRestaurants')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.driverDueBalance)}</div><div className="label">{tr('adminAccounting.dueDrivers')}</div></div>
+        <div className="stat-card"><div className="num">{money(data.driverPaid)}</div><div className="label">{tr('adminAccounting.paidDrivers')}</div></div>
       </div>
       <p className="small" style={{ opacity: 0.6, marginTop: 10 }}>
-        Période : {fmtDate(data.period.start)} — {fmtDate(new Date(new Date(data.period.end).getTime() - 86400000))}. Écritures générées automatiquement à chaque commande payée, remboursement et virement (voir Journal).
+        {tr('adminAccounting.periodLine', { start: fmtDate(data.period.start), end: fmtDate(new Date(new Date(data.period.end).getTime() - 86400000)) })}
       </p>
     </>
   );
@@ -180,6 +184,7 @@ function groupByEcriture(rows) {
 }
 
 function JournalTab({ token, toast, dateFrom, dateTo }) {
+  const { t: tr } = useLanguage();
   const [entryType, setEntryType] = useState('');
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
@@ -199,13 +204,13 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
   }, [entryType, page, dateFrom, dateTo]);
 
   function exportCsv() {
-    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`journal-comptable-${Date.now()}.csv`, data.rows, [
-      { label: 'Date', get: (r) => fmtDateTime(r.date) }, { label: 'Référence', get: (r) => r.reference },
-      { label: 'Type', get: (r) => ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType },
+      { label: tr('adminCommon.date'), get: (r) => fmtDateTime(r.date) }, { label: tr('adminAccounting.reference'), get: (r) => r.reference },
+      { label: tr('adminCommon.type'), get: (r) => ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType },
       { label: 'Compte', get: (r) => `${r.accountCode} ${r.accountName}` },
       { label: 'Restaurant', get: (r) => r.restaurantName || '' }, { label: 'Livreur', get: (r) => r.driverName || '' }, { label: 'Client', get: (r) => r.clientName || '' },
-      { label: 'Débit', get: (r) => r.debit }, { label: 'Crédit', get: (r) => r.credit }, { label: 'TVA', get: (r) => r.vatAmount }, { label: 'Statut', get: (r) => r.status }
+      { label: tr('adminAccounting.debit'), get: (r) => r.debit }, { label: tr('adminAccounting.credit'), get: (r) => r.credit }, { label: 'TVA', get: (r) => r.vatAmount }, { label: 'Statut', get: (r) => r.status }
     ]);
   }
 
@@ -215,10 +220,10 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
         <div className="role-pick" style={{ margin: 0, flexWrap: 'wrap' }}>
           {ENTRY_TYPE_FILTERS.map((f) => <div key={f.key || 'all'} className={`chip${entryType === f.key ? ' active' : ''}`} onClick={() => setEntryType(f.key)}>{f.label}</div>)}
         </div>
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       {!data && <SkeletonCards count={4} />}
-      {data && data.rows.length === 0 && <div className="empty">Aucune écriture.</div>}
+      {data && data.rows.length === 0 && <div className="empty">{tr('adminAccounting.noEntries')}</div>}
       {data && groupByEcriture(data.rows).map((ecriture) => (
         <div className="card" key={ecriture.reference}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -226,7 +231,7 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
             <div className="row" style={{ gap: 8 }}>
               <span className="small" style={{ opacity: 0.6 }}>{fmtDateTime(ecriture.date)}</span>
               <span className="pill" style={{ color: ecriture.balanced ? 'var(--teal-deep)' : 'var(--red)' }}>
-                {ecriture.balanced ? '✅ Équilibrée' : '⚠️ Non équilibrée'}
+                {ecriture.balanced ? tr('adminAccounting.balanced') : tr('adminAccounting.unbalanced')}
               </span>
             </div>
           </div>
@@ -246,15 +251,15 @@ function JournalTab({ token, toast, dateFrom, dateTo }) {
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, paddingTop: 6, borderTop: '1px solid var(--line)', fontWeight: 700, fontSize: 13 }}>
             <span>{[ecriture.lines[0].restaurantName, ecriture.lines[0].driverName, ecriture.lines[0].clientName].filter(Boolean).join(' · ')}</span>
-            <span>Total {money(ecriture.totalDebit)} / <span style={{ color: 'var(--teal-deep)' }}>{money(ecriture.totalCredit)}</span></span>
+            <span>{tr('adminCommon.total')} {money(ecriture.totalDebit)} / <span style={{ color: 'var(--teal-deep)' }}>{money(ecriture.totalCredit)}</span></span>
           </div>
         </div>
       ))}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
-          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)} ({data.total} écritures)</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
+          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE) })} {tr('adminAccounting.entriesCount', { n: data.total })}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
         </div>
       )}
     </>
@@ -267,6 +272,7 @@ const ACCOUNT_KIND_ORDER = ['asset', 'liability', 'vat', 'revenue', 'expense'];
 const ACCOUNT_KIND_LABELS = { revenue: 'Revenu', expense: 'Charge', asset: 'Actif', liability: 'Passif', vat: 'TVA' };
 
 function LedgerTab({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [accounts, setAccounts] = useState(null);
   const [accountCode, setAccountCode] = useState('');
   const [data, setData] = useState(null);
@@ -287,11 +293,11 @@ function LedgerTab({ token, toast, periodKey }) {
   }, [accountCode, periodKey]);
 
   function exportCsv() {
-    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`grand-livre-${data.account.code}-${Date.now()}.csv`, data.rows, [
-      { label: 'Date', get: (r) => fmtDateTime(r.date) }, { label: 'Référence', get: (r) => r.reference },
-      { label: 'Type', get: (r) => ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType },
-      { label: 'Débit', get: (r) => r.debit }, { label: 'Crédit', get: (r) => r.credit }, { label: 'Solde progressif', get: (r) => r.runningBalance }
+      { label: tr('adminCommon.date'), get: (r) => fmtDateTime(r.date) }, { label: tr('adminAccounting.reference'), get: (r) => r.reference },
+      { label: tr('adminCommon.type'), get: (r) => ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType },
+      { label: tr('adminAccounting.debit'), get: (r) => r.debit }, { label: tr('adminAccounting.credit'), get: (r) => r.credit }, { label: tr('adminAccounting.runningBalance'), get: (r) => r.runningBalance }
     ]);
   }
 
@@ -303,26 +309,26 @@ function LedgerTab({ token, toast, periodKey }) {
         <select value={accountCode} onChange={(e) => setAccountCode(e.target.value)} style={{ maxWidth: 320 }}>
           {sortedAccounts.map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
         </select>
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       {!data && <SkeletonCards count={3} />}
       {data && (
         <>
           <div className="stat-grid">
-            <div className="stat-card"><div className="num">{money(data.openingBalance)}</div><div className="label">Solde d'ouverture</div></div>
-            <div className="stat-card"><div className="num">{money(data.totalDebit)}</div><div className="label">Total débit (période)</div></div>
-            <div className="stat-card"><div className="num" style={{ color: 'var(--teal-deep)' }}>{money(data.totalCredit)}</div><div className="label">Total crédit (période)</div></div>
-            <div className="stat-card highlight"><div className="num">{money(data.closingBalance)}</div><div className="label">Solde de clôture</div></div>
+            <div className="stat-card"><div className="num">{money(data.openingBalance)}</div><div className="label">{tr('adminAccounting.openingBalance')}</div></div>
+            <div className="stat-card"><div className="num">{money(data.totalDebit)}</div><div className="label">{tr('adminAccounting.totalDebitPeriod')}</div></div>
+            <div className="stat-card"><div className="num" style={{ color: 'var(--teal-deep)' }}>{money(data.totalCredit)}</div><div className="label">{tr('adminAccounting.totalCreditPeriod')}</div></div>
+            <div className="stat-card highlight"><div className="num">{money(data.closingBalance)}</div><div className="label">{tr('adminAccounting.closingBalance')}</div></div>
           </div>
-          {data.rows.length === 0 && <div className="empty" style={{ marginTop: 14 }}>Aucune écriture sur ce compte pour cette période.</div>}
+          {data.rows.length === 0 && <div className="empty" style={{ marginTop: 14 }}>{tr('adminAccounting.noEntriesAccount')}</div>}
           {data.rows.length > 0 && (
             <div className="table-scroll" style={{ marginTop: 14, overflowX: 'auto' }}>
               <table className="admin-table">
                 <thead>
-                  <tr><th>Date</th><th>Référence</th><th>Type</th><th style={{ textAlign: 'right' }}>Débit</th><th style={{ textAlign: 'right' }}>Crédit</th><th style={{ textAlign: 'right' }}>Solde</th></tr>
+                  <tr><th>{tr('adminCommon.date')}</th><th>{tr('adminAccounting.reference')}</th><th>{tr('adminCommon.type')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.debit')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.credit')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.balance')}</th></tr>
                 </thead>
                 <tbody>
-                  <tr><td colSpan={5} className="small" style={{ opacity: 0.6 }}>Solde d'ouverture</td><td style={{ textAlign: 'right', fontWeight: 700 }}>{money(data.openingBalance)}</td></tr>
+                  <tr><td colSpan={5} className="small" style={{ opacity: 0.6 }}>{tr('adminAccounting.openingBalance')}</td><td style={{ textAlign: 'right', fontWeight: 700 }}>{money(data.openingBalance)}</td></tr>
                   {data.rows.map((r) => (
                     <tr key={r.id}>
                       <td className="small">{fmtDateTime(r.date)}</td>
@@ -344,6 +350,7 @@ function LedgerTab({ token, toast, periodKey }) {
 }
 
 function BalanceTab({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -353,10 +360,10 @@ function BalanceTab({ token, toast, periodKey }) {
   }, [periodKey]);
 
   function exportCsv() {
-    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`balance-comptes-${Date.now()}.csv`, data.rows, [
-      { label: 'Code', get: (r) => r.code }, { label: 'Nom', get: (r) => r.name }, { label: 'Type', get: (r) => ACCOUNT_KIND_LABELS[r.kind] },
-      { label: 'Débit', get: (r) => r.debit }, { label: 'Crédit', get: (r) => r.credit }, { label: 'Solde', get: (r) => r.balance }
+      { label: tr('adminCommon.code'), get: (r) => r.code }, { label: tr('adminCommon.name'), get: (r) => r.name }, { label: tr('adminCommon.type'), get: (r) => ACCOUNT_KIND_LABELS[r.kind] },
+      { label: tr('adminAccounting.debit'), get: (r) => r.debit }, { label: tr('adminAccounting.credit'), get: (r) => r.credit }, { label: tr('adminAccounting.balance'), get: (r) => r.balance }
     ]);
   }
 
@@ -367,29 +374,28 @@ function BalanceTab({ token, toast, periodKey }) {
     <>
       <div className="card" style={{ borderLeft: `3px solid ${data.balanced ? 'var(--teal-deep)' : 'var(--red)'}` }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <b>{data.balanced ? '✅ Le journal est équilibré sur cette période' : '⚠️ Le journal n\'est pas équilibré sur cette période'}</b>
-          <span className="small">Total débit {money(data.totalDebit)} · Total crédit {money(data.totalCredit)}</span>
+          <b>{data.balanced ? tr('adminAccounting.journalBalanced') : tr('adminAccounting.journalUnbalanced')}</b>
+          <span className="small">{tr('adminAccounting.totalsLine', { debit: money(data.totalDebit), credit: money(data.totalCredit) })}</span>
         </div>
         {!data.balanced && (
           <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
-            Écart de {money(Math.abs(data.totalDebit - data.totalCredit))}. Le plus souvent, des écritures postées avant la
-            correction de la TVA (commission/livraison) ou un compte désactivé après coup — voir Journal pour repérer les écritures concernées.
+            {tr('adminAccounting.gapLine', { amount: money(Math.abs(data.totalDebit - data.totalCredit)) })}
           </p>
         )}
       </div>
       <div className="row" style={{ justifyContent: 'flex-end', margin: '10px 0' }}>
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       <div className="table-scroll" style={{ overflowX: 'auto' }}>
         <table className="admin-table">
           <thead>
-            <tr><th>Code</th><th>Nom</th><th>Type</th><th style={{ textAlign: 'right' }}>Débit</th><th style={{ textAlign: 'right' }}>Crédit</th><th style={{ textAlign: 'right' }}>Solde</th></tr>
+            <tr><th>{tr('adminCommon.code')}</th><th>{tr('adminCommon.name')}</th><th>{tr('adminCommon.type')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.debit')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.credit')}</th><th style={{ textAlign: 'right' }}>{tr('adminAccounting.balance')}</th></tr>
           </thead>
           <tbody>
             {sortedRows.map((r) => (
               <tr key={r.code} style={{ opacity: r.active ? 1 : 0.5 }}>
                 <td className="small" style={{ fontFamily: 'monospace' }}>{r.code}</td>
-                <td className="small">{r.name}{!r.active ? ' (désactivé)' : ''}</td>
+                <td className="small">{r.name}{!r.active ? tr('adminAccounting.disabledSuffix') : ''}</td>
                 <td className="small">{ACCOUNT_KIND_LABELS[r.kind]}</td>
                 <td style={{ textAlign: 'right' }}>{r.debit > 0 ? money(r.debit) : ''}</td>
                 <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{r.credit > 0 ? money(r.credit) : ''}</td>
@@ -399,7 +405,7 @@ function BalanceTab({ token, toast, periodKey }) {
           </tbody>
           <tfoot>
             <tr style={{ fontWeight: 700 }}>
-              <td colSpan={3}>Total</td>
+              <td colSpan={3}>{tr('adminCommon.total')}</td>
               <td style={{ textAlign: 'right' }}>{money(data.totalDebit)}</td>
               <td style={{ textAlign: 'right', color: 'var(--teal-deep)' }}>{money(data.totalCredit)}</td>
               <td />
@@ -416,6 +422,7 @@ function BalanceTab({ token, toast, periodKey }) {
 // comptabilisées. 59/49 restent à 0 avec un statut "non prêt" explicite plutôt qu'un chiffre inventé —
 // jamais présentée comme prête à déposer telle quelle.
 function VatReturnCard({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -425,11 +432,11 @@ function VatReturnCard({ token, toast, periodKey }) {
   }, [periodKey]);
 
   function exportCsv() {
-    if (!data) { toast('Rien à exporter.'); return; }
+    if (!data) { toast(tr('adminCommon.nothingToExport')); return; }
     const grilleRows = Object.entries(data.grilles).map(([code, g]) => ({ code, ...g }));
     downloadCsv(`declaration-tva-grilles-${Date.now()}.csv`, grilleRows, [
-      { label: 'Grille', get: (r) => r.code }, { label: 'Intitulé', get: (r) => r.label },
-      { label: 'Montant', get: (r) => r.amount }, { label: 'Prêt', get: (r) => r.ready ? 'Oui' : 'Non — ' + (r.reason || '') }
+      { label: 'Grille', get: (r) => r.code }, { label: tr('adminAccounting.label'), get: (r) => r.label },
+      { label: 'Montant', get: (r) => r.amount }, { label: tr('adminAccounting.ready'), get: (r) => r.ready ? 'Oui' : 'Non — ' + (r.reason || '') }
     ]);
   }
 
@@ -438,20 +445,19 @@ function VatReturnCard({ token, toast, periodKey }) {
   return (
     <div className="card" style={{ marginBottom: 14 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-        <b>Déclaration TVA par grille</b>
-        <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={exportCsv}>⬇️ CSV</button>
+        <b>{tr('adminAccounting.vatReturn')}</b>
+        <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       {!data.fullyReady && (
         <p className="small" style={{ margin: '6px 0 10px', color: 'var(--red)' }}>
-          ⚠️ Pas prête à déposer telle quelle — voir les grilles marquées "non prête" ci-dessous, et fait
-          confirmer les numéros de grille par un comptable sur le formulaire Intervat en vigueur.
+          {tr('adminAccounting.vatWarning')}
         </p>
       )}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 8, marginTop: 8 }}>
         {Object.entries(data.grilles).map(([code, g]) => (
           <div key={code} style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 12px' }}>
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <span className="small" style={{ fontFamily: 'monospace', fontWeight: 700 }}>Grille {code}</span>
+              <span className="small" style={{ fontFamily: 'monospace', fontWeight: 700 }}>{tr('adminAccounting.box', { code })}</span>
               <span className="small" style={{ color: g.ready ? 'var(--teal-deep)' : 'var(--red)' }}>{g.ready ? '✓' : '✗'}</span>
             </div>
             <div className="small" style={{ margin: '2px 0 4px', opacity: 0.75 }}>{g.label}</div>
@@ -461,7 +467,7 @@ function VatReturnCard({ token, toast, periodKey }) {
         ))}
       </div>
       <div className="row" style={{ justifyContent: 'space-between', marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-        <b>Solde dû à l'État (54 − 59 − 49)</b>
+        <b>{tr('adminAccounting.dueToState')}</b>
         <b>{money(data.soldeDu)}</b>
       </div>
     </div>
@@ -469,6 +475,7 @@ function VatReturnCard({ token, toast, periodKey }) {
 }
 
 function VatTab({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -478,7 +485,7 @@ function VatTab({ token, toast, periodKey }) {
   }, [periodKey]);
 
   function exportCsv() {
-    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`tva-${Date.now()}.csv`, data.rows, [
       { label: 'Origine', get: (r) => r.origin }, { label: 'Base HTVA', get: (r) => r.baseHt },
       { label: 'TVA', get: (r) => r.vatAmount }, { label: 'Taux effectif', get: (r) => r.rate }, { label: 'TVAC', get: (r) => r.totalTtc }
@@ -492,28 +499,28 @@ function VatTab({ token, toast, periodKey }) {
       <VatReturnCard token={token} toast={toast} periodKey={periodKey} />
       <div className="card" style={{ borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>
-          ⚠️ Taux de TVA par défaut (21%), à confirmer avec un comptable — notamment pour les frais de livraison et de service, qui peuvent avoir une qualification différente de la commission. Configurables dans Paramètres → Tarification.
+          {tr('adminAccounting.vatRateWarning')}
         </p>
       </div>
       <div className="row" style={{ justifyContent: 'flex-end', margin: '10px 0' }}>
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
-      {data.rows.length === 0 && <div className="empty">Aucune opération TVA-able sur cette période.</div>}
+      {data.rows.length === 0 && <div className="empty">{tr('adminAccounting.noVatOps')}</div>}
       {data.rows.map((r, i) => (
         <div className="card" key={i}>
-          <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.origin}</b><span className="small">Taux effectif {pct(r.rate, 1)}</span></div>
+          <div className="row" style={{ justifyContent: 'space-between' }}><b>{r.origin}</b><span className="small">{tr('adminAccounting.effectiveRate', { rate: pct(r.rate, 1) })}</span></div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">HTVA {money(r.baseHt)} + TVA {money(r.vatAmount)}</span>
+            <span className="small">{tr('adminAccounting.htVatLine', { ht: money(r.baseHt), vat: money(r.vatAmount) })}</span>
             <b className="small">{money(r.totalTtc)} TVAC</b>
           </div>
         </div>
       ))}
       {data.rows.length > 0 && (
         <div className="card" style={{ marginTop: 8 }}>
-          <div className="row" style={{ justifyContent: 'space-between' }}><b>Total</b><span />
+          <div className="row" style={{ justifyContent: 'space-between' }}><b>{tr('adminCommon.total')}</b><span />
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">HTVA {money(data.totalHt)} + TVA {money(data.totalVat)}</span>
+            <span className="small">{tr('adminAccounting.htVatLine', { ht: money(data.totalHt), vat: money(data.totalVat) })}</span>
             <b className="small">{money(data.totalTtc)} TVAC</b>
           </div>
         </div>
@@ -522,13 +529,14 @@ function VatTab({ token, toast, periodKey }) {
   );
 }
 
-const RECONCILIATION_LABELS = { rapproche: '✅ Rapproché', non_rapproche: '🕐 Non rapproché', problematique: '⚠️ Problématique' };
+const reconciliationLabels = (tr) => ({ rapproche: tr('adminCommon.reconciledOne'), non_rapproche: tr('adminCommon.notReconciledOne'), problematique: tr('adminCommon.problematicOne') });
 
 // Comparaison en direct avec l'API Stripe (pas dérivée des colonnes déjà en base comme le reste de cet
 // onglet) : solde du compte 5500-STRIPE dans les livres vs solde Stripe réel à l'instant présent. Sur
 // toute la durée de vie du compte, pas seulement la période choisie — un écart d'aujourd'hui vient d'un
 // mouvement Stripe jamais traduit en écriture, peu importe quand il a eu lieu.
 function StripeBalanceCard({ token, toast }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -542,21 +550,20 @@ function StripeBalanceCard({ token, toast }) {
     <div className="card" style={{ borderLeft: `3px solid ${!data ? 'var(--line)' : data.matched ? 'var(--teal-deep)' : 'var(--red)'}`, marginBottom: 14 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
         <b>
-          {!data ? 'Solde Stripe : vérification…' : data.matched ? '✅ Solde Stripe conforme aux livres' : '⚠️ Écart avec le solde Stripe réel'}
+          {!data ? tr('adminAccounting.stripeChecking') : data.matched ? tr('adminAccounting.stripeMatches') : tr('adminAccounting.stripeMismatch')}
         </b>
-        <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={loading} onClick={check}>{loading ? '...' : '🔄 Revérifier'}</button>
+        <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={loading} onClick={check}>{loading ? '...' : tr('adminAccounting.recheck')}</button>
       </div>
       {data && (
         <>
           <div className="row" style={{ gap: 16, marginTop: 6, flexWrap: 'wrap' }}>
-            <span className="small">Livres (5500-STRIPE) : <b>{money(data.booksBalance)}</b></span>
-            <span className="small">Stripe disponible : <b>{money(data.stripeAvailable)}</b></span>
-            <span className="small">Stripe en attente : <b>{money(data.stripePending)}</b></span>
+            <span className="small">{tr('adminAccounting.booksStripe')} <b>{money(data.booksBalance)}</b></span>
+            <span className="small">{tr('adminAccounting.stripeAvailable')} <b>{money(data.stripeAvailable)}</b></span>
+            <span className="small">{tr('adminAccounting.stripePending')} <b>{money(data.stripePending)}</b></span>
           </div>
           {!data.matched && (
             <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
-              Écart de {money(Math.abs(data.delta))} ({data.delta > 0 ? 'les livres montrent plus que Stripe' : 'Stripe montre plus que les livres'}).
-              Vérifié à {fmtDateTime(data.checkedAt)}.
+              {tr('adminAccounting.stripeGapLine', { amount: money(Math.abs(data.delta)), direction: data.delta > 0 ? tr('adminAccounting.booksMore') : tr('adminAccounting.stripeMore'), time: fmtDateTime(data.checkedAt) })}
             </p>
           )}
         </>
@@ -566,6 +573,7 @@ function StripeBalanceCard({ token, toast }) {
 }
 
 function ReconciliationTab({ token, toast, periodKey }) {
+  const { t: tr } = useLanguage();
   const [data, setData] = useState(null);
   const [filter, setFilter] = useState('non_rapproche');
 
@@ -576,10 +584,10 @@ function ReconciliationTab({ token, toast, periodKey }) {
   }, [periodKey]);
 
   function exportCsv() {
-    if (!data || !data.rows.length) { toast('Rien à exporter.'); return; }
+    if (!data || !data.rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`rapprochement-${Date.now()}.csv`, data.rows, [
       { label: 'ID commande', get: (r) => r.id }, { label: 'Restaurant', get: (r) => r.restaurantName }, { label: 'Livreur', get: (r) => r.driverName || '' },
-      { label: 'Total', get: (r) => r.total }, { label: 'État', get: (r) => r.state }, { label: 'Problèmes', get: (r) => r.issues.join(' | ') }, { label: 'Date', get: (r) => fmtDate(r.paidAt) }
+      { label: tr('adminCommon.total'), get: (r) => r.total }, { label: tr('adminAccounting.state'), get: (r) => r.state }, { label: tr('adminAccounting.problems'), get: (r) => r.issues.join(' | ') }, { label: tr('adminCommon.date'), get: (r) => fmtDate(r.paidAt) }
     ]);
   }
 
@@ -590,9 +598,9 @@ function ReconciliationTab({ token, toast, periodKey }) {
     <>
       <StripeBalanceCard token={token} toast={toast} />
       <div className="stat-grid">
-        <div className="stat-card"><div className="num">{data.counts.rapproche}</div><div className="label">Rapprochées</div></div>
-        <div className="stat-card"><div className="num" style={{ color: 'var(--gold-deep)' }}>{data.counts.non_rapproche}</div><div className="label">Non rapprochées</div></div>
-        <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{data.counts.problematique}</div><div className="label">Problématiques</div></div>
+        <div className="stat-card"><div className="num">{data.counts.rapproche}</div><div className="label">{tr('adminCommon.reconciled')}</div></div>
+        <div className="stat-card"><div className="num" style={{ color: 'var(--gold-deep)' }}>{data.counts.non_rapproche}</div><div className="label">{tr('adminCommon.notReconciled')}</div></div>
+        <div className="stat-card"><div className="num" style={{ color: 'var(--red)' }}>{data.counts.problematique}</div><div className="label">{tr('adminCommon.problematic')}</div></div>
       </div>
       <div className="row" style={{ justifyContent: 'space-between', gap: 8, margin: '14px 0', flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
@@ -600,17 +608,17 @@ function ReconciliationTab({ token, toast, periodKey }) {
             <div key={f.key || 'all'} className={`chip${filter === f.key ? ' active' : ''}`} onClick={() => setFilter(f.key)}>{f.label}</div>
           ))}
         </div>
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
-      {rows.length === 0 && <div className="empty">Rien à afficher pour ce filtre.</div>}
+      {rows.length === 0 && <div className="empty">{tr('adminCommon.nothingForFilter')}</div>}
       {rows.map((r) => (
         <div className="card" key={r.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{r.restaurantName}{r.driverName ? ` · ${r.driverName}` : ''}</b>
-            <span className="small">{RECONCILIATION_LABELS[r.state]}</span>
+            <span className="small">{reconciliationLabels(tr)[r.state]}</span>
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{fmtDate(r.paidAt)}{r.refundTotal > 0 ? ` · remboursé ${money(r.refundTotal)}` : ''}</span>
+            <span className="small">{fmtDate(r.paidAt)}{r.refundTotal > 0 ? tr('adminCommon.refundedSuffix', { amount: money(r.refundTotal) }) : ''}</span>
             <b className="small">{money(r.total)}</b>
           </div>
           {r.issues.length > 0 && <div className="small" style={{ color: 'var(--red)', marginTop: 2 }}>{r.issues.join(' · ')}</div>}
@@ -621,6 +629,7 @@ function ReconciliationTab({ token, toast, periodKey }) {
 }
 
 function ChartOfAccountsTab({ token, toast }) {
+  const { t: tr } = useLanguage();
   const [accounts, setAccounts] = useState(null);
   const [newCode, setNewCode] = useState('');
   const [newName, setNewName] = useState('');
@@ -633,13 +642,13 @@ function ChartOfAccountsTab({ token, toast }) {
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function createAccount() {
-    if (!newCode.trim() || !newName.trim()) { toast('Code et nom requis.'); return; }
+    if (!newCode.trim() || !newName.trim()) { toast(tr('adminAccounting.toastCodeName')); return; }
     setCreating(true);
     try {
       const created = await api('/admin/accounting/accounts', { method: 'POST', token, body: { code: newCode.trim(), name: newName.trim(), kind: newKind } });
       setAccounts((prev) => [...prev, created].sort((a, b) => a.code.localeCompare(b.code)));
       setNewCode(''); setNewName('');
-      toast('Compte créé.');
+      toast(tr('adminAccounting.toastAccountCreated'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -661,15 +670,15 @@ function ChartOfAccountsTab({ token, toast }) {
   return (
     <>
       <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>Ajouter un compte</h3>
-        <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>Le plan comptable est extensible — aucun compte n'est codé en dur dans l'application.</p>
+        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminAccounting.addAccount')}</h3>
+        <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>{tr('adminAccounting.chartExtensible')}</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <input placeholder="Code (ex: 703-AUTRE)" value={newCode} onChange={(e) => setNewCode(e.target.value)} style={{ maxWidth: 160 }} />
-          <input placeholder="Nom" value={newName} onChange={(e) => setNewName(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
+          <input placeholder={tr('adminAccounting.phCode')} value={newCode} onChange={(e) => setNewCode(e.target.value)} style={{ maxWidth: 160 }} />
+          <input placeholder={tr('adminCommon.name')} value={newName} onChange={(e) => setNewName(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
           <select value={newKind} onChange={(e) => setNewKind(e.target.value)} style={{ maxWidth: 140 }}>
             {Object.entries(ACCOUNT_KIND_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
           </select>
-          <button className="btn-teal" disabled={creating} onClick={createAccount}>{creating ? '...' : 'Créer'}</button>
+          <button className="btn-teal" disabled={creating} onClick={createAccount}>{creating ? '...' : tr('adminCommon.create')}</button>
         </div>
       </div>
       {accounts.map((a) => (
@@ -679,7 +688,7 @@ function ChartOfAccountsTab({ token, toast }) {
             <div className="row" style={{ gap: 8 }}>
               <span className="pill">{ACCOUNT_KIND_LABELS[a.kind]}</span>
               <button className={a.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleActive(a)}>
-                {a.active ? 'Désactiver' : 'Activer'}
+                {a.active ? tr('adminCommon.disable') : 'Activer'}
               </button>
             </div>
           </div>

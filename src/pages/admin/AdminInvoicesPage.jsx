@@ -8,10 +8,12 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { money, fmtDate, fmtDateTime, useDebouncedValue, downloadPdf, INVOICE_STATUS_LABELS, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 const TABS = ['Factures', 'Relevés livreurs', 'Autofacturation'];
+const tabLabels = (tr) => ({ "Factures": tr('adminInvoices.tab_invoices'), "Relevés livreurs": tr('adminInvoices.tab_driverStatements'), "Autofacturation": tr('adminInvoices.tab_selfBilling') });
 const PAGE_SIZE = 25;
-const STATUS_FILTERS = [{ key: '', label: 'Tous' }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
+const statusFilters = (tr) => [{ key: '', label: tr('adminInvoices.all') }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
 
 function statusPill(status) {
   const s = INVOICE_STATUS_LABELS[status];
@@ -19,6 +21,7 @@ function statusPill(status) {
 }
 
 export default function AdminInvoicesPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -27,14 +30,14 @@ export default function AdminInvoicesPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Factures</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminInvoices.title')}</h2>
       <div className="role-pick" style={{ marginBottom: 14 }}>
-        {TABS.map((t) => <div key={t} className={`chip${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>{t}</div>)}
+        {TABS.map((t) => <div key={t} className={`chip${tab === t ? ' active' : ''}`} onClick={() => setTab(t)}>{tabLabels(tr)[t] || t}</div>)}
       </div>
       {tab === 'Factures' && restaurantFilter && (
         <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 10 }}>
-          <span className="pill teal">Filtré sur ce restaurant</span>
-          <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setRestaurantFilter('')}>✕ Retirer le filtre</button>
+          <span className="pill teal">{tr('adminInvoices.filteredOnRestaurant')}</span>
+          <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setRestaurantFilter('')}>{tr('adminInvoices.removeFilter')}</button>
         </div>
       )}
       {tab === 'Factures' && <InvoicesTab token={token} toast={toast} presetRestaurantId={restaurantFilter} />}
@@ -45,6 +48,7 @@ export default function AdminInvoicesPage() {
 }
 
 function InvoicesTab({ token, toast, presetRestaurantId }) {
+  const { t: tr } = useLanguage();
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
   const [status, setStatus] = useState('');
@@ -70,34 +74,34 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
   return (
     <>
       <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <input placeholder="Chercher par n° de facture ou restaurant..." value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-        <button className="btn-teal" onClick={() => setShowGenerate(true)}>+ Générer une facture</button>
+        <input placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <button className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateInvoiceBtn')}</button>
       </div>
       <div className="role-pick" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
-        {STATUS_FILTERS.map((f) => <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>)}
+        {statusFilters(tr).map((f) => <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>)}
       </div>
 
       {!data && <SkeletonCards count={4} />}
-      {data && data.rows.length === 0 && <div className="empty">Aucune facture pour ce filtre.</div>}
+      {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noneForFilter')}</div>}
       {data && data.rows.map((inv) => (
         <div className="card order-card-clickable" key={inv.id} onClick={() => setSelectedId(inv.id)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>
             {statusPill(inv.status)}
           </div>
-          <div className="small">{inv.restaurantName} · période {fmtDate(inv.periodStart)}</div>
+          <div className="small">{tr('adminInvoices.namePeriod', { name: inv.restaurantName, date: fmtDate(inv.periodStart) })}</div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">HTVA {money(inv.subtotalHt)} + TVA {money(inv.vatAmount)}</span>
+            <span className="small">{tr('adminInvoices.htVat', { ht: money(inv.subtotalHt), vat: money(inv.vatAmount) })}</span>
             <b className="small">{money(inv.totalTtc)}</b>
           </div>
-          <div className="small" style={{ opacity: 0.6, marginTop: 2 }}>Émise le {fmtDateTime(inv.issuedAt)}</div>
+          <div className="small" style={{ opacity: 0.6, marginTop: 2 }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</div>
         </div>
       ))}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
-          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)} ({data.total} factures)</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
+          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE) })} {tr('adminInvoices.invoicesCount', { n: data.total })}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
         </div>
       )}
 
@@ -108,6 +112,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
 }
 
 function GenerateInvoiceModal({ onClose, onGenerated }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [restaurants, setRestaurants] = useState(null);
@@ -118,11 +123,11 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
   useEffect(() => { api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function generate() {
-    if (!restaurantId) { toast('Choisis un restaurant.'); return; }
+    if (!restaurantId) { toast(tr('adminCommon.toastChooseRestaurant')); return; }
     setGenerating(true);
     try {
       const inv = await api('/admin/invoices/generate', { method: 'POST', token, body: { restaurantId, month } });
-      toast(`Facture ${inv.invoiceNumber} générée.`);
+      toast(tr('adminInvoices.toastGenerated', { n: inv.invoiceNumber }));
       onGenerated();
     } catch (e) {
       toast(e.message);
@@ -134,22 +139,22 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-        <h3 style={{ margin: '0 0 8px' }}>Générer une facture de commission</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>Si une facture existe déjà pour ce restaurant sur ce mois, elle sera simplement renvoyée (jamais renumérotée).</p>
+        <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateCommissionInvoice')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminInvoices.generateHelp')}</p>
         <div className="field">
-          <label>Restaurant</label>
+          <label>{tr('adminCommon.restaurant')}</label>
           <select value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
-            <option value="">Choisir...</option>
+            <option value="">{tr('adminCommon.choose')}</option>
             {restaurants && restaurants.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>Mois</label>
+          <label>{tr('adminInvoices.month')}</label>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : 'Générer'}</button>
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
+          <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
       </div>
     </div>,
@@ -158,6 +163,7 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
 }
 
 function InvoiceDetailModal({ id, onClose, onChanged }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [inv, setInv] = useState(null);
@@ -175,7 +181,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     setBusy(true);
     try {
       await api(`/admin/invoices/${id}/status`, { method: 'PATCH', token, body: { status } });
-      toast('Statut mis à jour.');
+      toast(tr('adminCommon.toastStatusUpdated'));
       load(); onChanged();
     } catch (e) {
       toast(e.message);
@@ -188,7 +194,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     setBusy(true);
     try {
       await api(`/admin/invoices/${id}/send`, { method: 'POST', token });
-      toast('Facture envoyée par email.');
+      toast(tr('adminInvoices.toastSent'));
       load(); onChanged();
     } catch (e) {
       toast(e.message);
@@ -214,11 +220,11 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
   }
 
   async function createCreditNote() {
-    if (!creditNoteReason.trim()) { toast('Motif requis.'); return; }
+    if (!creditNoteReason.trim()) { toast(tr('adminCommon.toastReasonRequired')); return; }
     setBusy(true);
     try {
       await api(`/admin/invoices/${id}/credit-note`, { method: 'POST', token, body: { reason: creditNoteReason.trim() } });
-      toast('Note de crédit créée — facture annulée.');
+      toast(tr('adminInvoices.toastCreditNote'));
       setShowCreditNoteForm(false); setCreditNoteReason('');
       load(); onChanged();
     } catch (e) {
@@ -232,20 +238,20 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
-        {!inv && <div className="small">Chargement...</div>}
+        {!inv && <div className="small">{tr('adminCommon.loading')}</div>}
         {inv && (
           <>
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <h3 style={{ margin: '0 0 8px', fontFamily: 'monospace' }}>{inv.invoiceNumber}</h3>
               {statusPill(inv.status)}
             </div>
-            <p className="small" style={{ margin: '2px 0' }}>{inv.restaurant.name} · période {fmtDate(inv.periodStart)} — {fmtDate(inv.periodEnd)}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Émise le {fmtDateTime(inv.issuedAt)}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.namePeriodRange', { name: inv.restaurant.name, start: fmtDate(inv.periodStart), end: fmtDate(inv.periodEnd) })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</p>
             {!inv.fairide.configured && (
-              <p className="small" style={{ color: 'var(--red)' }}>⚠️ Identité légale Fairide non configurée côté serveur.</p>
+              <p className="small" style={{ color: 'var(--red)' }}>{tr('adminInvoices.legalNotConfigured')}</p>
             )}
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>Commandes ({inv.items.length})</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{tr('adminInvoices.ordersN', { n: inv.items.length })}</h4>
             {inv.items.map((o) => (
               <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                 <span className="small">{fmtDate(o.createdAt)} · #{o.id.slice(0, 8)}</span>
@@ -253,14 +259,14 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
               </div>
             ))}
             <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Total HTVA</span><span className="small">{money(inv.subtotalHt)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">TVA ({(inv.vatRate * 100).toFixed(0)}%)</span><span className="small">{money(inv.vatAmount)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">Total TTC</b><b className="small">{money(inv.totalTtc)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminInvoices.totalExVat')}</span><span className="small">{money(inv.subtotalHt)}</span></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminInvoices.vatRate', { rate: (inv.vatRate * 100).toFixed(0) })}</span><span className="small">{money(inv.vatAmount)}</span></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminInvoices.totalIncVat')}</b><b className="small">{money(inv.totalTtc)}</b></div>
 
             {inv.entries.length > 0 && (
               <>
                 <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>Écritures comptables liées</h4>
+                <h4 style={{ margin: '0 0 6px' }}>{tr('adminInvoices.linkedEntries')}</h4>
                 {inv.entries.map((e) => (
                   <div key={e.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                     <span className="small">{ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType}</span>
@@ -273,7 +279,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
             {inv.creditNotes.length > 0 && (
               <>
                 <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>Notes de crédit</h4>
+                <h4 style={{ margin: '0 0 6px' }}>{tr('adminInvoices.creditNotes')}</h4>
                 {inv.creditNotes.map((cn) => (
                   <div key={cn.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                     <span className="small" style={{ fontFamily: 'monospace' }}>{cn.creditNoteNumber}</span>
@@ -287,38 +293,38 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
             )}
 
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>Actions</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.actions')}</h4>
             <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <button className="btn-outline" onClick={downloadInvoicePdf}>⬇️ PDF</button>
-              <button className="btn-outline" onClick={downloadInvoiceUbl} title="Fichier UBL 2.1 (Peppol BIS Billing 3.0), à valider avant tout envoi réel">⬇️ UBL (Peppol)</button>
-              <button className="btn-outline" disabled={busy} onClick={sendEmail}>✉️ Envoyer par email</button>
+              <button className="btn-outline" onClick={downloadInvoicePdf}>{tr('adminInvoices.pdf')}</button>
+              <button className="btn-outline" onClick={downloadInvoiceUbl} title={tr('adminInvoices.ublTitle')}>{tr('adminInvoices.ubl')}</button>
+              <button className="btn-outline" disabled={busy} onClick={sendEmail}>{tr('adminInvoices.sendByEmail')}</button>
               {inv.status !== 'annulee' && inv.status !== 'payee' && (
-                <button className="btn-outline" disabled={busy} onClick={() => changeStatus('payee')}>Marquer payée</button>
+                <button className="btn-outline" disabled={busy} onClick={() => changeStatus('payee')}>{tr('adminInvoices.markPaid')}</button>
               )}
               {inv.status !== 'annulee' && inv.status !== 'en_retard' && (
-                <button className="btn-outline" disabled={busy} onClick={() => changeStatus('en_retard')}>Marquer en retard</button>
+                <button className="btn-outline" disabled={busy} onClick={() => changeStatus('en_retard')}>{tr('adminInvoices.markOverdue')}</button>
               )}
               <CreateTaskButton targetType="invoice" targetId={id} label={inv.invoiceNumber} />
             </div>
             {inv.status !== 'annulee' && (
               !showCreditNoteForm ? (
-                <button className="btn-danger-ghost" onClick={() => setShowCreditNoteForm(true)}>Annuler (note de crédit)</button>
+                <button className="btn-danger-ghost" onClick={() => setShowCreditNoteForm(true)}>{tr('adminInvoices.cancelCreditNote')}</button>
               ) : (
                 <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                  <input placeholder="Motif de l'annulation" value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
-                  <button className="btn-danger-ghost" onClick={() => setConfirmAction(true)}>Confirmer</button>
-                  <button className="btn-ghost" onClick={() => { setShowCreditNoteForm(false); setCreditNoteReason(''); }}>Annuler</button>
+                  <input placeholder={tr('adminInvoices.phCancelReason')} value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+                  <button className="btn-danger-ghost" onClick={() => setConfirmAction(true)}>{tr('adminCommon.confirm')}</button>
+                  <button className="btn-ghost" onClick={() => { setShowCreditNoteForm(false); setCreditNoteReason(''); }}>{tr('adminCommon.cancel')}</button>
                 </div>
               )
             )}
           </>
         )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>Fermer</button>
+        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
       </div>
       <ConfirmDialog
         open={!!confirmAction}
-        title="Créer une note de crédit ?"
-        message="La facture sera marquée annulée et une note de crédit du montant total sera émise. Cette action est définitive et tracée."
+        title={tr('adminInvoices.confirmCreditNote')}
+        message={tr('adminInvoices.creditNoteBody')}
         danger
         loading={busy}
         onConfirm={createCreditNote}
@@ -330,6 +336,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
 }
 
 function DriverStatementsTab({ token, toast }) {
+  const { t: tr } = useLanguage();
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -354,29 +361,28 @@ function DriverStatementsTab({ token, toast }) {
   return (
     <>
       <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-        Documents informatifs — pas des factures au sens légal. Pour une vraie facture (mentions TVA
-        exactes selon le régime du livreur), voir l'onglet Autofacturation.
+        {tr('adminInvoices.statementsDisclaimer')}
       </p>
       <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button className="btn-teal" onClick={() => setShowGenerate(true)}>+ Générer un relevé</button>
+        <button className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateStatementBtn')}</button>
       </div>
       {!data && <SkeletonCards count={3} />}
-      {data && data.rows.length === 0 && <div className="empty">Aucun relevé.</div>}
+      {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noStatements')}</div>}
       {data && data.rows.map((st) => (
         <div className="card" key={st.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b style={{ fontFamily: 'monospace' }}>{st.statementNumber}</b>
-            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadStatementPdf(st)}>⬇️ PDF</button>
+            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadStatementPdf(st)}>{tr('adminInvoices.pdf')}</button>
           </div>
-          <div className="small">{st.driverName} · période {fmtDate(st.periodStart)} · {st.deliveriesCount} livraison(s)</div>
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">Émis le {fmtDateTime(st.issuedAt)}</span><b className="small">{money(st.totalAmount)}</b></div>
+          <div className="small">{tr('adminInvoices.statementLine', { name: st.driverName, date: fmtDate(st.periodStart), n: st.deliveriesCount })}</div>
+          <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}><span className="small">{tr('adminInvoices.issuedOnM', { date: fmtDateTime(st.issuedAt) })}</span><b className="small">{money(st.totalAmount)}</b></div>
         </div>
       ))}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
-          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)}</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
+          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE) })}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
         </div>
       )}
       {showGenerate && <GenerateStatementModal onClose={() => setShowGenerate(false)} onGenerated={() => { setShowGenerate(false); load(); }} />}
@@ -385,6 +391,7 @@ function DriverStatementsTab({ token, toast }) {
 }
 
 function GenerateStatementModal({ onClose, onGenerated }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [drivers, setDrivers] = useState(null);
@@ -395,11 +402,11 @@ function GenerateStatementModal({ onClose, onGenerated }) {
   useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function generate() {
-    if (!driverId) { toast('Choisis un livreur.'); return; }
+    if (!driverId) { toast(tr('adminCommon.toastChooseDriver')); return; }
     setGenerating(true);
     try {
       const st = await api('/admin/driver-statements/generate', { method: 'POST', token, body: { driverId, month } });
-      toast(`Relevé ${st.statementNumber} généré.`);
+      toast(tr('adminInvoices.toastStatementGenerated', { n: st.statementNumber }));
       onGenerated();
     } catch (e) {
       toast(e.message);
@@ -411,21 +418,21 @@ function GenerateStatementModal({ onClose, onGenerated }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-        <h3 style={{ margin: '0 0 8px' }}>Générer un relevé de paiement livreur</h3>
+        <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateDriverStatement')}</h3>
         <div className="field">
-          <label>Livreur</label>
+          <label>{tr('adminCommon.driver')}</label>
           <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
-            <option value="">Choisir...</option>
+            <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>Mois</label>
+          <label>{tr('adminInvoices.month')}</label>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : 'Générer'}</button>
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
+          <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
       </div>
     </div>,
@@ -436,6 +443,7 @@ function GenerateStatementModal({ onClose, onGenerated }) {
 const VAT_STATUS_LABELS = { franchise: 'Franchise (art. 56bis CTVA)', assujetti: 'Assujetti TVA' };
 
 function SelfBillingTab({ token, toast }) {
+  const { t: tr } = useLanguage();
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -460,7 +468,7 @@ function SelfBillingTab({ token, toast }) {
   async function sendEmail(inv) {
     try {
       await api(`/admin/self-billing-invoices/${inv.id}/send`, { method: 'POST', token });
-      toast('Autofacturation envoyée par email.');
+      toast(tr('adminInvoices.toastSelfBillingSent'));
     } catch (e) {
       toast(e.message);
     }
@@ -469,39 +477,38 @@ function SelfBillingTab({ token, toast }) {
   return (
     <>
       <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-        Facture établie par Fairide au nom du livreur (mention légale "Autofacturation"), pas un simple relevé.
-        Nécessite un régime TVA renseigné et un accord préalable confirmé sur la fiche du livreur.
+        {tr('adminInvoices.selfBillingHelp')}
       </p>
       <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
-        <button className="btn-teal" onClick={() => setShowGenerate(true)}>+ Générer une autofacturation</button>
+        <button className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateSelfBillingBtn')}</button>
       </div>
       {!data && <SkeletonCards count={3} />}
-      {data && data.rows.length === 0 && <div className="empty">Aucune autofacturation.</div>}
+      {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noSelfBilling')}</div>}
       {data && data.rows.map((inv) => (
         <div className="card" key={inv.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>
             <span className="pill">{VAT_STATUS_LABELS[inv.vatStatus] || inv.vatStatus}</span>
           </div>
-          <div className="small">{inv.driverName} · période {fmtDate(inv.periodStart)}</div>
+          <div className="small">{tr('adminInvoices.namePeriod', { name: inv.driverName, date: fmtDate(inv.periodStart) })}</div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 4 }}>
-            <span className="small">{inv.vatStatus === 'assujetti' ? `HTVA ${money(inv.subtotalHt)} + TVA ${money(inv.vatAmount)}` : 'TVA non applicable'}</span>
+            <span className="small">{inv.vatStatus === 'assujetti' ? tr('adminInvoices.htVat', { ht: money(inv.subtotalHt), vat: money(inv.vatAmount) }) : tr('adminInvoices.vatNotApplicable')}</span>
             <b className="small">{money(inv.totalTtc)}</b>
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-            <span className="small" style={{ opacity: 0.6 }}>Émise le {fmtDateTime(inv.issuedAt)}</span>
+            <span className="small" style={{ opacity: 0.6 }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</span>
             <div className="row" style={{ gap: 6 }}>
-              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadInvoicePdf(inv)}>⬇️ PDF</button>
-              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => sendEmail(inv)}>✉️ Envoyer</button>
+              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => downloadInvoicePdf(inv)}>{tr('adminInvoices.pdf')}</button>
+              <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => sendEmail(inv)}>{tr('adminInvoices.send')}</button>
             </div>
           </div>
         </div>
       ))}
       {data && data.total > PAGE_SIZE && (
         <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>← Précédent</button>
-          <span className="small">Page {page + 1} / {Math.ceil(data.total / PAGE_SIZE)}</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>Suivant →</button>
+          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
+          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE) })}</span>
+          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
         </div>
       )}
       {showGenerate && <GenerateSelfBillingModal onClose={() => setShowGenerate(false)} onGenerated={() => { setShowGenerate(false); load(); }} />}
@@ -510,6 +517,7 @@ function SelfBillingTab({ token, toast }) {
 }
 
 function GenerateSelfBillingModal({ onClose, onGenerated }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [drivers, setDrivers] = useState(null);
@@ -544,7 +552,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
         method: 'PATCH', token, body: { vatStatus, vatNumber: vatStatus === 'assujetti' ? vatNumber.trim() : null, confirmAgreement }
       });
       setDriver((d) => ({ ...d, ...updated }));
-      toast('Régime TVA enregistré.');
+      toast(tr('adminInvoices.toastRegimeSaved'));
     } catch (e) {
       toast(e.message);
     } finally {
@@ -556,7 +564,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
     setGenerating(true);
     try {
       const inv = await api('/admin/self-billing-invoices/generate', { method: 'POST', token, body: { driverId, month } });
-      toast(`Autofacturation ${inv.invoiceNumber} générée.`);
+      toast(tr('adminInvoices.toastSelfBillingGenerated', { n: inv.invoiceNumber }));
       onGenerated();
     } catch (e) {
       toast(e.message);
@@ -568,51 +576,51 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
-        <h3 style={{ margin: '0 0 8px' }}>Générer une autofacturation</h3>
+        <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateSelfBilling')}</h3>
         <div className="field">
-          <label>Livreur</label>
+          <label>{tr('adminCommon.driver')}</label>
           <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
-            <option value="">Choisir...</option>
+            <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         {driver && (
           <div className="card" style={{ background: 'var(--cream-dim)', margin: '10px 0', padding: 12 }}>
-            <p className="small" style={{ margin: '0 0 8px', fontWeight: 700 }}>Régime TVA du livreur</p>
+            <p className="small" style={{ margin: '0 0 8px', fontWeight: 700 }}>{tr('adminInvoices.driverVatRegime')}</p>
             <div className="row" style={{ gap: 12, marginBottom: 8 }}>
               <label className="row" style={{ gap: 4, cursor: 'pointer' }}>
-                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'franchise'} onChange={() => setVatStatus('franchise')} /> Franchise
+                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'franchise'} onChange={() => setVatStatus('franchise')} /> {tr('adminInvoices.vatExempt')}
               </label>
               <label className="row" style={{ gap: 4, cursor: 'pointer' }}>
-                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'assujetti'} onChange={() => setVatStatus('assujetti')} /> Assujetti
+                <input type="radio" style={{ width: 'auto' }} checked={vatStatus === 'assujetti'} onChange={() => setVatStatus('assujetti')} /> {tr('adminInvoices.vatLiable')}
               </label>
             </div>
             {vatStatus === 'assujetti' && (
-              <input placeholder="Numéro de TVA (BE...)" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
+              <input placeholder={tr('adminInvoices.phVat')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
             )}
             {agreementAlreadyConfirmed ? (
-              <p className="small" style={{ color: 'var(--teal-deep)', margin: 0 }}>✅ Accord préalable confirmé le {fmtDate(driver.selfBillingAgreedAt)}.</p>
+              <p className="small" style={{ color: 'var(--teal-deep)', margin: 0 }}>{tr('adminInvoices.agreementConfirmed', { date: fmtDate(driver.selfBillingAgreedAt) })}</p>
             ) : (
               <label className="row" style={{ gap: 6, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={confirmAgreement} onChange={(e) => setConfirmAgreement(e.target.checked)} />
-                <span className="small">Je confirme que ce livreur a donné son accord écrit préalable à l'autofacturation.</span>
+                <span className="small">{tr('adminInvoices.confirmAgreement')}</span>
               </label>
             )}
             <button className="btn-outline" style={{ marginTop: 8, padding: '4px 10px', fontSize: 12 }} disabled={savingStatus || !vatStatus} onClick={saveVatStatus}>
-              {savingStatus ? '...' : 'Enregistrer le régime TVA'}
+              {savingStatus ? '...' : tr('adminInvoices.saveVatRegime')}
             </button>
           </div>
         )}
         <div className="field">
-          <label>Mois</label>
+          <label>{tr('adminInvoices.month')}</label>
           <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          <button className="btn-teal" disabled={generating || !canGenerate} onClick={generate}>{generating ? '...' : 'Générer'}</button>
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn-teal" disabled={generating || !canGenerate} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
+          <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
         {driver && !canGenerate && (
-          <p className="small" style={{ color: 'var(--red)', marginTop: 8 }}>Enregistre le régime TVA et confirme l'accord préalable avant de générer.</p>
+          <p className="small" style={{ color: 'var(--red)', marginTop: 8 }}>{tr('adminInvoices.saveRegimeFirst')}</p>
         )}
       </div>
     </div>,

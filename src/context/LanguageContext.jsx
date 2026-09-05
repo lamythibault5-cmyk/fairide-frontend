@@ -7,7 +7,10 @@ export const LOCALES = { fr: 'fr-BE', en: 'en-GB', nl: 'nl-BE' };
 // Locale courante lisible hors composant (fonctions de formatage de date appelées au rendu) : mise à
 // jour par le fournisseur à chaque rendu, donc toujours celle de la langue affichée.
 let localeCourante = LOCALES.fr;
+let langueCourante = 'fr';
 export function getLocale() { return localeCourante; }
+// Langue courante lisible hors composant — pour des tables de libellés (ERP admin) indexées par langue.
+export function getLanguage() { return langueCourante; }
 
 // Persisté dans localStorage (pas sessionStorage) pour que le choix survive aussi bien à un
 // changement de page qu'à une fermeture/réouverture du navigateur.
@@ -61,6 +64,7 @@ export function LanguageProvider({ children }) {
   // pas « lundi 7 octobre ». Belgique dans les trois cas (formats de date et d'euro belges).
   const locale = LOCALES[language] || LOCALES[DEFAULT_LANGUAGE];
   localeCourante = locale;
+  langueCourante = language;
 
   return (
     <LanguageContext.Provider value={{ language, locale, setLanguage, t, languages: SUPPORTED_LANGUAGES }}>

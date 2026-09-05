@@ -3,16 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useDebouncedValue } from '../../pages/admin/adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
-const GROUPS = [
-  { key: 'orders', label: 'Commandes' },
-  { key: 'restaurants', label: 'Restaurants' },
-  { key: 'drivers', label: 'Livreurs' },
-  { key: 'clients', label: 'Clients' },
-  { key: 'crmProspects', label: 'CRM' },
-  { key: 'tickets', label: 'Support' },
-  { key: 'documents', label: 'Documents' },
-  { key: 'tasks', label: 'Tâches' }
+const groups = (tr) => [
+  { key: 'orders', label: tr('adminSearch.orders') },
+  { key: 'restaurants', label: tr('adminSearch.restaurants') },
+  { key: 'drivers', label: tr('adminSearch.drivers') },
+  { key: 'clients', label: tr('adminSearch.clients') },
+  { key: 'crmProspects', label: tr('adminSearch.crm') },
+  { key: 'tickets', label: tr('adminSearch.support') },
+  { key: 'documents', label: tr('adminSearch.documents') },
+  { key: 'tasks', label: tr('adminSearch.tasks') }
 ];
 // La route ne suit pas toujours la clé de groupe telle quelle (ex: crmProspects → /admin/crm) — mapping
 // explicite plutôt que de dériver la route depuis le nom du groupe backend.
@@ -21,6 +22,7 @@ const GROUP_ROUTES = { orders: 'orders', restaurants: 'restaurants', drivers: 'd
 // Recherche globale de la sidebar admin : une commande, un restaurant, un livreur ou un client, retrouvés
 // en un seul champ — voir GET /admin/search côté backend.
 export default function AdminGlobalSearch() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const navigate = useNavigate();
   const [q, setQ] = useState('');
@@ -52,7 +54,7 @@ export default function AdminGlobalSearch() {
     else navigate(`/admin/${GROUP_ROUTES[groupKey]}`, { state: { presetSearch: item.label } });
   }
 
-  const hasResults = results && GROUPS.some((g) => results[g.key]?.length > 0);
+  const hasResults = results && groups(tr).some((g) => results[g.key]?.length > 0);
 
   return (
     <div ref={boxRef} style={{ position: 'relative', padding: '0 16px 12px' }}>
@@ -60,14 +62,14 @@ export default function AdminGlobalSearch() {
         value={q}
         onChange={(e) => { setQ(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(true)}
-        placeholder="🔍 Rechercher..."
+        placeholder={tr('adminSearch.phSearch')}
         style={{ fontSize: 13 }}
       />
       {open && q.trim().length >= 2 && (
         <div className="card" style={{ position: 'absolute', top: '100%', left: 16, right: 16, zIndex: 50, maxHeight: 320, overflowY: 'auto', boxShadow: 'var(--shadow)' }}>
-          {!results && <div className="small" style={{ padding: 8 }}>Recherche...</div>}
-          {results && !hasResults && <div className="small" style={{ padding: 8, opacity: 0.6 }}>Aucun résultat.</div>}
-          {results && GROUPS.map((g) => {
+          {!results && <div className="small" style={{ padding: 8 }}>{tr('adminSearch.searching')}</div>}
+          {results && !hasResults && <div className="small" style={{ padding: 8, opacity: 0.6 }}>{tr('adminCommon.noResults')}</div>}
+          {results && groups(tr).map((g) => {
             const items = results[g.key] || [];
             if (!items.length) return null;
             return (

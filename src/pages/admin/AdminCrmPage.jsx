@@ -9,8 +9,9 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { fmtDate, fmtDateTime, filterBySearch, pct, CRM_STAGES, CRM_STAGE_LABELS, CRM_PRIORITY_LABELS, TASK_STATUS_LABELS } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
-const PERIOD_TYPES = [{ key: 'month', label: 'Mois' }, { key: 'quarter', label: 'Trimestre' }, { key: 'year', label: 'Année' }];
+const periodTypes = (tr) => [{ key: 'month', label: tr('adminCommon.month') }, { key: 'quarter', label: tr('adminCommon.quarter') }, { key: 'year', label: tr('adminCommon.year') }];
 
 function currentMonthValue() {
   const d = new Date();
@@ -18,6 +19,7 @@ function currentMonthValue() {
 }
 
 export default function AdminCrmPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -62,7 +64,7 @@ export default function AdminCrmPage() {
   }
 
   async function confirmLoss() {
-    if (!lossReason.trim()) { toast('Motif requis.'); return; }
+    if (!lossReason.trim()) { toast(tr('adminCommon.toastReasonRequired')); return; }
     try {
       await api(`/admin/crm/prospects/${pendingLossStage.id}/stage`, { method: 'PATCH', token, body: { stage: 'perdu', lossReason: lossReason.trim() } });
       setPendingLossStage(null);
@@ -74,11 +76,11 @@ export default function AdminCrmPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>CRM Restaurants</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminCrm.title')}</h2>
 
       <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
         <div className="role-pick" style={{ margin: 0 }}>
-          {PERIOD_TYPES.map((p) => <div key={p.key} className={`chip${periodType === p.key ? ' active' : ''}`} onClick={() => setPeriodType(p.key)}>{p.label}</div>)}
+          {periodTypes(tr).map((p) => <div key={p.key} className={`chip${periodType === p.key ? ' active' : ''}`} onClick={() => setPeriodType(p.key)}>{p.label}</div>)}
         </div>
         {periodType === 'month' && <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ maxWidth: 160 }} />}
         {periodType === 'year' && <input type="number" value={year} onChange={(e) => setYear(e.target.value)} style={{ maxWidth: 100 }} />}
@@ -87,28 +89,28 @@ export default function AdminCrmPage() {
       {!stats && <SkeletonCards count={1} />}
       {stats && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
-          <div className="stat-card highlight"><div className="num">{pct(stats.conversionRate, 1)}</div><div className="label">Taux de conversion</div></div>
-          <div className="stat-card"><div className="num">{stats.avgDaysToConversion !== null ? `${stats.avgDaysToConversion} j` : '—'}</div><div className="label">Durée moyenne avant signature</div></div>
-          <div className="stat-card"><div className="num">{stats.converted}</div><div className="label">Nouveaux partenaires (période)</div></div>
-          <div className="stat-card"><div className="num">{stats.newProspects}</div><div className="label">Nouveaux prospects (période)</div></div>
+          <div className="stat-card highlight"><div className="num">{pct(stats.conversionRate, 1)}</div><div className="label">{tr('adminCrm.conversionRate')}</div></div>
+          <div className="stat-card"><div className="num">{stats.avgDaysToConversion !== null ? `${stats.avgDaysToConversion} j` : '—'}</div><div className="label">{tr('adminCrm.avgTimeToSign')}</div></div>
+          <div className="stat-card"><div className="num">{stats.converted}</div><div className="label">{tr('adminCrm.newPartners')}</div></div>
+          <div className="stat-card"><div className="num">{stats.newProspects}</div><div className="label">{tr('adminCrm.newProspects')}</div></div>
         </div>
       )}
 
       {stats && stats.byOwner.length > 0 && (
         <div className="card" style={{ marginBottom: 16 }}>
-          <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>Performance commerciale</h3>
+          <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{tr('adminCrm.salesPerformance')}</h3>
           {stats.byOwner.map((o) => (
             <div key={o.ownerEmail} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
               <span className="small">{o.ownerEmail}</span>
-              <span className="small">{o.converted} converti(s) / {o.total} prospect(s)</span>
+              <span className="small">{tr('adminCrm.convertedOf', { converted: o.converted, total: o.total })}</span>
             </div>
           ))}
         </div>
       )}
 
       <div className="row" style={{ gap: 8, marginBottom: 14 }}>
-        <input placeholder="Chercher un prospect..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-teal" onClick={() => setShowCreate(true)}>+ Nouveau prospect</button>
+        <input placeholder={tr('adminCrm.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
+        <button className="btn-teal" onClick={() => setShowCreate(true)}>{tr('adminCrm.newProspectBtn')}</button>
       </div>
 
       {!prospects && <SkeletonCards count={4} />}
@@ -133,7 +135,7 @@ export default function AdminCrmPage() {
                       {p.ownerEmail && <div className="small" style={{ opacity: 0.7 }}>👤 {p.ownerEmail}</div>}
                       {p.nextFollowUpAt && (
                         <div className="small" style={{ color: p.nextFollowUpAt < Date.now() ? 'var(--red)' : 'inherit' }}>
-                          🔔 Relance {fmtDate(p.nextFollowUpAt)}
+                          {tr('adminCrm.followUpOn', { date: fmtDate(p.nextFollowUpAt) })}
                         </div>
                       )}
                     </div>
@@ -162,11 +164,11 @@ export default function AdminCrmPage() {
       {pendingLossStage && createPortal(
         <div className="modal-overlay" onClick={() => setPendingLossStage(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <h3 style={{ margin: '0 0 8px' }}>Marquer "{pendingLossStage.name}" comme perdu ?</h3>
-            <input placeholder="Motif de perte (requis)" value={lossReason} onChange={(e) => setLossReason(e.target.value)} autoFocus style={{ width: '100%' }} />
+            <h3 style={{ margin: '0 0 8px' }}>{tr('adminCrm.confirmLost', { name: pendingLossStage.name })}</h3>
+            <input placeholder={tr('adminCrm.phLossReason')} value={lossReason} onChange={(e) => setLossReason(e.target.value)} autoFocus style={{ width: '100%' }} />
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
-              <button className="btn-danger-ghost" onClick={confirmLoss}>Marquer perdu</button>
-              <button className="btn-ghost" onClick={() => setPendingLossStage(null)}>Annuler</button>
+              <button className="btn-danger-ghost" onClick={confirmLoss}>{tr('adminCrm.markLost')}</button>
+              <button className="btn-ghost" onClick={() => setPendingLossStage(null)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
         </div>,
@@ -177,17 +179,18 @@ export default function AdminCrmPage() {
 }
 
 function CreateProspectModal({ onClose, onCreated }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [form, setForm] = useState({ name: '', commune: '', cuisine: '', contactName: '', contactEmail: '', contactPhone: '', priority: 'medium', ownerEmail: '', source: '' });
   const [saving, setSaving] = useState(false);
 
   async function create() {
-    if (!form.name.trim()) { toast('Nom requis.'); return; }
+    if (!form.name.trim()) { toast(tr('adminCrm.toastNameRequired')); return; }
     setSaving(true);
     try {
       await api('/admin/crm/prospects', { method: 'POST', token, body: form });
-      toast('Prospect créé.');
+      toast(tr('adminCrm.toastCreated'));
       onCreated();
     } catch (e) {
       toast(e.message);
@@ -199,30 +202,30 @@ function CreateProspectModal({ onClose, onCreated }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
-        <h3 style={{ margin: '0 0 10px' }}>Nouveau prospect</h3>
-        <div className="field"><label>Nom du restaurant</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+        <h3 style={{ margin: '0 0 10px' }}>{tr('adminCrm.newProspect')}</h3>
+        <div className="field"><label>{tr('adminCrm.restaurantName')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div className="row" style={{ gap: 8 }}>
-          <div className="field" style={{ flex: 1 }}><label>Commune</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
-          <div className="field" style={{ flex: 1 }}><label>Cuisine</label><input value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.cuisine')}</label><input value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
         </div>
-        <div className="field"><label>Contact</label><input placeholder="Nom du contact" value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
+        <div className="field"><label>{tr('adminCrm.contact')}</label><input placeholder={tr('adminCrm.phContactName')} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
         <div className="row" style={{ gap: 8 }}>
-          <div className="field" style={{ flex: 1 }}><label>Email</label><input value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
-          <div className="field" style={{ flex: 1 }}><label>Téléphone</label><input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.email')}</label><input value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.phone')}</label><input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
         </div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>Priorité</label>
+            <label>{tr('adminCommon.priority')}</label>
             <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-              <option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option>
+              <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
             </select>
           </div>
-          <div className="field" style={{ flex: 1 }}><label>Responsable commercial</label><input placeholder="email@fairide.be" value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} /></div>
+          <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.salesOwner')}</label><input placeholder={tr('adminCrm.phEmail')} value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} /></div>
         </div>
-        <div className="field"><label>Source</label><input placeholder="prospection, inbound..." value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
+        <div className="field"><label>{tr('adminCrm.source')}</label><input placeholder={tr('adminCrm.phSource')} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
-          <button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : 'Créer'}</button>
-          <button className="btn-ghost" onClick={onClose}>Annuler</button>
+          <button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : tr('adminCommon.create')}</button>
+          <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
         </div>
       </div>
     </div>,
@@ -231,6 +234,7 @@ function CreateProspectModal({ onClose, onCreated }) {
 }
 
 function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [p, setP] = useState(null);
@@ -266,7 +270,7 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
     setSaving(true);
     try {
       await api(`/admin/crm/prospects/${id}`, { method: 'PATCH', token, body: form });
-      toast('Prospect mis à jour.');
+      toast(tr('adminCrm.toastUpdated'));
       setEditing(false);
       load(); onChanged();
     } catch (e) {
@@ -282,11 +286,11 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
   }
 
   async function convert() {
-    if (!convertRestaurantId) { toast('Choisis un restaurant.'); return; }
+    if (!convertRestaurantId) { toast(tr('adminCommon.toastChooseRestaurant')); return; }
     setConverting(true);
     try {
       await api(`/admin/crm/prospects/${id}/convert`, { method: 'POST', token, body: { restaurantId: convertRestaurantId } });
-      toast('Prospect converti en partenaire.');
+      toast(tr('adminCrm.toastConverted'));
       setShowConvert(false);
       load(); onChanged();
     } catch (e) {
@@ -299,7 +303,7 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
   return createPortal(
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
-        {!p && <div className="small">Chargement...</div>}
+        {!p && <div className="small">{tr('adminCommon.loading')}</div>}
         {p && !editing && (
           <>
             <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -307,22 +311,22 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
               <span className="pill">{CRM_STAGE_LABELS[p.stage]}</span>
             </div>
             <p className="small" style={{ margin: '2px 0' }}>{[p.commune, p.cuisine].filter(Boolean).join(' · ') || '—'}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Contact : {p.contactName || '—'}{p.contactEmail ? ` · ${p.contactEmail}` : ''}{p.contactPhone ? ` · ${p.contactPhone}` : ''}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Priorité : {CRM_PRIORITY_LABELS[p.priority]?.label} · Responsable : {p.ownerEmail || '—'} · Source : {p.source || '—'}</p>
-            {p.nextFollowUpAt && <p className="small" style={{ margin: '2px 0' }}>🔔 Prochaine relance : {fmtDate(p.nextFollowUpAt)}</p>}
-            {p.stage === 'perdu' && p.lossReason && <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>Motif de perte : {p.lossReason}</p>}
-            {p.convertedRestaurantId && <p className="small" style={{ margin: '2px 0' }}>✅ Converti en restaurant "{p.convertedRestaurantName}" le {fmtDate(p.convertedAt)}</p>}
-            <p className="small" style={{ margin: '2px 0', opacity: 0.6 }}>Créé le {fmtDate(p.createdAt)}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.contactLine', { name: p.contactName || '—', email: p.contactEmail ? ` · ${p.contactEmail}` : '', phone: p.contactPhone ? ` · ${p.contactPhone}` : '' })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.priorityLine', { priority: CRM_PRIORITY_LABELS[p.priority]?.label, owner: p.ownerEmail || '—', source: p.source || '—' })}</p>
+            {p.nextFollowUpAt && <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.nextFollowUpLine', { date: fmtDate(p.nextFollowUpAt) })}</p>}
+            {p.stage === 'perdu' && p.lossReason && <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminCrm.lossReasonLine', { reason: p.lossReason })}</p>}
+            {p.convertedRestaurantId && <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.convertedLine', { name: p.convertedRestaurantName, date: fmtDate(p.convertedAt) })}</p>}
+            <p className="small" style={{ margin: '2px 0', opacity: 0.6 }}>{tr('adminCrm.createdOn', { date: fmtDate(p.createdAt) })}</p>
             <div className="row" style={{ gap: 8, marginTop: 8 }}>
-              <button className="btn-outline" onClick={startEdit}>✏️ Modifier</button>
-              {!p.convertedRestaurantId && <button className="btn-teal" onClick={openConvert}>Convertir en restaurant</button>}
+              <button className="btn-outline" onClick={startEdit}>{tr('adminCommon.edit')}</button>
+              {!p.convertedRestaurantId && <button className="btn-teal" onClick={openConvert}>{tr('adminCrm.convert')}</button>}
               <CreateTaskButton targetType="crm_prospect" targetId={id} label={p.name} />
             </div>
 
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>Tâches</h4>
-            {!tasks && <div className="small">Chargement...</div>}
-            {tasks && tasks.length === 0 && <div className="small">Aucune tâche.</div>}
+            <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.tasks')}</h4>
+            {!tasks && <div className="small">{tr('adminCommon.loading')}</div>}
+            {tasks && tasks.length === 0 && <div className="small">{tr('adminCommon.noTasks')}</div>}
             {tasks && tasks.map((tk) => (
               <div key={tk.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
                 <span className="small">{tk.title}</span>
@@ -338,50 +342,50 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
         )}
         {p && editing && form && (
           <div>
-            <div className="field"><label>Nom</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}><label>Commune</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label>Cuisine</label><input value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.cuisine')}</label><input value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
             </div>
-            <div className="field"><label>Contact</label><input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCrm.contact')}</label><input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}><label>Email</label><input value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label>Téléphone</label><input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.email')}</label><input value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.phone')}</label><input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>Priorité</label>
+                <label>{tr('adminCommon.priority')}</label>
                 <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
-                  <option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option>
+                  <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
                 </select>
               </div>
-              <div className="field" style={{ flex: 1 }}><label>Responsable</label><input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.owner')}</label><input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}><label>Source</label><input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label>Prochaine relance</label><input type="date" value={form.nextFollowUpAt} onChange={(e) => setForm({ ...form, nextFollowUpAt: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.source')}</label><input value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.nextFollowUp')}</label><input type="date" value={form.nextFollowUpAt} onChange={(e) => setForm({ ...form, nextFollowUpAt: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
-              <button className="btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
+              <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
         )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>Fermer</button>
+        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
       </div>
 
       {showConvert && createPortal(
         <div className="modal-overlay" onClick={() => setShowConvert(false)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 400 }}>
-            <h3 style={{ margin: '0 0 8px' }}>Convertir en restaurant</h3>
-            <p className="small" style={{ margin: '0 0 10px' }}>Choisis le restaurant réellement inscrit correspondant à ce prospect.</p>
+            <h3 style={{ margin: '0 0 8px' }}>{tr('adminCrm.convert')}</h3>
+            <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCrm.chooseRealRestaurant')}</p>
             <select value={convertRestaurantId} onChange={(e) => setConvertRestaurantId(e.target.value)}>
-              <option value="">Choisir...</option>
+              <option value="">{tr('adminCommon.choose')}</option>
               {restaurants && restaurants.filter((r) => !linkedRestaurantIds.has(r.id)).map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
             </select>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
               <button className="btn-teal" disabled={converting} onClick={convert}>{converting ? '...' : 'Convertir'}</button>
-              <button className="btn-ghost" onClick={() => setShowConvert(false)}>Annuler</button>
+              <button className="btn-ghost" onClick={() => setShowConvert(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
         </div>,

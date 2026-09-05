@@ -12,14 +12,16 @@ import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
-const ACTIVITY_LABELS = {
-  disponible: { label: '🟢 Disponible', color: 'var(--teal-deep)' },
-  en_livraison: { label: '🟡 En livraison', color: 'var(--gold-deep)' },
-  offline: { label: '⚫ Hors ligne', color: 'inherit' }
-};
+const activityLabels = (tr) => ({
+  disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
+  en_livraison: { label: tr('adminDrivers.delivering'), color: 'var(--gold-deep)' },
+  offline: { label: tr('adminDrivers.offline'), color: 'inherit' }
+});
 
 export default function AdminDriversPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -55,17 +57,17 @@ export default function AdminDriversPage() {
       setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? 'Livreur approuvé.' : status === 'blocked' ? 'Livreur suspendu.' : 'Statut mis à jour.');
+      toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? 'Livreur suspendu.' : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
       toast(e.message);
     }
   }
 
   function askSuspend(d) {
-    setConfirmAction({ title: `Suspendre ${d.name} ?`, message: 'Le livreur ne pourra plus prendre de courses.', danger: true, run: () => setStatus(d.id, 'blocked') });
+    setConfirmAction({ title: `Suspendre ${d.name} ?`, message: tr('adminDrivers.suspendBody'), danger: true, run: () => setStatus(d.id, 'blocked') });
   }
   function askReactivate(d) {
-    setConfirmAction({ title: `Réactiver ${d.name} ?`, run: () => setStatus(d.id, 'approved') });
+    setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
   }
   async function runConfirmed() {
     if (!confirmAction) return;
@@ -78,13 +80,13 @@ export default function AdminDriversPage() {
   }
 
   function exportCsv() {
-    if (!drivers || !drivers.length) { toast('Rien à exporter.'); return; }
+    if (!drivers || !drivers.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`livreurs-${Date.now()}.csv`, drivers, [
       { label: 'Nom', get: (d) => d.name },
       { label: 'Email', get: (d) => d.email },
-      { label: 'Téléphone', get: (d) => d.phone },
+      { label: tr('adminCommon.phone'), get: (d) => d.phone },
       { label: 'Statut', get: (d) => d.adminStatus },
-      { label: 'Activité', get: (d) => d.activityStatus },
+      { label: tr('adminDrivers.activity'), get: (d) => d.activityStatus },
       { label: 'Livraisons', get: (d) => d.deliveriesCount },
       { label: 'Revenus', get: (d) => d.revenue },
       { label: "Taux d'annulation", get: (d) => d.cancellationRate },
@@ -96,15 +98,15 @@ export default function AdminDriversPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Livreurs</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminDrivers.title')}</h2>
       <div className="row" style={{ marginBottom: 14, gap: 8 }}>
-        <input placeholder="Chercher un(e) livreur..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <input placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       {!drivers && <SkeletonCards count={3} />}
-      {drivers && filtered.length === 0 && <div className="empty">Aucun résultat.</div>}
+      {drivers && filtered.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {filtered && filtered.map((d) => {
-        const act = ACTIVITY_LABELS[d.activityStatus];
+        const act = activityLabels(tr)[d.activityStatus];
         return (
           <div className={`card order-card-clickable${isTestAccount(d.email) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
@@ -113,22 +115,22 @@ export default function AdminDriversPage() {
                 {isTestAccount(d.email) && <TestBadge />}
                 <span className="pill" style={{ color: act?.color }}>{act?.label}</span>
                 <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
-                  {d.adminStatus === 'approved' ? '✅ Approuvé' : d.adminStatus === 'blocked' ? '🚫 Suspendu' : '🕐 En attente'}
+                  {d.adminStatus === 'approved' ? tr('adminDrivers.approved') : d.adminStatus === 'blocked' ? '🚫 Suspendu' : tr('adminDrivers.pendingBadge')}
                 </span>
               </div>
             </div>
-            <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}{d.linkedRestaurantName ? ` · lié à ${d.linkedRestaurantName}` : ''}</div>
+            <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}{d.linkedRestaurantName ? tr('adminDrivers.linkedToSuffix', { name: d.linkedRestaurantName }) : ''}</div>
             <div className="small">
               {d.deliveriesCount} livraison(s) · {money(d.revenue)} de revenus · {pct(d.cancellationRate)} annulation
-              {d.reviewCount > 0 ? ` · ${d.avgRating.toFixed(1)}★ (${d.reviewCount} avis)` : ' · pas encore d\'avis'}
+              {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: d.avgRating.toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
             </div>
             <div className="small" style={{ opacity: 0.6 }}>
-              {d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min de livraison en moyenne` : 'Temps de livraison pas encore mesuré'} · taux d'acceptation non mesurable
+              {d.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: d.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')}{tr('adminDrivers.acceptanceNotMeasurable')}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
-              {d.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(d.id, 'approved')}>Approuver</button>}
-              {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(d)}>Suspendre</button>}
-              {d.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(d)}>Réactiver</button>}
+              {d.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(d.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+              {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(d)}>{tr('adminCommon.suspend')}</button>}
+              {d.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(d)}>{tr('adminCommon.reactivate')}</button>}
             </div>
           </div>
         );
@@ -138,32 +140,32 @@ export default function AdminDriversPage() {
         <div className="modal-overlay" onClick={() => setSelected(null)}>
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
             <h3 style={{ margin: '0 0 8px' }}>{selected.name}</h3>
-            {!detail && <div className="small">Chargement...</div>}
+            {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
             {detail && (
               <>
                 <p className="small" style={{ margin: '2px 0' }}>{detail.email}{detail.phone ? ` · ${detail.phone}` : ''}</p>
-                <p className="small" style={{ margin: '2px 0' }}>Inscrit le {fmtDate(detail.createdAt)} · Stripe Connect : {detail.stripeConnectStatus || '—'}</p>
+                <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '—' })}</p>
                 {(detail.payoutIban || detail.payoutAccountHolder) && (
-                  <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || '(titulaire non renseigné)'} — {detail.payoutIban || '(IBAN non renseigné)'}</p>
+                  <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
                 )}
                 <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                  {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>Suspendre</button>}
-                  {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>Réactiver</button>}
+                  {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
+                  {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
                 </div>
                 <div className="divider" />
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Livraisons terminées</span><b className="small">{detail.deliveriesCount}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Taux d'annulation</span><b className="small">{pct(detail.cancellationRate)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Temps moyen de livraison</span><b className="small">{detail.avgDeliveryMinutes !== null ? `${detail.avgDeliveryMinutes} min` : 'non mesuré'}</b></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.completedDeliveries')}</span><b className="small">{detail.deliveriesCount}</b></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.cancellationRate')}</span><b className="small">{pct(detail.cancellationRate)}</b></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.avgDeliveryTime')}</span><b className="small">{detail.avgDeliveryMinutes !== null ? tr('adminDrivers.minutes', { n: detail.avgDeliveryMinutes }) : tr('adminCommon.notMeasured')}</b></div>
                 <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>💶 Finance livreur</h4>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Total frais de livraison (ses courses)</span><span className="small">{money(detail.deliveryFeesTotal)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Part Fairide (10%, référence — non déduite)</span><span className="small">{money(detail.fairideShareOnThose)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">Part livreur (100% du tarif livraison)</b><b className="small">{money(detail.deliveryFeesTotal)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Ajustements (remboursements à sa charge)</span><span className="small">-{money(detail.adjustments)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">Montant dû / payé</b><b className="small">{money(detail.revenue)}</b></div>
+                <h4 style={{ margin: '0 0 6px' }}>{tr('adminDrivers.driverFinance')}</h4>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.totalDeliveryFees')}</span><span className="small">{money(detail.deliveryFeesTotal)}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.fairideShare')}</span><span className="small">{money(detail.fairideShareOnThose)}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminDrivers.driverShare')}</b><b className="small">{money(detail.deliveryFeesTotal)}</b></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.adjustments')}</span><span className="small">-{money(detail.adjustments)}</span></div>
+                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminDrivers.duePaid')}</b><b className="small">{money(detail.revenue)}</b></div>
                 <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>Commandes récentes</h4>
-                {(detail.orders || []).length === 0 && <div className="small">Aucune commande pour l'instant.</div>}
+                <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>
+                {(detail.orders || []).length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
                 {(detail.orders || []).map((o) => (
                   <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
                     <span className="small">{o.restaurantName} → {o.clientName}</span>
@@ -172,11 +174,11 @@ export default function AdminDriversPage() {
                 ))}
                 <div className="divider" />
                 <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: '0 0 6px' }}>Documents</h4>
-                  <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>+ Ajouter</button>
+                  <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.documents')}</h4>
+                  <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
                 </div>
-                {!documents && <div className="small">Chargement...</div>}
-                {documents && documents.length === 0 && <div className="small">Aucun document.</div>}
+                {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
+                {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
                 {documents && documents.map((doc) => (
                   <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
                     <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
@@ -203,7 +205,7 @@ export default function AdminDriversPage() {
                 <AdminActionHistory actions={detail.actions} />
               </>
             )}
-            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelected(null)}>Fermer</button>
+            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelected(null)}>{tr('adminCommon.close')}</button>
           </div>
         </div>,
         document.body

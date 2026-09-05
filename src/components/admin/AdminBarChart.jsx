@@ -3,7 +3,7 @@
 // le dashboard et la page Finance. `data` : [{ label, value }]. `formatValue` formate l'infobulle/l'axe.
 export default function AdminBarChart({ data, formatValue = (v) => v, color = 'var(--teal)', height = 140 }) {
   if (!data || data.length === 0) {
-    return <div className="empty" style={{ padding: '24px 0' }}>Pas encore de données sur cette période.</div>;
+    return <div className="empty" style={{ padding: '24px 0' }}>{tr('adminCommon.noDataPeriod')}</div>;
   }
   const max = Math.max(1, ...data.map((d) => d.value));
   const barWidth = 100 / data.length;

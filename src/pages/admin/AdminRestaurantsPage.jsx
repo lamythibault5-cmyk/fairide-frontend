@@ -12,8 +12,10 @@ import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminRestaurantsPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
@@ -44,17 +46,17 @@ export default function AdminRestaurantsPage() {
       setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
-      toast(status === 'approved' ? 'Restaurant approuvé.' : status === 'blocked' ? 'Restaurant suspendu.' : 'Statut mis à jour.');
+      toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? 'Restaurant suspendu.' : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
       toast(e.message);
     }
   }
 
   function askSuspend(r) {
-    setConfirmAction({ title: `Suspendre ${r.name} ?`, message: 'Le restaurant ne sera plus visible ni ne pourra recevoir de commandes.', danger: true, run: () => setStatus(r.id, 'blocked') });
+    setConfirmAction({ title: `Suspendre ${r.name} ?`, message: tr('adminRestos.suspendBody'), danger: true, run: () => setStatus(r.id, 'blocked') });
   }
   function askReactivate(r) {
-    setConfirmAction({ title: `Réactiver ${r.name} ?`, run: () => setStatus(r.id, 'approved') });
+    setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
   }
 
   async function runConfirmed() {
@@ -68,7 +70,7 @@ export default function AdminRestaurantsPage() {
   }
 
   function exportCsv() {
-    if (!restaurants || !restaurants.length) { toast('Rien à exporter.'); return; }
+    if (!restaurants || !restaurants.length) { toast(tr('adminCommon.nothingToExport')); return; }
     downloadCsv(`restaurants-${Date.now()}.csv`, restaurants, [
       { label: 'Nom', get: (r) => r.name },
       { label: 'Commune', get: (r) => r.commune },
@@ -76,16 +78,16 @@ export default function AdminRestaurantsPage() {
       { label: 'Statut', get: (r) => r.businessStatus },
       { label: 'Responsable', get: (r) => r.responsibleName },
       { label: 'Email', get: (r) => r.ownerEmail },
-      { label: 'Téléphone', get: (r) => r.ownerPhone },
-      { label: 'N° entreprise', get: (r) => r.companyNumber },
+      { label: tr('adminCommon.phone'), get: (r) => r.ownerPhone },
+      { label: tr('adminRestos.companyNumber'), get: (r) => r.companyNumber },
       { label: 'TVA', get: (r) => r.vatNumber },
       { label: 'Commandes', get: (r) => r.orderCount },
       { label: 'CA', get: (r) => r.revenue },
-      { label: 'Commission générée', get: (r) => r.commissionGenerated },
+      { label: tr('adminRestos.commissionGenerated'), get: (r) => r.commissionGenerated },
       { label: 'Panier moyen', get: (r) => r.avgBasket },
       { label: "Taux d'annulation", get: (r) => r.cancellationRate },
       { label: "Taux d'acceptation", get: (r) => r.acceptanceRate },
-      { label: 'Temps moyen prépa (min)', get: (r) => r.avgPrepMinutes }
+      { label: tr('adminRestos.colAvgPrep'), get: (r) => r.avgPrepMinutes }
     ]);
   }
 
@@ -93,13 +95,13 @@ export default function AdminRestaurantsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Restaurants</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminRestos.title')}</h2>
       <div className="row" style={{ marginBottom: 14, gap: 8 }}>
-        <input placeholder="Chercher un restaurant..." value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
-        <button className="btn-outline" onClick={exportCsv}>⬇️ CSV</button>
+        <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1 }} />
+        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>
       {!restaurants && <SkeletonCards count={3} />}
-      {restaurants && filtered.length === 0 && <div className="empty">Aucun résultat.</div>}
+      {restaurants && filtered.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {filtered && filtered.map((r) => {
         const biz = BUSINESS_STATUS_LABELS[r.businessStatus];
         return (
@@ -112,18 +114,18 @@ export default function AdminRestaurantsPage() {
               </div>
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
-            <div className="small">Responsable : {r.responsibleName || r.ownerEmail}{r.phone ? ` · ${r.phone}` : ''}</div>
-            {(r.companyNumber || r.vatNumber) && <div className="small">N° entreprise {r.companyNumber || '—'} · TVA {r.vatNumber || '—'}</div>}
+            <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || r.ownerEmail, phone: r.phone ? ` · ${r.phone}` : '' })}</div>
+            {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '—'} · TVA {r.vatNumber || '—'}</div>}
             <div className="small">
-              {r.orderCount} commande(s) · {money(r.revenue)} CA · {money(r.commissionGenerated)} commission · panier moyen {money(r.avgBasket)}
+              {tr('adminRestos.statsLine', { n: r.orderCount, revenue: money(r.revenue), commission: money(r.commissionGenerated), basket: money(r.avgBasket) })}
             </div>
             <div className="small">
-              {pct(r.cancellationRate)} annulation · {pct(r.acceptanceRate)} acceptation · {r.avgPrepMinutes !== null ? `${r.avgPrepMinutes} min prépa` : 'prépa non mesurée'}
+              {tr('adminRestos.ratesLine', { cancel: pct(r.cancellationRate), accept: pct(r.acceptanceRate), prep: r.avgPrepMinutes !== null ? tr('adminRestos.prepMinutes', { n: r.avgPrepMinutes }) : tr('adminRestos.prepNotMeasured') })}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
-              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>Approuver</button>}
-              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>Suspendre</button>}
-              {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>Réactiver</button>}
+              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+              {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
+              {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
             </div>
           </div>
         );
@@ -152,6 +154,7 @@ export default function AdminRestaurantsPage() {
 }
 
 function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onChanged }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -188,7 +191,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
     setSaving(true);
     try {
       await api(`/admin/restaurants/${selected.id}`, { method: 'PATCH', token, body: form });
-      toast('Informations mises à jour.');
+      toast(tr('adminRestos.toastUpdated'));
       setEditing(false);
       onChanged();
     } catch (e) {
@@ -203,39 +206,39 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <h3 style={{ margin: '0 0 8px' }}>{selected.name}</h3>
-          <a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="small">Voir la page ↗</a>
+          <a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="small">{tr('adminRestos.viewPage')}</a>
         </div>
-        {!detail && <div className="small">Chargement...</div>}
+        {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
         {detail && !editing && (
           <>
             <p className="small" style={{ margin: '2px 0' }}>{detail.commune}{detail.neighborhood ? ` (${detail.neighborhood})` : ''} · {detail.cuisine} · {detail.rating.toFixed(1)}★</p>
             <p className="small" style={{ margin: '2px 0' }}>📍 {[detail.addressStreet, detail.addressNumber].filter(Boolean).join(' ')}{detail.addressCity ? `, ${detail.addressPostalCode} ${detail.addressCity}` : ''}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Responsable : {detail.responsibleName || '—'} · {detail.email}{detail.phone ? ` · ${detail.phone}` : ''}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Raison sociale : {detail.legalName || '—'} · N° entreprise {detail.companyNumber || '—'} · TVA {detail.vatNumber || '—'}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Abonnement : {detail.subscriptionStatus} · Mode de livraison : {detail.deliveryMode}</p>
-            <p className="small" style={{ margin: '2px 0' }}>Inscrit le {fmtDate(detail.createdAt)}</p>
-            <button className="btn-outline" style={{ marginTop: 6 }} onClick={startEdit}>✏️ Modifier les informations</button>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: detail.phone ? ` · ${detail.phone}` : '' })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
+            <button className="btn-outline" style={{ marginTop: 6 }} onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
             <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Commandes payées</span><b className="small">{detail.orderCount}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">CA plats</span><b className="small">{money(detail.revenue)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Commission générée</span><b className="small">{money(detail.commissionGenerated)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Montant net dû</span><b className="small">{money(detail.netAmountDue)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Remboursements à sa charge</span><b className="small">{money(detail.refundsTotal)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Panier moyen</span><b className="small">{money(detail.avgBasket)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Taux d'annulation</span><b className="small">{pct(detail.cancellationRate)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Taux d'acceptation</span><b className="small">{pct(detail.acceptanceRate)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">Temps moyen de préparation</span><b className="small">{detail.avgPrepMinutes !== null ? `${detail.avgPrepMinutes} min` : 'non mesuré'}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.paidOrders')}</span><b className="small">{detail.orderCount}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.foodRevenue')}</span><b className="small">{money(detail.revenue)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.commissionGenerated')}</span><b className="small">{money(detail.commissionGenerated)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.netDue')}</span><b className="small">{money(detail.netAmountDue)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.refundsCharged')}</span><b className="small">{money(detail.refundsTotal)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.avgBasket')}</span><b className="small">{money(detail.avgBasket)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.cancellationRate')}</span><b className="small">{pct(detail.cancellationRate)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.acceptanceRate')}</span><b className="small">{pct(detail.acceptanceRate)}</b></div>
+            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.avgPrepTime')}</span><b className="small">{detail.avgPrepMinutes !== null ? tr('adminRestos.minutes', { n: detail.avgPrepMinutes }) : tr('adminCommon.notMeasured')}</b></div>
             <div className="row" style={{ gap: 8, marginTop: 10 }}>
-              {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>Suspendre</button>}
-              {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>Réactiver</button>}
+              {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
+              {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             </div>
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>Commandes récentes</h4>
-            {!orders && <div className="small">Chargement...</div>}
-            {orders && orders.length === 0 && <div className="small">Aucune commande pour l'instant.</div>}
+            <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>
+            {!orders && <div className="small">{tr('adminCommon.loading')}</div>}
+            {orders && orders.length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
             {orders && orders.map((o) => (
               <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                <span className="small">{o.clientName}{o.driverName ? ` · livré par ${o.driverName}` : ''}</span>
+                <span className="small">{o.clientName}{o.driverName ? tr('adminRestos.deliveredBySuffix', { name: o.driverName }) : ''}</span>
                 <span className={`status-badge status-${o.status}`}>{o.status}</span>
               </div>
             ))}
@@ -243,20 +246,20 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <>
                 <div className="divider" />
                 <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: '0 0 6px' }}>Origine commerciale</h4>
-                  <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">Voir dans le CRM ↗</Link>
+                  <h4 style={{ margin: '0 0 6px' }}>{tr('adminRestos.commercialOrigin')}</h4>
+                  <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">{tr('adminRestos.viewInCrm')}</Link>
                 </div>
-                <div className="small">Responsable : {crmProspect.ownerEmail || '—'} · Source : {crmProspect.source || '—'}</div>
-                <div className="small">Converti le {fmtDate(crmProspect.convertedAt)}</div>
+                <div className="small">{tr('adminRestos.crmOwnerLine', { owner: crmProspect.ownerEmail || '—', source: crmProspect.source || '—' })}</div>
+                <div className="small">{tr('adminRestos.convertedOn', { date: fmtDate(crmProspect.convertedAt) })}</div>
               </>
             )}
             <div className="divider" />
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: '0 0 6px' }}>Factures</h4>
-              <Link to="/admin/invoices" state={{ restaurantId: selected.id }} className="small">Tout voir ↗</Link>
+              <h4 style={{ margin: '0 0 6px' }}>{tr('adminRestos.invoices')}</h4>
+              <Link to="/admin/invoices" state={{ restaurantId: selected.id }} className="small">{tr('adminRestos.seeAll')}</Link>
             </div>
-            {!invoices && <div className="small">Chargement...</div>}
-            {invoices && invoices.length === 0 && <div className="small">Aucune facture pour l'instant.</div>}
+            {!invoices && <div className="small">{tr('adminCommon.loading')}</div>}
+            {invoices && invoices.length === 0 && <div className="small">{tr('adminRestos.noInvoices')}</div>}
             {invoices && invoices.map((inv) => (
               <div key={inv.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
                 <span className="small" style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</span>
@@ -265,11 +268,11 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             ))}
             <div className="divider" />
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: '0 0 6px' }}>Documents</h4>
-              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>+ Ajouter</button>
+              <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.documents')}</h4>
+              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
             </div>
-            {!documents && <div className="small">Chargement...</div>}
-            {documents && documents.length === 0 && <div className="small">Aucun document.</div>}
+            {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
+            {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
             {documents && documents.map((doc) => (
               <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
                 <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
@@ -298,21 +301,21 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         )}
         {detail && editing && form && (
           <div>
-            <div className="field"><label>Nom</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="field"><label>Commune</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
-            <div className="field"><label>Responsable</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
-            <div className="field"><label>Raison sociale</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
+            <div className="field"><label>{tr('adminRestos.legalName')}</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
             <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}><label>N° entreprise</label><input value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
+              <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.companyNumber')}</label><input value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
               <div className="field" style={{ flex: 1 }}><label>TVA</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : 'Enregistrer'}</button>
-              <button className="btn-ghost" onClick={() => setEditing(false)}>Annuler</button>
+              <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
             </div>
           </div>
         )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>Fermer</button>
+        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
       </div>
     </div>,
     document.body

@@ -4,8 +4,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { fmtDateTime, AUTOMATION_RULES_META } from './adminUtils';
+import { useLanguage } from '../../context/LanguageContext';
 
 export default function AdminAutomationsPage() {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [rules, setRules] = useState(null);
@@ -23,7 +25,7 @@ export default function AdminAutomationsPage() {
     try {
       const r = await api('/admin/automations/run', { method: 'POST', token });
       const totalCreated = r.summary.reduce((a, s) => a + s.created, 0);
-      toast(totalCreated > 0 ? `${totalCreated} nouvelle(s) tâche(s) créée(s).` : 'Aucune nouvelle tâche — tout est déjà à jour.');
+      toast(totalCreated > 0 ? tr('adminAutomations.toastCreated', { n: totalCreated }) : tr('adminAutomations.toastNothingNew'));
       load();
     } catch (e) {
       toast(e.message);
@@ -34,10 +36,10 @@ export default function AdminAutomationsPage() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>Automatisations</h2>
+      <h2 className="section-title" style={{ marginTop: 0 }}>{tr('adminAutomations.title')}</h2>
       <div className="card" style={{ marginBottom: 16, borderLeft: '3px solid var(--gold-deep)' }}>
         <p className="small" style={{ margin: 0 }}>
-          Chaque règle vérifie l'état de la plateforme toutes les 15 minutes et crée une tâche (module Tâches) quand une condition est remplie — jamais deux fois pour la même situation tant que la tâche précédente n'est pas traitée. "Remboursements élevés" ne bloque rien : c'est une vérification a posteriori, pas une validation à deux mains.
+          {tr('adminAutomations.intro')}
         </p>
       </div>
       <div className="row" style={{ justifyContent: 'flex-end', marginBottom: 14 }}>
@@ -49,11 +51,11 @@ export default function AdminAutomationsPage() {
 
       {log && log.length > 0 && (
         <>
-          <h3 style={{ margin: '20px 0 10px', fontSize: 15 }}>Historique des exécutions</h3>
+          <h3 style={{ margin: '20px 0 10px', fontSize: 15 }}>{tr('adminAutomations.runHistory')}</h3>
           {log.map((l) => (
             <div key={l.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', borderBottom: '1px solid var(--cream-dim)' }}>
               <span className="small">{AUTOMATION_RULES_META[l.ruleType]?.label || l.ruleType}</span>
-              <span className="small">{l.createdCount} créée(s) / {l.matchedCount} détectée(s) · {fmtDateTime(l.ranAt)}</span>
+              <span className="small">{tr('adminAutomations.runLine', { created: l.createdCount, matched: l.matchedCount, date: fmtDateTime(l.ranAt) })}</span>
             </div>
           ))}
         </>
@@ -63,6 +65,7 @@ export default function AdminAutomationsPage() {
 }
 
 function RuleCard({ rule, onChanged }) {
+  const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const meta = AUTOMATION_RULES_META[rule.ruleType] || { label: rule.ruleType, description: '', params: [] };
@@ -84,7 +87,7 @@ function RuleCard({ rule, onChanged }) {
     setSaving(true);
     try {
       await api(`/admin/automations/rules/${rule.ruleType}`, { method: 'PATCH', token, body: { params } });
-      toast('Paramètres enregistrés.');
+      toast(tr('adminAutomations.toastSaved'));
       onChanged();
     } catch (e) {
       toast(e.message);
@@ -101,7 +104,7 @@ function RuleCard({ rule, onChanged }) {
           <p className="small" style={{ margin: '2px 0 0', opacity: 0.75 }}>{meta.description}</p>
         </div>
         <button className={rule.enabled ? 'btn-danger-ghost' : 'btn-teal'} style={{ padding: '4px 12px', fontSize: 12, flexShrink: 0 }} onClick={toggleEnabled}>
-          {rule.enabled ? 'Désactiver' : 'Activer'}
+          {rule.enabled ? tr('adminCommon.disable') : 'Activer'}
         </button>
       </div>
       {meta.params.length > 0 && (
@@ -116,7 +119,7 @@ function RuleCard({ rule, onChanged }) {
         </div>
       )}
       <p className="small" style={{ margin: '8px 0 0', opacity: 0.6 }}>
-        {rule.lastRunAt ? `Dernier passage : ${fmtDateTime(rule.lastRunAt)} — ${rule.lastRunCreatedCount ?? 0} tâche(s) créée(s) / ${rule.lastRunMatchedCount ?? 0} détectée(s)` : 'Jamais encore exécutée.'}
+        {rule.lastRunAt ? tr('adminAutomations.lastRun', { date: fmtDateTime(rule.lastRunAt), created: rule.lastRunCreatedCount ?? 0, matched: rule.lastRunMatchedCount ?? 0 }) : tr('adminAutomations.neverRun')}
       </p>
     </div>
   );
