@@ -51,6 +51,15 @@ export default function AdminClientsPage() {
   function askSuspend(c) {
     setConfirmAction({ title: `Suspendre ${c.name} ?`, message: tr('adminClients.suspendBody'), danger: true, run: () => setStatus(c.id, 'blocked') });
   }
+  async function deleteClient(c) {
+    const r = await api(`/admin/clients/${c.id}`, { method: 'DELETE', token });
+    setClients((prev) => prev.filter((x) => x.id !== c.id));
+    if (selected?.id === c.id) { setSelected(null); setDetail(null); }
+    toast(tr('adminClients.toastDeleted', { n: r.deletedOrders || 0 }));
+  }
+  function askDelete(c) {
+    setConfirmAction({ title: tr('adminClients.confirmDelete', { name: c.name }), message: tr('adminClients.deleteBody', { email: c.email }), danger: true, run: () => deleteClient(c).catch((e) => toast(e.message)) });
+  }
   function askReactivate(c) {
     setConfirmAction({ title: tr('adminClients.confirmReactivate', { name: c.name }), run: () => setStatus(c.id, 'approved') });
   }
@@ -113,6 +122,7 @@ export default function AdminClientsPage() {
           <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
             {c.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(c)}>{tr('adminCommon.suspend')}</button>}
             {c.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(c)}>{tr('adminCommon.reactivate')}</button>}
+            <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(c)}>{tr('adminClients.deleteAccount')}</button>
           </div>
         </div>
       ))}
@@ -130,6 +140,7 @@ export default function AdminClientsPage() {
                 <div className="row" style={{ gap: 8, marginTop: 6 }}>
                   {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                   {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
+                  <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminClients.deleteAccount')}</button>
                 </div>
                 <div className="divider" />
                 <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.orders')}</span><b className="small">{detail.orderCount}</b></div>

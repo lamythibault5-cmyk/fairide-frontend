@@ -159,6 +159,10 @@ export default function Orders() {
   const typeFiltre = searchParams.get('type');
   const listeAffichee = typeFiltre ? orders.filter((o) => o.orderType === typeFiltre) : orders;
   const titre = typeFiltre === 'dine_in' ? t('orders.myReservations') : t('orders.title');
+  // Rappel à l'écran, en plus de l'e-mail de la veille : les tables confirmées qui commencent dans les
+  // 24 prochaines heures.
+  const maintenant = Date.now();
+  const rappels = orders.filter((o) => o.orderType === 'dine_in' && o.status === 'preparation' && o.scheduledFor && o.scheduledFor > maintenant && o.scheduledFor - maintenant <= 24 * 3600000);
 
   if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
@@ -189,6 +193,15 @@ export default function Orders() {
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
       </div>
+      {rappels.map((o) => {
+        const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
+        return (
+          <div key={`rappel-${o.id}`} className="card orders-reminder" role="status">
+            <b>📅 {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
+            {o.deliveryCode && <span className="small"> · {t('orders.reminderCode', { code: o.deliveryCode })}</span>}
+          </div>
+        );
+      })}
       {listeAffichee.map((o) => (
         <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>

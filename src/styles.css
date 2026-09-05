@@ -2255,3 +2255,4 @@ button.account-link-row:last-child { border-bottom: none; }
   .resa-stepper li button { width: 36px; height: 36px; font-size: 15px; }
   .resa-wizard-body { padding: 14px; }
 }
+.orders-reminder { background: rgba(59,47,181,0.08); border-color: var(--iris); color: var(--ink); padding: 12px 16px; }

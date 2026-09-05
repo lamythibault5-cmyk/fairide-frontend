@@ -214,7 +214,11 @@ export const translations = {
       ordersPerMonth: '{n} commande(s)/mois',
       lastOrderOn: 'dernière commande le {date}',
       noOrder: 'aucune commande',
-      registeredBalance: 'Inscrit le {date} · Solde Fairide :'
+      registeredBalance: 'Inscrit le {date} · Solde Fairide :',
+      deleteAccount: 'Supprimer le compte',
+      confirmDelete: 'Supprimer définitivement {name} ?',
+      deleteBody: 'Le compte {email} et tout son historique (commandes, réservations, avis, favoris) seront effacés. Les écritures comptables sont conservées mais détachées. Irréversible.',
+      toastDeleted: 'Compte supprimé ({n} commande(s) effacée(s)).'
     },
     adminPayments: {
       title: 'Paiements',
@@ -2609,7 +2613,11 @@ export const translations = {
       filterAll: 'Toutes',
       filterReservations: 'Réservations',
       myReservations: 'Mes réservations',
-      noReservations: 'Aucune réservation de table pour l\'instant.'
+      noReservations: 'Aucune réservation de table pour l\'instant.',
+      reminderBanner: 'Rappel : ta table chez {name} c\'est {when} à {time} ({n} pers.).',
+      reminderToday: 'aujourd\'hui',
+      reminderTomorrow: 'demain',
+      reminderCode: 'Code : {code}'
     },
     review: {
       foodRatingLabel: 'Note pour la nourriture',
@@ -3089,7 +3097,11 @@ export const translations = {
       ordersPerMonth: '{n} order(s)/month',
       lastOrderOn: 'last order on {date}',
       noOrder: 'no order',
-      registeredBalance: 'Registered on {date} · Fairide balance:'
+      registeredBalance: 'Registered on {date} · Fairide balance:',
+      deleteAccount: 'Delete account',
+      confirmDelete: 'Permanently delete {name}?',
+      deleteBody: 'The account {email} and all its history (orders, reservations, reviews, favourites) will be erased. Accounting entries are kept but detached. This cannot be undone.',
+      toastDeleted: 'Account deleted ({n} order(s) erased).'
     },
     adminPayments: {
       title: 'Payments',
@@ -5484,7 +5496,11 @@ export const translations = {
       filterAll: 'All',
       filterReservations: 'Reservations',
       myReservations: 'My reservations',
-      noReservations: 'No table reservation yet.'
+      noReservations: 'No table reservation yet.',
+      reminderBanner: 'Reminder: your table at {name} is {when} at {time} ({n} guests).',
+      reminderToday: 'today',
+      reminderTomorrow: 'tomorrow',
+      reminderCode: 'Code: {code}'
     },
     review: {
       foodRatingLabel: 'Food rating',
@@ -5964,7 +5980,11 @@ export const translations = {
       ordersPerMonth: '{n} bestelling(en)/maand',
       lastOrderOn: 'laatste bestelling op {date}',
       noOrder: 'geen bestelling',
-      registeredBalance: 'Ingeschreven op {date} · Fairide-saldo:'
+      registeredBalance: 'Ingeschreven op {date} · Fairide-saldo:',
+      deleteAccount: 'Account verwijderen',
+      confirmDelete: '{name} definitief verwijderen?',
+      deleteBody: 'Het account {email} en zijn hele geschiedenis (bestellingen, reserveringen, beoordelingen, favorieten) worden gewist. Boekhoudkundige boekingen blijven bewaard maar losgekoppeld. Onomkeerbaar.',
+      toastDeleted: 'Account verwijderd ({n} bestelling(en) gewist).'
     },
     adminPayments: {
       title: 'Betalingen',
@@ -8359,7 +8379,11 @@ export const translations = {
       filterAll: 'Alle',
       filterReservations: 'Reservaties',
       myReservations: 'Mijn reservaties',
-      noReservations: 'Nog geen tafelreservatie.'
+      noReservations: 'Nog geen tafelreservatie.',
+      reminderBanner: 'Herinnering: je tafel bij {name} is {when} om {time} ({n} pers.).',
+      reminderToday: 'vandaag',
+      reminderTomorrow: 'morgen',
+      reminderCode: 'Code: {code}'
     },
     review: {
       foodRatingLabel: 'Beoordeling voor het eten',
