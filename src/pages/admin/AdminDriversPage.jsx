@@ -222,6 +222,7 @@ export default function AdminDriversPage() {
                 <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
               )}
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.vat')} : {VAT_LABELS(tr)[detail.vatStatus] || tr('adminDrivers.vatUnknown')}{detail.vatNumber ? ` · ${detail.vatNumber}` : ''}</p>
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '—'}</p>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
                 {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => setStatus(detail.id, 'approved')}>{tr('adminCommon.approve')}</button>}
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}

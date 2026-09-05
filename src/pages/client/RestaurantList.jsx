@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
+import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // Chargée à la demande : la carte tire Leaflet (~150 Ko) avec elle, et cette page fait partie des
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
@@ -88,14 +89,6 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   );
 }
 
-// Un plat est « bio » ou « vegan » si le restaurateur l'a coché (menu_items.organic / .vegan), ou si son
-// nom ou sa description le dit (« Vin bio », « Burger vegan ») — pour que les rangées et les filtres
-// vivent avant que toutes les cartes soient annotées.
-const texteDuPlat = (m) => `${m.name || ''} ${m.desc || ''}`.toLowerCase();
-export const platBio = (m) => !!m.organic || /(^|[^a-zà-ÿ])bio(logique)?s?($|[^a-zà-ÿ])|organic/i.test(texteDuPlat(m));
-export const platVegan = (m) => !!m.vegan || /v[eé]gan/i.test(texteDuPlat(m));
-const restoBio = (r) => (r.menu || []).some(platBio);
-const restoVegan = (r) => (r.menu || []).some(platVegan);
 
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop }) {
   if (list.length === 0) return null;

@@ -2390,3 +2390,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .diet-chip:hover { border-color: var(--iris); }
 .diet-chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 @media (max-width: 560px) { .diet-filters { width: 100%; } .diet-chip { flex: 1; } }
+/* Reconnaissance d'adresse (inscription restaurateur, création du restaurant). */
+.address-reco { background: rgba(59,47,181,0.06); border-left: 3px solid var(--iris); border-radius: var(--radius-chip); padding: 10px 12px; margin: 4px 0 12px; }
+.address-reco-candidates { display: flex; flex-direction: column; gap: 6px; }
+.address-reco-candidate { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; color: var(--ink); }
+.address-reco-candidate:hover { border-color: var(--iris); }
+.address-reco-candidate.active { border-color: var(--iris); background: rgba(59,47,181,0.08); }
+.recherche-regimes { margin: -6px 0 14px; align-items: center; flex-wrap: wrap; }

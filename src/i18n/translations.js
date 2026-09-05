@@ -4,6 +4,20 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    addressReco: {
+      searching: 'Reconnaissance de l\'adresse…',
+      notFound: 'Adresse non reconnue : vérifie la rue et le code postal. Tu pourras préciser la commune à l\'étape suivante.',
+      error: 'La reconnaissance d\'adresse est indisponible pour l\'instant, tu peux continuer.',
+      recognized: 'Adresse reconnue :',
+      communeLine: 'commune {commune}',
+      communeUnknown: 'commune à préciser',
+      neighbourhoodLine: 'quartier {neighbourhood}',
+      candidatesTitle: 'Est-ce votre commerce ?',
+      candidatesHelp: 'Commerces référencés sur Internet à cette adresse — clique pour reprendre le nom.',
+      distance: 'à {m} m',
+      picked: '{name} sera proposé comme nom de ton commerce.',
+      noCandidate: 'Aucun commerce référencé à cette adresse — tu choisiras le nom toi-même.'
+    },
     adminReviews: {
       foodRating: 'Note plats',
       foodComment: 'Commentaire plats',
@@ -545,7 +559,8 @@ export const translations = {
       vatFranchise: 'Franchise TVA',
       vatSubject: 'Assujetti TVA',
       vatUnknown: 'TVA non renseignée',
-      statsLine: '{n} livraison(s) · {revenue} de revenus · {cancel} annulation'
+      statsLine: '{n} livraison(s) · {revenue} de revenus · {cancel} annulation',
+      companyNumber: 'N° d\'entreprise'
     },
     adminDocs: {
       expired: 'Expirés',
@@ -1601,7 +1616,11 @@ export const translations = {
       orderIssueSub: 'Suivi, retard, erreur, remboursement',
       ourStory: 'Notre histoire',
       ourStorySub: 'Pourquoi Fairide existe',
-      stNew: 'nouvelle'
+      stNew: 'nouvelle',
+      filterBio: '🌿 Bio',
+      filterVegan: '🌱 Vegan',
+      dietFilters: 'Filtres alimentaires',
+      dietHint: 'Seuls les commerces et plats correspondants sont affichés.'
     },
     invoiceArchive: {
       none: 'Aucune facture émise pour l\'instant. Elles apparaîtront ici dès la première période facturée.',
@@ -2129,7 +2148,9 @@ export const translations = {
       tripEstimate: '🚴 Trajet resto → client : ~{min} min{km}',
       rideFee: 'Course : {fee}€',
       geoLastSentDot: ' · dernier envoi {time}',
-      configure: 'Configurer'
+      configure: 'Configurer',
+      waitingTitle: 'Compte en attente de validation',
+      waitingEmpty: 'Ton adresse e-mail est confirmée. L\'équipe Fairide vérifie maintenant ton dossier (identité, numéro d\'entreprise) ; ton tableau de bord s\'activera dès la validation, tu recevras un e-mail.'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -3178,10 +3199,27 @@ export const translations = {
       phLegalName: 'Ex: HORECA BRUSSELS SRL',
       phStreet: 'Rue du Midi',
       phCity: 'Bruxelles',
-      toastLegalRequired: 'Les informations légales de ton commerce sont requises (nom légal, n° d\'entreprise, n° TVA, responsable).'
+      toastLegalRequired: 'Les informations légales de ton commerce sont requises (nom légal, n° d\'entreprise, n° TVA, responsable).',
+      companyNumberDriver: 'N° d\'entreprise (statut indépendant)',
+      companyNumberDriverHelp: 'Les livreurs Fairide travaillent en indépendants : ton numéro BCE est nécessaire pour l\'autofacturation mensuelle.',
+      errDriverCompanyNumber: 'Le numéro d\'entreprise est requis pour un compte livreur.'
     }
   },
   en: {
+    addressReco: {
+      searching: 'Recognising the address…',
+      notFound: 'Address not recognised: check the street and postal code. You can set the municipality at the next step.',
+      error: 'Address recognition is unavailable right now, you can continue.',
+      recognized: 'Address recognised:',
+      communeLine: 'municipality {commune}',
+      communeUnknown: 'municipality to confirm',
+      neighbourhoodLine: 'neighbourhood {neighbourhood}',
+      candidatesTitle: 'Is this your business?',
+      candidatesHelp: 'Businesses listed online at this address — click to reuse the name.',
+      distance: '{m} m away',
+      picked: '{name} will be suggested as your business name.',
+      noCandidate: 'No business listed at this address — you will choose the name yourself.'
+    },
     adminReviews: {
       foodRating: 'Food rating',
       foodComment: 'Food comment',
@@ -3723,7 +3761,8 @@ export const translations = {
       vatFranchise: 'VAT exempt',
       vatSubject: 'VAT registered',
       vatUnknown: 'VAT status missing',
-      statsLine: '{n} delivery(ies) · {revenue} earned · {cancel} cancellation'
+      statsLine: '{n} delivery(ies) · {revenue} earned · {cancel} cancellation',
+      companyNumber: 'Company number'
     },
     adminDocs: {
       expired: 'Expired',
@@ -4779,7 +4818,11 @@ export const translations = {
       orderIssueSub: 'Tracking, delay, error, refund',
       ourStory: 'Our story',
       ourStorySub: 'Why Fairide exists',
-      stNew: 'new'
+      stNew: 'new',
+      filterBio: '🌿 Organic',
+      filterVegan: '🌱 Vegan',
+      dietFilters: 'Dietary filters',
+      dietHint: 'Only matching businesses and dishes are shown.'
     },
     invoiceArchive: {
       none: 'No invoice issued yet. They will appear here from the first invoiced period.',
@@ -5307,7 +5350,9 @@ export const translations = {
       tripEstimate: '🚴 Restaurant → customer: ~{min} min{km}',
       rideFee: 'Ride: €{fee}',
       geoLastSentDot: ' · last sent {time}',
-      configure: 'Set up'
+      configure: 'Set up',
+      waitingTitle: 'Account awaiting validation',
+      waitingEmpty: 'Your e-mail address is confirmed. The Fairide team is now checking your file (identity, company number); your dashboard will activate as soon as it is validated, and you will get an e-mail.'
     },
     dashResto: {
       today: 'Today',
@@ -6356,10 +6401,27 @@ export const translations = {
       phLegalName: 'E.g.: HORECA BRUSSELS LTD',
       phStreet: 'High Street',
       phCity: 'Brussels',
-      toastLegalRequired: 'Your business\'s legal information is required (legal name, company number, VAT number, manager).'
+      toastLegalRequired: 'Your business\'s legal information is required (legal name, company number, VAT number, manager).',
+      companyNumberDriver: 'Company number (self-employed status)',
+      companyNumberDriverHelp: 'Fairide couriers are self-employed: your company number is needed for monthly self-billing.',
+      errDriverCompanyNumber: 'The company number is required for a courier account.'
     }
   },
   nl: {
+    addressReco: {
+      searching: 'Adres herkennen…',
+      notFound: 'Adres niet herkend: controleer straat en postcode. Je kunt de gemeente in de volgende stap kiezen.',
+      error: 'Adresherkenning is momenteel niet beschikbaar, je kunt verdergaan.',
+      recognized: 'Adres herkend:',
+      communeLine: 'gemeente {commune}',
+      communeUnknown: 'gemeente te bevestigen',
+      neighbourhoodLine: 'wijk {neighbourhood}',
+      candidatesTitle: 'Is dit jouw zaak?',
+      candidatesHelp: 'Zaken die online op dit adres gekend zijn — klik om de naam over te nemen.',
+      distance: 'op {m} m',
+      picked: '{name} wordt voorgesteld als naam van je zaak.',
+      noCandidate: 'Geen zaak gekend op dit adres — je kiest de naam zelf.'
+    },
     adminReviews: {
       foodRating: 'Score eten',
       foodComment: 'Opmerking eten',
@@ -6901,7 +6963,8 @@ export const translations = {
       vatFranchise: 'Btw-vrijstelling',
       vatSubject: 'Btw-plichtig',
       vatUnknown: 'Btw-status ontbreekt',
-      statsLine: '{n} levering(en) · {revenue} inkomsten · {cancel} annulering'
+      statsLine: '{n} levering(en) · {revenue} inkomsten · {cancel} annulering',
+      companyNumber: 'Ondernemingsnummer'
     },
     adminDocs: {
       expired: 'Verlopen',
@@ -7957,7 +8020,11 @@ export const translations = {
       orderIssueSub: 'Opvolging, vertraging, fout, terugbetaling',
       ourStory: 'Ons verhaal',
       ourStorySub: 'Waarom Fairide bestaat',
-      stNew: 'nieuw'
+      stNew: 'nieuw',
+      filterBio: '🌿 Bio',
+      filterVegan: '🌱 Vegan',
+      dietFilters: 'Voedingsfilters',
+      dietHint: 'Alleen passende zaken en gerechten worden getoond.'
     },
     invoiceArchive: {
       none: 'Nog geen factuur uitgegeven. Ze verschijnen hier vanaf de eerste gefactureerde periode.',
@@ -8485,7 +8552,9 @@ export const translations = {
       tripEstimate: '🚴 Traject restaurant → klant: ~{min} min{km}',
       rideFee: 'Rit: €{fee}',
       geoLastSentDot: ' · laatst verzonden {time}',
-      configure: 'Instellen'
+      configure: 'Instellen',
+      waitingTitle: 'Account wacht op validatie',
+      waitingEmpty: 'Je e-mailadres is bevestigd. Het Fairide-team controleert nu je dossier (identiteit, ondernemingsnummer); je dashboard wordt geactiveerd zodra het gevalideerd is, je krijgt een e-mail.'
     },
     dashResto: {
       today: 'Vandaag',
@@ -9534,7 +9603,10 @@ export const translations = {
       phLegalName: 'Bv.: HORECA BRUSSEL BV',
       phStreet: 'Zuidstraat',
       phCity: 'Brussel',
-      toastLegalRequired: 'De juridische gegevens van je zaak zijn vereist (juridische naam, ondernemingsnummer, btw-nummer, verantwoordelijke).'
+      toastLegalRequired: 'De juridische gegevens van je zaak zijn vereist (juridische naam, ondernemingsnummer, btw-nummer, verantwoordelijke).',
+      companyNumberDriver: 'Ondernemingsnummer (zelfstandig statuut)',
+      companyNumberDriverHelp: 'Fairide-koeriers werken als zelfstandige: je ondernemingsnummer is nodig voor de maandelijkse selfbilling.',
+      errDriverCompanyNumber: 'Het ondernemingsnummer is verplicht voor een koeriersaccount.'
     }
   }
 };

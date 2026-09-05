@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Outlet, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
+import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
@@ -41,6 +42,20 @@ export default function DashboardLayout() {
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [hours, setHours] = useState(null);
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
+  // Ce que la reconnaissance d'adresse a trouvé à l'inscription (voir Auth.jsx) : commune, quartier,
+  // adresse, et le commerce référencé sur Internet si le restaurateur l'a désigné.
+  useEffect(() => {
+    try {
+      const brut = localStorage.getItem('fairide_resto_hint'); if (!brut) return;
+      const h = JSON.parse(brut);
+      if (h.name) setName((v) => v || h.name);
+      if (h.commune && COMMUNES.includes(h.commune)) setCommune(h.commune);
+      if (h.neighborhood) setNeighborhood((v) => v || h.neighborhood);
+      if (h.street) setAddressStreet((v) => v || h.street);
+      if (h.number) setAddressNumber((v) => v || h.number);
+      if (h.postalCode) setAddressPostalCode((v) => v || h.postalCode);
+    } catch { /* indice illisible : formulaire vide */ }
+  }, []);
 
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
   const [ordersLoaded, setOrdersLoaded] = useState(false);
@@ -152,6 +167,7 @@ export default function DashboardLayout() {
         }
       });
       setMyRestos((prev) => [...prev, r]);
+      try { localStorage.removeItem('fairide_resto_hint'); } catch { /* rien */ }
       setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
@@ -239,6 +255,11 @@ export default function DashboardLayout() {
               <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
             </div>
           </div>
+          <AddressRecognition
+            street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact
+            onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
+            onPickCandidate={(c) => { setName(c.name); }}
+          />
           <div className="field"><label>{t('dashResto.neighbourhoodOptional')}</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
 
           <div className="divider" />

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -62,6 +63,8 @@ export default function SearchPage() {
   usePageMeta({ title: 'Recherche — Fairide', path: '/recherche' });
 
   const [requete, setRequete] = useState('');
+  const [bio, setBio] = useState(false);
+  const [vegan, setVegan] = useState(false);
   const [restaurants, setRestaurants] = useState([]);
   const [commandes, setCommandes] = useState([]);
   const [chargement, setChargement] = useState(true);
@@ -77,20 +80,25 @@ export default function SearchPage() {
   }, [token]);
 
   const q = normaliser(requete);
-  const actif = q.length >= 2;
+  const filtreRegime = bio || vegan;
+  const actif = q.length >= 2 || filtreRegime;
+  const platOk = (p) => (!bio || platBio(p)) && (!vegan || platVegan(p));
+  const restoOk = (r) => (!bio || restoBio(r)) && (!vegan || restoVegan(r));
 
   const resultats = useMemo(() => {
     if (!actif) return null;
+    const texteOk = (r) => q.length < 2 || contient(r.name, q) || contient(r.cuisine, q) || contient(r.desc, q) || contient(r.neighborhood, q);
     const commerces = restaurants
-      .filter((r) => contient(r.name, q) || contient(r.cuisine, q) || contient(r.desc, q) || contient(r.neighborhood, q))
-      .slice(0, MAX_PAR_GROUPE);
+      .filter((r) => restoOk(r) && texteOk(r))
+      .slice(0, filtreRegime && q.length < 2 ? 30 : MAX_PAR_GROUPE);
 
     // Un plat par ligne, avec son commerce : on cherche « tiramisu », on veut savoir OÙ il y en a.
     const plats = [];
     for (const r of restaurants) {
       for (const p of r.menu || []) {
         if (p.available === false) continue;
-        if (contient(p.name, q) || contient(p.desc || p.description, q)) {
+        if (!platOk(p)) continue;
+        if (q.length < 2 || contient(p.name, q) || contient(p.desc || p.description, q)) {
           plats.push({ restaurant: r, plat: p });
           if (plats.length >= MAX_PAR_GROUPE) break;
         }
@@ -98,19 +106,19 @@ export default function SearchPage() {
       if (plats.length >= MAX_PAR_GROUPE) break;
     }
 
-    const cuisines = RESTAURANT_TYPES.filter((c) => contient(c.value, q)).slice(0, MAX_PAR_GROUPE);
-    const communes = COMMUNES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
-    const aide = sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
+    const cuisines = q.length < 2 ? [] : RESTAURANT_TYPES.filter((c) => contient(c.value, q)).slice(0, MAX_PAR_GROUPE);
+    const communes = q.length < 2 ? [] : COMMUNES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
+    const aide = q.length < 2 ? [] : sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
     const rubriques = rubriquesCompte(t)
-      .filter((s) => (!s.connecte || user) && (contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)))
+      .filter((s) => q.length >= 2 && (!s.connecte || user) && (contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)))
       .slice(0, MAX_PAR_GROUPE);
     const mesCommandes = commandes
-      .filter((o) => contient(o.restaurantName || o.restaurant?.name, q) || (o.items || []).some((i) => contient(i.name, q)) || contient(String(o.id).slice(0, 8), q))
+      .filter((o) => q.length >= 2 && (contient(o.restaurantName || o.restaurant?.name, q) || (o.items || []).some((i) => contient(i.name, q)) || contient(String(o.id).slice(0, 8), q)))
       .slice(0, MAX_PAR_GROUPE);
 
     const total = commerces.length + plats.length + cuisines.length + communes.length + aide.length + rubriques.length + mesCommandes.length;
     return { commerces, plats, cuisines, communes, aide, rubriques, mesCommandes, total };
-  }, [actif, q, restaurants, commandes, user]);
+  }, [actif, q, restaurants, commandes, user, bio, vegan]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Entrée sur un texte qui n'a qu'un résultat : on y va. Sur plusieurs, on ne devine pas.
   function soumettre(e) {
@@ -149,6 +157,11 @@ export default function SearchPage() {
           <button type="button" className="recherche-effacer" onClick={() => { setRequete(''); champ.current?.focus(); }} aria-label={t('search.clear')}>✕</button>
         )}
       </form>
+      <div className="diet-filters recherche-regimes" role="group" aria-label={t('search.dietFilters')}>
+        <button type="button" className={`diet-chip${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
+        <button type="button" className={`diet-chip${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
+        {filtreRegime && <span className="small">{t('search.dietHint')}</span>}
+      </div>
 
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit

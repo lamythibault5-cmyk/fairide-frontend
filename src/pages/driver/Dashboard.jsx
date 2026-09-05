@@ -272,7 +272,13 @@ export default function DriverDashboard() {
         )}
       </div>
 
-      {user?.driverPaused ? (
+      {user?.adminStatus !== 'approved' ? (
+        <div className="empty" style={{ padding: '40px 20px' }}>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>{user?.adminStatus === 'blocked' ? '🚫' : '🕐'}</div>
+          <b>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedTitle') : t('dashDriver.waitingTitle')}</b>
+          <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedText') : t('dashDriver.waitingEmpty')}</p>
+        </div>
+      ) : user?.driverPaused ? (
         <div className="empty">{t('dashDriver.pausedText')}</div>
       ) : (
         <>
@@ -301,6 +307,8 @@ export default function DriverDashboard() {
         </>
       )}
 
+      {/* Retraits et livraisons en cours : rien à montrer tant que l'admin n'a pas validé le livreur. */}
+      {user?.adminStatus === 'approved' && (<>
       <h2 className="section-title">{t('dashDriver.awaitingPickup')}</h2>
       {awaitingPickup.length === 0 && <div className="empty">{t('dashDriver.noneToPickUp')}</div>}
       {awaitingPickup.map((o) => (
@@ -353,6 +361,7 @@ export default function DriverDashboard() {
           </div>
         </div>
       ))}
+      </>)}
     </div>
   );
 }

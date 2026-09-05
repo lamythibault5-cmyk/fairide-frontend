@@ -4,6 +4,7 @@ import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import AddressRecognition from '../components/AddressRecognition';
 
 function roles(t) {
   return [
@@ -147,6 +148,7 @@ export default function Auth() {
       if (!firstName.trim()) e.firstName = required;
       if (!lastName.trim()) e.lastName = required;
       if (!phone.trim()) e.phone = required;
+      if (role === 'driver' && !companyNumber.trim()) e.companyNumber = required;
     }
     if (key === 'business') {
       if (!legalName.trim()) e.legalName = required;
@@ -198,6 +200,10 @@ export default function Auth() {
       toast(t('auth.googleIncompleteProfile'));
       return;
     }
+    if (mode === 'register' && role === 'driver' && !companyNumber.trim()) {
+      toast(t('auth.errDriverCompanyNumber'));
+      return;
+    }
     if (mode === 'register' && role === 'restaurant' && (!legalName.trim() || !companyNumber.trim() || !vatNumber.trim() || !responsibleName.trim())) {
       toast(t('auth.toastLegalRequired'));
       return;
@@ -211,7 +217,8 @@ export default function Auth() {
         ...(role === 'restaurant' ? {
           legalName: legalName.trim(), companyNumber: companyNumber.trim(),
           vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim()
-        } : {})
+        } : {}),
+        ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
       });
       toast(t('auth.welcome', { name: data.user.name }));
       navigate(from);
@@ -281,7 +288,8 @@ export default function Auth() {
           ...(role === 'restaurant' ? {
             legalName: legalName.trim(), companyNumber: companyNumber.trim(),
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim()
-          } : {})
+          } : {}),
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
         });
         if (data.needsVerification) {
           setPendingEmail(data.email);
@@ -502,6 +510,15 @@ export default function Auth() {
                     value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
                   {fieldError('phone')}
                 </div>
+                {role === 'driver' && (
+                  <div className="field">
+                    <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
+                    <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}
+                      value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                    {fieldError('companyNumber')}
+                    <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
+                  </div>
+                )}
               </>
             )}
 
@@ -569,6 +586,18 @@ export default function Auth() {
                     {fieldError('addressCity')}
                   </div>
                 </div>
+                {role === 'restaurant' && (
+                  <AddressRecognition
+                    street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={addressCity}
+                    onResult={(r) => {
+                      if (r.commune && !addressCity.trim()) setAddressCity(r.commune);
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ name: ancien.name, cuisine: ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                    }}
+                    onPickCandidate={(c, r) => {
+                      try { localStorage.setItem('fairide_resto_hint', JSON.stringify({ name: c.name, cuisine: c.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                    }}
+                  />
+                )}
               </>
             )}
 
