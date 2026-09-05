@@ -106,6 +106,11 @@ export default function Checkout() {
   const [dateOptions] = useState(getScheduleDateOptions);
   const [partySize, setPartySize] = useState(2);
   const [reservationName, setReservationName] = useState(user.name || '');
+  const [reservationNote, setReservationNote] = useState('');
+  // Disponibilité réelle du restaurant pour la date et le groupe choisis (créneaux libres, règles,
+  // acompte) — voir GET /restaurants/:id/availability. Remplace la grille fixe 9h–22h pour la table.
+  const [dispo, setDispo] = useState(null);
+  const [dispoChargement, setDispoChargement] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
@@ -172,6 +177,26 @@ export default function Checkout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurant]);
 
+  // Créneaux libres pour la date et le groupe : rechargés à chaque changement de l'un ou l'autre. Le
+  // créneau déjà choisi est conservé s'il reste disponible, effacé sinon (on ne laisse pas partir
+  // une réservation sur une heure devenue complète). Déclaré AVANT les sorties anticipées ci-dessous,
+  // comme tout hook : l'ordre des hooks doit être le même à chaque rendu.
+  useEffect(() => {
+    if (fulfillmentType !== 'dine_in' || !restaurantId || !scheduleDate || !partySize) { setDispo(null); return undefined; }
+    let annule = false;
+    setDispoChargement(true);
+    api(`/restaurants/${restaurantId}/availability?date=${scheduleDate}&partySize=${Number(partySize)}`)
+      .then((d) => {
+        if (annule) return;
+        setDispo(d);
+        setScheduleTime((h) => (h && d.creneaux?.some((c) => c.heure === h && c.disponible) ? h : ''));
+      })
+      .catch((e) => { if (!annule) { setDispo(null); toast(e.message); } })
+      .finally(() => { if (!annule) setDispoChargement(false); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fulfillmentType, restaurantId, scheduleDate, partySize]);
+
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
@@ -185,6 +210,12 @@ export default function Checkout() {
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
   const isPureReservation = pendingOrder?.orderType === 'dine_in' && pendingOrder.items.length === 0;
+  // Réservation : les jours proposés vont jusqu'à l'horizon du restaurant, les heures sont ses
+  // créneaux réellement libres. Le créneau choisi porte son instant exact (heure de Bruxelles) et
+  // l'acompte qui s'y applique (il dépend de la table qui serait attribuée).
+  const dateOptionsResa = fulfillmentType === 'dine_in' ? getScheduleDateOptions(restaurant?.reservationMaxDays || 7) : dateOptions;
+  const creneauChoisi = dispo?.creneaux?.find((c) => c.heure === scheduleTime) || null;
+  const acompteDu = creneauChoisi ? creneauChoisi.acompte : (dispo?.acompte?.montant || 0);
 
   function selectFulfillment(type) {
     setFulfillmentType(type);
@@ -223,7 +254,11 @@ export default function Checkout() {
       return;
     }
     const isScheduled = fulfillmentType === 'dine_in' || scheduleEnabled;
-    const scheduledForISO = isScheduled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
+    // Table : l'instant vient du créneau serveur (heure de Bruxelles, quel que soit le fuseau du
+    // téléphone) ; commande programmée : heure locale, comme avant.
+    const scheduledForISO = isScheduled
+      ? (fulfillmentType === 'dine_in' && creneauChoisi ? creneauChoisi.debut : new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString())
+      : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     setPlacing(true);
     try {
@@ -239,7 +274,7 @@ export default function Checkout() {
             addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
             deliveryInstructions, deliveryNote: deliveryNote.trim()
           } : {}),
-          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim() } : {}),
+          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim() } : {}),
           useBalance
         }
       });
@@ -256,7 +291,10 @@ export default function Checkout() {
   async function confirmAndPay() {
     setPaying(true);
     try {
-      const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
+      // Réservation avec acompte : c'est l'acompte qu'on encaisse (la commande est à 0 €) ; le serveur
+      // confirme la table dès qu'il est payé. Sinon, le parcours de paiement habituel.
+      const acompteAPayer = pendingOrder.orderType === 'dine_in' && pendingOrder.reservationDepositStatus === 'pending' && pendingOrder.reservationDepositAmount > 0;
+      const pay = await api(acompteAPayer ? `/payments/deposit-checkout/${pendingOrder.id}` : `/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         cart.clear();
@@ -431,30 +469,46 @@ export default function Checkout() {
                       style={{ flex: 1 }}
                       aria-label={t('checkout.reservationDateTime')}
                     >
-                      {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
+                      {dateOptionsResa.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
                     </select>
                     <select
                       value={scheduleTime}
                       onChange={(e) => setScheduleTime(e.target.value)}
                       style={{ flex: 1 }}
                       aria-label={t('checkout.timePlaceholder')}
+                      disabled={dispoChargement}
                     >
-                      <option value="">{t('checkout.timePlaceholder')}</option>
-                      {scheduleTimeOptions.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
+                      <option value="">{dispoChargement ? t('checkout.loadingSlots') : t('checkout.timePlaceholder')}</option>
+                      {/* Les créneaux pleins restent visibles mais grisés : voir qu'il y avait 20h30 et que
+                          c'est complet aide à choisir 19h30, là où une liste amputée laisse croire que le
+                          restaurant ferme tôt. */}
+                      {(dispo?.creneaux || []).map((c) => (
+                        <option key={c.heure} value={c.heure} disabled={!c.disponible}>
+                          {c.heure}{!c.disponible ? ` — ${c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable')}` : (c.acompte > 0 ? ` · 💳 ${c.acompte.toFixed(2)}€` : '')}
+                        </option>
+                      ))}
                     </select>
                   </div>
-                  {scheduleTimeOptions.length === 0 && (
+                  {!dispoChargement && dispo && dispo.raison && (
+                    <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
+                      {t(`checkout.noSlotsReason_${dispo.raison}`, { max: dispo.maxCouverts })}
+                    </p>
+                  )}
+                  {!dispoChargement && dispo && !dispo.raison && !dispo.creneaux.some((c) => c.disponible) && (
                     <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
                   )}
                   {scheduledPreview && (
                     <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.reservationForPreview', { preview: scheduledPreview })}</p>
+                  )}
+                  {dispo?.regles?.messageAccueil && (
+                    <p className="small" style={{ margin: '8px 0 0', padding: '8px 10px', background: 'var(--cream-dim)', borderRadius: 9 }}>💬 {dispo.regles.messageAccueil}</p>
                   )}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="checkout-f-7">{t('checkout.partySize')}</label>
                     <input id="checkout-f-7"
-                      type="number" min="1" max="30"
+                      type="number" min="1" max={dispo?.maxCouverts || 30}
                       value={partySize}
                       onChange={(e) => setPartySize(e.target.value === '' ? '' : Number(e.target.value))}
                     />
@@ -464,6 +518,21 @@ export default function Checkout() {
                     <input id="checkout-f-8" value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
                   </div>
                 </div>
+                <div className="field">
+                  <label htmlFor="checkout-f-9">{t('checkout.reservationNote')}</label>
+                  <input id="checkout-f-9" value={reservationNote} maxLength={500} onChange={(e) => setReservationNote(e.target.value)} placeholder={t('checkout.reservationNotePlaceholder')} />
+                </div>
+                {/* Ce que le client s'engage à quoi, avant de valider : acompte (déduit sur place),
+                    délai d'annulation, et confirmation manuelle éventuelle. */}
+                {dispo && !dispo.raison && (
+                  <div className="small" style={{ margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {cart.count === 0 && acompteDu > 0 && (
+                      <span>{t('checkout.depositInfo', { amount: `${acompteDu.toFixed(2)}€` })}{dispo.acompte?.note ? ` ${dispo.acompte.note}` : ''}</span>
+                    )}
+                    <span>{dispo.regles.annulationHeures > 0 ? t('checkout.cancelPolicy', { hours: dispo.regles.annulationHeures }) : t('checkout.cancelPolicyUntilStart')}</span>
+                    {!dispo.regles.confirmationAuto && <span>{t('checkout.awaitsConfirmation')}</span>}
+                  </div>
+                )}
               </>
             )}
             {fulfillmentType !== 'dine_in' && (
@@ -573,9 +642,20 @@ export default function Checkout() {
                 {pendingOrder.scheduledFor && (
                   <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 )}
+                {pendingOrder.reservationNote && (
+                  <p className="small" style={{ margin: '4px 0 0' }}><b>{t('checkout.noteColon')}</b> {pendingOrder.reservationNote}</p>
+                )}
               </>
             )}
           </div>
+
+          {/* Acompte : la seule somme due maintenant sur une réservation sans plats. Montant figé par le
+              serveur à la création (voir routes/orders.js), c'est lui qu'on affiche et qu'on encaisse. */}
+          {isPureReservation && pendingOrder.reservationDepositAmount > 0 && (
+            <div className="breakdown">
+              <div className="line total"><span>{t('checkout.depositLine')}</span><span>{pendingOrder.reservationDepositAmount.toFixed(2)}€</span></div>
+            </div>
+          )}
 
           {!isPureReservation && (
             <div className="breakdown">
@@ -600,7 +680,10 @@ export default function Checkout() {
           )}
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
-              {paying ? '...' : isPureReservation ? t('checkout.sendReservation') : t('checkout.confirmAndPay')}
+              {paying ? '...'
+                : isPureReservation && pendingOrder.reservationDepositAmount > 0 ? t('checkout.payDepositAndReserve', { amount: `${pendingOrder.reservationDepositAmount.toFixed(2)}€` })
+                : isPureReservation ? t('checkout.sendReservation')
+                : t('checkout.confirmAndPay')}
             </button>
             <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : t('common.cancel')}</button>
           </div>

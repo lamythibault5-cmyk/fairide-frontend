@@ -1820,11 +1820,70 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .resa-bloc-nouveau { background: var(--red); }
 .resa-bloc-livre { background: var(--ink-faint); }
 
-/* Liste chronologique — l'heure en gouttière, le reste libre de s'envelopper. */
-.resa-ligne { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--line); }
-.resa-ligne:first-of-type { border-top: 0; padding-top: 0; }
+/* Les blocs sont des boutons : cliquer une table dans la grille ouvre sa fiche dans la liste. */
+button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: inherit; }
+.resa-ligne-tete .status-badge { white-space: nowrap; }
+@media (max-width: 480px) {
+  /* Un badge long (« À confirmer ») et un nom long ne tiennent pas côte à côte : le badge passe
+     sous le nom plutôt que de le couper lettre à lettre. */
+  .resa-ligne-tete { flex-wrap: wrap; }
+  .resa-ligne-tete .status-badge { order: 3; margin-left: 56px; }
+}
+.resa-bloc-arrive { background: var(--teal-deep, #2A6F5F); }
+.resa-bloc-absent { background: var(--ink-faint); text-decoration: line-through; }
+.resa-bloc-choisi { outline: 2px solid var(--lime); outline-offset: 1px; }
+
+/* Liste chronologique — l'heure en gouttière, le reste libre de s'envelopper. La tête est un bouton
+   (toute la rangée s'ouvre), le détail se déplie dessous. */
+.resa-ligne { border-top: 1px solid var(--line); }
+.resa-ligne:first-of-type { border-top: 0; }
+.resa-ligne-tete { display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 9px 0; border: 0; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.resa-ligne-tete .status-badge { flex: 0 0 auto; }
 .resa-ligne-heure { flex: 0 0 46px; display: flex; flex-direction: column; line-height: 1.2; }
 .resa-ligne-corps { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; overflow-wrap: anywhere; }
+.resa-detail { padding: 2px 0 12px 56px; }
+.resa-detail label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.resa-detail textarea, .resa-detail input, .resa-detail select { font-size: 13px; }
+.resa-detail-infos { display: flex; flex-wrap: wrap; gap: 6px; }
+.resa-detail-infos a.pill { text-decoration: none; }
+.resa-note-client { margin: 8px 0 0; padding: 8px 10px; background: var(--cream-dim); border-radius: 9px; }
+.resa-deplacer { margin-top: 10px; padding: 10px; border: 1px dashed var(--line); border-radius: var(--radius-chip); }
+.resa-deplacer label { font-size: 12px; }
+.resa-annuler summary { cursor: pointer; color: var(--red); }
+@media (max-width: 600px) { .resa-detail { padding-left: 0; } }
+
+/* Onglets de la page Réservations. */
+.resa-onglets { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
+.resa-onglet { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-chip); padding: 8px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.resa-onglet.actif { background: var(--iris); border-color: var(--iris); color: #fff; }
+.resa-bascule { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; }
+.resa-bascule button { border: 0; background: #fff; color: var(--ink); padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+.resa-bascule button.actif { background: var(--ink); color: #fff; }
+.resa-regle { align-items: flex-start; flex-wrap: nowrap; }
+.resa-regle input { margin-top: 3px; flex: 0 0 auto; }
+.resa-regle > span { flex: 1 1 0; min-width: 0; }
+.resa-enregistrer { position: sticky; bottom: 76px; z-index: 5; display: flex; justify-content: flex-end; padding: 8px 0; }
+@media (min-width: 900px) { .resa-enregistrer { bottom: 12px; } }
+
+/* Vue semaine : sept colonnes, une par jour, cliquables. */
+.resa-semaine { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.resa-semaine-jour { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; min-height: 110px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; font: inherit; color: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.resa-semaine-jour.aujourdhui { border-color: var(--iris); box-shadow: inset 0 0 0 1px var(--iris); }
+.resa-semaine-jour b { font-size: 12px; }
+.resa-semaine-liste { display: flex; flex-direction: column; gap: 2px; font-size: 11px; color: var(--ink-soft); width: 100%; }
+.resa-semaine-liste span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 720px) { .resa-semaine { grid-template-columns: repeat(2, minmax(0, 1fr)); } .resa-semaine-jour { min-height: 0; } }
+
+/* Statistiques : cartes chiffrées puis barres. */
+.resa-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-bottom: 12px; }
+.resa-stat { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 2px; }
+.resa-stat b { font-size: 22px; line-height: 1.1; }
+.resa-stat-warn b { color: var(--red); }
+.resa-stat-danger b { color: var(--red); }
+.resa-barres { display: flex; gap: 6px; align-items: flex-end; height: 150px; }
+.resa-barre-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 3px; }
+.resa-barre-col .small { font-size: 10px; line-height: 1; }
+.resa-barre { width: 100%; max-width: 46px; background: var(--iris); border-radius: 6px 6px 0 0; min-height: 2px; transition: height .3s ease; }
 
 /* ---------------------------------------------------------------------------
    Fond de cuisine plein écran de l'accueil public (CuisineBackdrop)

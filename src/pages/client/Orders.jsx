@@ -134,6 +134,25 @@ export default function Orders() {
     }
   }
 
+  // Acompte laissé en attente (le client a quitté la page de paiement) : on rouvre le paiement d'ici.
+  async function payDeposit(orderId) {
+    setCancellingId(orderId);
+    try {
+      const pay = await api(`/payments/deposit-checkout/${orderId}`, { method: 'POST', token });
+      if (pay.simulated) {
+        const orders = await api('/orders/mine', { token });
+        setOrders(orders);
+        toast(pay.message);
+      } else {
+        window.location.href = pay.checkoutUrl;
+      }
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setCancellingId(null);
+    }
+  }
+
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
   // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
@@ -219,11 +238,45 @@ export default function Orders() {
             </div>
           )}
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-            <span className="small">{o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
-            <b>{o.total.toFixed(2)}€</b>
+            {o.orderType === 'dine_in' && o.items.length === 0 ? (
+              <span className="small">
+                {o.reservationDepositAmount > 0
+                  ? t('orders.deposit', { amount: `${o.reservationDepositAmount.toFixed(2)}€`, status: t(`orders.depositStatus_${o.reservationDepositStatus}`) })
+                  : t('orders.noPrepayment')}
+              </span>
+            ) : (
+              <>
+                <span className="small">{o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+                <b>{o.total.toFixed(2)}€</b>
+              </>
+            )}
           </div>
+          {o.orderType === 'dine_in' && o.items.length > 0 && o.reservationDepositAmount > 0 && (
+            <div className="small">{t('orders.deposit', { amount: `${o.reservationDepositAmount.toFixed(2)}€`, status: t(`orders.depositStatus_${o.reservationDepositStatus}`) })}</div>
+          )}
 
-          {!o.paid && o.status !== 'annule' && o.status !== 'refuse' && (
+          {/* Une réservation s'annule en ligne jusqu'au délai du restaurant (acompte rendu) ; après, on
+              l'appelle. Une commande classique, tant qu'elle n'est pas payée. */}
+          {o.orderType === 'dine_in' && !['annule', 'refuse', 'livre'].includes(o.status) && (
+            <>
+              {o.reservationDepositStatus === 'pending' && o.reservationDepositAmount > 0 && (
+                <button className="btn-gold" style={{ marginTop: 8 }} disabled={cancellingId === o.id} onClick={() => payDeposit(o.id)}>
+                  {t('orders.payDeposit')} — {o.reservationDepositAmount.toFixed(2)}€
+                </button>
+              )}
+              {o.reservationCancelDeadline && Date.now() < o.reservationCancelDeadline && (
+                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { date: new Date(o.reservationCancelDeadline).toLocaleString('fr-BE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</div>
+              )}
+              {(!o.reservationCancelDeadline || Date.now() < o.reservationCancelDeadline) ? (
+                <button className="btn-ghost" style={{ marginTop: 4, color: 'var(--red)' }} disabled={cancellingId === o.id} onClick={() => cancelOrder(o.id)}>
+                  {cancellingId === o.id ? '...' : t('orders.cancelReservation')}
+                </button>
+              ) : (
+                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelClosed')}</div>
+              )}
+            </>
+          )}
+          {o.orderType !== 'dine_in' && !o.paid && o.status !== 'annule' && o.status !== 'refuse' && (
             <button
               className="btn-ghost"
               style={{ marginTop: 8, color: 'var(--red)' }}

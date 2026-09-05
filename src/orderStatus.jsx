@@ -27,9 +27,16 @@ const STATUS_LABELS_FR = {
   livre: 'Livrée', refuse: 'Refusée', annule: 'Annulée'
 };
 
+// Une réservation de table n'est ni « nouvelle » ni « en préparation » : elle attend une confirmation,
+// puis elle est confirmée. Les mêmes statuts bruts, des mots qui parlent de tables.
+const STATUS_LABELS_DINE_IN_FR = { nouveau: 'À confirmer', preparation: 'Confirmée', pret: 'Table prête' };
+
 export function statusLabel(status, orderType, t) {
   if (status === 'livre' && orderType === 'pickup') return t ? t('orderStatus.status.livrePickup') : 'Récupérée';
   if (status === 'livre' && orderType === 'dine_in') return t ? t('orderStatus.status.livreDineIn') : 'Terminée';
+  if (orderType === 'dine_in' && STATUS_LABELS_DINE_IN_FR[status]) {
+    return t ? t(`orderStatus.status.${status}DineIn`) : STATUS_LABELS_DINE_IN_FR[status];
+  }
   if (t) return t(`orderStatus.status.${status}`);
   return STATUS_LABELS_FR[status] || status;
 }
