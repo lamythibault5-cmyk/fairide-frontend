@@ -138,8 +138,8 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateCommissionInvoice')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminInvoices.generateHelp')}</p>
         <div className="field">
@@ -237,8 +237,8 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
         {!inv && <div className="small">{tr('adminCommon.loading')}</div>}
         {inv && (
           <>
@@ -419,8 +419,8 @@ function GenerateStatementModal({ onClose, onGenerated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateDriverStatement')}</h3>
         <div className="field">
           <label>{tr('adminCommon.driver')}</label>
@@ -571,8 +571,8 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateSelfBilling')}</h3>
         <div className="field">
           <label>{tr('adminCommon.driver')}</label>

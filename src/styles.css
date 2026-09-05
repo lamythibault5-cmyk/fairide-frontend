@@ -2350,3 +2350,36 @@ button.account-link-row:last-child { border-bottom: none; }
 .admin-table td .pill { white-space: nowrap; }
 .admin-inline-field { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .admin-inline-field input { width: auto; padding: 6px 8px; font-size: 13px; }
+
+/* ---- Panneau latéral de fiche (RecordDrawer) et modales converties en panneau ---- */
+.drawer-overlay { justify-content: flex-end; align-items: stretch; padding: 0; overflow: hidden; }
+@keyframes drawer-in { from { transform: translateX(24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.record-drawer { background: #fff; height: 100vh; height: 100dvh; display: flex; flex-direction: column; border-left: 1px solid var(--line); animation: drawer-in .18s ease-out; max-width: 100vw; }
+.record-drawer-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.record-drawer-title { min-width: 0; }
+.record-drawer-title h3 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.record-drawer-title .small { margin: 2px 0 0; }
+.record-drawer-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; flex: none; }
+.record-drawer-close { width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: var(--cream); color: var(--ink); font-size: 15px; line-height: 1; padding: 0; }
+.record-drawer-tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; }
+.record-drawer-tabs::-webkit-scrollbar { display: none; }
+.record-drawer-tabs button { background: none; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 12px; font-size: 13px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.record-drawer-tabs button.active { color: var(--iris); border-bottom-color: var(--iris); }
+.record-drawer-tabs button .pill { padding: 1px 7px; font-size: 11px; }
+.record-drawer-body { padding: 16px 18px 24px; overflow-y: auto; flex: 1; min-height: 0; }
+.record-drawer-foot { padding: 12px 18px; border-top: 1px solid var(--line); background: var(--cream-dim); display: flex; gap: 8px; flex-wrap: wrap; }
+.drawer-row { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+.drawer-row:last-child { border-bottom: none; }
+.drawer-section-title { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); }
+.drawer-box { height: 100vh; height: 100dvh; max-height: none; overflow-y: auto; border-radius: 0; border-left: 1px solid var(--line); border-top: none; border-bottom: none; border-right: none; animation: drawer-in .18s ease-out; padding: 20px 20px 32px; }
+/* Sections de la barre latérale admin : transparentes pour la mise en page (les liens restent des
+   éléments flex directs de la nav, en colonne comme en barre du bas). */
+.dashboard-nav-section { display: contents; }
+@media (max-width: 900px) {
+  .dashboard-nav-link { position: relative; }
+  .dashboard-nav.admin .dashboard-nav-link { flex: 0 0 auto; min-width: 54px; }
+  .record-drawer, .drawer-box { width: 100vw !important; }
+}
+@media (max-width: 520px) {
+  .dashboard-nav.admin .dashboard-nav-link { flex: 0 0 auto; min-width: 48px; padding: 8px 6px; }
+}

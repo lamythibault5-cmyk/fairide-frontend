@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
@@ -237,6 +238,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   const [crmProspect, setCrmProspect] = useState(null);
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
+  const [onglet, setOnglet] = useState('apercu');
 
   function loadDocuments() {
     setDocuments(null);
@@ -274,124 +276,145 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
     }
   }
 
+  const biz = detail ? BUSINESS_STATUS_LABELS[detail.businessStatus] : null;
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h3 style={{ margin: '0 0 8px' }}>{selected.name}</h3>
-          <a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="small">{tr('adminRestos.viewPage')}</a>
-        </div>
-        {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
-        {detail && !editing && (
-          <>
-            <p className="small" style={{ margin: '2px 0' }}>{detail.commune}{detail.neighborhood ? ` (${detail.neighborhood})` : ''} · {detail.cuisine} · {detail.rating.toFixed(1)}★</p>
-            <p className="small" style={{ margin: '2px 0' }}>📍 {[detail.addressStreet, detail.addressNumber].filter(Boolean).join(' ')}{detail.addressCity ? `, ${detail.addressPostalCode} ${detail.addressCity}` : ''}</p>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: detail.phone ? ` · ${detail.phone}` : '' })}</p>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
-            <button className="btn-outline" style={{ marginTop: 6 }} onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
-            <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.paidOrders')}</span><b className="small">{detail.orderCount}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.foodRevenue')}</span><b className="small">{money(detail.revenue)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.commissionGenerated')}</span><b className="small">{money(detail.commissionGenerated)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.netDue')}</span><b className="small">{money(detail.netAmountDue)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.refundsCharged')}</span><b className="small">{money(detail.refundsTotal)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.avgBasket')}</span><b className="small">{money(detail.avgBasket)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.cancellationRate')}</span><b className="small">{pct(detail.cancellationRate)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.acceptanceRate')}</span><b className="small">{pct(detail.acceptanceRate)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminRestos.avgPrepTime')}</span><b className="small">{detail.avgPrepMinutes !== null ? tr('adminRestos.minutes', { n: detail.avgPrepMinutes }) : tr('adminCommon.notMeasured')}</b></div>
-            <div className="row" style={{ gap: 8, marginTop: 10 }}>
-              {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
-              {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
-              <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>
-            </div>
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>
-            {!orders && <div className="small">{tr('adminCommon.loading')}</div>}
-            {orders && orders.length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
-            {orders && orders.map((o) => (
-              <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                <span className="small">{o.clientName}{o.driverName ? tr('adminRestos.deliveredBySuffix', { name: o.driverName }) : ''}</span>
-                <span className={`status-badge status-${o.status}`}>{o.status}</span>
-              </div>
-            ))}
-            {crmProspect && (
-              <>
-                <div className="divider" />
-                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: '0 0 6px' }}>{tr('adminRestos.commercialOrigin')}</h4>
-                  <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">{tr('adminRestos.viewInCrm')}</Link>
-                </div>
-                <div className="small">{tr('adminRestos.crmOwnerLine', { owner: crmProspect.ownerEmail || '—', source: crmProspect.source || '—' })}</div>
-                <div className="small">{tr('adminRestos.convertedOn', { date: fmtDate(crmProspect.convertedAt) })}</div>
-              </>
-            )}
-            <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: '0 0 6px' }}>{tr('adminRestos.invoices')}</h4>
-              <Link to="/admin/invoices" state={{ restaurantId: selected.id }} className="small">{tr('adminRestos.seeAll')}</Link>
-            </div>
-            {!invoices && <div className="small">{tr('adminCommon.loading')}</div>}
-            {invoices && invoices.length === 0 && <div className="small">{tr('adminRestos.noInvoices')}</div>}
-            {invoices && invoices.map((inv) => (
-              <div key={inv.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                <span className="small" style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</span>
-                <span className="small">{money(inv.totalTtc)} · <span style={{ color: INVOICE_STATUS_LABELS[inv.status]?.color }}>{INVOICE_STATUS_LABELS[inv.status]?.label}</span></span>
-              </div>
-            ))}
-            <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.documents')}</h4>
-              <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
-            </div>
-            {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
-            {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
-            {documents && documents.map((doc) => (
-              <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
-                <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
-                <span className="small">
-                  {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
-                  {DOCUMENT_TYPE_LABELS[doc.documentType]}
-                </span>
-              </div>
-            ))}
-            {showUploadDoc && (
-              <UploadDocumentModal
-                presetTargetType="restaurant" presetTargetId={selected.id} presetTargetLabel={detail.name}
-                onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(); }}
-              />
-            )}
-            <div className="divider" />
-            <div className="row" style={{ gap: 8 }}>
-              <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
-              <CreateTaskButton targetType="restaurant" targetId={selected.id} label={detail.name} />
-            </div>
-            <div className="divider" />
-            <AdminNotesPanel targetType="restaurant" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
-            <div className="divider" />
-            <AdminActionHistory actions={detail.actions} />
-          </>
-        )}
-        {detail && editing && form && (
-          <div>
-            <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-            <div className="field"><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
-            <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
-            <div className="field"><label>{tr('adminRestos.legalName')}</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
-            <div className="row" style={{ gap: 8 }}>
-              <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.companyNumber')}</label><input value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
-              <div className="field" style={{ flex: 1 }}><label>TVA</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
-            </div>
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
-              <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
-            </div>
+    <RecordDrawer
+      title={selected.name}
+      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${detail.rating.toFixed(1)}★` : ''}
+      badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
+      actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
+      tabs={[
+        { key: 'apercu', label: tr('adminCommon.tabOverview') },
+        { key: 'commandes', label: tr('adminCommon.tabOrders'), count: orders ? orders.length : null },
+        { key: 'finance', label: tr('adminCommon.tabFinance'), count: invoices ? invoices.length : null },
+        { key: 'documents', label: tr('adminCommon.tabDocuments'), count: documents ? documents.length : null },
+        { key: 'suivi', label: tr('adminCommon.tabFollowUp'), count: detail?.notes ? detail.notes.length : null }
+      ]}
+      tab={onglet} onTab={setOnglet} onClose={onClose} width={680}
+    >
+      {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
+      {detail && onglet === 'apercu' && !editing && (
+        <>
+          <p className="small" style={{ margin: '2px 0' }}>📍 {[detail.addressStreet, detail.addressNumber].filter(Boolean).join(' ')}{detail.addressCity ? `, ${detail.addressPostalCode} ${detail.addressCity}` : detail.address}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: detail.phone ? ` · ${detail.phone}` : '' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
+          <div className="row" style={{ gap: 8, marginTop: 10 }}>
+            <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
+            {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
+            {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
+            <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>
           </div>
-        )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
-      </div>
-    </div>,
+          <div className="divider" />
+          <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
+          <DrawerRow label={tr('adminCommon.paidOrders')} value={detail.orderCount} strong />
+          <DrawerRow label={tr('adminRestos.foodRevenue')} value={money(detail.revenue)} strong />
+          <DrawerRow label={tr('adminRestos.commissionGenerated')} value={money(detail.commissionGenerated)} strong />
+          <DrawerRow label={tr('adminRestos.netDue')} value={money(detail.netAmountDue)} strong />
+          <DrawerRow label={tr('adminRestos.refundsCharged')} value={money(detail.refundsTotal)} strong />
+          <DrawerRow label={tr('adminCommon.avgBasket')} value={money(detail.avgBasket)} strong />
+          <DrawerRow label={tr('adminCommon.cancellationRate')} value={pct(detail.cancellationRate)} strong />
+          <DrawerRow label={tr('adminRestos.acceptanceRate')} value={pct(detail.acceptanceRate)} strong />
+          <DrawerRow label={tr('adminRestos.avgPrepTime')} value={detail.avgPrepMinutes !== null ? tr('adminRestos.prepMinutes', { n: detail.avgPrepMinutes }) : tr('adminRestos.prepNotMeasured')} strong />
+        </>
+      )}
+      {detail && onglet === 'apercu' && editing && form && (
+        <div>
+          <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div className="field"><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+          <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
+          <div className="field"><label>{tr('adminRestos.legalName')}</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.companyNumber')}</label><input value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label>TVA</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
+            <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
+          </div>
+        </div>
+      )}
+      {detail && onglet === 'commandes' && (
+        <>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.recentOrders')}</h4>
+            <Link to={`/admin/orders?restaurantId=${selected.id}`} className="small">{tr('adminRestos.seeAll')}</Link>
+          </div>
+          {!orders && <div className="small">{tr('adminCommon.loading')}</div>}
+          {orders && orders.length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
+          {orders && orders.map((o) => (
+            <div key={o.id} className="drawer-row">
+              <span className="small">{fmtDate(o.createdAt)} · {o.clientName}{o.driverName ? tr('adminRestos.deliveredBySuffix', { name: o.driverName }) : ''}</span>
+              <span className="row" style={{ gap: 8 }}><b className="small">{money(o.total)}</b><span className={`status-badge status-${o.status}`}>{o.status}</span></span>
+            </div>
+          ))}
+        </>
+      )}
+      {detail && onglet === 'finance' && (
+        <>
+          {crmProspect && (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminRestos.commercialOrigin')}</h4>
+                <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">{tr('adminRestos.viewInCrm')}</Link>
+              </div>
+              <div className="small">{tr('adminRestos.crmOwnerLine', { owner: crmProspect.ownerEmail || '—', source: crmProspect.source || '—' })}</div>
+              <div className="small">{tr('adminRestos.convertedOn', { date: fmtDate(crmProspect.convertedAt) })}</div>
+              <div className="divider" />
+            </>
+          )}
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminRestos.invoices')}</h4>
+            <Link to="/admin/invoices" state={{ restaurantId: selected.id }} className="small">{tr('adminRestos.seeAll')}</Link>
+          </div>
+          {!invoices && <div className="small">{tr('adminCommon.loading')}</div>}
+          {invoices && invoices.length === 0 && <div className="small">{tr('adminRestos.noInvoices')}</div>}
+          {invoices && invoices.map((inv) => (
+            <div key={inv.id} className="drawer-row">
+              <span className="small" style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</span>
+              <span className="small">{money(inv.totalTtc)} · <span style={{ color: INVOICE_STATUS_LABELS[inv.status]?.color }}>{INVOICE_STATUS_LABELS[inv.status]?.label}</span></span>
+            </div>
+          ))}
+        </>
+      )}
+      {detail && onglet === 'documents' && (
+        <>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.documents')}</h4>
+            <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+          </div>
+          {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
+          {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
+          {documents && documents.map((doc) => (
+            <div key={doc.id} className="drawer-row">
+              <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+              <span className="small">
+                {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
+                {DOCUMENT_TYPE_LABELS[doc.documentType]}
+              </span>
+            </div>
+          ))}
+          {showUploadDoc && (
+            <UploadDocumentModal
+              presetTargetType="restaurant" presetTargetId={selected.id} presetTargetLabel={detail.name}
+              onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(); }}
+            />
+          )}
+        </>
+      )}
+      {detail && onglet === 'suivi' && (
+        <>
+          <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+            <CreateTicketButton linkType="linkedRestaurantId" linkId={selected.id} label={detail.name} />
+            <CreateTaskButton targetType="restaurant" targetId={selected.id} label={detail.name} />
+          </div>
+          <AdminNotesPanel targetType="restaurant" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
+          <div className="divider" />
+          <AdminActionHistory actions={detail.actions} />
+        </>
+      )}
+    </RecordDrawer>,
     document.body
   );
 }

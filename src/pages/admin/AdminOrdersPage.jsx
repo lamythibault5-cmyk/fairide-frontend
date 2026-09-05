@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -254,6 +255,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   const [busy, setBusy] = useState(false);
 
   const [entries, setEntries] = useState(null);
+  const [onglet, setOnglet] = useState('apercu');
 
   useEffect(() => { setNewStatus(detail?.status || ''); }, [detail?.status]);
   useEffect(() => {
@@ -306,7 +308,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
     if (!driver) { toast(tr('adminCommon.toastChooseDriver')); return; }
     setConfirmAction({
       title: tr('adminOrders.confirmReassign'),
-      message: `Nouveau livreur : ${driver.name}.`,
+      message: tr('adminOrders.newDriverMsg', { name: driver.name }),
       successMessage: tr('adminOrders.toastReassigned'),
       run: () => api(`/admin/orders/${selected.id}/driver`, { method: 'PATCH', token, body: { driverId: driver.id } })
     });
@@ -325,110 +327,103 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
-        <div className="row" style={{ justifyContent: 'space-between' }}>
-          <h3 style={{ margin: '0 0 8px' }}>{selected.restaurantName}</h3>
-          <span className={`status-badge status-${selected.status}`}>{ORDER_STATUS_LABELS[selected.status] || selected.status}</span>
-        </div>
-        {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
-        {detail && (
-          <>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.clientLine', { name: detail.clientName, phone: detail.clientPhone ? ` · ${detail.clientPhone}` : '' })}</p>
-            {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
-            {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{tr('adminOrders.items')}</h4>
-            {(detail.items || []).map((it, i) => (
-              <div key={i} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                <span className="small">{it.qty}× {it.name}</span>
-                <span className="small">{money(it.price * it.qty - (it.discount || 0))}</span>
-              </div>
-            ))}
-            <div className="divider" />
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.foodSubtotal')}</span><span className="small">{money(detail.subtotal)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.delivery')}</span><span className="small">{money(detail.deliveryFee)}</span></div>
-            {detail.tipAmount > 0 && <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.tip')}</span><span className="small">{money(detail.tipAmount)}</span></div>}
-            <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminOrders.totalPaid')}</b><b className="small">{money(detail.total)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.restoCommission')}</span><span className="small">{money(detail.commission)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.deliveryShare')}</span><span className="small">{money(detail.deliveryFairideShare)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminOrders.totalRevenue')}</b><b className="small">{money(detail.fairideTotalRevenue)}</b></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.dueRestaurant')}</span><span className="small">{money(detail.restaurantDue)}</span></div>
-            <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminOrders.dueDriver')}</span><span className="small">{money(detail.driverDue)}</span></div>
-            {(detail.refunds || []).length > 0 && (
-              <>
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 6px', color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
-                {detail.refunds.map((r) => (
-                  <div key={r.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                    <span className="small">{r.reason || r.responsibility}</span>
-                    <span className="small">{money(r.amount)}</span>
-                  </div>
-                ))}
-              </>
-            )}
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{tr('adminOrders.timeline')}</h4>
-            {(detail.timeline || []).map((step, i) => (
-              <div key={i} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                <span className="small">{step.label}</span>
-                <span className="small" style={{ opacity: 0.6 }}>{fmtDateTime(step.at)}</span>
-              </div>
-            ))}
-
-            {entries && entries.length > 0 && (
-              <>
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>{tr('adminOrders.entries')}</h4>
-                {entries.map((e) => (
-                  <div key={e.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                    <span className="small">{ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType} — {e.accountCode}</span>
-                    <span className="small">{e.debit > 0 ? `-${money(e.debit)}` : money(e.credit)}</span>
-                  </div>
-                ))}
-              </>
-            )}
-
-            <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{tr('adminOrders.adminActions')}</h4>
-            <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{ maxWidth: 180 }}>
-                {ORDER_STATUSES.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
-              </select>
-              <button className="btn-outline" disabled={newStatus === detail.status} onClick={askStatusChange}>{tr('adminOrders.changeStatus')}</button>
-              <button className="btn-danger-ghost" onClick={askCancel}>{tr('adminOrders.cancelOrder')}</button>
-            </div>
-            <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
-              <select value={newDriverId} onChange={(e) => setNewDriverId(e.target.value)} onFocus={loadDrivers} style={{ maxWidth: 220 }}>
-                <option value="">{tr('adminOrders.reassignTo')}</option>
-                {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.activityStatus})</option>)}
-              </select>
-              <button className="btn-outline" disabled={!newDriverId} onClick={askReassign}>{tr('adminOrders.reassign')}</button>
-            </div>
-            <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-              <input type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
-              <select value={refundResponsibility} onChange={(e) => setRefundResponsibility(e.target.value)} style={{ maxWidth: 140 }}>
-                <option value="restaurant">{tr('adminCommon.resto')}</option>
-                <option value="driver">{tr('adminCommon.driver')}</option>
-                <option value="fairide">{tr('adminCommon.fairide')}</option>
-              </select>
-              <input placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
-              <button className="btn-danger-ghost" onClick={askRefund}>{tr('adminOrders.refund')}</button>
-            </div>
-
-            <div className="divider" />
-            <div className="row" style={{ gap: 8 }}>
-              <CreateTicketButton linkType="linkedOrderId" linkId={selected.id} label={`Commande ${selected.restaurantName}`} />
-              <CreateTaskButton targetType="order" targetId={selected.id} label={`Commande ${selected.restaurantName}`} />
-            </div>
-            <div className="divider" />
-            <AdminNotesPanel targetType="order" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
-            <div className="divider" />
-            <AdminActionHistory actions={detail.actions} />
-          </>
-        )}
-        <button className="btn-ghost" style={{ marginTop: 12 }} onClick={onClose}>{tr('adminCommon.close')}</button>
-      </div>
+    <RecordDrawer
+      title={selected.restaurantName}
+      subtitle={detail ? tr('adminOrders.clientLine', { name: detail.clientName, phone: detail.clientPhone ? ` · ${detail.clientPhone}` : '' }) : ''}
+      badge={<span className={`status-badge status-${selected.status}`}>{ORDER_STATUS_LABELS[selected.status] || selected.status}</span>}
+      tabs={[
+        { key: 'apercu', label: tr('adminCommon.tabOverview') },
+        { key: 'historique', label: tr('adminCommon.tabTimeline') },
+        { key: 'actions', label: tr('adminCommon.tabActions') },
+        { key: 'suivi', label: tr('adminCommon.tabFollowUp'), count: detail?.notes ? detail.notes.length : null }
+      ]}
+      tab={onglet} onTab={setOnglet} onClose={onClose} width={640}
+    >
+      {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
+      {detail && onglet === 'apercu' && (
+        <>
+          {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
+          {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
+          <p className="small" style={{ margin: '2px 0' }}>{TYPE_LABELS(tr)[detail.orderType] || detail.orderType} · {fmtDateTime(detail.createdAt)}</p>
+          <div className="divider" />
+          <h4 className="drawer-section-title">{tr('adminOrders.items')}</h4>
+          {(detail.items || []).length === 0 && <div className="small">{tr('adminOrders.noItems')}</div>}
+          {(detail.items || []).map((it, i) => <DrawerRow key={i} label={`${it.qty}× ${it.name}`} value={money(it.price * it.qty - (it.discount || 0))} />)}
+          <div className="divider" />
+          <DrawerRow label={tr('adminOrders.foodSubtotal')} value={money(detail.subtotal)} />
+          <DrawerRow label={tr('adminOrders.delivery')} value={money(detail.deliveryFee)} />
+          {detail.tipAmount > 0 && <DrawerRow label={tr('adminOrders.tip')} value={money(detail.tipAmount)} />}
+          <DrawerRow label={tr('adminOrders.totalPaid')} value={money(detail.total)} strong />
+          <DrawerRow label={tr('adminOrders.restoCommission')} value={money(detail.commission)} />
+          <DrawerRow label={tr('adminOrders.deliveryShare')} value={money(detail.deliveryFairideShare)} />
+          <DrawerRow label={tr('adminOrders.totalRevenue')} value={money(detail.fairideTotalRevenue)} strong />
+          <DrawerRow label={tr('adminOrders.dueRestaurant')} value={money(detail.restaurantDue)} />
+          <DrawerRow label={tr('adminOrders.dueDriver')} value={money(detail.driverDue)} />
+          {(detail.refunds || []).length > 0 && (
+            <>
+              <div className="divider" />
+              <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
+              {detail.refunds.map((r) => <DrawerRow key={r.id} label={r.reason || r.responsibility} value={money(r.amount)} />)}
+            </>
+          )}
+        </>
+      )}
+      {detail && onglet === 'historique' && (
+        <>
+          <h4 className="drawer-section-title">{tr('adminOrders.timeline')}</h4>
+          {(detail.timeline || []).length === 0 && <div className="small">—</div>}
+          {(detail.timeline || []).map((step, i) => <DrawerRow key={i} label={step.label} value={fmtDateTime(step.at)} />)}
+          {entries && entries.length > 0 && (
+            <>
+              <div className="divider" />
+              <h4 className="drawer-section-title">{tr('adminOrders.entries')}</h4>
+              {entries.map((e) => <DrawerRow key={e.id} label={`${ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType} — ${e.accountCode}`} value={e.debit > 0 ? `-${money(e.debit)}` : money(e.credit)} />)}
+            </>
+          )}
+        </>
+      )}
+      {detail && onglet === 'actions' && (
+        <>
+          <h4 className="drawer-section-title">{tr('adminOrders.adminActions')}</h4>
+          <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} style={{ maxWidth: 180 }}>
+              {ORDER_STATUSES.map((s) => <option key={s} value={s}>{ORDER_STATUS_LABELS[s]}</option>)}
+            </select>
+            <button className="btn-outline" disabled={newStatus === detail.status} onClick={askStatusChange}>{tr('adminOrders.changeStatus')}</button>
+            <button className="btn-danger-ghost" onClick={askCancel}>{tr('adminOrders.cancelOrder')}</button>
+          </div>
+          <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+            <select value={newDriverId} onChange={(e) => setNewDriverId(e.target.value)} onFocus={loadDrivers} style={{ maxWidth: 220 }}>
+              <option value="">{tr('adminOrders.reassignTo')}</option>
+              {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.activityStatus})</option>)}
+            </select>
+            <button className="btn-outline" disabled={!newDriverId} onClick={askReassign}>{tr('adminOrders.reassign')}</button>
+          </div>
+          <div className="divider" />
+          <h4 className="drawer-section-title">{tr('adminOrders.refund')}</h4>
+          <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+            <input type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
+            <select value={refundResponsibility} onChange={(e) => setRefundResponsibility(e.target.value)} style={{ maxWidth: 140 }}>
+              <option value="restaurant">{tr('adminCommon.resto')}</option>
+              <option value="driver">{tr('adminCommon.driver')}</option>
+              <option value="fairide">{tr('adminCommon.fairide')}</option>
+            </select>
+            <input placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
+            <button className="btn-danger-ghost" onClick={askRefund}>{tr('adminOrders.refund')}</button>
+          </div>
+        </>
+      )}
+      {detail && onglet === 'suivi' && (
+        <>
+          <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+            <CreateTicketButton linkType="linkedOrderId" linkId={selected.id} label={tr('adminOrders.orderLabel', { name: selected.restaurantName })} />
+            <CreateTaskButton targetType="order" targetId={selected.id} label={tr('adminOrders.orderLabel', { name: selected.restaurantName })} />
+          </div>
+          <AdminNotesPanel targetType="order" targetId={selected.id} notes={detail.notes} onAdded={onChanged} />
+          <div className="divider" />
+          <AdminActionHistory actions={detail.actions} />
+        </>
+      )}
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}
@@ -438,7 +433,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
       />
-    </div>,
+    </RecordDrawer>,
     document.body
   );
 }

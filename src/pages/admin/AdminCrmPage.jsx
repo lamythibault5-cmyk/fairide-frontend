@@ -223,8 +223,8 @@ function CreateProspectModal({ onClose, onCreated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminCrm.newProspect')}</h3>
         <div className="field"><label>{tr('adminCrm.restaurantName')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div className="row" style={{ gap: 8 }}>
@@ -324,8 +324,8 @@ function ProspectDetailModal({ id, onClose, onChanged, linkedRestaurantIds }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 560 }}>
         {!p && <div className="small">{tr('adminCommon.loading')}</div>}
         {p && !editing && (
           <>

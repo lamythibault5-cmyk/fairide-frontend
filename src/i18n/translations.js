@@ -887,7 +887,8 @@ export const translations = {
       kpiPending: 'À valider',
       kpiRevenue: 'CA cumulé',
       kpiCommission: 'Commission générée',
-      groupBusiness: 'Statut commercial'
+      groupBusiness: 'Statut commercial',
+      keyFigures: 'Chiffres clés'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -947,7 +948,10 @@ export const translations = {
       clearFilters: 'Effacer les filtres',
       groupDay: 'Jour',
       colPaid: 'Payée',
-      colFairide: 'Revenu Fairide'
+      colFairide: 'Revenu Fairide',
+      newDriverMsg: 'Nouveau livreur : {name}.',
+      orderLabel: 'Commande {name}',
+      noItems: 'Réservation sans plats'
     },
     adminDash: {
       title: 'Dashboard',
@@ -1117,7 +1121,14 @@ export const translations = {
       frequency: 'Fréquence / mois',
       balanceCol: 'Solde',
       spent: 'Dépensé',
-      client: 'Client'
+      client: 'Client',
+      tabOverview: 'Aperçu',
+      tabOrders: 'Commandes',
+      tabFinance: 'Finance',
+      tabDocuments: 'Documents',
+      tabFollowUp: 'Suivi & notes',
+      tabActions: 'Actions',
+      tabTimeline: 'Historique'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -4045,7 +4056,8 @@ export const translations = {
       kpiPending: 'To validate',
       kpiRevenue: 'Cumulative revenue',
       kpiCommission: 'Commission generated',
-      groupBusiness: 'Business status'
+      groupBusiness: 'Business status',
+      keyFigures: 'Key figures'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -4105,7 +4117,10 @@ export const translations = {
       clearFilters: 'Clear filters',
       groupDay: 'Day',
       colPaid: 'Paid',
-      colFairide: 'Fairide revenue'
+      colFairide: 'Fairide revenue',
+      newDriverMsg: 'New courier: {name}.',
+      orderLabel: 'Order {name}',
+      noItems: 'Reservation without items'
     },
     adminDash: {
       title: 'Dashboard',
@@ -4275,7 +4290,14 @@ export const translations = {
       frequency: 'Frequency / month',
       balanceCol: 'Balance',
       spent: 'Spent',
-      client: 'Customer'
+      client: 'Customer',
+      tabOverview: 'Overview',
+      tabOrders: 'Orders',
+      tabFinance: 'Finance',
+      tabDocuments: 'Documents',
+      tabFollowUp: 'Follow-up & notes',
+      tabActions: 'Actions',
+      tabTimeline: 'History'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -7203,7 +7225,8 @@ export const translations = {
       kpiPending: 'Te valideren',
       kpiRevenue: 'Gecumuleerde omzet',
       kpiCommission: 'Gegenereerde commissie',
-      groupBusiness: 'Commerciële status'
+      groupBusiness: 'Commerciële status',
+      keyFigures: 'Kerncijfers'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
@@ -7263,7 +7286,10 @@ export const translations = {
       clearFilters: 'Filters wissen',
       groupDay: 'Dag',
       colPaid: 'Betaald',
-      colFairide: 'Fairide-inkomsten'
+      colFairide: 'Fairide-inkomsten',
+      newDriverMsg: 'Nieuwe koerier: {name}.',
+      orderLabel: 'Bestelling {name}',
+      noItems: 'Reservering zonder gerechten'
     },
     adminDash: {
       title: 'Dashboard',
@@ -7433,7 +7459,14 @@ export const translations = {
       frequency: 'Frequentie / maand',
       balanceCol: 'Saldo',
       spent: 'Uitgegeven',
-      client: 'Klant'
+      client: 'Klant',
+      tabOverview: 'Overzicht',
+      tabOrders: 'Bestellingen',
+      tabFinance: 'Financiën',
+      tabDocuments: 'Documenten',
+      tabFollowUp: 'Opvolging & notities',
+      tabActions: 'Acties',
+      tabTimeline: 'Historiek'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',

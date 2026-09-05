@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
@@ -45,6 +46,7 @@ export default function AdminDriversPage() {
   const { sort, toggle } = useTableSort('deliveriesCount');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
+  const [onglet, setOnglet] = useState('apercu');
 
   useEffect(() => {
     api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
@@ -57,6 +59,7 @@ export default function AdminDriversPage() {
   }
 
   function openDriver(d) {
+    setOnglet('apercu');
     setSelected(d);
     setDetail(null);
     api(`/admin/drivers/${d.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
@@ -199,77 +202,97 @@ export default function AdminDriversPage() {
       })}
 
       {selected && createPortal(
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
-            <h3 style={{ margin: '0 0 8px' }}>{selected.name}</h3>
-            {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
-            {detail && (
-              <>
-                <p className="small" style={{ margin: '2px 0' }}>{detail.email}{detail.phone ? ` · ${detail.phone}` : ''}</p>
-                <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '—' })}</p>
-                {(detail.payoutIban || detail.payoutAccountHolder) && (
-                  <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
-                )}
-                <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                  {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
-                  {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
+        <RecordDrawer
+          title={selected.name}
+          subtitle={detail ? `${detail.email}${detail.phone ? ` · ${detail.phone}` : ''}` : ''}
+          badge={<span className="pill" style={{ color: selected.adminStatus === 'approved' ? 'var(--teal-deep)' : selected.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>{STATUT_ADMIN(tr)[selected.adminStatus] || selected.adminStatus}</span>}
+          tabs={[
+            { key: 'apercu', label: tr('adminCommon.tabOverview') },
+            { key: 'commandes', label: tr('adminCommon.tabOrders'), count: detail?.orders ? detail.orders.length : null },
+            { key: 'documents', label: tr('adminCommon.tabDocuments'), count: documents ? documents.length : null },
+            { key: 'suivi', label: tr('adminCommon.tabFollowUp'), count: detail?.notes ? detail.notes.length : null }
+          ]}
+          tab={onglet} onTab={setOnglet} onClose={() => setSelected(null)} width={640}
+        >
+          {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
+          {detail && onglet === 'apercu' && (
+            <>
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '—' })}</p>
+              {(detail.payoutIban || detail.payoutAccountHolder) && (
+                <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
+              )}
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.vat')} : {VAT_LABELS(tr)[detail.vatStatus] || tr('adminDrivers.vatUnknown')}{detail.vatNumber ? ` · ${detail.vatNumber}` : ''}</p>
+              <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => setStatus(detail.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+                {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
+                {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
+              </div>
+              <div className="divider" />
+              <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
+              <DrawerRow label={tr('adminDrivers.completedDeliveries')} value={detail.deliveriesCount} strong />
+              <DrawerRow label={tr('adminCommon.cancellationRate')} value={pct(detail.cancellationRate)} strong />
+              <DrawerRow label={tr('adminDrivers.avgDeliveryTime')} value={detail.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: detail.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')} strong />
+              <div className="divider" />
+              <h4 className="drawer-section-title">{tr('adminDrivers.driverFinance')}</h4>
+              <DrawerRow label={tr('adminDrivers.totalDeliveryFees')} value={money(detail.deliveryFeesTotal)} />
+              <DrawerRow label={tr('adminDrivers.fairideShare')} value={money(detail.fairideShareOnThose)} />
+              <DrawerRow label={tr('adminDrivers.driverShare')} value={money(detail.deliveryFeesTotal)} strong />
+              <DrawerRow label={tr('adminDrivers.adjustments')} value={`-${money(detail.adjustments)}`} />
+              <DrawerRow label={tr('adminDrivers.duePaid')} value={money(detail.revenue)} strong />
+            </>
+          )}
+          {detail && onglet === 'commandes' && (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.recentOrders')}</h4>
+                <Link to={`/admin/orders?driverId=${selected.id}`} className="small">{tr('adminRestos.seeAll')}</Link>
+              </div>
+              {(detail.orders || []).length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
+              {(detail.orders || []).map((o) => (
+                <div key={o.id} className="drawer-row">
+                  <span className="small">{o.restaurantName} → {o.clientName}</span>
+                  <span className={`status-badge status-${o.status}`}>{o.status}</span>
                 </div>
-                <div className="divider" />
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.completedDeliveries')}</span><b className="small">{detail.deliveriesCount}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.cancellationRate')}</span><b className="small">{pct(detail.cancellationRate)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.avgDeliveryTime')}</span><b className="small">{detail.avgDeliveryMinutes !== null ? tr('adminDrivers.minutes', { n: detail.avgDeliveryMinutes }) : tr('adminCommon.notMeasured')}</b></div>
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>{tr('adminDrivers.driverFinance')}</h4>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.totalDeliveryFees')}</span><span className="small">{money(detail.deliveryFeesTotal)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.fairideShare')}</span><span className="small">{money(detail.fairideShareOnThose)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminDrivers.driverShare')}</b><b className="small">{money(detail.deliveryFeesTotal)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminDrivers.adjustments')}</span><span className="small">-{money(detail.adjustments)}</span></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><b className="small">{tr('adminDrivers.duePaid')}</b><b className="small">{money(detail.revenue)}</b></div>
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>
-                {(detail.orders || []).length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
-                {(detail.orders || []).map((o) => (
-                  <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span className="small">{o.restaurantName} → {o.clientName}</span>
-                    <span className={`status-badge status-${o.status}`}>{o.status}</span>
-                  </div>
-                ))}
-                <div className="divider" />
-                <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-                  <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.documents')}</h4>
-                  <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+              ))}
+            </>
+          )}
+          {detail && onglet === 'documents' && (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.documents')}</h4>
+                <button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => setShowUploadDoc(true)}>{tr('adminCommon.add')}</button>
+              </div>
+              {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
+              {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
+              {documents && documents.map((doc) => (
+                <div key={doc.id} className="drawer-row">
+                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+                  <span className="small">
+                    {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
+                    {DOCUMENT_TYPE_LABELS[doc.documentType]}
+                  </span>
                 </div>
-                {!documents && <div className="small">{tr('adminCommon.loading')}</div>}
-                {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
-                {documents && documents.map((doc) => (
-                  <div key={doc.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
-                    <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
-                    <span className="small">
-                      {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
-                      {DOCUMENT_TYPE_LABELS[doc.documentType]}
-                    </span>
-                  </div>
-                ))}
-                {showUploadDoc && (
-                  <UploadDocumentModal
-                    presetTargetType="driver" presetTargetId={selected.id} presetTargetLabel={detail.name}
-                    onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(selected.id); }}
-                  />
-                )}
-                <div className="divider" />
-                <div className="row" style={{ gap: 8 }}>
-                  <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
-                  <CreateTaskButton targetType="driver" targetId={selected.id} label={detail.name} />
-                </div>
-                <div className="divider" />
-                <AdminNotesPanel targetType="driver" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
-                <div className="divider" />
-                <AdminActionHistory actions={detail.actions} />
-              </>
-            )}
-            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelected(null)}>{tr('adminCommon.close')}</button>
-          </div>
-        </div>,
+              ))}
+              {showUploadDoc && (
+                <UploadDocumentModal
+                  presetTargetType="driver" presetTargetId={selected.id} presetTargetLabel={detail.name}
+                  onClose={() => setShowUploadDoc(false)} onUploaded={() => { setShowUploadDoc(false); loadDocuments(selected.id); }}
+                />
+              )}
+            </>
+          )}
+          {detail && onglet === 'suivi' && (
+            <>
+              <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+                <CreateTicketButton linkType="linkedDriverId" linkId={selected.id} label={detail.name} />
+                <CreateTaskButton targetType="driver" targetId={selected.id} label={detail.name} />
+              </div>
+              <AdminNotesPanel targetType="driver" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
+              <div className="divider" />
+              <AdminActionHistory actions={detail.actions} />
+            </>
+          )}
+        </RecordDrawer>,
         document.body
       )}
       <ConfirmDialog

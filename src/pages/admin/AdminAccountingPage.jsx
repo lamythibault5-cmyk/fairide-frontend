@@ -73,6 +73,7 @@ function usePeriodParams() {
 }
 
 function PeriodPicker(period) {
+  const { t: tr } = useLanguage();
   return (
     <div className="row" style={{ gap: 8, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
       <div className="role-pick" style={{ margin: 0 }}>

@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
+import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { useAuth } from '../../context/AuthContext';
@@ -30,6 +31,7 @@ export default function AdminClientsPage() {
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [onglet, setOnglet] = useState('apercu');
   const [mode, setMode] = useViewMode('clients', 'cards');
   const [filtre, setFiltre] = useState('all');
   const [groupBy, setGroupBy] = useState('');
@@ -41,6 +43,7 @@ export default function AdminClientsPage() {
   }, []);
 
   function openClient(c) {
+    setOnglet('apercu');
     setSelected(c);
     setDetail(null);
     api(`/admin/clients/${c.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
@@ -193,62 +196,66 @@ export default function AdminClientsPage() {
       ))}
 
       {selected && createPortal(
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
-            <h3 style={{ margin: '0 0 8px' }}>{selected.name}</h3>
-            {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
-            {detail && (
-              <>
-                <p className="small" style={{ margin: '2px 0' }}>{detail.email}{detail.phone ? ` · ${detail.phone}` : ''}</p>
-                {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}</p>}
-                <p className="small" style={{ margin: '2px 0' }}>{tr('adminClients.registeredBalance', { date: fmtDate(detail.createdAt) })} <b>{money(detail.balance)}</b></p>
-                <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                  {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
-                  {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
-                  <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminClients.deleteAccount')}</button>
-                </div>
-                <div className="divider" />
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.orders')}</span><b className="small">{detail.orderCount}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminClients.cancellations')}</span><b className="small">{detail.cancelledCount}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.totalSpent')}</span><b className="small">{money(detail.totalSpent)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.avgBasket')}</span><b className="small">{money(detail.avgBasket)}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminClients.purchaseFrequency')}</span><b className="small">{tr('adminClients.ordersPerMonth', { n: detail.purchaseFrequency })}</b></div>
-                <div className="row" style={{ justifyContent: 'space-between' }}><span className="small">{tr('adminCommon.lastOrder')}</span><b className="small">{fmtDate(detail.lastOrderAt)}</b></div>
-                {(detail.refunds || []).length > 0 && (
-                  <>
-                    <div className="divider" />
-                    <h4 style={{ margin: '0 0 6px', color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
-                    {detail.refunds.map((r) => (
-                      <div key={r.id} className="row" style={{ justifyContent: 'space-between', padding: '2px 0' }}>
-                        <span className="small">{r.restaurantName} — {r.reason || r.responsibility}</span>
-                        <span className="small">{money(r.amount)}</span>
-                      </div>
-                    ))}
-                  </>
-                )}
-                <div className="divider" />
-                <h4 style={{ margin: '0 0 6px' }}>{tr('adminCommon.recentOrders')}</h4>
-                {(detail.orders || []).length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
-                {(detail.orders || []).map((o) => (
-                  <div key={o.id} className="row" style={{ justifyContent: 'space-between', padding: '4px 0' }}>
-                    <span className="small">{o.restaurantName}</span>
-                    <span className="small">{money(o.total)}</span>
-                  </div>
-                ))}
-                <div className="divider" />
-                <div className="row" style={{ gap: 8 }}>
-                  <CreateTicketButton linkType="linkedClientId" linkId={selected.id} label={detail.name} />
-                  <CreateTaskButton targetType="client" targetId={selected.id} label={detail.name} />
-                </div>
-                <div className="divider" />
-                <AdminNotesPanel targetType="client" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
-                <div className="divider" />
-                <AdminActionHistory actions={detail.actions} />
-              </>
-            )}
-            <button className="btn-ghost" style={{ marginTop: 12 }} onClick={() => setSelected(null)}>{tr('adminCommon.close')}</button>
-          </div>
-        </div>,
+        <RecordDrawer
+          title={selected.name}
+          subtitle={detail ? `${detail.email}${detail.phone ? ` · ${detail.phone}` : ''}` : ''}
+          badge={selected.adminStatus === 'blocked' ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>}
+          tabs={[
+            { key: 'apercu', label: tr('adminCommon.tabOverview') },
+            { key: 'commandes', label: tr('adminCommon.tabOrders'), count: detail?.orders ? detail.orders.length : null },
+            { key: 'suivi', label: tr('adminCommon.tabFollowUp'), count: detail?.notes ? detail.notes.length : null }
+          ]}
+          tab={onglet} onTab={setOnglet} onClose={() => setSelected(null)} width={620}
+        >
+          {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
+          {detail && onglet === 'apercu' && (
+            <>
+              {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}</p>}
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminClients.registeredBalance', { date: fmtDate(detail.createdAt) })} <b>{money(detail.balance)}</b></p>
+              <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
+                {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
+                <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminClients.deleteAccount')}</button>
+              </div>
+              <div className="divider" />
+              <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>
+              <DrawerRow label={tr('adminCommon.orders')} value={detail.orderCount} strong />
+              <DrawerRow label={tr('adminClients.cancellations')} value={detail.cancelledCount} strong />
+              <DrawerRow label={tr('adminCommon.totalSpent')} value={money(detail.totalSpent)} strong />
+              <DrawerRow label={tr('adminCommon.avgBasket')} value={money(detail.avgBasket)} strong />
+              <DrawerRow label={tr('adminClients.purchaseFrequency')} value={tr('adminClients.ordersPerMonth', { n: detail.purchaseFrequency })} strong />
+              <DrawerRow label={tr('adminCommon.lastOrder')} value={detail.lastOrderAt ? fmtDate(detail.lastOrderAt) : '—'} strong />
+              {(detail.refunds || []).length > 0 && (
+                <>
+                  <div className="divider" />
+                  <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
+                  {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.restaurantName} — ${r.reason || r.responsibility}`} value={money(r.amount)} />)}
+                </>
+              )}
+            </>
+          )}
+          {detail && onglet === 'commandes' && (
+            <>
+              <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminCommon.recentOrders')}</h4>
+                <Link to={`/admin/orders?clientId=${selected.id}`} className="small">{tr('adminRestos.seeAll')}</Link>
+              </div>
+              {(detail.orders || []).length === 0 && <div className="small">{tr('adminCommon.noOrdersYet')}</div>}
+              {(detail.orders || []).map((o) => <DrawerRow key={o.id} label={o.restaurantName} value={money(o.total)} />)}
+            </>
+          )}
+          {detail && onglet === 'suivi' && (
+            <>
+              <div className="row" style={{ gap: 8, marginBottom: 12 }}>
+                <CreateTicketButton linkType="linkedClientId" linkId={selected.id} label={detail.name} />
+                <CreateTaskButton targetType="client" targetId={selected.id} label={detail.name} />
+              </div>
+              <AdminNotesPanel targetType="client" targetId={selected.id} notes={detail.notes} onAdded={refreshDetail} />
+              <div className="divider" />
+              <AdminActionHistory actions={detail.actions} />
+            </>
+          )}
+        </RecordDrawer>,
         document.body
       )}
       <ConfirmDialog

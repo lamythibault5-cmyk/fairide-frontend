@@ -63,7 +63,7 @@ function navItemsForRole(role, t) {
 function AdminNav({ t }) {
   const { overview } = useAdminOverview();
   return (
-    <nav className="dashboard-nav">
+    <nav className="dashboard-nav admin">
       <NavLink to="/admin" end title={t('adminHome.apps')} aria-label={t('adminHome.apps')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
         <span className="dashboard-nav-icon">🏠</span>
         <span>{t('adminHome.apps')}</span>

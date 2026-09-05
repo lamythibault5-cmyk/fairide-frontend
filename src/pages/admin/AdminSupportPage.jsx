@@ -214,8 +214,8 @@ function CreateTicketModal({ onClose, onCreated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminCommon.newTicket')}</h3>
         <div className="field"><label>{tr('adminCommon.subject')}</label><input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /></div>
         <div className="field"><label>{tr('adminCommon.message')}</label><textarea rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
@@ -378,8 +378,8 @@ function TicketDetailModal({ id, onClose, onChanged }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
         {!t && <div className="small">{tr('adminCommon.loading')}</div>}
         {t && !editing && (
           <>
@@ -548,8 +548,8 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminSupport.cannedReplies')}</h3>
         {(!cannedReplies || cannedReplies.length === 0) && <div className="small" style={{ opacity: 0.6, marginBottom: 10 }}>{tr('adminSupport.noCanned')}</div>}
         {cannedReplies && cannedReplies.map((c) => (

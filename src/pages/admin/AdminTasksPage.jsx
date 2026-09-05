@@ -198,8 +198,8 @@ function CreateTaskModal({ onClose, onCreated }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminCommon.newTask')}</h3>
         <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
         <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
@@ -283,8 +283,8 @@ function TaskDetailModal({ id, onClose, onChanged }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         {!t && <div className="small">{tr('adminCommon.loading')}</div>}
         {t && !editing && (
           <>

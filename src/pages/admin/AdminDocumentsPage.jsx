@@ -184,8 +184,8 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminDocs.addDocument')}</h3>
         {!presetTargetId && (
           <div className="row" style={{ gap: 8 }}>
@@ -288,8 +288,8 @@ function DocumentDetailModal({ id, onClose, onChanged }) {
   }
 
   return createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 460 }}>
+    <div className="modal-overlay drawer-overlay" onClick={onClose}>
+      <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         {!d && <div className="small">{tr('adminCommon.loading')}</div>}
         {d && !editing && (
           <>
