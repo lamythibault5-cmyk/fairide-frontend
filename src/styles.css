@@ -1949,6 +1949,17 @@ button.account-link-row:last-child { border-bottom: none; }
   .account-panneau .row:not(.account-inline) > .field { flex: 1 1 100% !important; }
 }
 
+/* Rangées d état en tête des tableaux de bord (validation, paiements, pause, position) : statiques,
+   avec l action à droite ; la pastille de l icône prend la couleur de l état. */
+.account-link-row--statique { cursor: default; }
+.account-link-row--statique:hover { background: none; }
+.account-link-action { flex-shrink: 0; display: inline-flex; align-items: center; }
+.account-link-icon--ok { background: rgba(200, 240, 60, 0.45); }
+.account-link-icon--warn { background: rgba(240, 200, 60, 0.28); }
+.account-link-icon--danger { background: rgba(220, 60, 60, 0.14); }
+/* Le sous-titre d une rangée d état peut être long : on le laisse passer sur deux lignes. */
+.account-link-row--statique .account-link-text .small { white-space: normal; }
+
 /* Supprimer le compte, au bout de « Mes infos » : un filet, un titre rouge discret, et le bouton. */
 .account-zone-danger { margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--line); }
 .account-zone-danger-titre { display: block; margin: 0 0 8px; font-size: 13px; color: var(--red); }

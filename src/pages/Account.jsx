@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import LigneCompte from '../components/LigneCompte';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -838,34 +839,6 @@ export default function Account() {
         <Link to="/mentions-legales">Mentions légales</Link>
         <span className="account-build">Build {__BUILD_ID__}</span>
       </p>
-    </div>
-  );
-}
-
-// Une rangée du menu Compte. Tantôt un lien, tantôt une action (ouvrir l'assistant, partager), tantôt
-// une rangée qui se déplie (`children` + `ouverte`) pour montrer un formulaire sur place. Dans les deux
-// derniers cas c'est un <button>, pas un <a href="#"> déguisé — un lien qui ne mène nulle part est
-// annoncé comme un lien par les lecteurs d'écran et s'ouvre dans un nouvel onglet au clic du milieu,
-// deux promesses qu'on ne tiendrait pas.
-function LigneCompte({ to, onClick, icone, titre, sous, danger = false, ouverte = false, children }) {
-  const pliable = children !== undefined;
-  const contenu = (
-    <>
-      <span className="account-link-icon" aria-hidden="true">{icone}</span>
-      <span className="account-link-text">
-        <b>{titre}</b>
-        <span className="small">{sous}</span>
-      </span>
-      <span className={`account-link-chevron${pliable ? ' account-link-chevron--pliable' : ''}`} aria-hidden="true">›</span>
-    </>
-  );
-  const classe = `account-link-row${danger ? ' account-link-danger' : ''}${ouverte ? ' ouverte' : ''}`;
-  if (to) return <Link to={to} className={classe}>{contenu}</Link>;
-  if (!pliable) return <button type="button" className={classe} onClick={onClick}>{contenu}</button>;
-  return (
-    <div className={`account-pliable${ouverte ? ' ouverte' : ''}`}>
-      <button type="button" className={classe} onClick={onClick} aria-expanded={ouverte}>{contenu}</button>
-      {ouverte && <div className="account-panneau">{children}</div>}
     </div>
   );
 }

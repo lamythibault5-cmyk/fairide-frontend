@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
@@ -26,6 +27,8 @@ export default function DriverDashboard() {
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
+  // La rangée d'état dépliée en tête (validation), null si aucune.
+  const [statutOuvert, setStatutOuvert] = useState(null);
   const activeIdsRef = useRef([]);
 
   async function togglePause() {
@@ -209,73 +212,63 @@ export default function DriverDashboard() {
 
   return (
     <div>
-      {user?.adminStatus !== 'approved' && (
-        <div className="card" style={{ border: '2px solid var(--red)' }}>
-          {user?.adminStatus === 'blocked' ? (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚫 Compte bloqué par Fairide</h3>
-              <p className="small" style={{ margin: 0 }}>
-                Ton compte livreur a été bloqué par l'équipe Fairide — tu ne peux plus voir ni prendre de commandes. Contacte le support pour plus d'informations.
-              </p>
-            </>
-          ) : (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
-              <p className="small" style={{ margin: 0 }}>
-                Ton compte livreur doit être validé par l'équipe Fairide avant de pouvoir voir et prendre des commandes. C'est généralement rapide, repasse un peu plus tard.
-              </p>
-            </>
-          )}
-        </div>
-      )}
-
-      {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
-        <div className="card" style={{ border: `2px solid ${user?.stripeConnectStatus === 'restricted' ? 'var(--red)' : 'var(--gold)'}` }}>
-          {user?.stripeConnectStatus === 'restricted' ? (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Informations de paiement à compléter</h3>
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                Stripe a besoin d'informations supplémentaires pour pouvoir te verser tes paiements. Tant que ce n'est pas complété, tu ne peux pas prendre de nouvelles livraisons.
-              </p>
-            </>
-          ) : (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>💳 Configure tes paiements Fairide</h3>
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                Pour recevoir tes frais de livraison et tes pourboires directement sur ton compte bancaire, configure tes informations de paiement via Stripe (rapide et sécurisé). Tant que ce n'est pas fait, tu ne peux pas prendre de livraisons.
-              </p>
-            </>
-          )}
-          <button className="btn-gold" disabled={connecting} onClick={connectOnboard}>
-            {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? 'Compléter mes informations' : 'Configurer mes paiements')}
-          </button>
-        </div>
-      )}
-
-      {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
-        <div className="card" style={{ border: `2px solid ${user?.driverPaused ? 'var(--gold)' : 'var(--teal)'}` }}>
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>
-                {user?.driverPaused ? '⏸️ Compte en pause' : '✅ Compte validé, tu peux commencer à livrer'}
-              </h3>
-              <p className="small" style={{ margin: 0 }}>
-                {user?.driverPaused
-                  ? "Tu ne vois plus les commandes disponibles et ne peux pas en prendre. Réactive-toi quand tu es prêt à reprendre."
-                  : 'Mets ton compte en pause à tout moment si tu arrêtes de livrer temporairement — tes livraisons en cours ne sont pas affectées.'}
-              </p>
-            </div>
-            <button
-              className={user?.driverPaused ? 'btn-teal' : 'btn-outline'}
-              style={{ padding: '8px 14px', fontSize: 13, flexShrink: 0 }}
-              disabled={togglingPause}
-              onClick={togglePause}
-            >
-              {togglingPause ? '...' : user?.driverPaused ? '▶️ Reprendre' : '⏸️ Mettre en pause'}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* L'état du compte livreur, en rangées du même dessin que Mon compte (LigneCompte) : validation,
+          paiements, disponibilité, partage de position. Une carte, une rangée par sujet, l'action à
+          droite quand il y en a une — plus trois encadrés colorés empilés. */}
+      <div className="card account-groupe" aria-label="Mon compte livreur">
+        {user?.adminStatus === 'blocked' && (
+          <LigneCompte accent="danger" icone="🚫" titre="Compte bloqué par Fairide" sous="Tu ne peux plus voir ni prendre de commandes" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <p className="small" style={{ margin: 0 }}>
+              Ton compte livreur a été bloqué par l'équipe Fairide — tu ne peux plus voir ni prendre de commandes. Contacte le support pour plus d'informations.
+            </p>
+          </LigneCompte>
+        )}
+        {user?.adminStatus !== 'approved' && user?.adminStatus !== 'blocked' && (
+          <LigneCompte accent="warn" icone="🕐" titre="En attente de validation" sous="Généralement rapide — repasse un peu plus tard" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <p className="small" style={{ margin: 0 }}>
+              Ton compte livreur doit être validé par l'équipe Fairide avant de pouvoir voir et prendre des commandes. C'est généralement rapide, repasse un peu plus tard.
+            </p>
+          </LigneCompte>
+        )}
+        {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
+          <LigneCompte
+            accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
+            titre={user?.stripeConnectStatus === 'restricted' ? 'Informations de paiement à compléter' : 'Paiements à configurer'}
+            sous={user?.stripeConnectStatus === 'restricted'
+              ? 'Stripe a besoin d\'informations pour te verser tes gains'
+              : 'Via Stripe, rapide et sécurisé — sans ça, pas de livraisons'}
+            action={(
+              <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? 'Compléter' : 'Configurer')}
+              </button>
+            )}
+          />
+        )}
+        {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
+          <LigneCompte
+            accent={user?.driverPaused ? 'warn' : 'ok'} icone={user?.driverPaused ? '⏸️' : '✅'}
+            titre={user?.driverPaused ? 'Compte en pause' : 'Disponible pour livrer'}
+            sous={user?.driverPaused ? 'Tu ne vois plus les commandes disponibles' : 'Mets-toi en pause quand tu arrêtes — tes courses en cours ne bougent pas'}
+            action={(
+              <button type="button" className={user?.driverPaused ? 'btn-teal' : 'btn-outline'} style={{ padding: '8px 12px', fontSize: 13 }} disabled={togglingPause} onClick={togglePause}>
+                {togglingPause ? '...' : user?.driverPaused ? '▶️ Reprendre' : '⏸️ Pause'}
+              </button>
+            )}
+          />
+        )}
+        {active.length > 0 && (
+          <LigneCompte
+            accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="📍"
+            titre="Partage de position"
+            sous={user?.locationSharingEnabled === false
+              ? 'Désactivé — réactivable dans Mon compte'
+              : sharingLocation
+                ? `Partagée avec le client${lastPositionAt ? ` · dernier envoi ${formatClock(lastPositionAt)}` : ''} · garde l'écran allumé`
+                : 'En attente de ton autorisation de géolocalisation…'}
+            action={null}
+          />
+        )}
+      </div>
 
       {user?.driverPaused ? (
         <div className="empty">Ton compte est en pause — pas de nouvelles commandes tant que tu n'as pas repris.</div>
@@ -330,21 +323,9 @@ export default function DriverDashboard() {
         </div>
       ))}
 
+      {/* L'état du partage de position est dans la rangée « Partage de position » en tête de page,
+          avec le rappel « garde l'écran allumé » : sans app native, écran éteint = suivi interrompu. */}
       <h2 className="section-title">Mes livraisons en cours</h2>
-      {active.length > 0 && (
-        <div className="small" style={{ marginBottom: 10 }}>
-          {user?.locationSharingEnabled === false
-            ? '📍 Partage de position désactivé (réactivable dans les réglages du compte).'
-            : sharingLocation
-              ? `📍 Ta position est partagée avec le(s) client(s)${lastPositionAt ? ` — dernier envoi à ${formatClock(lastPositionAt)}` : ''}.`
-              : '📍 En attente de ton autorisation de géolocalisation...'}
-          {/* Dit explicitement ce que le web ne peut pas garantir, plutôt que de laisser croire à un
-              suivi permanent : tant qu'il n'y a pas d'app native, écran éteint = suivi interrompu. */}
-          {sharingLocation && (
-            <div style={{ marginTop: 2 }}>Garde cet écran allumé : le partage s'interrompt quand le téléphone se verrouille.</div>
-          )}
-        </div>
-      )}
       {active.length === 0 && <div className="empty">Pas de livraison en cours.</div>}
       {active.map((o) => (
         <div className="card" key={o.id}>

@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
+import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
@@ -44,6 +45,8 @@ export default function DashboardLayout() {
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
 
   const [connecting, setConnecting] = useState(false);
+  // La rangée d'état dépliée en tête du tableau de bord (validation), null si aucune.
+  const [statutOuvert, setStatutOuvert] = useState(null);
   // Capturé une seule fois au montage, avant que l'effet ci-dessous ne nettoie l'URL — loadDashboard
   // (appelé de façon asynchrone, après coup) ne pourrait plus lire ce paramètre autrement.
   const connectReturnRef = useRef(new URLSearchParams(window.location.search).get('connect'));
@@ -265,49 +268,42 @@ export default function DashboardLayout() {
         </div>
       )}
 
-      {restaurant && restaurant.adminStatus !== 'approved' && (
-        <div className="card" style={{ border: '2px solid var(--red)' }}>
-          {restaurant.adminStatus === 'blocked' ? (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🚫 Compte bloqué par Fairide</h3>
+      {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
+          validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
+          reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
+      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active') && (
+        <div className="card account-groupe" aria-label="Statut de mon commerce">
+          {restaurant.adminStatus === 'blocked' && (
+            <LigneCompte accent="danger" icone="🚫" titre="Compte bloqué par Fairide" sous="Ton restaurant n'est pas visible aux clients" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 Ton restaurant a été bloqué par l'équipe Fairide et n'est pas visible aux clients, quel que soit ton statut d'abonnement. Contacte le support pour plus d'informations.
               </p>
-            </>
-          ) : (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>🕐 En attente de validation</h3>
+            </LigneCompte>
+          )}
+          {restaurant.adminStatus !== 'approved' && restaurant.adminStatus !== 'blocked' && (
+            <LigneCompte accent="warn" icone="🕐" titre="En attente de validation" sous="Tu peux déjà compléter ton menu en attendant" ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 Ton restaurant doit être validé par l'équipe Fairide avant d'apparaître aux clients — mais pas besoin d'attendre pour continuer :
                 tu peux dès maintenant compléter ton menu. Ton abonnement (premier mois offert) ne pourra être activé qu'une fois ton compte
                 validé — le temps pour Fairide de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties.
                 Dès que ton compte est validé, tu pourras t'abonner et ton restaurant deviendra visible immédiatement. C'est généralement rapide, repasse un peu plus tard.
               </p>
-            </>
+            </LigneCompte>
           )}
-        </div>
-      )}
-
-      {restaurant && restaurant.stripeConnectStatus !== 'active' && (
-        <div className="card" style={{ border: `2px solid ${restaurant.stripeConnectStatus === 'restricted' ? 'var(--red)' : 'var(--gold)'}` }}>
-          {restaurant.stripeConnectStatus === 'restricted' ? (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>⚠️ Informations de paiement à compléter</h3>
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                Stripe a besoin d'informations supplémentaires pour pouvoir te verser tes paiements. Tant que ce n'est pas complété, tu ne peux pas recevoir de nouvelles commandes.
-              </p>
-            </>
-          ) : (
-            <>
-              <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>💳 Configure tes paiements Fairide</h3>
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                Pour recevoir tes paiements directement sur ton compte bancaire à chaque commande, configure tes informations de paiement via Stripe (rapide et sécurisé). Tant que ce n'est pas fait, ton restaurant ne peut pas recevoir de commandes.
-              </p>
-            </>
+          {restaurant.stripeConnectStatus !== 'active' && (
+            <LigneCompte
+              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
+              titre={restaurant.stripeConnectStatus === 'restricted' ? 'Informations de paiement à compléter' : 'Paiements à configurer'}
+              sous={restaurant.stripeConnectStatus === 'restricted'
+                ? 'Stripe a besoin d\'informations pour te verser tes paiements'
+                : 'Via Stripe, rapide et sécurisé — sans ça, pas de commandes'}
+              action={(
+                <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
+                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? 'Compléter' : 'Configurer')}
+                </button>
+              )}
+            />
           )}
-          <button className="btn-gold" disabled={connecting} onClick={connectOnboard}>
-            {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? 'Compléter mes informations' : 'Configurer mes paiements')}
-          </button>
         </div>
       )}
 
