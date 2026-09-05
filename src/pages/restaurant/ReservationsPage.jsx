@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
+import ReservationSteps from '../../components/ReservationSteps';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { statusLabel } from '../../orderStatus';
@@ -227,9 +228,9 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
       </div>
 
       {formulaire && (
-        <NouvelleReservation token={token} toast={toast} restoId={restoId} tables={tablesActives} restaurant={restaurant}
-          dateInitiale={date}
-          onCree={(r) => { setFormulaire(false); setDate(isoDuJour(new Date(r.startAt))); setVue('jour'); setOuverte(r.id); recharger(); }} />
+        <ReservationSteps mode="resto" restaurantId={restoId} restaurant={restaurant} token={token} tables={tablesActives} dateInitiale={date}
+          onClose={() => setFormulaire(false)}
+          onDone={(r) => { setFormulaire(false); setDate(isoDuJour(new Date(r.startAt))); setVue('jour'); setOuverte(r.id); recharger(); }} />
       )}
 
       {chargement && <p className="small">{t('resa.loading')}</p>}
@@ -506,103 +507,6 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
         </div>
       )}
     </div>
-  );
-}
-
-function NouvelleReservation({ token, toast, restoId, tables, dateInitiale, onCree, restaurant }) {
-  const { t } = useLanguage();
-  const [nom, setNom] = useState('');
-  const [telephone, setTelephone] = useState('');
-  const [email, setEmail] = useState('');
-  const [couverts, setCouverts] = useState(2);
-  const [jour, setJour] = useState(dateInitiale);
-  const [heure, setHeure] = useState('19:30');
-  const [duree, setDuree] = useState(120);
-  const [tableId, setTableId] = useState('');
-  const [source, setSource] = useState('phone');
-  const [noteInterne, setNoteInterne] = useState('');
-  const [envoi, setEnvoi] = useState(false);
-  const pas = restaurant?.reservationSlotMinutes || 30;
-
-  async function soumettre(e) {
-    e.preventDefault();
-    if (!nom.trim()) { toast(t('resa.toastNameRequired')); return; }
-    setEnvoi(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/reservations`, {
-        method: 'POST', token,
-        body: {
-          reservationName: nom.trim(), clientPhone: telephone.trim(), clientEmail: email.trim(), partySize: Number(couverts),
-          startAt: new Date(`${jour}T${heure}:00`).toISOString(), durationMinutes: duree, tableId: tableId || null,
-          internalNote: noteInterne, source
-        }
-      });
-      toast(t('resa.toastAdded'));
-      onCree(r);
-    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
-  }
-
-  return (
-    <form className="card" onSubmit={soumettre}>
-      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.newReservation')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>
-        {t('resa.newIntro')}
-      </p>
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-        <div className="field" style={{ flex: '2 1 180px' }}>
-          <label htmlFor="nr-nom">{t('resa.name')}</label>
-          <input id="nr-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('resa.phName')} required />
-        </div>
-        <div className="field" style={{ flex: '1 1 140px' }}>
-          <label htmlFor="nr-tel">{t('resa.phone')}</label>
-          <input id="nr-tel" value={telephone} onChange={(e) => setTelephone(e.target.value)} placeholder="+32…" />
-        </div>
-        <div className="field" style={{ flex: '2 1 180px' }}>
-          <label htmlFor="nr-email">{t('resa.emailOptional')}</label>
-          <input id="nr-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </div>
-      </div>
-      <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-        <div className="field" style={{ flex: '0 0 90px' }}>
-          <label htmlFor="nr-pers">{t('resa.ppl')}</label>
-          <input id="nr-pers" type="number" min="1" max="200" value={couverts} onChange={(e) => setCouverts(e.target.value)} />
-        </div>
-        <div className="field" style={{ flex: '1 1 140px' }}>
-          <label htmlFor="nr-jour">{t('resa.day')}</label>
-          <input id="nr-jour" type="date" value={jour} onChange={(e) => setJour(e.target.value)} />
-        </div>
-        <div className="field" style={{ flex: '0 0 110px' }}>
-          <label htmlFor="nr-heure">{t('resa.time')}</label>
-          <input id="nr-heure" type="time" step={pas * 60} value={heure} onChange={(e) => setHeure(e.target.value)} />
-        </div>
-        <div className="field" style={{ flex: '0 0 110px' }}>
-          <label htmlFor="nr-duree">{t('resa.duration')}</label>
-          <select id="nr-duree" value={duree} onChange={(e) => setDuree(Number(e.target.value))}>
-            {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{m % 60 ? t('resa.durationHM', { h: Math.floor(m / 60), m: m % 60 }) : t('resa.durationH', { h: m / 60 })}</option>)}
-          </select>
-        </div>
-        <div className="field" style={{ flex: '1 1 150px' }}>
-          <label htmlFor="nr-table">{t('resa.table')}</label>
-          <select id="nr-table" value={tableId} onChange={(e) => setTableId(e.target.value)}>
-            <option value="">{t('resa.automaticSmallest')}</option>
-            {tables.map((tb) => <option key={tb.id} value={tb.id}>{tb.name} ({t('resa.seatsShort', { n: tb.seats })}{tb.zone ? `, ${tb.zone}` : ''})</option>)}
-          </select>
-        </div>
-        <div className="field" style={{ flex: '1 1 130px' }}>
-          <label htmlFor="nr-source">{t('resa.receivedVia')}</label>
-          <select id="nr-source" value={source} onChange={(e) => setSource(e.target.value)}>
-            <option value="phone">{t('resa.phone')}</option>
-            <option value="walk_in">{t('resa.walkIn')}</option>
-            <option value="restaurant">{t('resa.otherSource')}</option>
-          </select>
-        </div>
-      </div>
-      <div className="field">
-        <label htmlFor="nr-note">{t('resa.internalNoteShort')}</label>
-        <input id="nr-note" value={noteInterne} onChange={(e) => setNoteInterne(e.target.value)} placeholder={t('resa.phInternalNoteShort')} />
-      </div>
-      <button className="btn-teal" disabled={envoi}>{envoi ? '…' : t('resa.addToAgenda')}</button>
-    </form>
   );
 }
 
