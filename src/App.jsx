@@ -26,6 +26,7 @@ import NotFound from './pages/NotFound';
 // --- Espace client (au-delà des pages publiques) ---
 const SearchPage = lazy(() => import('./pages/client/SearchPage'));
 const Checkout = lazy(() => import('./pages/client/Checkout'));
+const ReservationWizard = lazy(() => import('./pages/client/ReservationWizard'));
 const Favorites = lazy(() => import('./pages/client/Favorites'));
 const Orders = lazy(() => import('./pages/client/Orders'));
 const OrderResult = lazy(() => import('./pages/client/OrderResult'));
@@ -100,6 +101,7 @@ export default function App() {
             statique : une page indexable ne doit pas attendre un second téléchargement pour s'afficher. */}
         <Route path="/restaurants" element={<RestaurantList />} />
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
+        <Route path="/restaurants/:id/reserver" element={<ReservationWizard />} />
         {/* Publique comme la liste : chercher un commerce ou un plat ne demande pas de compte. Les
             résultats personnels (commandes) n'apparaissent que connecté. */}
         <Route path="/recherche" element={<SearchPage />} />

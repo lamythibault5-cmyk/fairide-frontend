@@ -734,12 +734,19 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
           </div>
           <div style={{ flex: '1 1 120px' }}>
             <label htmlFor="resa-horizon">{t('resa.bookableUpTo')}</label>
-            <select id="resa-horizon" value={horizon} onChange={(e) => setHorizon(e.target.value)}>
-              <option value="7">{t('resa.days7')}</option><option value="14">{t('resa.days14')}</option><option value="30">{t('resa.days30')}</option>
-              <option value="60">{t('resa.days60')}</option><option value="90">{t('resa.days90')}</option>
-            </select>
+            <div className="row" style={{ gap: 6, alignItems: 'center' }}>
+              <input id="resa-horizon" type="number" min={1} max={365} step={1} value={horizon} style={{ width: 90 }}
+                onChange={(e) => setHorizon(e.target.value)} onBlur={() => setHorizon((h) => String(Math.min(365, Math.max(1, Number(h) || 1))))} />
+              <span className="small">{t('resa.daysAhead')}</span>
+            </div>
+            <div className="pill-row" style={{ marginTop: 6 }}>
+              {[1, 3, 7, 14, 30, 60, 90, 180, 365].map((j) => (
+                <button key={j} type="button" className={`pill${Number(horizon) === j ? ' gold' : ''}`} style={{ cursor: 'pointer', border: '1px solid var(--line)' }} onClick={() => setHorizon(String(j))}>{j}</button>
+              ))}
+            </div>
           </div>
         </div>
+        <p className="small" style={{ margin: '10px 0 0' }}>{t('resa.horizonHelp')}</p>
       </div>
 
       <div className="card">
