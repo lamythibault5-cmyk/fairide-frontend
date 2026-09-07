@@ -1894,6 +1894,11 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
    s'affichait donc que derrière la colonne de contenu, jamais dans les marges. */
 .cuisine-fond { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
 .cuisine-fond-media { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Le voile blanc délave les couleurs de la vidéo : une légère remontée de saturation et de contraste
+   sur le média lui-même, AVANT le voile, rend au plat sa couleur sans toucher au plancher de contraste
+   du texte (qui ne dépend que du voile). Mesuré à l'œil sur les plans sombres et le flambé : le rouge
+   des tomates et l'orange de la flamme reviennent, le blanc des vestes ne sature pas. */
+.cuisine-fond-media { filter: saturate(1.18) contrast(1.04); }
 
 /* Le voile est ce qui rend tout le reste possible. Une vidéo change de luminosité d'une image à
    l'autre : contrairement à une photo, son pire pixel ne se calcule pas. Le voile impose donc un
@@ -1957,8 +1962,8 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 @media (max-width: 700px) { .wrap-fond .site-footer { background: rgba(255, 255, 255, .9); } }
 @media (prefers-contrast: more) { .wrap-fond .site-footer { background: #fff; } }
 
-/* Sur téléphone et tablette en portrait, le fond est la déclinaison 720p du montage (voir
-   CuisineBackdrop.jsx). Le voile y est un peu plus dense qu'en grand écran : le texte y court sur
+/* Sur téléphone et tablette en portrait, le fond est la déclinaison portrait 810×1440 du montage
+   (voir CuisineBackdrop.jsx). Le voile y est un peu plus dense qu'en grand écran : le texte y court sur
    toute la largeur, sans marge où le mouvement pourrait vivre seul, et une vidéo trop présente
    derrière une colonne pleine fatigue plus qu'elle ne séduit. */
 @media (max-width: 700px) {

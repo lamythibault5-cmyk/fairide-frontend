@@ -5,11 +5,11 @@ directement chez Pixabay et Pexels : ça fonctionnait, mais la page d'accueil au
 le jour où l'un des deux aurait bloqué le lien direct — Pexels le fait déjà pour ses vidéos, dont
 le téléchargement passe par `pexels.com/download/video/<id>/` et non par un lien vers le fichier.
 
-## `cuisine.mp4` (3840 × 2160, 72 s, 37 Mo)
+## `cuisine.mp4` et ses déclinaisons (72 s)
 
-Une seule définition, servie à tous ceux qui reçoivent la vidéo — donc jamais un téléphone, jamais
-en mouvement réduit, jamais en économiseur de données. Une version antérieure livrait du 1080p sous
-2560 pixels réels ; ce n'est plus le cas. Le même fond sert à la page d'accueil et à la page de
+Quatre définitions du même montage, choisies selon la largeur et l'orientation de l'écran (voir le
+tableau en fin de fichier et CuisineBackdrop.jsx). La vidéo n'est jamais servie en mouvement réduit ni
+en économiseur de données : la photo (affiche) prend la place. Le même fond sert à la page d'accueil et à la page de
 connexion / inscription, pour un visiteur non connecté seulement (voir Layout.jsx, `fondCuisine`).
 
 ### Ce que montre le montage
@@ -117,14 +117,36 @@ Les rushes téléchargés vivent dans `public/_probe/`, ignoré par git : un `gi
 `ffmpeg` n'est pas une dépendance du projet — il a été installé le temps du montage avec
 `npm i ffmpeg-static --no-save`, qui n'écrit ni dans `package.json` ni dans `package-lock.json`.
 
-## Déclinaison mobile — cuisine-mobile.mp4 / cuisine-mobile.jpg
+## Les quatre fichiers servis — recette d'encodage (septembre 2026)
 
-Même montage, même boucle, réduit pour les écrans de moins de 900 px (téléphones, tablettes en
-portrait), où la 4K ne se justifie pas et pèserait 37 Mo sur une connexion mobile. Produit à partir
-du fichier final, pas des sources : la boucle et les fondus sont donc identiques.
+Tous sont tirés des intermédiaires du montage encodés en CRF 18 (`raccord12.mp4`, 2 s de boucle
+refermée, puis `milieu12.mp4`, 70 s), jamais d'un fichier déjà compressé : réencoder la 4K CRF 35
+n'aurait fait que cumuler deux compressions. Les intermédiaires ne sont pas dans le dépôt (330 Mo) ;
+ils vivent dans `public/_probe/` (ignoré par git) sur le poste de montage, et se refabriquent avec
+`montage12.sh` au même endroit.
 
-    ffmpeg -i cuisine.mp4 -vf "scale=1280:720,fps=25" -an -c:v libx264 -preset medium -crf 34 \
-      -pix_fmt yuv420p -movflags +faststart cuisine-mobile.mp4
-    ffmpeg -ss 5 -i cuisine-mobile.mp4 -frames:v 1 -q:v 5 cuisine-mobile.jpg
+    # maître : concaténation sans réencodage
+    printf "file 'raccord12.mp4'\nfile 'milieu12.mp4'\n" > liste.txt
+    ffmpeg -f concat -safe 0 -i liste.txt -c copy master.mp4
+    ENC="-an -c:v libx264 -preset slow -tune film -pix_fmt yuv420p -movflags +faststart"
+    # cuisine.mp4 — 3840×2160, écrans de 1400 px et plus
+    ffmpeg -i master.mp4 -vf fps=25 $ENC -crf 31 cuisine.mp4
+    # cuisine-hd.mp4 — 1920×1080, de 900 à 1400 px
+    ffmpeg -i master.mp4 -vf "scale=1920:1080,fps=25" $ENC -crf 27 cuisine-hd.mp4
+    # cuisine-sd.mp4 — 1600×900, moins de 900 px en paysage
+    ffmpeg -i master.mp4 -vf "scale=1600:900,fps=25" $ENC -crf 30 cuisine-sd.mp4
+    # cuisine-portrait.mp4 — 810×1440, moins de 900 px en portrait (recadrage central du 16:9)
+    ffmpeg -i master.mp4 -vf "crop=1215:2160:(iw-1215)/2:0,scale=810:1440,fps=25" $ENC -crf 30 cuisine-portrait.mp4
+    # affiches (image à 5 s de chaque fichier)
+    ffmpeg -ss 5 -i cuisine.mp4 -frames:v 1 -q:v 4 cuisine.jpg   # idem -hd, -sd, -portrait
 
-Résultat : 4,2 Mo (vidéo), 46 Ko (affiche). À refaire à chaque remplacement de cuisine.mp4.
+Poids obtenus (72 s, 25 im/s, sans son) :
+
+| Fichier | Définition | Servi à | CRF | Poids |
+|---|---|---|---|---|
+| cuisine.mp4 | 3840 × 2160 | 1400 px et plus | 31 | 56,6 Mo |
+| cuisine-hd.mp4 | 1920 × 1080 | 900 à 1400 px | 27 | 17,6 Mo |
+| cuisine-sd.mp4 | 1600 × 900 | moins de 900 px, paysage | 30 | 8,9 Mo |
+| cuisine-portrait.mp4 | 810 × 1440 | moins de 900 px, portrait | 30 | 8,2 Mo |
+
+À refaire à chaque remplacement du montage.

@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import VIDEO from '../assets/cuisine.mp4';
 import AFFICHE from '../assets/cuisine.jpg';
-import VIDEO_MOBILE from '../assets/cuisine-mobile.mp4';
-import AFFICHE_MOBILE from '../assets/cuisine-mobile.jpg';
+import VIDEO_HD from '../assets/cuisine-hd.mp4';
+import AFFICHE_HD from '../assets/cuisine-hd.jpg';
+import VIDEO_SD from '../assets/cuisine-sd.mp4';
+import AFFICHE_SD from '../assets/cuisine-sd.jpg';
+import VIDEO_PORTRAIT from '../assets/cuisine-portrait.mp4';
+import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.jpg';
 
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
@@ -50,13 +54,21 @@ import AFFICHE_MOBILE from '../assets/cuisine-mobile.jpg';
 // d'eux-mêmes — là où un chemin fixe aurait continué de servir l'ancienne vidéo à qui l'avait
 // déjà vue.
 //
-// DEUX FICHIERS, LE MÊME MONTAGE. Au-delà de 900 px de large, la 4K (37 Mo, CRF 35) ; en dessous —
-// téléphones et tablettes en portrait — une déclinaison 1280×720 du même montage (4,2 Mo, CRF 34,
-// recette dans PROVENANCE.md). Une version précédente ne servait AUCUNE vidéo sous 900 px, seulement
-// la photo : le fond, qui est le geste visuel de l'accueil, n'existait donc pas pour la majorité des
-// visiteurs, qui arrivent au téléphone. 4 Mo, c'est le poids d'une page d'accueil ordinaire avec ses
-// photos ; le voile (blanc à 64 % sur petit écran) efface de toute façon le détail qu'une meilleure
-// définition apporterait.
+// QUATRE FICHIERS, LE MÊME MONTAGE, tous tirés des intermédiaires quasi sans perte du montage (CRF 18),
+// jamais d'un fichier déjà compressé (recette et poids dans PROVENANCE.md) :
+//   - 1400 px et plus (grands écrans, moniteurs) : la 4K, CRF 31 en preset slow — une version
+//     précédente était en CRF 35 preset medium, avec des blocs visibles dans la fumée et les fonds
+//     sombres, même sous le voile ;
+//   - de 900 à 1400 px (portables) : 1920×1080, CRF 27. À cette taille, un 1080p propre vaut mieux
+//     qu'une 4K écrasée, pour un quart du poids ;
+//   - moins de 900 px en paysage (tablette couchée) : 1600×900, CRF 30 ;
+//   - moins de 900 px en portrait (téléphones, tablettes debout) : un recadrage central du 16:9 en
+//     810×1440, CRF 30. Une première déclinaison mobile était un 1280×720 paysage : en portrait,
+//     object-fit: cover n'en montrait qu'une bande centrale de 405 px de large, agrandie trois fois sur
+//     un écran de 1170 px physiques — flou visible malgré le voile. Le recadrage sert au téléphone
+//     deux fois plus de pixels utiles, pour un poids voisin.
+// Une version encore antérieure ne servait AUCUNE vidéo sous 900 px, seulement la photo : le fond,
+// qui est le geste visuel de l'accueil, n'existait donc pas pour la majorité des visiteurs.
 //
 // Ce que le téléphone ne reçoit toujours pas : la vidéo en « mouvement réduit » (réglage
 // d'accessibilité du système) et en économiseur de données — dans les deux cas l'utilisateur l'a
@@ -108,19 +120,29 @@ export default function CuisineBackdrop() {
 
   useEffect(() => {
     const large = window.matchMedia('(min-width: 900px)');
+    const tresLarge = window.matchMedia('(min-width: 1400px)');
     const calme = window.matchMedia('(prefers-reduced-motion: reduce)');
     const evaluer = () => {
       // Économiseur de données : l'utilisateur a demandé qu'on ne consomme pas, on ne consomme pas.
       const economie = navigator.connection?.saveData === true;
-      setAffiche(large.matches ? AFFICHE : AFFICHE_MOBILE);
-      setSource(calme.matches || economie ? null : (large.matches ? VIDEO : VIDEO_MOBILE));
+      const portrait = window.matchMedia('(orientation: portrait)').matches;
+      const [videoChoisie, afficheChoisie] = tresLarge.matches ? [VIDEO, AFFICHE]
+        : large.matches ? [VIDEO_HD, AFFICHE_HD]
+          : portrait ? [VIDEO_PORTRAIT, AFFICHE_PORTRAIT] : [VIDEO_SD, AFFICHE_SD];
+      setAffiche(afficheChoisie);
+      setSource(calme.matches || economie ? null : videoChoisie);
     };
+    const orientation = window.matchMedia('(orientation: portrait)');
     evaluer();
     large.addEventListener('change', evaluer);
+    tresLarge.addEventListener('change', evaluer);
     calme.addEventListener('change', evaluer);
+    orientation.addEventListener('change', evaluer);
     return () => {
       large.removeEventListener('change', evaluer);
+      tresLarge.removeEventListener('change', evaluer);
       calme.removeEventListener('change', evaluer);
+      orientation.removeEventListener('change', evaluer);
     };
   }, []);
 
