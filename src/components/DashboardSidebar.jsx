@@ -32,10 +32,11 @@ function navItemsForRole(role, t) {
   }
   if (role === 'restaurant') {
     return [
+      // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
       { to: '/dashboard', end: true, icon: '🏪', label: t('nav.myBusiness') },
+      { to: '/dashboard/menu', icon: '🍽️', label: t('nav.myMenu') },
       { to: '/dashboard/orders', icon: '📦', label: t('nav.orders') },
       { to: '/dashboard/preview', icon: '👁️', label: t('nav.customerPreview') },
-      { to: '/dashboard/edit', icon: '✏️', label: 'Modifier mon restaurant' },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. Neuf onglets ne tiennent pas dans une barre
       // du bas — sous 520px ils deviennent des icônes muettes, et la sixième est déjà de trop.

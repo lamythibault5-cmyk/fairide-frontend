@@ -1299,9 +1299,9 @@ export const translations = {
       s1p2: 'Une connexion internet stable est nécessaire pour voir les commandes arriver et pour les traiter.',
       s1p3: 'Il est recommandé de réserver un appareil au comptoir, dédié à la réception des commandes, pour ne jamais le perdre de vue pendant le service.',
       s2Title: 'Modifier les informations et le menu du restaurant',
-      s2p1: '**Infos du restaurant** (nom, adresse, description, photo d\'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, frais de livraison...) : section « Modifier mon restaurant » dans le menu de gauche.',
+      s2p1: '**Infos du restaurant** (nom, adresse, description, photo d\'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, frais de livraison...) : section « Mon commerce » dans le menu de gauche.',
       s2p2: 'Un changement d\'horaires ou de fermeture exceptionnelle est visible immédiatement par les clients — pas besoin d\'attendre une validation.',
-      s2p3: '**Menu** (plats, prix, disponibilité, photos, groupes d\'options comme les sauces ou suppléments) : section « Mon commerce » dans le menu de gauche.',
+      s2p3: '**Menu** (plats, prix, disponibilité, photos, groupes d\'options comme les sauces ou suppléments) : section « Ma carte » dans le menu de gauche — disponible dès que le restaurant est créé.',
       s2l1: 'Chaque section du menu (Entrées, Plats, Mitraillettes...) peut avoir ses propres plats, être renommée, réorganisée ou supprimée.',
       s2l2: 'Une section peut aussi avoir sa propre photo (icône 🖼️ sur la section), utilisée par défaut pour tous les plats de cette section qui n\'ont pas déjà la leur — pratique pour éviter d\'uploader la même photo plat par plat. Après l\'avoir choisie, il est possible de l\'appliquer directement à certains plats précis ou à tous d\'un coup.',
       s2l3: 'Un plat peut être marqué « indisponible » temporairement (rupture de stock) sans avoir à le supprimer.',
@@ -1992,7 +1992,7 @@ export const translations = {
       translateButton: '🌍 Traduire ma carte'
     },
     editResto: {
-      title: 'Modifier mon restaurant',
+      title: 'Infos de mon restaurant',
       infoTitle: 'Infos du restaurant',
       nameLabel: 'Nom du restaurant (affiché aux clients)',
       legalTitle: 'Informations légales',
@@ -2261,7 +2261,10 @@ export const translations = {
       complete: 'Compléter',
       configure: 'Configurer',
       toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour continuer.',
-      founderHint: 'Compte fondateur : nom, adresse et horaires sont facultatifs pour ce restaurant, le serveur complète ce qui manque.'
+      founderHint: 'Compte fondateur : nom, adresse et horaires sont facultatifs pour ce restaurant, le serveur complète ce qui manque.',
+      waitTitle: 'En attente de la création du restaurant',
+      waitText: 'Cette section s\'ouvrira dès que ton restaurant existera : commence par ses infos dans « Mon commerce » (nom, adresse, horaires), la carte et les produits viennent ensuite.',
+      waitCta: 'Créer mon restaurant'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -2649,7 +2652,8 @@ export const translations = {
       customerPreview: 'Aperçu client',
       customerPreviewLower: 'aperçu client',
       previewModeBanner: '👁️ Mode aperçu client',
-      leave: 'Quitter'
+      leave: 'Quitter',
+      myMenu: 'Ma carte'
     },
     footer: {
       tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',
@@ -4556,9 +4560,9 @@ export const translations = {
       s1p2: 'A stable internet connection is needed to see orders come in and to handle them.',
       s1p3: 'It is recommended to keep one device at the counter, dedicated to receiving orders, so it is never out of sight during service.',
       s2Title: 'Editing the restaurant\'s details and menu',
-      s2p1: '**Restaurant details** (name, address, description, cover photo, logo, hours, exceptional closures, cuisine type, delivery fees...): “Edit my restaurant” section in the left menu.',
+      s2p1: '**Restaurant details** (name, address, description, cover photo, logo, hours, exceptional closures, cuisine type, delivery fees...): “My business” section in the left menu.',
       s2p2: 'A change of hours or an exceptional closure is visible to customers immediately — no need to wait for validation.',
-      s2p3: '**Menu** (dishes, prices, availability, photos, option groups such as sauces or extras): “My business” section in the left menu.',
+      s2p3: '**Menu** (dishes, prices, availability, photos, option groups such as sauces or extras): “My menu” section in the left menu — available as soon as the restaurant is created.',
       s2l1: 'Each menu section (Starters, Mains, Mitraillettes...) can have its own dishes, be renamed, reordered or deleted.',
       s2l2: 'A section can also have its own photo (🖼️ icon on the section), used by default for all dishes of that section without their own — handy to avoid uploading the same photo dish by dish. Once chosen, it can be applied directly to specific dishes or to all at once.',
       s2l3: 'A dish can be marked “unavailable” temporarily (out of stock) without having to delete it.',
@@ -5249,7 +5253,7 @@ export const translations = {
       translateButton: '🌍 Translate my menu'
     },
     editResto: {
-      title: 'Edit my restaurant',
+      title: 'My restaurant details',
       infoTitle: 'Restaurant details',
       nameLabel: 'Restaurant name (shown to customers)',
       legalTitle: 'Legal information',
@@ -5518,7 +5522,10 @@ export const translations = {
       complete: 'Complete',
       configure: 'Set up',
       toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to continue.',
-      founderHint: 'Founder account: name, address and opening hours are optional for this restaurant, the server fills in what is missing.'
+      founderHint: 'Founder account: name, address and opening hours are optional for this restaurant, the server fills in what is missing.',
+      waitTitle: 'Waiting for the restaurant to be created',
+      waitText: 'This section opens as soon as your restaurant exists: start with its details in “My business” (name, address, hours); the menu and products come next.',
+      waitCta: 'Create my restaurant'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -5906,7 +5913,8 @@ export const translations = {
       customerPreview: 'Customer preview',
       customerPreviewLower: 'customer preview',
       previewModeBanner: '👁️ Customer preview mode',
-      leave: 'Leave'
+      leave: 'Leave',
+      myMenu: 'My menu'
     },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',
@@ -7813,9 +7821,9 @@ export const translations = {
       s1p2: 'Een stabiele internetverbinding is nodig om bestellingen te zien binnenkomen en te verwerken.',
       s1p3: 'Het is aanbevolen om één toestel aan de balie te houden, enkel voor het ontvangen van bestellingen, zodat je het tijdens de service nooit uit het oog verliest.',
       s2Title: 'De gegevens en het menu van het restaurant wijzigen',
-      s2p1: '**Restaurantgegevens** (naam, adres, beschrijving, omslagfoto, logo, uren, uitzonderlijke sluitingen, type keuken, leveringskosten...): onderdeel “Mijn restaurant wijzigen” in het linkermenu.',
+      s2p1: '**Restaurantgegevens** (naam, adres, beschrijving, omslagfoto, logo, uren, uitzonderlijke sluitingen, type keuken, leveringskosten...): onderdeel “Mijn zaak” in het linkermenu.',
       s2p2: 'Een wijziging van uren of een uitzonderlijke sluiting is meteen zichtbaar voor klanten — geen validatie af te wachten.',
-      s2p3: '**Menu** (gerechten, prijzen, beschikbaarheid, foto\'s, optiegroepen zoals sauzen of extra\'s): onderdeel “Mijn zaak” in het linkermenu.',
+      s2p3: '**Menu** (gerechten, prijzen, beschikbaarheid, foto\'s, optiegroepen zoals sauzen of extra\'s): onderdeel “Mijn kaart” in het linkermenu — beschikbaar zodra het restaurant is aangemaakt.',
       s2l1: 'Elke menusectie (Voorgerechten, Hoofdgerechten, Mitraillettes...) kan eigen gerechten hebben, hernoemd, herschikt of verwijderd worden.',
       s2l2: 'Een sectie kan ook een eigen foto hebben (🖼️-icoon op de sectie), standaard gebruikt voor alle gerechten van die sectie zonder eigen foto — handig om niet gerecht per gerecht dezelfde foto te uploaden. Na de keuze kan ze rechtstreeks op bepaalde gerechten of op alle tegelijk toegepast worden.',
       s2l3: 'Een gerecht kan tijdelijk als “niet beschikbaar” gemarkeerd worden (uitverkocht) zonder het te verwijderen.',
@@ -8506,7 +8514,7 @@ export const translations = {
       translateButton: '🌍 Mijn kaart vertalen'
     },
     editResto: {
-      title: 'Mijn restaurant wijzigen',
+      title: 'Gegevens van mijn restaurant',
       infoTitle: 'Restaurantgegevens',
       nameLabel: 'Naam van het restaurant (getoond aan klanten)',
       legalTitle: 'Juridische gegevens',
@@ -8775,7 +8783,10 @@ export const translations = {
       complete: 'Aanvullen',
       configure: 'Instellen',
       toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om verder te gaan.',
-      founderHint: 'Oprichtersaccount: naam, adres en openingsuren zijn optioneel voor dit restaurant, de server vult aan wat ontbreekt.'
+      founderHint: 'Oprichtersaccount: naam, adres en openingsuren zijn optioneel voor dit restaurant, de server vult aan wat ontbreekt.',
+      waitTitle: 'In afwachting van de aanmaak van het restaurant',
+      waitText: 'Dit onderdeel opent zodra je restaurant bestaat: begin met de gegevens in “Mijn zaak” (naam, adres, uren); de kaart en producten komen daarna.',
+      waitCta: 'Mijn restaurant aanmaken'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -9163,7 +9174,8 @@ export const translations = {
       customerPreview: 'Klantvoorbeeld',
       customerPreviewLower: 'klantvoorbeeld',
       previewModeBanner: '👁️ Klantvoorbeeldmodus',
-      leave: 'Verlaten'
+      leave: 'Verlaten',
+      myMenu: 'Mijn kaart'
     },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',

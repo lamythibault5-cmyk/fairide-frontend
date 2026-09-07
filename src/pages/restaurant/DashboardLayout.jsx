@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Outlet, useOutletContext } from 'react-router-dom';
+import { Link, Outlet, useLocation, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
@@ -30,6 +30,9 @@ export default function DashboardLayout() {
   const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
+  // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
+  // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
+  const surAccueil = ['/dashboard', '/dashboard/edit'].includes(useLocation().pathname.replace(/\/$/, ''));
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -223,12 +226,20 @@ export default function DashboardLayout() {
               </select>
             </div>
           )}
-          {!newRestoOpen && myRestos.length === 0 && (
+          {!newRestoOpen && myRestos.length === 0 && surAccueil && (
             <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>{t('dashResto.createMine')}</button>
+          )}
+          {myRestos.length === 0 && !surAccueil && (
+            <div className="empty" style={{ marginTop: 8 }}>
+              <div style={{ fontSize: 30, marginBottom: 6 }}>🔒</div>
+              <b>{t('dashResto.waitTitle')}</b>
+              <p className="small" style={{ margin: '6px auto 12px', maxWidth: 420 }}>{t('dashResto.waitText')}</p>
+              <Link to="/dashboard" className="btn-teal" style={{ display: 'inline-block', padding: '8px 16px', fontSize: 14 }}>{t('dashResto.waitCta')}</Link>
+            </div>
           )}
         </div>
       )}
-      {newRestoOpen && (
+      {newRestoOpen && surAccueil && (
         <div style={{ marginTop: 10 }}>
           <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
             {t('dashResto.createIntro')}

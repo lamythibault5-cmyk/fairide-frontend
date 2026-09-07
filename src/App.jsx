@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -117,10 +117,14 @@ export default function App() {
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
 
         <Route path="/dashboard" element={<ProtectedRoute role="restaurant"><RestaurantDashboardLayout /></ProtectedRoute>}>
-          <Route index element={<RestaurantMenuPage />} />
+          {/* « Mon commerce » : les infos du restaurant (création puis modification). « Ma carte » : les produits,
+              en attente tant que le restaurant n'est pas créé (voir DashboardLayout). L'ancienne adresse /edit
+              redirige : elle portait les infos, qui vivent maintenant à la racine. */}
+          <Route index element={<RestaurantEditPage />} />
+          <Route path="menu" element={<RestaurantMenuPage />} />
           <Route path="orders" element={<RestaurantOrdersPage />} />
           <Route path="preview" element={<RestaurantPreviewPage />} />
-          <Route path="edit" element={<RestaurantEditPage />} />
+          <Route path="edit" element={<Navigate to="/dashboard" replace />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
           <Route path="map" element={<RestaurantMapPage />} />
           <Route path="reviews" element={<RestaurantReviewsPage />} />
