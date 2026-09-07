@@ -1214,7 +1214,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Conditions générales — Fairide',
-      draftWarning: '⚠️ Document de travail — à faire relire et compléter par un professionnel avant publication réelle.',
+      draftWarning: 'Version du 7 septembre 2026 — Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Conditions générales d\'utilisation et de vente',
       objectTitle: 'Objet',
       object: 'Fairide est une plateforme mettant en relation des clients, des commerces locaux partenaires (restaurants, supermarchés, commerces de proximité) et des livreurs indépendants, pour la commande et la livraison de produits. Fairide n\'est ni un restaurant, ni un service de livraison : elle fournit uniquement l\'outil technique de mise en relation et de paiement.',
@@ -1227,20 +1227,20 @@ export const translations = {
       feesTitle: 'Commission et frais',
       fees: 'Fairide perçoit une commission sur chaque commande payée par un commerce partenaire, plafonnée à 10% (hors TVA) du montant des produits. Les commerces partenaires s\'acquittent également d\'un abonnement mensuel de 20€ leur donnant accès à la plateforme. Les frais de livraison affichés au client sont calculés selon la distance entre le commerce et l\'adresse de livraison, et reviennent intégralement au livreur. Un frais de système supplémentaire, égal à 10% du montant de la livraison, est prélevé auprès du client pour couvrir le traitement des paiements et les services de la plateforme — il ne réduit pas la part du livreur.',
       cancellationTitle: 'Annulation et remboursement',
-      cancellation: 'Un commerce partenaire peut refuser une commande avant de la préparer ; dans ce cas, le client est intégralement remboursé (montant payé et solde éventuellement utilisé). Passé ce stade, l\'annulation n\'est plus possible.',
+      cancellation: 'Le client peut annuler sa commande tant que le commerce partenaire ne l\'a pas acceptée ; le commerce partenaire peut de son côté refuser une commande avant de la préparer. Dans les deux cas, le client est intégralement remboursé (montant payé et solde éventuellement utilisé). Une fois la préparation commencée, l\'annulation n\'est plus possible en ligne. Les réservations de table s\'annulent gratuitement jusqu\'au délai fixé par le commerce.',
       reviewsTitle: 'Avis clients',
       reviews: 'Les avis publiés doivent être sincères et respectueux. Fairide se réserve le droit de retirer tout avis manifestement abusif, diffamatoire ou hors sujet.',
       liabilityTitle: 'Responsabilité',
       liability: 'Fairide met tout en œuvre pour assurer le bon fonctionnement de la plateforme mais ne garantit pas une disponibilité continue du service. Fairide n\'est pas responsable de la qualité des produits fournis par les commerces partenaires ni des délais de livraison, qui dépendent de tiers indépendants.',
       lawTitle: 'Droit applicable',
-      law: 'Les présentes conditions sont soumises au droit belge. Tout litige relève des tribunaux compétents de [ville].'
+      law: 'Les présentes conditions sont soumises au droit belge. Tout litige relève des tribunaux compétents de l\'arrondissement judiciaire de Bruxelles.'
     },
     privacy: {
       pageTitle: 'Politique de confidentialité — Fairide',
-      draftWarning: '⚠️ Document de travail — à faire relire et compléter par un professionnel (conformité RGPD) avant publication réelle.',
+      draftWarning: 'Version du 7 septembre 2026 — Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Politique de confidentialité',
       collectedTitle: 'Données collectées',
-      collected: 'Lors de l\'inscription et de l\'utilisation de Fairide, nous collectons : nom, prénom, email, téléphone, adresse postale, éventuellement genre et date de naissance, ainsi que l\'historique de commandes et les avis laissés. Pour la connexion Google, nous recevons votre nom et votre email depuis Google.',
+      collected: 'Responsable du traitement : Fairide SRL (BCE 1042.169.780), Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique — contact@fairide.be. Lors de l\'inscription et de l\'utilisation de Fairide, nous collectons : nom, prénom, email, téléphone, adresse postale, éventuellement genre et date de naissance, ainsi que l\'historique de commandes et les avis laissés. Pour la connexion Google, nous recevons votre nom et votre email depuis Google.',
       purposeTitle: 'Finalité du traitement',
       purpose: 'Ces données servent à : créer et gérer votre compte, traiter vos commandes et paiements, permettre la livraison, vous envoyer des emails liés à vos commandes, et améliorer le service.',
       sharingTitle: 'Partage des données',
@@ -1254,10 +1254,10 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Mentions légales — Fairide',
-      draftWarning: '⚠️ Document de travail — à faire relire et compléter par un professionnel (avocat/comptable) avant publication réelle. Les champs entre [crochets] doivent être remplis.',
+      draftWarning: 'Version du 7 septembre 2026 — Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Mentions légales',
       publisherTitle: 'Éditeur du site',
-      publisher: 'Fairide\n[Forme juridique — ex: personne physique / SRL en formation]\n[Numéro d\'entreprise BCE]\nSiège : [Adresse complète, Belgique]\nEmail : contact@fairide.be',
+      publisher: 'Fairide SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 — TVA : BE 1042.169.780 — RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nReprésentant légal : Thibault Lamy, administrateur\nEmail : contact@fairide.be — Téléphone : +32 474 20 07 13\nCompte bancaire : IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hébergement',
       hosting: 'Frontend hébergé par Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).\nBackend et base de données hébergés par Railway Corporation.',
       ipTitle: 'Propriété intellectuelle',
@@ -2677,7 +2677,7 @@ export const translations = {
       legalNotice: 'Mentions légales',
       privacy: 'Confidentialité',
       terms: 'CGV',
-      bottom: 'Fairide — la livraison de repas à commission réduite.'
+      bottom: '© Fairide SRL — BCE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be'
     },
     cookies: {
       text: "Fairide utilise des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Avec ton accord uniquement, nous activons aussi un outil de rapport d'erreurs qui nous aide à corriger les pannes. Aucun tracking publicitaire.",
@@ -4488,7 +4488,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Terms and conditions — Fairide',
-      draftWarning: '⚠️ Working document — to be reviewed and completed by a professional before real publication.',
+      draftWarning: 'Version of 7 September 2026 — Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'General terms of use and sale',
       objectTitle: 'Purpose',
       object: 'Fairide is a platform connecting customers, local partner businesses (restaurants, supermarkets, local shops) and independent couriers for ordering and delivering products. Fairide is neither a restaurant nor a delivery service: it only provides the technical tool for matching and payment.',
@@ -4501,20 +4501,20 @@ export const translations = {
       feesTitle: 'Commission and fees',
       fees: 'Fairide charges a commission on each order paid by a partner business, capped at 10% (excluding VAT) of the product amount. Partner businesses also pay a monthly subscription of €20 giving them access to the platform. The delivery fees shown to the customer are calculated according to the distance between the business and the delivery address, and go entirely to the courier. An additional system fee, equal to 10% of the delivery amount, is charged to the customer to cover payment processing and platform services — it does not reduce the courier\'s share.',
       cancellationTitle: 'Cancellation and refund',
-      cancellation: 'A partner business may refuse an order before preparing it; in that case, the customer is fully refunded (amount paid and any balance used). Beyond that stage, cancellation is no longer possible.',
+      cancellation: 'The customer may cancel an order as long as the partner business has not accepted it; the partner business may in turn refuse an order before preparing it. In both cases the customer is fully refunded (amount paid and any balance used). Once preparation has started, cancellation is no longer possible online. Table reservations can be cancelled free of charge until the deadline set by the business.',
       reviewsTitle: 'Customer reviews',
       reviews: 'Published reviews must be honest and respectful. Fairide reserves the right to remove any review that is clearly abusive, defamatory or off-topic.',
       liabilityTitle: 'Liability',
       liability: 'Fairide does its utmost to ensure the platform works properly but does not guarantee continuous availability of the service. Fairide is not responsible for the quality of products supplied by partner businesses or for delivery times, which depend on independent third parties.',
       lawTitle: 'Applicable law',
-      law: 'These terms are governed by Belgian law. Any dispute falls under the jurisdiction of the competent courts of [city].'
+      law: 'These terms are governed by Belgian law. Any dispute falls under the jurisdiction of the competent courts of the judicial district of Brussels.'
     },
     privacy: {
       pageTitle: 'Privacy policy — Fairide',
-      draftWarning: '⚠️ Working document — to be reviewed and completed by a professional (GDPR compliance) before real publication.',
+      draftWarning: 'Version of 7 September 2026 — Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Privacy policy',
       collectedTitle: 'Data collected',
-      collected: 'When you register and use Fairide, we collect: last name, first name, email, phone, postal address, possibly gender and date of birth, as well as order history and reviews left. For Google sign-in, we receive your name and email from Google.',
+      collected: 'Data controller: Fairide SRL (CBE 1042.169.780), Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium — contact@fairide.be. When you register and use Fairide, we collect: last name, first name, email, phone, postal address, possibly gender and date of birth, as well as order history and reviews left. For Google sign-in, we receive your name and email from Google.',
       purposeTitle: 'Purpose of processing',
       purpose: 'This data is used to: create and manage your account, process your orders and payments, enable delivery, send you emails related to your orders, and improve the service.',
       sharingTitle: 'Data sharing',
@@ -4528,10 +4528,10 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Legal notice — Fairide',
-      draftWarning: '⚠️ Working document — to be reviewed and completed by a professional (lawyer/accountant) before real publication. Fields in [brackets] must be filled in.',
+      draftWarning: 'Version of 7 September 2026 — Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Legal notice',
       publisherTitle: 'Site publisher',
-      publisher: 'Fairide\n[Legal form — e.g. natural person / SRL in formation]\n[CBE company number]\nRegistered office: [Full address, Belgium]\nEmail: contact@fairide.be',
+      publisher: 'Fairide SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 — VAT: BE 1042.169.780 — RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nLegal representative: Thibault Lamy, director\nEmail: contact@fairide.be — Phone: +32 474 20 07 13\nBank account: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hosting',
       hosting: 'Frontend hosted by Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).\nBackend and database hosted by Railway Corporation.',
       ipTitle: 'Intellectual property',
@@ -5951,7 +5951,7 @@ export const translations = {
       legalNotice: 'Legal notice',
       privacy: 'Privacy',
       terms: 'Terms',
-      bottom: 'Fairide — reduced-commission food delivery.'
+      bottom: '© Fairide SRL — CBE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be'
     },
     cookies: {
       text: 'Fairide uses technical cookies necessary for the site to work (login, cart). Only with your consent, we also enable an error-reporting tool that helps us fix breakages. No advertising tracking.',
@@ -7762,7 +7762,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Algemene voorwaarden — Fairide',
-      draftWarning: '⚠️ Werkdocument — te laten nalezen en aanvullen door een professional vóór echte publicatie.',
+      draftWarning: 'Versie van 7 september 2026 — Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe.',
       title: 'Algemene gebruiks- en verkoopsvoorwaarden',
       objectTitle: 'Voorwerp',
       object: 'Fairide is een platform dat klanten, lokale partnerzaken (restaurants, supermarkten, buurtwinkels) en onafhankelijke koeriers met elkaar in contact brengt voor het bestellen en leveren van producten. Fairide is noch een restaurant, noch een bezorgdienst: het levert enkel het technische hulpmiddel voor bemiddeling en betaling.',
@@ -7775,20 +7775,20 @@ export const translations = {
       feesTitle: 'Commissie en kosten',
       fees: 'Fairide int een commissie op elke door een partnerzaak betaalde bestelling, beperkt tot 10% (excl. btw) van het productbedrag. Partnerzaken betalen ook een maandelijks abonnement van €20 dat hen toegang geeft tot het platform. De aan de klant getoonde leveringskosten worden berekend volgens de afstand tussen de zaak en het leveradres en gaan volledig naar de koerier. Een bijkomende systeemkost, gelijk aan 10% van het leveringsbedrag, wordt bij de klant aangerekend om de betalingsverwerking en de platformdiensten te dekken — ze vermindert het deel van de koerier niet.',
       cancellationTitle: 'Annulering en terugbetaling',
-      cancellation: 'Een partnerzaak kan een bestelling weigeren vóór ze wordt bereid; in dat geval wordt de klant volledig terugbetaald (betaald bedrag en eventueel gebruikt saldo). Voorbij dat stadium is annulering niet meer mogelijk.',
+      cancellation: 'De klant kan een bestelling annuleren zolang de partnerzaak ze niet heeft aanvaard; de partnerzaak kan van haar kant een bestelling weigeren vóór ze wordt bereid. In beide gevallen wordt de klant volledig terugbetaald (betaald bedrag en eventueel gebruikt saldo). Zodra de bereiding gestart is, is online annuleren niet meer mogelijk. Tafelreservaties kunnen gratis geannuleerd worden tot de termijn die de zaak bepaalt.',
       reviewsTitle: 'Klantbeoordelingen',
       reviews: 'Gepubliceerde beoordelingen moeten oprecht en respectvol zijn. Fairide behoudt zich het recht voor elke duidelijk beledigende, lasterlijke of irrelevante beoordeling te verwijderen.',
       liabilityTitle: 'Aansprakelijkheid',
       liability: 'Fairide stelt alles in het werk om de goede werking van het platform te verzekeren maar garandeert geen ononderbroken beschikbaarheid van de dienst. Fairide is niet verantwoordelijk voor de kwaliteit van de producten van partnerzaken noch voor de levertermijnen, die afhangen van onafhankelijke derden.',
       lawTitle: 'Toepasselijk recht',
-      law: 'Deze voorwaarden zijn onderworpen aan het Belgische recht. Elk geschil valt onder de bevoegde rechtbanken van [stad].'
+      law: 'Deze voorwaarden zijn onderworpen aan het Belgische recht. Elk geschil valt onder de bevoegde rechtbanken van het gerechtelijk arrondissement Brussel.'
     },
     privacy: {
       pageTitle: 'Privacybeleid — Fairide',
-      draftWarning: '⚠️ Werkdocument — te laten nalezen en aanvullen door een professional (AVG-conformiteit) vóór echte publicatie.',
+      draftWarning: 'Versie van 7 september 2026 — Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe.',
       title: 'Privacybeleid',
       collectedTitle: 'Verzamelde gegevens',
-      collected: 'Bij de registratie en het gebruik van Fairide verzamelen we: naam, voornaam, e-mail, telefoon, postadres, eventueel geslacht en geboortedatum, evenals de bestelgeschiedenis en de achtergelaten beoordelingen. Bij aanmelding via Google ontvangen we uw naam en e-mail van Google.',
+      collected: 'Verwerkingsverantwoordelijke: Fairide SRL (KBO 1042.169.780), Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België — contact@fairide.be. Bij de registratie en het gebruik van Fairide verzamelen we: naam, voornaam, e-mail, telefoon, postadres, eventueel geslacht en geboortedatum, evenals de bestelgeschiedenis en de achtergelaten beoordelingen. Bij aanmelding via Google ontvangen we uw naam en e-mail van Google.',
       purposeTitle: 'Doel van de verwerking',
       purpose: 'Deze gegevens dienen om: uw account aan te maken en te beheren, uw bestellingen en betalingen te verwerken, de levering mogelijk te maken, u e-mails over uw bestellingen te sturen en de dienst te verbeteren.',
       sharingTitle: 'Delen van gegevens',
@@ -7802,10 +7802,10 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Wettelijke vermeldingen — Fairide',
-      draftWarning: '⚠️ Werkdocument — te laten nalezen en aanvullen door een professional (advocaat/boekhouder) vóór echte publicatie. De velden tussen [haakjes] moeten ingevuld worden.',
+      draftWarning: 'Versie van 7 september 2026 — Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe.',
       title: 'Wettelijke vermeldingen',
       publisherTitle: 'Uitgever van de site',
-      publisher: 'Fairide\n[Rechtsvorm — bv. natuurlijke persoon / BV in oprichting]\n[KBO-ondernemingsnummer]\nZetel: [Volledig adres, België]\nE-mail: contact@fairide.be',
+      publisher: 'Fairide SRL\nBesloten vennootschap (BV/SRL) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 — BTW: BE 1042.169.780 — RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nWettelijke vertegenwoordiger: Thibault Lamy, bestuurder\nE-mail: contact@fairide.be — Telefoon: +32 474 20 07 13\nBankrekening: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hosting',
       hosting: 'Frontend gehost door Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, VS).\nBackend en database gehost door Railway Corporation.',
       ipTitle: 'Intellectuele eigendom',
@@ -9225,7 +9225,7 @@ export const translations = {
       legalNotice: 'Wettelijke vermeldingen',
       privacy: 'Privacy',
       terms: 'Voorwaarden',
-      bottom: 'Fairide — maaltijdlevering tegen verlaagde commissie.'
+      bottom: '© Fairide SRL — KBO 1042.169.780 — Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe — contact@fairide.be'
     },
     cookies: {
       text: 'Fairide gebruikt technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Alleen met jouw toestemming schakelen we ook een tool voor foutrapportage in die ons helpt storingen op te lossen. Geen advertentietracking.',
