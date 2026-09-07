@@ -19,6 +19,10 @@ import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, download
 import { useLanguage } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+// Restaurant test : de démonstration (restaurants.is_demo, créés par les seeds) ou tenu par un compte QA (+qa).
+// Les autres sont de vraies inscriptions : visibles des clients seulement une fois publiées (publicListed).
+const estTest = (r) => !!r.isDemo || isTestAccount(r.ownerEmail);
+
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminRestos.filterPending'), approved: tr('adminRestos.filterApproved'), blocked: tr('adminRestos.filterBlocked') });
 
 export default function AdminRestaurantsPage() {
@@ -35,6 +39,7 @@ export default function AdminRestaurantsPage() {
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const [filtre, setFiltre] = useState('all');
+  const [nature, setNature] = useState('all'); // all | real | test
   const [commune, setCommune] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [groupBy, setGroupBy] = useState('');
@@ -51,6 +56,16 @@ export default function AdminRestaurantsPage() {
     setOrders(null);
     api(`/admin/restaurants/${r.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
     api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then((res) => setOrders(res.rows)).catch((e) => toast(e.message));
+  }
+
+  async function setListing(id, publicListed) {
+    try {
+      await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
+      setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, publicListed } : r)));
+      if (selected?.id === id) setSelected((prev) => ({ ...prev, publicListed }));
+      if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
+      toast(publicListed ? tr('adminRestos.publishedToast') : tr('adminRestos.unpublishedToast'));
+    } catch (e) { toast(e.message); }
   }
 
   async function setStatus(id, status) {
@@ -117,7 +132,8 @@ export default function AdminRestaurantsPage() {
   const communes = useMemo(() => [...new Set((restaurants || []).map((r) => r.commune).filter(Boolean))].sort(), [restaurants]);
   const cuisines = useMemo(() => [...new Set((restaurants || []).map((r) => r.cuisine).filter(Boolean))].sort(), [restaurants]);
   const colonnes = [
-    { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{isTestAccount(r.ownerEmail) && <TestBadge />}</>, sortValue: (r) => r.name },
+    { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estTest(r) && <TestBadge />}</>, sortValue: (r) => r.name },
+    { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{tr('adminRestos.alwaysListed')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
     { key: 'commune', label: tr('adminCommon.commune'), get: (r) => r.commune },
     { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
@@ -133,8 +149,8 @@ export default function AdminRestaurantsPage() {
     commune: { get: (r) => r.commune || '—' }, cuisine: { get: (r) => r.cuisine || '—' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || r.adminStatus === filtre) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || r.adminStatus === filtre) && (nature === 'all' || (nature === 'test') === estTest(r)) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), real: a.real + (estTest(r) ? 0 : 1), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, real: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
 
   return (
     <div>
@@ -143,6 +159,7 @@ export default function AdminRestaurantsPage() {
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{restaurants.length}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminRestos.kpiReal')}{kpi.unlisted > 0 ? ` · ${tr('adminRestos.kpiUnlisted', { n: kpi.unlisted })}` : ''}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
           <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
           <div className="stat-card"><div className="num">{money(kpi.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
@@ -153,6 +170,11 @@ export default function AdminRestaurantsPage() {
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
+          ))}
+        </div>
+        <div className="role-pick" style={{ margin: 0 }}>
+          {[['all', tr('adminCommon.allM')], ['real', tr('adminRestos.filterReal')], ['test', tr('adminRestos.filterTest')]].map(([k, l]) => (
+            <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => setNature(k)}>{l}{k === 'real' && kpi.real > 0 ? ` (${kpi.real})` : ''}</div>
           ))}
         </div>
         <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCommunes')}</option>{communes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
@@ -168,20 +190,22 @@ export default function AdminRestaurantsPage() {
         )}
         <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (restaurants || []).length })}</span>
       </div>
+      {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>ℹ️ {tr('adminRestos.listingHint')}</p>}
       {!restaurants && <SkeletonCards count={3} />}
       {restaurants && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {restaurants && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openRestaurant}
-          rowClassName={(r) => (isTestAccount(r.ownerEmail) ? 'row-test-account' : '')} showTotals format={{ revenue: money, commissionGenerated: money }} emptyLabel={tr('adminCommon.noResults')} />
+          rowClassName={(r) => (estTest(r) ? 'row-test-account' : '')} showTotals format={{ revenue: money, commissionGenerated: money }} emptyLabel={tr('adminCommon.noResults')} />
       )}
       {restaurants && mode === 'cards' && visibles.map((r) => {
         const biz = BUSINESS_STATUS_LABELS[r.businessStatus];
         return (
-          <div className={`card order-card-clickable${isTestAccount(r.ownerEmail) ? ' card-test-account' : ''}`} key={r.id} onClick={() => openRestaurant(r)}>
+          <div className={`card order-card-clickable${estTest(r) ? ' card-test-account' : ''}`} key={r.id} onClick={() => openRestaurant(r)}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <b>{r.name}</b>
               <div className="row" style={{ gap: 6 }}>
-                {isTestAccount(r.ownerEmail) && <TestBadge />}
+                {estTest(r) && <TestBadge />}
+                {!estTest(r) && <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>}
                 <span className="pill" style={{ color: biz?.color }}>{biz?.label}</span>
               </div>
             </div>
@@ -195,6 +219,7 @@ export default function AdminRestaurantsPage() {
               {tr('adminRestos.ratesLine', { cancel: pct(r.cancellationRate), accept: pct(r.acceptanceRate), prep: r.avgPrepMinutes !== null ? tr('adminRestos.prepMinutes', { n: r.avgPrepMinutes }) : tr('adminRestos.prepNotMeasured') })}
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+              {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setListing(r.id, !r.publicListed)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
               {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
               {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
@@ -209,6 +234,7 @@ export default function AdminRestaurantsPage() {
           selected={selected} detail={detail} orders={orders}
           onClose={() => setSelected(null)}
           onSuspend={() => askSuspend(detail)}
+          onToggleListing={() => setListing(detail.id, !detail.publicListed)}
           onReactivate={() => askReactivate(detail)}
           onDelete={() => askDelete(detail)}
           onChanged={refreshDetail}
@@ -227,7 +253,7 @@ export default function AdminRestaurantsPage() {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged, onToggleListing }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -300,8 +326,12 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
+          <p className="small" style={{ margin: '6px 0 2px' }}>
+            {estTest(detail) ? <>🧪 {tr('adminRestos.testLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
+          </p>
           <div className="row" style={{ gap: 8, marginTop: 10 }}>
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
+            {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>

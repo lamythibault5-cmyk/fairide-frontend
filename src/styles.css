@@ -2421,3 +2421,6 @@ button.account-link-row:last-child { border-bottom: none; }
 .pseudo-modal { max-width: 420px; }
 .pseudo-public { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; cursor: pointer; }
 .pseudo-public input { margin-top: 3px; }
+/* Admin › Restaurants : visibilité d'une vraie inscription sur le site client. */
+.pill.listing-on { background: rgba(31,138,112,0.14); color: var(--teal-deep, #1F8A70); }
+.pill.listing-off { background: rgba(20,18,31,0.08); color: var(--ink-soft, #3A4A63); }
