@@ -2472,3 +2472,15 @@ button.account-link-row:last-child { border-bottom: none; }
 .paiement-activation.fermee button { opacity: 0.6; cursor: not-allowed; }
 .paiement-table td, .paiement-table th { white-space: nowrap; }
 .paiement-table tfoot td { border-top: 2px solid var(--line); }
+/* Mes produits : « + » d'ajout dans l'en-tête de chaque section et de la carte, grand « + » sur la tuile d'ajout. */
+.menu-plus { padding: 4px 10px; font-size: 15px; font-weight: 800; line-height: 1; display: inline-flex; align-items: center; gap: 4px; }
+.menu-plus span { font-size: 12px; font-weight: 700; }
+.menu-item-card-add { flex-direction: column; gap: 4px; }
+.menu-item-card-add-plus { font-size: 26px; line-height: 1; color: var(--iris); font-weight: 800; }
+@media (max-width: 640px) { .menu-plus span { display: none; } }
+/* Carte + jeux : boutons sous le bloc (masquer les jeux, agrandir) ; jeux masqués = carte pleine largeur, nette. */
+.tracking-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.tracking-with-game.jeux-masques > .tracking-map-col { width: 100%; }
+.tracking-with-game.jeux-masques .leaflet-container, .tracking-fullscreen-split.jeux-masques .leaflet-container { filter: none; image-rendering: auto; }
+.tracking-fullscreen-split.jeux-masques .tracking-fullscreen-map { flex: 1; }
+.tracking-fullscreen-split.jeux-masques .tracking-fullscreen-map > .tracking-map-wrap { max-width: 1400px; }

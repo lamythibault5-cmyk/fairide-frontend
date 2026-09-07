@@ -1536,7 +1536,10 @@ export const translations = {
       fullscreenTitle: 'Carte et mini-jeux en plein écran',
       tabMap: 'Carte',
       tabGames: 'Jeux',
-      fullscreenHelp: 'Échap ou ✕ pour revenir · 📖 pour les règles du jeu · 🔇 pour la musique de fond'
+      fullscreenHelp: 'Échap ou ✕ pour revenir · 📖 pour les règles du jeu · 🔇 pour la musique de fond',
+      hideGames: '🙈 Masquer les jeux',
+      showGames: '🎮 Afficher les jeux',
+      enlargeMap: '⛶ Agrandir la carte'
     },
     mapResto: {
       title: 'Carte',
@@ -2049,7 +2052,9 @@ export const translations = {
       nSelected: '{n} plat(s) sélectionné(s)',
       applyPanelHelp: 'La photo est déjà celle par défaut de la section "{section}" pour les plats sans photo propre. Tu peux en plus l\'appliquer directement sur des plats précis (utile pour remplacer une photo déjà présente) — décoche ceux à laisser tels quels, ou ignore pour ne rien changer aux plats.',
       typicalDishes: 'Plats types — {cuisine}',
-      translateButton: '🌍 Traduire ma carte'
+      translateButton: '🌍 Traduire ma carte',
+      newSectionShort: 'Nouvelle section',
+      addItemTo: 'Ajouter un élément dans « {section} »'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -4871,7 +4876,10 @@ export const translations = {
       fullscreenTitle: 'Map and mini-games in full screen',
       tabMap: 'Map',
       tabGames: 'Games',
-      fullscreenHelp: 'Esc or ✕ to go back · 📖 for the game rules · 🔇 for background music'
+      fullscreenHelp: 'Esc or ✕ to go back · 📖 for the game rules · 🔇 for background music',
+      hideGames: '🙈 Hide the games',
+      showGames: '🎮 Show the games',
+      enlargeMap: '⛶ Enlarge the map'
     },
     mapResto: {
       title: 'Map',
@@ -5384,7 +5392,9 @@ export const translations = {
       nSelected: '{n} dish(es) selected',
       applyPanelHelp: 'The photo is already the default of the section "{section}" for dishes without their own photo. You can also apply it directly to specific dishes (useful to replace an existing photo) — untick those to leave as they are, or skip to change nothing on the dishes.',
       typicalDishes: 'Typical dishes — {cuisine}',
-      translateButton: '🌍 Translate my menu'
+      translateButton: '🌍 Translate my menu',
+      newSectionShort: 'New section',
+      addItemTo: 'Add an item to “{section}”'
     },
     editResto: {
       title: 'My restaurant details',
@@ -8206,7 +8216,10 @@ export const translations = {
       fullscreenTitle: 'Kaart en minigames op volledig scherm',
       tabMap: 'Kaart',
       tabGames: 'Games',
-      fullscreenHelp: 'Esc of ✕ om terug te gaan · 📖 voor de spelregels · 🔇 voor achtergrondmuziek'
+      fullscreenHelp: 'Esc of ✕ om terug te gaan · 📖 voor de spelregels · 🔇 voor achtergrondmuziek',
+      hideGames: '🙈 Games verbergen',
+      showGames: '🎮 Games tonen',
+      enlargeMap: '⛶ Kaart vergroten'
     },
     mapResto: {
       title: 'Kaart',
@@ -8719,7 +8732,9 @@ export const translations = {
       nSelected: '{n} gerecht(en) geselecteerd',
       applyPanelHelp: 'De foto is al de standaardfoto van de sectie "{section}" voor gerechten zonder eigen foto. Je kunt ze bovendien rechtstreeks op bepaalde gerechten toepassen (handig om een bestaande foto te vervangen) — vink af wat je ongemoeid laat, of sla over om niets aan de gerechten te wijzigen.',
       typicalDishes: 'Typische gerechten — {cuisine}',
-      translateButton: '🌍 Mijn kaart vertalen'
+      translateButton: '🌍 Mijn kaart vertalen',
+      newSectionShort: 'Nieuwe sectie',
+      addItemTo: 'Een item toevoegen aan “{section}”'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',

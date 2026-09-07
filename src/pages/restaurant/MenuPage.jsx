@@ -349,6 +349,7 @@ export default function MenuPage() {
 
   function openAddItemTile(section) {
     setAddSectionId(section.id);
+    setTimeout(() => document.getElementById(`ajout-plat-${section.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 50);
     setItemCategory(section.name);
     setItemName('');
     setItemPrice('');
@@ -531,7 +532,12 @@ export default function MenuPage() {
       )}
 
       <div className="card">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
+          {!reorderSectionId && !selectSectionId && !creatingSection && (
+            <button type="button" className="btn-teal menu-plus" onClick={() => setCreatingSection(true)} title={t('menuPage.newSection')} aria-label={t('menuPage.newSection')}>＋ <span>{t('menuPage.newSectionShort')}</span></button>
+          )}
+        </div>
         <p className="small" style={{ margin: '0 0 12px' }}>
           {t('menuPage.menuHelp')}
         </p>
@@ -569,6 +575,7 @@ export default function MenuPage() {
                       <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : !reorderSectionId && !selectSectionId && (
                       <>
+                        <button type="button" className="btn-teal menu-plus" onClick={() => openAddItemTile(section)} title={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })} aria-label={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })}>＋</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}>☑️</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleReorderSection(section.id)} title={t('menuPage.reorder')}>↕️</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => setSectionGalleryFor(section)} title={t('menuPage.sectionPhoto')}>🖼️</button>
@@ -629,7 +636,7 @@ export default function MenuPage() {
               </DndContext>
               <div className="menu-grid dashboard-menu-grid">
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
-                  <div className="card" style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
+                  <div className="card" id={`ajout-plat-${section.id}`} style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
                     <div className="field"><label>{t('menuPage.name')}</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
                     <div className="field"><label>{t('menuPage.price')}</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
@@ -664,7 +671,8 @@ export default function MenuPage() {
                   </div>
                 ) : (
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
-                    {t('menuPage.addItem')}
+                    <span className="menu-item-card-add-plus" aria-hidden="true">＋</span>
+                    {t('menuPage.addItem').replace(/^\+\s*/, '')}
                   </button>
                 ))}
               </div>
