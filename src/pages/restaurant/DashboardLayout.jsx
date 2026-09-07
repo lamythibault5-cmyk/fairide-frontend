@@ -32,7 +32,10 @@ export default function DashboardLayout() {
   const { setRightSlot } = useOutletContext();
   // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
-  const surAccueil = ['/dashboard', '/dashboard/edit'].includes(useLocation().pathname.replace(/\/$/, ''));
+  const chemin = useLocation().pathname.replace(/\/$/, '');
+  const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
+  // La page Carte (map, livreurs, jeux) s'ouvre même sans restaurant : rien n'y dépend d'un commerce créé.
+  const surCarte = chemin === '/dashboard/map';
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -229,7 +232,7 @@ export default function DashboardLayout() {
           {!newRestoOpen && myRestos.length === 0 && surAccueil && (
             <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>{t('dashResto.createMine')}</button>
           )}
-          {myRestos.length === 0 && !surAccueil && (
+          {myRestos.length === 0 && !surAccueil && !surCarte && (
             <div className="empty" style={{ marginTop: 8 }}>
               <div style={{ fontSize: 30, marginBottom: 6 }}>🔒</div>
               <b>{t('dashResto.waitTitle')}</b>
@@ -357,8 +360,8 @@ export default function DashboardLayout() {
           s'il est en train de modifier son menu ou de consulter ses avis. */}
       {restaurant && <NewOrderAlertBar {...orderAlert} />}
 
-      {restaurant && (
-        <Outlet context={{ restaurant, orders, reviews, drivers, restoId, loadDashboard }} />
+      {(restaurant || (surCarte && myRestos.length === 0)) && (
+        <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
       )}
     </div>
   );
