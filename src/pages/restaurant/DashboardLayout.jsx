@@ -323,7 +323,7 @@ export default function DashboardLayout() {
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
           validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
           reste quelque chose à faire — un commerce validé et payé n'a rien à lire ici. */}
-      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active') && (
+      {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo)) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
             <LigneCompte accent="danger" icone="🚫" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
@@ -337,6 +337,13 @@ export default function DashboardLayout() {
               <p className="small" style={{ margin: 0 }}>
                 {t('dashResto.pendingText')}
               </p>
+            </LigneCompte>
+          )}
+          {/* Validé mais pas encore publié : le commerce n'apparaît pas aux clients, et le restaurateur doit le
+              savoir sans avoir à le deviner en cherchant sa fiche sur le site. */}
+          {restaurant.adminStatus === 'approved' && !restaurant.publicListed && !restaurant.isDemo && (
+            <LigneCompte accent="warn" icone="🙈" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
+              <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
           {restaurant.stripeConnectStatus !== 'active' && (

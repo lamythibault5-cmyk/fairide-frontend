@@ -18,6 +18,12 @@ export default function PreviewPage() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('previewPage.title')}</h2>
       <p className="small" style={{ margin: '0 0 14px' }}>{t('previewPage.intro')}</p>
+      {restaurant && !restaurant.publicListed && !restaurant.isDemo && (
+        <div className="card preview-not-visible" role="status">
+          <b>🙈 {t('previewPage.notVisibleTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('previewPage.notVisibleText')}</p>
+        </div>
+      )}
       <div className="card" style={{ marginBottom: 14 }}>
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('previewPage.tryAppTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>

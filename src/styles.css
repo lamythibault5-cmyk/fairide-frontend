@@ -2460,3 +2460,5 @@ button.account-link-row:last-child { border-bottom: none; }
   .tracking-fullscreen-eta { font-size: 12px; padding: 8px 10px; }
   .tracking-fullscreen-aide { display: none; }
 }
+/* Aperçu client d'un commerce pas encore publié : bandeau d'avertissement au-dessus de la fiche. */
+.preview-not-visible { background: #FFF6E5; border: 1px solid #F1D9A6; margin-bottom: 14px; }

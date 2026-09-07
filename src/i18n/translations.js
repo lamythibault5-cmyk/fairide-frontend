@@ -1747,7 +1747,9 @@ export const translations = {
       intro: 'Exactement ce que voient tes clients quand ils visitent ta page.',
       tryAppTitle: '👁️ Essayer toute l\'app en tant que client',
       tryAppHelp: 'Parcours l\'app entière comme un client — liste des restos, favoris, suivi de commande, carte — avec ta propre barre de navigation qui devient temporairement celle d\'un client. Aucune vraie commande ne peut être passée : le paiement est bloqué à la toute fin, exactement là où un client réel serait redirigé vers Stripe.',
-      tryAsCustomer: '👁️ Essayer en tant que client'
+      tryAsCustomer: '👁️ Essayer en tant que client',
+      notVisibleTitle: 'Aperçu seulement : ton commerce n\'est pas encore visible sur Fairide',
+      notVisibleText: 'Cette page te montre ce que verront les clients. Elle sera mise en ligne par l\'équipe Fairide après vérification de ton dossier, et tu seras prévenu par e-mail à ce moment-là.'
     },
     reviewsResto: {
       title: 'Avis clients',
@@ -2241,7 +2243,7 @@ export const translations = {
       ownDriversHelp: 'Tu pourras lier l\'email de ton livreur juste après la création (il doit avoir un compte livreur Fairide). Ton livreur suit exactement le même processus que les autres — retrait/livraison par code, position en direct.',
       createMyRestaurant: 'Créer mon restaurant',
       blockedText: 'Ton restaurant a été bloqué par l\'équipe Fairide et n\'est pas visible aux clients, quel que soit ton statut d\'abonnement. Contacte le support pour plus d\'informations.',
-      pendingText: 'Ton restaurant doit être validé par l\'équipe Fairide avant d\'apparaître aux clients — mais pas besoin d\'attendre pour continuer : tu peux dès maintenant compléter ton menu. Ton abonnement (premier mois offert) ne pourra être activé qu\'une fois ton compte validé — le temps pour Fairide de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties. Dès que ton compte est validé, tu pourras t\'abonner et ton restaurant deviendra visible immédiatement. C\'est généralement rapide, repasse un peu plus tard.',
+      pendingText: 'Ton restaurant doit être validé par l\'équipe Fairide avant d\'apparaître aux clients — tu recevras un e-mail à sa validation, puis un autre à sa mise en ligne. Pas besoin d\'attendre pour continuer : tu peux dès maintenant compléter ton menu. Ton abonnement (premier mois offert) ne pourra être activé qu\'une fois ton compte validé — le temps pour Fairide de vérifier la conformité de ton commerce et que le contrat soit accepté par les deux parties. Dès que ton compte est validé, tu pourras t\'abonner et ton restaurant deviendra visible immédiatement. C\'est généralement rapide, repasse un peu plus tard.',
       phName: 'Ex: Chez Momo',
       phType: 'Ex: Grec, Mexicain...',
       phStreet: 'Rue du Midi',
@@ -2270,7 +2272,10 @@ export const translations = {
       founderHint: 'Compte fondateur : nom, adresse et horaires sont facultatifs pour ce restaurant, le serveur complète ce qui manque.',
       waitTitle: 'En attente de la création du restaurant',
       waitText: 'Cette section s\'ouvrira dès que ton restaurant existera : commence par ses infos dans « Mon commerce » (nom, adresse, horaires), les produits viennent ensuite.',
-      waitCta: 'Créer mon restaurant'
+      waitCta: 'Créer mon restaurant',
+      notListedTitle: 'Pas encore visible sur Fairide',
+      notListedSub: 'Validé — mise en ligne par notre équipe très bientôt',
+      notListedText: 'Ton commerce est validé mais n\'apparaît pas encore aux clients (liste, recherche, carte). L\'équipe Fairide le met en ligne très prochainement et tu recevras un e-mail à ce moment-là. D\'ici là, tu peux peaufiner ta carte, tes photos et tes horaires : tout sera prêt le jour J.'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -5016,7 +5021,9 @@ export const translations = {
       intro: 'Exactly what your customers see when they visit your page.',
       tryAppTitle: '👁️ Try the whole app as a customer',
       tryAppHelp: 'Browse the whole app as a customer — restaurant list, favourites, order tracking, map — with your own navigation bar temporarily becoming a customer\'s. No real order can be placed: payment is blocked at the very end, exactly where a real customer would be redirected to Stripe.',
-      tryAsCustomer: '👁️ Try as a customer'
+      tryAsCustomer: '👁️ Try as a customer',
+      notVisibleTitle: 'Preview only: your business is not visible on Fairide yet',
+      notVisibleText: 'This page shows what customers will see. The Fairide team will put it online after checking your file, and you will be notified by e-mail at that moment.'
     },
     reviewsResto: {
       title: 'Customer reviews',
@@ -5539,7 +5546,10 @@ export const translations = {
       founderHint: 'Founder account: name, address and opening hours are optional for this restaurant, the server fills in what is missing.',
       waitTitle: 'Waiting for the restaurant to be created',
       waitText: 'This section opens as soon as your restaurant exists: start with its details in “My business” (name, address, hours); the menu and products come next.',
-      waitCta: 'Create my restaurant'
+      waitCta: 'Create my restaurant',
+      notListedTitle: 'Not visible on Fairide yet',
+      notListedSub: 'Approved — our team puts it online very soon',
+      notListedText: 'Your business is approved but not yet shown to customers (list, search, map). The Fairide team will put it online very soon and you will receive an e-mail at that moment. Until then you can polish your menu, photos and hours: everything will be ready on day one.'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -8285,7 +8295,9 @@ export const translations = {
       intro: 'Precies wat je klanten zien wanneer ze je pagina bezoeken.',
       tryAppTitle: '👁️ De hele app als klant uitproberen',
       tryAppHelp: 'Doorloop de hele app als klant — restaurantlijst, favorieten, bestelopvolging, kaart — met je eigen navigatiebalk die tijdelijk die van een klant wordt. Er kan geen echte bestelling worden geplaatst: de betaling is helemaal op het einde geblokkeerd, precies waar een echte klant naar Stripe zou worden doorgestuurd.',
-      tryAsCustomer: '👁️ Als klant uitproberen'
+      tryAsCustomer: '👁️ Als klant uitproberen',
+      notVisibleTitle: 'Alleen voorbeeld: je zaak is nog niet zichtbaar op Fairide',
+      notVisibleText: 'Deze pagina toont wat klanten zullen zien. Het Fairide-team zet ze online na controle van je dossier, en je wordt dan per e-mail verwittigd.'
     },
     reviewsResto: {
       title: 'Klantbeoordelingen',
@@ -8808,7 +8820,10 @@ export const translations = {
       founderHint: 'Oprichtersaccount: naam, adres en openingsuren zijn optioneel voor dit restaurant, de server vult aan wat ontbreekt.',
       waitTitle: 'In afwachting van de aanmaak van het restaurant',
       waitText: 'Dit onderdeel opent zodra je restaurant bestaat: begin met de gegevens in “Mijn zaak” (naam, adres, uren); de kaart en producten komen daarna.',
-      waitCta: 'Mijn restaurant aanmaken'
+      waitCta: 'Mijn restaurant aanmaken',
+      notListedTitle: 'Nog niet zichtbaar op Fairide',
+      notListedSub: 'Gevalideerd — ons team zet het heel binnenkort online',
+      notListedText: 'Je zaak is gevalideerd maar nog niet zichtbaar voor klanten (lijst, zoeken, kaart). Het Fairide-team zet ze heel binnenkort online en je krijgt dan een e-mail. Tot dan kun je je kaart, foto\'s en uren bijschaven: alles staat klaar op dag één.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
