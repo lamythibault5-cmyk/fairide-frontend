@@ -1957,11 +1957,12 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 @media (max-width: 700px) { .wrap-fond .site-footer { background: rgba(255, 255, 255, .9); } }
 @media (prefers-contrast: more) { .wrap-fond .site-footer { background: #fff; } }
 
-/* Sur téléphone le fond n'est qu'une photo (voir CuisineBackdrop.jsx : la vidéo n'y est jamais
-   téléchargée). On l'atténue : une image fixe très présente derrière une colonne de texte pleine
-   largeur fatigue plus qu'elle ne séduit. */
+/* Sur téléphone et tablette en portrait, le fond est la déclinaison 720p du montage (voir
+   CuisineBackdrop.jsx). Le voile y est un peu plus dense qu'en grand écran : le texte y court sur
+   toute la largeur, sans marge où le mouvement pourrait vivre seul, et une vidéo trop présente
+   derrière une colonne pleine fatigue plus qu'elle ne séduit. */
 @media (max-width: 700px) {
-  .cuisine-fond-voile { background: rgba(255, 255, 255, .68); }
+  .cuisine-fond-voile { background: rgba(255, 255, 255, .64); }
   .wrap-fond .card { background: rgba(255, 255, 255, .9); }
 }
 

@@ -116,3 +116,15 @@ Les rushes téléchargés vivent dans `public/_probe/`, ignoré par git : un `gi
 
 `ffmpeg` n'est pas une dépendance du projet — il a été installé le temps du montage avec
 `npm i ffmpeg-static --no-save`, qui n'écrit ni dans `package.json` ni dans `package-lock.json`.
+
+## Déclinaison mobile — cuisine-mobile.mp4 / cuisine-mobile.jpg
+
+Même montage, même boucle, réduit pour les écrans de moins de 900 px (téléphones, tablettes en
+portrait), où la 4K ne se justifie pas et pèserait 37 Mo sur une connexion mobile. Produit à partir
+du fichier final, pas des sources : la boucle et les fondus sont donc identiques.
+
+    ffmpeg -i cuisine.mp4 -vf "scale=1280:720,fps=25" -an -c:v libx264 -preset medium -crf 34 \
+      -pix_fmt yuv420p -movflags +faststart cuisine-mobile.mp4
+    ffmpeg -ss 5 -i cuisine-mobile.mp4 -frames:v 1 -q:v 5 cuisine-mobile.jpg
+
+Résultat : 4,2 Mo (vidéo), 46 Ko (affiche). À refaire à chaque remplacement de cuisine.mp4.
