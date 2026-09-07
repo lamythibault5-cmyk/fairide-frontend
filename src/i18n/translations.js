@@ -2775,7 +2775,9 @@ export const translations = {
       sectionVegan: 'Vegan',
       filterBio: '🌿 Bio',
       filterVegan: '🌱 Vegan',
-      dietFiltersAria: 'Filtres alimentaires'
+      dietFiltersAria: 'Filtres alimentaires',
+      chipBio: 'Bio',
+      chipVegan: 'Vegan'
     },
     map: {
       home: 'Chez toi',
@@ -6036,7 +6038,9 @@ export const translations = {
       sectionVegan: 'Vegan',
       filterBio: '🌿 Organic',
       filterVegan: '🌱 Vegan',
-      dietFiltersAria: 'Dietary filters'
+      dietFiltersAria: 'Dietary filters',
+      chipBio: 'Organic',
+      chipVegan: 'Vegan'
     },
     map: {
       home: 'Your home',
@@ -9297,7 +9301,9 @@ export const translations = {
       sectionVegan: 'Vegan',
       filterBio: '🌿 Bio',
       filterVegan: '🌱 Vegan',
-      dietFiltersAria: 'Voedingsfilters'
+      dietFiltersAria: 'Voedingsfilters',
+      chipBio: 'Bio',
+      chipVegan: 'Vegan'
     },
     map: {
       home: 'Bij jou thuis',

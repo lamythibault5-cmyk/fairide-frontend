@@ -176,7 +176,20 @@ export default function RestaurantList() {
     }
   }
 
-  const cuisineOptions = [{ value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') }, ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))];
+  // Bio et Vegan prennent place dans la même rangée que les types de commerce, juste après « Tous » : ce sont des
+  // filtres au même titre (cumulables entre eux et avec un type), pas une rubrique à part.
+  const cuisineOptions = [
+    { value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') },
+    { value: '__bio', emoji: '🌿', label: t('restaurantList.chipBio'), regime: 'bio' },
+    { value: '__vegan', emoji: '🌱', label: t('restaurantList.chipVegan'), regime: 'vegan' },
+    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))
+  ];
+  const chipActive = (opt) => (opt.regime === 'bio' ? bio : opt.regime === 'vegan' ? vegan : cuisine === opt.value);
+  const surChip = (opt) => {
+    if (opt.regime === 'bio') setBio((v) => !v);
+    else if (opt.regime === 'vegan') setVegan((v) => !v);
+    else setCuisine(cuisine === opt.value ? '' : opt.value);
+  };
 
   const hasActiveFilter = !!(search || cuisine || commune || bio || vegan);
 
@@ -260,8 +273,8 @@ export default function RestaurantList() {
           renderItem={(opt, i, key) => (
             <div
               key={key}
-              className={`cuisine-chip${cuisine === opt.value ? ' active' : ''}`}
-              onClick={() => setCuisine(cuisine === opt.value ? '' : opt.value)}
+              className={`cuisine-chip${chipActive(opt) ? ' active' : ''}`}
+              onClick={() => surChip(opt)}
             >
               <span className="emoji">{opt.emoji}</span>
               <span>{opt.label}</span>
@@ -275,10 +288,6 @@ export default function RestaurantList() {
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
-        <div className="diet-filters" role="group" aria-label={t('restaurantList.dietFiltersAria')}>
-          <button type="button" className={`diet-chip${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('restaurantList.filterBio')}</button>
-          <button type="button" className={`diet-chip${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('restaurantList.filterVegan')}</button>
-        </div>
       </div>
       <div className="role-pick" style={{ marginBottom: 14 }}>
         <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>{t('restaurantList.viewList')}</div>
