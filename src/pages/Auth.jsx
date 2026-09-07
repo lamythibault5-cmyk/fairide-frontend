@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import AddressRecognition from '../components/AddressRecognition';
+import AddressSearch from '../components/AddressSearch';
 
 function roles(t) {
   return [
@@ -558,6 +559,7 @@ export default function Auth() {
 
             {stepKey === 'address' && (
               <>
+                <AddressSearch onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city) setAddressCity(a.city); }} />
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 2 }}>
                     <label htmlFor="auth-f-8">{t('auth.street')}</label>

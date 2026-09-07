@@ -4,6 +4,14 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    addressSearch: {
+      label: 'Rechercher l\'adresse',
+      placeholder: 'Ex : Avenue Georges Henri 12, 1200',
+      help: 'Tape le début de l\'adresse et choisis dans la liste — ou remplis les champs à la main ci-dessous et valide.',
+      searching: 'Recherche…',
+      noResult: 'Aucune adresse trouvée : remplis les champs manuellement.',
+      streetOnly: 'numéro à compléter'
+    },
     gameSocial: {
       podiumTitle: '🏆 Podium',
       empty: 'Aucun score public pour l\'instant — sois le premier !',
@@ -3247,6 +3255,14 @@ export const translations = {
     }
   },
   en: {
+    addressSearch: {
+      label: 'Search the address',
+      placeholder: 'E.g. Avenue Georges Henri 12, 1200',
+      help: 'Type the beginning of the address and pick from the list — or fill in the fields below by hand and confirm.',
+      searching: 'Searching…',
+      noResult: 'No address found: fill in the fields manually.',
+      streetOnly: 'number to fill in'
+    },
     gameSocial: {
       podiumTitle: '🏆 Podium',
       empty: 'No public score yet — be the first!',
@@ -6490,6 +6506,14 @@ export const translations = {
     }
   },
   nl: {
+    addressSearch: {
+      label: 'Adres zoeken',
+      placeholder: 'Bv. Georges Henrilaan 12, 1200',
+      help: 'Typ het begin van het adres en kies uit de lijst — of vul de velden hieronder zelf in en bevestig.',
+      searching: 'Zoeken…',
+      noResult: 'Geen adres gevonden: vul de velden zelf in.',
+      streetOnly: 'nummer aan te vullen'
+    },
     gameSocial: {
       podiumTitle: '🏆 Podium',
       empty: 'Nog geen publieke score — wees de eerste!',

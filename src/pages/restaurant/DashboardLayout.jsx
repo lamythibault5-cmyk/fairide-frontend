@@ -12,6 +12,7 @@ import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import { useLanguage } from '../../context/LanguageContext';
+import AddressSearch from '../../components/AddressSearch';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -244,6 +245,7 @@ export default function DashboardLayout() {
               {COMMUNES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setCommune(a.city); }} />
           <div className="field"><label>{t('dashResto.street')}</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>

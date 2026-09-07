@@ -2424,3 +2424,11 @@ button.account-link-row:last-child { border-bottom: none; }
 /* Admin › Restaurants : visibilité d'une vraie inscription sur le site client. */
 .pill.listing-on { background: rgba(31,138,112,0.14); color: var(--teal-deep, #1F8A70); }
 .pill.listing-off { background: rgba(20,18,31,0.08); color: var(--ink-soft, #3A4A63); }
+/* Barre de recherche d'adresse (AddressSearch.jsx) au-dessus des champs rue / numéro / code postal. */
+.address-search { position: relative; margin-bottom: 10px; }
+.address-search label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.address-search-help { margin: 4px 0 0; opacity: 0.75; }
+.address-search-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% - 18px); margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); box-shadow: 0 8px 24px rgba(20,18,31,.12); max-height: 260px; overflow-y: auto; }
+.address-search-list li { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.address-search-list li:hover, .address-search-list li.active { background: rgba(59,47,181,0.08); }
+.address-search-list li.address-search-empty { cursor: default; opacity: 0.75; font-size: 13px; }

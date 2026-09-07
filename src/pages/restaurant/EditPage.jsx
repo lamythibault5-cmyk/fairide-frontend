@@ -8,6 +8,7 @@ import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { formatDateFr } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
+import AddressSearch from '../../components/AddressSearch';
 
 // Valeurs envoyées au backend (en français, stockées telles quelles) ; le libellé affiché est traduit.
 const RESTO_DELETION_REASONS = [
@@ -377,6 +378,7 @@ export default function EditPage() {
           </select>
         </div>
         <div className="field"><label>{t('editResto.neighbourhoodOptional')}</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder={t('editResto.phNeighbourhood')} /></div>
+        <AddressSearch compact onSelect={(a) => { setEditAddressStreet(a.street); if (a.number) setEditAddressNumber(a.number); if (a.postalCode) setEditAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setEditCommune(a.city); }} />
         <div className="field"><label>{t('editResto.streetForDrivers')}</label><input value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
