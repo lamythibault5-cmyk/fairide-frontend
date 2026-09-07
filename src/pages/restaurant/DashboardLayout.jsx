@@ -18,11 +18,14 @@ import AddressSearch from '../../components/AddressSearch';
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : formulaire de création, bannières (validation/abonnement/Stripe),
 // et la carte "Aujourd'hui" de la colonne de droite.
+const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
+
 export default function DashboardLayout() {
   const { t } = useLanguage();
   const { token, user } = useAuth();
-  // Compte fondateur (admin) : son restaurant de test se crée même incomplet, le serveur complète.
-  const fondateur = !!user?.isAdmin;
+  // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
+  // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
+  const fondateur = !!user?.isAdmin || FONDATEURS.includes(String(user?.email || '').toLowerCase());
   const [recoEtat, setRecoEtat] = useState('idle');
   const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const toast = useToast();
