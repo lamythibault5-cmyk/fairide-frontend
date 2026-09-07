@@ -38,7 +38,7 @@ export default function MapPage() {
         inDelivery.map((o) => (
           <div className={`card order-type-${orderTypeColor(o)}`} key={o.id} style={{ marginBottom: 16 }}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
-              <b>{t('mapResto.orderNumber', { id: o.id.slice(0, 8) })}</b>
+              <b>{t('mapResto.orderNumber', { id: String(o.id).slice(0, 8) })}</b>
               <span className="order-type-badge order-type-badge-delivery">{orderTypeLabel(o)}</span>
             </div>
             <div className="small" style={{ margin: '4px 0' }}>📍 {o.address}</div>
