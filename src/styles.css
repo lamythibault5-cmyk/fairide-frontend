@@ -2432,3 +2432,5 @@ button.account-link-row:last-child { border-bottom: none; }
 .address-search-list li { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
 .address-search-list li:hover, .address-search-list li.active { background: rgba(59,47,181,0.08); }
 .address-search-list li.address-search-empty { cursor: default; opacity: 0.75; font-size: 13px; }
+.address-reco-confirm { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.address-reco-confirm input { margin-top: 2px; }

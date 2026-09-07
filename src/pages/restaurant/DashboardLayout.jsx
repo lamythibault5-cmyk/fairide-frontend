@@ -20,7 +20,11 @@ import AddressSearch from '../../components/AddressSearch';
 // et la carte "Aujourd'hui" de la colonne de droite.
 export default function DashboardLayout() {
   const { t } = useLanguage();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  // Compte fondateur (admin) : son restaurant de test se crée même incomplet, le serveur complète.
+  const fondateur = !!user?.isAdmin;
+  const [recoEtat, setRecoEtat] = useState('idle');
+  const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
   const [myRestos, setMyRestos] = useState(null);
@@ -148,12 +152,17 @@ export default function DashboardLayout() {
   }
 
   async function createResto() {
-    if (!name.trim()) { toast(t('dashResto.toastNameRequired')); return; }
-    if (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim()) {
+    if (!name.trim() && !fondateur) { toast(t('dashResto.toastNameRequired')); return; }
+    if (!fondateur && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim())) {
       toast(t('dashResto.toastAddressRequired'));
       return;
     }
-    if (!hours || !Object.values(hours).some((shifts) => Array.isArray(shifts) && shifts.length)) {
+    // Adresse tapée mais non reconnue : on ne bloque pas, on demande une confirmation explicite.
+    if ((recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) {
+      toast(t('dashResto.toastAddressConfirm'));
+      return;
+    }
+    if (!fondateur && (!hours || !Object.values(hours).some((shifts) => Array.isArray(shifts) && shifts.length))) {
       toast(t('dashResto.toastHoursRequired'));
       return;
     }
@@ -261,7 +270,9 @@ export default function DashboardLayout() {
             street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact
             onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
             onPickCandidate={(c) => { setName(c.name); }}
+            onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
+          {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
           <div className="field"><label>{t('dashResto.neighbourhoodOptional')}</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
 
           <div className="divider" />

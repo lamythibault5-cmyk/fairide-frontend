@@ -66,6 +66,8 @@ export default function Auth() {
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState('');
   const [addressCity, setAddressCity] = useState('');
+  const [recoEtat, setRecoEtat] = useState('idle');
+  const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const [referralCode, setReferralCode] = useState(() => searchParams.get('ref') || '');
   const [legalName, setLegalName] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
@@ -162,6 +164,8 @@ export default function Auth() {
       if (!addressNumber.trim()) e.addressNumber = required;
       if (!addressPostalCode.trim()) e.addressPostalCode = required;
       if (!addressCity.trim()) e.addressCity = required;
+      // Adresse non reconnue : on demande une confirmation plutôt que de bloquer.
+      if (role === 'restaurant' && (recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) e.addressConfirm = t('auth.errAddressConfirm');
     }
     if (key === 'account') {
       if (!email.trim()) e.email = required;
@@ -598,7 +602,11 @@ export default function Auth() {
                     onPickCandidate={(c, r) => {
                       try { localStorage.setItem('fairide_resto_hint', JSON.stringify({ name: c.name, cuisine: c.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
                     }}
+                    onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
                   />
+                )}
+                {role === 'restaurant' && errors.addressConfirm && (
+                  <p className="small" style={{ color: 'var(--red)', margin: '4px 0 0' }}>{errors.addressConfirm}</p>
                 )}
               </>
             )}

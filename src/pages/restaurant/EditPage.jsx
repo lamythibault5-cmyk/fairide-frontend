@@ -9,6 +9,7 @@ import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { formatDateFr } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
 import AddressSearch from '../../components/AddressSearch';
+import AddressRecognition from '../../components/AddressRecognition';
 
 // Valeurs envoyées au backend (en français, stockées telles quelles) ; le libellé affiché est traduit.
 const RESTO_DELETION_REASONS = [
@@ -38,6 +39,8 @@ export default function EditPage() {
   const [editAddressStreet, setEditAddressStreet] = useState('');
   const [editAddressNumber, setEditAddressNumber] = useState('');
   const [editAddressPostalCode, setEditAddressPostalCode] = useState('');
+  const [recoEtat, setRecoEtat] = useState('idle');
+  const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const [editCover, setEditCover] = useState('');
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [coverSuggestions, setCoverSuggestions] = useState([]);
@@ -114,6 +117,7 @@ export default function EditPage() {
   }, [restaurant]);
 
   async function saveRestoInfo() {
+    if ((recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) { toast(t('editResto.toastAddressConfirm')); return; }
     if (!editName.trim()) {
       toast(t('editResto.toastNameRequired'));
       return;
@@ -390,6 +394,11 @@ export default function EditPage() {
             <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
           </div>
         </div>
+        <AddressRecognition
+          street={editAddressStreet} number={editAddressNumber} postalCode={editAddressPostalCode} city={editCommune} compact
+          onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setEditCommune(r.commune); if (r.neighborhood) setEditNeighborhood((v) => v || r.neighborhood); }}
+          onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
+        />
         <div className="field"><label>{t('editResto.description')}</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
         <div className="field">
           <label>{t('editResto.coverLabel')}</label>

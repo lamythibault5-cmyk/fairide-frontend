@@ -7,8 +7,12 @@ import { useLanguage } from '../context/LanguageContext';
 // quartier (Nominatim) et liste les commerces déjà référencés sur Internet à cette adresse
 // (OpenStreetMap). Le parent reçoit la commune/le quartier (onResult) et, si le restaurateur clique
 // sur un commerce proposé, son nom (onPickCandidate). Rien n'est imposé : ce sont des propositions.
-export default function AddressRecognition({ street, number, postalCode, city, onResult, onPickCandidate, compact = false }) {
+// onStatus(etat) informe le parent ('idle' | 'loading' | 'done' | 'none' | 'error') ; quand l'adresse n'est pas
+// reconnue, une case « Je confirme que cette adresse est correcte » apparaît et onConfirm(bool) remonte
+// le choix : le restaurateur reste maître de son adresse, on lui demande juste de la confirmer.
+export default function AddressRecognition({ street, number, postalCode, city, onResult, onPickCandidate, onStatus, onConfirm, compact = false }) {
   const { t } = useLanguage();
+  const [confirme, setConfirme] = useState(false);
   const [etat, setEtat] = useState('idle'); // idle | loading | done | none | error
   const [reco, setReco] = useState(null);
   const [choisi, setChoisi] = useState(null);
@@ -18,6 +22,9 @@ export default function AddressRecognition({ street, number, postalCode, city, o
   // La ville ne fait pas partie de la clé : elle est souvent remplie par la reconnaissance elle-même, et
   // relancer la recherche à ce moment-là effacerait le commerce que le restaurateur vient de choisir.
   const cle = complet ? `${street.trim()}|${number.trim()}|${postalCode.trim()}` : '';
+
+  useEffect(() => { onStatus?.(etat); }, [etat]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setConfirme(false); onConfirm?.(false); }, [cle]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!cle) { setEtat('idle'); setReco(null); return undefined; }
@@ -45,8 +52,15 @@ export default function AddressRecognition({ street, number, postalCode, city, o
   return (
     <div className={`address-reco${compact ? ' compact' : ''}`} aria-live="polite">
       {etat === 'loading' && <p className="small" style={{ margin: 0 }}>🔎 {t('addressReco.searching')}</p>}
-      {etat === 'none' && <p className="small" style={{ margin: 0 }}>{t('addressReco.notFound')}</p>}
+      {etat === 'none' && <p className="small" style={{ margin: 0 }}>⚠️ {t('addressReco.notFound')}</p>}
       {etat === 'error' && <p className="small" style={{ margin: 0 }}>{t('addressReco.error')}</p>}
+      {(etat === 'none' || etat === 'error') && (
+        <label className="address-reco-confirm">
+          <input type="checkbox" checked={confirme} onChange={(e) => { setConfirme(e.target.checked); onConfirm?.(e.target.checked); }} />
+          <span>{t('addressReco.confirmLabel')}</span>
+        </label>
+      )}
+      {(etat === 'none' || etat === 'error') && confirme && <p className="small" style={{ margin: '4px 0 0' }}>✅ {t('addressReco.confirmedOk')}</p>}
       {etat === 'done' && reco && (
         <>
           <p className="small" style={{ margin: 0 }}>

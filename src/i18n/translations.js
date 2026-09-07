@@ -33,7 +33,7 @@ export const translations = {
     },
     addressReco: {
       searching: 'Reconnaissance de l\'adresse…',
-      notFound: 'Adresse non reconnue : vérifie la rue et le code postal. Tu pourras préciser la commune à l\'étape suivante.',
+      notFound: 'Cette adresse ne correspond à aucune adresse connue. Vérifie la rue, le numéro et le code postal — ou confirme-la telle quelle ci-dessous.',
       error: 'La reconnaissance d\'adresse est indisponible pour l\'instant, tu peux continuer.',
       recognized: 'Adresse reconnue :',
       communeLine: 'commune {commune}',
@@ -43,7 +43,9 @@ export const translations = {
       candidatesHelp: 'Commerces référencés sur Internet à cette adresse — clique pour reprendre le nom.',
       distance: 'à {m} m',
       picked: '{name} sera proposé comme nom de ton commerce.',
-      noCandidate: 'Aucun commerce référencé à cette adresse — tu choisiras le nom toi-même.'
+      noCandidate: 'Aucun commerce référencé à cette adresse — tu choisiras le nom toi-même.',
+      confirmLabel: 'Je confirme que cette adresse est correcte',
+      confirmedOk: 'Adresse confirmée : elle sera enregistrée telle que tu l\'as écrite.'
     },
     adminReviews: {
       foodRating: 'Note plats',
@@ -2095,7 +2097,8 @@ export const translations = {
       switchInternal: 'Passer en livraison interne (mon/mes livreur(s))',
       switchPool: 'Repasser au pool de livreurs Fairide',
       reasonOther: 'Autre raison',
-      delivery: 'Livraison'
+      delivery: 'Livraison',
+      toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour enregistrer.'
     },
     ordersResto: {
       colorsTitle: '🎨 Couleurs des commandes',
@@ -2256,7 +2259,9 @@ export const translations = {
       stripeNeedsInfoResto: 'Stripe a besoin d\'informations pour te verser tes paiements',
       viaStripeResto: 'Via Stripe, rapide et sécurisé — sans ça, pas de commandes',
       complete: 'Compléter',
-      configure: 'Configurer'
+      configure: 'Configurer',
+      toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour continuer.',
+      founderHint: 'Compte fondateur : nom, adresse et horaires sont facultatifs pour ce restaurant, le serveur complète ce qui manque.'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -3251,7 +3256,8 @@ export const translations = {
       toastLegalRequired: 'Les informations légales de ton commerce sont requises (nom légal, n° d\'entreprise, n° TVA, responsable).',
       companyNumberDriver: 'N° d\'entreprise (statut indépendant)',
       companyNumberDriverHelp: 'Les livreurs Fairide travaillent en indépendants : ton numéro BCE est nécessaire pour l\'autofacturation mensuelle.',
-      errDriverCompanyNumber: 'Le numéro d\'entreprise est requis pour un compte livreur.'
+      errDriverCompanyNumber: 'Le numéro d\'entreprise est requis pour un compte livreur.',
+      errAddressConfirm: 'Adresse non reconnue : confirme-la ci-dessus pour continuer.'
     }
   },
   en: {
@@ -3284,7 +3290,7 @@ export const translations = {
     },
     addressReco: {
       searching: 'Recognising the address…',
-      notFound: 'Address not recognised: check the street and postal code. You can set the municipality at the next step.',
+      notFound: 'This address does not match any known address. Check the street, number and postal code — or confirm it as is below.',
       error: 'Address recognition is unavailable right now, you can continue.',
       recognized: 'Address recognised:',
       communeLine: 'municipality {commune}',
@@ -3294,7 +3300,9 @@ export const translations = {
       candidatesHelp: 'Businesses listed online at this address — click to reuse the name.',
       distance: '{m} m away',
       picked: '{name} will be suggested as your business name.',
-      noCandidate: 'No business listed at this address — you will choose the name yourself.'
+      noCandidate: 'No business listed at this address — you will choose the name yourself.',
+      confirmLabel: 'I confirm this address is correct',
+      confirmedOk: 'Address confirmed: it will be saved exactly as you wrote it.'
     },
     adminReviews: {
       foodRating: 'Food rating',
@@ -5346,7 +5354,8 @@ export const translations = {
       switchInternal: 'Switch to internal delivery (my courier(s))',
       switchPool: 'Switch back to the Fairide courier pool',
       reasonOther: 'Other reason',
-      delivery: 'Delivery'
+      delivery: 'Delivery',
+      toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to save.'
     },
     ordersResto: {
       colorsTitle: '🎨 Order colours',
@@ -5507,7 +5516,9 @@ export const translations = {
       stripeNeedsInfoResto: 'Stripe needs information to pay out your earnings',
       viaStripeResto: 'Via Stripe, fast and secure — without it, no orders',
       complete: 'Complete',
-      configure: 'Set up'
+      configure: 'Set up',
+      toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to continue.',
+      founderHint: 'Founder account: name, address and opening hours are optional for this restaurant, the server fills in what is missing.'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -6502,7 +6513,8 @@ export const translations = {
       toastLegalRequired: 'Your business\'s legal information is required (legal name, company number, VAT number, manager).',
       companyNumberDriver: 'Company number (self-employed status)',
       companyNumberDriverHelp: 'Fairide couriers are self-employed: your company number is needed for monthly self-billing.',
-      errDriverCompanyNumber: 'The company number is required for a courier account.'
+      errDriverCompanyNumber: 'The company number is required for a courier account.',
+      errAddressConfirm: 'Address not recognised: confirm it above to continue.'
     }
   },
   nl: {
@@ -6535,7 +6547,7 @@ export const translations = {
     },
     addressReco: {
       searching: 'Adres herkennen…',
-      notFound: 'Adres niet herkend: controleer straat en postcode. Je kunt de gemeente in de volgende stap kiezen.',
+      notFound: 'Dit adres komt met geen enkel gekend adres overeen. Controleer straat, nummer en postcode — of bevestig het hieronder zoals het is.',
       error: 'Adresherkenning is momenteel niet beschikbaar, je kunt verdergaan.',
       recognized: 'Adres herkend:',
       communeLine: 'gemeente {commune}',
@@ -6545,7 +6557,9 @@ export const translations = {
       candidatesHelp: 'Zaken die online op dit adres gekend zijn — klik om de naam over te nemen.',
       distance: 'op {m} m',
       picked: '{name} wordt voorgesteld als naam van je zaak.',
-      noCandidate: 'Geen zaak gekend op dit adres — je kiest de naam zelf.'
+      noCandidate: 'Geen zaak gekend op dit adres — je kiest de naam zelf.',
+      confirmLabel: 'Ik bevestig dat dit adres juist is',
+      confirmedOk: 'Adres bevestigd: het wordt opgeslagen zoals je het schreef.'
     },
     adminReviews: {
       foodRating: 'Score eten',
@@ -8597,7 +8611,8 @@ export const translations = {
       switchInternal: 'Overschakelen naar interne levering (mijn koerier(s))',
       switchPool: 'Terug naar de Fairide-koerierspool',
       reasonOther: 'Andere reden',
-      delivery: 'Levering'
+      delivery: 'Levering',
+      toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om op te slaan.'
     },
     ordersResto: {
       colorsTitle: '🎨 Kleuren van bestellingen',
@@ -8758,7 +8773,9 @@ export const translations = {
       stripeNeedsInfoResto: 'Stripe heeft gegevens nodig om je betalingen uit te keren',
       viaStripeResto: 'Via Stripe, snel en veilig — zonder geen bestellingen',
       complete: 'Aanvullen',
-      configure: 'Instellen'
+      configure: 'Instellen',
+      toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om verder te gaan.',
+      founderHint: 'Oprichtersaccount: naam, adres en openingsuren zijn optioneel voor dit restaurant, de server vult aan wat ontbreekt.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -9753,7 +9770,8 @@ export const translations = {
       toastLegalRequired: 'De juridische gegevens van je zaak zijn vereist (juridische naam, ondernemingsnummer, btw-nummer, verantwoordelijke).',
       companyNumberDriver: 'Ondernemingsnummer (zelfstandig statuut)',
       companyNumberDriverHelp: 'Fairide-koeriers werken als zelfstandige: je ondernemingsnummer is nodig voor de maandelijkse selfbilling.',
-      errDriverCompanyNumber: 'Het ondernemingsnummer is verplicht voor een koeriersaccount.'
+      errDriverCompanyNumber: 'Het ondernemingsnummer is verplicht voor een koeriersaccount.',
+      errAddressConfirm: 'Adres niet herkend: bevestig het hierboven om verder te gaan.'
     }
   }
 };
