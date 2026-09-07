@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import GameFrame, { tJeu } from './jeux/GameFrame';
 import { JEUX } from './jeux/jeux';
 import { Podium, PseudoModal, useGameSocial } from './jeux/GameSocial';
+import { musique } from './jeux/musique';
 import { useLanguage } from '../context/LanguageContext';
 
 // Le choix du mini-jeu à côté de la carte de suivi. Six jeux, chacun avec son meilleur score
@@ -25,6 +26,17 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
   });
   const [pourquoiOuvert, setPourquoiOuvert] = useState(false);
   const social = useGameSocial();
+  // Musique : relancée si le joueur l'avait activée la dernière fois (au premier geste, faute de quoi le navigateur
+  // la refuserait), coupée quand on quitte la page — elle n'a pas à suivre l'utilisateur dans ses commandes.
+  useEffect(() => {
+    let relancer = null;
+    if (musique.preference() && !musique.estActive()) {
+      relancer = () => { musique.demarrer(); retirer(); };
+      var retirer = () => ['pointerdown', 'keydown', 'touchstart'].forEach((e) => window.removeEventListener(e, relancer));
+      ['pointerdown', 'keydown', 'touchstart'].forEach((e) => window.addEventListener(e, relancer, { passive: true }));
+    }
+    return () => { if (relancer) retirer(); musique.arreter({ oublier: false }); };
+  }, []);
   function choisir(i) { setIndex(i); try { localStorage.setItem(CLE_INDEX, String(i)); } catch { /* sans stockage, le choix vaut pour la page */ } }
   const jeu = JEUX[index];
 

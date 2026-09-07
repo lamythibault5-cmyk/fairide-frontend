@@ -1372,12 +1372,12 @@ export const translations = {
       sort_regles_1: 'Un bon plat attrapé rapporte un point. Attraper un déchet, c’est perdu. Rater un plat ne coûte rien.',
       sort_regles_2: 'Plus tu montes, plus il y a de déchets dans le lot.',
       sort_regles_3: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
-      rider_sub: 'Roule et fais des saltos',
+      rider_sub: 'Roule, saute, fais des saltos',
       rider_perdu: '🤕 Chute !',
-      rider_regles_0: 'Tu roules sur une route en bosses. Maintiens appuyé pour accélérer, relâche pour ralentir.',
-      rider_regles_1: 'Lancé sur une bosse, tu décolles. En l’air, maintiens appuyé pour faire une roue arrière… et un salto.',
-      rider_regles_2: 'Chaque salto complet réussi rapporte un point, et chaque bout de route parcouru aussi. Retomber de travers, c’est la chute.',
-      rider_regles_3: 'Maintiens le doigt (ou la souris, ou la touche Espace) : accélère au sol, tourne en l’air.',
+      rider_regles_0: 'Tu roules sur une route en bosses. Tape brièvement pour sauter, maintiens appuyé pour accélérer.',
+      rider_regles_1: 'Lancé sur une bosse, tu décolles : saute par-dessus les obstacles (🪨 🚧 🛢️) — en toucher un au sol, c’est la chute.',
+      rider_regles_2: 'Chaque obstacle franchi et chaque bout de route rapportent un point ; en l’air, maintiens appuyé pour un salto (+1 par tour complet). Retomber de travers, c’est la chute.',
+      rider_regles_3: 'Tape brièvement pour sauter ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
       arrow_sub: 'Vise les passages',
       arrow_perdu: '💢 Dans le mur !',
       arrow_regles_0: 'Ta flèche file vers le haut. Des murs descendent, chacun avec une seule ouverture.',
@@ -1459,7 +1459,9 @@ export const translations = {
       rulesOf: 'Règles de {game}',
       level: '· Niv. {n}',
       score: 'Score : {score}{record}',
-      newRecord: ' — 🎉 nouveau record !'
+      newRecord: ' — 🎉 nouveau record !',
+      musicOn: 'Activer la musique de fond',
+      musicOff: 'Couper la musique'
     },
     games: {
       title: '🎮 Mini-jeux',
@@ -1478,7 +1480,11 @@ export const translations = {
       showMap: '🗺️ Afficher la carte',
       hideMap: '🙈 Masquer la carte',
       etaDriver: '🏁 Arrivée dans ~{min} min',
-      etaClient: '🛵 Arrive dans ~{min} min'
+      etaClient: '🛵 Arrive dans ~{min} min',
+      fullscreenTitle: 'Carte et mini-jeux en plein écran',
+      tabMap: 'Carte',
+      tabGames: 'Jeux',
+      fullscreenHelp: 'Échap ou ✕ pour revenir · 📖 pour les règles du jeu · 🔇 pour la musique de fond'
     },
     mapResto: {
       title: 'Carte',
@@ -4635,12 +4641,12 @@ export const translations = {
       sort_regles_1: 'A good dish caught earns a point. Catching rubbish means it\'s over. Missing a dish costs nothing.',
       sort_regles_2: 'The higher you go, the more rubbish in the mix.',
       sort_regles_3: 'Slide your finger (or the mouse) left and right: the basket follows.',
-      rider_sub: 'Ride and do backflips',
+      rider_sub: 'Ride, jump, do backflips',
       rider_perdu: '🤕 Crash!',
-      rider_regles_0: 'You ride on a bumpy road. Hold to accelerate, release to slow down.',
-      rider_regles_1: 'Launched off a bump, you take off. In the air, hold to do a wheelie… and a backflip.',
-      rider_regles_2: 'Each completed backflip earns a point, and so does each stretch of road covered. Landing crooked means a crash.',
-      rider_regles_3: 'Hold your finger (or the mouse, or the Space key): accelerate on the ground, rotate in the air.',
+      rider_regles_0: 'You ride on a bumpy road. Tap briefly to jump, hold to accelerate.',
+      rider_regles_1: 'Launched off a bump, you take off: jump over the obstacles (🪨 🚧 🛢️) — touching one on the ground means a crash.',
+      rider_regles_2: 'Each obstacle cleared and each stretch of road earns a point; in the air, hold to backflip (+1 per full turn). Landing crooked means a crash.',
+      rider_regles_3: 'Tap briefly to jump; hold (finger, mouse or Space) to accelerate on the ground and rotate in the air.',
       arrow_sub: 'Aim for the gaps',
       arrow_perdu: '💢 Into the wall!',
       arrow_regles_0: 'Your arrow shoots upward. Walls come down, each with a single opening.',
@@ -4722,7 +4728,9 @@ export const translations = {
       rulesOf: 'Rules of {game}',
       level: '· Lvl {n}',
       score: 'Score: {score}{record}',
-      newRecord: ' — 🎉 new record!'
+      newRecord: ' — 🎉 new record!',
+      musicOn: 'Turn on background music',
+      musicOff: 'Turn off the music'
     },
     games: {
       title: '🎮 Mini-games',
@@ -4741,7 +4749,11 @@ export const translations = {
       showMap: '🗺️ Show the map',
       hideMap: '🙈 Hide the map',
       etaDriver: '🏁 Arrival in ~{min} min',
-      etaClient: '🛵 Arriving in ~{min} min'
+      etaClient: '🛵 Arriving in ~{min} min',
+      fullscreenTitle: 'Map and mini-games in full screen',
+      tabMap: 'Map',
+      tabGames: 'Games',
+      fullscreenHelp: 'Esc or ✕ to go back · 📖 for the game rules · 🔇 for background music'
     },
     mapResto: {
       title: 'Map',
@@ -7898,12 +7910,12 @@ export const translations = {
       sort_regles_1: 'Een goed gerecht vangen levert een punt op. Afval vangen betekent verloren. Een gerecht missen kost niets.',
       sort_regles_2: 'Hoe hoger je komt, hoe meer afval ertussen zit.',
       sort_regles_3: 'Schuif je vinger (of de muis) van links naar rechts: de mand volgt.',
-      rider_sub: 'Rijd en maak salto\'s',
+      rider_sub: 'Rijd, spring, maak salto’s',
       rider_perdu: '🤕 Gevallen!',
-      rider_regles_0: 'Je rijdt op een hobbelige weg. Houd ingedrukt om te versnellen, laat los om te vertragen.',
-      rider_regles_1: 'Gelanceerd van een bult ga je de lucht in. In de lucht houd je ingedrukt voor een wheelie… en een salto.',
-      rider_regles_2: 'Elke geslaagde volledige salto levert een punt op, en elk stuk afgelegde weg ook. Scheef landen betekent vallen.',
-      rider_regles_3: 'Houd je vinger (of de muis, of de spatiebalk) ingedrukt: versnel op de grond, draai in de lucht.',
+      rider_regles_0: 'Je rijdt op een hobbelige weg. Tik kort om te springen, houd ingedrukt om te versnellen.',
+      rider_regles_1: 'Gelanceerd van een bult ga je de lucht in: spring over de obstakels (🪨 🚧 🛢️) — er één raken op de grond is vallen.',
+      rider_regles_2: 'Elk genomen obstakel en elk stuk weg levert een punt op; in de lucht houd je ingedrukt voor een salto (+1 per volledige draai). Scheef landen is vallen.',
+      rider_regles_3: 'Tik kort om te springen; houd ingedrukt (vinger, muis of spatiebalk) om te versnellen op de grond en te draaien in de lucht.',
       arrow_sub: 'Richt op de openingen',
       arrow_perdu: '💢 Tegen de muur!',
       arrow_regles_0: 'Je pijl schiet omhoog. Muren dalen af, elk met één enkele opening.',
@@ -7985,7 +7997,9 @@ export const translations = {
       rulesOf: 'Regels van {game}',
       level: '· Niv. {n}',
       score: 'Score: {score}{record}',
-      newRecord: ' — 🎉 nieuw record!'
+      newRecord: ' — 🎉 nieuw record!',
+      musicOn: 'Achtergrondmuziek aanzetten',
+      musicOff: 'Muziek uitzetten'
     },
     games: {
       title: '🎮 Minispelletjes',
@@ -8004,7 +8018,11 @@ export const translations = {
       showMap: '🗺️ Kaart tonen',
       hideMap: '🙈 Kaart verbergen',
       etaDriver: '🏁 Aankomst binnen ~{min} min',
-      etaClient: '🛵 Komt aan binnen ~{min} min'
+      etaClient: '🛵 Komt aan binnen ~{min} min',
+      fullscreenTitle: 'Kaart en minigames op volledig scherm',
+      tabMap: 'Kaart',
+      tabGames: 'Games',
+      fullscreenHelp: 'Esc of ✕ om terug te gaan · 📖 voor de spelregels · 🔇 voor achtergrondmuziek'
     },
     mapResto: {
       title: 'Kaart',

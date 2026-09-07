@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { musique } from './musique';
 
 // Le moteur commun des mini-jeux : boucle, saisie, rendu, tableau de bord, règles.
 //
@@ -39,6 +40,9 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const [meilleur, setMeilleur] = useState(() => lireMeilleur(jeu.stockage));
   const [nouveauRecord, setNouveauRecord] = useState(false);
   const [reglesOuvertes, setReglesOuvertes] = useState(false);
+  // Musique de fond (musique.js) : un seul moteur pour tous les jeux, coupée par défaut.
+  const [musiqueActive, setMusiqueActive] = useState(() => musique.estActive());
+  useEffect(() => musique.abonner(setMusiqueActive), []);
 
   const conteneur = useRef(null);
   const canvas = useRef(null);
@@ -183,8 +187,14 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       <div className="jeu-hud">
         <span className="jeu-best">🥇 {meilleur}</span>
         <span className="jeu-score">🏆 {score} <span className="jeu-niveau">{t('gameFrame.level', { n: niveau() + 1 })}</span></span>
-        <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
+        <span className="jeu-hud-boutons">
+          <button type="button" className={`jeu-regles-btn${musiqueActive ? ' active' : ''}`} onClick={() => musique.basculer()} aria-pressed={musiqueActive} aria-label={musiqueActive ? t('gameFrame.musicOff') : t('gameFrame.musicOn')} title={musiqueActive ? t('gameFrame.musicOff') : t('gameFrame.musicOn')}>{musiqueActive ? '🎵' : '🔇'}</button>
+          <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
+        </span>
       </div>
+      {/* En grand (plein écran), la commande du jeu reste sous les yeux : on n'a pas à rouvrir les règles pour
+          se souvenir s'il faut glisser, taper ou maintenir. */}
+      {large && <p className="jeu-indice">🎮 {tJeu(t, jeu, 'regles_3', jeu.controles)}</p>}
 
       {/* En `fill`, c'est le cadre (et non tout le bloc, qui contient aussi le tableau de bord et les
           boutons) qui est mesuré : le canvas doit remplir exactement la place laissée au terrain. */}

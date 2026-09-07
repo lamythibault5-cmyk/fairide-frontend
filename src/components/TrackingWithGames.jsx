@@ -76,7 +76,13 @@ function useFullscreenSizes() {
 
 function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, onClose }) {
   const { t } = useLanguage();
+  const { narrow, mapHeight } = useFullscreenSizes();
+  // Grand écran : carte et jeu côte à côte, « Masquer la carte » donne tout l'écran au jeu. Téléphone : un
+  // seul bloc à la fois, choisi par deux gros onglets (la carte empilée au-dessus d'un jeu minuscule ne
+  // servait ni l'un ni l'autre) ; la carte reste montée, juste cachée, pour continuer à recevoir les
+  // positions et le temps d'arrivée, affiché en permanence dans la barre.
   const [carteMasquee, setCarteMasquee] = useState(false);
+  const [onglet, setOnglet] = useState('jeux'); // téléphone : 'carte' | 'jeux'
   const [eta, setEta] = useState(null);
 
   useEffect(() => {
@@ -90,30 +96,37 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, onC
     };
   }, [onClose]);
 
-  const { mapHeight } = useFullscreenSizes();
+  const carteVisible = narrow ? onglet === 'carte' : !carteMasquee;
+  const texteEta = eta
+    ? (role === 'driver' ? t('tracking.etaDriver', { min: eta.minutes }) : t('tracking.etaClient', { min: eta.minutes }))
+    : (etaSansEstimation || t('tracking.courierOnWay'));
 
   return createPortal(
-    <div className="tracking-fullscreen-overlay">
+    <div className="tracking-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={t('tracking.fullscreenTitle')}>
       <div className="tracking-fullscreen-bar">
-        <button type="button" className="tracking-fullscreen-toggle" onClick={() => setCarteMasquee((m) => !m)} aria-pressed={carteMasquee}>
-          {carteMasquee ? t('tracking.showMap') : t('tracking.hideMap')}
-        </button>
-        {carteMasquee && (
-          <span className="tracking-fullscreen-eta" aria-live="polite">
-            {eta ? (role === 'driver' ? t('tracking.etaDriver', { min: eta.minutes }) : t('tracking.etaClient', { min: eta.minutes })) : (etaSansEstimation || t('tracking.courierOnWay'))}
-          </span>
+        {narrow ? (
+          <div className="tracking-fullscreen-tabs" role="tablist">
+            <button type="button" role="tab" aria-selected={onglet === 'carte'} className={onglet === 'carte' ? 'active' : ''} onClick={() => setOnglet('carte')}>🗺️ {t('tracking.tabMap')}</button>
+            <button type="button" role="tab" aria-selected={onglet === 'jeux'} className={onglet === 'jeux' ? 'active' : ''} onClick={() => setOnglet('jeux')}>🎮 {t('tracking.tabGames')}</button>
+          </div>
+        ) : (
+          <button type="button" className="tracking-fullscreen-toggle" onClick={() => setCarteMasquee((m) => !m)} aria-pressed={carteMasquee}>
+            {carteMasquee ? t('tracking.showMap') : t('tracking.hideMap')}
+          </button>
         )}
-        <button type="button" className="tracking-fullscreen-close" onClick={onClose} aria-label={t('tracking.close')}>✕</button>
+        <span className="tracking-fullscreen-eta" aria-live="polite">{texteEta}</span>
+        <button type="button" className="tracking-fullscreen-close" onClick={onClose}>✕ <span>{t('tracking.close')}</span></button>
       </div>
-      <div className={`tracking-fullscreen-split${carteMasquee ? ' carte-masquee' : ''}`}>
-        <div className="tracking-fullscreen-map" hidden={carteMasquee}>
-          {rendreCarte({ height: mapHeight, onEta: setEta })}
+      <div className={`tracking-fullscreen-split${carteVisible ? '' : ' carte-masquee'}`}>
+        <div className="tracking-fullscreen-map" hidden={!carteVisible}>
+          {rendreCarte({ height: narrow ? Math.max(mapHeight, 360) : mapHeight, onEta: setEta })}
           {legende && <div className="small tracking-fullscreen-map-caption">{legende}</div>}
         </div>
-        <div className="tracking-fullscreen-game">
+        <div className="tracking-fullscreen-game" hidden={narrow && onglet !== 'jeux'}>
           <GameSwitcher fill large pourquoi={t(`tracking.${POURQUOI[role]}`)} />
         </div>
       </div>
+      <p className="tracking-fullscreen-aide small">{t('tracking.fullscreenHelp')}</p>
     </div>,
     document.body
   );

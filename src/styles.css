@@ -2434,3 +2434,29 @@ button.account-link-row:last-child { border-bottom: none; }
 .address-search-list li.address-search-empty { cursor: default; opacity: 0.75; font-size: 13px; }
 .address-reco-confirm { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .address-reco-confirm input { margin-top: 2px; }
+/* Plein écran carte + jeux : barre plus lisible, onglets sur téléphone, rappel des commandes. */
+.jeu-hud-boutons { grid-column: 2; grid-row: 1; display: inline-flex; gap: 6px; }
+.jeu--large .jeu-hud-boutons { grid-column: auto; grid-row: auto; }
+.jeu-regles-btn.active { border-color: var(--iris); background: rgba(59,47,181,0.12); }
+.jeu-indice { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }
+.tracking-fullscreen-overlay .jeu-indice { color: rgba(255,255,255,0.8); }
+.tracking-fullscreen-bar { padding: 4px 2px; }
+.tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: 999px; }
+.tracking-fullscreen-eta { font-size: 14px; padding: 9px 14px; }
+.tracking-fullscreen-close {
+  width: auto; height: auto; padding: 9px 14px; border-radius: 999px; font-size: 15px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border-color: #fff;
+}
+.tracking-fullscreen-close:hover { background: var(--lime); border-color: var(--lime); }
+.tracking-fullscreen-tabs { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 4px; gap: 4px; }
+.tracking-fullscreen-tabs button { padding: 9px 16px; border-radius: 999px; border: none; background: transparent; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+.tracking-fullscreen-tabs button.active { background: var(--lime); color: var(--ink); }
+.tracking-fullscreen-game[hidden] { display: none; }
+.tracking-fullscreen-aide { color: rgba(255,255,255,0.6); text-align: center; margin: 8px 0 0; flex-shrink: 0; }
+@media (max-width: 800px) {
+  .tracking-fullscreen-split.carte-masquee .tracking-fullscreen-game { flex: 1 1 0; }
+  .tracking-fullscreen-close span { display: none; }
+  .tracking-fullscreen-close { width: 40px; height: 40px; padding: 0; justify-content: center; }
+  .tracking-fullscreen-eta { font-size: 12px; padding: 8px 10px; }
+  .tracking-fullscreen-aide { display: none; }
+}
