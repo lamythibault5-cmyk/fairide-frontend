@@ -7,6 +7,7 @@ import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
 import PaiementRestaurant from '../components/PaiementRestaurant';
+import PaiementLivreur from '../components/PaiementLivreur';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -810,6 +811,9 @@ export default function Account() {
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
             <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
+          </LigneCompte>
+          <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>
           <LigneCompte to="/driver/reviews" icone="⭐" titre={t('accountUi.myReviews')} sous={t('accountUi.myReviewsSub')} />
           <LigneCompte to="/driver/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />

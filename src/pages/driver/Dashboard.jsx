@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -239,10 +239,13 @@ export default function DriverDashboard() {
             sous={user?.stripeConnectStatus === 'restricted'
               ? t('dashDriver.stripeNeedsInfo')
               : t('dashDriver.viaStripe')}
-            action={(
+            action={user?.stripeConnectStatus === 'restricted' ? (
               <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                {connecting ? '...' : (user?.stripeConnectStatus === 'restricted' ? t('dashDriver.complete') : t('dashDriver.configure'))}
+                {connecting ? '...' : t('dashDriver.complete')}
               </button>
+            ) : (
+              // Activation fermée jusqu'à fin septembre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
+              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn')}</Link>
             )}
           />
         )}

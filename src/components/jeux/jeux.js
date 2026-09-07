@@ -221,84 +221,81 @@ export const JEUX = [
     })
   },
   {
-    key: 'rider', label: 'FairRider', sub: 'Roule, saute, fais des saltos', emoji: '🚴',
-    stockage: 'fairide_rider_best', pointsParNiveau: 6, maxNiveau: 8, perdu: '🤕 Chute !',
+    key: 'rider', label: 'FairRider', sub: 'Saute, double-saute, enchaîne les saltos', emoji: '🚴',
+    stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '🤕 Chute !',
     regles: [
-      'Tu roules sur une route en bosses. Maintiens appuyé pour accélérer, relâche pour ralentir.',
-      'Lancé sur une bosse, tu décolles : saute par-dessus les obstacles (🪨 🚧 🛢️) — en toucher un au sol, c’est la chute.',
-      'Chaque obstacle franchi et chaque bout de route rapportent un point ; en l’air, maintiens appuyé pour un salto (+1 par tour complet). Retomber de travers, c’est la chute.'
+      'Tu roules sur une route en bosses. Tape brièvement pour sauter, tape à nouveau en l’air pour un double saut (plus haut, plus longtemps). Maintiens appuyé pour accélérer.',
+      'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi et chaque bout de route rapportent un point.',
+      'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point, et un enchaînement paie plus (2 saltos = +1 bonus, 3 = +2). Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.'
     ],
-    controles: 'Tape brièvement pour sauter ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
-    // ANCIENNE VERSION, ET CE QUI N'ALLAIT PAS. Le relief était défini en fraction de la HAUTEUR du
-    // cadre : dans la colonne étroite (140×280), les bosses faisaient jusqu'à 58° de pente ; en plein
-    // écran, presque rien. Et le décollage exigeait une pente montante raide, si bien qu'on quittait la
-    // route avec un angle d'environ -60° pour retomber sur une descente à +60° : sans un salto complet
-    // quasi parfait, c'était la chute à CHAQUE bosse. Le joueur ne comprenait pas ce qu'il devait faire.
-    // ICI : relief et gravité en fraction de la LARGEUR (même jeu dans toutes les tailles), décollage
-    // purement balistique (on quitte la route quand la trajectoire libre passe au-dessus), et, en l'air,
-    // le vélo se redresse tout seul quand on relâche : rouler sans tenter de figure ne fait jamais
-    // tomber ; c'est le salto raté qui coûte la partie.
+    controles: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
+    // Toutes les grandeurs sont en fraction d'une « unité » u = min(largeur, 1,1 × hauteur) : le même jeu dans la
+    // colonne étroite et en plein écran, sans qu'un double saut sorte du cadre en grand (une caméra suit de
+    // toute façon le cycliste quand il monte haut). Un appui bref (< 0,28 s) est un saut, au sol comme en l'air
+    // (une fois par envol) ; un appui long accélère au sol et fait tourner en l'air — la rotation ne démarre
+    // qu'après 0,25 s d'appui, pour qu'un tap de double saut ne fasse pas pivoter le vélo.
     creer(api) {
       let w = api.w; let h = api.h;
       let dist = 0; let y = 0; let vy = 0; let vx = 0; let angle = 0; let rotation = 0; let auSol = true;
       let prochainJalon = 0; let obstacles = []; let prochainObstacle = 0; let appuiPrec = false; let dureeAppui = 0;
+      let sautsRestants = 0; let camY = 0; let flash = null; let poussiere = [];
       const OBSTACLES = ['🪨', '🚧', '🛢️'];
+      const u = () => Math.min(w, h * 1.1);
       const sol = (x) => h * 0.72 + Math.sin(x / (w * 0.30)) * w * 0.09 + Math.sin(x / (w * 0.13) + 1.7) * w * 0.035;
       const pente = (x) => (sol(x + 2) - sol(x - 2)) / 4;
       const xEcran = () => w * 0.3;
       const normaliser = (a) => { let r = a % (Math.PI * 2); if (r > Math.PI) r -= Math.PI * 2; if (r < -Math.PI) r += Math.PI * 2; return r; };
+      const decoller = (impulsion) => { auSol = false; vy = Math.min(vy, 0) - impulsion; };
       return {
-        reset() { dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.6; angle = Math.atan(pente(xEcran())); rotation = 0; auSol = true; prochainJalon = w * 3; obstacles = []; prochainObstacle = xEcran() + w * 3; appuiPrec = false; dureeAppui = 0; },
+        reset() { dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.6; angle = Math.atan(pente(xEcran())); rotation = 0; auSol = true; prochainJalon = w * 3; obstacles = []; prochainObstacle = xEcran() + w * 3; appuiPrec = false; dureeAppui = 0; sautsRestants = 0; camY = 0; flash = null; poussiere = []; },
         redimensionner(nw, nh) { w = nw; h = nh; },
         update(dt, input) {
           const n = input.niveau;
-          // Vitesse modérée : un obstacle entre par la droite à 0,7 largeur du cycliste, il faut le temps de le voir
-          // et de sauter, même lancé à fond.
           const base = w * (0.6 + n * 0.07); const maxi = base * 1.6;
-          // Au sol, l'appui accélère ; en l'air, la vitesse horizontale est acquise (on ne pédale pas dans le vide).
           if (auSol) {
             const cibleV = input.enfonce ? maxi : base;
             vx += (cibleV - vx) * Math.min(1, dt * (input.enfonce ? 2.2 : 1.4));
           }
-          // Un appui BREF relâché au sol = un saut : la seule façon fiable de passer un obstacle posé sur du
-          // plat. Un appui long reste l'accélération (et, en l'air, la roue arrière).
+          // Saut au relâchement d'un appui bref : au sol, ou en l'air une fois (double saut).
           if (input.enfonce) dureeAppui += dt;
-          if (!input.enfonce && appuiPrec && auSol && dureeAppui < 0.3) { auSol = false; vy = Math.min(vy, 0) - w * 1.15; rotation = 0; }
+          if (!input.enfonce && appuiPrec && dureeAppui < 0.28) {
+            if (auSol) { decoller(u() * 1.15); sautsRestants = 1; rotation = 0; }
+            else if (sautsRestants > 0) { sautsRestants--; decoller(u() * 1.15); for (let k = 0; k < 6; k++) poussiere.push({ x: xEcran() + (Math.random() - 0.5) * 20, y, vx: (Math.random() - 0.5) * 60, vy: 40 + Math.random() * 60, reste: 0.5 }); }
+          }
           if (!input.enfonce) dureeAppui = 0;
           appuiPrec = input.enfonce;
           dist += vx * dt;
           const xm = xEcran() + dist;
-          const g = w * 2.2;
+          const g = u() * 2.0;
           const ySol = sol(xm); const p = pente(xm);
           if (auSol) {
-            // Décollage : si la trajectoire libre (vitesse verticale héritée de la pente) passe au-dessus
-            // du sol, on quitte la route ; sinon on la suit.
             const yLibre = y + vy * dt + 0.5 * g * dt * dt;
-            if (yLibre < ySol - 1) auSol = false;
+            if (yLibre < ySol - 1) { auSol = false; sautsRestants = 1; }
             else { y = ySol; vy = p * vx; angle = Math.atan(p); rotation = 0; }
           }
           if (!auSol) {
             vy += g * dt; y += vy * dt;
-            if (input.enfonce) {
-              // Roue arrière : tirer sur le guidon fait tourner en arrière (sens trigonométrique à l'écran).
-              const va = -5.2; angle += va * dt; rotation += Math.abs(va * dt);
+            if (input.enfonce && dureeAppui > 0.25) {
+              // Roue arrière rapide : un tour en 0,48 s, de quoi en enchaîner trois sur un double saut (~2 s de vol).
+              const va = -13; angle += va * dt; rotation += Math.abs(va * dt);
             } else {
-              // Relâché : le vélo se redresse vers la position droite la plus proche (un salto entamé se termine).
               const droit = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
-              angle += (droit - angle) * Math.min(1, dt * 4);
+              angle += (droit - angle) * Math.min(1, dt * 6);
             }
             if (y >= ySol) {
               const attendu = Math.atan(p);
-              if (Math.abs(normaliser(angle - attendu)) > Math.PI * 0.42) return api.perdre();
-              // Un salto compte dès 7/8 de tour : le redressement automatique finit le dernier bout.
-              const saltos = Math.floor((rotation + Math.PI * 0.25) / (Math.PI * 2));
-              if (saltos > 0) api.marquer(saltos);
-              y = ySol; vy = p * vx; angle = attendu; auSol = true; rotation = 0;
+              if (Math.abs(normaliser(angle - attendu)) > Math.PI * 0.45) return api.perdre();
+              const saltos = Math.floor((rotation + Math.PI * 0.35) / (Math.PI * 2));
+              if (saltos > 0) {
+                const bonus = saltos >= 3 ? 2 : saltos === 2 ? 1 : 0;
+                api.marquer(saltos + bonus);
+                flash = { texte: saltos === 1 ? 'SALTO !' : `SALTO ×${saltos}${bonus ? ` +${bonus} bonus` : ''} !`, reste: 1 };
+              }
+              for (let k = 0; k < 8; k++) poussiere.push({ x: xEcran() + (Math.random() - 0.5) * 24, y: ySol, vx: (Math.random() - 0.5) * 120, vy: -Math.random() * 60, reste: 0.45 });
+              y = ySol; vy = p * vx; angle = attendu; auSol = true; rotation = 0; sautsRestants = 0;
             }
           }
           if (dist >= prochainJalon) { prochainJalon += w * 3; api.marquer(1); }
-          // Obstacles : posés juste après un sommet, sur la descente, là où un vélo lancé décolle — ils
-          // se sautent, ils ne se contournent pas. Plus le niveau monte, plus ils se rapprochent.
           const t = Math.max(26, Math.min(44, w * 0.2));
           if (xm + w * 1.5 >= prochainObstacle) {
             let ox = prochainObstacle;
@@ -313,23 +310,29 @@ export const JEUX = [
             api.marquer(1);
           }
           obstacles = obstacles.filter((o) => o.x > dist - w * 0.5);
+          // Caméra : quand le cycliste monte au-dessus du tiers haut, la scène descend en douceur pour le garder visible.
+          const cibleCam = Math.max(0, h * 0.3 - y);
+          camY += (cibleCam - camY) * Math.min(1, dt * 7);
+          if (flash) { flash.reste -= dt; if (flash.reste <= 0) flash = null; }
+          for (const pp of poussiere) { pp.x += pp.vx * dt; pp.y += pp.vy * dt; pp.reste -= dt; }
+          poussiere = poussiere.filter((pp) => pp.reste > 0);
           return undefined;
         },
         draw(ctx) {
           fondDegrade(ctx, w, h, '#EEF0FF', '#FFFFFF');
-          // Nuages qui défilent lentement : le sens de la vitesse sans un seul chiffre.
           ctx.fillStyle = 'rgba(59,47,181,.07)';
           for (let i = 0; i < 4; i++) {
             const cx = ((i * w * 0.37 - dist * 0.15) % (w * 1.4) + w * 1.4) % (w * 1.4) - w * 0.2;
-            ctx.beginPath(); ctx.ellipse(cx, h * (0.12 + (i % 2) * 0.1), w * 0.11, h * 0.035, 0, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.ellipse(cx, h * (0.12 + (i % 2) * 0.1) + camY * 0.2, w * 0.11, h * 0.035, 0, 0, Math.PI * 2); ctx.fill();
           }
-          // La route : un polygone échantillonné sur toute la largeur.
-          ctx.beginPath(); ctx.moveTo(0, h);
-          for (let sx = 0; sx <= w; sx += 4) ctx.lineTo(sx, sol(sx + dist));
-          ctx.lineTo(w, h); ctx.closePath();
+          ctx.save();
+          ctx.translate(0, camY);
+          ctx.beginPath(); ctx.moveTo(0, h + camY + 10);
+          for (let sx = 0; sx <= w; sx += 3) ctx.lineTo(sx, sol(sx + dist));
+          ctx.lineTo(w, h + camY + 10); ctx.closePath();
           ctx.fillStyle = IRIS; ctx.fill();
           ctx.beginPath();
-          for (let sx = 0; sx <= w; sx += 4) { const yy = sol(sx + dist); if (sx === 0) ctx.moveTo(sx, yy); else ctx.lineTo(sx, yy); }
+          for (let sx = 0; sx <= w; sx += 3) { const yy = sol(sx + dist); if (sx === 0) ctx.moveTo(sx, yy); else ctx.lineTo(sx, yy); }
           ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.stroke();
           const t = Math.max(26, Math.min(44, w * 0.2));
           for (const o of obstacles) {
@@ -337,13 +340,25 @@ export const JEUX = [
             if (sx < -t || sx > w + t) continue;
             emoji(ctx, o.emoji, sx, sol(o.x) - t * 0.3, t * 0.75);
           }
-          // Ombre au sol pendant le saut : on lit la hauteur et l'endroit où l'on va retomber.
           if (!auSol) {
             const ySolIci = sol(xEcran() + dist);
             ctx.fillStyle = 'rgba(20,18,31,.18)';
             ctx.beginPath(); ctx.ellipse(xEcran(), ySolIci - 2, t * 0.38, t * 0.1, 0, 0, Math.PI * 2); ctx.fill();
           }
+          ctx.fillStyle = 'rgba(200,240,60,.9)';
+          for (const pp of poussiere) { ctx.globalAlpha = Math.max(0, pp.reste * 2); ctx.beginPath(); ctx.arc(pp.x, pp.y, 2.2, 0, Math.PI * 2); ctx.fill(); }
+          ctx.globalAlpha = 1;
           emoji(ctx, '🚴', xEcran(), y - t * 0.42, t, angle, true);
+          ctx.restore();
+          if (flash) {
+            ctx.save();
+            ctx.globalAlpha = Math.min(1, flash.reste * 2);
+            ctx.font = `800 ${Math.max(14, Math.min(26, w * 0.085))}px sans-serif`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+            ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.strokeText(flash.texte, w / 2, 10);
+            ctx.fillStyle = LIME; ctx.fillText(flash.texte, w / 2, 10);
+            ctx.restore();
+          }
         }
       };
     }

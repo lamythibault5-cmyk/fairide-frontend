@@ -151,7 +151,7 @@ export default function DashboardSidebar() {
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
           <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
-          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? t('nav.customerPreviewLower') : isAdminAccount ? 'admin' : t(`account.role${role.charAt(0).toUpperCase()}${role.slice(1)}`)}</span>
+          <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? t('nav.customerPreviewLower') : isAdminAccount ? 'admin' : t(`account.role${String(role || 'client').charAt(0).toUpperCase()}${role.slice(1)}`)}</span>
           <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
       </div>

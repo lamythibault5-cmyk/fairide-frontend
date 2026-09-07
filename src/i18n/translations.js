@@ -4,6 +4,26 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    paiementLivreur: {
+      howTitle: 'Comment tu es payé',
+      step1: 'Le client paie sa commande en ligne au moment de commander (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
+      step2: 'Sur chaque course livrée, les frais de livraison te reviennent à 100 % — Fairide ne prend aucune commission dessus — et les pourboires laissés par le client aussi, intégralement.',
+      step3: 'Ta part est transférée automatiquement sur ton compte Stripe dès la livraison confirmée, puis versée sur ton compte bancaire par Stripe (en général sous quelques jours ouvrés).',
+      selfBillingTitle: 'Statut d\'indépendant et autofacturation',
+      selfBillingText: 'Tu livres en indépendant, avec ton numéro d\'entreprise. Chaque mois, Fairide établit à ta place la facture de tes courses (autofacturation, avec la mention légale) : tu n\'as rien à rédiger, juste à indiquer ton régime TVA (franchise ou assujetti) et à accepter l\'accord préalable, une seule fois.',
+      selfBillingLink: 'Régler mon régime TVA et voir mes factures →',
+      noBankText: 'Ni IBAN, ni carte, ni pièce d\'identité ne transitent par Fairide : tout se passe directement chez Stripe, qui nous indique seulement si ton compte est prêt à recevoir tes gains.',
+      activationClosedText: 'Le bouton sera disponible ici fin septembre et tu recevras un e-mail à ce moment-là. D\'ici là, aucune information bancaire n\'est nécessaire : ton compte, une fois validé par Fairide, est prêt pour le lancement de l\'application mi-octobre 2026.',
+      activationOpenText: 'Active tes paiements chez Stripe depuis ton tableau de bord (rangée « Paiements à configurer »).',
+      activationDoneText: 'Ton compte Stripe est prêt : frais de livraison et pourboires de chaque course te sont versés automatiquement.',
+      receiptsTitle: 'Reçus de tes courses',
+      receiptsIntro: 'Chaque course livrée, avec les frais de livraison et le pourboire qui te reviennent.',
+      receiptsEmpty: 'Aucune course livrée pour l\'instant : les reçus apparaîtront ici dès ta première livraison.',
+      colRide: 'Course',
+      colFee: 'Frais de livraison',
+      colTip: 'Pourboire',
+      receiptsNote: 'Montants hors TVA éventuelle selon ton régime ; l\'autofacturation mensuelle dans « Mes factures » fait foi. Les pourboires n\'apparaissent qu\'une fois payés par le client.'
+    },
     paiementResto: {
       howTitle: 'Comment tu es payé',
       step1: 'Le client paie en ligne au moment de la commande (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
@@ -1404,12 +1424,12 @@ export const translations = {
       sort_regles_1: 'Un bon plat attrapé rapporte un point. Attraper un déchet, c’est perdu. Rater un plat ne coûte rien.',
       sort_regles_2: 'Plus tu montes, plus il y a de déchets dans le lot.',
       sort_regles_3: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
-      rider_sub: 'Roule, saute, fais des saltos',
+      rider_sub: 'Saute, double-saute, enchaîne les saltos',
       rider_perdu: '🤕 Chute !',
-      rider_regles_0: 'Tu roules sur une route en bosses. Tape brièvement pour sauter, maintiens appuyé pour accélérer.',
-      rider_regles_1: 'Lancé sur une bosse, tu décolles : saute par-dessus les obstacles (🪨 🚧 🛢️) — en toucher un au sol, c’est la chute.',
-      rider_regles_2: 'Chaque obstacle franchi et chaque bout de route rapportent un point ; en l’air, maintiens appuyé pour un salto (+1 par tour complet). Retomber de travers, c’est la chute.',
-      rider_regles_3: 'Tape brièvement pour sauter ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
+      rider_regles_0: 'Tu roules sur une route en bosses. Tape brièvement pour sauter, tape à nouveau en l’air pour un double saut (plus haut, plus longtemps). Maintiens appuyé pour accélérer.',
+      rider_regles_1: 'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi et chaque bout de route rapportent un point.',
+      rider_regles_2: 'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point, et un enchaînement paie plus (2 saltos = +1 bonus, 3 = +2). Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.',
+      rider_regles_3: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
       arrow_sub: 'Vise les passages',
       arrow_perdu: '💢 Dans le mur !',
       arrow_regles_0: 'Ta flèche file vers le haut. Des murs descendent, chacun avec une seule ouverture.',
@@ -2222,7 +2242,7 @@ export const translations = {
       paymentInfoTitle: 'Informations de paiement à compléter',
       paymentsToConfigure: 'Paiements à configurer',
       stripeNeedsInfo: 'Stripe a besoin d\'informations pour te verser tes gains',
-      viaStripe: 'Via Stripe, rapide et sécurisé — sans ça, pas de livraisons',
+      viaStripe: 'Ouverture fin septembre 2026 — via Stripe, sans aucune donnée bancaire confiée à Fairide',
       complete: 'Compléter',
       accountPaused: 'Compte en pause',
       availableToDeliver: 'Disponible pour livrer',
@@ -2240,7 +2260,8 @@ export const translations = {
       geoLastSentDot: ' · dernier envoi {time}',
       configure: 'Configurer',
       waitingTitle: 'Compte en attente de validation',
-      waitingEmpty: 'Ton adresse e-mail est confirmée. L\'équipe Fairide vérifie maintenant ton dossier (identité, numéro d\'entreprise) ; ton tableau de bord s\'activera dès la validation, tu recevras un e-mail.'
+      waitingEmpty: 'Ton adresse e-mail est confirmée. L\'équipe Fairide vérifie maintenant ton dossier (identité, numéro d\'entreprise) ; ton tableau de bord s\'activera dès la validation, tu recevras un e-mail.',
+      paymentsSoonBtn: 'Ouverture fin septembre — en savoir plus'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -2450,7 +2471,9 @@ export const translations = {
       paymentRowSub: 'Comment tu es payé, Stripe, reçus clients — activation fin septembre',
       paymentRowSubActive: 'Paiements actifs · reçus clients et détail de ce qui te revient',
       subNotYetTitle: 'Rien à activer pour l\'instant',
-      subNotYetText: 'Tu peux créer ton compte, ton restaurant et ta carte sans abonnement. L\'abonnement Fairide ne s\'active que lorsque l\'application sera disponible, mi-octobre 2026 — et le premier mois est offert de toute façon. Tu recevras un e-mail à ce moment-là.'
+      subNotYetText: 'Tu peux créer ton compte, ton restaurant et ta carte sans abonnement. L\'abonnement Fairide ne s\'active que lorsque l\'application sera disponible, mi-octobre 2026 — et le premier mois est offert de toute façon. Tu recevras un e-mail à ce moment-là.',
+      driverPaymentRowSub: 'Comment tu es payé, Stripe, autofacturation, reçus de tes courses — activation fin septembre',
+      driverPaymentRowSubActive: 'Paiements actifs · reçus de tes courses et pourboires'
     },
     resa: {
       title: '📅 Réservations',
@@ -3316,6 +3339,26 @@ export const translations = {
     }
   },
   en: {
+    paiementLivreur: {
+      howTitle: 'How you get paid',
+      step1: 'The customer pays the order online when ordering (card, Bancontact, Apple Pay, Google Pay). The money is collected by Stripe, never by Fairide.',
+      step2: 'On each delivered ride, the delivery fee comes to you at 100% — Fairide takes no commission on it — and the tips left by the customer too, in full.',
+      step3: 'Your share is transferred automatically to your Stripe account as soon as the delivery is confirmed, then paid out to your bank account by Stripe (usually within a few working days).',
+      selfBillingTitle: 'Self-employed status and self-billing',
+      selfBillingText: 'You deliver as a self-employed person, with your company number. Each month, Fairide issues the invoice for your rides on your behalf (self-billing, with the legal mention): nothing to write, just indicate your VAT regime (exemption or registered) and accept the prior agreement, once.',
+      selfBillingLink: 'Set my VAT regime and see my invoices →',
+      noBankText: 'No IBAN, card or ID document goes through Fairide: everything happens directly at Stripe, which only tells us whether your account is ready to receive your earnings.',
+      activationClosedText: 'The button will be available here at the end of September and you will receive an e-mail at that moment. Until then no banking information is needed: your account, once validated by Fairide, is ready for the app launch in mid-October 2026.',
+      activationOpenText: 'Activate your payments at Stripe from your dashboard (“Payments to set up” row).',
+      activationDoneText: 'Your Stripe account is ready: delivery fees and tips of each ride are paid out to you automatically.',
+      receiptsTitle: 'Receipts of your rides',
+      receiptsIntro: 'Each delivered ride, with the delivery fee and the tip that come to you.',
+      receiptsEmpty: 'No delivered ride yet: receipts will appear here from your first delivery.',
+      colRide: 'Ride',
+      colFee: 'Delivery fee',
+      colTip: 'Tip',
+      receiptsNote: 'Amounts before any VAT depending on your regime; the monthly self-billing invoice under “My invoices” is the reference. Tips only appear once paid by the customer.'
+    },
     paiementResto: {
       howTitle: 'How you get paid',
       step1: 'The customer pays online when ordering (card, Bancontact, Apple Pay, Google Pay). The money is collected by Stripe, never by Fairide.',
@@ -4716,12 +4759,12 @@ export const translations = {
       sort_regles_1: 'A good dish caught earns a point. Catching rubbish means it\'s over. Missing a dish costs nothing.',
       sort_regles_2: 'The higher you go, the more rubbish in the mix.',
       sort_regles_3: 'Slide your finger (or the mouse) left and right: the basket follows.',
-      rider_sub: 'Ride, jump, do backflips',
+      rider_sub: 'Jump, double-jump, chain backflips',
       rider_perdu: '🤕 Crash!',
-      rider_regles_0: 'You ride on a bumpy road. Tap briefly to jump, hold to accelerate.',
-      rider_regles_1: 'Launched off a bump, you take off: jump over the obstacles (🪨 🚧 🛢️) — touching one on the ground means a crash.',
-      rider_regles_2: 'Each obstacle cleared and each stretch of road earns a point; in the air, hold to backflip (+1 per full turn). Landing crooked means a crash.',
-      rider_regles_3: 'Tap briefly to jump; hold (finger, mouse or Space) to accelerate on the ground and rotate in the air.',
+      rider_regles_0: 'You ride on a bumpy road. Tap briefly to jump, tap again in the air for a double jump (higher, longer). Hold to accelerate.',
+      rider_regles_1: 'Jump over the obstacles (🪨 🚧 🛢️): touching one on the ground means a crash. Each obstacle cleared and each stretch of road earns a point.',
+      rider_regles_2: 'In the air, hold to rotate: each full backflip is worth 1 point, and a chain pays more (2 flips = +1 bonus, 3 = +2). Release to straighten up before the ground — landing crooked means a crash.',
+      rider_regles_3: 'Tap to jump (twice for a double jump); hold (finger, mouse or Space) to accelerate on the ground and rotate in the air.',
       arrow_sub: 'Aim for the gaps',
       arrow_perdu: '💢 Into the wall!',
       arrow_regles_0: 'Your arrow shoots upward. Walls come down, each with a single opening.',
@@ -5534,7 +5577,7 @@ export const translations = {
       paymentInfoTitle: 'Payment information to complete',
       paymentsToConfigure: 'Payments to set up',
       stripeNeedsInfo: 'Stripe needs information to pay out your earnings',
-      viaStripe: 'Via Stripe, fast and secure — without it, no deliveries',
+      viaStripe: 'Opens end of September 2026 — via Stripe, no banking details ever given to Fairide',
       complete: 'Complete',
       accountPaused: 'Account paused',
       availableToDeliver: 'Available to deliver',
@@ -5552,7 +5595,8 @@ export const translations = {
       geoLastSentDot: ' · last sent {time}',
       configure: 'Set up',
       waitingTitle: 'Account awaiting validation',
-      waitingEmpty: 'Your e-mail address is confirmed. The Fairide team is now checking your file (identity, company number); your dashboard will activate as soon as it is validated, and you will get an e-mail.'
+      waitingEmpty: 'Your e-mail address is confirmed. The Fairide team is now checking your file (identity, company number); your dashboard will activate as soon as it is validated, and you will get an e-mail.',
+      paymentsSoonBtn: 'Opens end of September — learn more'
     },
     dashResto: {
       today: 'Today',
@@ -5762,7 +5806,9 @@ export const translations = {
       paymentRowSub: 'How you get paid, Stripe, customer receipts — activation end of September',
       paymentRowSubActive: 'Payments active · customer receipts and what comes to you',
       subNotYetTitle: 'Nothing to activate for now',
-      subNotYetText: 'You can create your account, your restaurant and your menu without a subscription. The Fairide subscription only starts when the app is available, mid-October 2026 — and the first month is free in any case. You will receive an e-mail at that moment.'
+      subNotYetText: 'You can create your account, your restaurant and your menu without a subscription. The Fairide subscription only starts when the app is available, mid-October 2026 — and the first month is free in any case. You will receive an e-mail at that moment.',
+      driverPaymentRowSub: 'How you get paid, Stripe, self-billing, ride receipts — activation end of September',
+      driverPaymentRowSubActive: 'Payments active · receipts of your rides and tips'
     },
     resa: {
       title: '📅 Reservations',
@@ -6628,6 +6674,26 @@ export const translations = {
     }
   },
   nl: {
+    paiementLivreur: {
+      howTitle: 'Hoe je betaald wordt',
+      step1: 'De klant betaalt de bestelling online bij het bestellen (kaart, Bancontact, Apple Pay, Google Pay). Het geld wordt geïnd door Stripe, nooit door Fairide.',
+      step2: 'Bij elke geleverde rit komt de leveringskost voor 100% jou toe — Fairide neemt er geen commissie op — en de fooien van de klant ook, volledig.',
+      step3: 'Jouw deel wordt automatisch naar je Stripe-account overgemaakt zodra de levering bevestigd is, en daarna door Stripe op je bankrekening gestort (meestal binnen enkele werkdagen).',
+      selfBillingTitle: 'Zelfstandig statuut en selfbilling',
+      selfBillingText: 'Je levert als zelfstandige, met je ondernemingsnummer. Elke maand stelt Fairide in jouw plaats de factuur van je ritten op (selfbilling, met de wettelijke vermelding): niets te schrijven, enkel je btw-regime aangeven (vrijstelling of btw-plichtig) en één keer het voorafgaand akkoord aanvaarden.',
+      selfBillingLink: 'Mijn btw-regime instellen en mijn facturen bekijken →',
+      noBankText: 'Geen IBAN, kaart of identiteitsbewijs passeert via Fairide: alles gebeurt rechtstreeks bij Stripe, dat ons alleen meldt of je account klaar is om je verdiensten te ontvangen.',
+      activationClosedText: 'De knop komt hier eind september beschikbaar en je krijgt dan een e-mail. Tot dan zijn geen bankgegevens nodig: je account is, eens gevalideerd door Fairide, klaar voor de lancering van de app midden oktober 2026.',
+      activationOpenText: 'Activeer je betalingen bij Stripe vanuit je dashboard (rij “Betalingen in te stellen”).',
+      activationDoneText: 'Je Stripe-account is klaar: leveringskosten en fooien van elke rit worden automatisch aan jou uitbetaald.',
+      receiptsTitle: 'Bonnen van je ritten',
+      receiptsIntro: 'Elke geleverde rit, met de leveringskost en de fooi die jou toekomen.',
+      receiptsEmpty: 'Nog geen geleverde rit: de bonnen verschijnen hier vanaf je eerste levering.',
+      colRide: 'Rit',
+      colFee: 'Leveringskost',
+      colTip: 'Fooi',
+      receiptsNote: 'Bedragen vóór eventuele btw volgens je regime; de maandelijkse selfbillingfactuur onder “Mijn facturen” is de referentie. Fooien verschijnen pas zodra de klant ze betaald heeft.'
+    },
     paiementResto: {
       howTitle: 'Hoe je betaald wordt',
       step1: 'De klant betaalt online bij het bestellen (kaart, Bancontact, Apple Pay, Google Pay). Het geld wordt geïnd door Stripe, nooit door Fairide.',
@@ -8028,12 +8094,12 @@ export const translations = {
       sort_regles_1: 'Een goed gerecht vangen levert een punt op. Afval vangen betekent verloren. Een gerecht missen kost niets.',
       sort_regles_2: 'Hoe hoger je komt, hoe meer afval ertussen zit.',
       sort_regles_3: 'Schuif je vinger (of de muis) van links naar rechts: de mand volgt.',
-      rider_sub: 'Rijd, spring, maak salto’s',
+      rider_sub: 'Spring, dubbelspring, rijg salto’s aaneen',
       rider_perdu: '🤕 Gevallen!',
-      rider_regles_0: 'Je rijdt op een hobbelige weg. Tik kort om te springen, houd ingedrukt om te versnellen.',
-      rider_regles_1: 'Gelanceerd van een bult ga je de lucht in: spring over de obstakels (🪨 🚧 🛢️) — er één raken op de grond is vallen.',
-      rider_regles_2: 'Elk genomen obstakel en elk stuk weg levert een punt op; in de lucht houd je ingedrukt voor een salto (+1 per volledige draai). Scheef landen is vallen.',
-      rider_regles_3: 'Tik kort om te springen; houd ingedrukt (vinger, muis of spatiebalk) om te versnellen op de grond en te draaien in de lucht.',
+      rider_regles_0: 'Je rijdt op een hobbelige weg. Tik kort om te springen, tik nog eens in de lucht voor een dubbele sprong (hoger, langer). Houd ingedrukt om te versnellen.',
+      rider_regles_1: 'Spring over de obstakels (🪨 🚧 🛢️): er één raken op de grond is vallen. Elk genomen obstakel en elk stuk weg levert een punt op.',
+      rider_regles_2: 'In de lucht houd je ingedrukt om te draaien: elke volledige salto is 1 punt waard, en een reeks levert meer op (2 salto’s = +1 bonus, 3 = +2). Laat los om je recht te zetten vóór de grond — scheef landen is vallen.',
+      rider_regles_3: 'Tik om te springen (twee keer voor een dubbele sprong); houd ingedrukt (vinger, muis of spatiebalk) om te versnellen op de grond en te draaien in de lucht.',
       arrow_sub: 'Richt op de openingen',
       arrow_perdu: '💢 Tegen de muur!',
       arrow_regles_0: 'Je pijl schiet omhoog. Muren dalen af, elk met één enkele opening.',
@@ -8846,7 +8912,7 @@ export const translations = {
       paymentInfoTitle: 'Betalingsgegevens aan te vullen',
       paymentsToConfigure: 'Betalingen in te stellen',
       stripeNeedsInfo: 'Stripe heeft gegevens nodig om je verdiensten uit te keren',
-      viaStripe: 'Via Stripe, snel en veilig — zonder geen leveringen',
+      viaStripe: 'Opent eind september 2026 — via Stripe, zonder bankgegevens aan Fairide te geven',
       complete: 'Aanvullen',
       accountPaused: 'Account gepauzeerd',
       availableToDeliver: 'Beschikbaar om te leveren',
@@ -8864,7 +8930,8 @@ export const translations = {
       geoLastSentDot: ' · laatst verzonden {time}',
       configure: 'Instellen',
       waitingTitle: 'Account wacht op validatie',
-      waitingEmpty: 'Je e-mailadres is bevestigd. Het Fairide-team controleert nu je dossier (identiteit, ondernemingsnummer); je dashboard wordt geactiveerd zodra het gevalideerd is, je krijgt een e-mail.'
+      waitingEmpty: 'Je e-mailadres is bevestigd. Het Fairide-team controleert nu je dossier (identiteit, ondernemingsnummer); je dashboard wordt geactiveerd zodra het gevalideerd is, je krijgt een e-mail.',
+      paymentsSoonBtn: 'Opent eind september — meer info'
     },
     dashResto: {
       today: 'Vandaag',
@@ -9074,7 +9141,9 @@ export const translations = {
       paymentRowSub: 'Hoe je betaald wordt, Stripe, klantbonnen — activering eind september',
       paymentRowSubActive: 'Betalingen actief · klantbonnen en wat jou toekomt',
       subNotYetTitle: 'Voorlopig niets te activeren',
-      subNotYetText: 'Je kunt je account, je restaurant en je kaart aanmaken zonder abonnement. Het Fairide-abonnement start pas wanneer de app beschikbaar is, midden oktober 2026 — en de eerste maand is sowieso gratis. Je krijgt dan een e-mail.'
+      subNotYetText: 'Je kunt je account, je restaurant en je kaart aanmaken zonder abonnement. Het Fairide-abonnement start pas wanneer de app beschikbaar is, midden oktober 2026 — en de eerste maand is sowieso gratis. Je krijgt dan een e-mail.',
+      driverPaymentRowSub: 'Hoe je betaald wordt, Stripe, selfbilling, ritbonnen — activering eind september',
+      driverPaymentRowSubActive: 'Betalingen actief · bonnen van je ritten en fooien'
     },
     resa: {
       title: '📅 Reservaties',
