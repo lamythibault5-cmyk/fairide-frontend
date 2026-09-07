@@ -308,9 +308,9 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionHealthy')} icon="🥗" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionBio')} icon="🌿" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="🌱" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
