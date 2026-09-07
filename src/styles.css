@@ -2462,3 +2462,13 @@ button.account-link-row:last-child { border-bottom: none; }
 }
 /* Aperçu client d'un commerce pas encore publié : bandeau d'avertissement au-dessus de la fiche. */
 .preview-not-visible { background: #FFF6E5; border: 1px solid #F1D9A6; margin-bottom: 14px; }
+/* Mon compte › Paiement (PaiementRestaurant.jsx). */
+.paiement-resto { display: flex; flex-direction: column; gap: 4px; }
+.paiement-titre { margin: 10px 0 6px; font-size: 14px; }
+.paiement-etapes { margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 1.5; }
+.paiement-etapes li { margin-bottom: 4px; }
+.paiement-encart { background: rgba(59,47,181,0.06); border-left: 3px solid var(--iris); border-radius: var(--radius-chip); padding: 10px 12px; }
+.paiement-activation { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #FFF6E5; border: 1px solid #F1D9A6; border-radius: var(--radius-chip); padding: 12px 14px; margin: 4px 0 8px; }
+.paiement-activation.fermee button { opacity: 0.6; cursor: not-allowed; }
+.paiement-table td, .paiement-table th { white-space: nowrap; }
+.paiement-table tfoot td { border-top: 2px solid var(--line); }

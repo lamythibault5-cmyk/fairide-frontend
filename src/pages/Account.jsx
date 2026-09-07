@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
+import PaiementRestaurant from '../components/PaiementRestaurant';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -77,6 +78,8 @@ export default function Account() {
   const [driverReviews, setDriverReviews] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
+  // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
+  const [commandesResto, setCommandesResto] = useState([]);
   const [now, setNow] = useState(() => new Date());
   const [subscribing, setSubscribing] = useState(false);
   const [promoCodeInput, setPromoCodeInput] = useState('');
@@ -158,7 +161,7 @@ export default function Account() {
   useEffect(() => {
     if (role !== 'restaurant') return;
     api('/restaurants/mine/dashboard', { token }).then((list) => {
-      if (list[0]) setRestoId(list[0].id);
+      if (list[0]) { setRestoId(list[0].id); api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {}); }
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast(t('accountUi.toastSubActivating'));
@@ -645,6 +648,9 @@ export default function Account() {
 
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
+          <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <PaiementRestaurant restaurant={restaurant} orders={commandesResto} />
+          </LigneCompte>
           <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
@@ -683,12 +689,16 @@ export default function Account() {
               </p>
             )}
 
-            {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus !== 'approved' && (
-              <p className="small" style={{ margin: '0 0 12px', fontStyle: 'italic', opacity: 0.75 }}>
-                {t('accountUi.subLocked')}
-              </p>
+            {/* Aucun abonnement à activer avant la sortie de l'application (mi-octobre 2026) : le bouton
+                d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
+                la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && (
+              <div className="paiement-encart" style={{ marginBottom: 12 }}>
+                <b>{t('accountUi.subNotYetTitle')}</b>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
+              </div>
             )}
-            {['inactive', 'past_due', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
+            {['past_due'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
                   <label>{t('auth.promoCode')}</label>

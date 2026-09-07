@@ -353,10 +353,13 @@ export default function DashboardLayout() {
               sous={restaurant.stripeConnectStatus === 'restricted'
                 ? t('dashResto.stripeNeedsInfoResto')
                 : t('dashResto.viaStripeResto')}
-              action={(
+              action={restaurant.stripeConnectStatus === 'restricted' ? (
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
-                  {connecting ? '...' : (restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.complete') : t('dashResto.configure'))}
+                  {connecting ? '...' : t('dashResto.complete')}
                 </button>
+              ) : (
+                // Activation fermée jusqu'à fin septembre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
+                <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn')}</Link>
               )}
             />
           )}
