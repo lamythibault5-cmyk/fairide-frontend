@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, Outlet, useLocation, useOutletContext } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
@@ -25,6 +25,7 @@ const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 export default function DashboardLayout() {
   const { t } = useLanguage();
   const { token, user } = useAuth();
+  const navigate = useNavigate();
   // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
   // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
   const fondateur = !!user?.isAdmin || FONDATEURS.includes(String(user?.email || '').toLowerCase());
@@ -81,6 +82,15 @@ export default function DashboardLayout() {
       }
       if (h.openingHours) setOpeningHoursTexte(h.openingHours);
       if (h.hours && typeof h.hours === 'object') setHours(h.hours);
+      // Quartier depuis la position du commerce et description publiée sur son site : préremplis, modifiables.
+      if ((h.lat && h.lng) || h.website) {
+        const q = new URLSearchParams(); if (h.lat && h.lng) { q.set('lat', h.lat); q.set('lng', h.lng); } if (h.website) q.set('website', h.website);
+        api(`/restaurants/lookup/enrich?${q.toString()}`).then((e) => {
+          if (e.neighborhood) setNeighborhood((v) => v || e.neighborhood);
+          if (e.description) setDesc((v) => v || e.description);
+          if (e.city && COMMUNES.includes(e.city) && !COMMUNES.includes(h.commune)) setCommune(e.city);
+        }).catch(() => { /* enrichissement facultatif */ });
+      }
       if (h.services) {
         setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
         if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);
@@ -228,6 +238,8 @@ export default function DashboardLayout() {
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
       pickResto(r.id);
+      navigate('/dashboard', { replace: true });
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       if (r.wantsOwnDriver) {
         toast(t('dashResto.toastCreatedOwnDriver'));
       } else {
