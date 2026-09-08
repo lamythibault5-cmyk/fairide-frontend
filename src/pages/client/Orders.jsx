@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import useRevalidation from '../../useRevalidation';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -119,6 +120,8 @@ export default function Orders() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Retour sur l'onglet après une absence : relecture immédiate des commandes.
+  useRevalidation(() => api('/orders/mine', { token }).then(setOrders), { actif: !(previewMode && role === 'restaurant') });
 
   // Le client peut annuler tant que le restaurant n'a pas accepté la commande (statut « nouveau »), payée
   // ou non : le paiement est alors remboursé. Dès la préparation, plus d'annulation en ligne.

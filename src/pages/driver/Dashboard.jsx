@@ -7,6 +7,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import useRevalidation from '../../useRevalidation';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -97,6 +98,8 @@ export default function DriverDashboard() {
     const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
     return () => clearInterval(interval);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle.
+  useRevalidation(() => { load(); return refreshUser(); });
 
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);

@@ -11,6 +11,27 @@ import { prechargerPage } from '../routePrefetch';
 //   - le module de la page visée est préchargé dès le survol, le toucher ou le focus d'un lien, pour
 //     que le clic qui suit n'ait plus rien à télécharger.
 const DELAI_ABANDON = 8000;
+// Veille de version : toutes les 5 minutes (et au retour sur l'onglet), on relit index.html et on compare le
+// nom du fichier principal à celui qui tourne. S'il a changé, une nouvelle version est en ligne : le prochain
+// clic sur un lien interne quitte le routeur pour un vrai chargement de la page cible — la personne arrive
+// où elle voulait aller, dans la nouvelle version, sans jamais voir un rechargement en plein travail.
+const VEILLE_MS = 5 * 60 * 1000;
+let nouvelleVersion = false;
+function fichierPrincipalCourant() {
+  const el = document.querySelector('script[type="module"][src*="/assets/index-"]');
+  return el ? (el.getAttribute('src') || '').replace(/^.*\/assets\//, '') : null;
+}
+async function verifierVersion() {
+  const courant = fichierPrincipalCourant();
+  if (!courant || nouvelleVersion) return;
+  try {
+    const r = await fetch(`/index.html?v=${Date.now()}`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const html = await r.text();
+    const m = html.match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/);
+    if (m && m[1] !== courant) nouvelleVersion = true;
+  } catch { /* hors ligne : on réessaiera */ }
+}
 
 function lienInterne(e) {
   const a = e.target?.closest?.('a[href]');
@@ -35,6 +56,12 @@ export default function NavigationFeedback() {
       const url = lienInterne(e);
       if (!url) return;
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
+      if (nouvelleVersion) {
+        // Nouvelle version en ligne : chargement complet de la page cible, hors routeur.
+        e.preventDefault(); e.stopPropagation();
+        window.location.assign(url.href);
+        return;
+      }
       clearTimeout(abandon.current); clearTimeout(finTimer.current);
       setEtat('encours');
       abandon.current = setTimeout(() => setEtat('repos'), DELAI_ABANDON);
@@ -44,10 +71,15 @@ export default function NavigationFeedback() {
       if (url) prechargerPage(url.pathname);
     }
     document.addEventListener('click', onClick, true);
+    const veille = setInterval(verifierVersion, VEILLE_MS);
+    const onVisible = () => { if (document.visibilityState === 'visible') verifierVersion(); };
+    document.addEventListener('visibilitychange', onVisible);
     document.addEventListener('pointerover', onIntention, { passive: true });
     document.addEventListener('touchstart', onIntention, { passive: true });
     document.addEventListener('focusin', onIntention);
     return () => {
+      clearInterval(veille);
+      document.removeEventListener('visibilitychange', onVisible);
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('pointerover', onIntention);
       document.removeEventListener('touchstart', onIntention);

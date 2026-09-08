@@ -11,6 +11,7 @@ import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
+import useRevalidation from '../../useRevalidation';
 import { useLanguage } from '../../context/LanguageContext';
 import AddressSearch from '../../components/AddressSearch';
 import BusinessSearch from '../../components/BusinessSearch';
@@ -167,6 +168,8 @@ export default function DashboardLayout() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
+  // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
+  useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
   // affiché jusqu'à la réponse) pour que la page ouverte soit à jour sans attendre le prochain cycle.
   const premierChemin = useRef(chemin);

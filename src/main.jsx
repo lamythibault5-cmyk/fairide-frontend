@@ -11,6 +11,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { PreviewModeProvider } from './context/PreviewModeContext';
 import { hasAcceptedConsent, onConsentChange } from './consent';
 import './styles.css';
+import { rechargerSiNouveauCode } from './lazyPage';
 
 // Sentry ne démarre qu'APRÈS consentement explicite : il transmet l'adresse IP, les URL visitées et le
 // contexte utilisateur à un sous-traitant établi aux États-Unis. Le démarrer au chargement de la page,
@@ -26,6 +27,10 @@ function startSentryIfAllowed() {
 }
 
 startSentryIfAllowed();
+
+// Mise en ligne pendant qu'un onglet est ouvert : le code d'une section demandée n'existe plus sous son
+// ancien nom. Plutôt qu'une page vide, rechargement silencieux vers la nouvelle version (voir lazyPage.js).
+window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechargerSiNouveauCode(e.payload); });
 // Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
 onConsentChange(startSentryIfAllowed);
 
