@@ -238,20 +238,23 @@ export const JEUX = [
       let w = api.w; let h = api.h;
       let dist = 0; let y = 0; let vy = 0; let vx = 0; let angle = 0; let rotation = 0; let auSol = true;
       let prochainJalon = 0; let obstacles = []; let prochainObstacle = 0; let appuiPrec = false; let dureeAppui = 0;
-      let sautsRestants = 0; let camY = 0; let flash = null; let poussiere = [];
+      let sautsRestants = 0; let camY = 0; let flash = null; let poussiere = []; let vitesseAngulaire = 0;
       const OBSTACLES = ['🪨', '🚧', '🛢️'];
       const u = () => Math.min(w, h * 1.1);
-      const sol = (x) => h * 0.72 + Math.sin(x / (w * 0.30)) * w * 0.09 + Math.sin(x / (w * 0.13) + 1.7) * w * 0.035;
+      // Relief : deux ondulations principales plus rapprochées et plus marquées, plus une petite pour casser la régularité.
+      const sol = (x) => h * 0.70 + Math.sin(x / (w * 0.21)) * w * 0.10 + Math.sin(x / (w * 0.115) + 1.7) * w * 0.045 + Math.sin(x / (w * 0.055) + 0.6) * w * 0.012;
       const pente = (x) => (sol(x + 2) - sol(x - 2)) / 4;
       const xEcran = () => w * 0.3;
       const normaliser = (a) => { let r = a % (Math.PI * 2); if (r > Math.PI) r -= Math.PI * 2; if (r < -Math.PI) r += Math.PI * 2; return r; };
       const decoller = (impulsion) => { auSol = false; vy = Math.min(vy, 0) - impulsion; };
       return {
-        reset() { dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.6; angle = Math.atan(pente(xEcran())); rotation = 0; auSol = true; prochainJalon = w * 3; obstacles = []; prochainObstacle = xEcran() + w * 3; appuiPrec = false; dureeAppui = 0; sautsRestants = 0; camY = 0; flash = null; poussiere = []; },
+        reset() { dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.48; angle = Math.atan(pente(xEcran())); rotation = 0; auSol = true; prochainJalon = w * 3; obstacles = []; prochainObstacle = xEcran() + w * 3; appuiPrec = false; dureeAppui = 0; sautsRestants = 0; camY = 0; flash = null; poussiere = []; vitesseAngulaire = 0; },
         redimensionner(nw, nh) { w = nw; h = nh; },
+        // État lisible de l'extérieur (simulations, tests) : jamais utilisé par le rendu.
+        etat() { const xm = xEcran() + dist; return { auSol, vx, vy, angle, rotation, sautsRestants, obstacle: obstacles.filter((o) => o.x > xm).map((o) => (o.x - xm) / w)[0] ?? null }; },
         update(dt, input) {
           const n = input.niveau;
-          const base = w * (0.6 + n * 0.07); const maxi = base * 1.6;
+          const base = w * (0.48 + n * 0.05); const maxi = base * 1.45;
           if (auSol) {
             const cibleV = input.enfonce ? maxi : base;
             vx += (cibleV - vx) * Math.min(1, dt * (input.enfonce ? 2.2 : 1.4));
@@ -259,14 +262,15 @@ export const JEUX = [
           // Saut au relâchement d'un appui bref : au sol, ou en l'air une fois (double saut).
           if (input.enfonce) dureeAppui += dt;
           if (!input.enfonce && appuiPrec && dureeAppui < 0.28) {
-            if (auSol) { decoller(u() * 1.15); sautsRestants = 1; rotation = 0; }
-            else if (sautsRestants > 0) { sautsRestants--; decoller(u() * 1.15); for (let k = 0; k < 6; k++) poussiere.push({ x: xEcran() + (Math.random() - 0.5) * 20, y, vx: (Math.random() - 0.5) * 60, vy: 40 + Math.random() * 60, reste: 0.5 }); }
+            if (auSol) { decoller(u() * 0.98); sautsRestants = 1; rotation = 0; }
+            else if (sautsRestants > 0) { sautsRestants--; decoller(u() * 0.92); for (let k = 0; k < 6; k++) poussiere.push({ x: xEcran() + (Math.random() - 0.5) * 20, y, vx: (Math.random() - 0.5) * 60, vy: 40 + Math.random() * 60, reste: 0.5 }); }
           }
           if (!input.enfonce) dureeAppui = 0;
           appuiPrec = input.enfonce;
           dist += vx * dt;
           const xm = xEcran() + dist;
-          const g = u() * 2.0;
+          // Gravité plus douce : le vol dure plus longtemps, ce qui rend les saltos lisibles et laisse le temps de se redresser.
+          const g = u() * 1.55;
           const ySol = sol(xm); const p = pente(xm);
           if (auSol) {
             const yLibre = y + vy * dt + 0.5 * g * dt * dt;
@@ -275,24 +279,28 @@ export const JEUX = [
           }
           if (!auSol) {
             vy += g * dt; y += vy * dt;
-            if (input.enfonce && dureeAppui > 0.25) {
-              // Roue arrière rapide : un tour en 0,48 s, de quoi en enchaîner trois sur un double saut (~2 s de vol).
-              const va = -13; angle += va * dt; rotation += Math.abs(va * dt);
+            if (input.enfonce && dureeAppui > 0.22) {
+              // Salto : la rotation monte en douceur vers un tour en ~0,6 s (au lieu de partir d'un coup), ce qui
+              // laisse le temps d'en enchaîner deux ou trois sur un double saut sans que l'image saccade.
+              vitesseAngulaire += (-11 - vitesseAngulaire) * Math.min(1, dt * 10);
             } else {
+              // Relâché : la rotation s'amortit puis le vélo se redresse vers l'horizontale la plus proche.
+              vitesseAngulaire *= Math.max(0, 1 - dt * 12);
               const droit = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
-              angle += (droit - angle) * Math.min(1, dt * 6);
+              angle += (droit - angle) * Math.min(1, dt * 8);
             }
+            angle += vitesseAngulaire * dt; rotation += Math.abs(vitesseAngulaire * dt);
             if (y >= ySol) {
               const attendu = Math.atan(p);
-              if (Math.abs(normaliser(angle - attendu)) > Math.PI * 0.45) return api.perdre();
+              if (Math.abs(normaliser(angle - attendu)) > Math.PI * 0.5) return api.perdre();
               const saltos = Math.floor((rotation + Math.PI * 0.35) / (Math.PI * 2));
               if (saltos > 0) {
-                const bonus = saltos >= 3 ? 2 : saltos === 2 ? 1 : 0;
-                api.marquer(saltos + bonus);
-                flash = { texte: saltos === 1 ? 'SALTO !' : `SALTO ×${saltos}${bonus ? ` +${bonus} bonus` : ''} !`, reste: 1 };
+                // 1 point par salto : un double vaut 2, un triple 3.
+                api.marquer(saltos);
+                flash = { texte: saltos === 1 ? 'SALTO ! +1' : `SALTO ×${saltos} ! +${saltos}`, reste: 1 };
               }
               for (let k = 0; k < 8; k++) poussiere.push({ x: xEcran() + (Math.random() - 0.5) * 24, y: ySol, vx: (Math.random() - 0.5) * 120, vy: -Math.random() * 60, reste: 0.45 });
-              y = ySol; vy = p * vx; angle = attendu; auSol = true; rotation = 0; sautsRestants = 0;
+              y = ySol; vy = p * vx; angle = attendu; auSol = true; rotation = 0; sautsRestants = 0; vitesseAngulaire = 0;
             }
           }
           if (dist >= prochainJalon) { prochainJalon += w * 3; api.marquer(1); }

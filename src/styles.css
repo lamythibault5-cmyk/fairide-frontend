@@ -2524,3 +2524,9 @@ button.account-link-row:last-child { border-bottom: none; }
 .menu-import-web-row input { flex: 1 1 auto; min-width: 0; }
 .menu-import-web-row button { flex: 0 0 auto; }
 @media (max-width: 520px) { .menu-import-web-row { flex-direction: column; } .menu-import-web-row button { width: 100%; } }
+
+/* Champ mot de passe avec œil (PasswordInput.jsx). */
+.password-input { position: relative; }
+.password-input input { width: 100%; padding-right: 44px; }
+.password-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 4px 6px; cursor: pointer; font-size: 18px; line-height: 1; border-radius: 8px; }
+.password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }

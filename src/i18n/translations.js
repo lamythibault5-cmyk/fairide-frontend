@@ -1511,7 +1511,7 @@ export const translations = {
       rider_perdu: '🤕 Chute !',
       rider_regles_0: 'Tu roules sur une route en bosses. Tape brièvement pour sauter, tape à nouveau en l’air pour un double saut (plus haut, plus longtemps). Maintiens appuyé pour accélérer.',
       rider_regles_1: 'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi et chaque bout de route rapportent un point.',
-      rider_regles_2: 'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point, et un enchaînement paie plus (2 saltos = +1 bonus, 3 = +2). Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.',
+      rider_regles_2: 'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point (double salto = 2 points, triple = 3). Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.',
       rider_regles_3: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
       arrow_sub: 'Vise les passages',
       arrow_perdu: '💢 Dans le mur !',
@@ -3454,7 +3454,13 @@ export const translations = {
       serviceDeliveryOwn: 'avec mes propres livreurs',
       servicePickup: 'À emporter',
       serviceDineIn: 'Réservation de table (sur place)',
-      errServices: 'Choisis au moins un service.'
+      errServices: 'Choisis au moins un service.',
+      cuisineLabel: 'Type de cuisine / de commerce',
+      cuisinePlaceholder: 'Choisis dans la liste…',
+      cuisineHelp: 'On s\'en sert pour te proposer des plats de départ et pour aider l\'agent IA à lire ta carte. Modifiable à tout moment.',
+      errCuisine: 'Choisis un type de cuisine (ou « Autre »).',
+      passwordConfirm: 'Confirme ton mot de passe',
+      phPasswordConfirm: 'Retape le même mot de passe'
     }
   },
   en: {
@@ -4965,7 +4971,7 @@ export const translations = {
       rider_perdu: '🤕 Crash!',
       rider_regles_0: 'You ride on a bumpy road. Tap briefly to jump, tap again in the air for a double jump (higher, longer). Hold to accelerate.',
       rider_regles_1: 'Jump over the obstacles (🪨 🚧 🛢️): touching one on the ground means a crash. Each obstacle cleared and each stretch of road earns a point.',
-      rider_regles_2: 'In the air, hold to rotate: each full backflip is worth 1 point, and a chain pays more (2 flips = +1 bonus, 3 = +2). Release to straighten up before the ground — landing crooked means a crash.',
+      rider_regles_2: 'In the air, hold to rotate: each full flip is worth 1 point (double flip = 2 points, triple = 3). Release to straighten up before the ground — landing sideways means a crash.',
       rider_regles_3: 'Tap to jump (twice for a double jump); hold (finger, mouse or Space) to accelerate on the ground and rotate in the air.',
       arrow_sub: 'Aim for the gaps',
       arrow_perdu: '💢 Into the wall!',
@@ -6908,7 +6914,13 @@ export const translations = {
       serviceDeliveryOwn: 'with my own couriers',
       servicePickup: 'Takeaway',
       serviceDineIn: 'Table reservation (dine-in)',
-      errServices: 'Choose at least one service.'
+      errServices: 'Choose at least one service.',
+      cuisineLabel: 'Type of cuisine / business',
+      cuisinePlaceholder: 'Choose from the list…',
+      cuisineHelp: 'We use it to suggest starter dishes and to help the AI agent read your menu. You can change it any time.',
+      errCuisine: 'Choose a type of cuisine (or "Other").',
+      passwordConfirm: 'Confirm your password',
+      phPasswordConfirm: 'Type the same password again'
     }
   },
   nl: {
@@ -8419,7 +8431,7 @@ export const translations = {
       rider_perdu: '🤕 Gevallen!',
       rider_regles_0: 'Je rijdt op een hobbelige weg. Tik kort om te springen, tik nog eens in de lucht voor een dubbele sprong (hoger, langer). Houd ingedrukt om te versnellen.',
       rider_regles_1: 'Spring over de obstakels (🪨 🚧 🛢️): er één raken op de grond is vallen. Elk genomen obstakel en elk stuk weg levert een punt op.',
-      rider_regles_2: 'In de lucht houd je ingedrukt om te draaien: elke volledige salto is 1 punt waard, en een reeks levert meer op (2 salto’s = +1 bonus, 3 = +2). Laat los om je recht te zetten vóór de grond — scheef landen is vallen.',
+      rider_regles_2: 'In de lucht houd je ingedrukt om te draaien: elke volledige salto is 1 punt waard (dubbele salto = 2 punten, drievoudige = 3). Laat los om je recht te zetten vóór de grond — scheef landen is vallen.',
       rider_regles_3: 'Tik om te springen (twee keer voor een dubbele sprong); houd ingedrukt (vinger, muis of spatiebalk) om te versnellen op de grond en te draaien in de lucht.',
       arrow_sub: 'Richt op de openingen',
       arrow_perdu: '💢 Tegen de muur!',
@@ -10362,7 +10374,13 @@ export const translations = {
       serviceDeliveryOwn: 'met mijn eigen koeriers',
       servicePickup: 'Afhalen',
       serviceDineIn: 'Tafelreservatie (ter plaatse)',
-      errServices: 'Kies minstens één dienst.'
+      errServices: 'Kies minstens één dienst.',
+      cuisineLabel: 'Soort keuken / zaak',
+      cuisinePlaceholder: 'Kies uit de lijst…',
+      cuisineHelp: 'We gebruiken het om startgerechten voor te stellen en om de AI-agent te helpen je kaart te lezen. Altijd aanpasbaar.',
+      errCuisine: 'Kies een soort keuken (of "Andere").',
+      passwordConfirm: 'Bevestig je wachtwoord',
+      phPasswordConfirm: 'Typ hetzelfde wachtwoord opnieuw'
     }
   }
 };

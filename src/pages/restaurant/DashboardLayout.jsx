@@ -69,8 +69,14 @@ export default function DashboardLayout() {
       const brut = localStorage.getItem('fairide_resto_hint'); if (!brut) return;
       const h = JSON.parse(brut);
       if (h.name) setName((v) => v || h.name);
-      const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
-      if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+      // Le type choisi à l'inscription prime ; sinon celui deviné depuis la fiche OpenStreetMap.
+      if (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) {
+        setCuisine(h.cuisineType);
+        if (h.cuisineType === 'Autre' && h.customCuisine) setCustomCuisine(h.customCuisine);
+      } else {
+        const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
+        if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+      }
       if (h.openingHours) setOpeningHoursTexte(h.openingHours);
       if (h.services) {
         setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
@@ -83,6 +89,14 @@ export default function DashboardLayout() {
       if (h.postalCode) setAddressPostalCode((v) => v || h.postalCode);
     } catch { /* indice illisible : formulaire vide */ }
   }, []);
+  // Sans indice local (autre appareil, stockage vidé) : le type de cuisine mémorisé sur le compte à l'inscription.
+  useEffect(() => {
+    try { if (localStorage.getItem('fairide_resto_hint')) return; } catch { /* sans stockage */ }
+    const sc = user?.signupCuisine; if (!sc) return;
+    if (RESTAURANT_TYPES.some((rt) => rt.value === sc)) setCuisine(sc);
+    else { setCuisine('Autre'); setCustomCuisine(sc); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.signupCuisine]);
 
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
   const [ordersLoaded, setOrdersLoaded] = useState(false);

@@ -8,6 +8,9 @@ import AddressRecognition from '../components/AddressRecognition';
 import BusinessSearch from '../components/BusinessSearch';
 import { api } from '../api';
 import AddressSearch from '../components/AddressSearch';
+import PasswordInput from '../components/PasswordInput';
+import { RESTAURANT_TYPES } from '../menuCategories';
+import { cuisineDepuisOsm } from '../osmCuisine';
 
 function roles(t) {
   return [
@@ -84,6 +87,15 @@ export default function Auth() {
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false });
+  // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
+  // contexte à la lecture IA du menu.
+  const [cuisine, setCuisine] = useState('');
+  const [customCuisine, setCustomCuisine] = useState('');
+  const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, customCuisine: customCuisine.trim() })); } catch { /* sans stockage */ }
+  }, [cuisine, customCuisine, role]);
   useEffect(() => {
     if (role !== 'restaurant') return undefined;
     const chiffres = (companyNumber || vatNumber).replace(/\D/g, '');
@@ -113,6 +125,8 @@ export default function Auth() {
     setAddressPostalCode(fiche.postalCode || '');
     setAddressCity(fiche.city || '');
     if (fiche.phone) setPhone(fiche.phone);
+    const typeDevine = cuisineDepuisOsm(fiche.cuisine, fiche.type);
+    if (typeDevine && !cuisine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
     try {
       const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
@@ -128,7 +142,8 @@ export default function Auth() {
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
      protège mieux. Retaper un mot de passe à l'aveugle produit surtout la même faute deux fois,
      et c'est une question de plus à l'écran. Le voir suffit à le vérifier. */
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // eslint-disable-line no-unused-vars
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   /* Le code de parrainage n'apparaît que si la personne en a un : soit il arrive dans l'URL
      (?ref=...) depuis un lien de parrainage, soit elle clique sur "J'ai un code". Sinon, c'est
      un champ vide de plus qui allonge le formulaire sans jamais servir. */
@@ -204,6 +219,7 @@ export default function Auth() {
       if (!companyNumber.trim()) e.companyNumber = required;
       if (!vatNumber.trim()) e.vatNumber = required;
       if (!responsibleName.trim()) e.responsibleName = required;
+      if (!cuisine) e.cuisine = t('auth.errCuisine');
       if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
     }
     if (key === 'address') {
@@ -221,6 +237,8 @@ export default function Auth() {
       else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
+      if (!passwordConfirm) e.passwordConfirm = required;
+      else if (passwordConfirm !== password) e.passwordConfirm = t('auth.errPasswordMismatch');
     }
     return e;
   }
@@ -268,7 +286,7 @@ export default function Auth() {
         addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
         ...(role === 'restaurant' ? {
           legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-          vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim()
+          vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
         } : {}),
         ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
       });
@@ -339,7 +357,7 @@ export default function Auth() {
           addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
           ...(role === 'restaurant' ? {
             legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-            vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim()
+            vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
         });
@@ -580,6 +598,18 @@ export default function Auth() {
               <>
                 <BusinessSearch onSelect={appliquerCommerce} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} />
                 <div className="field">
+                  <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
+                  <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+                    <option value="">{t('auth.cuisinePlaceholder')}</option>
+                    {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{rt.emoji ? `${rt.emoji} ` : ''}{rt.value}</option>)}
+                  </select>
+                  {cuisine === 'Autre' && (
+                    <input style={{ marginTop: 6 }} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} aria-label={t('dashResto.specifyType')} />
+                  )}
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.cuisineHelp')}</p>
+                  {fieldError('cuisine')}
+                </div>
+                <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
                   <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
                     value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder={t('auth.phLegalName')} />
@@ -703,18 +733,16 @@ export default function Auth() {
                   {fieldError('email')}
                 </div>
                 <div className="field">
-                  <div className="field-label-row">
-                    <label htmlFor="auth-f-18">{t('auth.password')}</label>
-                    <button type="button" className="btn-ghost field-toggle" onClick={() => setShowPassword((v) => !v)}>
-                      {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                    </button>
-                  </div>
-                  <input id="auth-f-18" type={showPassword ? 'text' : 'password'}
-                    className={errors.password ? 'input-invalid' : undefined}
-                    value={password} onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('auth.passwordPlaceholderRegister')}
-                  />
+                  <label htmlFor="auth-f-18">{t('auth.password')}</label>
+                  <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)}
+                    placeholder={t('auth.passwordPlaceholderRegister')} invalid={!!errors.password} />
                   {fieldError('password')}
+                </div>
+                <div className="field">
+                  <label htmlFor="auth-f-18b">{t('auth.passwordConfirm')}</label>
+                  <PasswordInput id="auth-f-18b" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
+                    placeholder={t('auth.phPasswordConfirm')} invalid={!!errors.passwordConfirm} />
+                  {fieldError('passwordConfirm')}
                 </div>
                 {referralOpen ? (
                   <div className="field">
@@ -759,7 +787,7 @@ export default function Auth() {
               </div>
               <div className="field">
                 <label htmlFor="auth-f-18">{t('auth.password')}</label>
-                <input id="auth-f-18" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} />
+                <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} autoComplete="current-password" />
               </div>
               <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
                 {t('auth.forgotPassword')}

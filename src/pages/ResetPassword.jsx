@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
+import PasswordInput from '../components/PasswordInput';
 
 export default function ResetPassword() {
   const { t } = useLanguage();
@@ -56,11 +57,11 @@ export default function ResetPassword() {
             <form onSubmit={submit}>
               <div className="field">
                 <label>{t('resetPassword.title')}</label>
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('resetPassword.phPassword')} />
+                <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('resetPassword.phPassword')} />
               </div>
               <div className="field">
                 <label>{t('resetPassword.confirm')}</label>
-                <input type="password" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('resetPassword.phConfirm')} />
+                <PasswordInput value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('resetPassword.phConfirm')} />
               </div>
               <button type="submit" className="btn-gold btn-block" disabled={loading}>
                 {loading ? '...' : t('resetPassword.submit')}

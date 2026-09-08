@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import PasswordInput from '../components/PasswordInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
@@ -372,14 +373,16 @@ export default function Account() {
     }
   }
 
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   async function savePassword(e) {
     e.preventDefault();
     if (newPassword.length < 8) { toast(t('account.toastPasswordTooShort')); return; }
+    if (newPasswordConfirm !== newPassword) { toast(t('auth.errPasswordMismatch')); return; }
     setSavingPassword(true);
     try {
       await updateProfile({ currentPassword, newPassword });
       setCurrentPassword('');
-      setNewPassword('');
+      setNewPassword(''); setNewPasswordConfirm('');
       toast(t('account.toastPasswordChanged'));
     } catch (err) {
       toast(err.message);
@@ -530,11 +533,15 @@ export default function Account() {
           <form onSubmit={savePassword}>
             <div className="field">
               <label>{t('account.currentPassword')}</label>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
+              <PasswordInput value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
             </div>
             <div className="field">
               <label>{t('account.newPassword')}</label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
+              <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
+            </div>
+            <div className="field">
+              <label>{t('auth.passwordConfirm')}</label>
+              <PasswordInput value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} placeholder={t('auth.phPasswordConfirm')} />
             </div>
             <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
           </form>
