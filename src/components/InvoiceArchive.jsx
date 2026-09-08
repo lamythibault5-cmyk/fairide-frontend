@@ -22,6 +22,7 @@ function formatPeriod(start, end) {
 // Résolu au rendu (t n'existe pas au niveau module).
 const statusLabels = (t) => ({
   emise: { texte: t('invoiceArchive.statusIssued'), pill: 'pill' },
+  envoyee: { texte: t('invoiceArchive.statusSent'), pill: 'pill teal' },
   payee: { texte: t('invoiceArchive.statusPaid'), pill: 'pill teal' },
   annulee: { texte: t('invoiceArchive.statusCancelled'), pill: 'pill' }
 });
@@ -36,12 +37,27 @@ export const peppolLabels = (t) => ({
   desactive: { texte: t('peppol.stDisabled'), pill: 'pill' }
 });
 
-export default function InvoiceArchive({ endpoint, pdfPath, ublPath, titre, description, colonneMontant }) {
+export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, titre, description, colonneMontant }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const [data, setData] = useState(null);
   const [busyId, setBusyId] = useState(null);
+  const [mailId, setMailId] = useState(null);
+
+  // Renvoi de la facture par e-mail à l'adresse du compte, PDF joint (voir POST /invoices/restaurant/:id/send).
+  async function envoyerParEmail(inv) {
+    setMailId(inv.id);
+    try {
+      const r = await api(emailPath(inv), { method: 'POST', token });
+      toast(t('invoiceArchive.emailSent', { to: r.to || '' }));
+      setData((d) => ({ ...d, invoices: d.invoices.map((x) => (x.id === inv.id ? { ...x, emailedAt: new Date().toISOString(), status: x.status === 'emise' ? 'envoyee' : x.status } : x)) }));
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setMailId(null);
+    }
+  }
 
   useEffect(() => {
     api(endpoint, { token })
@@ -127,6 +143,11 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, titre, desc
                       {ublPath && (
                         <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv, 'ubl')} title={t('invoiceArchive.ublTitle')}>
                           UBL
+                        </button>
+                      )}
+                      {emailPath && inv.status !== 'annulee' && (
+                        <button type="button" className="btn-ghost" disabled={mailId === inv.id} onClick={() => envoyerParEmail(inv)} title={inv.emailedAt ? t('invoiceArchive.emailedOn', { date: new Date(inv.emailedAt).toLocaleDateString(getLocale()) }) : t('invoiceArchive.emailTitle')}>
+                          {mailId === inv.id ? '...' : '📧'}
                         </button>
                       )}
                     </td>

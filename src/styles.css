@@ -2599,3 +2599,12 @@ button.account-link-row:last-child { border-bottom: none; }
 .menu-staging-icon { flex: 0 0 auto; }
 .menu-staging-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .menu-staging-progress { border-top: 1px dashed var(--line); padding-top: 8px; }
+
+/* Relevés de commissions (components/CommissionStatements.jsx) : puces de période, en-tête de groupe cliquable. */
+.statements-chips { flex-wrap: wrap; }
+.statements-chips .chip { flex: 0 1 auto; padding: 8px 12px; }
+.statements-group-head { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; background: none; border: none; padding: 14px 18px; cursor: pointer; font: inherit; color: inherit; }
+.statements-group-head:hover { background: var(--cream-dim); }
+.statements-group-totals { display: flex; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+.statements-group-totals > div { display: flex; flex-direction: column; align-items: flex-end; min-width: 70px; }
+@media (max-width: 640px) { .statements-group-totals { display: none; } }

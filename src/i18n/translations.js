@@ -4,6 +4,50 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    invoicePrefs: {
+      title: 'Réception par e-mail',
+      intro: 'Les documents sont envoyés à l\'adresse du compte ({email}), avec le PDF en pièce jointe. Ils restent aussi téléchargeables ici à tout moment.',
+      monthlyInvoice: 'Recevoir chaque facture mensuelle par e-mail',
+      monthlyInvoiceHelp: 'Dès son émission, en début de mois : la facture de commission du mois écoulé, avec le détail de chaque commande.',
+      weeklyStatement: 'Recevoir un relevé détaillé chaque semaine',
+      weeklyStatementHelp: 'Chaque lundi, le relevé de la semaine écoulée (du lundi au dimanche) en PDF. Document informatif, pratique pour suivre au fil de l\'eau.',
+      saved: 'Préférences enregistrées.'
+    },
+    statements: {
+      title: 'Relevés détaillés de commissions',
+      intro: 'Toutes tes commandes payées, regroupées par semaine, par mois ou par trimestre, avec le détail de la commission Fairide sur chacune. Pour ton suivi : la facture mensuelle numérotée (onglet Factures) reste la pièce comptable qui fait foi.',
+      period: 'Période',
+      thisWeek: 'Cette semaine',
+      lastWeek: 'Semaine dernière',
+      thisMonth: 'Ce mois-ci',
+      lastMonth: 'Mois dernier',
+      last3Months: '3 derniers mois',
+      thisYear: 'Cette année',
+      custom: 'Dates libres',
+      from: 'Du',
+      to: 'Au',
+      groupBy: 'Regrouper',
+      byWeek: 'Par semaine',
+      byMonth: 'Par mois',
+      byQuarter: 'Par trimestre',
+      summaryTitle: 'Du {from} au {to}',
+      summaryNote: 'Totaux de la période sélectionnée. Le PDF reprend chaque groupe et chaque commande ; le CSV s\'ouvre dans Excel.',
+      orders: 'Commandes payées',
+      sales: 'Ventes (hors livraison)',
+      commissionExVat: 'Commission HTVA',
+      vat: 'TVA',
+      commissionIncVat: 'Commission TTC',
+      avgRate: 'Taux moyen',
+      none: 'Aucune commande payée sur cette période.',
+      groupSub: '{n} commande(s) · {sales} de ventes',
+      invoiceIssued: 'Facture {number}',
+      invoicePending: 'Facture mensuelle à venir',
+      colDate: 'Date',
+      colOrder: 'Commande',
+      colOrderAmount: 'Montant commande',
+      colRate: 'Taux',
+      discount: 'remise {n}'
+    },
     adminCouriers: {
       tab_dossiers: 'Dossiers',
       tab_parametres: 'Paramètres légaux',
@@ -2132,7 +2176,11 @@ export const translations = {
       issuer: 'Émetteur : {name}',
       vatSuffix: ' · TVA {vat}',
       peppol: 'Peppol',
-      ublTitle: 'Fichier UBL (Peppol), à importer dans ton logiciel comptable'
+      ublTitle: 'Fichier UBL (Peppol), à importer dans ton logiciel comptable',
+      statusSent: 'Envoyée',
+      emailSent: 'Facture envoyée par e-mail à {to}.',
+      emailTitle: 'Recevoir cette facture par e-mail (PDF joint)',
+      emailedOn: 'Envoyée par e-mail le {date} — cliquer pour la renvoyer'
     },
     hoursEditor: {
       closed: 'Fermé',
@@ -2239,7 +2287,12 @@ export const translations = {
       vatNumber: 'TVA : {n}',
       serviceCommission: 'Commission de service — {period}',
       serviceCommissionOrder: 'Commission de service (10%) — commande #{id}',
-      vatRate: 'TVA ({rate}%)'
+      vatRate: 'TVA ({rate}%)',
+      pageIntro: 'Tes factures mensuelles de commission (pièces comptables, envoyées aussi par e-mail), tes relevés détaillés par semaine ou par mois, et tes factures d\'abonnement.',
+      tabInvoices: '📄 Mes factures',
+      tabStatements: '📊 Relevés par semaine / mois',
+      tabSubscription: '💳 Abonnement',
+      archiveDesc2: 'Une facture par mois, émise automatiquement en début de mois pour le mois écoulé et envoyée par e-mail avec le PDF. Chaque PDF détaille toutes les commandes : date, type, montant, taux, commission HTVA, TVA et TTC. 📧 pour la recevoir à nouveau, UBL pour ton logiciel comptable (Peppol).'
     },
     promosPage: {
       title: 'Promotions',
@@ -3803,6 +3856,50 @@ export const translations = {
     }
   },
   en: {
+    invoicePrefs: {
+      title: 'E-mail delivery',
+      intro: 'Documents are sent to the account address ({email}) with the PDF attached. They also stay downloadable here at any time.',
+      monthlyInvoice: 'Receive each monthly invoice by e-mail',
+      monthlyInvoiceHelp: 'As soon as it is issued, at the start of the month: the commission invoice for the past month, with every order detailed.',
+      weeklyStatement: 'Receive a detailed statement every week',
+      weeklyStatementHelp: 'Every Monday, the statement for the past week (Monday to Sunday) as a PDF. For information, handy to keep track as you go.',
+      saved: 'Preferences saved.'
+    },
+    statements: {
+      title: 'Detailed commission statements',
+      intro: 'All your paid orders, grouped by week, month or quarter, with the Fairide commission detailed on each one. For your records: the numbered monthly invoice (Invoices tab) remains the official accounting document.',
+      period: 'Period',
+      thisWeek: 'This week',
+      lastWeek: 'Last week',
+      thisMonth: 'This month',
+      lastMonth: 'Last month',
+      last3Months: 'Last 3 months',
+      thisYear: 'This year',
+      custom: 'Custom dates',
+      from: 'From',
+      to: 'To',
+      groupBy: 'Group',
+      byWeek: 'By week',
+      byMonth: 'By month',
+      byQuarter: 'By quarter',
+      summaryTitle: 'From {from} to {to}',
+      summaryNote: 'Totals for the selected period. The PDF lists every group and every order; the CSV opens in Excel.',
+      orders: 'Paid orders',
+      sales: 'Sales (excl. delivery)',
+      commissionExVat: 'Commission excl. VAT',
+      vat: 'VAT',
+      commissionIncVat: 'Commission incl. VAT',
+      avgRate: 'Average rate',
+      none: 'No paid order in this period.',
+      groupSub: '{n} order(s) · {sales} in sales',
+      invoiceIssued: 'Invoice {number}',
+      invoicePending: 'Monthly invoice to come',
+      colDate: 'Date',
+      colOrder: 'Order',
+      colOrderAmount: 'Order amount',
+      colRate: 'Rate',
+      discount: 'discount {n}'
+    },
     adminCouriers: {
       tab_dossiers: 'Files',
       tab_parametres: 'Legal settings',
@@ -5931,7 +6028,11 @@ export const translations = {
       issuer: 'Issuer: {name}',
       vatSuffix: ' · VAT {vat}',
       peppol: 'Peppol',
-      ublTitle: 'UBL (Peppol) file, to import into your accounting software'
+      ublTitle: 'UBL (Peppol) file, to import into your accounting software',
+      statusSent: 'Sent',
+      emailSent: 'Invoice e-mailed to {to}.',
+      emailTitle: 'Receive this invoice by e-mail (PDF attached)',
+      emailedOn: 'E-mailed on {date} — click to send again'
     },
     hoursEditor: {
       closed: 'Closed',
@@ -6038,7 +6139,12 @@ export const translations = {
       vatNumber: 'VAT: {n}',
       serviceCommission: 'Service commission — {period}',
       serviceCommissionOrder: 'Service commission (10%) — order #{id}',
-      vatRate: 'VAT ({rate}%)'
+      vatRate: 'VAT ({rate}%)',
+      pageIntro: 'Your monthly commission invoices (accounting documents, also e-mailed), your detailed statements by week or month, and your subscription invoices.',
+      tabInvoices: '📄 My invoices',
+      tabStatements: '📊 Weekly / monthly statements',
+      tabSubscription: '💳 Subscription',
+      archiveDesc2: 'One invoice per month, issued automatically at the start of the month for the past month and e-mailed with the PDF. Each PDF details every order: date, type, amount, rate, commission excl. VAT, VAT and total. 📧 to receive it again, UBL for your accounting software (Peppol).'
     },
     promosPage: {
       title: 'Promotions',
@@ -7602,6 +7708,50 @@ export const translations = {
     }
   },
   nl: {
+    invoicePrefs: {
+      title: 'Ontvangst per e-mail',
+      intro: 'Documenten worden naar het e-mailadres van het account ({email}) gestuurd, met de pdf als bijlage. Ze blijven hier ook altijd downloadbaar.',
+      monthlyInvoice: 'Elke maandfactuur per e-mail ontvangen',
+      monthlyInvoiceHelp: 'Zodra ze wordt uitgegeven, begin elke maand: de commissiefactuur van de voorbije maand, met het detail van elke bestelling.',
+      weeklyStatement: 'Elke week een gedetailleerd overzicht ontvangen',
+      weeklyStatementHelp: 'Elke maandag het overzicht van de voorbije week (maandag tot zondag) als pdf. Ter informatie, handig om op te volgen.',
+      saved: 'Voorkeuren opgeslagen.'
+    },
+    statements: {
+      title: 'Gedetailleerde commissieoverzichten',
+      intro: 'Al je betaalde bestellingen, gegroepeerd per week, maand of kwartaal, met het detail van de Fairide-commissie op elke bestelling. Ter opvolging: de genummerde maandfactuur (tab Facturen) blijft het officiële boekhoudkundige document.',
+      period: 'Periode',
+      thisWeek: 'Deze week',
+      lastWeek: 'Vorige week',
+      thisMonth: 'Deze maand',
+      lastMonth: 'Vorige maand',
+      last3Months: 'Laatste 3 maanden',
+      thisYear: 'Dit jaar',
+      custom: 'Vrije data',
+      from: 'Van',
+      to: 'Tot',
+      groupBy: 'Groeperen',
+      byWeek: 'Per week',
+      byMonth: 'Per maand',
+      byQuarter: 'Per kwartaal',
+      summaryTitle: 'Van {from} tot {to}',
+      summaryNote: 'Totalen van de gekozen periode. De pdf bevat elke groep en elke bestelling; de csv opent in Excel.',
+      orders: 'Betaalde bestellingen',
+      sales: 'Verkoop (excl. levering)',
+      commissionExVat: 'Commissie excl. btw',
+      vat: 'Btw',
+      commissionIncVat: 'Commissie incl. btw',
+      avgRate: 'Gemiddeld tarief',
+      none: 'Geen betaalde bestelling in deze periode.',
+      groupSub: '{n} bestelling(en) · {sales} verkoop',
+      invoiceIssued: 'Factuur {number}',
+      invoicePending: 'Maandfactuur volgt',
+      colDate: 'Datum',
+      colOrder: 'Bestelling',
+      colOrderAmount: 'Bedrag bestelling',
+      colRate: 'Tarief',
+      discount: 'korting {n}'
+    },
     adminCouriers: {
       tab_dossiers: 'Dossiers',
       tab_parametres: 'Wettelijke instellingen',
@@ -9730,7 +9880,11 @@ export const translations = {
       issuer: 'Uitgever: {name}',
       vatSuffix: ' · btw {vat}',
       peppol: 'Peppol',
-      ublTitle: 'UBL-bestand (Peppol), om in je boekhoudsoftware te importeren'
+      ublTitle: 'UBL-bestand (Peppol), om in je boekhoudsoftware te importeren',
+      statusSent: 'Verzonden',
+      emailSent: 'Factuur per e-mail verstuurd naar {to}.',
+      emailTitle: 'Deze factuur per e-mail ontvangen (pdf bijgevoegd)',
+      emailedOn: 'Per e-mail verstuurd op {date} — klik om opnieuw te versturen'
     },
     hoursEditor: {
       closed: 'Gesloten',
@@ -9837,7 +9991,12 @@ export const translations = {
       vatNumber: 'Btw: {n}',
       serviceCommission: 'Servicecommissie — {period}',
       serviceCommissionOrder: 'Servicecommissie (10%) — bestelling #{id}',
-      vatRate: 'Btw ({rate}%)'
+      vatRate: 'Btw ({rate}%)',
+      pageIntro: 'Je maandelijkse commissiefacturen (boekhoudkundige stukken, ook per e-mail), je gedetailleerde overzichten per week of maand, en je abonnementsfacturen.',
+      tabInvoices: '📄 Mijn facturen',
+      tabStatements: '📊 Overzichten per week / maand',
+      tabSubscription: '💳 Abonnement',
+      archiveDesc2: 'Eén factuur per maand, automatisch uitgegeven begin elke maand voor de voorbije maand en per e-mail verstuurd met de pdf. Elke pdf detailleert alle bestellingen: datum, type, bedrag, tarief, commissie excl. btw, btw en totaal. 📧 om ze opnieuw te ontvangen, UBL voor je boekhoudsoftware (Peppol).'
     },
     promosPage: {
       title: 'Promoties',

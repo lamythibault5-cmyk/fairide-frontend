@@ -4,6 +4,8 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import InvoiceArchive from '../../components/InvoiceArchive';
+import CommissionStatements from '../../components/CommissionStatements';
+import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 function currentMonthValue() {
@@ -31,6 +33,10 @@ export default function InvoicesPage() {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
+  // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
+  const [onglet, setOnglet] = useState(() => { try { return sessionStorage.getItem('fairide_factures_onglet') || 'factures'; } catch { return 'factures'; } });
+  function choisirOnglet(o) { setOnglet(o); try { sessionStorage.setItem('fairide_factures_onglet', o); } catch { /* sans stockage */ } }
 
   useEffect(() => {
     setLoading(true);
@@ -72,27 +78,42 @@ export default function InvoicesPage() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesResto.title')}</h2>
+      <p className="small no-print" style={{ margin: '-6px 0 12px' }}>{t('invoicesResto.pageIntro')}</p>
 
+      <div className="auth-tabs no-print" role="tablist" style={{ marginBottom: 14 }}>
+        {[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ['abonnement', t('invoicesResto.tabSubscription')]].map(([cle, label]) => (
+          <div key={cle} role="tab" tabIndex={0} aria-selected={onglet === cle} className={`chip${onglet === cle ? ' active' : ''}`} onClick={() => choisirOnglet(cle)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') choisirOnglet(cle); }}>{label}</div>
+        ))}
+      </div>
+
+      {onglet === 'releves' && <CommissionStatements />}
+
+      {onglet === 'abonnement' && (
+        <div className="card no-print">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesResto.subscription')}</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            {t('invoicesResto.subscriptionHelp')}
+          </p>
+          <button className="btn-ghost" disabled={openingPortal} onClick={openPortal}>
+            {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
+          </button>
+        </div>
+      )}
+
+      {onglet === 'factures' && (<>
       {/* Archive de tout ce qui a déjà été émis, en plus de la vue mois par mois plus bas qui sert, elle,
           à préparer et émettre la facture d'une période donnée. */}
       <InvoiceArchive
         endpoint="/invoices/restaurant"
         pdfPath={(inv) => `/invoices/restaurant/${inv.id}/pdf`}
         ublPath={(inv) => `/invoices/restaurant/${inv.id}/ubl`}
+        emailPath={(inv) => `/invoices/restaurant/${inv.id}/send`}
         titre={t('invoicesResto.archiveTitle')}
-        description={t('invoicesResto.archiveDesc')}
+        description={t('invoicesResto.archiveDesc2')}
         colonneMontant="Total TTC"
       />
 
-      <div className="card no-print">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesResto.subscription')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('invoicesResto.subscriptionHelp')}
-        </p>
-        <button className="btn-ghost" disabled={openingPortal} onClick={openPortal}>
-          {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
-        </button>
-      </div>
+      <InvoicePreferences />
 
       <div className="card no-print">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('invoicesResto.commissionInvoice')}</h3>
@@ -166,6 +187,7 @@ export default function InvoicesPage() {
                 <tr style={{ borderBottom: '2px solid var(--line)', textAlign: 'left' }}>
                   <th style={{ padding: '6px 4px' }}>{t('invoicesResto.date')}</th>
                   <th style={{ padding: '6px 4px' }}>{t('invoicesResto.description')}</th>
+                  <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('statements.colOrderAmount')}</th>
                   <th style={{ padding: '6px 4px', textAlign: 'right' }}>{t('invoicesResto.priceExVat')}</th>
                   <th style={{ padding: '6px 4px', textAlign: 'right' }}>TVA</th>
                 </tr>
@@ -174,23 +196,24 @@ export default function InvoicesPage() {
                 {invoice.items.map((o) => (
                   <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
                     <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
-                    <td style={{ padding: '6px 4px' }}>{t('invoicesResto.serviceCommissionOrder', { id: o.id.slice(0, 8) })}</td>
+                    <td style={{ padding: '6px 4px' }}>{t('invoicesResto.serviceCommissionOrder', { id: o.id.slice(0, 8) })}{o.typeLabel ? <span className="small"> · {o.typeLabel}</span> : null}</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.subtotal || 0).toFixed(2)}€</td>
                     <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.commission.toFixed(2)}€</td>
-                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{(invoice.vatRate * 100).toFixed(0)}%</td>
+                    <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.commissionVat || 0).toFixed(2)}€ <span className="small">({(invoice.vatRate * 100).toFixed(0)}%)</span></td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr style={{ borderTop: '2px solid var(--line)' }}>
-                  <td style={{ padding: '8px 4px' }} colSpan={2}>{t('invoicesResto.totalExVat')}</td>
+                  <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalExVat')}</td>
                   <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.subtotalHt.toFixed(2)}€</td>
                 </tr>
                 <tr>
-                  <td style={{ padding: '4px' }} colSpan={2}>{t('invoicesResto.vatRate', { rate: (invoice.vatRate * 100).toFixed(0) })}</td>
+                  <td style={{ padding: '4px' }} colSpan={3}>{t('invoicesResto.vatRate', { rate: (invoice.vatRate * 100).toFixed(0) })}</td>
                   <td style={{ padding: '4px', textAlign: 'right' }} colSpan={2}>{invoice.vatAmount.toFixed(2)}€</td>
                 </tr>
                 <tr style={{ fontWeight: 700 }}>
-                  <td style={{ padding: '8px 4px' }} colSpan={2}>{t('invoicesResto.totalIncVat')}</td>
+                  <td style={{ padding: '8px 4px' }} colSpan={3}>{t('invoicesResto.totalIncVat')}</td>
                   <td style={{ padding: '8px 4px', textAlign: 'right' }} colSpan={2}>{invoice.totalTtc.toFixed(2)}€</td>
                 </tr>
               </tfoot>
@@ -202,6 +225,7 @@ export default function InvoicesPage() {
           </p>
         </div>
       )}
+      </>)}
     </div>
   );
 }
