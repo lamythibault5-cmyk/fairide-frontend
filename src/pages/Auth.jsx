@@ -6,7 +6,8 @@ import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import AddressRecognition from '../components/AddressRecognition';
 import BusinessSearch from '../components/BusinessSearch';
-import { api } from '../api';
+import { api, apiUpload } from '../api';
+import IdentityDocsPicker from '../components/IdentityDocsPicker';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { RESTAURANT_TYPES } from '../menuCategories';
@@ -39,7 +40,7 @@ function roles(t) {
    responsable sont exigés par POST /register côté backend, on ne peut pas s'en passer. */
 const STEP_KEYS = {
   client: ['identity', 'address', 'account'],
-  driver: ['identity', 'address', 'account'],
+  driver: ['identity', 'documents', 'address', 'account'],
   restaurant: ['identity', 'business', 'address', 'account']
 };
 
@@ -164,6 +165,21 @@ export default function Auth() {
      requise" n'indique pas lequel des quatre champs d'adresse est vide. */
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
+  // Pièce d'identité du livreur (recto / verso) et attestation étudiant, gardées dans le navigateur jusqu'à la
+  // création du compte, puis envoyées au dossier coursier — voir televerserDocumentsLivreur.
+  const [docKind, setDocKind] = useState('identity_card');
+  const [docRecto, setDocRecto] = useState(null);
+  const [docVerso, setDocVerso] = useState(null);
+  const [docStudent, setDocStudent] = useState(null);
+  async function televerserDocumentsLivreur(token) {
+    if (role !== 'driver' || !token) return;
+    const envois = [[docKind, 'recto', docRecto], [docKind, 'verso', docVerso], ['school_certificate', null, docStudent]].filter((x) => x[2]);
+    let echecs = 0;
+    for (const [docType, side, file] of envois) {
+      try { await apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, ...(side ? { side } : {}) } }); } catch { echecs++; }
+    }
+    if (echecs) toast(t('authDocs.uploadFailed'));
+  }
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
   const [code, setCode] = useState('');
@@ -202,6 +218,7 @@ export default function Auth() {
   const stepCopy = {
     identity: { title: t('auth.stepIdentityTitle'), sub: t('auth.stepIdentitySub') },
     business: { title: t('auth.stepBusinessTitle'), sub: t('auth.stepBusinessSub') },
+    documents: { title: t('auth.stepDocsTitle'), sub: t('auth.stepDocsSub') },
     address: {
       title: t('auth.stepAddressTitle'),
       sub: role === 'client' ? t('auth.stepAddressSubClient')
@@ -228,6 +245,10 @@ export default function Auth() {
       if (!lastName.trim()) e.lastName = required;
       if (!phone.trim()) e.phone = required;
       if (role === 'driver' && !companyNumber.trim()) e.companyNumber = required;
+    }
+    if (key === 'documents') {
+      if (!docRecto) e.docRecto = t('authDocs.errFront');
+      if (!docVerso) e.docVerso = t('authDocs.errBack');
     }
     if (key === 'business') {
       if (!legalName.trim()) e.legalName = required;
@@ -276,12 +297,16 @@ export default function Auth() {
     } catch { return {}; }
   }
 
+  // Un double appui sur « Continuer » pendant la vérification de disponibilité (réseau lent) ne doit pas
+  // faire sauter une étape : tant que la première demande n'est pas revenue, les suivantes sont ignorées.
+  const verifEnCours = useRef(false);
   async function goNext() {
+    if (verifEnCours.current) return;
     let e = validateStep(stepKey);
     setErrors(e);
     if (Object.keys(e).length) return;
-    setVerifDispo(true);
-    try { e = await verifierDisponibilite(stepKey); } finally { setVerifDispo(false); }
+    setVerifDispo(true); verifEnCours.current = true;
+    try { e = await verifierDisponibilite(stepKey); } finally { setVerifDispo(false); verifEnCours.current = false; }
     setErrors(e);
     if (Object.keys(e).length === 0) setStep((s) => s + 1);
   }
@@ -327,6 +352,7 @@ export default function Auth() {
         } : {}),
         ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
       });
+      await televerserDocumentsLivreur(data.token);
       toast(t('auth.welcome', { name: data.user.name }));
       navigate(from);
     } catch (err) {
@@ -401,6 +427,8 @@ export default function Auth() {
         if (data.needsVerification) {
           setPendingEmail(data.email);
           toast(t('auth.errVerificationSent'));
+        } else if (data.token) {
+          await televerserDocumentsLivreur(data.token);
         }
       } else {
         const data = await login(email.trim(), password);
@@ -431,6 +459,7 @@ export default function Auth() {
     setLoading(true);
     try {
       const data = await verifyEmail(pendingEmail, code.trim());
+      await televerserDocumentsLivreur(data.token);
       toast(t('auth.welcome', { name: data.user.name }));
       navigate(from);
     } catch (err) {
@@ -709,6 +738,10 @@ export default function Auth() {
                   {fieldError('services')}
                 </div>
               </>
+            )}
+
+            {stepKey === 'documents' && (
+              <IdentityDocsPicker kind={docKind} setKind={setDocKind} recto={docRecto} setRecto={setDocRecto} verso={docVerso} setVerso={setDocVerso} student={docStudent} setStudent={setDocStudent} errors={errors} />
             )}
 
             {stepKey === 'address' && (

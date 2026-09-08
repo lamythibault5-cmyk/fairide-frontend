@@ -2615,3 +2615,15 @@ button.account-link-row:last-child { border-bottom: none; }
 .tracking-with-game.carte-seule { display: block; }
 .tracking-with-game.carte-seule > .tracking-map-col { width: 100%; }
 .carte-page .tracking-actions { justify-content: center; }
+
+/* Pièce d'identité recto / verso (IdentityDocsPicker.jsx à l'inscription, DriverDocuments.jsx dans Mon compte). */
+.doc-slots { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.doc-slot { position: relative; display: flex; align-items: center; gap: 8px; border: 1px dashed var(--line); border-radius: var(--radius); padding: 8px; background: #fff; }
+.doc-slot.rempli { border-style: solid; }
+.doc-slot.input-invalid { border-color: var(--red); }
+.doc-slot-body { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
+.doc-slot-img { width: 64px; height: 44px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; background: var(--cream-dim); }
+.doc-slot-vide { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 44px; border-radius: 6px; background: var(--cream-dim); font-size: 22px; flex: 0 0 auto; text-decoration: none; }
+.doc-slot-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
+.doc-slot-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-slot-retirer { position: absolute; top: 4px; right: 4px; padding: 2px 6px; font-size: 12px; }

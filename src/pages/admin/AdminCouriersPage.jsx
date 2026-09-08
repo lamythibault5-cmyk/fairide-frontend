@@ -124,7 +124,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {d.documents.length === 0 && <p className="small">—</p>}
           {d.documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
-              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` — ${x.rejectedReason}` : ''}</span>
+              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` — ${x.rejectedReason}` : ''}</span>
               {!x.verifiedAt && (
                 <span className="row" style={{ gap: 4 }}>
                   <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} disabled={busy} onClick={() => agir(() => api(`/admin/couriers/${id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } }))}>✓</button>

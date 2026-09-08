@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import PasswordInput from '../components/PasswordInput';
 import PhoneVerification from '../components/PhoneVerification';
+import DriverDocuments from '../components/DriverDocuments';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
@@ -557,6 +558,11 @@ export default function Account() {
           <LanguageSwitcher />
         </LigneCompte>
 
+        {role === 'driver' && (
+          <LigneCompte icone="🪪" titre={t('driverDocs.title')} sous={t('driverDocs.sub')} ouverte={ouvertes.has('documents')} onClick={() => basculer('documents')}>
+            {ouvertes.has('documents') && <DriverDocuments />}
+          </LigneCompte>
+        )}
         {role === 'driver' && (
           <LigneCompte icone="📡" titre={t('account.geoTitle')} sous={locationSharingEnabled ? t('accountUi.sharingOn') : t('accountUi.sharingOff')} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
             <p className="small" style={{ margin: '0 0 10px' }}>{t('account.geoExplain')}</p>

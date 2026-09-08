@@ -4,6 +4,33 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    driverDocs: {
+      title: 'Mes documents',
+      sub: 'Pièce d\'identité recto / verso, attestation étudiant, autres pièces',
+      intro: 'Les documents déposés à l\'inscription et pendant ton dossier livreur. Tu peux remplacer une face tant qu\'elle n\'est pas vérifiée par Fairide.',
+      identityVerified: 'Identité vérifiée via {provider}',
+      verified: 'Vérifié',
+      pending: 'En attente de vérification',
+      missing: 'Manquant',
+      chooseKind: 'Choisis la pièce :',
+      others: 'Autres documents du dossier',
+      uploaded: 'Document envoyé.',
+      goOnboarding: 'Voir tout mon dossier livreur (statut, contrat, paiements) →'
+    },
+    authDocs: {
+      intro: 'Choisis la pièce, puis prends une photo nette de chaque face (ou choisis un fichier). Le contrôle d\'identité Stripe se fait ensuite, ces photos servent à ton dossier et aux vérifications de Fairide.',
+      front: 'Recto',
+      back: 'Verso',
+      student: 'Attestation étudiant',
+      studentHelp: 'Si tu es étudiant : attestation d\'inscription ou carte d\'étudiant. Elle ouvre le statut étudiant (heures Student@work). Tu peux l\'ajouter plus tard.',
+      optional: 'optionnel',
+      tapToAdd: 'Appuie pour prendre une photo ou choisir un fichier',
+      remove: 'Retirer',
+      errFront: 'Ajoute la photo du recto.',
+      errBack: 'Ajoute la photo du verso.',
+      privacy: 'Documents stockés de façon sécurisée, visibles uniquement par toi et l\'équipe Fairide, jamais partagés avec les clients ni les restaurants.',
+      uploadFailed: 'Certains documents n\'ont pas pu être envoyés. Tu peux les ajouter dans Mon compte › Mes documents.'
+    },
     invoicePrefs: {
       title: 'Réception par e-mail',
       intro: 'Les documents sont envoyés à l\'adresse du compte ({email}), avec le PDF en pièce jointe. Ils restent aussi téléchargeables ici à tout moment.',
@@ -3854,10 +3881,39 @@ export const translations = {
       hoursHelp: 'Indique tes horaires jour par jour (plusieurs créneaux possibles). Tu pourras les modifier à tout moment.',
       errEmailTaken: 'Un compte existe déjà avec cette adresse e-mail. Connecte-toi ou utilise « Mot de passe oublié ».',
       errPhoneTaken: 'Un compte existe déjà avec ce numéro de téléphone. Chaque numéro ne peut être lié qu\'à un seul compte.',
-      errPhoneInvalid: 'Numéro de téléphone invalide (ex. +32 470 00 00 00 ou 0470 00 00 00).'
+      errPhoneInvalid: 'Numéro de téléphone invalide (ex. +32 470 00 00 00 ou 0470 00 00 00).',
+      stepDocsTitle: 'Ta pièce d\'identité',
+      stepDocsSub: 'Une photo du recto et une du verso de ta carte d\'identité ou de ton permis. Elles sont conservées avec ton dossier livreur, visibles dans « Mon compte ».'
     }
   },
   en: {
+    driverDocs: {
+      title: 'My documents',
+      sub: 'ID document front / back, student certificate, other documents',
+      intro: 'The documents added at sign-up and during your courier file. You can replace a side as long as Fairide has not verified it.',
+      identityVerified: 'Identity verified via {provider}',
+      verified: 'Verified',
+      pending: 'Awaiting verification',
+      missing: 'Missing',
+      chooseKind: 'Choose the document:',
+      others: 'Other documents in the file',
+      uploaded: 'Document sent.',
+      goOnboarding: 'See my full courier file (status, contract, payments) →'
+    },
+    authDocs: {
+      intro: 'Choose the document, then take a clear photo of each side (or pick a file). The Stripe identity check comes later; these photos are for your file and Fairide\'s checks.',
+      front: 'Front',
+      back: 'Back',
+      student: 'Student certificate',
+      studentHelp: 'If you are a student: enrolment certificate or student card. It unlocks the student status (Student@work hours). You can add it later.',
+      optional: 'optional',
+      tapToAdd: 'Tap to take a photo or pick a file',
+      remove: 'Remove',
+      errFront: 'Add the photo of the front.',
+      errBack: 'Add the photo of the back.',
+      privacy: 'Documents are stored securely, visible only to you and the Fairide team, never shared with customers or restaurants.',
+      uploadFailed: 'Some documents could not be sent. You can add them in My account › My documents.'
+    },
     invoicePrefs: {
       title: 'E-mail delivery',
       intro: 'Documents are sent to the account address ({email}) with the PDF attached. They also stay downloadable here at any time.',
@@ -7708,10 +7764,39 @@ export const translations = {
       hoursHelp: 'Enter your opening hours day by day (several time slots possible). You can change them any time.',
       errEmailTaken: 'An account already exists with this e-mail address. Log in or use “Forgot password”.',
       errPhoneTaken: 'An account already exists with this phone number. Each number can be linked to only one account.',
-      errPhoneInvalid: 'Invalid phone number (e.g. +32 470 00 00 00 or 0470 00 00 00).'
+      errPhoneInvalid: 'Invalid phone number (e.g. +32 470 00 00 00 or 0470 00 00 00).',
+      stepDocsTitle: 'Your ID document',
+      stepDocsSub: 'One photo of the front and one of the back of your ID card or driving licence. They are kept with your courier file and visible in “My account”.'
     }
   },
   nl: {
+    driverDocs: {
+      title: 'Mijn documenten',
+      sub: 'Identiteitsbewijs voor- / achterkant, studentenattest, andere stukken',
+      intro: 'De documenten toegevoegd bij de inschrijving en tijdens je koeriersdossier. Je kunt een kant vervangen zolang Fairide ze niet heeft geverifieerd.',
+      identityVerified: 'Identiteit geverifieerd via {provider}',
+      verified: 'Geverifieerd',
+      pending: 'Wacht op verificatie',
+      missing: 'Ontbreekt',
+      chooseKind: 'Kies het document:',
+      others: 'Andere documenten in het dossier',
+      uploaded: 'Document verstuurd.',
+      goOnboarding: 'Mijn volledige koeriersdossier bekijken (statuut, contract, betalingen) →'
+    },
+    authDocs: {
+      intro: 'Kies het document en maak een scherpe foto van elke kant (of kies een bestand). De Stripe-identiteitscontrole volgt later; deze foto\'s dienen voor je dossier en de controles van Fairide.',
+      front: 'Voorkant',
+      back: 'Achterkant',
+      student: 'Studentenattest',
+      studentHelp: 'Als je student bent: inschrijvingsattest of studentenkaart. Het opent het studentenstatuut (Student@work-uren). Je kunt het later toevoegen.',
+      optional: 'optioneel',
+      tapToAdd: 'Tik om een foto te maken of een bestand te kiezen',
+      remove: 'Verwijderen',
+      errFront: 'Voeg de foto van de voorkant toe.',
+      errBack: 'Voeg de foto van de achterkant toe.',
+      privacy: 'Documenten worden veilig bewaard, alleen zichtbaar voor jou en het Fairide-team, nooit gedeeld met klanten of restaurants.',
+      uploadFailed: 'Sommige documenten konden niet verstuurd worden. Je kunt ze toevoegen in Mijn account › Mijn documenten.'
+    },
     invoicePrefs: {
       title: 'Ontvangst per e-mail',
       intro: 'Documenten worden naar het e-mailadres van het account ({email}) gestuurd, met de pdf als bijlage. Ze blijven hier ook altijd downloadbaar.',
@@ -11562,7 +11647,9 @@ export const translations = {
       hoursHelp: 'Geef je openingsuren per dag op (meerdere tijdvakken mogelijk). Je kunt ze altijd wijzigen.',
       errEmailTaken: 'Er bestaat al een account met dit e-mailadres. Log in of gebruik “Wachtwoord vergeten”.',
       errPhoneTaken: 'Er bestaat al een account met dit telefoonnummer. Elk nummer kan maar aan één account gekoppeld zijn.',
-      errPhoneInvalid: 'Ongeldig telefoonnummer (bv. +32 470 00 00 00 of 0470 00 00 00).'
+      errPhoneInvalid: 'Ongeldig telefoonnummer (bv. +32 470 00 00 00 of 0470 00 00 00).',
+      stepDocsTitle: 'Je identiteitsbewijs',
+      stepDocsSub: 'Eén foto van de voorkant en één van de achterkant van je identiteitskaart of rijbewijs. Ze worden bij je koeriersdossier bewaard en zijn zichtbaar in “Mijn account”.'
     }
   }
 };
