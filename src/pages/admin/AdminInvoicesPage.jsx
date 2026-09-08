@@ -50,6 +50,7 @@ function PeppolStatusCard({ token, toast, tr }) {
             {etat.configured ? tr('adminInvoices.peppolConfigured', { provider: etat.provider, id: etat.fairidePeppolId }) : tr('adminInvoices.peppolNotConfigured', { id: etat.fairidePeppolId || '—' })}
           </p>
           <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? '✅ ' + tr('adminInvoices.fairideRegistered') : '⚠️ ' + tr('adminInvoices.fairideNotRegistered')}</p>
+          {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? '✅ ' : '❌ '}{etat.providerCheck.message}{etat.keyHint ? ` — clé ${etat.keyHint}` : ''}</p>}
           <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
         </div>
         {etat.configured && (
