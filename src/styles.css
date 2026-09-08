@@ -2499,6 +2499,13 @@ button.account-link-row:last-child { border-bottom: none; }
 .business-zone-text .small { overflow-wrap: anywhere; }
 .business-zone-empty { padding: 10px; font-size: 13px; opacity: 0.75; }
 .business-manual { margin-top: 6px; padding: 4px 10px; font-size: 13px; }
+/* Fiche modifiable du commerce choisi (ou saisi à la main) : deux colonnes, une seule sur téléphone. */
+.business-fiche-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 10px; }
+.business-fiche-field { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.business-fiche-field > span { font-size: 12px; font-weight: 600; opacity: 0.75; }
+.business-fiche-field input { width: 100%; min-width: 0; }
+.business-fiche-field.span2 { grid-column: span 2; }
+@media (max-width: 480px) { .business-fiche-grid { grid-template-columns: 1fr; } .business-fiche-field.span2 { grid-column: auto; } }
 @media (max-width: 480px) { .business-search-row { flex-wrap: wrap; } .business-search-row #business-search-filter { flex-basis: 100%; } .business-zone-list { max-height: 240px; } }
 .business-found { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; }
 .company-check { color: var(--ink); }

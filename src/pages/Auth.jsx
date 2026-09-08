@@ -107,11 +107,12 @@ export default function Auth() {
   function appliquerCommerce(fiche) {
     setCommerceTrouve(fiche);
     if (!fiche) return;
-    if (fiche.street) setAddressStreet(fiche.street);
-    if (fiche.number) setAddressNumber(fiche.number);
-    if (fiche.postalCode) setAddressPostalCode(fiche.postalCode);
-    if (fiche.city) setAddressCity(fiche.city);
-    if (fiche.phone && !phone.trim()) setPhone(fiche.phone);
+    // La fiche est modifiable : chaque correction du restaurateur se répercute sur l'adresse et le téléphone.
+    setAddressStreet(fiche.street || '');
+    setAddressNumber(fiche.number || '');
+    setAddressPostalCode(fiche.postalCode || '');
+    setAddressCity(fiche.city || '');
+    if (fiche.phone) setPhone(fiche.phone);
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
     try {
       const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');

@@ -4,24 +4,26 @@ import { useLanguage } from '../context/LanguageContext';
 
 // Recherche du commerce du restaurateur dans OpenStreetMap, en deux temps : d'abord son code postal — la liste
 // de tous les commerces alimentaires de cette zone s'affiche alors et défile — puis, s'il le veut, quelques
-// lettres du nom ou de la rue pour la filtrer. Il clique sur sa fiche et tout ce qui est connu publiquement
-// est repris (adresse, téléphone, e-mail, site, horaires, cuisine). Rien n'est imposé : chaque champ reste
-// modifiable, « Ce n'est pas le bon ? » recommence, « Mon commerce n'est pas dans la liste » laisse tout
+// lettres du nom ou de la rue pour la filtrer. Il clique sur sa fiche : les données récupérées (nom, adresse,
+// téléphone, e-mail, site, horaires, cuisine) apparaissent dans des champs modifiables, avec « Revoir la
+// liste » pour revenir en arrière. « Mon commerce n'est pas dans la liste » ouvre la même fiche, vide, à
 // remplir à la main. Si la zone n'est pas disponible, on retombe sur une recherche par nom.
+//
+// Le parent reçoit la fiche complète à chaque modification (onSelect), et null quand on revient à la liste.
 const EMOJI_TYPE = { restaurant: '🍽️', cafe: '☕', fast_food: '🍔', bar: '🍺', pub: '🍺', bakery: '🥐', ice_cream: '🍨', food_court: '🍱', supermarket: '🛒', convenience: '🏪', butcher: '🥩', deli: '🧀', pastry: '🍰', greengrocer: '🥦', chocolate: '🍫', cheese: '🧀', seafood: '🐟', beverages: '🧃', tea: '🍵', coffee: '☕' };
 const normaliser = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const adresse = (r) => [[r.street, r.number].filter(Boolean).join(' '), [r.postalCode, r.city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: '', city: '', phone: '', email: '', website: '', openingHours: '' };
 
 export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '' }) {
   const { t } = useLanguage();
   const [cp, setCp] = useState(initialPostalCode);
-  const [zone, setZone] = useState(null); // { results, unavailable }
+  const [zone, setZone] = useState(null); // { results, unavailable, pending }
   const [chargement, setChargement] = useState(false);
   const [filtre, setFiltre] = useState('');
-  const [choisi, setChoisi] = useState(null);
-  const [manuel, setManuel] = useState(false);
-  // Recherche par nom (repli quand la zone n'est pas disponible)
-  const [reponseNom, setReponseNom] = useState(null);
+  const [fiche, setFiche] = useState(null); // fiche affichée et modifiable (choisie ou saisie à la main)
+  const [origine, setOrigine] = useState(null); // 'web' | 'manuel'
+  const [reponseNom, setReponseNom] = useState(null); // repli : recherche par nom
   const listeRef = useRef(null);
 
   const cpValide = /^\d{4}$/.test(cp.trim());
@@ -47,7 +49,6 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cp, cpValide]);
 
-  // Repli : la zone n'a rien donné → recherche par nom sur le web, dès 3 lettres.
   const repli = zone && (zone.unavailable || zone.results.length === 0);
   useEffect(() => {
     if (!repli || filtre.trim().length < 3) { setReponseNom(null); return undefined; }
@@ -69,19 +70,23 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
 
   useEffect(() => { if (listeRef.current) listeRef.current.scrollTop = 0; }, [filtre]);
 
+  function publier(f) { setFiche(f); onSelect?.(f); }
+
   async function choisir(r) {
-    let fiche = { ...r };
+    let f = { ...FICHE_VIDE, ...r };
     // Une fiche venue de la recherche par nom n'a pas encore ses coordonnées : on les demande.
     if (r.phone === undefined) {
-      try { fiche = { ...fiche, ...(await api(`/restaurants/lookup/business-details?type=${encodeURIComponent(r.osmType)}&id=${encodeURIComponent(r.osmId)}`)) }; } catch { /* l'adresse suffit déjà */ }
+      try { f = { ...f, ...(await api(`/restaurants/lookup/business-details?type=${encodeURIComponent(r.osmType)}&id=${encodeURIComponent(r.osmId)}`)) }; } catch { /* l'adresse suffit déjà */ }
     }
-    fiche.name = r.name;
-    if (!fiche.postalCode) fiche.postalCode = cp.trim();
-    setChoisi(fiche);
-    onSelect?.(fiche);
+    f.name = r.name;
+    if (!f.postalCode) f.postalCode = cp.trim();
+    setOrigine('web');
+    publier(f);
   }
 
-  function recommencer() { setChoisi(null); setFiltre(''); setManuel(false); onSelect?.(null); }
+  function saisirALaMain() { setOrigine('manuel'); publier({ ...FICHE_VIDE, postalCode: cp.trim() }); }
+  function revoirListe() { setFiche(null); setOrigine(null); onSelect?.(null); }
+  const modifier = (champ) => (e) => publier({ ...fiche, [champ]: e.target.value });
 
   return (
     <div className={`business-search${compact ? ' compact' : ''}`}>
@@ -89,8 +94,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
       <p className="small business-search-help">{t('businessSearch.postalHelp')}</p>
       <div className="business-search-row">
         <input id="business-search-cp" inputMode="numeric" maxLength={4} value={cp} placeholder={t('businessSearch.postalPlaceholder')}
-          onChange={(e) => { setCp(e.target.value.replace(/\D/g, '').slice(0, 4)); setChoisi(null); setFiltre(''); setManuel(false); }} disabled={!!choisi} />
-        {cpValide && !choisi && !manuel && (
+          onChange={(e) => { setCp(e.target.value.replace(/\D/g, '').slice(0, 4)); setFiche(null); setOrigine(null); setFiltre(''); onSelect?.(null); }} disabled={!!fiche} />
+        {cpValide && !fiche && (
           <input id="business-search-filter" value={filtre} onChange={(e) => setFiltre(e.target.value)} autoComplete="off"
             placeholder={repli ? t('businessSearch.namePlaceholder') : t('businessSearch.filterPlaceholder')} />
         )}
@@ -98,7 +103,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
 
       {chargement && <p className="small" style={{ margin: '6px 0 0' }}>⏳ {t('businessSearch.loadingZone', { cp: cp.trim() })}</p>}
 
-      {zone && !choisi && !manuel && (
+      {zone && !fiche && (
         <>
           <p className="small business-search-count" style={{ margin: '6px 0 4px' }}>
             {repli
@@ -121,28 +126,33 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               </li>
             ))}
           </ul>
-          <button type="button" className="btn-ghost business-manual" onClick={() => { setManuel(true); onSelect?.(null); }}>{t('businessSearch.notInList')}</button>
+          <button type="button" className="btn-ghost business-manual" onClick={saisirALaMain}>{t('businessSearch.notInList')}</button>
         </>
       )}
 
-      {manuel && !choisi && (
-        <p className="small business-found" role="status" style={{ marginTop: 8 }}>
-          ✍️ {t('businessSearch.manualMode')} <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={recommencer}>{t('businessSearch.backToList')}</button>
-        </p>
-      )}
-
-      {choisi && (
-        <div className="business-found" role="status">
+      {fiche && (
+        <div className="business-found business-fiche" role="region" aria-label={t('businessSearch.ficheTitle')}>
           <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-            <b>✅ {t('businessSearch.found', { name: choisi.name })}</b>
-            <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={recommencer}>{t('businessSearch.notIt')}</button>
+            <b>{origine === 'web' ? `✅ ${t('businessSearch.found', { name: fiche.name })}` : `✍️ ${t('businessSearch.manualTitle')}`}</b>
+            <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={revoirListe}>← {t('businessSearch.backToList')}</button>
           </div>
-          <p className="small" style={{ margin: '4px 0 0', overflowWrap: 'anywhere' }}>
-            {adresse(choisi)}
-            {choisi.phone ? ` · 📞 ${choisi.phone}` : ''}{choisi.email ? ` · ✉️ ${choisi.email}` : ''}{choisi.website ? ` · 🌐 ${choisi.website.replace(/^https?:\/\//, '')}` : ''}
-            {choisi.cuisine ? ` · 🍽️ ${choisi.cuisine}` : ''}
-          </p>
-          <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('businessSearch.verifyBelow')}</p>
+          <p className="small" style={{ margin: '4px 0 8px', opacity: 0.8 }}>{origine === 'web' ? t('businessSearch.verifyFields') : t('businessSearch.manualHelp')}</p>
+          {compact ? (
+            <p className="small" style={{ margin: 0 }}>{t('businessSearch.compactHint')}</p>
+          ) : (
+            <div className="business-fiche-grid">
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fName')}</span><input value={fiche.name} onChange={modifier('name')} /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fStreet')}</span><input value={fiche.street} onChange={modifier('street')} /></label>
+              <label className="business-fiche-field"><span>{t('businessSearch.fNumber')}</span><input value={fiche.number} onChange={modifier('number')} /></label>
+              <label className="business-fiche-field"><span>{t('businessSearch.fPostal')}</span><input value={fiche.postalCode} inputMode="numeric" maxLength={4} onChange={modifier('postalCode')} /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fCity')}</span><input value={fiche.city} onChange={modifier('city')} /></label>
+              <label className="business-fiche-field"><span>{t('businessSearch.fPhone')}</span><input value={fiche.phone} type="tel" onChange={modifier('phone')} /></label>
+              <label className="business-fiche-field"><span>{t('businessSearch.fEmail')}</span><input value={fiche.email} type="email" onChange={modifier('email')} /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fWebsite')}</span><input value={fiche.website} onChange={modifier('website')} placeholder="https://" /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fHours')}</span><input value={fiche.openingHours} onChange={modifier('openingHours')} placeholder={t('businessSearch.fHoursPh')} /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fCuisine')}</span><input value={fiche.cuisine} onChange={modifier('cuisine')} placeholder={t('businessSearch.fCuisinePh')} /></label>
+            </div>
+          )}
         </div>
       )}
     </div>
