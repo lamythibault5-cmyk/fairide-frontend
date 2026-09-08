@@ -2643,3 +2643,13 @@ button.account-link-row:last-child { border-bottom: none; }
 
 /* Inscription : compte Google retenu (Auth.jsx) — résumé du profil connu, bouton pour en changer. */
 .auth-google-lie { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-dim); margin-bottom: 14px; }
+
+/* Inscription livreur : choix du statut légal (Auth.jsx) — trois cartes, l'économie collaborative grisée tant que
+   l'agrément SPF n'est pas obtenu. */
+.statut-choix { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; }
+.statut-choix.input-invalid .statut-carte { border-color: var(--red); }
+.statut-carte { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; font-size: 13px; }
+.statut-carte:hover { border-color: var(--iris); }
+.statut-carte.active { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); background: rgba(59,47,181,0.04); }
+.statut-carte.ferme { opacity: 0.6; cursor: not-allowed; }
+.statut-carte.ferme:hover { border-color: var(--line); }

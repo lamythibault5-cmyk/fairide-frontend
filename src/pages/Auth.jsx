@@ -82,6 +82,15 @@ export default function Auth() {
   const [referralCode, setReferralCode] = useState(() => searchParams.get('ref') || '');
   const [legalName, setLegalName] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
+  // Livreur : statut légal et véhicule choisis dès l'inscription (voir routes/auth.js validerLivreur).
+  const [courierStatus, setCourierStatus] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [courierOptions, setCourierOptions] = useState(null);
+  useEffect(() => {
+    if (role !== 'driver' || courierOptions) return;
+    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student', 'p2p', 'independent'], p2pEnabled: false, vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
   const [vatNumber, setVatNumber] = useState('');
   // Pré-rempli avec prénom+nom dès qu'ils sont saisis (cas le plus fréquent) tant que le champ n'a
   // pas été touché à la main — modifiable si le responsable légal du commerce diffère de la personne
@@ -265,7 +274,11 @@ export default function Auth() {
       if (!firstName.trim()) e.firstName = required;
       if (!lastName.trim()) e.lastName = required;
       if (!phone.trim()) e.phone = required;
-      if (role === 'driver' && !companyNumber.trim()) e.companyNumber = required;
+      if (role === 'driver') {
+        if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
+        if (!vehicleType) e.vehicleType = t('auth.errVehicle');
+        if (courierStatus === 'independent' && !companyNumber.trim()) e.companyNumber = required;
+      }
     }
     if (key === 'documents') {
       if (!docRecto) e.docRecto = t('authDocs.errFront');
@@ -384,7 +397,7 @@ export default function Auth() {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(),
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
     });
     await televerserDocumentsLivreur(data.token);
     toast(t('auth.welcome', { name: data.user.name }));
@@ -456,7 +469,7 @@ export default function Auth() {
             legalName: legalName.trim(), companyNumber: companyNumber.trim(),
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
         });
         if (data.needsVerification) {
           setPendingEmail(data.email);
@@ -699,13 +712,53 @@ export default function Auth() {
                   {fieldError('phone')}
                 </div>
                 {role === 'driver' && (
-                  <div className="field">
-                    <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
-                    <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}
-                      value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
-                    {fieldError('companyNumber')}
-                    <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
-                  </div>
+                  <>
+                    <div className="field">
+                      <label>{t('auth.courierStatusTitle')}</label>
+                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
+                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup">
+                        {(courierOptions?.statuses || ['student', 'p2p', 'independent']).map((st) => {
+                          const ferme = st === 'p2p' && courierOptions && !courierOptions.p2pEnabled;
+                          return (
+                            <div key={st} role="radio" aria-checked={courierStatus === st} aria-disabled={ferme} tabIndex={ferme ? -1 : 0}
+                              className={`statut-carte${courierStatus === st ? ' active' : ''}${ferme ? ' ferme' : ''}`}
+                              onClick={() => { if (!ferme) setCourierStatus(st); }} onKeyDown={(e) => { if (!ferme && (e.key === 'Enter' || e.key === ' ')) setCourierStatus(st); }}>
+                              <b>{st === 'student' ? '🎓 ' : st === 'p2p' ? '🤝 ' : '🧾 '}{t(`courierOnboarding.status_${st}`)}</b>
+                              <span className="small">{t(`courierOnboarding.status_${st}_desc`)}</span>
+                              {ferme && <span className="pill" style={{ alignSelf: 'flex-start' }}>{t('auth.courierStatusP2pSoon')}</span>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      {fieldError('courierStatus')}
+                    </div>
+                    {courierStatus === 'independent' && (
+                      <div className="field">
+                        <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
+                        <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}
+                          value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+                        {fieldError('companyNumber')}
+                        <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.companyNumberDriverHelp')}</p>
+                      </div>
+                    )}
+                    <div className="field">
+                      <label>{t('auth.vehicleTitle')}</label>
+                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup">
+                        {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
+                          <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
+                            onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
+                            {v === 'velo' ? '🚲 ' : v === 'velo_electrique' ? '⚡🚲 ' : v === 'scooter' ? '🛵 ' : '🚗 '}{t(`courierOnboarding.vehicle_${v}`)}
+                          </div>
+                        ))}
+                      </div>
+                      {fieldError('vehicleType')}
+                      {vehicleType && (
+                        <p className="small" style={{ margin: '6px 0 0' }}>
+                          {['velo', 'velo_electrique'].includes(vehicleType) ? t('auth.vehicleHelpBike', { km: courierOptions?.bikeMaxKm || 4 }) : t('auth.vehicleHelpMotor', { km: courierOptions?.bikeMaxKm || 4 })}
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
               </>
             )}

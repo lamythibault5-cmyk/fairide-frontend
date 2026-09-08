@@ -67,6 +67,11 @@ export default function DriverDashboard() {
     }
   }
 
+  // Véhicule déclaré (dossier coursier) : explique pourquoi certaines courses n'apparaissent pas (vélo) ou
+  // pourquoi les longues distances sont en tête (motorisé).
+  const [vehicule, setVehicule] = useState(null);
+  useEffect(() => { api('/couriers/me', { token }).then((d) => setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: 4 })).catch(() => {}); }, [token]);
+
   async function load() {
     try {
       const [availableData, mineData] = await Promise.all([
@@ -287,12 +292,20 @@ export default function DriverDashboard() {
       ) : (
         <>
           <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
+          {vehicule?.type && (
+            <p className="small" style={{ margin: '-6px 0 10px' }}>
+              {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
+            </p>
+          )}
           {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
           {available.map((o) => (
             <div className="card" key={o.id}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{o.restaurantName}</b>
-                <span className="pill teal">{o.commune}</span>
+                <span className="row" style={{ gap: 6 }}>
+                  {o.distanceKm != null && <span className={`pill${o.longDistance ? ' gold' : ''}`}>{o.longDistance ? t('dashDriver.longDistance', { km: o.distanceKm }) : t('dashDriver.shortDistance', { km: o.distanceKm })}</span>}
+                  <span className="pill teal">{o.commune}</span>
+                </span>
               </div>
               <span className={`status-badge status-${o.status}`} style={{ marginBottom: 6, display: 'inline-block' }}>
                 {o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}

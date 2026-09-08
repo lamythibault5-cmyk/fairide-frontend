@@ -2772,7 +2772,11 @@ export const translations = {
       waitingEmpty: 'Ton adresse e-mail est confirmée. L\'équipe Fairide vérifie maintenant ton dossier (identité, numéro d\'entreprise) ; ton tableau de bord s\'activera dès la validation, tu recevras un e-mail.',
       paymentsSoonBtn: 'Ouverture fin septembre — en savoir plus',
       courierFileTitle: 'Mon dossier livreur',
-      courierFileSub: 'Statut (étudiant, économie collaborative, indépendant), identité, documents, contrat, compteurs légaux'
+      courierFileSub: 'Statut (étudiant, économie collaborative, indépendant), identité, documents, contrat, compteurs légaux',
+      longDistance: '🛣️ Longue distance · {km} km',
+      shortDistance: '{km} km',
+      bikeRule: '🚲 Tu roules à vélo : on te propose les courses jusqu\'à {km} km. Change de véhicule dans ton dossier livreur si besoin.',
+      motorRule: '🛵 Motorisé : les longues distances (plus de {km} km) sont en tête de liste, les courtes restent disponibles.'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -3894,7 +3898,15 @@ export const translations = {
       googleNewAccount: 'Pas encore de compte Fairide pour cette adresse Google : complète les quelques infos qui suivent.',
       googleExpired: 'La connexion Google a expiré, reclique sur « Continuer avec Google ».',
       fromGoogle: 'renseigné par Google',
-      edit: 'Modifier'
+      edit: 'Modifier',
+      courierStatusTitle: 'Ton statut de livreur',
+      courierStatusHelp: 'Il détermine tes documents, tes plafonds et la façon dont tu es payé. Tu pourras le compléter dans ton dossier livreur après l\'inscription.',
+      courierStatusP2pSoon: 'Bientôt · en attente de l\'agrément SPF',
+      errCourierStatus: 'Choisis ton statut.',
+      vehicleTitle: 'Ton véhicule',
+      errVehicle: 'Choisis ton véhicule.',
+      vehicleHelpBike: 'À vélo, on te propose les courses proches : jusqu\'à {km} km entre le restaurant et le client.',
+      vehicleHelpMotor: 'Motorisé, tu vois toutes les courses, les longues distances (plus de {km} km) en priorité : c\'est là qu\'on a le plus besoin de toi, mais les courtes restent accessibles.'
     }
   },
   en: {
@@ -6666,7 +6678,11 @@ export const translations = {
       waitingEmpty: 'Your e-mail address is confirmed. The Fairide team is now checking your file (identity, company number); your dashboard will activate as soon as it is validated, and you will get an e-mail.',
       paymentsSoonBtn: 'Opens end of September — learn more',
       courierFileTitle: 'My courier file',
-      courierFileSub: 'Status (student, sharing economy, self-employed), identity, documents, contract, legal counters'
+      courierFileSub: 'Status (student, sharing economy, self-employed), identity, documents, contract, legal counters',
+      longDistance: '🛣️ Long distance · {km} km',
+      shortDistance: '{km} km',
+      bikeRule: '🚲 You ride a bike: rides up to {km} km are offered to you. Change your vehicle in your courier file if needed.',
+      motorRule: '🛵 Motorised: long distances (over {km} km) come first, short ones stay available.'
     },
     dashResto: {
       today: 'Today',
@@ -7788,7 +7804,15 @@ export const translations = {
       googleNewAccount: 'No Fairide account yet for this Google address: fill in the few details that follow.',
       googleExpired: 'The Google sign-in expired, click “Continue with Google” again.',
       fromGoogle: 'provided by Google',
-      edit: 'Edit'
+      edit: 'Edit',
+      courierStatusTitle: 'Your courier status',
+      courierStatusHelp: 'It determines your documents, your ceilings and how you get paid. You can complete it in your courier file after signing up.',
+      courierStatusP2pSoon: 'Soon · awaiting FPS approval',
+      errCourierStatus: 'Choose your status.',
+      vehicleTitle: 'Your vehicle',
+      errVehicle: 'Choose your vehicle.',
+      vehicleHelpBike: 'By bike, you are offered nearby rides: up to {km} km between the restaurant and the customer.',
+      vehicleHelpMotor: 'Motorised, you see every ride, long distances (over {km} km) first: that is where you are needed most, but short ones stay available.'
     }
   },
   nl: {
@@ -10560,7 +10584,11 @@ export const translations = {
       waitingEmpty: 'Je e-mailadres is bevestigd. Het Fairide-team controleert nu je dossier (identiteit, ondernemingsnummer); je dashboard wordt geactiveerd zodra het gevalideerd is, je krijgt een e-mail.',
       paymentsSoonBtn: 'Opent eind september — meer info',
       courierFileTitle: 'Mijn koeriersdossier',
-      courierFileSub: 'Statuut (student, deeleconomie, zelfstandige), identiteit, documenten, contract, wettelijke tellers'
+      courierFileSub: 'Statuut (student, deeleconomie, zelfstandige), identiteit, documenten, contract, wettelijke tellers',
+      longDistance: '🛣️ Lange afstand · {km} km',
+      shortDistance: '{km} km',
+      bikeRule: '🚲 Je rijdt met de fiets: ritten tot {km} km worden je aangeboden. Wijzig je voertuig in je koeriersdossier indien nodig.',
+      motorRule: '🛵 Gemotoriseerd: lange afstanden (meer dan {km} km) staan bovenaan, korte blijven beschikbaar.'
     },
     dashResto: {
       today: 'Vandaag',
@@ -11682,7 +11710,15 @@ export const translations = {
       googleNewAccount: 'Nog geen Fairide-account voor dit Google-adres: vul de paar gegevens hierna aan.',
       googleExpired: 'De Google-aanmelding is verlopen, klik opnieuw op “Doorgaan met Google”.',
       fromGoogle: 'ingevuld door Google',
-      edit: 'Wijzigen'
+      edit: 'Wijzigen',
+      courierStatusTitle: 'Je koeriersstatuut',
+      courierStatusHelp: 'Het bepaalt je documenten, je plafonds en hoe je betaald wordt. Je kunt het na de inschrijving aanvullen in je koeriersdossier.',
+      courierStatusP2pSoon: 'Binnenkort · wacht op FOD-erkenning',
+      errCourierStatus: 'Kies je statuut.',
+      vehicleTitle: 'Je voertuig',
+      errVehicle: 'Kies je voertuig.',
+      vehicleHelpBike: 'Met de fiets krijg je ritten in de buurt: tot {km} km tussen het restaurant en de klant.',
+      vehicleHelpMotor: 'Gemotoriseerd zie je alle ritten, lange afstanden (meer dan {km} km) eerst: daar heb je het meeste nut, maar korte blijven beschikbaar.'
     }
   }
 };
