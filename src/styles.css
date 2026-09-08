@@ -2584,3 +2584,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .courier-bar.warn > div { background: var(--gold-deep, #B8860B); }
 .courier-bar.danger > div { background: var(--red); }
 @media (max-width: 480px) { .courier-doc { flex-direction: column; } }
+
+/* Import de menu en deux temps (MenuImportStaging.jsx) : liste des documents, puis avancement page par page. */
+.menu-staging-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.menu-staging-list li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--cream-dim); border-radius: 8px; font-size: 13px; }
+.menu-staging-icon { flex: 0 0 auto; }
+.menu-staging-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.menu-staging-progress { border-top: 1px dashed var(--line); padding-top: 8px; }

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useOutletContext } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, rectSortingStrategy, arrayMove } from '@dnd-kit/sortable';
-import { api, apiUpload } from '../../api';
+import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -17,6 +17,7 @@ import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
+import MenuImportStaging, { MenuImportReport } from '../../components/MenuImportStaging';
 import MenuImportReview from '../../components/MenuImportReview';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -58,8 +59,10 @@ export default function MenuPage() {
   // exact (plats édités, mode remplacer/ajouter) est relu par MenuImportReview lui-même ; ce tableau vide
   // sert juste de déclencheur de rendu ici.
   const [importedItems, setImportedItems] = useState(() => (sessionStorage.getItem(`fairide_menu_import_draft_${restoId}`) ? [] : null));
+  // Bilan page par page du dernier import de documents (✅ / ⚠️ trop de plats / ❌ illisible), gardé
+  // visible au-dessus de la relecture pour que le restaurateur sache quelles pages re-photographier.
+  const [importReport, setImportReport] = useState(null);
   const [submittingImport, setSubmittingImport] = useState(false);
-  const importFileRef = useRef(null);
   // Import depuis le web : site du restaurant, Uber Eats, Deliveroo, Takeaway. L'adresse relevée à
   // l'inscription (fairide_menu_source_url) est proposée d'office.
   const [importUrl, setImportUrl] = useState(() => { try { return localStorage.getItem('fairide_menu_source_url') || ''; } catch { return ''; } });
@@ -422,24 +425,6 @@ export default function MenuPage() {
     }
   }
 
-  const [importCount, setImportCount] = useState(0);
-  async function handleImportFile(e) {
-    const files = [...(e.target.files || [])].slice(0, 12);
-    e.target.value = '';
-    if (!files.length) return;
-    setImporting(true); setImportCount(files.length);
-    setImportedItems(null);
-    try {
-      const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { files, token, fieldName: 'files' });
-      setImportedItems(r.items);
-      if (r.failed) toast(t('menuPage.importPartial', { ok: r.read, ko: r.failed }));
-    } catch (err) {
-      toast(err.message);
-    } finally {
-      setImporting(false);
-    }
-  }
-
   async function handleImportUrl() {
     const url = importUrl.trim();
     if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
@@ -482,7 +467,7 @@ export default function MenuPage() {
     setSubmittingImport(true);
     try {
       await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting } });
-      setImportedItems(null);
+      setImportedItems(null); setImportReport(null);
       loadDashboard(restoId);
       toast(replaceExisting ? t('menuPage.toastMenuReplaced', { n: items.length }) : t('menuPage.toastImportedAdded', { n: items.length }));
     } catch (e) {
@@ -528,18 +513,10 @@ export default function MenuPage() {
         <p className="small" style={{ margin: '0 0 12px' }}>
           {t('menuPage.importIntro')}
         </p>
-        <input
-          ref={importFileRef}
-          type="file"
-          multiple
-          accept="application/pdf,image/*"
-          style={{ display: 'none' }}
-          onChange={handleImportFile}
-        />
         {!importedItems && (
-          <button type="button" className="btn-teal" disabled={importing || importingUrl} onClick={() => importFileRef.current?.click()}>
-            {importing ? (importCount > 1 ? t('menuPage.readingMenuN', { n: importCount }) : t('menuPage.readingMenu')) : t('menuPage.chooseFiles')}
-          </button>
+          <MenuImportStaging restoId={restoId} token={token} disabled={importingUrl || importingText}
+            onBusy={setImporting}
+            onDone={(items, bilans) => { setImportReport(bilans); setImportedItems(items); }} />
         )}
         {!importedItems && (
           <div className="menu-import-web">
@@ -570,6 +547,7 @@ export default function MenuPage() {
             </div>
           </div>
         )}
+        {importedItems && importReport && <MenuImportReport bilans={importReport} />}
         {importedItems && (
           <MenuImportReview
             items={importedItems}
@@ -578,7 +556,7 @@ export default function MenuPage() {
             restaurant={restaurant}
             submitting={submittingImport}
             onSubmit={submitImportedItems}
-            onCancel={() => setImportedItems(null)}
+            onCancel={() => { setImportedItems(null); setImportReport(null); }}
           />
         )}
       </div>

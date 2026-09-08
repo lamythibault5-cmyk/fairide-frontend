@@ -11,7 +11,9 @@ export function ToastProvider({ children }) {
     setMessage(msg);
     setShow(true);
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setShow(false), 3200);
+    // Au moins 5 s, davantage pour un message long : le temps de lire une erreur avant qu'elle ne disparaisse.
+    const duree = Math.max(5200, Math.min(9000, 2200 + String(msg || '').length * 45));
+    timer.current = setTimeout(() => setShow(false), duree);
   }, []);
 
   return (
