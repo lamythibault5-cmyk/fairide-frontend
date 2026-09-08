@@ -1889,7 +1889,13 @@ export const translations = {
       score: 'Score : {score}{record}',
       newRecord: ' — 🎉 nouveau record !',
       musicOn: 'Activer la musique de fond',
-      musicOff: 'Couper la musique'
+      musicOff: 'Couper la musique',
+      levelUp: 'Niveau {n} !',
+      music: 'Musique',
+      bestTitle: 'Meilleur score',
+      bestScore: 'Record : {n}',
+      newRecordLine: '🎉 Nouveau record !',
+      keyboardHint: 'Clavier : Espace pour maintenir, Échap ou P pour la pause.'
     },
     games: {
       title: '🎮 Mini-jeux',
@@ -5647,7 +5653,13 @@ export const translations = {
       score: 'Score: {score}{record}',
       newRecord: ' — 🎉 new record!',
       musicOn: 'Turn on background music',
-      musicOff: 'Turn off the music'
+      musicOff: 'Turn off the music',
+      levelUp: 'Level {n}!',
+      music: 'Music',
+      bestTitle: 'Best score',
+      bestScore: 'Best: {n}',
+      newRecordLine: '🎉 New record!',
+      keyboardHint: 'Keyboard: Space to hold, Esc or P to pause.'
     },
     games: {
       title: '🎮 Mini-games',
@@ -9405,7 +9417,13 @@ export const translations = {
       score: 'Score: {score}{record}',
       newRecord: ' — 🎉 nieuw record!',
       musicOn: 'Achtergrondmuziek aanzetten',
-      musicOff: 'Muziek uitzetten'
+      musicOff: 'Muziek uitzetten',
+      levelUp: 'Niveau {n}!',
+      music: 'Muziek',
+      bestTitle: 'Beste score',
+      bestScore: 'Record: {n}',
+      newRecordLine: '🎉 Nieuw record!',
+      keyboardHint: 'Toetsenbord: spatie om vast te houden, Esc of P voor pauze.'
     },
     games: {
       title: '🎮 Minispelletjes',

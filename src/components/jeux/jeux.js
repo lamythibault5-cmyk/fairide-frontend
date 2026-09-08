@@ -72,23 +72,23 @@ function creerChute(api, cfg) {
       if (depuisSpawn >= cfg.intervalle(n)) {
         depuisSpawn = 0;
         const o = cfg.nouvelObjet(n);
-        objets.push({ ...o, x: aleatoire(t / 2, w - t / 2), y: -t, v: cfg.vitesse(n) * h, taille: t, id: Math.random() });
+        objets.push({ ...o, x: aleatoire(t / 2, w - t / 2), y: -t, v: cfg.vitesse(n) * h, taille: t, id: Math.random(), phase: Math.random() * Math.PI * 2, balance: aleatoire(0.12, 0.28) });
       }
       const yJoueur = h - t * 1.3;
       const restants = [];
       for (const o of objets) {
-        o.y += o.v * dt;
+        o.y += o.v * dt; o.phase += dt * 3;
         const touche = Math.abs(o.y - yJoueur) < t * 0.6 && Math.abs(o.x - joueurX) < (lj + t) / 2 - 4;
         if (touche) {
           const effet = cfg.toucher(o);
           if (effet === 'perdu') return api.perdre();
-          if (effet === 'point') api.marquer(1);
+          if (effet === 'point') { api.marquer(1); api.effet?.(o.x, yJoueur - t * 0.9, '+1'); api.eclat?.(o.x, yJoueur - t * 0.4, cfg.eclat || IRIS, 7); }
           continue;
         }
         if (o.y > h + t) {
           const effet = cfg.manquer(o);
           if (effet === 'perdu') return api.perdre();
-          if (effet === 'point') api.marquer(1);
+          if (effet === 'point') { api.marquer(1); api.effet?.(o.x, h - t * 1.6, '+1'); }
           continue;
         }
         restants.push(o);
@@ -102,8 +102,9 @@ function creerChute(api, cfg) {
       // Sol : une bande qui ancre le joueur, sinon il flotte.
       ctx.fillStyle = 'rgba(20,18,31,.08)';
       ctx.fillRect(0, h - t * 0.55, w, t * 0.55);
-      for (const o of objets) emoji(ctx, o.emoji, o.x, o.y, o.taille);
-      emoji(ctx, cfg.joueur, joueurX, h - t * 1.2, t * 1.45);
+      for (const o of objets) emoji(ctx, o.emoji, o.x, o.y, o.taille, Math.sin(o.phase) * o.balance);
+      // Le joueur penche légèrement dans le sens de son déplacement : le mouvement se lit mieux.
+      emoji(ctx, cfg.joueur, joueurX, h - t * 1.2, t * 1.45, Math.max(-0.25, Math.min(0.25, (cibleX - joueurX) / (w * 0.6))));
     }
   };
 }
@@ -163,7 +164,7 @@ export const JEUX = [
         const t = taille();
         fenetre = Math.max(0.55, 1.5 - n * 0.12);
         reste = fenetre;
-        cible = { x: aleatoire(t / 2, w - t / 2), y: aleatoire(t / 2, h - t / 2) };
+        cible = { x: aleatoire(t / 2, w - t / 2), y: aleatoire(t / 2, h - t / 2), age: 0 };
       };
       return {
         reset() { cible = null; reste = 0; },
@@ -173,14 +174,14 @@ export const JEUX = [
           const t = taille();
           for (const tape of input.tapes) {
             if (Math.hypot(tape.x - cible.x, tape.y - cible.y) <= t * 0.62) {
-              api.marquer(1);
+              api.marquer(1); api.effet?.(cible.x, cible.y - t * 0.8, '+1'); api.eclat?.(cible.x, cible.y, '#E8A33C', 10);
               // Le niveau est relu APRÈS le point : la cible suivante doit déjà tenir compte du palier
               // qu'on vient éventuellement de franchir, pas de celui d'avant.
               nouvelleCible(api.niveau());
               return undefined;
             }
           }
-          reste -= dt;
+          reste -= dt; cible.age += dt;
           if (reste <= 0) { cible = null; return api.perdre(); }
           return undefined;
         },
@@ -195,7 +196,9 @@ export const JEUX = [
           ctx.lineWidth = 4;
           ctx.lineCap = 'round';
           ctx.stroke();
-          emoji(ctx, '🎯', cible.x, cible.y, t);
+          // Apparition avec un léger rebond (0,2 s) : l'œil repère la nouvelle cible tout de suite.
+          const k = Math.min(1, cible.age / 0.2); const echelle = 1 + Math.sin(k * Math.PI) * 0.18 * (1 - k) + (k - 1) * 0.3;
+          emoji(ctx, '🎯', cible.x, cible.y, t * Math.max(0.7, echelle));
         }
       };
     }
@@ -381,10 +384,10 @@ export const JEUX = [
     ],
     controles: 'Glisse le doigt (ou la souris) de gauche à droite : la flèche suit.',
     creer(api) {
-      let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0;
+      let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0; let traine = [];
       const yFleche = () => h * 0.8;
       return {
-        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = 0; inclinaison = 0; },
+        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = 0; inclinaison = 0; traine = []; },
         redimensionner(nw, nh) { w = nw; h = nh; },
         update(dt, input) {
           const n = input.niveau;
@@ -408,14 +411,19 @@ export const JEUX = [
             const dansHauteur = yf - h * 0.06 < m.y + m.ep && yf + demi > m.y;
             const dansOuverture = ax - demi > m.x && ax + demi < m.x + m.largeur;
             if (dansHauteur && !dansOuverture) return api.perdre();
-            if (!m.compte && m.y > yf) { m.compte = true; api.marquer(1); }
+            if (!m.compte && m.y > yf) { m.compte = true; api.marquer(1); api.effet?.(ax, yf - h * 0.12, '+1'); }
             if (m.y < h + m.ep) restants.push(m);
           }
           murs = restants;
+          // Traînée : les dernières positions de la flèche, dessinées en s'estompant.
+          traine.push({ x: ax, reste: 0.25 }); for (const tr of traine) tr.reste -= dt; traine = traine.filter((tr) => tr.reste > 0).slice(-14);
           return undefined;
         },
         draw(ctx) {
           fondDegrade(ctx, w, h, '#FFFFFF', '#EEF0FF');
+          const yt = yFleche();
+          for (const tr of traine) { ctx.globalAlpha = tr.reste / 0.25 * 0.35; ctx.fillStyle = IRIS; ctx.beginPath(); ctx.arc(tr.x, yt + h * 0.05, 3, 0, Math.PI * 2); ctx.fill(); }
+          ctx.globalAlpha = 1;
           for (const m of murs) {
             ctx.fillStyle = INK;
             ctx.beginPath(); ctx.roundRect(0, m.y, Math.max(0, m.x), m.ep, 4); ctx.fill();

@@ -1572,6 +1572,26 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-regles ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; line-height: 1.45; }
 .jeu-controles { margin: 0; font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.85); }
 .jeu-actions { display: flex; gap: 8px; min-height: 26px; }
+/* Progression vers le prochain palier, score qui « saute » à chaque point, écran de fin plus lisible. */
+.jeu-progress { width: 100%; height: 4px; background: var(--cream-dim); border-radius: 999px; overflow: hidden; }
+.jeu-progress > div { height: 100%; background: linear-gradient(90deg, var(--iris), var(--lime)); transition: width .25s ease; }
+.jeu-score-val { display: inline-block; }
+.jeu-score-val.pop { animation: jeu-pop .28s ease-out; }
+@keyframes jeu-pop { 0% { transform: scale(1); } 40% { transform: scale(1.28); } 100% { transform: scale(1); } }
+.jeu-emoji { font-size: 34px; line-height: 1; }
+.jeu-record { color: var(--lime); font-weight: 700; }
+.jeu-score-final { font-size: 40px; font-weight: 900; line-height: 1; color: #fff; }
+.jeu-score-final.record { color: var(--lime); animation: jeu-pop .5s ease-out; }
+.jeu-ligne-boutons { display: flex; gap: 6px; width: 100%; }
+.jeu-ligne-boutons .jeu-btn { flex: 1 1 0; padding-left: 6px; padding-right: 6px; }
+.jeu-btn-ghost.active { background: rgba(200,240,60,0.25); border-color: var(--lime); }
+.jeu-musique-btn { width: auto; min-width: 26px; padding: 0 6px; gap: 4px; }
+.jeu-musique-label { font-size: 12px; font-weight: 700; }
+.jeu-regles-btn.active { border-color: var(--lime); background: rgba(200,240,60,0.3); }
+.jeu--large .jeu-emoji { font-size: 52px; }
+.jeu--large .jeu-score-final { font-size: 56px; }
+.jeu--large .jeu-progress { height: 6px; }
+@media (prefers-reduced-motion: reduce) { .jeu-score-val.pop, .jeu-score-final.record { animation: none; } }
 .jeu-actions button { padding: 4px 10px; font-size: 11px; background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 .jeu-actions button:hover { background: var(--line); }
 /* Plein écran : tout en plus grand… */
