@@ -29,7 +29,8 @@ export const translations = {
       noMatch: 'Rien ne correspond à ce filtre.',
       notInList: 'Mon commerce n\'est pas dans la liste → je remplis à la main',
       manualMode: 'D\'accord, remplis les champs ci-dessous à la main.',
-      backToList: 'Revoir la liste'
+      backToList: 'Revoir la liste',
+      zonePending: 'Liste de la zone {cp} en préparation (première demande, une à deux minutes)… Elle s\'affichera toute seule ; tu peux déjà taper le nom de ton commerce.'
     },
     paiementLivreur: {
       howTitle: 'Comment tu es payé',
@@ -3410,7 +3411,8 @@ export const translations = {
       noMatch: 'Nothing matches this filter.',
       notInList: 'My business isn\'t listed → I\'ll fill in by hand',
       manualMode: 'All right, fill in the fields below by hand.',
-      backToList: 'Back to the list'
+      backToList: 'Back to the list',
+      zonePending: 'Area {cp} list being prepared (first request, one to two minutes)… It will appear by itself; you can already type your business\'s name.'
     },
     paiementLivreur: {
       howTitle: 'How you get paid',
@@ -6791,7 +6793,8 @@ export const translations = {
       noMatch: 'Niets komt overeen met deze filter.',
       notInList: 'Mijn zaak staat er niet bij → ik vul zelf in',
       manualMode: 'Oké, vul de velden hieronder zelf in.',
-      backToList: 'Terug naar de lijst'
+      backToList: 'Terug naar de lijst',
+      zonePending: 'Lijst van zone {cp} wordt voorbereid (eerste aanvraag, één tot twee minuten)… Ze verschijnt vanzelf; je kunt al de naam van je zaak typen.'
     },
     paiementLivreur: {
       howTitle: 'Hoe je betaald wordt',

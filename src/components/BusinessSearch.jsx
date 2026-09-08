@@ -26,16 +26,24 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
 
   const cpValide = /^\d{4}$/.test(cp.trim());
 
+  // Une zone jamais demandée est collectée par le serveur en tâche de fond (« pending ») : on repasse toutes
+  // les 8 s pendant deux minutes, le temps qu'Overpass réponde ; entre-temps la recherche par nom fonctionne.
   useEffect(() => {
     if (!cpValide) { setZone(null); return undefined; }
     onPostalCode?.(cp.trim());
-    let annule = false;
+    let annule = false; let essais = 0; let timer = null;
     setChargement(true); setZone(null); setReponseNom(null);
-    api(`/restaurants/lookup/zone?postalCode=${cp.trim()}`)
-      .then((r) => { if (!annule) setZone({ results: r.results || [], unavailable: !!r.unavailable }); })
-      .catch(() => { if (!annule) setZone({ results: [], unavailable: true }); })
+    const demander = () => api(`/restaurants/lookup/zone?postalCode=${cp.trim()}`)
+      .then((r) => {
+        if (annule) return;
+        const attente = !!r.pending && essais < 15;
+        setZone({ results: r.results || [], unavailable: !!r.unavailable, pending: attente });
+        if (attente) { essais += 1; timer = setTimeout(demander, 8000); }
+      })
+      .catch(() => { if (!annule) setZone({ results: [], unavailable: true, pending: false }); })
       .finally(() => { if (!annule) setChargement(false); });
-    return () => { annule = true; };
+    demander();
+    return () => { annule = true; clearTimeout(timer); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cp, cpValide]);
 
@@ -94,7 +102,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
         <>
           <p className="small business-search-count" style={{ margin: '6px 0 4px' }}>
             {repli
-              ? (zone.unavailable ? t('businessSearch.zoneUnavailable') : t('businessSearch.zoneEmpty', { cp: cp.trim() }))
+              ? (zone.pending ? `⏳ ${t('businessSearch.zonePending', { cp: cp.trim() })}` : zone.unavailable ? t('businessSearch.zoneUnavailable') : t('businessSearch.zoneEmpty', { cp: cp.trim() }))
               : t('businessSearch.zoneCount', { count: zone.results.length, cp: cp.trim(), shown: visibles.length })}
           </p>
           <ul className="business-zone-list" role="listbox" ref={listeRef} aria-label={t('businessSearch.postalLabel')}>
