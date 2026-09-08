@@ -80,6 +80,7 @@ export default function DashboardLayout() {
         if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
       }
       if (h.openingHours) setOpeningHoursTexte(h.openingHours);
+      if (h.hours && typeof h.hours === 'object') setHours(h.hours);
       if (h.services) {
         setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
         if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);

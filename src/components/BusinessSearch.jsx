@@ -149,7 +149,6 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               <label className="business-fiche-field"><span>{t('businessSearch.fPhone')}</span><input value={fiche.phone} type="tel" onChange={modifier('phone')} /></label>
               <label className="business-fiche-field"><span>{t('businessSearch.fEmail')}</span><input value={fiche.email} type="email" onChange={modifier('email')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fWebsite')}</span><input value={fiche.website} onChange={modifier('website')} placeholder="https://" /></label>
-              <label className="business-fiche-field span2"><span>{t('businessSearch.fHours')}</span><input value={fiche.openingHours} onChange={modifier('openingHours')} placeholder={t('businessSearch.fHoursPh')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fCuisine')}</span><input value={fiche.cuisine} onChange={modifier('cuisine')} placeholder={t('businessSearch.fCuisinePh')} /></label>
             </div>
           )}

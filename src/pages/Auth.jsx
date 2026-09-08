@@ -11,6 +11,8 @@ import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { RESTAURANT_TYPES } from '../menuCategories';
 import { cuisineDepuisOsm } from '../osmCuisine';
+import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
+import OpeningHoursEditor from '../components/OpeningHoursEditor';
 
 function roles(t) {
   return [
@@ -91,11 +93,15 @@ export default function Auth() {
   // contexte à la lecture IA du menu.
   const [cuisine, setCuisine] = useState('');
   const [customCuisine, setCustomCuisine] = useState('');
+  // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
+  const [hours, setHours] = useState(null);
+  const [hoursDepuisWeb, setHoursDepuisWeb] = useState(false);
+  const emailDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
   useEffect(() => {
     if (role !== 'restaurant') return;
-    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, customCuisine: customCuisine.trim() })); } catch { /* sans stockage */ }
-  }, [cuisine, customCuisine, role]);
+    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, customCuisine: customCuisine.trim(), hours: horairesNonVides(hours) ? hours : undefined })); } catch { /* sans stockage */ }
+  }, [cuisine, customCuisine, hours, role]);
   useEffect(() => {
     if (role !== 'restaurant') return undefined;
     const chiffres = (companyNumber || vatNumber).replace(/\D/g, '');
@@ -128,6 +134,10 @@ export default function Auth() {
     if (fiche.phone && !phone.trim()) setPhone(fiche.phone);
     const typeDevine = cuisineDepuisOsm(fiche.cuisine, fiche.type);
     if (typeDevine && !cuisine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+    // Horaires publiés sur le web → structure par jour, tant que le restaurateur n'a pas commencé à les régler lui-même.
+    if (fiche.openingHours && (!hours || hoursDepuisWeb)) { const h = horairesDepuisOsm(fiche.openingHours); if (h) { setHours(h); setHoursDepuisWeb(true); } }
+    // L'e-mail du commerce noté dans la fiche devient l'e-mail du compte (dernière étape), tant qu'il n'a pas été changé à la main.
+    if (fiche.email && (!email.trim() || email === emailDepuisFiche.current)) { setEmail(fiche.email); emailDepuisFiche.current = fiche.email; }
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
     try {
       const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
@@ -614,6 +624,11 @@ export default function Auth() {
                   )}
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
+                </div>
+                <div className="field">
+                  <label>{t('auth.hoursTitle')}</label>
+                  <p className="small" style={{ margin: '0 0 6px' }}>{hoursDepuisWeb ? `✅ ${t('auth.hoursFromWeb')}` : t('auth.hoursHelp')}</p>
+                  <OpeningHoursEditor value={hours || {}} onChange={(h) => { setHours(h); setHoursDepuisWeb(false); }} />
                 </div>
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>

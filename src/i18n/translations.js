@@ -3764,7 +3764,10 @@ export const translations = {
       errCuisine: 'Choisis un type de cuisine (ou « Autre »).',
       passwordConfirm: 'Confirme ton mot de passe',
       phPasswordConfirm: 'Retape le même mot de passe',
-      addressFromFiche: 'Adresse reprise de la fiche : l\'étape « Ton adresse » est sautée. Corrige-la ci-dessus si besoin.'
+      addressFromFiche: 'Adresse reprise de la fiche : l\'étape « Ton adresse » est sautée. Corrige-la ci-dessus si besoin.',
+      hoursTitle: 'Horaires d\'ouverture',
+      hoursFromWeb: 'Horaires repris du web : vérifie-les jour par jour et adapte-les si besoin.',
+      hoursHelp: 'Indique tes horaires jour par jour (plusieurs créneaux possibles). Tu pourras les modifier à tout moment.'
     }
   },
   en: {
@@ -7528,7 +7531,10 @@ export const translations = {
       errCuisine: 'Choose a type of cuisine (or "Other").',
       passwordConfirm: 'Confirm your password',
       phPasswordConfirm: 'Type the same password again',
-      addressFromFiche: 'Address taken from the listing: the "Your address" step is skipped. Correct it above if needed.'
+      addressFromFiche: 'Address taken from the listing: the "Your address" step is skipped. Correct it above if needed.',
+      hoursTitle: 'Opening hours',
+      hoursFromWeb: 'Opening hours taken from the web: check them day by day and adjust if needed.',
+      hoursHelp: 'Enter your opening hours day by day (several time slots possible). You can change them any time.'
     }
   },
   nl: {
@@ -11292,7 +11298,10 @@ export const translations = {
       errCuisine: 'Kies een soort keuken (of "Andere").',
       passwordConfirm: 'Bevestig je wachtwoord',
       phPasswordConfirm: 'Typ hetzelfde wachtwoord opnieuw',
-      addressFromFiche: 'Adres overgenomen van de fiche: de stap "Je adres" wordt overgeslagen. Verbeter het hierboven indien nodig.'
+      addressFromFiche: 'Adres overgenomen van de fiche: de stap "Je adres" wordt overgeslagen. Verbeter het hierboven indien nodig.',
+      hoursTitle: 'Openingsuren',
+      hoursFromWeb: 'Openingsuren van het web overgenomen: controleer ze per dag en pas ze aan indien nodig.',
+      hoursHelp: 'Geef je openingsuren per dag op (meerdere tijdvakken mogelijk). Je kunt ze altijd wijzigen.'
     }
   }
 };
