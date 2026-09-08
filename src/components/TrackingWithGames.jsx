@@ -33,10 +33,14 @@ function useLargeurFenetre() {
 const CLE_JEUX_MASQUES = 'fairide_games_hidden';
 function lireJeuxMasques() { try { return localStorage.getItem(CLE_JEUX_MASQUES) === '1'; } catch { return false; } }
 
-export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300 }) {
+// `jeux` : les mini-jeux ne sont proposés qu'aux CLIENTS, qui attendent leur commande. Restaurateur et livreur
+// travaillent : leur page Carte est un outil (suivi au comptoir, guidage), la carte y est seule, au centre,
+// en grand — voir pages/restaurant/MapPage.jsx et pages/driver/MapPage.jsx qui passent jeux={false}.
+export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300, jeux = true }) {
   const { t } = useLanguage();
   const [pleinEcran, setPleinEcran] = useState(false);
-  const [jeuxMasques, setJeuxMasques] = useState(lireJeuxMasques);
+  const [jeuxMasquesChoix, setJeuxMasques] = useState(lireJeuxMasques);
+  const jeuxMasques = !jeux || jeuxMasquesChoix;
   const empile = useLargeurFenetre() <= EMPILE_BREAKPOINT;
   function basculerJeux() {
     setJeuxMasques((m) => { try { localStorage.setItem(CLE_JEUX_MASQUES, m ? '0' : '1'); } catch { /* sans stockage */ } return !m; });
@@ -44,7 +48,7 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
   const hauteurCarte = jeuxMasques ? Math.max(hauteur, 460) : hauteur;
   return (
     <>
-      <div className={`tracking-with-game${jeuxMasques ? ' jeux-masques' : ''}`} style={{ margin: '10px 0' }}>
+      <div className={`tracking-with-game${jeuxMasques ? ' jeux-masques' : ''}${jeux ? '' : ' carte-seule'}`} style={{ margin: '10px 0' }}>
         <div className="tracking-map-col">
           {rendreCarte({ height: hauteurCarte })}
           {legende && <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>{legende}</div>}
@@ -52,11 +56,11 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
         {!jeuxMasques && <GameSwitcher pourquoi={t(`tracking.${POURQUOI[role]}`)} width={empile ? 240 : 140} height={empile ? 300 : 280} />}
       </div>
       <div className="tracking-actions">
-        <button type="button" className="tracking-expand-btn" onClick={basculerJeux} aria-pressed={jeuxMasques}>{jeuxMasques ? t('tracking.showGames') : t('tracking.hideGames')}</button>
+        {jeux && <button type="button" className="tracking-expand-btn" onClick={basculerJeux} aria-pressed={jeuxMasques}>{jeuxMasques ? t('tracking.showGames') : t('tracking.hideGames')}</button>}
         <button type="button" className="tracking-expand-btn" onClick={() => setPleinEcran(true)}>{jeuxMasques ? t('tracking.enlargeMap') : t('tracking.enlarge')}</button>
       </div>
       {pleinEcran && (
-        <TrackingFullscreen role={role} rendreCarte={rendreCarte} legende={legende} etaSansEstimation={etaSansEstimation} jeuxMasques={jeuxMasques} onBasculerJeux={basculerJeux} onClose={() => setPleinEcran(false)} />
+        <TrackingFullscreen role={role} rendreCarte={rendreCarte} legende={legende} etaSansEstimation={etaSansEstimation} jeuxMasques={jeuxMasques} onBasculerJeux={jeux ? basculerJeux : null} onClose={() => setPleinEcran(false)} />
       )}
     </>
   );
@@ -119,7 +123,7 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, jeu
     : (etaSansEstimation || t('tracking.courierOnWay'));
 
   return createPortal(
-    <div className="tracking-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={t('tracking.fullscreenTitle')}>
+    <div className="tracking-fullscreen-overlay" role="dialog" aria-modal="true" aria-label={jeuxMasques ? t('tracking.fullscreenTitleMap') : t('tracking.fullscreenTitle')}>
       <div className="tracking-fullscreen-bar">
         {jeuxMasques ? null : narrow ? (
           <div className="tracking-fullscreen-tabs" role="tablist">
@@ -146,7 +150,7 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, jeu
           <GameSwitcher fill large pourquoi={t(`tracking.${POURQUOI[role]}`)} />
         </div>
       </div>
-      <p className="tracking-fullscreen-aide small">{t('tracking.fullscreenHelp')}</p>
+      <p className="tracking-fullscreen-aide small">{jeuxMasques ? t('tracking.fullscreenHelpMap') : t('tracking.fullscreenHelp')}</p>
     </div>,
     document.body
   );

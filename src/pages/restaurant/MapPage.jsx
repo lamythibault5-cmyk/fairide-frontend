@@ -5,9 +5,9 @@ import { orderTypeLabel, orderTypeColor } from '../../orderStatus';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Suivi en direct des livraisons en cours (livreur à deux roues en route vers le client), pour que le
-// commerçant puisse voir où en est chaque livraison sans appeler le livreur. Même bloc carte + jeux que
-// chez le client (TrackingWithGames) : on peut laisser l'écran ouvert au comptoir et voir la livraison
-// avancer sans rester planté devant. Sans livraison : le commerce, seul, sur la carte.
+// commerçant puisse voir où en est chaque livraison sans appeler le livreur. Même bloc carte que chez le
+// client (TrackingWithGames) mais SANS les mini-jeux (jeux={false}) : au comptoir, la carte est un outil de
+// travail, seule, au centre et en grand. Sans livraison : le commerce, seul, sur la carte.
 export default function MapPage() {
   const { t } = useLanguage();
   const { orders, restaurant } = useOutletContext();
@@ -17,7 +17,7 @@ export default function MapPage() {
   );
 
   return (
-    <div>
+    <div className="carte-page">
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapResto.title')}</h2>
       <p className="small" style={{ marginBottom: 16 }}>
         {t('mapResto.intro')}
@@ -26,7 +26,7 @@ export default function MapPage() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="empty" style={{ marginBottom: 10 }}>{t('mapResto.noneOngoing')}</div>
           <TrackingWithGames
-            role="restaurant"
+            role="restaurant" jeux={false} hauteur={420}
             legende={`${restaurant?.lat ? t('mapResto.hereIsBusiness') : ''}${t('mapResto.whenStarts')}`}
             etaSansEstimation={t('mapResto.nothingOngoing')}
             rendreCarte={({ height, onEta }) => (
@@ -46,7 +46,7 @@ export default function MapPage() {
               <div className="small">🛵 {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</div>
             )}
             <TrackingWithGames
-              role="restaurant"
+              role="restaurant" jeux={false} hauteur={420}
               legende={o.driverLat ? t('mapResto.livePosition', { name: o.driverName || t('mapResto.yourCourier') }) : t('mapResto.waitingPosition')}
               etaSansEstimation={o.driverLat ? t('mapResto.courierOnWay') : t('mapResto.courierAwaited')}
               rendreCarte={({ height, onEta }) => (

@@ -2608,3 +2608,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .statements-group-totals { display: flex; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
 .statements-group-totals > div { display: flex; flex-direction: column; align-items: flex-end; min-width: 70px; }
 @media (max-width: 640px) { .statements-group-totals { display: none; } }
+
+/* Pages Carte restaurateur / livreur : sans jeux, la carte est l'unique contenu — centrée, pleine largeur du
+   bloc, actions centrées dessous (voir TrackingWithGames jeux={false}). */
+.carte-page { max-width: 960px; margin: 0 auto; }
+.tracking-with-game.carte-seule { display: block; }
+.tracking-with-game.carte-seule > .tracking-map-col { width: 100%; }
+.carte-page .tracking-actions { justify-content: center; }

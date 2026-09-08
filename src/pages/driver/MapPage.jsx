@@ -110,7 +110,7 @@ export default function MapPage() {
   if (!orders) return <div className="empty">{t('mapDriver.loading')}</div>;
 
   return (
-    <div>
+    <div className="carte-page">
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapDriver.title')}</h2>
       <p className="small" style={{ marginBottom: 16 }}>
         {t('mapDriver.intro')}
@@ -122,7 +122,7 @@ export default function MapPage() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="empty" style={{ marginBottom: 10 }}>{t('mapDriver.noneOngoing')}</div>
           <TrackingWithGames
-            role="driver"
+            role="driver" jeux={false} hauteur={hauteurCourse}
             legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
             etaSansEstimation={t('mapDriver.noRide')}
             rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
@@ -154,10 +154,10 @@ export default function MapPage() {
                 // En course, pas de jeux : le livreur roule, la carte seule, en grand.
                 <div style={{ margin: '10px 0' }}>{carte({ height: hauteurCourse })}</div>
               ) : (
-                // Commande pas encore retirée : le livreur attend au restaurant (ou y va). Les jeux servent
-                // à patienter sans quitter la carte — pas à jouer en roulant, la phrase 💡 le rappelle.
+                // Commande pas encore retirée : le livreur va au restaurant ou y attend — la carte seule,
+                // agrandissable, sans jeux (les mini-jeux sont réservés aux clients).
                 <TrackingWithGames
-                  role="driver"
+                  role="driver" jeux={false} hauteur={hauteurCourse}
                   legende={o.status === 'pret' ? t('mapDriver.readyAtRestaurant') : t('mapDriver.preparing')}
                   etaSansEstimation={t('mapDriver.toRestaurantIcon')}
                   rendreCarte={carte}

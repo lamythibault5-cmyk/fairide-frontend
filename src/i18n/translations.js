@@ -1966,12 +1966,14 @@ export const translations = {
       fullscreenHelp: 'Échap ou ✕ pour revenir · 📖 pour les règles du jeu · 🔇 pour la musique de fond',
       hideGames: '🙈 Masquer les jeux',
       showGames: '🎮 Afficher les jeux',
-      enlargeMap: '⛶ Agrandir la carte'
+      enlargeMap: '⛶ Agrandir la carte',
+      fullscreenTitleMap: 'Carte en plein écran',
+      fullscreenHelpMap: 'Échap ou ✕ pour revenir'
     },
     mapResto: {
       title: 'Carte',
       intro: 'Suis en direct tes livraisons en cours : la position du livreur, le trajet qu\'il lui reste et son heure d\'arrivée estimée chez le client.',
-      noneOngoing: 'Aucune livraison en cours pour le moment — mais les jeux restent jouables !',
+      noneOngoing: 'Aucune livraison en cours pour le moment. Dès qu\'un livreur part, tu le suis ici en direct.',
       hereIsBusiness: 'Voici ton commerce. ',
       whenStarts: 'Dès qu\'un livreur part avec une commande, il apparaît ici en direct.',
       nothingOngoing: '⏳ Rien en cours',
@@ -2016,7 +2018,7 @@ export const translations = {
       title: 'Carte',
       intro: 'Navigation vers ton prochain arrêt pour chaque course en cours, avec le temps qu\'il te reste — utilise-la à la place d\'une appli de guidage externe.',
       enableGeo: 'Active la géolocalisation pour voir le trajet depuis ta position.',
-      noneOngoing: 'Aucune course en cours pour le moment — mais les jeux restent jouables !',
+      noneOngoing: 'Aucune course en cours pour le moment. Dès qu\'une course démarre, le trajet s\'affiche ici.',
       addressNotLocated: 'Adresse non localisée pour cette course.',
       toastAllowGeo: 'Autorise la géolocalisation dans ton navigateur pour utiliser la navigation.',
       hereYouAre: 'Te voilà. Dès qu\'une course démarre, le trajet vers ton prochain arrêt apparaît ici.',
@@ -5818,12 +5820,14 @@ export const translations = {
       fullscreenHelp: 'Esc or ✕ to go back · 📖 for the game rules · 🔇 for background music',
       hideGames: '🙈 Hide the games',
       showGames: '🎮 Show the games',
-      enlargeMap: '⛶ Enlarge the map'
+      enlargeMap: '⛶ Enlarge the map',
+      fullscreenTitleMap: 'Full-screen map',
+      fullscreenHelpMap: 'Esc or ✕ to go back'
     },
     mapResto: {
       title: 'Map',
       intro: 'Follow your ongoing deliveries live: the courier\'s position, the route left and the estimated arrival time at the customer\'s.',
-      noneOngoing: 'No delivery in progress right now — but the games are still playable!',
+      noneOngoing: 'No delivery in progress right now. As soon as a courier sets off, you follow them here live.',
       hereIsBusiness: 'This is your business. ',
       whenStarts: 'As soon as a courier leaves with an order, they appear here live.',
       nothingOngoing: '⏳ Nothing in progress',
@@ -5868,7 +5872,7 @@ export const translations = {
       title: 'Map',
       intro: 'Navigation to your next stop for each ongoing ride, with the time you have left — use it instead of an external navigation app.',
       enableGeo: 'Enable geolocation to see the route from your position.',
-      noneOngoing: 'No ride in progress right now — but the games are still playable!',
+      noneOngoing: 'No ride in progress right now. As soon as a ride starts, the route appears here.',
       addressNotLocated: 'Address not located for this ride.',
       toastAllowGeo: 'Allow geolocation in your browser to use navigation.',
       hereYouAre: 'Here you are. As soon as a ride starts, the route to your next stop appears here.',
@@ -9670,12 +9674,14 @@ export const translations = {
       fullscreenHelp: 'Esc of ✕ om terug te gaan · 📖 voor de spelregels · 🔇 voor achtergrondmuziek',
       hideGames: '🙈 Games verbergen',
       showGames: '🎮 Games tonen',
-      enlargeMap: '⛶ Kaart vergroten'
+      enlargeMap: '⛶ Kaart vergroten',
+      fullscreenTitleMap: 'Kaart op volledig scherm',
+      fullscreenHelpMap: 'Esc of ✕ om terug te keren'
     },
     mapResto: {
       title: 'Kaart',
       intro: 'Volg je lopende leveringen live: de positie van de koerier, de resterende route en de geschatte aankomsttijd bij de klant.',
-      noneOngoing: 'Momenteel geen levering bezig — maar de spelletjes blijven speelbaar!',
+      noneOngoing: 'Geen levering bezig op dit moment. Zodra een koerier vertrekt, volg je hem hier live.',
       hereIsBusiness: 'Dit is je zaak. ',
       whenStarts: 'Zodra een koerier met een bestelling vertrekt, verschijnt hij hier live.',
       nothingOngoing: '⏳ Niets bezig',
@@ -9720,7 +9726,7 @@ export const translations = {
       title: 'Kaart',
       intro: 'Navigatie naar je volgende halte voor elke lopende rit, met de tijd die je nog hebt — gebruik ze in plaats van een externe navigatie-app.',
       enableGeo: 'Schakel geolocatie in om de route vanaf je positie te zien.',
-      noneOngoing: 'Momenteel geen rit bezig — maar de spelletjes blijven speelbaar!',
+      noneOngoing: 'Geen rit bezig op dit moment. Zodra een rit start, verschijnt de route hier.',
       addressNotLocated: 'Adres niet gelokaliseerd voor deze rit.',
       toastAllowGeo: 'Sta geolocatie toe in je browser om de navigatie te gebruiken.',
       hereYouAre: 'Hier ben je. Zodra een rit start, verschijnt de route naar je volgende halte hier.',
