@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -11,6 +11,7 @@ import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
+import { SkeletonCards } from './Skeleton';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
@@ -24,6 +25,16 @@ const SOUS_SECTIONS_COMPTE = ['/invoices',
 function estSousSectionCompte(pathname) {
   return SOUS_SECTIONS_COMPTE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+// Clé du conteneur animé autour du contenu. Elle changeait à CHAQUE adresse : dans l'espace
+// restaurateur ou admin, passer d'un onglet à l'autre recréait donc toute la coquille (DashboardLayout,
+// AdminLayout) — rechargement des données, squelettes, fondu sur toute la zone : le « mini-bug » au
+// changement de page. À l'intérieur d'une coquille la clé est maintenant celle de la coquille ; c'est
+// elle qui anime ses propres pages (voir DashboardLayout.jsx / AdminLayout.jsx).
+const COQUILLES = ['/dashboard', '/admin'];
+function cleTransition(pathname) {
+  return COQUILLES.find((p) => pathname === p || pathname.startsWith(`${p}/`)) || pathname;
+}
+const attentePage = <div style={{ paddingTop: 8 }}><SkeletonCards count={3} /></div>;
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
@@ -74,8 +85,10 @@ export default function Layout() {
             {estSousSectionCompte(location.pathname) && (
               <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">{t('nav.backToAccount')}</Link>
             )}
-            <div className="page-fade" key={location.pathname}>
-              <Outlet context={{ setRightSlot }} />
+            <div className="page-fade" key={cleTransition(location.pathname)}>
+              <Suspense fallback={attentePage}>
+                <Outlet context={{ setRightSlot }} />
+              </Suspense>
             </div>
             <div className="dashboard-footer-links">
               <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
@@ -159,8 +172,10 @@ export default function Layout() {
         </div>
       </div>
       <div className={`wrap${fondCuisine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
-        <div className="page-fade" key={location.pathname}>
-          <Outlet />
+        <div className="page-fade" key={cleTransition(location.pathname)}>
+          <Suspense fallback={attentePage}>
+            <Outlet />
+          </Suspense>
         </div>
         <Footer />
       </div>

@@ -2903,7 +2903,16 @@ export const translations = {
       subNotYetTitle: 'Rien à activer pour l\'instant',
       subNotYetText: 'Tu peux créer ton compte, ton restaurant et ta carte sans abonnement. L\'abonnement Fairide ne s\'active que lorsque l\'application sera disponible, mi-octobre 2026 — et le premier mois est offert de toute façon. Tu recevras un e-mail à ce moment-là.',
       driverPaymentRowSub: 'Comment tu es payé, Stripe, autofacturation, reçus de tes courses — activation fin septembre',
-      driverPaymentRowSubActive: 'Paiements actifs · reçus de tes courses et pourboires'
+      driverPaymentRowSubActive: 'Paiements actifs · reçus de tes courses et pourboires',
+      phoneVerified: 'Numéro de téléphone vérifié',
+      phoneNotVerified: 'Numéro de téléphone pas encore vérifié. Tu peux le faire maintenant ou plus tard.',
+      phoneNotVerifiedShort: 'téléphone à vérifier',
+      verifyPhone: 'Vérifier mon numéro',
+      phoneCodeSentSms: 'Code envoyé par SMS au {phone}. Saisis-le ci-dessous.',
+      phoneCodeSentEmail: 'Code envoyé par e-mail à {email} (pas encore de SMS chez Fairide). Saisis-le ci-dessous.',
+      phoneVerifiedToast: 'Numéro de téléphone vérifié, merci !',
+      phoneVerifyLater: 'Plus tard',
+      confirm: 'Confirmer'
     },
     resa: {
       title: '📅 Réservations',
@@ -3787,7 +3796,10 @@ export const translations = {
       addressFromFiche: 'Adresse reprise de la fiche : l\'étape « Ton adresse » est sautée. Corrige-la ci-dessus si besoin.',
       hoursTitle: 'Horaires d\'ouverture',
       hoursFromWeb: 'Horaires repris du web : vérifie-les jour par jour et adapte-les si besoin.',
-      hoursHelp: 'Indique tes horaires jour par jour (plusieurs créneaux possibles). Tu pourras les modifier à tout moment.'
+      hoursHelp: 'Indique tes horaires jour par jour (plusieurs créneaux possibles). Tu pourras les modifier à tout moment.',
+      errEmailTaken: 'Un compte existe déjà avec cette adresse e-mail. Connecte-toi ou utilise « Mot de passe oublié ».',
+      errPhoneTaken: 'Un compte existe déjà avec ce numéro de téléphone. Chaque numéro ne peut être lié qu\'à un seul compte.',
+      errPhoneInvalid: 'Numéro de téléphone invalide (ex. +32 470 00 00 00 ou 0470 00 00 00).'
     }
   },
   en: {
@@ -6690,7 +6702,16 @@ export const translations = {
       subNotYetTitle: 'Nothing to activate for now',
       subNotYetText: 'You can create your account, your restaurant and your menu without a subscription. The Fairide subscription only starts when the app is available, mid-October 2026 — and the first month is free in any case. You will receive an e-mail at that moment.',
       driverPaymentRowSub: 'How you get paid, Stripe, self-billing, ride receipts — activation end of September',
-      driverPaymentRowSubActive: 'Payments active · receipts of your rides and tips'
+      driverPaymentRowSubActive: 'Payments active · receipts of your rides and tips',
+      phoneVerified: 'Phone number verified',
+      phoneNotVerified: 'Phone number not verified yet. You can do it now or later.',
+      phoneNotVerifiedShort: 'phone to verify',
+      verifyPhone: 'Verify my number',
+      phoneCodeSentSms: 'Code sent by text message to {phone}. Enter it below.',
+      phoneCodeSentEmail: 'Code sent by e-mail to {email} (Fairide does not send text messages yet). Enter it below.',
+      phoneVerifiedToast: 'Phone number verified, thank you!',
+      phoneVerifyLater: 'Later',
+      confirm: 'Confirm'
     },
     resa: {
       title: '📅 Reservations',
@@ -7574,7 +7595,10 @@ export const translations = {
       addressFromFiche: 'Address taken from the listing: the "Your address" step is skipped. Correct it above if needed.',
       hoursTitle: 'Opening hours',
       hoursFromWeb: 'Opening hours taken from the web: check them day by day and adjust if needed.',
-      hoursHelp: 'Enter your opening hours day by day (several time slots possible). You can change them any time.'
+      hoursHelp: 'Enter your opening hours day by day (several time slots possible). You can change them any time.',
+      errEmailTaken: 'An account already exists with this e-mail address. Log in or use “Forgot password”.',
+      errPhoneTaken: 'An account already exists with this phone number. Each number can be linked to only one account.',
+      errPhoneInvalid: 'Invalid phone number (e.g. +32 470 00 00 00 or 0470 00 00 00).'
     }
   },
   nl: {
@@ -10477,7 +10501,16 @@ export const translations = {
       subNotYetTitle: 'Voorlopig niets te activeren',
       subNotYetText: 'Je kunt je account, je restaurant en je kaart aanmaken zonder abonnement. Het Fairide-abonnement start pas wanneer de app beschikbaar is, midden oktober 2026 — en de eerste maand is sowieso gratis. Je krijgt dan een e-mail.',
       driverPaymentRowSub: 'Hoe je betaald wordt, Stripe, selfbilling, ritbonnen — activering eind september',
-      driverPaymentRowSubActive: 'Betalingen actief · bonnen van je ritten en fooien'
+      driverPaymentRowSubActive: 'Betalingen actief · bonnen van je ritten en fooien',
+      phoneVerified: 'Telefoonnummer geverifieerd',
+      phoneNotVerified: 'Telefoonnummer nog niet geverifieerd. Je kunt dit nu of later doen.',
+      phoneNotVerifiedShort: 'telefoon te verifiëren',
+      verifyPhone: 'Mijn nummer verifiëren',
+      phoneCodeSentSms: 'Code per sms verstuurd naar {phone}. Vul hem hieronder in.',
+      phoneCodeSentEmail: 'Code per e-mail verstuurd naar {email} (Fairide verstuurt nog geen sms). Vul hem hieronder in.',
+      phoneVerifiedToast: 'Telefoonnummer geverifieerd, bedankt!',
+      phoneVerifyLater: 'Later',
+      confirm: 'Bevestigen'
     },
     resa: {
       title: '📅 Reservaties',
@@ -11361,7 +11394,10 @@ export const translations = {
       addressFromFiche: 'Adres overgenomen van de fiche: de stap "Je adres" wordt overgeslagen. Verbeter het hierboven indien nodig.',
       hoursTitle: 'Openingsuren',
       hoursFromWeb: 'Openingsuren van het web overgenomen: controleer ze per dag en pas ze aan indien nodig.',
-      hoursHelp: 'Geef je openingsuren per dag op (meerdere tijdvakken mogelijk). Je kunt ze altijd wijzigen.'
+      hoursHelp: 'Geef je openingsuren per dag op (meerdere tijdvakken mogelijk). Je kunt ze altijd wijzigen.',
+      errEmailTaken: 'Er bestaat al een account met dit e-mailadres. Log in of gebruik “Wachtwoord vergeten”.',
+      errPhoneTaken: 'Er bestaat al een account met dit telefoonnummer. Elk nummer kan maar aan één account gekoppeld zijn.',
+      errPhoneInvalid: 'Ongeldig telefoonnummer (bv. +32 470 00 00 00 of 0470 00 00 00).'
     }
   }
 };

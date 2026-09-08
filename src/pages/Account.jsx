@@ -4,6 +4,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import PasswordInput from '../components/PasswordInput';
+import PhoneVerification from '../components/PhoneVerification';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
@@ -514,7 +515,7 @@ export default function Account() {
           </div>
         </LigneCompte>
 
-        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone ? `${user.email} · ${user.phone}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone ? `${user.email} · ${user.phone}${user.phoneVerified ? '' : ` · ${t('accountUi.phoneNotVerifiedShort')}`}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
           <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
             {t('accountUi.contactCodeInfo')}
           </p>
@@ -527,6 +528,7 @@ export default function Account() {
             field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
             requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
           />
+          <PhoneVerification />
         </LigneCompte>
 
         <LigneCompte icone="🔑" titre={t('account.passwordTitle')} sous={t('accountUi.newPasswordSub')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>

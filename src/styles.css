@@ -1209,7 +1209,15 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
 @keyframes popIn { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
 
-.page-fade { animation: fadeIn .35s cubic-bezier(.2,.8,.2,1) both; }
+.page-fade { animation: fadeIn .22s cubic-bezier(.2,.8,.2,1) both; }
+/* Barre de progression de navigation (components/NavigationFeedback.jsx) : fine, en haut, avance vite
+   puis ralentit tant que la page se charge, file jusqu'au bout et s'efface quand elle est affichée. */
+.nav-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 4000; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 3px 3px 0; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,.15); }
+.nav-progress.encours { animation: nav-progress-avance 6s cubic-bezier(.1,.7,.2,1) forwards; }
+.nav-progress.fin { width: 100%; animation: nav-progress-fin .3s ease forwards; }
+@keyframes nav-progress-avance { 0% { width: 0; } 20% { width: 45%; } 60% { width: 78%; } 100% { width: 92%; } }
+@keyframes nav-progress-fin { 0% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } .nav-progress.encours { animation-duration: 1s; } }
 
 .card { transition: border-color .15s ease; }
 /* Plus d'effet de survol sur les cartes de contenu : le soulèvement + ombre d'avant n'a plus de sens en aplats, et un filet iris qui s'allume sous chaque bloc statique serait du bruit. Les cartes réellement cliquables (.rest-card, .join-card, .menu-item-card) gardent le leur, défini plus haut. */

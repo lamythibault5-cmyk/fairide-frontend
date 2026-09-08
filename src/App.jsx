@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
+import NavigationFeedback from './components/NavigationFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SkeletonCards } from './components/Skeleton';
 
@@ -89,6 +90,7 @@ export default function App() {
   return (
     <>
       <ScrollRestorer />
+      <NavigationFeedback />
       {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
           au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}

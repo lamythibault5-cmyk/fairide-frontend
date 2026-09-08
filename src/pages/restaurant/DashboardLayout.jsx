@@ -167,6 +167,15 @@ export default function DashboardLayout() {
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
+  // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
+  // affiché jusqu'à la réponse) pour que la page ouverte soit à jour sans attendre le prochain cycle.
+  const premierChemin = useRef(chemin);
+  useEffect(() => {
+    if (!restoId || premierChemin.current === chemin) return;
+    premierChemin.current = chemin;
+    loadDashboard(restoId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chemin, restoId]);
 
   async function loadDashboard(id) {
     try {
@@ -433,7 +442,9 @@ export default function DashboardLayout() {
       {restaurant && <NewOrderAlertBar {...orderAlert} />}
 
       {(restaurant || (surCarte && myRestos.length === 0)) && (
-        <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
+        <div className="page-fade" key={chemin}>
+          <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
+        </div>
       )}
     </div>
   );

@@ -258,8 +258,30 @@ export default function Auth() {
     return e;
   }
 
-  function goNext() {
-    const e = validateStep(stepKey);
+  const [verifDispo, setVerifDispo] = useState(false);
+  /* Un e-mail = un compte, un numéro de téléphone = un compte : le serveur applique la règle à
+     l'inscription (409), mais on la vérifie déjà en quittant l'étape concernée pour que le refus
+     s'affiche sous le champ fautif, pas après avoir tout rempli. Réseau indisponible : on laisse
+     passer, l'inscription elle-même tranchera. */
+  async function verifierDisponibilite(key) {
+    const corps = key === 'identity' ? { phone: phone.trim() } : key === 'account' ? { email: email.trim() } : null;
+    if (!corps) return {};
+    try {
+      const r = await api('/auth/check-availability', { method: 'POST', body: corps });
+      const e = {};
+      if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
+      if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
+      if (r.emailTaken) e.email = t('auth.errEmailTaken');
+      return e;
+    } catch { return {}; }
+  }
+
+  async function goNext() {
+    let e = validateStep(stepKey);
+    setErrors(e);
+    if (Object.keys(e).length) return;
+    setVerifDispo(true);
+    try { e = await verifierDisponibilite(stepKey); } finally { setVerifDispo(false); }
     setErrors(e);
     if (Object.keys(e).length === 0) setStep((s) => s + 1);
   }
@@ -389,6 +411,12 @@ export default function Auth() {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
         setPendingEmail(email.trim());
         toast(t('auth.errEmailNotVerified'));
+      } else if (err.field === 'phone' || err.field === 'email') {
+        const message = err.field === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken');
+        setErrors({ [err.field]: message });
+        const i = steps.indexOf(err.field === 'phone' ? 'identity' : 'account');
+        if (i >= 0) setStep(i);
+        toast(message);
       } else {
         toast(err.message);
       }
