@@ -60,6 +60,14 @@ export default function MenuPage() {
   const [importedItems, setImportedItems] = useState(() => (sessionStorage.getItem(`fairide_menu_import_draft_${restoId}`) ? [] : null));
   const [submittingImport, setSubmittingImport] = useState(false);
   const importFileRef = useRef(null);
+  // Import depuis le web : site du restaurant, Uber Eats, Deliveroo, Takeaway. L'adresse relevée à
+  // l'inscription (fairide_menu_source_url) est proposée d'office.
+  const [importUrl, setImportUrl] = useState(() => { try { return localStorage.getItem('fairide_menu_source_url') || ''; } catch { return ''; } });
+  const [importingUrl, setImportingUrl] = useState(false);
+  const importUrlRef = useRef(null);
+  const [importText, setImportText] = useState('');
+  const [importTextOpen, setImportTextOpen] = useState(false);
+  const [importingText, setImportingText] = useState(false);
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
   // n'est active) plutôt qu'un mode global sur tout le menu — plus simple à suivre quand le menu a
@@ -430,6 +438,43 @@ export default function MenuPage() {
     }
   }
 
+  async function handleImportUrl() {
+    const url = importUrl.trim();
+    if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
+    setImportingUrl(true);
+    setImportedItems(null);
+    try {
+      const r = await api(`/restaurants/${restoId}/menu/import-url`, { method: 'POST', token, body: { url } });
+      setImportedItems(r.items);
+      try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ }
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setImportingUrl(false);
+    }
+  }
+
+  async function handleImportText() {
+    const text = importText.trim();
+    if (text.length < 40) { toast(t('menuPage.toastTextTooShort')); return; }
+    setImportingText(true);
+    setImportedItems(null);
+    try {
+      const r = await api(`/restaurants/${restoId}/menu/import-text`, { method: 'POST', token, body: { text } });
+      setImportedItems(r.items);
+      setImportText(''); setImportTextOpen(false);
+    } catch (err) {
+      toast(err.message);
+    } finally {
+      setImportingText(false);
+    }
+  }
+
+  function allerALImportWeb() {
+    setStartChoiceMade(true);
+    setTimeout(() => { importUrlRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); importUrlRef.current?.focus(); }, 50);
+  }
+
   async function submitImportedItems(items, replaceExisting) {
     if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setSubmittingImport(true);
@@ -489,9 +534,38 @@ export default function MenuPage() {
           onChange={handleImportFile}
         />
         {!importedItems && (
-          <button type="button" className="btn-teal" disabled={importing} onClick={() => importFileRef.current?.click()}>
+          <button type="button" className="btn-teal" disabled={importing || importingUrl} onClick={() => importFileRef.current?.click()}>
             {importing ? t('menuPage.readingMenu') : t('menuPage.chooseFile')}
           </button>
+        )}
+        {!importedItems && (
+          <div className="menu-import-web">
+            <h4 style={{ margin: '14px 0 4px', fontSize: 14 }}>{t('menuPage.importUrlTitle')}</h4>
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
+            <div className="menu-import-web-row">
+              <input ref={importUrlRef} id="menu-import-url" type="url" inputMode="url" value={importUrl} onChange={(e) => setImportUrl(e.target.value)}
+                placeholder={t('menuPage.importUrlPlaceholder')} disabled={importingUrl} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleImportUrl(); } }} />
+              <button type="button" className="btn-teal" disabled={importingUrl || importing} onClick={handleImportUrl}>
+                {importingUrl ? t('menuPage.importUrlReading') : t('menuPage.importUrlButton')}
+              </button>
+            </div>
+            <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('menuPage.importUrlHint')}</p>
+            <div className="menu-import-text">
+              {!importTextOpen ? (
+                <button type="button" className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setImportTextOpen(true)}>{t('menuPage.importTextOpen')}</button>
+              ) : (
+                <>
+                  <h4 style={{ margin: '14px 0 4px', fontSize: 14 }}>{t('menuPage.importTextTitle')}</h4>
+                  <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importTextIntro')}</p>
+                  <textarea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={t('menuPage.importTextPlaceholder')} disabled={importingText} style={{ width: '100%' }} />
+                  <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    <button type="button" className="btn-teal" disabled={importingText} onClick={handleImportText}>{importingText ? t('menuPage.importUrlReading') : t('menuPage.importTextButton')}</button>
+                    <button type="button" className="btn-ghost" disabled={importingText} onClick={() => { setImportTextOpen(false); setImportText(''); }}>{t('menuPage.cancel')}</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
         )}
         {importedItems && (
           <MenuImportReview
@@ -514,6 +588,7 @@ export default function MenuPage() {
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-teal" onClick={allerALImportWeb}>{t('menuPage.quickStartFromWeb')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
                 {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
               </button>

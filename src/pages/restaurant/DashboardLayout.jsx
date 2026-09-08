@@ -201,7 +201,12 @@ export default function DashboardLayout() {
         }
       });
       setMyRestos((prev) => [...prev, r]);
-      try { localStorage.removeItem('fairide_resto_hint'); } catch { /* rien */ }
+      // Le site web relevé à l'inscription sert ensuite à lire la carte (Mes produits → import depuis le web).
+      try {
+        const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
+        if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
+        localStorage.removeItem('fairide_resto_hint');
+      } catch { /* rien */ }
       setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
       setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
       setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);

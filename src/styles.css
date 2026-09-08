@@ -2517,3 +2517,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .service-suboptions select { width: 100%; max-width: 100%; }
 @media (max-width: 480px) { .service-suboptions { margin-left: 0; padding-left: 12px; border-left: 3px solid rgba(59,47,181,0.25); } }
 .service-suboptions .service-option { font-weight: 500; margin: 2px 0; }
+
+/* Import du menu depuis le web (MenuPage) : adresse + bouton, empilés sur téléphone. */
+.menu-import-web { border-top: 1px dashed var(--line); }
+.menu-import-web-row { display: flex; gap: 8px; }
+.menu-import-web-row input { flex: 1 1 auto; min-width: 0; }
+.menu-import-web-row button { flex: 0 0 auto; }
+@media (max-width: 520px) { .menu-import-web-row { flex-direction: column; } .menu-import-web-row button { width: 100%; } }
