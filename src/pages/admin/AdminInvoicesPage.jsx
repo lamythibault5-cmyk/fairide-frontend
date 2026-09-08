@@ -35,6 +35,10 @@ function PeppolStatusCard({ token, toast, tr }) {
     setBusy(true);
     try { const r = await api('/admin/peppol/process', { method: 'POST', token }); toast(tr('adminInvoices.peppolProcessed', { sent: r.envoyes || 0, errors: r.erreurs || 0, skipped: r.ignores || 0 })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
+  async function test() {
+    setBusy(true);
+    try { const r = await api('/admin/peppol/test', { method: 'POST', token }); toast(tr('adminInvoices.peppolTestOk', { num: r.numero, id: r.recipient })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
   if (!etat) return null;
   const c = etat.counts?.commission || {};
   return (
@@ -48,7 +52,12 @@ function PeppolStatusCard({ token, toast, tr }) {
           <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? '✅ ' + tr('adminInvoices.fairideRegistered') : '⚠️ ' + tr('adminInvoices.fairideNotRegistered')}</p>
           <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
         </div>
-        {etat.configured && <button className="btn-outline" disabled={busy} onClick={process}>{tr('adminInvoices.peppolProcess')}</button>}
+        {etat.configured && (
+          <span className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+            <button className="btn-outline" disabled={busy} onClick={test}>{tr('adminInvoices.peppolTest')}</button>
+            <button className="btn-outline" disabled={busy} onClick={process}>{tr('adminInvoices.peppolProcess')}</button>
+          </span>
+        )}
       </div>
     </div>
   );

@@ -834,7 +834,9 @@ export const translations = {
       fairideNotRegistered: 'Fairide n\'apparaît pas encore dans l\'annuaire Peppol : l\'enregistrement se fait chez le prestataire choisi.',
       peppolProcess: 'Traiter la file maintenant',
       peppolProcessed: 'File traitée : {sent} envoyé(s), {errors} erreur(s), {skipped} ignoré(s).',
-      peppolCounts: 'Factures : {a} en attente · {b} transmises · {c} en erreur'
+      peppolCounts: 'Factures : {a} en attente · {b} transmises · {c} en erreur',
+      peppolTest: 'Envoi de test (vers Fairide)',
+      peppolTestOk: 'Test envoyé : facture {num} transmise à {id}. Elle doit apparaître dans « Envoyés et reçus » chez le prestataire.'
     },
     adminCrm: {
       title: 'CRM Restaurants',
@@ -4286,7 +4288,9 @@ export const translations = {
       fairideNotRegistered: 'Fairide does not yet appear in the Peppol directory: registration is done with the chosen provider.',
       peppolProcess: 'Process the queue now',
       peppolProcessed: 'Queue processed: {sent} sent, {errors} error(s), {skipped} skipped.',
-      peppolCounts: 'Invoices: {a} pending · {b} sent · {c} failed'
+      peppolCounts: 'Invoices: {a} pending · {b} sent · {c} failed',
+      peppolTest: 'Test send (to Fairide)',
+      peppolTestOk: 'Test sent: invoice {num} delivered to {id}. It should appear under "Sent and received" at the provider.'
     },
     adminCrm: {
       title: 'Restaurant CRM',
@@ -7738,7 +7742,9 @@ export const translations = {
       fairideNotRegistered: 'Fairide staat nog niet in de Peppol-directory: de registratie gebeurt bij de gekozen provider.',
       peppolProcess: 'Wachtrij nu verwerken',
       peppolProcessed: 'Wachtrij verwerkt: {sent} verzonden, {errors} fout(en), {skipped} overgeslagen.',
-      peppolCounts: 'Facturen: {a} in afwachting · {b} verzonden · {c} mislukt'
+      peppolCounts: 'Facturen: {a} in afwachting · {b} verzonden · {c} mislukt',
+      peppolTest: 'Testverzending (naar Fairide)',
+      peppolTestOk: 'Test verzonden: factuur {num} bezorgd aan {id}. Ze moet verschijnen onder "Verzonden en ontvangen" bij de provider.'
     },
     adminCrm: {
       title: 'Restaurant-CRM',
