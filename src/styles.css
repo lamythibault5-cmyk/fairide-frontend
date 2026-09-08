@@ -2530,3 +2530,37 @@ button.account-link-row:last-child { border-bottom: none; }
 .password-input input { width: 100%; padding-right: 44px; }
 .password-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 4px 6px; cursor: pointer; font-size: 18px; line-height: 1; border-radius: 8px; }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
+
+/* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
+.courier-state { border-left: 4px solid var(--line); }
+.courier-state.ok { border-left-color: var(--teal-deep, #1F8A70); }
+.courier-state.warn { border-left-color: var(--gold-deep, #B8860B); }
+.courier-state.danger { border-left-color: var(--red); }
+.courier-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+.courier-step { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
+.courier-step.active { border-color: var(--iris); background: rgba(59,47,181,0.08); font-weight: 700; }
+.courier-step.done .courier-step-num { background: var(--teal-deep, #1F8A70); color: #fff; }
+.courier-step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--cream-dim); font-size: 12px; font-weight: 700; }
+.courier-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.courier-compare-card { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
+.courier-compare-card.active { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); }
+.courier-compare-card.soon { opacity: 0.75; }
+.courier-compare-head { display: flex; align-items: center; gap: 8px; }
+.courier-compare-list { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 13px; }
+.courier-compare-list dt { opacity: 0.65; }
+.courier-compare-list dd { margin: 0; }
+.courier-soon { color: var(--ink-soft); }
+.courier-providers { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.courier-provider { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; background: #fff; }
+.courier-provider.soon { opacity: 0.7; }
+.courier-ok { background: rgba(31,138,112,0.10); border-radius: var(--radius-chip); padding: 10px 12px; }
+.courier-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 12px; }
+.courier-doc { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; padding: 8px 0; border-top: 1px dashed var(--line); flex-wrap: wrap; }
+.courier-doc-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.courier-missing { margin: 0; padding-left: 18px; }
+.courier-missing li { margin: 2px 0; }
+.courier-bar { height: 10px; background: var(--cream-dim); border-radius: 999px; overflow: hidden; }
+.courier-bar > div { height: 100%; background: var(--teal-deep, #1F8A70); transition: width .3s; }
+.courier-bar.warn > div { background: var(--gold-deep, #B8860B); }
+.courier-bar.danger > div { background: var(--red); }
+@media (max-width: 480px) { .courier-doc { flex-direction: column; } }

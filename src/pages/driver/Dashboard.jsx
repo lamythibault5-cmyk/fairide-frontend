@@ -225,6 +225,7 @@ export default function DriverDashboard() {
             </p>
           </LigneCompte>
         )}
+        <LigneCompte to="/driver/onboarding" icone="🪪" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
         {user?.adminStatus !== 'approved' && user?.adminStatus !== 'blocked' && (
           <LigneCompte accent="warn" icone="🕐" titre={t('dashDriver.pendingTitle')} sous={t('dashDriver.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
             <p className="small" style={{ margin: 0 }}>

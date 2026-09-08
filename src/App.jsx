@@ -54,6 +54,7 @@ const DriverMapPage = lazy(() => import('./pages/driver/MapPage'));
 const DriverReviewsPage = lazy(() => import('./pages/driver/ReviewsPage'));
 const DriverTipsPage = lazy(() => import('./pages/driver/TipsPage'));
 const DriverInvoicesPage = lazy(() => import('./pages/driver/InvoicesPage'));
+const DriverOnboarding = lazy(() => import('./pages/driver/Onboarding'));
 
 // --- Console d'administration ---
 const AdminLayout = lazy(() => import('./pages/admin/AdminLayout'));
@@ -65,6 +66,7 @@ const AdminOrdersPage = lazy(() => import('./pages/admin/AdminOrdersPage'));
 const AdminCrmPage = lazy(() => import('./pages/admin/AdminCrmPage'));
 const AdminRestaurantsPage = lazy(() => import('./pages/admin/AdminRestaurantsPage'));
 const AdminDriversPage = lazy(() => import('./pages/admin/AdminDriversPage'));
+const AdminCouriersPage = lazy(() => import('./pages/admin/AdminCouriersPage'));
 const AdminClientsPage = lazy(() => import('./pages/admin/AdminClientsPage'));
 const AdminFinancePage = lazy(() => import('./pages/admin/AdminFinancePage'));
 const AdminPaymentsPage = lazy(() => import('./pages/admin/AdminPaymentsPage'));
@@ -138,6 +140,7 @@ export default function App() {
         <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
         <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
+        <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminHomePage />} />
@@ -148,6 +151,7 @@ export default function App() {
           <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />
           <Route path="drivers" element={<AdminDriversPage />} />
+          <Route path="couriers" element={<AdminCouriersPage />} />
           <Route path="clients" element={<AdminClientsPage />} />
           <Route path="finance" element={<AdminFinancePage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />

@@ -17,6 +17,7 @@ export const ADMIN_MODULES = [
     badge: (o) => pastille(o.orders.pending + o.orders.noDriver + o.orders.late, o.orders.late + o.orders.noDriver > 0 ? 'danger' : 'warn') },
   { key: 'restaurants', path: '/admin/restaurants', icon: '🏪', group: 'operations', badge: (o) => pastille(o.restaurants.pending) },
   { key: 'drivers', path: '/admin/drivers', icon: '🛵', group: 'operations', badge: (o) => pastille(o.drivers.pending) },
+  { key: 'couriers', path: '/admin/couriers', icon: '🪪', group: 'operations', badge: (o) => pastille(o.couriers ? o.couriers.pending : 0) },
   { key: 'clients', path: '/admin/clients', icon: '👥', group: 'operations', badge: (o) => pastille(o.clients.newWeek, 'info') },
   { key: 'reviews', path: '/admin/reviews', icon: '⭐', group: 'operations', badge: (o) => pastille(o.reviews.low, 'danger') },
   { key: 'crm', path: '/admin/crm', icon: '🤝', group: 'croissance', badge: (o) => pastille(o.crm.followUpsOverdue, 'danger') },

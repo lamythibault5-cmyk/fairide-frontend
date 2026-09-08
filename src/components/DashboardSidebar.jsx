@@ -50,6 +50,7 @@ function navItemsForRole(role, t) {
       // sont partis dans Mon compte — on les ouvre de temps en temps, pas au guidon. Même règle que
       // pour le client : une rubrique ne figure qu'à UN endroit, jamais aux deux.
       { to: '/driver', end: true, icon: '📦', label: 'Mes commandes' },
+      { to: '/driver/onboarding', icon: '🪪', label: t('nav.courierFile') },
       { to: '/driver/map', icon: '🗺️', label: t('nav.map') },
       { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
       { to: '/account', icon: '👤', label: t('nav.account') }
