@@ -92,9 +92,11 @@ export async function apiDownload(path, { token, filename }) {
 // `fields` (optionnel) ajoute des champs texte au FormData (ex: module Documents, POST /admin/documents
 // qui a besoin de targetType/targetId/title en plus du fichier) — undefined/absent pour tous les autres
 // appelants existants, aucun changement de comportement pour eux.
-export async function apiUpload(path, { file, token, fieldName = 'image', fields }) {
+export async function apiUpload(path, { file, files, token, fieldName = 'image', fields }) {
   const formData = new FormData();
-  formData.append(fieldName, file);
+  // Un fichier (`file`) ou plusieurs (`files`, même nom de champ répété).
+  if (files && files.length) files.forEach((f) => formData.append(fieldName, f));
+  else if (file) formData.append(fieldName, file);
   if (fields) Object.entries(fields).forEach(([k, v]) => { if (v !== undefined && v !== null && v !== '') formData.append(k, v); });
   const headers = {};
   if (token) headers.Authorization = 'Bearer ' + token;

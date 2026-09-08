@@ -159,6 +159,7 @@ function EtapeStatut({ d, t, busy, onChoose }) {
 }
 
 function EtapeIdentite({ d, t, busy, token, action, onNext }) {
+  const toast = useToast();
   const id = d.courier.identity; const prov = d.identityProviders;
   const fichier = useRef(null);
   async function demarrer(provider) {
@@ -169,8 +170,9 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
     });
   }
   async function deposer(e) {
-    const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
-    await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), t('courierOnboarding.toastDocUploaded'));
+    const files = [...(e.target.files || [])].slice(0, 4); e.target.value = ''; if (!files.length) return;
+    for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
+    toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
   const carte = d.documents.filter((x) => x.docType === 'identity_card');
   return (
@@ -198,7 +200,7 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
           <div className="courier-provider">
             <b>📄 {t('courierOnboarding.provider_manual')}</b>
             <p className="small">{t('courierOnboarding.manualHelp')}</p>
-            <input ref={fichier} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
+            <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
             <button type="button" className="btn-outline" disabled={busy} onClick={async () => { if (d.courier.identity.provider !== 'manual') await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }}>{t('courierOnboarding.manualUpload')}</button>
             {carte.length > 0 && <p className="small" style={{ margin: '6px 0 0' }}>✅ {t('courierOnboarding.manualUploaded', { n: carte.length })}</p>}
           </div>
@@ -214,6 +216,7 @@ function Champ({ label, children, help }) {
 }
 
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
+  const toast = useToast();
   const c = d.courier; const legal = d.legal;
   const [f, setF] = useState({ birthDate: c.birthDate, nationalNumber: '', iban: c.iban, zone: c.zone, vehicleType: c.vehicleType, licenceNumber: c.licenceNumber, licencePlate: c.licencePlate,
     schoolName: c.student.school, academicYear: c.student.academicYear, fullTimeSchooling: c.student.fullTimeSchooling, studentHoursRemaining: c.student.hoursRemainingDeclared ?? '',
@@ -235,8 +238,12 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     return ok;
   }
   async function deposer(docType, e) {
-    const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
-    await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: docType === 'liability_insurance' ? expiry : undefined } }), t('courierOnboarding.toastDocUploaded'));
+    const files = [...(e.target.files || [])].slice(0, 6); e.target.value = ''; if (!files.length) return;
+    for (const file of files) {
+      const ok = await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: docType === 'liability_insurance' ? expiry : undefined } }), files.length === 1 ? t('courierOnboarding.toastDocUploaded') : null);
+      if (!ok) break;
+    }
+    if (files.length > 1) toast(t('courierOnboarding.toastDocsUploaded', { n: files.length }));
   }
   const docsRequis = [...(d.requiredDocuments[c.statusType] || []), ...(motorise ? ['driving_licence', 'vehicle_registration'] : [])];
   const docsDe = (type) => d.documents.filter((x) => x.docType === type);
@@ -319,7 +326,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
             </div>
             <div className="courier-doc-actions">
               {type === 'liability_insurance' && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
-              <input ref={(el) => { fichiers.current[type] = el; }} type="file" accept="application/pdf,image/*" style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+              <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
               <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
             </div>
           </div>

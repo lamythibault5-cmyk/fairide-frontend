@@ -422,15 +422,17 @@ export default function MenuPage() {
     }
   }
 
+  const [importCount, setImportCount] = useState(0);
   async function handleImportFile(e) {
-    const file = e.target.files?.[0];
+    const files = [...(e.target.files || [])].slice(0, 12);
     e.target.value = '';
-    if (!file) return;
-    setImporting(true);
+    if (!files.length) return;
+    setImporting(true); setImportCount(files.length);
     setImportedItems(null);
     try {
-      const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { file, token, fieldName: 'file' });
+      const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { files, token, fieldName: 'files' });
       setImportedItems(r.items);
+      if (r.failed) toast(t('menuPage.importPartial', { ok: r.read, ko: r.failed }));
     } catch (err) {
       toast(err.message);
     } finally {
@@ -529,13 +531,14 @@ export default function MenuPage() {
         <input
           ref={importFileRef}
           type="file"
+          multiple
           accept="application/pdf,image/*"
           style={{ display: 'none' }}
           onChange={handleImportFile}
         />
         {!importedItems && (
           <button type="button" className="btn-teal" disabled={importing || importingUrl} onClick={() => importFileRef.current?.click()}>
-            {importing ? t('menuPage.readingMenu') : t('menuPage.chooseFile')}
+            {importing ? (importCount > 1 ? t('menuPage.readingMenuN', { n: importCount }) : t('menuPage.readingMenu')) : t('menuPage.chooseFiles')}
           </button>
         )}
         {!importedItems && (

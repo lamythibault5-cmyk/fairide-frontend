@@ -292,7 +292,8 @@ export const translations = {
       requestChange: 'Demander le changement',
       toastChangeRequested: 'Demande envoyée à Fairide.',
       hide: 'Masquer',
-      open: 'Ouvrir'
+      open: 'Ouvrir',
+      toastDocsUploaded: '{n} documents déposés.'
     },
     peppol: {
       title: 'Facturation électronique Peppol',
@@ -2453,7 +2454,10 @@ export const translations = {
       importTextIntro: 'Uber Eats, Deliveroo et Takeaway bloquent les lectures automatiques. Ouvre ta page sur la plateforme, sélectionne tout (Ctrl+A puis Ctrl+C, ou appui long puis « Tout sélectionner » sur téléphone) et colle ici : l\'agent IA retrouve les plats, prix et descriptions.',
       importTextPlaceholder: 'Colle ici le texte de ta carte…',
       importTextButton: '🤖 Lire ce texte',
-      toastTextTooShort: 'Colle au moins quelques plats avec leurs prix.'
+      toastTextTooShort: 'Colle au moins quelques plats avec leurs prix.',
+      chooseFiles: '+ Choisir un ou plusieurs fichiers (pages PDF, photos)',
+      readingMenuN: 'Lecture de {n} documents en cours…',
+      importPartial: '{ok} document(s) lu(s), {ko} illisible(s) : vérifie la liste, puis réessaie les pages manquantes avec une photo plus nette.'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -4059,7 +4063,8 @@ export const translations = {
       requestChange: 'Request the change',
       toastChangeRequested: 'Request sent to Fairide.',
       hide: 'Hide',
-      open: 'Open'
+      open: 'Open',
+      toastDocsUploaded: '{n} documents uploaded.'
     },
     peppol: {
       title: 'Peppol e-invoicing',
@@ -6220,7 +6225,10 @@ export const translations = {
       importTextIntro: 'Uber Eats, Deliveroo and Takeaway block automated reading. Open your page on the platform, select all (Ctrl+A then Ctrl+C, or long-press then "Select all" on a phone) and paste here: the AI agent recovers dishes, prices and descriptions.',
       importTextPlaceholder: 'Paste the text of your menu here…',
       importTextButton: '🤖 Read this text',
-      toastTextTooShort: 'Paste at least a few dishes with their prices.'
+      toastTextTooShort: 'Paste at least a few dishes with their prices.',
+      chooseFiles: '+ Choose one or more files (PDF pages, photos)',
+      readingMenuN: 'Reading {n} documents…',
+      importPartial: '{ok} document(s) read, {ko} unreadable: check the list, then retry the missing pages with a clearer photo.'
     },
     editResto: {
       title: 'My restaurant details',
@@ -7826,7 +7834,8 @@ export const translations = {
       requestChange: 'Wijziging aanvragen',
       toastChangeRequested: 'Aanvraag naar Fairide verzonden.',
       hide: 'Verbergen',
-      open: 'Openen'
+      open: 'Openen',
+      toastDocsUploaded: '{n} documenten opgeladen.'
     },
     peppol: {
       title: 'Elektronische facturatie via Peppol',
@@ -9987,7 +9996,10 @@ export const translations = {
       importTextIntro: 'Uber Eats, Deliveroo en Takeaway blokkeren automatisch lezen. Open je pagina op het platform, selecteer alles (Ctrl+A en Ctrl+C, of lang indrukken en "Alles selecteren" op je telefoon) en plak hier: de AI-agent haalt gerechten, prijzen en beschrijvingen eruit.',
       importTextPlaceholder: 'Plak hier de tekst van je kaart…',
       importTextButton: '🤖 Deze tekst lezen',
-      toastTextTooShort: 'Plak minstens enkele gerechten met hun prijzen.'
+      toastTextTooShort: 'Plak minstens enkele gerechten met hun prijzen.',
+      chooseFiles: '+ Kies een of meer bestanden (pdf-pagina\'s, foto\'s)',
+      readingMenuN: '{n} documenten worden gelezen…',
+      importPartial: '{ok} document(en) gelezen, {ko} onleesbaar: controleer de lijst en probeer de ontbrekende pagina\'s opnieuw met een scherpere foto.'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',
