@@ -2488,10 +2488,25 @@ button.account-link-row:last-child { border-bottom: none; }
 .business-search { position: relative; margin-bottom: 14px; background: rgba(59,47,181,0.06); border-radius: var(--radius-chip); padding: 10px 12px; }
 .business-search label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
 .business-search-help { margin: 0 0 6px; opacity: 0.8; }
-.business-search-list { top: calc(100% - 6px); }
+.business-search-row { display: flex; gap: 8px; }
+.business-search-row #business-search-cp { flex: 0 0 96px; width: 96px; text-align: center; letter-spacing: 1px; }
+.business-search-row #business-search-filter { flex: 1 1 auto; min-width: 0; }
+.business-zone-list { margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.business-zone-list li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: inherit; font: inherit; }
+.business-zone-list li button:hover, .business-zone-list li button:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
+.business-zone-emoji { flex: 0 0 auto; font-size: 18px; line-height: 1.2; }
+.business-zone-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.business-zone-text .small { overflow-wrap: anywhere; }
+.business-zone-empty { padding: 10px; font-size: 13px; opacity: 0.75; }
+.business-manual { margin-top: 6px; padding: 4px 10px; font-size: 13px; }
+@media (max-width: 480px) { .business-search-row { flex-wrap: wrap; } .business-search-row #business-search-filter { flex-basis: 100%; } .business-zone-list { max-height: 240px; } }
 .business-found { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; }
 .company-check { color: var(--ink); }
-.services-choice .service-option { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; margin: 6px 0; cursor: pointer; }
+.services-choice .service-option { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; font-size: 15px; line-height: 1.35; margin: 8px 0; cursor: pointer; }
+.services-choice .service-option input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--brand, #3b2fb5); }
+.services-choice .service-option span { min-width: 0; }
 .services-choice .service-option input { margin: 0; }
-.service-suboptions { margin: 2px 0 6px 26px; display: flex; flex-direction: column; gap: 4px; }
+.service-suboptions { margin: 2px 0 8px 28px; display: flex; flex-direction: column; gap: 4px; }
+.service-suboptions select { width: 100%; max-width: 100%; }
+@media (max-width: 480px) { .service-suboptions { margin-left: 0; padding-left: 12px; border-left: 3px solid rgba(59,47,181,0.25); } }
 .service-suboptions .service-option { font-weight: 500; margin: 2px 0; }

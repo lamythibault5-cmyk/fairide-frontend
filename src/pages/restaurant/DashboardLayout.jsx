@@ -266,7 +266,7 @@ export default function DashboardLayout() {
             {t('dashResto.createNote')}
           </p>
 
-          <BusinessSearch compact onSelect={(f) => {
+          <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
             if (!f) return;
             if (f.name) setName(f.name);
             const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);

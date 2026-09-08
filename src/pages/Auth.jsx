@@ -575,7 +575,7 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
-                <BusinessSearch onSelect={appliquerCommerce} />
+                <BusinessSearch onSelect={appliquerCommerce} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} />
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
                   <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
