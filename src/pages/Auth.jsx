@@ -51,14 +51,14 @@ export default function Auth() {
   const [searchParams] = useSearchParams();
   const audience = searchParams.get('audience'); // 'client' | 'partner' | null
   const roleHint = searchParams.get('role'); // optional pre-pick within an audience, e.g. 'driver'
-  const visibleRoles = audience === 'client' ? ROLES.filter((r) => r.value === 'client')
-    : audience === 'partner' ? ROLES.filter((r) => r.value !== 'client')
-    : ROLES;
+  // Les trois types de compte sont toujours proposés ; l'audience et le rôle passés dans l'adresse ne
+  // servent qu'à présélectionner le bon (demande du fondateur : ne jamais cacher une porte d'entrée).
+  const visibleRoles = ROLES;
 
   const [mode, setMode] = useState(audience ? 'register' : 'login');
   const [role, setRole] = useState(() => {
-    if (audience === 'client') return 'client';
-    if (audience === 'partner') return visibleRoles.some((r) => r.value === roleHint) ? roleHint : 'restaurant';
+    if (ROLES.some((r) => r.value === roleHint)) return roleHint;
+    if (audience === 'partner') return 'restaurant';
     return 'client';
   });
   const [firstName, setFirstName] = useState('');
@@ -405,7 +405,9 @@ export default function Auth() {
     }
   }
 
-  const decorClass = audience === 'partner' ? 'partner' : audience === 'client' ? 'client' : '';
+  // Décor et en-tête suivent le rôle choisi, pas seulement l'adresse d'arrivée : changer de type de compte
+  // change le contexte affiché.
+  const decorClass = mode === 'register' ? (role === 'client' ? 'client' : 'partner') : (audience === 'partner' ? 'partner' : audience === 'client' ? 'client' : '');
 
   if (forgotMode) {
     return (
@@ -490,13 +492,13 @@ export default function Auth() {
 
   return (
     <div className={`decor-page auth-decor ${decorClass}`}>
-      {audience && (
+      {(audience || mode === 'register') && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <span className={`pill ${audience === 'client' ? 'gold' : 'teal'}`}>
-            {audience === 'client' ? t('auth.clientSpace') : t('auth.partnerSpace')}
+          <span className={`pill ${role === 'client' ? 'gold' : 'teal'}`}>
+            {role === 'client' ? t('auth.clientSpace') : t('auth.partnerSpace')}
           </span>
           <h2 style={{ margin: '10px 0 0', fontSize: 22 }}>
-            {audience === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
+            {role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
           </h2>
         </div>
       )}

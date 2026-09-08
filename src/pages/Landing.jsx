@@ -104,9 +104,11 @@ export default function Landing() {
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
           <p className="landing-sub">{t('landing.sub')}</p>
-          <div className="row" style={{ gap: 10 }}>
+          {/* Les trois types de compte, toujours proposés ensemble : client, commerce, livreur. */}
+          <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
             <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
-            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner')}>{t('landing.becomePartner')}</button>
+            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
+            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
         </div>
 
