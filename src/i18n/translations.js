@@ -4,6 +4,30 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    menuConcierge: {
+      intro: 'Indique sur quelle plateforme (ou quel site) ta carte est la plus à jour. L\'équipe Fairide la reprend telle quelle : plats, prix, descriptions, sections. Tu suis l\'avancement ici même et tu pourras tout ajuster ensuite.',
+      platformLabel: 'Se baser sur',
+      platform_website: 'Mon site web',
+      platform_other: 'Autre (précise ci-dessous)',
+      urlLabel: 'Lien vers ma carte',
+      urlHelp: 'Si tu l\'as sous la main : ta page sur la plateforme ou la page « Menu » de ton site. Sinon, on la retrouve avec le nom de ton restaurant.',
+      notesLabel: 'Précisions',
+      notesPlaceholder: 'Ex. : « Sans la partie boissons », « Prix Fairide = prix sur place », « Ajouter le menu du midi »…',
+      optional: 'optionnel',
+      send: 'Envoyer ma demande à Fairide',
+      delay: 'Compte en général 1 à 2 jours ouvrables. Gratuit.',
+      sent: 'Demande envoyée ! On s\'en occupe.',
+      cancelled: 'Demande annulée.',
+      loading: 'Chargement…',
+      stPending: 'Demande reçue',
+      stInProgress: 'Fairide intègre ta carte',
+      stDone: 'Carte intégrée',
+      requestedOn: 'Demande du {date} · base : {platform}',
+      pendingHelp: 'Tu n\'as rien à faire. Dès que ta carte est intégrée, elle apparaît plus bas sur cette page et tu peux tout ajuster.',
+      doneHelp: 'Ta carte est en place : vérifie-la plus bas et corrige ce qui doit l\'être.',
+      cancel: 'Annuler ma demande',
+      newRequest: 'Nouvelle demande'
+    },
     phoneInput: {
       country: 'Pays du numéro de téléphone'
     },
@@ -2558,7 +2582,22 @@ export const translations = {
       stagingPageFail: 'Illisible : réessaie avec une photo plus nette ou un PDF.',
       stagingDone: 'Lecture terminée : les plats trouvés sont dans la liste ci-dessous, à relire avant l\'ajout.',
       stagingNothing: 'Aucun plat n\'a pu être lu. Réessaie avec des photos plus nettes, page par page.',
-      stagingRestart: 'Recommencer avec d\'autres documents'
+      stagingRestart: 'Recommencer avec d\'autres documents',
+      methodsTitle: 'Créer ma carte : 5 façons de faire',
+      methodsIntro: 'Choisis la méthode qui te convient, tu peux les combiner. Quoi que tu choisisses, rien n\'est ajouté à ta carte sans que tu l\'aies relu et validé.',
+      recommended: 'Recommandé',
+      method1Title: '🤝 Fairide s\'en occupe pour moi',
+      method1Sub: 'Tu es déjà sur Uber Eats, Deliveroo, Takeaway ou tu as un site avec ta carte ? Dis-nous où regarder, on l\'intègre sur Fairide pour toi. Zéro travail de ton côté.',
+      method2Title: '📄 Envoyer des photos ou un PDF de ma carte',
+      method2Sub: 'Prends tes pages en photo ou dépose le PDF : l\'agent IA lit chaque page et te propose les plats avec prix et descriptions.',
+      method3Title: '🌐 Lire ma carte sur mon site web',
+      method4Title: '📋 Coller le texte de ma carte',
+      method4Sub: 'Depuis ta page Uber Eats, Deliveroo ou Takeaway : sélectionne tout, copie, colle ici. L\'agent IA reconstruit ta carte.',
+      importTextOpen2: 'Coller le texte',
+      method5Title: '✍️ Créer ma carte moi-même',
+      method5Sub: 'Pars d\'une sélection de plats typiques de ta cuisine, ou ajoute tes sections et tes plats un par un, plus bas sur cette page.',
+      method5Button: 'Aller à ma carte',
+      quickStartConcierge: '🤝 Demander à Fairide de s\'en occuper'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -3910,6 +3949,30 @@ export const translations = {
     }
   },
   en: {
+    menuConcierge: {
+      intro: 'Tell us on which platform (or website) your menu is most up to date. The Fairide team copies it as is: dishes, prices, descriptions, sections. You follow the progress right here and can adjust everything afterwards.',
+      platformLabel: 'Base it on',
+      platform_website: 'My website',
+      platform_other: 'Other (specify below)',
+      urlLabel: 'Link to my menu',
+      urlHelp: 'If you have it handy: your page on the platform or the “Menu” page of your website. Otherwise we find it from your restaurant\'s name.',
+      notesLabel: 'Details',
+      notesPlaceholder: 'E.g. “Without the drinks section”, “Fairide prices = dine-in prices”, “Add the lunch menu”…',
+      optional: 'optional',
+      send: 'Send my request to Fairide',
+      delay: 'Usually 1 to 2 working days. Free.',
+      sent: 'Request sent! We are on it.',
+      cancelled: 'Request cancelled.',
+      loading: 'Loading…',
+      stPending: 'Request received',
+      stInProgress: 'Fairide is adding your menu',
+      stDone: 'Menu added',
+      requestedOn: 'Request of {date} · based on: {platform}',
+      pendingHelp: 'Nothing to do on your side. As soon as your menu is added, it appears further down this page and you can adjust everything.',
+      doneHelp: 'Your menu is in place: check it further down and correct what needs it.',
+      cancel: 'Cancel my request',
+      newRequest: 'New request'
+    },
     phoneInput: {
       country: 'Phone number country'
     },
@@ -6464,7 +6527,22 @@ export const translations = {
       stagingPageFail: 'Unreadable: try again with a clearer photo or a PDF.',
       stagingDone: 'Reading finished: the dishes found are in the list below, to review before adding.',
       stagingNothing: 'No dish could be read. Try again with clearer photos, page by page.',
-      stagingRestart: 'Start again with other documents'
+      stagingRestart: 'Start again with other documents',
+      methodsTitle: 'Create my menu: 5 ways to do it',
+      methodsIntro: 'Pick the method that suits you, you can combine them. Whatever you choose, nothing is added to your menu until you have reviewed and approved it.',
+      recommended: 'Recommended',
+      method1Title: '🤝 Fairide does it for me',
+      method1Sub: 'Already on Uber Eats, Deliveroo, Takeaway, or you have a website with your menu? Tell us where to look and we add it to Fairide for you. Zero work on your side.',
+      method2Title: '📄 Send photos or a PDF of my menu',
+      method2Sub: 'Photograph your pages or drop the PDF: the AI agent reads each page and suggests the dishes with prices and descriptions.',
+      method3Title: '🌐 Read my menu from my website',
+      method4Title: '📋 Paste the text of my menu',
+      method4Sub: 'From your Uber Eats, Deliveroo or Takeaway page: select all, copy, paste here. The AI agent rebuilds your menu.',
+      importTextOpen2: 'Paste the text',
+      method5Title: '✍️ Create my menu myself',
+      method5Sub: 'Start from a selection of dishes typical of your cuisine, or add your sections and dishes one by one, further down this page.',
+      method5Button: 'Go to my menu',
+      quickStartConcierge: '🤝 Ask Fairide to do it'
     },
     editResto: {
       title: 'My restaurant details',
@@ -7816,6 +7894,30 @@ export const translations = {
     }
   },
   nl: {
+    menuConcierge: {
+      intro: 'Geef aan op welk platform (of welke website) je kaart het meest actueel is. Het Fairide-team neemt ze over zoals ze is: gerechten, prijzen, beschrijvingen, secties. Je volgt de voortgang hier en kunt daarna alles aanpassen.',
+      platformLabel: 'Baseren op',
+      platform_website: 'Mijn website',
+      platform_other: 'Andere (hieronder toelichten)',
+      urlLabel: 'Link naar mijn kaart',
+      urlHelp: 'Als je ze bij de hand hebt: je pagina op het platform of de “Menu”-pagina van je website. Anders vinden we ze via de naam van je restaurant.',
+      notesLabel: 'Toelichting',
+      notesPlaceholder: 'Bv. “Zonder de dranken”, “Fairide-prijzen = prijzen ter plaatse”, “Lunchmenu toevoegen”…',
+      optional: 'optioneel',
+      send: 'Mijn aanvraag naar Fairide sturen',
+      delay: 'Meestal 1 tot 2 werkdagen. Gratis.',
+      sent: 'Aanvraag verstuurd! Wij zorgen ervoor.',
+      cancelled: 'Aanvraag geannuleerd.',
+      loading: 'Laden…',
+      stPending: 'Aanvraag ontvangen',
+      stInProgress: 'Fairide zet je kaart erop',
+      stDone: 'Kaart toegevoegd',
+      requestedOn: 'Aanvraag van {date} · basis: {platform}',
+      pendingHelp: 'Je hoeft niets te doen. Zodra je kaart is toegevoegd, verschijnt ze lager op deze pagina en kun je alles aanpassen.',
+      doneHelp: 'Je kaart staat klaar: controleer ze lager op de pagina en corrigeer wat nodig is.',
+      cancel: 'Mijn aanvraag annuleren',
+      newRequest: 'Nieuwe aanvraag'
+    },
     phoneInput: {
       country: 'Land van het telefoonnummer'
     },
@@ -10370,7 +10472,22 @@ export const translations = {
       stagingPageFail: 'Onleesbaar: probeer opnieuw met een scherpere foto of een pdf.',
       stagingDone: 'Lezen voltooid: de gevonden gerechten staan in de lijst hieronder, te controleren vóór toevoeging.',
       stagingNothing: 'Er kon geen gerecht gelezen worden. Probeer opnieuw met scherpere foto\'s, pagina per pagina.',
-      stagingRestart: 'Opnieuw beginnen met andere documenten'
+      stagingRestart: 'Opnieuw beginnen met andere documenten',
+      methodsTitle: 'Mijn kaart maken: 5 manieren',
+      methodsIntro: 'Kies de methode die je past, je kunt ze combineren. Wat je ook kiest, er wordt niets aan je kaart toegevoegd zonder dat je het hebt nagelezen en goedgekeurd.',
+      recommended: 'Aanbevolen',
+      method1Title: '🤝 Fairide doet het voor mij',
+      method1Sub: 'Sta je al op Uber Eats, Deliveroo, Takeaway of heb je een website met je kaart? Zeg ons waar we moeten kijken en wij zetten ze voor jou op Fairide. Geen werk voor jou.',
+      method2Title: '📄 Foto\'s of een pdf van mijn kaart sturen',
+      method2Sub: 'Fotografeer je pagina\'s of zet de pdf erbij: de AI-agent leest elke pagina en stelt de gerechten voor met prijzen en beschrijvingen.',
+      method3Title: '🌐 Mijn kaart van mijn website lezen',
+      method4Title: '📋 De tekst van mijn kaart plakken',
+      method4Sub: 'Vanaf je Uber Eats-, Deliveroo- of Takeaway-pagina: alles selecteren, kopiëren, hier plakken. De AI-agent bouwt je kaart opnieuw op.',
+      importTextOpen2: 'Tekst plakken',
+      method5Title: '✍️ Mijn kaart zelf maken',
+      method5Sub: 'Begin met een selectie typische gerechten van je keuken, of voeg je secties en gerechten één voor één toe, lager op deze pagina.',
+      method5Button: 'Naar mijn kaart',
+      quickStartConcierge: '🤝 Fairide vragen het te doen'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',

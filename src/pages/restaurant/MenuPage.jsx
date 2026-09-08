@@ -18,6 +18,7 @@ import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
 import MenuImportStaging, { MenuImportReport } from '../../components/MenuImportStaging';
+import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import MenuImportReview from '../../components/MenuImportReview';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -461,6 +462,10 @@ export default function MenuPage() {
     setStartChoiceMade(true);
     setTimeout(() => { importUrlRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); importUrlRef.current?.focus(); }, 50);
   }
+  function allerAuConcierge() {
+    setStartChoiceMade(true);
+    setTimeout(() => { document.getElementById('menu-concierge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
+  }
 
   async function submitImportedItems(items, replaceExisting) {
     if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
@@ -508,19 +513,30 @@ export default function MenuPage() {
           </button>
         </div>
       )}
-      <div className="card">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.importTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('menuPage.importIntro')}
-        </p>
+      <div className="card" id="menu-methodes">
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
+
         {!importedItems && (
-          <MenuImportStaging restoId={restoId} token={token} disabled={importingUrl || importingText}
-            onBusy={setImporting}
-            onDone={(items, bilans) => { setImportReport(bilans); setImportedItems(items); }} />
+          <div className="methode" id="menu-concierge">
+            <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommended')}</span></div>
+            <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
+            <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
+          </div>
+        )}
+
+        {!importedItems && (
+          <div className="methode">
+            <div className="methode-tete"><span className="methode-num">2</span><h4>{t('menuPage.method2Title')}</h4></div>
+            <p className="small methode-sous">{t('menuPage.method2Sub')}</p>
+            <MenuImportStaging restoId={restoId} token={token} disabled={importingUrl || importingText}
+              onBusy={setImporting}
+              onDone={(items, bilans) => { setImportReport(bilans); setImportedItems(items); }} />
+          </div>
         )}
         {!importedItems && (
-          <div className="menu-import-web">
-            <h4 style={{ margin: '14px 0 4px', fontSize: 14 }}>{t('menuPage.importUrlTitle')}</h4>
+          <div className="menu-import-web methode">
+            <div className="methode-tete"><span className="methode-num">3</span><h4>{t('menuPage.method3Title')}</h4></div>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
             <div className="menu-import-web-row">
               <input ref={importUrlRef} id="menu-import-url" type="url" inputMode="url" value={importUrl} onChange={(e) => setImportUrl(e.target.value)}
@@ -530,12 +546,17 @@ export default function MenuPage() {
               </button>
             </div>
             <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('menuPage.importUrlHint')}</p>
+          </div>
+        )}
+        {!importedItems && (
+          <div className="methode">
+            <div className="methode-tete"><span className="methode-num">4</span><h4>{t('menuPage.method4Title')}</h4></div>
+            <p className="small methode-sous">{t('menuPage.method4Sub')}</p>
             <div className="menu-import-text">
               {!importTextOpen ? (
-                <button type="button" className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setImportTextOpen(true)}>{t('menuPage.importTextOpen')}</button>
+                <button type="button" className="btn-outline" onClick={() => setImportTextOpen(true)}>{t('menuPage.importTextOpen2')}</button>
               ) : (
                 <>
-                  <h4 style={{ margin: '14px 0 4px', fontSize: 14 }}>{t('menuPage.importTextTitle')}</h4>
                   <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importTextIntro')}</p>
                   <textarea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={t('menuPage.importTextPlaceholder')} disabled={importingText} style={{ width: '100%' }} />
                   <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
@@ -544,6 +565,16 @@ export default function MenuPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        )}
+        {!importedItems && (
+          <div className="methode">
+            <div className="methode-tete"><span className="methode-num">5</span><h4>{t('menuPage.method5Title')}</h4></div>
+            <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              {restaurant.menu.length === 0 && <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}</button>}
+              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(true); setTimeout(() => document.getElementById('menu-liste')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.method5Button')}</button>
             </div>
           </div>
         )}
@@ -562,13 +593,14 @@ export default function MenuPage() {
       </div>
 
       {restaurant.menu.length === 0 && !startChoiceMade && (
-        <div className="card" style={{ border: '2px solid var(--teal)' }}>
+        <div className="card" id="menu-demarrage" style={{ border: '2px solid var(--teal)' }}>
           <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('menuPage.quickStartTitle')}</h3>
           <p className="small" style={{ margin: '0 0 12px' }}>
             {t('menuPage.quickStart1')} <b>{restaurant.cuisine}</b>{t('menuPage.quickStart2')}
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button className="btn-gold" onClick={allerAuConcierge}>{t('menuPage.quickStartConcierge')}</button>
               <button className="btn-teal" onClick={allerALImportWeb}>{t('menuPage.quickStartFromWeb')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
                 {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
@@ -587,7 +619,7 @@ export default function MenuPage() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
           {!reorderSectionId && !selectSectionId && !creatingSection && (

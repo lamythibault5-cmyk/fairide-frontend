@@ -2653,3 +2653,12 @@ button.account-link-row:last-child { border-bottom: none; }
 .statut-carte.active { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); background: rgba(59,47,181,0.04); }
 .statut-carte.ferme { opacity: 0.6; cursor: not-allowed; }
 .statut-carte.ferme:hover { border-color: var(--line); }
+
+/* Page Ma carte : les méthodes de création, numérotées (MenuPage.jsx). */
+.methode { padding: 14px 0; border-top: 1px dashed var(--line); }
+.methode:first-of-type { border-top: none; padding-top: 0; }
+.methode-tete { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.methode-tete h4 { margin: 0; font-size: 15px; }
+.methode-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--iris); color: #fff; font-weight: 800; font-size: 13px; flex: 0 0 auto; }
+.methode-sous { margin: 0 0 10px; }
+.menu-concierge-etat { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-dim); }
