@@ -17,6 +17,43 @@ const tabLabels = (tr) => ({ "Factures": tr('adminInvoices.tab_invoices'), "Rele
 const PAGE_SIZE = 25;
 const statusFilters = (tr) => [{ key: '', label: tr('adminInvoices.all') }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
 
+import { peppolLabels } from '../../components/InvoiceArchive';
+
+function peppolPill(status, tr) {
+  const l = peppolLabels(tr)[status] || peppolLabels(tr).en_attente;
+  return <span className={l.pill}>{l.texte}</span>;
+}
+
+// Carte d'état du point d'accès Peppol : configuré ou non, identifiant de Fairide, enregistrement dans
+// l'annuaire, compteurs, et un bouton pour forcer un passage de la file d'attente.
+function PeppolStatusCard({ token, toast, tr }) {
+  const [etat, setEtat] = useState(null);
+  const [busy, setBusy] = useState(false);
+  function load() { api('/admin/peppol/status', { token }).then(setEtat).catch((e) => toast(e.message)); }
+  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  async function process() {
+    setBusy(true);
+    try { const r = await api('/admin/peppol/process', { method: 'POST', token }); toast(tr('adminInvoices.peppolProcessed', { sent: r.envoyes || 0, errors: r.erreurs || 0, skipped: r.ignores || 0 })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
+  if (!etat) return null;
+  const c = etat.counts?.commission || {};
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
+        <div>
+          <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🧾 {tr('adminInvoices.peppolCardTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 4px' }}>
+            {etat.configured ? tr('adminInvoices.peppolConfigured', { provider: etat.provider, id: etat.fairidePeppolId }) : tr('adminInvoices.peppolNotConfigured', { id: etat.fairidePeppolId || '—' })}
+          </p>
+          <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? '✅ ' + tr('adminInvoices.fairideRegistered') : '⚠️ ' + tr('adminInvoices.fairideNotRegistered')}</p>
+          <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
+        </div>
+        {etat.configured && <button className="btn-outline" disabled={busy} onClick={process}>{tr('adminInvoices.peppolProcess')}</button>}
+      </div>
+    </div>
+  );
+}
+
 function statusPill(status) {
   const s = INVOICE_STATUS_LABELS[status];
   return <span className="pill" style={{ color: s?.color }}>{s?.label || status}</span>;
@@ -85,6 +122,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
       </div>
 
       {!data && <SkeletonCards count={4} />}
+      <PeppolStatusCard token={token} toast={toast} tr={tr} />
       {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noneForFilter')}</div>}
       {data && data.rows.length > 0 && (
         <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} onRowClick={(inv) => setSelectedId(inv.id)} showTotals format={{ subtotalHt: money, vatAmount: money, totalTtc: money }} columns={[
@@ -92,6 +130,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
           { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (inv) => inv.restaurantName },
           { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
           { key: 'status', label: tr('adminCommon.status'), get: (inv) => statusPill(inv.status), sortValue: (inv) => inv.status },
+          { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
           { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
           { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => money(inv.vatAmount), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
           { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
@@ -204,6 +243,19 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     }
   }
 
+  async function sendPeppol(kind = 'invoices', docId = id) {
+    setBusy(true);
+    try {
+      const r = await api(`/admin/${kind}/${docId}/peppol`, { method: 'POST', token });
+      toast(tr('adminInvoices.peppolResult', { status: (peppolLabels(tr)[r.status] || {}).texte || r.status }));
+      load(); onChanged();
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function downloadInvoicePdf() {
     try {
       await downloadPdf(`/admin/invoices/${id}/pdf`, token, `${inv.invoiceNumber}.pdf`);
@@ -244,7 +296,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
           <>
             <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <h3 style={{ margin: '0 0 8px', fontFamily: 'monospace' }}>{inv.invoiceNumber}</h3>
-              {statusPill(inv.status)}
+              <span className="row" style={{ gap: 6 }}>{statusPill(inv.status)}{peppolPill(inv.peppolStatus, tr)}</span>
             </div>
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.namePeriodRange', { name: inv.restaurant.name, start: fmtDate(inv.periodStart), end: fmtDate(inv.periodEnd) })}</p>
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</p>
@@ -286,7 +338,10 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                     <span className="small" style={{ fontFamily: 'monospace' }}>{cn.creditNoteNumber}</span>
                     <div className="row" style={{ gap: 8 }}>
                       <span className="small" style={{ color: 'var(--red)' }}>-{money(cn.totalTtc)}</span>
+                      {peppolPill(cn.peppolStatus, tr)}
                       <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message))}>PDF</button>
+                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/ubl`, token, `${cn.creditNoteNumber}.xml`).catch((e) => toast(e.message))}>UBL</button>
+                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} disabled={busy} onClick={() => sendPeppol('credit-notes', cn.id)}>Peppol</button>
                     </div>
                   </div>
                 ))}
@@ -298,6 +353,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
             <div className="row" style={{ gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
               <button className="btn-outline" onClick={downloadInvoicePdf}>{tr('adminInvoices.pdf')}</button>
               <button className="btn-outline" onClick={downloadInvoiceUbl} title={tr('adminInvoices.ublTitle')}>{tr('adminInvoices.ubl')}</button>
+              <button className="btn-outline" disabled={busy} onClick={() => sendPeppol()}>{tr('adminInvoices.sendPeppol')}</button>
               <button className="btn-outline" disabled={busy} onClick={sendEmail}>{tr('adminInvoices.sendByEmail')}</button>
               {inv.status !== 'annulee' && inv.status !== 'payee' && (
                 <button className="btn-outline" disabled={busy} onClick={() => changeStatus('payee')}>{tr('adminInvoices.markPaid')}</button>
@@ -468,6 +524,16 @@ function SelfBillingTab({ token, toast }) {
       toast(e.message);
     }
   }
+  async function downloadInvoiceUbl(inv) {
+    try { await downloadPdf(`/admin/self-billing-invoices/${inv.id}/ubl`, token, `${inv.invoiceNumber}.xml`); } catch (e) { toast(e.message); }
+  }
+  async function sendPeppol(inv) {
+    try {
+      const r = await api(`/admin/self-billing-invoices/${inv.id}/peppol`, { method: 'POST', token });
+      toast(tr('adminInvoices.peppolResult', { status: (peppolLabels(tr)[r.status] || {}).texte || r.status }));
+      load();
+    } catch (e) { toast(e.message); }
+  }
 
   async function sendEmail(inv) {
     try {
@@ -494,11 +560,12 @@ function SelfBillingTab({ token, toast }) {
           { key: 'driverName', label: tr('adminCommon.driver'), get: (inv) => inv.driverName },
           { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
           { key: 'vatStatus', label: tr('adminCommon.vat'), get: (inv) => <span className="pill">{vatStatusLabels(tr)[inv.vatStatus] || inv.vatStatus}</span>, sortValue: (inv) => inv.vatStatus },
+          { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
           { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
           { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '—'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
           { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
           { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt },
-          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button></span>, align: 'right' }
+          { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoiceUbl(inv); }}>UBL</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendPeppol(inv); }}>Peppol</button></span>, align: 'right' }
         ]} />
       )}
       {data && data.total > PAGE_SIZE && (

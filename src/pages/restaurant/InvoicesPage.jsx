@@ -78,6 +78,7 @@ export default function InvoicesPage() {
       <InvoiceArchive
         endpoint="/invoices/restaurant"
         pdfPath={(inv) => `/invoices/restaurant/${inv.id}/pdf`}
+        ublPath={(inv) => `/invoices/restaurant/${inv.id}/ubl`}
         titre={t('invoicesResto.archiveTitle')}
         description={t('invoicesResto.archiveDesc')}
         colonneMontant="Total TTC"

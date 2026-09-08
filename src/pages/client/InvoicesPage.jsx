@@ -90,6 +90,7 @@ export default function InvoicesPage() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
+      <p className="small" style={{ margin: '-6px 0 12px', opacity: 0.85 }}>🧾 {t('invoicesClient.peppolNote')}</p>
 
       {downloadable.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>

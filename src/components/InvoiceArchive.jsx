@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from './Skeleton';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import PeppolSettings from './PeppolSettings';
 
 // Archive des factures émises, partagée par le restaurateur (factures de commission) et le livreur
 // (autofacturations). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
@@ -25,7 +26,17 @@ const statusLabels = (t) => ({
   annulee: { texte: t('invoiceArchive.statusCancelled'), pill: 'pill' }
 });
 
-export default function InvoiceArchive({ endpoint, pdfPath, titre, description, colonneMontant }) {
+// Statut Peppol d'un document (voir peppol.js côté serveur) → libellé et pastille.
+export const peppolLabels = (t) => ({
+  en_attente: { texte: t('peppol.stPending'), pill: 'pill' },
+  envoye: { texte: t('peppol.stSent'), pill: 'pill teal' },
+  erreur: { texte: t('peppol.stError'), pill: 'pill' },
+  sans_identifiant: { texte: t('peppol.stNoId'), pill: 'pill' },
+  non_enregistre: { texte: t('peppol.stNotRegistered'), pill: 'pill' },
+  desactive: { texte: t('peppol.stDisabled'), pill: 'pill' }
+});
+
+export default function InvoiceArchive({ endpoint, pdfPath, ublPath, titre, description, colonneMontant }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -39,10 +50,11 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
-  async function download(inv) {
+  async function download(inv, format = 'pdf') {
     setBusyId(inv.id);
     try {
-      await apiDownload(pdfPath(inv), { token, filename: `${inv.invoiceNumber}.pdf` });
+      if (format === 'ubl' && ublPath) await apiDownload(ublPath(inv), { token, filename: `${inv.invoiceNumber}.xml` });
+      else await apiDownload(pdfPath(inv), { token, filename: `${inv.invoiceNumber}.pdf` });
     } catch (e) {
       toast(e.message);
     } finally {
@@ -55,6 +67,8 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
   const invoices = data.invoices || [];
 
   return (
+    <>
+    <PeppolSettings endpoint="/invoices/peppol/settings" />
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{titre}</h3>
       <p className="small" style={{ margin: '0 0 14px' }}>{description}</p>
@@ -77,13 +91,15 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
                 <th className="num">TVA</th>
                 <th className="num">{colonneMontant}</th>
                 <th>{t('invoiceArchive.status')}</th>
+                <th>{t('invoiceArchive.peppol')}</th>
                 <th aria-label={t('invoiceArchive.download')} />
               </tr>
             </thead>
             <tbody>
               {invoices.map((inv) => {
                 const p = formatPeriod(inv.periodStart, inv.periodEnd);
-                const st = statusLabels(t)[inv.status] || STATUS_LABEL.emise;
+                const st = statusLabels(t)[inv.status] || statusLabels(t).emise;
+                const pp = peppolLabels(t)[inv.peppolStatus] || peppolLabels(t).en_attente;
                 return (
                   <tr key={inv.id}>
                     <td><b>{inv.invoiceNumber}</b></td>
@@ -103,15 +119,16 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
                     </td>
                     <td className="num"><b>{inv.totalTtc.toFixed(2)}€</b></td>
                     <td><span className={st.pill}>{st.texte}</span></td>
-                    <td className="num">
-                      <button
-                        type="button"
-                        className="btn-ghost"
-                        disabled={busyId === inv.id}
-                        onClick={() => download(inv)}
-                      >
+                    <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>
+                    <td className="num" style={{ whiteSpace: 'nowrap' }}>
+                      <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv)}>
                         {busyId === inv.id ? '...' : '⬇️ PDF'}
                       </button>
+                      {ublPath && (
+                        <button type="button" className="btn-ghost" disabled={busyId === inv.id} onClick={() => download(inv, 'ubl')} title={t('invoiceArchive.ublTitle')}>
+                          UBL
+                        </button>
+                      )}
                     </td>
                   </tr>
                 );
@@ -134,5 +151,6 @@ export default function InvoiceArchive({ endpoint, pdfPath, titre, description, 
         </p>
       ))}
     </div>
+    </>
   );
 }

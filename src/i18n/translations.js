@@ -4,6 +4,32 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    peppol: {
+      title: 'Facturation électronique Peppol',
+      stateOn: 'Activée : tes factures te sont transmises automatiquement sur le réseau Peppol, en plus du PDF.',
+      stateOff: 'Désactivée : tu reçois uniquement le PDF. Attention, la facturation électronique est obligatoire entre entreprises en Belgique depuis le 1er janvier 2026.',
+      stateSoon: 'Fairide finalise son raccordement à un point d\'accès Peppol : dès son activation, tes factures partiront automatiquement sur le réseau. En attendant, chaque facture est déjà disponible au format UBL (Peppol) ci-dessous.',
+      details: 'Détails et réglages',
+      hide: 'Masquer',
+      what: 'Peppol est le réseau européen d\'échange de factures électroniques : la facture arrive directement dans ton logiciel comptable (ou chez ton comptable), sans e-mail ni PDF à ressaisir. En Belgique, toute facture entre entreprises doit passer par ce réseau depuis le 1er janvier 2026.',
+      howFairide: 'Fairide transmet sur Peppol tes factures de commission, notes de crédit et autofacturations. Ton identifiant Peppol est ton numéro d\'entreprise (schéma belge 0208) ; ton comptable ou ton logiciel de facturation t\'a normalement enregistré sur le réseau.',
+      idLabel: 'Identifiant Peppol (laisse vide pour utiliser ton numéro d\'entreprise)',
+      idInUse: 'Identifiant utilisé : {id}',
+      registered: 'enregistré sur Peppol',
+      notRegistered: 'introuvable dans l\'annuaire Peppol',
+      notRegisteredHelp: 'Tant que tu n\'es pas enregistré sur le réseau (via ton comptable ou ton logiciel de facturation), la facture ne peut pas t\'être livrée par Peppol : tu continues à la recevoir en PDF, et l\'envoi Peppol se fera automatiquement dès ton enregistrement.',
+      noId: 'Aucun identifiant : renseigne ton numéro d\'entreprise dans ton profil ou saisis un identifiant Peppol ci-dessus.',
+      enable: 'Recevoir mes factures via Peppol',
+      save: 'Enregistrer',
+      toastSaved: 'Réglages Peppol enregistrés.',
+      ublHint: 'Chaque facture peut aussi être téléchargée au format UBL (le fichier XML que tout logiciel comptable compatible Peppol importe) via le bouton « UBL » de la liste.',
+      stPending: 'En attente d\'envoi',
+      stSent: 'Transmise via Peppol',
+      stError: 'Échec d\'envoi',
+      stNoId: 'Numéro d\'entreprise manquant',
+      stNotRegistered: 'Destinataire non enregistré sur Peppol',
+      stDisabled: 'Peppol désactivé'
+    },
     businessSearch: {
       label: 'Trouve ton commerce sur le web',
       help: 'Tape son nom : on récupère l\'adresse, le téléphone, l\'e-mail, le site et les horaires publiés sur Internet (OpenStreetMap). Tu vérifies, tu corriges si besoin.',
@@ -798,7 +824,17 @@ export const translations = {
       colPeriod: 'Période',
       colHt: 'HT',
       colTtc: 'TTC',
-      colIssued: 'Émise le'
+      colIssued: 'Émise le',
+      sendPeppol: 'Envoyer via Peppol',
+      peppolResult: 'Peppol : {status}',
+      peppolCardTitle: 'Point d\'accès Peppol',
+      peppolConfigured: 'Configuré ({provider}) — identifiant Fairide {id}',
+      peppolNotConfigured: 'Non configuré : les documents restent « en attente » et l\'UBL est téléchargeable. Renseigne PEPPOL_PROVIDER, PEPPOL_API_KEY et PEPPOL_COMPANY_ID sur Railway (Recommand ou Storecove) pour activer l\'envoi. Identifiant Fairide : {id}.',
+      fairideRegistered: 'Fairide est enregistrée sur le réseau Peppol',
+      fairideNotRegistered: 'Fairide n\'apparaît pas encore dans l\'annuaire Peppol : l\'enregistrement se fait chez le prestataire choisi.',
+      peppolProcess: 'Traiter la file maintenant',
+      peppolProcessed: 'File traitée : {sent} envoyé(s), {errors} erreur(s), {skipped} ignoré(s).',
+      peppolCounts: 'Factures : {a} en attente · {b} transmises · {c} en erreur'
     },
     adminCrm: {
       title: 'CRM Restaurants',
@@ -1690,7 +1726,8 @@ export const translations = {
       unavailable: 'Facture indisponible',
       toastSelectOne: 'Sélectionne au moins une facture.',
       downloadFailed: 'Échec du téléchargement.',
-      downloadSelection: '⬇️ Télécharger la sélection ({n})'
+      downloadSelection: '⬇️ Télécharger la sélection ({n})',
+      peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
     },
     restoListUi: {
       closed: '🔒 Fermé',
@@ -1791,7 +1828,9 @@ export const translations = {
       statusPaid: 'Payée',
       statusCancelled: 'Annulée',
       issuer: 'Émetteur : {name}',
-      vatSuffix: ' · TVA {vat}'
+      vatSuffix: ' · TVA {vat}',
+      peppol: 'Peppol',
+      ublTitle: 'Fichier UBL (Peppol), à importer dans ton logiciel comptable'
     },
     hoursEditor: {
       closed: 'Fermé',
@@ -3417,6 +3456,32 @@ export const translations = {
     }
   },
   en: {
+    peppol: {
+      title: 'Peppol e-invoicing',
+      stateOn: 'Enabled: your invoices are delivered to you automatically over the Peppol network, in addition to the PDF.',
+      stateOff: 'Disabled: you only receive the PDF. Note that e-invoicing between businesses has been mandatory in Belgium since 1 January 2026.',
+      stateSoon: 'Fairide is finalising its connection to a Peppol access point: once it is live, your invoices will be sent automatically over the network. Meanwhile, each invoice is already available below in UBL (Peppol) format.',
+      details: 'Details and settings',
+      hide: 'Hide',
+      what: 'Peppol is the European network for exchanging electronic invoices: the invoice lands directly in your accounting software (or with your accountant), with no e-mail or PDF to re-enter. In Belgium, every invoice between businesses has had to go through this network since 1 January 2026.',
+      howFairide: 'Fairide sends your commission invoices, credit notes and self-billing invoices over Peppol. Your Peppol identifier is your company number (Belgian scheme 0208); your accountant or invoicing software has normally registered you on the network.',
+      idLabel: 'Peppol identifier (leave empty to use your company number)',
+      idInUse: 'Identifier in use: {id}',
+      registered: 'registered on Peppol',
+      notRegistered: 'not found in the Peppol directory',
+      notRegisteredHelp: 'Until you are registered on the network (through your accountant or invoicing software), the invoice cannot be delivered to you via Peppol: you keep receiving it as a PDF, and Peppol delivery starts automatically once you are registered.',
+      noId: 'No identifier: fill in your company number in your profile or enter a Peppol identifier above.',
+      enable: 'Receive my invoices via Peppol',
+      save: 'Save',
+      toastSaved: 'Peppol settings saved.',
+      ublHint: 'Each invoice can also be downloaded in UBL format (the XML file that any Peppol-compatible accounting software imports) via the "UBL" button in the list.',
+      stPending: 'Awaiting sending',
+      stSent: 'Sent via Peppol',
+      stError: 'Sending failed',
+      stNoId: 'Company number missing',
+      stNotRegistered: 'Recipient not registered on Peppol',
+      stDisabled: 'Peppol disabled'
+    },
     businessSearch: {
       label: 'Find your business on the web',
       help: 'Type its name: we fetch the address, phone, e-mail, website and opening hours published online (OpenStreetMap). You check and correct if needed.',
@@ -4211,7 +4276,17 @@ export const translations = {
       colPeriod: 'Period',
       colHt: 'Excl. VAT',
       colTtc: 'Incl. VAT',
-      colIssued: 'Issued on'
+      colIssued: 'Issued on',
+      sendPeppol: 'Send via Peppol',
+      peppolResult: 'Peppol: {status}',
+      peppolCardTitle: 'Peppol access point',
+      peppolConfigured: 'Configured ({provider}) — Fairide identifier {id}',
+      peppolNotConfigured: 'Not configured: documents stay "pending" and the UBL can be downloaded. Set PEPPOL_PROVIDER, PEPPOL_API_KEY and PEPPOL_COMPANY_ID on Railway (Recommand or Storecove) to enable sending. Fairide identifier: {id}.',
+      fairideRegistered: 'Fairide is registered on the Peppol network',
+      fairideNotRegistered: 'Fairide does not yet appear in the Peppol directory: registration is done with the chosen provider.',
+      peppolProcess: 'Process the queue now',
+      peppolProcessed: 'Queue processed: {sent} sent, {errors} error(s), {skipped} skipped.',
+      peppolCounts: 'Invoices: {a} pending · {b} sent · {c} failed'
     },
     adminCrm: {
       title: 'Restaurant CRM',
@@ -5103,7 +5178,8 @@ export const translations = {
       unavailable: 'Invoice unavailable',
       toastSelectOne: 'Select at least one invoice.',
       downloadFailed: 'Download failed.',
-      downloadSelection: '⬇️ Download the selection ({n})'
+      downloadSelection: '⬇️ Download the selection ({n})',
+      peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
     },
     restoListUi: {
       closed: '🔒 Closed',
@@ -5204,7 +5280,9 @@ export const translations = {
       statusPaid: 'Paid',
       statusCancelled: 'Cancelled',
       issuer: 'Issuer: {name}',
-      vatSuffix: ' · VAT {vat}'
+      vatSuffix: ' · VAT {vat}',
+      peppol: 'Peppol',
+      ublTitle: 'UBL (Peppol) file, to import into your accounting software'
     },
     hoursEditor: {
       closed: 'Closed',
@@ -6830,6 +6908,32 @@ export const translations = {
     }
   },
   nl: {
+    peppol: {
+      title: 'Elektronische facturatie via Peppol',
+      stateOn: 'Actief: je facturen worden automatisch via het Peppol-netwerk bezorgd, naast de pdf.',
+      stateOff: 'Uitgeschakeld: je ontvangt alleen de pdf. Let op: elektronische facturatie tussen ondernemingen is in België verplicht sinds 1 januari 2026.',
+      stateSoon: 'Fairide rondt de aansluiting op een Peppol-toegangspunt af: zodra die actief is, vertrekken je facturen automatisch via het netwerk. Intussen is elke factuur hieronder al beschikbaar in UBL-formaat (Peppol).',
+      details: 'Details en instellingen',
+      hide: 'Verbergen',
+      what: 'Peppol is het Europese netwerk voor het uitwisselen van elektronische facturen: de factuur komt rechtstreeks in je boekhoudsoftware (of bij je boekhouder) terecht, zonder e-mail of pdf om over te typen. In België moet elke factuur tussen ondernemingen sinds 1 januari 2026 via dit netwerk.',
+      howFairide: 'Fairide verstuurt je commissiefacturen, creditnota\'s en zelffacturen via Peppol. Je Peppol-identificatie is je ondernemingsnummer (Belgisch schema 0208); je boekhouder of facturatiesoftware heeft je normaal op het netwerk geregistreerd.',
+      idLabel: 'Peppol-identificatie (laat leeg om je ondernemingsnummer te gebruiken)',
+      idInUse: 'Gebruikte identificatie: {id}',
+      registered: 'geregistreerd op Peppol',
+      notRegistered: 'niet gevonden in de Peppol-directory',
+      notRegisteredHelp: 'Zolang je niet op het netwerk geregistreerd bent (via je boekhouder of facturatiesoftware), kan de factuur niet via Peppol bezorgd worden: je blijft ze als pdf ontvangen, en de Peppol-verzending start automatisch zodra je geregistreerd bent.',
+      noId: 'Geen identificatie: vul je ondernemingsnummer in je profiel in of geef hierboven een Peppol-identificatie op.',
+      enable: 'Mijn facturen via Peppol ontvangen',
+      save: 'Opslaan',
+      toastSaved: 'Peppol-instellingen opgeslagen.',
+      ublHint: 'Elke factuur kan ook in UBL-formaat gedownload worden (het XML-bestand dat elke Peppol-compatibele boekhoudsoftware importeert) via de knop "UBL" in de lijst.',
+      stPending: 'Wacht op verzending',
+      stSent: 'Verzonden via Peppol',
+      stError: 'Verzending mislukt',
+      stNoId: 'Ondernemingsnummer ontbreekt',
+      stNotRegistered: 'Ontvanger niet geregistreerd op Peppol',
+      stDisabled: 'Peppol uitgeschakeld'
+    },
     businessSearch: {
       label: 'Vind je zaak op het web',
       help: 'Typ de naam: we halen adres, telefoon, e-mail, website en openingsuren op die online staan (OpenStreetMap). Jij controleert en verbetert waar nodig.',
@@ -7624,7 +7728,17 @@ export const translations = {
       colPeriod: 'Periode',
       colHt: 'Excl. btw',
       colTtc: 'Incl. btw',
-      colIssued: 'Uitgegeven op'
+      colIssued: 'Uitgegeven op',
+      sendPeppol: 'Verzenden via Peppol',
+      peppolResult: 'Peppol: {status}',
+      peppolCardTitle: 'Peppol-toegangspunt',
+      peppolConfigured: 'Geconfigureerd ({provider}) — Fairide-identificatie {id}',
+      peppolNotConfigured: 'Niet geconfigureerd: documenten blijven "in afwachting" en de UBL kan gedownload worden. Stel PEPPOL_PROVIDER, PEPPOL_API_KEY en PEPPOL_COMPANY_ID in op Railway (Recommand of Storecove) om het verzenden te activeren. Fairide-identificatie: {id}.',
+      fairideRegistered: 'Fairide is geregistreerd op het Peppol-netwerk',
+      fairideNotRegistered: 'Fairide staat nog niet in de Peppol-directory: de registratie gebeurt bij de gekozen provider.',
+      peppolProcess: 'Wachtrij nu verwerken',
+      peppolProcessed: 'Wachtrij verwerkt: {sent} verzonden, {errors} fout(en), {skipped} overgeslagen.',
+      peppolCounts: 'Facturen: {a} in afwachting · {b} verzonden · {c} mislukt'
     },
     adminCrm: {
       title: 'Restaurant-CRM',
@@ -8516,7 +8630,8 @@ export const translations = {
       unavailable: 'Factuur niet beschikbaar',
       toastSelectOne: 'Selecteer minstens één factuur.',
       downloadFailed: 'Downloaden mislukt.',
-      downloadSelection: '⬇️ Selectie downloaden ({n})'
+      downloadSelection: '⬇️ Selectie downloaden ({n})',
+      peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
     },
     restoListUi: {
       closed: '🔒 Gesloten',
@@ -8617,7 +8732,9 @@ export const translations = {
       statusPaid: 'Betaald',
       statusCancelled: 'Geannuleerd',
       issuer: 'Uitgever: {name}',
-      vatSuffix: ' · btw {vat}'
+      vatSuffix: ' · btw {vat}',
+      peppol: 'Peppol',
+      ublTitle: 'UBL-bestand (Peppol), om in je boekhoudsoftware te importeren'
     },
     hoursEditor: {
       closed: 'Gesloten',

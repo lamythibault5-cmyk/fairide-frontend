@@ -49,6 +49,7 @@ export default function InvoicesPage() {
       <InvoiceArchive
         endpoint="/invoices/driver"
         pdfPath={(inv) => `/invoices/driver/${inv.id}/pdf`}
+        ublPath={(inv) => `/invoices/driver/${inv.id}/ubl`}
         titre={t('invoicesDriver.selfBilling')}
         description={t('invoicesDriver.selfBillingDesc')}
         colonneMontant="Total"
