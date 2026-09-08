@@ -4,6 +4,9 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    phoneInput: {
+      country: 'Pays du numéro de téléphone'
+    },
     driverDocs: {
       title: 'Mes documents',
       sub: 'Pièce d\'identité recto / verso, attestation étudiant, autres pièces',
@@ -3883,10 +3886,21 @@ export const translations = {
       errPhoneTaken: 'Un compte existe déjà avec ce numéro de téléphone. Chaque numéro ne peut être lié qu\'à un seul compte.',
       errPhoneInvalid: 'Numéro de téléphone invalide (ex. +32 470 00 00 00 ou 0470 00 00 00).',
       stepDocsTitle: 'Ta pièce d\'identité',
-      stepDocsSub: 'Une photo du recto et une du verso de ta carte d\'identité ou de ton permis. Elles sont conservées avec ton dossier livreur, visibles dans « Mon compte ».'
+      stepDocsSub: 'Une photo du recto et une du verso de ta carte d\'identité ou de ton permis. Elles sont conservées avec ton dossier livreur, visibles dans « Mon compte ».',
+      stepAccountSubFirst: 'Commence par ton adresse e-mail et un mot de passe, ou continue avec Google : on ne te redemandera pas ces infos ensuite.',
+      googleLinked: 'Compte Google retenu',
+      googleLinkedHelp: 'Ton compte Fairide sera créé avec cette adresse à la dernière étape, sans mot de passe à choisir.',
+      googleUseOther: 'Utiliser un autre moyen',
+      googleNewAccount: 'Pas encore de compte Fairide pour cette adresse Google : complète les quelques infos qui suivent.',
+      googleExpired: 'La connexion Google a expiré, reclique sur « Continuer avec Google ».',
+      fromGoogle: 'renseigné par Google',
+      edit: 'Modifier'
     }
   },
   en: {
+    phoneInput: {
+      country: 'Phone number country'
+    },
     driverDocs: {
       title: 'My documents',
       sub: 'ID document front / back, student certificate, other documents',
@@ -7766,10 +7780,21 @@ export const translations = {
       errPhoneTaken: 'An account already exists with this phone number. Each number can be linked to only one account.',
       errPhoneInvalid: 'Invalid phone number (e.g. +32 470 00 00 00 or 0470 00 00 00).',
       stepDocsTitle: 'Your ID document',
-      stepDocsSub: 'One photo of the front and one of the back of your ID card or driving licence. They are kept with your courier file and visible in “My account”.'
+      stepDocsSub: 'One photo of the front and one of the back of your ID card or driving licence. They are kept with your courier file and visible in “My account”.',
+      stepAccountSubFirst: 'Start with your e-mail address and a password, or continue with Google: we will not ask for these again.',
+      googleLinked: 'Google account selected',
+      googleLinkedHelp: 'Your Fairide account will be created with this address at the last step, no password to choose.',
+      googleUseOther: 'Use another method',
+      googleNewAccount: 'No Fairide account yet for this Google address: fill in the few details that follow.',
+      googleExpired: 'The Google sign-in expired, click “Continue with Google” again.',
+      fromGoogle: 'provided by Google',
+      edit: 'Edit'
     }
   },
   nl: {
+    phoneInput: {
+      country: 'Land van het telefoonnummer'
+    },
     driverDocs: {
       title: 'Mijn documenten',
       sub: 'Identiteitsbewijs voor- / achterkant, studentenattest, andere stukken',
@@ -11649,7 +11674,15 @@ export const translations = {
       errPhoneTaken: 'Er bestaat al een account met dit telefoonnummer. Elk nummer kan maar aan één account gekoppeld zijn.',
       errPhoneInvalid: 'Ongeldig telefoonnummer (bv. +32 470 00 00 00 of 0470 00 00 00).',
       stepDocsTitle: 'Je identiteitsbewijs',
-      stepDocsSub: 'Eén foto van de voorkant en één van de achterkant van je identiteitskaart of rijbewijs. Ze worden bij je koeriersdossier bewaard en zijn zichtbaar in “Mijn account”.'
+      stepDocsSub: 'Eén foto van de voorkant en één van de achterkant van je identiteitskaart of rijbewijs. Ze worden bij je koeriersdossier bewaard en zijn zichtbaar in “Mijn account”.',
+      stepAccountSubFirst: 'Begin met je e-mailadres en een wachtwoord, of ga verder met Google: we vragen dit daarna niet opnieuw.',
+      googleLinked: 'Google-account gekozen',
+      googleLinkedHelp: 'Je Fairide-account wordt bij de laatste stap met dit adres aangemaakt, zonder wachtwoord te kiezen.',
+      googleUseOther: 'Andere methode gebruiken',
+      googleNewAccount: 'Nog geen Fairide-account voor dit Google-adres: vul de paar gegevens hierna aan.',
+      googleExpired: 'De Google-aanmelding is verlopen, klik opnieuw op “Doorgaan met Google”.',
+      fromGoogle: 'ingevuld door Google',
+      edit: 'Wijzigen'
     }
   }
 };

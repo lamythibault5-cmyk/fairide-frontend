@@ -8,6 +8,7 @@ import AddressRecognition from '../components/AddressRecognition';
 import BusinessSearch from '../components/BusinessSearch';
 import { api, apiUpload } from '../api';
 import IdentityDocsPicker from '../components/IdentityDocsPicker';
+import PhoneInput from '../components/PhoneInput';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { RESTAURANT_TYPES } from '../menuCategories';
@@ -38,10 +39,12 @@ function roles(t) {
 
    L'étape "business" n'existe que pour les commerces : le nom légal, le n° BCE, le n° TVA et le
    responsable sont exigés par POST /register côté backend, on ne peut pas s'en passer. */
+// Le compte d'abord (adresse e-mail + mot de passe, ou Google) : avec Google, nom et e-mail sont connus et ne
+// sont plus redemandés aux étapes suivantes. Les autres étapes précisent qui on est et où on est.
 const STEP_KEYS = {
-  client: ['identity', 'address', 'account'],
-  driver: ['identity', 'documents', 'address', 'account'],
-  restaurant: ['identity', 'business', 'address', 'account']
+  client: ['account', 'identity', 'address'],
+  driver: ['account', 'identity', 'documents', 'address'],
+  restaurant: ['account', 'identity', 'business', 'address']
 };
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -165,6 +168,24 @@ export default function Auth() {
      requise" n'indique pas lequel des quatre champs d'adresse est vide. */
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState({});
+  // Inscription via Google : le jeton d'identité est gardé jusqu'à la fin du formulaire (c'est lui qui
+  // crée le compte), le profil qu'il contient préremplit prénom, nom et e-mail — qu'on ne redemande pas.
+  const [googleCredential, setGoogleCredential] = useState(null);
+  const [googleProfile, setGoogleProfile] = useState(null);
+  const [nomModifiable, setNomModifiable] = useState(false);
+  function decoderJwt(cred) {
+    try { const b = cred.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
+  }
+  function retenirGoogle(credential) {
+    const pr = decoderJwt(credential);
+    setGoogleCredential(credential);
+    setGoogleProfile({ name: pr.name || '', email: pr.email || '' });
+    if (pr.email) setEmail(pr.email);
+    if (pr.given_name) setFirstName((v) => v || pr.given_name);
+    if (pr.family_name) setLastName((v) => v || pr.family_name);
+    setPassword(''); setPasswordConfirm(''); setErrors({});
+  }
+  function oublierGoogle() { setGoogleCredential(null); setGoogleProfile(null); setEmail(''); }
   // Pièce d'identité du livreur (recto / verso) et attestation étudiant, gardées dans le navigateur jusqu'à la
   // création du compte, puis envoyées au dossier coursier — voir televerserDocumentsLivreur.
   const [docKind, setDocKind] = useState('identity_card');
@@ -225,7 +246,7 @@ export default function Auth() {
         : role === 'driver' ? t('auth.stepAddressSubDriver')
         : t('auth.stepAddressSubRestaurant')
     },
-    account: { title: t('auth.stepAccountTitle'), sub: t('auth.stepAccountSub') }
+    account: { title: t('auth.stepAccountTitle'), sub: t('auth.stepAccountSubFirst') }
   }[stepKey];
 
   /* Un commerce a une étape de plus qu'un client : changer de rôle en cours de route (ou passer
@@ -266,6 +287,7 @@ export default function Auth() {
       // Adresse non reconnue : on demande une confirmation plutôt que de bloquer.
       if (role === 'restaurant' && (recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) e.addressConfirm = t('auth.errAddressConfirm');
     }
+    if (key === 'account' && googleCredential) return e;
     if (key === 'account') {
       if (!email.trim()) e.email = required;
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
@@ -285,7 +307,7 @@ export default function Auth() {
      s'affiche sous le champ fautif, pas après avoir tout rempli. Réseau indisponible : on laisse
      passer, l'inscription elle-même tranchera. */
   async function verifierDisponibilite(key) {
-    const corps = key === 'identity' ? { phone: phone.trim() } : key === 'account' ? { email: email.trim() } : null;
+    const corps = key === 'identity' ? { phone: phone.trim() } : key === 'account' && !googleCredential ? { email: email.trim() } : null;
     if (!corps) return {};
     try {
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
@@ -327,44 +349,46 @@ export default function Auth() {
   useEffect(() => { stateRef.current = { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName }; });
 
   async function handleGoogleCredential(response) {
-    const { mode, role, phone, addressStreet, addressNumber, addressPostalCode, addressCity, legalName, companyNumber, vatNumber, responsibleName } = stateRef.current;
-    if (mode === 'register' && (!phone.trim() || !addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
-      toast(t('auth.googleIncompleteProfile'));
-      return;
-    }
-    if (mode === 'register' && role === 'driver' && !companyNumber.trim()) {
-      toast(t('auth.errDriverCompanyNumber'));
-      return;
-    }
-    if (mode === 'register' && role === 'restaurant' && (!legalName.trim() || !companyNumber.trim() || !vatNumber.trim() || !responsibleName.trim())) {
-      toast(t('auth.toastLegalRequired'));
+    const { mode, role } = stateRef.current;
+    if (mode === 'register') {
+      retenirGoogle(response.credential);
+      setStep((s) => (s === 0 ? 1 : s));
       return;
     }
     setLoading(true);
     try {
-      const data = await loginWithGoogle(response.credential, role, {
-        phone: phone.trim(),
-        addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
-        addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
-        ...(role === 'restaurant' ? {
-          legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-          vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
-        } : {}),
-        ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
-      });
-      await televerserDocumentsLivreur(data.token);
+      const data = await loginWithGoogle(response.credential, role, {});
       toast(t('auth.welcome', { name: data.user.name }));
       navigate(from);
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
+        // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
+        retenirGoogle(response.credential);
         setMode('register');
-        toast(t('auth.googleCompleteProfile'));
+        toast(t('auth.googleNewAccount'));
       } else {
         toast(err.message);
       }
     } finally {
       setLoading(false);
     }
+  }
+
+  // Création du compte via Google, à la dernière étape, avec tout ce que le formulaire a recueilli.
+  async function inscrireViaGoogle() {
+    const data = await loginWithGoogle(googleCredential, role, {
+      phone: phone.trim(),
+      addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(),
+      addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+      ...(role === 'restaurant' ? {
+        legalName: legalName.trim(), companyNumber: companyNumber.trim(),
+        vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
+      } : {}),
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim() } : {})
+    });
+    await televerserDocumentsLivreur(data.token);
+    toast(t('auth.welcome', { name: data.user.name }));
+    navigate(from);
   }
 
   useEffect(() => {
@@ -385,11 +409,11 @@ export default function Auth() {
     tryInit();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode]);
+  }, [mode, stepKey, googleCredential]);
 
   async function submit(e) {
     e.preventDefault();
-    if (!email || !password) { toast(t('auth.errEmailPassword')); return; }
+    if (!(mode === 'register' && googleCredential) && (!email || !password)) { toast(t('auth.errEmailPassword')); return; }
     setLoading(true);
     try {
       if (mode === 'register') {
@@ -411,6 +435,16 @@ export default function Auth() {
           // Demande l'autorisation de géolocalisation une seule fois, à la création du compte.
           // Elle pourra être désactivée plus tard dans les réglages du compte.
           navigator.geolocation.getCurrentPosition(() => {}, () => {}, { timeout: 5000 });
+        }
+        if (googleCredential) {
+          try {
+            await inscrireViaGoogle();
+          } catch (err) {
+            // Jeton Google expiré (il vit une heure) ou refusé : on repart de la première étape.
+            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired')); }
+            else throw err;
+          }
+          return;
         }
         const data = await register({
           firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role,
@@ -634,6 +668,15 @@ export default function Auth() {
                     <p className="small" style={{ marginBottom: 14 }}>{t('auth.driverFeeNotice')}</p>
                   </>
                 )}
+                {googleCredential && !nomModifiable && firstName.trim() && lastName.trim() ? (
+                  <div className="auth-google-lie" style={{ marginBottom: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>👤 {firstName} {lastName}</div>
+                      <div className="small">{email} · {t('auth.fromGoogle')}</div>
+                    </div>
+                    <button type="button" className="btn-ghost" onClick={() => setNomModifiable(true)}>{t('auth.edit')}</button>
+                  </div>
+                ) : (
                 <div className="row" style={{ gap: 8 }}>
                   <div className="field" style={{ flex: 1 }}>
                     <label htmlFor="auth-f-3">{t('auth.firstName')}</label>
@@ -648,10 +691,11 @@ export default function Auth() {
                     {fieldError('lastName')}
                   </div>
                 </div>
+                )}
                 <div className="field">
                   <label htmlFor="auth-f-7">{t('auth.phone')}</label>
-                  <input id="auth-f-7" type="tel" className={errors.phone ? 'input-invalid' : undefined}
-                    value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+32 470 00 00 00" />
+                  {/* Pays (UE, Belgique par défaut) + numéro local : la valeur envoyée est internationale (+32 470…). */}
+                  <PhoneInput id="auth-f-7" value={phone} onChange={setPhone} invalid={!!errors.phone} />
                   {fieldError('phone')}
                 </div>
                 {role === 'driver' && (
@@ -794,7 +838,17 @@ export default function Auth() {
               </>
             )}
 
-            {stepKey === 'account' && (
+            {stepKey === 'account' && googleCredential && (
+              <div className="auth-google-lie">
+                <div>
+                  <div style={{ fontWeight: 700 }}>✅ {t('auth.googleLinked')}</div>
+                  <div className="small">{googleProfile?.name}{googleProfile?.name && googleProfile?.email ? ' · ' : ''}{googleProfile?.email}</div>
+                  <div className="small" style={{ marginTop: 4 }}>{t('auth.googleLinkedHelp')}</div>
+                </div>
+                <button type="button" className="btn-ghost" onClick={oublierGoogle}>{t('auth.googleUseOther')}</button>
+              </div>
+            )}
+            {stepKey === 'account' && !googleCredential && (
               <>
                 {GOOGLE_CLIENT_ID && (
                   <>
@@ -826,18 +880,18 @@ export default function Auth() {
                     placeholder={t('auth.phPasswordConfirm')} invalid={!!errors.passwordConfirm} />
                   {fieldError('passwordConfirm')}
                 </div>
-                {referralOpen ? (
-                  <div className="field">
-                    <label htmlFor="auth-f-16">{t('auth.promoCode')}</label>
-                    <input id="auth-f-16" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-                  </div>
-                ) : (
-                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => setReferralOpen(true)}>
-                    {t('auth.haveReferral')}
-                  </button>
-                )}
               </>
             )}
+            {stepKey === 'account' && (referralOpen ? (
+              <div className="field">
+                <label htmlFor="auth-f-16">{t('auth.promoCode')}</label>
+                <input id="auth-f-16" value={referralCode} onChange={(e) => setReferralCode(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+              </div>
+            ) : (
+              <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => setReferralOpen(true)}>
+                {t('auth.haveReferral')}
+              </button>
+            ))}
 
             <div className="auth-step-nav">
               {step > 0 && (

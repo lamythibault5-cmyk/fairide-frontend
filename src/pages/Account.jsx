@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import PasswordInput from '../components/PasswordInput';
 import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
+import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
@@ -927,7 +928,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       {!codeSent ? (
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: 1, margin: 0, minWidth: 180 }}>
-            <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />
+            {type === 'tel' ? <PhoneInput value={newValue} onChange={setNewValue} /> : <input type={type} value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder={placeholder} />}
           </div>
           <button type="button" className="btn-teal" disabled={sending} onClick={sendCode}>{sending ? '...' : t('accountUi.sendCode')}</button>
           <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>

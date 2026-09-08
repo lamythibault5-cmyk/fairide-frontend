@@ -2627,3 +2627,19 @@ button.account-link-row:last-child { border-bottom: none; }
 .doc-slot-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .doc-slot-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doc-slot-retirer { position: absolute; top: 4px; right: 4px; padding: 2px 6px; font-size: 12px; }
+
+/* Téléphone pays + numéro (components/PhoneInput.jsx) : un seul cadre, le sélecteur de pays réduit à son
+   drapeau + indicatif (la liste complète s'ouvre au clic), le numéro local à droite. */
+.phone-input { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; overflow: hidden; }
+.phone-input:focus-within { border-color: var(--iris); box-shadow: 0 0 0 3px rgba(59,47,181,0.12); }
+.phone-input.input-invalid { border-color: var(--red); }
+.phone-input .phone-input-pays { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.phone-input { position: relative; }
+.phone-input .phone-input-indicatif { display: inline-flex; align-items: center; gap: 4px; padding: 0 10px; font-size: 14px; font-weight: 600; background: var(--cream-dim); border-right: 1px solid var(--line); white-space: nowrap; cursor: pointer; }
+.phone-input .phone-input-indicatif::after { content: '▾'; font-size: 11px; opacity: 0.7; }
+.phone-input select.phone-input-pays { position: absolute; left: 0; top: 0; height: 100%; width: 96px; opacity: 0; cursor: pointer; }
+.phone-input input { border: none !important; border-radius: 0 !important; box-shadow: none !important; flex: 1; min-width: 0; }
+.field .phone-input input:focus { outline: none; }
+
+/* Inscription : compte Google retenu (Auth.jsx) — résumé du profil connu, bouton pour en changer. */
+.auth-google-lie { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-dim); margin-bottom: 14px; }
