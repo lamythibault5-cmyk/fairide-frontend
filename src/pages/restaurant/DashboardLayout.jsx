@@ -13,6 +13,8 @@ import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import { useLanguage } from '../../context/LanguageContext';
 import AddressSearch from '../../components/AddressSearch';
+import BusinessSearch from '../../components/BusinessSearch';
+import { cuisineDepuisOsm } from '../../osmCuisine';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -56,6 +58,10 @@ export default function DashboardLayout() {
   const [coverImageUrl, setCoverImageUrl] = useState('');
   const [hours, setHours] = useState(null);
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
+  const [offersDelivery, setOffersDelivery] = useState(true);
+  const [offersPickup, setOffersPickup] = useState(true);
+  const [offersDineIn, setOffersDineIn] = useState(false);
+  const [openingHoursTexte, setOpeningHoursTexte] = useState('');
   // Ce que la reconnaissance d'adresse a trouvé à l'inscription (voir Auth.jsx) : commune, quartier,
   // adresse, et le commerce référencé sur Internet si le restaurateur l'a désigné.
   useEffect(() => {
@@ -63,6 +69,13 @@ export default function DashboardLayout() {
       const brut = localStorage.getItem('fairide_resto_hint'); if (!brut) return;
       const h = JSON.parse(brut);
       if (h.name) setName((v) => v || h.name);
+      const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
+      if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+      if (h.openingHours) setOpeningHoursTexte(h.openingHours);
+      if (h.services) {
+        setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
+        if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);
+      }
       if (h.commune && COMMUNES.includes(h.commune)) setCommune(h.commune);
       if (h.neighborhood) setNeighborhood((v) => v || h.neighborhood);
       if (h.street) setAddressStreet((v) => v || h.street);
@@ -166,6 +179,7 @@ export default function DashboardLayout() {
       toast(t('dashResto.toastAddressRequired'));
       return;
     }
+    if (!offersDelivery && !offersPickup && !offersDineIn) { toast(t('dashResto.toastServicesRequired')); return; }
     // Adresse tapée mais non reconnue : on ne bloque pas, on demande une confirmation explicite.
     if ((recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) {
       toast(t('dashResto.toastAddressConfirm'));
@@ -182,7 +196,8 @@ export default function DashboardLayout() {
         body: {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
-          coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref
+          coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref,
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn
         }
       });
       setMyRestos((prev) => [...prev, r]);
@@ -251,6 +266,14 @@ export default function DashboardLayout() {
             {t('dashResto.createNote')}
           </p>
 
+          <BusinessSearch compact onSelect={(f) => {
+            if (!f) return;
+            if (f.name) setName(f.name);
+            const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
+            if (f.street) setAddressStreet(f.street); if (f.number) setAddressNumber(f.number); if (f.postalCode) setAddressPostalCode(f.postalCode);
+            if (f.city && COMMUNES.includes(f.city)) setCommune(f.city);
+            if (f.openingHours) setOpeningHoursTexte(f.openingHours);
+          }} />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
           <div className="field"><label>{t('dashResto.businessName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field">
@@ -303,18 +326,22 @@ export default function DashboardLayout() {
           <div className="field"><label>{t('dashResto.coverUrl')}</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
 
           <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.delivery')}</h4>
-          <div className="field">
-            <label>{t('dashResto.whoDelivers')}</label>
-            <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
-              <option value="fairide">{t('dashResto.fairidePool')}</option>
-              <option value="own">{t('dashResto.ownDrivers')}</option>
-            </select>
-            {deliveryModePref === 'own' && (
-              <p className="small" style={{ margin: '6px 0 0' }}>
-                {t('dashResto.ownDriversHelp')}
-              </p>
+          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.servicesTitle')}</h4>
+          <p className="small" style={{ margin: '0 0 8px' }}>{t('dashResto.servicesHelp')}</p>
+          <div className="field services-choice">
+            <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
+            {offersDelivery && (
+              <div className="service-suboptions">
+                <label>{t('dashResto.whoDelivers')}</label>
+                <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
+                  <option value="fairide">{t('dashResto.fairidePool')}</option>
+                  <option value="own">{t('dashResto.ownDrivers')}</option>
+                </select>
+                {deliveryModePref === 'own' && <p className="small" style={{ margin: '6px 0 0' }}>{t('dashResto.ownDriversHelp')}</p>}
+              </div>
             )}
+            <label className="service-option"><input type="checkbox" checked={offersPickup} onChange={(e) => setOffersPickup(e.target.checked)} /> <span>🏠 {t('auth.servicePickup')}</span></label>
+            <label className="service-option"><input type="checkbox" checked={offersDineIn} onChange={(e) => setOffersDineIn(e.target.checked)} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
           </div>
           <button className="btn-teal" onClick={createResto}>{t('dashResto.createMyRestaurant')}</button>
         </div>

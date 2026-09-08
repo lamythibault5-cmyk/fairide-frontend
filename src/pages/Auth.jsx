@@ -5,6 +5,8 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import AddressRecognition from '../components/AddressRecognition';
+import BusinessSearch from '../components/BusinessSearch';
+import { api } from '../api';
 import AddressSearch from '../components/AddressSearch';
 
 function roles(t) {
@@ -77,6 +79,49 @@ export default function Auth() {
   // qui crée le compte, sans reposer une question dont on connaît déjà la réponse dans la majorité des cas.
   const [responsibleName, setResponsibleName] = useState('');
   const [responsibleTouched, setResponsibleTouched] = useState(false);
+  // Commerce trouvé sur le web (BusinessSearch) et vérification BCE/TVA (VIES) — voir l'étape « Ton commerce ».
+  const [commerceTrouve, setCommerceTrouve] = useState(null);
+  const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
+  // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
+  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false });
+  useEffect(() => {
+    if (role !== 'restaurant') return undefined;
+    const chiffres = (companyNumber || vatNumber).replace(/\D/g, '');
+    if (chiffres.length !== 10) { setVerifSociete(null); return undefined; }
+    let annule = false;
+    const timer = setTimeout(async () => {
+      try {
+        const r = await api(`/restaurants/lookup/company?number=${chiffres}`);
+        if (annule) return;
+        setVerifSociete(r);
+        if (r.companyNumber && !companyNumber.trim()) setCompanyNumber(r.companyNumber);
+        if (r.vatNumber && !vatNumber.trim()) setVatNumber(r.vatNumber);
+        if (r.valid && r.legalName && !legalName.trim()) setLegalName(r.legalName);
+      } catch { if (!annule) setVerifSociete({ valid: null, error: 'indisponible' }); }
+    }, 700);
+    return () => { annule = true; clearTimeout(timer); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [companyNumber, vatNumber, role]);
+
+  // La fiche choisie sur le web préremplit ce qu'elle sait ; le reste est mémorisé pour la création du restaurant.
+  function appliquerCommerce(fiche) {
+    setCommerceTrouve(fiche);
+    if (!fiche) return;
+    if (fiche.street) setAddressStreet(fiche.street);
+    if (fiche.number) setAddressNumber(fiche.number);
+    if (fiche.postalCode) setAddressPostalCode(fiche.postalCode);
+    if (fiche.city) setAddressCity(fiche.city);
+    if (fiche.phone && !phone.trim()) setPhone(fiche.phone);
+    if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
+    try {
+      const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
+      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', street: fiche.street || '', number: fiche.number || '', postalCode: fiche.postalCode || '', commune: fiche.city || '' }));
+    } catch { /* sans stockage */ }
+  }
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, services })); } catch { /* sans stockage */ }
+  }, [services, role]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
@@ -158,6 +203,7 @@ export default function Auth() {
       if (!companyNumber.trim()) e.companyNumber = required;
       if (!vatNumber.trim()) e.vatNumber = required;
       if (!responsibleName.trim()) e.responsibleName = required;
+      if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
     }
     if (key === 'address') {
       if (!addressStreet.trim()) e.addressStreet = required;
@@ -529,6 +575,7 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
+                <BusinessSearch onSelect={appliquerCommerce} />
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>
                   <input id="auth-f-12" className={errors.legalName ? 'input-invalid' : undefined}
@@ -549,6 +596,13 @@ export default function Auth() {
                     {fieldError('vatNumber')}
                   </div>
                 </div>
+                {verifSociete && (
+                  <p className="small company-check" style={{ margin: '-4px 0 10px' }}>
+                    {verifSociete.valid === true && <>✅ {t('auth.companyVerified', { name: verifSociete.legalName || '', address: verifSociete.address || '' })}</>}
+                    {verifSociete.valid === false && <>⚠️ {t('auth.companyNotFound')}</>}
+                    {verifSociete.valid === null && verifSociete.error === 'indisponible' && <>{t('auth.companyCheckUnavailable')}</>}
+                  </p>
+                )}
                 <div className="field">
                   <label htmlFor="auth-f-15">{t('auth.responsibleName')}</label>
                   <input id="auth-f-15" className={errors.responsibleName ? 'input-invalid' : undefined}
@@ -557,6 +611,20 @@ export default function Auth() {
                     placeholder={t('auth.responsibleNamePlaceholder')}
                   />
                   {fieldError('responsibleName')}
+                </div>
+                <div className="field services-choice">
+                  <label>{t('auth.servicesTitle')}</label>
+                  <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
+                  <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
+                  {services.delivery && (
+                    <div className="service-suboptions">
+                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'fairide'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'fairide' }))} /> <span>{t('auth.serviceDeliveryFairide')}</span></label>
+                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'own'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'own' }))} /> <span>{t('auth.serviceDeliveryOwn')}</span></label>
+                    </div>
+                  )}
+                  <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
+                  <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
+                  {fieldError('services')}
                 </div>
               </>
             )}

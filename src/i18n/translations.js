@@ -4,6 +4,19 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    businessSearch: {
+      label: 'Trouve ton commerce sur le web',
+      help: 'Tape son nom : on récupère l\'adresse, le téléphone, l\'e-mail, le site et les horaires publiés sur Internet (OpenStreetMap). Tu vérifies, tu corriges si besoin.',
+      placeholder: 'Ex : Pizzeria Bella, Le Cèdre Bleu…',
+      searching: 'Recherche sur le web…',
+      fetching: 'Récupération des coordonnées…',
+      error: 'Recherche indisponible pour l\'instant : remplis les champs à la main.',
+      noResult: 'Aucun commerce trouvé à ce nom à Bruxelles — remplis les champs à la main, ou essaie une autre orthographe.',
+      noAddress: 'adresse non renseignée',
+      found: '{name} — informations récupérées',
+      notIt: 'Ce n\'est pas le bon ?',
+      verifyBelow: 'Vérifie chaque champ ci-dessous : ce qui vient du web peut être ancien ou incomplet.'
+    },
     paiementLivreur: {
       howTitle: 'Comment tu es payé',
       step1: 'Le client paie sa commande en ligne au moment de commander (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
@@ -2334,7 +2347,10 @@ export const translations = {
       notListedTitle: 'Pas encore visible sur Fairide',
       notListedSub: 'Validé — mise en ligne par notre équipe très bientôt',
       notListedText: 'Ton commerce est validé mais n\'apparaît pas encore aux clients (liste, recherche, carte). L\'équipe Fairide le met en ligne très prochainement et tu recevras un e-mail à ce moment-là. D\'ici là, tu peux peaufiner ta carte, tes photos et tes horaires : tout sera prêt le jour J.',
-      paymentsSoonBtn: 'Ouverture fin septembre — en savoir plus'
+      paymentsSoonBtn: 'Ouverture fin septembre — en savoir plus',
+      servicesTitle: 'Services proposés',
+      servicesHelp: 'Coche ce que ton commerce propose ; tu pourras changer à tout moment.',
+      toastServicesRequired: 'Choisis au moins un service (livraison, à emporter ou réservation).'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -3340,10 +3356,34 @@ export const translations = {
       companyNumberDriver: 'N° d\'entreprise (statut indépendant)',
       companyNumberDriverHelp: 'Les livreurs Fairide travaillent en indépendants : ton numéro BCE est nécessaire pour l\'autofacturation mensuelle.',
       errDriverCompanyNumber: 'Le numéro d\'entreprise est requis pour un compte livreur.',
-      errAddressConfirm: 'Adresse non reconnue : confirme-la ci-dessus pour continuer.'
+      errAddressConfirm: 'Adresse non reconnue : confirme-la ci-dessus pour continuer.',
+      companyVerified: 'Vérifié dans le registre TVA européen (VIES) : {name}, {address}',
+      companyNotFound: 'Numéro non trouvé dans le registre TVA européen (VIES). C\'est normal pour une société très récente ; sinon, vérifie les dix chiffres.',
+      companyCheckUnavailable: 'Vérification du numéro indisponible pour l\'instant — tu peux continuer.',
+      servicesTitle: 'Services que tu veux proposer',
+      servicesHelp: 'Tu pourras les changer à tout moment dans ton tableau de bord.',
+      serviceDelivery: 'Livraison',
+      serviceDeliveryFairide: 'avec les livreurs Fairide',
+      serviceDeliveryOwn: 'avec mes propres livreurs',
+      servicePickup: 'À emporter',
+      serviceDineIn: 'Réservation de table (sur place)',
+      errServices: 'Choisis au moins un service.'
     }
   },
   en: {
+    businessSearch: {
+      label: 'Find your business on the web',
+      help: 'Type its name: we fetch the address, phone, e-mail, website and opening hours published online (OpenStreetMap). You check and correct if needed.',
+      placeholder: 'E.g. Pizzeria Bella, Le Cèdre Bleu…',
+      searching: 'Searching the web…',
+      fetching: 'Fetching the details…',
+      error: 'Search unavailable right now: fill in the fields by hand.',
+      noResult: 'No business found with that name in Brussels — fill in the fields by hand, or try another spelling.',
+      noAddress: 'no address listed',
+      found: '{name} — details retrieved',
+      notIt: 'Not the right one?',
+      verifyBelow: 'Check each field below: what comes from the web can be outdated or incomplete.'
+    },
     paiementLivreur: {
       howTitle: 'How you get paid',
       step1: 'The customer pays the order online when ordering (card, Bancontact, Apple Pay, Google Pay). The money is collected by Stripe, never by Fairide.',
@@ -5674,7 +5714,10 @@ export const translations = {
       notListedTitle: 'Not visible on Fairide yet',
       notListedSub: 'Approved — our team puts it online very soon',
       notListedText: 'Your business is approved but not yet shown to customers (list, search, map). The Fairide team will put it online very soon and you will receive an e-mail at that moment. Until then you can polish your menu, photos and hours: everything will be ready on day one.',
-      paymentsSoonBtn: 'Opens end of September — learn more'
+      paymentsSoonBtn: 'Opens end of September — learn more',
+      servicesTitle: 'Services offered',
+      servicesHelp: 'Tick what your business offers; you can change it any time.',
+      toastServicesRequired: 'Choose at least one service (delivery, takeaway or reservation).'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -6680,10 +6723,34 @@ export const translations = {
       companyNumberDriver: 'Company number (self-employed status)',
       companyNumberDriverHelp: 'Fairide couriers are self-employed: your company number is needed for monthly self-billing.',
       errDriverCompanyNumber: 'The company number is required for a courier account.',
-      errAddressConfirm: 'Address not recognised: confirm it above to continue.'
+      errAddressConfirm: 'Address not recognised: confirm it above to continue.',
+      companyVerified: 'Verified in the EU VAT register (VIES): {name}, {address}',
+      companyNotFound: 'Number not found in the EU VAT register (VIES). Normal for a very recent company; otherwise check the ten digits.',
+      companyCheckUnavailable: 'Number check unavailable right now — you can continue.',
+      servicesTitle: 'Services you want to offer',
+      servicesHelp: 'You can change them any time in your dashboard.',
+      serviceDelivery: 'Delivery',
+      serviceDeliveryFairide: 'with Fairide couriers',
+      serviceDeliveryOwn: 'with my own couriers',
+      servicePickup: 'Takeaway',
+      serviceDineIn: 'Table reservation (dine-in)',
+      errServices: 'Choose at least one service.'
     }
   },
   nl: {
+    businessSearch: {
+      label: 'Vind je zaak op het web',
+      help: 'Typ de naam: we halen adres, telefoon, e-mail, website en openingsuren op die online staan (OpenStreetMap). Jij controleert en verbetert waar nodig.',
+      placeholder: 'Bv. Pizzeria Bella, Le Cèdre Bleu…',
+      searching: 'Zoeken op het web…',
+      fetching: 'Gegevens ophalen…',
+      error: 'Zoeken is momenteel niet beschikbaar: vul de velden zelf in.',
+      noResult: 'Geen zaak gevonden met die naam in Brussel — vul de velden zelf in, of probeer een andere spelling.',
+      noAddress: 'geen adres vermeld',
+      found: '{name} — gegevens opgehaald',
+      notIt: 'Niet de juiste?',
+      verifyBelow: 'Controleer elk veld hieronder: wat van het web komt kan verouderd of onvolledig zijn.'
+    },
     paiementLivreur: {
       howTitle: 'Hoe je betaald wordt',
       step1: 'De klant betaalt de bestelling online bij het bestellen (kaart, Bancontact, Apple Pay, Google Pay). Het geld wordt geïnd door Stripe, nooit door Fairide.',
@@ -9014,7 +9081,10 @@ export const translations = {
       notListedTitle: 'Nog niet zichtbaar op Fairide',
       notListedSub: 'Gevalideerd — ons team zet het heel binnenkort online',
       notListedText: 'Je zaak is gevalideerd maar nog niet zichtbaar voor klanten (lijst, zoeken, kaart). Het Fairide-team zet ze heel binnenkort online en je krijgt dan een e-mail. Tot dan kun je je kaart, foto\'s en uren bijschaven: alles staat klaar op dag één.',
-      paymentsSoonBtn: 'Opent eind september — meer info'
+      paymentsSoonBtn: 'Opent eind september — meer info',
+      servicesTitle: 'Aangeboden diensten',
+      servicesHelp: 'Vink aan wat je zaak aanbiedt; je kunt dit altijd wijzigen.',
+      toastServicesRequired: 'Kies minstens één dienst (levering, afhalen of reservatie).'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -10020,7 +10090,18 @@ export const translations = {
       companyNumberDriver: 'Ondernemingsnummer (zelfstandig statuut)',
       companyNumberDriverHelp: 'Fairide-koeriers werken als zelfstandige: je ondernemingsnummer is nodig voor de maandelijkse selfbilling.',
       errDriverCompanyNumber: 'Het ondernemingsnummer is verplicht voor een koeriersaccount.',
-      errAddressConfirm: 'Adres niet herkend: bevestig het hierboven om verder te gaan.'
+      errAddressConfirm: 'Adres niet herkend: bevestig het hierboven om verder te gaan.',
+      companyVerified: 'Geverifieerd in het Europese btw-register (VIES): {name}, {address}',
+      companyNotFound: 'Nummer niet gevonden in het Europese btw-register (VIES). Normaal voor een heel recente vennootschap; controleer anders de tien cijfers.',
+      companyCheckUnavailable: 'Controle van het nummer momenteel niet beschikbaar — je kunt verdergaan.',
+      servicesTitle: 'Diensten die je wilt aanbieden',
+      servicesHelp: 'Je kunt ze op elk moment wijzigen in je dashboard.',
+      serviceDelivery: 'Levering',
+      serviceDeliveryFairide: 'met Fairide-koeriers',
+      serviceDeliveryOwn: 'met mijn eigen koeriers',
+      servicePickup: 'Afhalen',
+      serviceDineIn: 'Tafelreservatie (ter plaatse)',
+      errServices: 'Kies minstens één dienst.'
     }
   }
 };

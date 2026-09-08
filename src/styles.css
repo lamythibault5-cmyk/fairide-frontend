@@ -2484,3 +2484,14 @@ button.account-link-row:last-child { border-bottom: none; }
 .tracking-with-game.jeux-masques .leaflet-container, .tracking-fullscreen-split.jeux-masques .leaflet-container { filter: none; image-rendering: auto; }
 .tracking-fullscreen-split.jeux-masques .tracking-fullscreen-map { flex: 1; }
 .tracking-fullscreen-split.jeux-masques .tracking-fullscreen-map > .tracking-map-wrap { max-width: 1400px; }
+/* Recherche du commerce sur le web (BusinessSearch.jsx) et choix des services (inscription, création). */
+.business-search { position: relative; margin-bottom: 14px; background: rgba(59,47,181,0.06); border-radius: var(--radius-chip); padding: 10px 12px; }
+.business-search label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px; }
+.business-search-help { margin: 0 0 6px; opacity: 0.8; }
+.business-search-list { top: calc(100% - 6px); }
+.business-found { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; }
+.company-check { color: var(--ink); }
+.services-choice .service-option { display: flex; gap: 8px; align-items: center; font-weight: 600; font-size: 14px; margin: 6px 0; cursor: pointer; }
+.services-choice .service-option input { margin: 0; }
+.service-suboptions { margin: 2px 0 6px 26px; display: flex; flex-direction: column; gap: 4px; }
+.service-suboptions .service-option { font-weight: 500; margin: 2px 0; }
