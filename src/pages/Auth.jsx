@@ -124,7 +124,8 @@ export default function Auth() {
     setAddressNumber(fiche.number || '');
     setAddressPostalCode(fiche.postalCode || '');
     setAddressCity(fiche.city || '');
-    if (fiche.phone) setPhone(fiche.phone);
+    // Le téléphone personnel saisi à l'étape précédente n'est jamais écrasé par celui du commerce.
+    if (fiche.phone && !phone.trim()) setPhone(fiche.phone);
     const typeDevine = cuisineDepuisOsm(fiche.cuisine, fiche.type);
     if (typeDevine && !cuisine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
@@ -176,7 +177,11 @@ export default function Auth() {
     if (full) setResponsibleName(full);
   }, [firstName, lastName, responsibleTouched]);
 
-  const steps = STEP_KEYS[role] || STEP_KEYS.client;
+  // La fiche du commerce (recherche web ou saisie à la main) fournit déjà l'adresse : pas de seconde étape
+  // « Ton adresse » pour un restaurateur dont l'adresse est complète — on ne pose jamais deux fois la même question.
+  const adresseComplete = !!(addressStreet.trim() && addressNumber.trim() && /^\d{4}$/.test(addressPostalCode.trim()) && addressCity.trim());
+  const adresseDepuisFiche = role === 'restaurant' && !!commerceTrouve && adresseComplete;
+  const steps = (STEP_KEYS[role] || STEP_KEYS.client).filter((k) => !(k === 'address' && adresseDepuisFiche));
   const stepKey = steps[Math.min(step, steps.length - 1)];
   const isLastStep = step >= steps.length - 1;
 
@@ -597,6 +602,7 @@ export default function Auth() {
             {stepKey === 'business' && (
               <>
                 <BusinessSearch onSelect={appliquerCommerce} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} />
+                {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
                 <div className="field">
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
                   <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>

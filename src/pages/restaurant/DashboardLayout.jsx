@@ -46,6 +46,8 @@ export default function DashboardLayout() {
   const [drivers, setDrivers] = useState([]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
+  // Commerce déjà désigné à l'inscription : le formulaire arrive prérempli, on ne redemande pas de le chercher.
+  const [commerceDejaChoisi, setCommerceDejaChoisi] = useState(false);
   const [name, setName] = useState('');
   const [commune, setCommune] = useState(COMMUNES[0]);
   const [neighborhood, setNeighborhood] = useState('');
@@ -68,7 +70,7 @@ export default function DashboardLayout() {
     try {
       const brut = localStorage.getItem('fairide_resto_hint'); if (!brut) return;
       const h = JSON.parse(brut);
-      if (h.name) setName((v) => v || h.name);
+      if (h.name) { setName((v) => v || h.name); setCommerceDejaChoisi(true); }
       // Le type choisi à l'inscription prime ; sinon celui deviné depuis la fiche OpenStreetMap.
       if (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) {
         setCuisine(h.cuisineType);
@@ -285,14 +287,15 @@ export default function DashboardLayout() {
             {t('dashResto.createNote')}
           </p>
 
-          <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
+          {commerceDejaChoisi && <p className="small" style={{ margin: '0 0 10px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('dashResto.prefilledFromSignup')}</p>}
+          {!commerceDejaChoisi && <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
             if (!f) return;
             if (f.name) setName(f.name);
             const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
             if (f.street) setAddressStreet(f.street); if (f.number) setAddressNumber(f.number); if (f.postalCode) setAddressPostalCode(f.postalCode);
             if (f.city && COMMUNES.includes(f.city)) setCommune(f.city);
             if (f.openingHours) setOpeningHoursTexte(f.openingHours);
-          }} />
+          }} />}
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
           <div className="field"><label>{t('dashResto.businessName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field">

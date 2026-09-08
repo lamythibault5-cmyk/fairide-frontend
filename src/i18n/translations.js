@@ -2732,7 +2732,8 @@ export const translations = {
       paymentsSoonBtn: 'Ouverture fin septembre — en savoir plus',
       servicesTitle: 'Services proposés',
       servicesHelp: 'Coche ce que ton commerce propose ; tu pourras changer à tout moment.',
-      toastServicesRequired: 'Choisis au moins un service (livraison, à emporter ou réservation).'
+      toastServicesRequired: 'Choisis au moins un service (livraison, à emporter ou réservation).',
+      prefilledFromSignup: 'Tout ce que tu as donné à l\'inscription est déjà repris ci-dessous : vérifie, complète les horaires, et crée ton restaurant.'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -3756,7 +3757,8 @@ export const translations = {
       cuisineHelp: 'On s\'en sert pour te proposer des plats de départ et pour aider l\'agent IA à lire ta carte. Modifiable à tout moment.',
       errCuisine: 'Choisis un type de cuisine (ou « Autre »).',
       passwordConfirm: 'Confirme ton mot de passe',
-      phPasswordConfirm: 'Retape le même mot de passe'
+      phPasswordConfirm: 'Retape le même mot de passe',
+      addressFromFiche: 'Adresse reprise de la fiche : l\'étape « Ton adresse » est sautée. Corrige-la ci-dessus si besoin.'
     }
   },
   en: {
@@ -6488,7 +6490,8 @@ export const translations = {
       paymentsSoonBtn: 'Opens end of September — learn more',
       servicesTitle: 'Services offered',
       servicesHelp: 'Tick what your business offers; you can change it any time.',
-      toastServicesRequired: 'Choose at least one service (delivery, takeaway or reservation).'
+      toastServicesRequired: 'Choose at least one service (delivery, takeaway or reservation).',
+      prefilledFromSignup: 'Everything you gave at sign-up is already filled in below: check it, complete the opening hours, and create your restaurant.'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -7512,7 +7515,8 @@ export const translations = {
       cuisineHelp: 'We use it to suggest starter dishes and to help the AI agent read your menu. You can change it any time.',
       errCuisine: 'Choose a type of cuisine (or "Other").',
       passwordConfirm: 'Confirm your password',
-      phPasswordConfirm: 'Type the same password again'
+      phPasswordConfirm: 'Type the same password again',
+      addressFromFiche: 'Address taken from the listing: the "Your address" step is skipped. Correct it above if needed.'
     }
   },
   nl: {
@@ -10244,7 +10248,8 @@ export const translations = {
       paymentsSoonBtn: 'Opent eind september — meer info',
       servicesTitle: 'Aangeboden diensten',
       servicesHelp: 'Vink aan wat je zaak aanbiedt; je kunt dit altijd wijzigen.',
-      toastServicesRequired: 'Kies minstens één dienst (levering, afhalen of reservatie).'
+      toastServicesRequired: 'Kies minstens één dienst (levering, afhalen of reservatie).',
+      prefilledFromSignup: 'Alles wat je bij de inschrijving gaf, staat hieronder al ingevuld: controleer, vul de openingsuren aan en maak je restaurant aan.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -11268,7 +11273,8 @@ export const translations = {
       cuisineHelp: 'We gebruiken het om startgerechten voor te stellen en om de AI-agent te helpen je kaart te lezen. Altijd aanpasbaar.',
       errCuisine: 'Kies een soort keuken (of "Andere").',
       passwordConfirm: 'Bevestig je wachtwoord',
-      phPasswordConfirm: 'Typ hetzelfde wachtwoord opnieuw'
+      phPasswordConfirm: 'Typ hetzelfde wachtwoord opnieuw',
+      addressFromFiche: 'Adres overgenomen van de fiche: de stap "Je adres" wordt overgeslagen. Verbeter het hierboven indien nodig.'
     }
   }
 };
