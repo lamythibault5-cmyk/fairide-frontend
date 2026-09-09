@@ -9,6 +9,7 @@ import BusinessSearch from '../components/BusinessSearch';
 import { api, apiUpload } from '../api';
 import IdentityDocsPicker from '../components/IdentityDocsPicker';
 import PhoneInput from '../components/PhoneInput';
+import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
 import { RESTAURANT_TYPES } from '../menuCategories';
@@ -922,7 +923,8 @@ export default function Auth() {
                 <div className="field">
                   <label htmlFor="auth-f-17">{t('auth.email')}</label>
                   <input id="auth-f-17" type="email" className={errors.email ? 'input-invalid' : undefined}
-                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
+                    value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} autoComplete="email" inputMode="email" />
+                  <EmailDomainChips value={email} onChange={setEmail} inputId="auth-f-17" />
                   {fieldError('email')}
                 </div>
                 <div className="field">

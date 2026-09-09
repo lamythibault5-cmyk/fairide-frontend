@@ -3573,7 +3573,7 @@ export const translations = {
       back: 'Retour',
       cancel: 'Annuler',
       save: 'Enregistrer',
-      slogan: 'Payer le repas, pas la plateforme.',
+      slogan: 'Paie le repas, pas la plateforme.',
       subtotal: 'Sous-total',
       verifiedByFairide: 'Restaurant vérifié par Fairide',
       verifiedShort: 'resto vérifié'
@@ -3629,7 +3629,7 @@ export const translations = {
       pill: "📍 Local d'abord",
       title1: 'Les commerces du quartier,',
       title2: 'livrés à domicile.',
-      sub: 'Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés — sans la commission excessive des grandes plateformes. Payer le repas, pas la plateforme.',
+      sub: 'Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés — sans la commission excessive des grandes plateformes. Paie le repas, pas la plateforme.',
       orderNow: '🛍️ Commander maintenant',
       becomePartner: '🏪 Devenir partenaire',
       statCommission: 'de commission (vs 22-32% ailleurs)',
@@ -3672,7 +3672,7 @@ export const translations = {
       euroEyebrow: 'Où va chaque euro',
       euroTitle: 'Sur 1 € de commande, voici ce que la plateforme prélève.',
       euroUsCut: '0,10 € prélevés',
-      euroUsLegend: 'Le commerce garde 0,90 €. Le livreur garde 100 % des frais de livraison.',
+      euroUsLegend: 'Le commerce garde 0,90 €. Ces 0,10 € couvrent le paiement sécurisé, la plateforme, le support, la garantie client et la facturation. Le livreur garde 100 % des frais de livraison.',
       euroThemName: 'Les grandes plateformes',
       euroThemCut: '0,22 à 0,32 € prélevés',
       euroThemLegend: 'Le commerce garde 0,68 à 0,78 €, et rogne souvent sur les portions ou monte ses prix.',
@@ -3709,7 +3709,7 @@ export const translations = {
       euroExThemLabel: 'Les grandes plateformes prennent',
       euroExThemSub: '22 à 32 % de commission chaque mois',
       euroExUsLabel: 'Fairide prend',
-      euroExUsSub: '10 % maximum, et rien sur la livraison',
+      euroExUsSub: '10 % maximum, tout compris : paiement sécurisé et frais bancaires, plateforme et hébergement, support, garantie et remboursements clients, factures et Peppol. Rien sur la livraison.',
       euroExDiffFigure: '300 à 550 € de plus dans la caisse du commerçant',
       euroExDiffText: 'chaque mois, pour les mêmes commandes.',
       discoverReviews: 'avis',
@@ -4288,7 +4288,9 @@ export const translations = {
       vehicleHelpMotor: 'Motorisé, tu vois toutes les courses, les longues distances (plus de {km} km) en priorité : c\'est là qu\'on a le plus besoin de toi, mais les courtes restent accessibles.',
       errAccountDeleted: 'Ce compte n\'existe plus : il a été supprimé. Crée un nouveau compte pour continuer.',
       errNoAccount: 'Aucun compte avec cette adresse e-mail : il n\'existe pas ou a été supprimé. Crée un compte pour continuer.',
-      accountDeletedLogout: 'Ce compte a été supprimé : tu as été déconnecté. Crée un nouveau compte pour continuer.'
+      accountDeletedLogout: 'Ce compte a été supprimé : tu as été déconnecté. Crée un nouveau compte pour continuer.',
+      emailSuggestions: 'Fournisseurs d\'e-mail fréquents',
+      emailOther: 'Autre…'
     }
   },
   en: {
@@ -7960,7 +7962,7 @@ export const translations = {
       euroEyebrow: 'Where every euro goes',
       euroTitle: 'On €1 of order value, this is what the platform takes.',
       euroUsCut: '€0.10 taken',
-      euroUsLegend: 'The business keeps €0.90. The driver keeps 100% of the delivery fee.',
+      euroUsLegend: 'The business keeps €0.90. Those €0.10 cover secure payment, the platform, support, customer guarantee and invoicing. The courier keeps 100% of the delivery fee.',
       euroThemName: 'The big platforms',
       euroThemCut: '€0.22 to €0.32 taken',
       euroThemLegend: 'The business keeps €0.68 to €0.78, and often shrinks portions or raises prices.',
@@ -7997,7 +7999,7 @@ export const translations = {
       euroExThemLabel: 'The big platforms take',
       euroExThemSub: '22 to 32% commission every month',
       euroExUsLabel: 'Fairide takes',
-      euroExUsSub: '10% at most, and nothing on delivery',
+      euroExUsSub: '10% at most, all included: secure payment and card fees, platform and hosting, support, customer guarantee and refunds, invoices and Peppol. Nothing on delivery.',
       euroExDiffFigure: '€300 to €550 more in the shopkeeper\'s till',
       euroExDiffText: 'every month, for the same orders.',
       discoverReviews: 'reviews',
@@ -8576,7 +8578,9 @@ export const translations = {
       vehicleHelpMotor: 'Motorised, you see every ride, long distances (over {km} km) first: that is where you are needed most, but short ones stay available.',
       errAccountDeleted: 'This account no longer exists: it was deleted. Create a new account to continue.',
       errNoAccount: 'No account with this e-mail address: it does not exist or was deleted. Create an account to continue.',
-      accountDeletedLogout: 'This account was deleted: you have been signed out. Create a new account to continue.'
+      accountDeletedLogout: 'This account was deleted: you have been signed out. Create a new account to continue.',
+      emailSuggestions: 'Common e-mail providers',
+      emailOther: 'Other…'
     }
   },
   nl: {
@@ -12248,7 +12252,7 @@ export const translations = {
       euroEyebrow: 'Waar elke euro naartoe gaat',
       euroTitle: 'Op € 1 bestelling houdt het platform dit in.',
       euroUsCut: '€ 0,10 ingehouden',
-      euroUsLegend: 'De handelaar houdt € 0,90. De koerier houdt 100% van de leveringskosten.',
+      euroUsLegend: 'De zaak houdt € 0,90. Die € 0,10 dekken de veilige betaling, het platform, de support, de klantgarantie en de facturatie. De koerier houdt 100% van de leveringskosten.',
       euroThemName: 'De grote platformen',
       euroThemCut: '€ 0,22 tot € 0,32 ingehouden',
       euroThemLegend: 'De handelaar houdt € 0,68 tot € 0,78 over, en verkleint vaak porties of verhoogt de prijzen.',
@@ -12285,7 +12289,7 @@ export const translations = {
       euroExThemLabel: 'De grote platformen nemen',
       euroExThemSub: '22 tot 32% commissie elke maand',
       euroExUsLabel: 'Fairide neemt',
-      euroExUsSub: 'maximaal 10%, en niets op de levering',
+      euroExUsSub: 'Maximaal 10%, alles inbegrepen: veilige betaling en bankkosten, platform en hosting, support, klantgarantie en terugbetalingen, facturen en Peppol. Niets op de levering.',
       euroExDiffFigure: '€ 300 tot € 550 meer in de kassa van de handelaar',
       euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
       discoverReviews: 'beoordelingen',
@@ -12864,7 +12868,9 @@ export const translations = {
       vehicleHelpMotor: 'Gemotoriseerd zie je alle ritten, lange afstanden (meer dan {km} km) eerst: daar heb je het meeste nut, maar korte blijven beschikbaar.',
       errAccountDeleted: 'Dit account bestaat niet meer: het is verwijderd. Maak een nieuw account aan om verder te gaan.',
       errNoAccount: 'Geen account met dit e-mailadres: het bestaat niet of is verwijderd. Maak een account aan om verder te gaan.',
-      accountDeletedLogout: 'Dit account is verwijderd: je bent afgemeld. Maak een nieuw account aan om verder te gaan.'
+      accountDeletedLogout: 'Dit account is verwijderd: je bent afgemeld. Maak een nieuw account aan om verder te gaan.',
+      emailSuggestions: 'Veelgebruikte e-mailproviders',
+      emailOther: 'Andere…'
     }
   }
 };
