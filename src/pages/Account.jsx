@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import PasswordInput from '../components/PasswordInput';
 import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
+import DriverContractTerms from '../components/DriverContractTerms';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -827,6 +828,9 @@ export default function Account() {
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
             <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
+          </LigneCompte>
+          <LigneCompte icone="📜" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
+            {ouvertes.has('contrat') && <DriverContractTerms />}
           </LigneCompte>
           <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />

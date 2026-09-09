@@ -2662,3 +2662,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .methode-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--iris); color: #fff; font-weight: 800; font-size: 13px; flex: 0 0 auto; }
 .methode-sous { margin: 0 0 10px; }
 .menu-concierge-etat { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-dim); }
+
+/* Mon compte livreur : contrat, conditions, paiement, comparatif des statuts (DriverContractTerms.jsx). */
+.driver-terms-table td:first-child { font-weight: 700; white-space: nowrap; }
+.driver-terms-table td { vertical-align: top; font-size: 12px; line-height: 1.4; }
