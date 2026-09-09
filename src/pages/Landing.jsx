@@ -6,6 +6,9 @@ import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
+import HeroPreview, { CommunePicker, useCommercesPublics } from '../components/landing/HeroPreview';
+import DiscoverSection from '../components/landing/DiscoverSection';
+import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
 
 /* Le cadre à l'échelle affiche, posé dans la bannière. Géométrie STRICTEMENT celle de la spec
    §4 (roues r=12,5 aux centres x=15 et x=61, tube supérieur x=16 y=8 de 44×5, tube de selle
@@ -68,9 +71,9 @@ function joinCards(t) {
 
 function features(t) {
   return [
-    { icon: '🏪', title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
-    { icon: '🚲', title: t('landing.featureBikeTitle'), text: t('landing.featureBikeText') },
-    { icon: '🤝', title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
+    { icon: <IconLocal />, title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
+    { icon: <IconBike />, title: t('landing.featureBikeTitle'), text: t('landing.featureBikeText') },
+    { icon: <IconFair />, title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
   ];
 }
 
@@ -86,12 +89,13 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useLanguage();
   usePageMeta({ path: '/' });
+  // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
+  const restaurants = useCommercesPublics();
 
   return (
     <div className="decor-page">
 
       <div className="landing-hero">
-        <HeroFrame />
         <div className="be-flag" title={t('landing.proudlyBelgian')}>
           <span className="be-flag-stripe" style={{ background: '#000' }} />
           <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
@@ -99,18 +103,21 @@ export default function Landing() {
         </div>
 
         <div className="landing-hero-text">
-          <span className="pill hero">{t('landing.pill')}</span>
+          <div className="landing-hero-signature"><HeroFrame /><span className="pill hero">{t('landing.pill')}</span></div>
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
           <p className="landing-sub">{t('landing.sub')}</p>
+          {/* Le geste d'entrée : sa commune, puis les commerces qui livrent chez soi — sans compte. */}
+          <CommunePicker />
           {/* Les trois types de compte, toujours proposés ensemble : client, commerce, livreur. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
+            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
         </div>
+        <HeroPreview restaurants={restaurants} />
 
         <div className="stats-bar">
           <div className="stats-bar-item"><b>10 %</b><span>{t('landing.statCommission')}</span></div>
@@ -122,12 +129,14 @@ export default function Landing() {
       <div className="feature-grid">
         {features(t).map((f, i) => (
           <Reveal className="card feature-card" key={f.title} delay={i * 90}>
-            <span className="feature-icon">{f.icon}</span>
+            <span className="feature-icon feature-icon-svg">{f.icon}</span>
             <h3 style={{ fontSize: 19, margin: '0 0 8px' }}>{f.title}</h3>
             <p className="small" style={{ lineHeight: 1.5 }}>{f.text}</p>
           </Reveal>
         ))}
       </div>
+
+      <DiscoverSection restaurants={restaurants} />
 
       {/* L'argument central de Fairide — la commission plafonnée — n'existait jusqu'ici que sous
           forme de phrase noyée dans le paragraphe d'accroche. Il devient ici une comparaison

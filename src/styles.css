@@ -989,11 +989,15 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   padding: 54px 34px 0;
   margin: 0 0 20px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 40%);
-  grid-template-areas: "text frame" "stats stats";
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 38%);
+  grid-template-areas: "text preview" "stats stats";
   align-items: center;
-  column-gap: 28px;
+  column-gap: 36px;
 }
+.landing-hero .hero-preview { grid-area: preview; }
+/* Signature de marque : le cadre à l'échelle, en petit, posé sur la même ligne que l'accroche. */
+.landing-hero-signature { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
+.landing-hero-signature .landing-frame { width: 66px; height: auto; flex: 0 0 auto; }
 .landing-hero-text { grid-area: text; }
 .landing-hero .stats-bar { grid-area: stats; }
 
@@ -1011,8 +1015,8 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    pour s'exprimer par ailleurs. Réduit à 168px, il se lit comme une signature posée
    au-dessus de l'accroche plutôt que comme un décor. */
 @media (max-width: 860px) {
-  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "frame" "text" "stats"; }
-  .landing-frame { width: 168px; justify-self: start; margin-bottom: 22px; }
+  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "stats"; }
+  .landing-hero .hero-preview { margin-top: 26px; }
 }
 @media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
 
@@ -2672,3 +2676,61 @@ button.account-link-row:last-child { border-bottom: none; }
 .resto-contract-tete { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: none; padding: 10px 0; font: inherit; font-weight: 700; font-size: 14px; color: inherit; cursor: pointer; text-align: left; }
 .resto-contract-clauses { margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 1.5; }
 .resto-contract-clauses li { margin-bottom: 8px; }
+
+/* ---------------------------------------------------------------------------
+   Bannière d'accueil : choix de commune + aperçu de vrais commerces (components/landing/HeroPreview.jsx).
+   Un panneau blanc sur l'iris — le seul bloc clair de la bannière, celui qui montre le produit.
+   --------------------------------------------------------------------------- */
+.commune-picker { margin: 0 0 18px; }
+.commune-picker-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 8px; }
+.commune-picker-row { display: flex; gap: 8px; align-items: stretch; max-width: 520px; }
+.commune-picker-row select { flex: 1 1 auto; min-width: 0; height: 46px; border-radius: var(--radius-chip); border: 1px solid rgba(255,255,255,0.35); background: #fff; color: var(--ink); font-size: 15px; padding: 0 12px; }
+.commune-picker-row .btn-gold { height: 46px; white-space: nowrap; padding: 0 18px; }
+@media (max-width: 480px) { .commune-picker-row { flex-direction: column; } }
+
+.hero-preview { background: #fff; color: var(--ink); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 10px; align-self: center; }
+.hero-preview-head { display: flex; align-items: center; gap: 8px; font-size: 12.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-soft); }
+.hero-preview-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 3px rgba(200,240,60,0.35); animation: hero-dot 1.8s ease-in-out infinite; }
+@keyframes hero-dot { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+.hero-preview-list { display: flex; flex-direction: column; gap: 8px; }
+.hero-preview-card { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: inherit; transition: border-color .15s ease, transform .15s ease; }
+.hero-preview-card:hover { border-color: var(--iris); transform: translateX(2px); }
+.hero-preview-img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: var(--cream-dim); display: block; }
+.hero-preview-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hero-preview-body b { font-size: 14.5px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-preview-meta { font-size: 12.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-preview-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.hero-preview-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
+.hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(200,240,60,0.35); color: #2F4A00; white-space: nowrap; }
+.hero-preview-open.ferme { background: var(--cream-dim); color: var(--ink-soft); }
+.hero-preview-all { font-size: 13.5px; font-weight: 600; color: var(--iris); text-decoration: none; margin-top: 2px; }
+.hero-preview-all:hover { text-decoration: underline; }
+.hero-preview-skeleton { pointer-events: none; }
+.hero-preview-skeleton .hero-preview-img { animation: shimmer 1.4s ease infinite; background: linear-gradient(90deg, var(--cream-dim) 25%, #fff 37%, var(--cream-dim) 63%); background-size: 400px 100%; }
+.hero-preview-lines { display: flex; flex-direction: column; gap: 6px; }
+.hero-preview-lines span { display: block; height: 10px; border-radius: 5px; background: var(--cream-dim); width: 70%; }
+.hero-preview-lines span:last-child { width: 45%; }
+
+/* Icônes vectorielles des arguments (components/landing/FeatureIcons.jsx). */
+.feature-icon-svg { color: var(--iris); display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 12px; background: rgba(59,47,181,0.08); margin-bottom: 14px; }
+
+/* Vitrine « Découvre les commerces » (components/landing/DiscoverSection.jsx). */
+.discover-section { margin: 6px 0 36px; }
+.discover-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.pill.hero.discover-eyebrow { color: var(--iris); }
+.discover-all { font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; }
+.discover-all:hover { text-decoration: underline; }
+.discover-filtres { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.discover-filtres .chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+.discover-filtres .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+.discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.discover-tile { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; transition: border-color .15s ease, transform .2s ease; }
+.discover-tile:hover { border-color: var(--iris); transform: translateY(-3px); }
+.discover-tile-img { aspect-ratio: 4 / 3; overflow: hidden; background: var(--cream-dim); }
+.discover-tile-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
+.discover-tile:hover .discover-tile-img img { transform: scale(1.04); }
+.discover-tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; }
+.discover-tile-body b { font-size: 15px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.discover-tile-rating { font-size: 12.5px; font-weight: 700; color: var(--iris); margin-top: 4px; }
+@media (max-width: 640px) { .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile-body b { font-size: 14px; } }
+

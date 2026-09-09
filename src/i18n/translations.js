@@ -3465,7 +3465,18 @@ export const translations = {
       euroNoteFigure: '600 à 1 100 € par mois',
       euroNoteText: 'restent dans le quartier au lieu de partir en commission, pour un commerce qui réalise 5 000 € de commandes mensuelles.',
       mockSearchPlaceholder: '🔍 Rechercher un commerce…',
-      proudlyBelgian: 'Fièrement belge'
+      proudlyBelgian: 'Fièrement belge',
+      heroCommuneLabel: 'Où te livrer ?',
+      heroCommunePlaceholder: 'Choisis ta commune',
+      heroCommuneButton: 'Voir les commerces',
+      heroPreviewTitle: 'Près de toi maintenant',
+      heroPreviewOpen: 'Ouvert',
+      heroPreviewClosed: 'Fermé',
+      heroPreviewAll: 'Voir les {n} commerces',
+      discoverEyebrow: 'Découvre',
+      discoverTitle: 'Les commerces qui livrent chez toi',
+      discoverAll: 'Tous les commerces ({n})',
+      discoverAllTypes: 'Tout'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -7502,7 +7513,18 @@ export const translations = {
       euroNoteFigure: '€600 to €1,100 a month',
       euroNoteText: 'stays in the neighbourhood instead of going to commission, for a business doing €5,000 of orders a month.',
       mockSearchPlaceholder: '🔍 Search a business…',
-      proudlyBelgian: 'Proudly Belgian'
+      proudlyBelgian: 'Proudly Belgian',
+      heroCommuneLabel: 'Where should we deliver?',
+      heroCommunePlaceholder: 'Choose your municipality',
+      heroCommuneButton: 'See the businesses',
+      heroPreviewTitle: 'Near you right now',
+      heroPreviewOpen: 'Open',
+      heroPreviewClosed: 'Closed',
+      heroPreviewAll: 'See all {n} businesses',
+      discoverEyebrow: 'Discover',
+      discoverTitle: 'The businesses that deliver to you',
+      discoverAll: 'All businesses ({n})',
+      discoverAllTypes: 'All'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -11539,7 +11561,18 @@ export const translations = {
       euroNoteFigure: '€ 600 tot € 1.100 per maand',
       euroNoteText: 'blijft in de buurt in plaats van naar commissie te gaan, voor een handelaar met € 5.000 aan bestellingen per maand.',
       mockSearchPlaceholder: '🔍 Zoek een zaak…',
-      proudlyBelgian: 'Trots Belgisch'
+      proudlyBelgian: 'Trots Belgisch',
+      heroCommuneLabel: 'Waar leveren we?',
+      heroCommunePlaceholder: 'Kies je gemeente',
+      heroCommuneButton: 'Bekijk de zaken',
+      heroPreviewTitle: 'Nu bij jou in de buurt',
+      heroPreviewOpen: 'Open',
+      heroPreviewClosed: 'Gesloten',
+      heroPreviewAll: 'Alle {n} zaken bekijken',
+      discoverEyebrow: 'Ontdek',
+      discoverTitle: 'De zaken die bij jou leveren',
+      discoverAll: 'Alle zaken ({n})',
+      discoverAllTypes: 'Alles'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
