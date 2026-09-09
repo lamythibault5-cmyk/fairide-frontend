@@ -11,11 +11,100 @@ const TYPES = [
   { value: 'cart_threshold', label: 'typeCart' }
 ];
 
+// « Avantage Fairide » : le commerce garde 90 % du prix (contre ~70 % sur les grandes plateformes). S'il le
+// souhaite — et seulement s'il le souhaite — il en fait profiter ses clients : -X € (ou -X %) sur chaque produit,
+// ou -X € sur chaque livraison. Le ton reste une proposition, jamais une obligation.
+const MONTANTS_PRODUIT = [0.5, 1, 1.5, 2, 3];
+const POURCENTS_PRODUIT = [5, 10, 15];
+const MONTANTS_LIVRAISON = [1, 1.5, 2, 3];
+const eur = (v) => `${Number(v).toFixed(2).replace('.', ',').replace(/,00$/, '')} €`;
+
+function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, onChanged }) {
+  const [busy, setBusy] = useState('');
+  const [modeProduit, setModeProduit] = useState('amount');
+  const avantage = restaurant?.fairideAdvantage || null;
+  const livraisonOfferte = !!restaurant?.freeDelivery;
+  const remiseLivraison = Number(restaurant?.deliveryFeeDiscount || 0);
+
+  async function reglerProduits(mode, value) {
+    setBusy('produits');
+    try {
+      await api(`/restaurants/${restoId}/promotions/fairide`, { method: 'PUT', token, body: value === null ? { off: true } : { mode, value } });
+      await loadDashboard(restoId); onChanged?.();
+      toast(value === null ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
+    } catch (e) { toast(e.message); } finally { setBusy(''); }
+  }
+  async function reglerLivraison(value) {
+    setBusy('livraison');
+    try {
+      await api(`/restaurants/${restoId}/delivery-discount`, { method: 'PATCH', token, body: { freeDelivery: false, deliveryFeeDiscount: value, freeDeliveryMinOrder: null } });
+      await loadDashboard(restoId);
+      toast(value === 0 ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
+    } catch (e) { toast(e.message); } finally { setBusy(''); }
+  }
+
+  return (
+    <div className="card avantage-fairide">
+      <div className="avantage-tete">
+        <span className="avantage-icone">💚</span>
+        <div>
+          <h3 style={{ margin: 0, fontSize: 16 }}>{t('promosPage.fairideTitle')}</h3>
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.fairideIntro')}</p>
+        </div>
+      </div>
+      <p className="small avantage-note">{t('promosPage.fairideOptional')}</p>
+      <div className="avantage-options">
+        <div className={`avantage-option ${avantage ? 'est-actif' : ''}`}>
+          <b>🍽️ {t('promosPage.fairideItemsTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideItemsHelp')}</p>
+          {avantage ? (
+            <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pill teal">✅ {avantage.mode === 'amount' ? t('promosPage.fairideItemsActiveAmount', { v: eur(avantage.value) }) : t('promosPage.fairideItemsActivePercent', { v: avantage.value })}</span>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'produits'} onClick={() => reglerProduits(null, null)}>{t('promosPage.fairideRemove')}</button>
+            </div>
+          ) : (
+            <>
+              <div className="row" style={{ gap: 6, marginBottom: 6 }}>
+                <button type="button" className={`chip ${modeProduit === 'amount' ? 'chip-on' : ''}`} onClick={() => setModeProduit('amount')}>{t('promosPage.fairideModeAmount')}</button>
+                <button type="button" className={`chip ${modeProduit === 'percent' ? 'chip-on' : ''}`} onClick={() => setModeProduit('percent')}>{t('promosPage.fairideModePercent')}</button>
+              </div>
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                {(modeProduit === 'amount' ? MONTANTS_PRODUIT : POURCENTS_PRODUIT).map((v) => (
+                  <button key={v} type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={busy === 'produits'} onClick={() => reglerProduits(modeProduit, v)}>
+                    −{modeProduit === 'amount' ? eur(v) : `${v} %`}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <div className={`avantage-option ${livraisonOfferte || remiseLivraison > 0 ? 'est-actif' : ''}`}>
+          <b>🛵 {t('promosPage.fairideDeliveryTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideDeliveryHelp')}</p>
+          {livraisonOfferte || remiseLivraison > 0 ? (
+            <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <span className="pill teal">✅ {livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
+            </div>
+          ) : (
+            <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+              {MONTANTS_LIVRAISON.map((v) => (
+                <button key={v} type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(v)}>−{eur(v)}</button>
+              ))}
+            </div>
+          )}
+          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('promosPage.fairideDeliveryMore')}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function PromotionsPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const { restaurant, restoId } = useOutletContext();
+  const { restaurant, restoId, loadDashboard } = useOutletContext();
 
   const [promos, setPromos] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
@@ -95,9 +184,12 @@ export default function PromotionsPage() {
         {t('promosPage.intro')}
       </p>
 
+      <AvantageFairide restaurant={restaurant} restoId={restoId} token={token} toast={toast} t={t} loadDashboard={loadDashboard} onChanged={loadPromos} />
+
+      <h3 style={{ margin: '18px 0 8px', fontSize: 15 }}>{t('promosPage.ownPromosTitle')}</h3>
       {promos === null && <div className="empty">{t('promosPage.loading')}</div>}
-      {promos !== null && promos.length === 0 && !formOpen && <div className="empty">{t('promosPage.none')}</div>}
-      {promos !== null && promos.map((p) => (
+      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).length === 0 && !formOpen && <div className="empty">{t('promosPage.none')}</div>}
+      {promos !== null && promos.filter((p) => !String(p.type).startsWith('all_items')).map((p) => (
         <div className="card" key={p.id} style={{ opacity: p.active ? 1 : 0.55 }}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div>

@@ -260,7 +260,14 @@ export default function RestaurantMenu() {
             </Suspense>
           </div>
         )}
-        {restaurant.hasPromo && (
+        {restaurant.fairideAdvantage && (
+          <div className="avantage-bandeau">
+            💚 {restaurant.fairideAdvantage.mode === 'amount'
+              ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
+              : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}
+          </div>
+        )}
+        {restaurant.hasPromo && !restaurant.fairideAdvantage && (
           <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
             {t('restaurantMenu.promoBanner')}
           </div>

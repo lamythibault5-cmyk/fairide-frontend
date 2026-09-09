@@ -2814,3 +2814,14 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .contacts-commerce .contact-second { margin: 4px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; }
 /* Bandeau « Fairide agit comme le restaurateur » en haut du tableau de bord du commerce. */
 .agir-bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #fff4d6; border: 1px solid #f0d28a; color: #6b4d00; font-weight: 600; font-size: 14px; }
+
+/* « Avantage Fairide » — page Promotions du restaurateur (facultatif, ton de proposition). */
+.avantage-fairide { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); }
+.avantage-tete { display: flex; gap: 12px; align-items: flex-start; }
+.avantage-icone { font-size: 26px; line-height: 1; }
+.avantage-note { margin: 10px 0 12px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px dashed #cfe9dc; }
+.avantage-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.avantage-option { padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); }
+.avantage-option.est-actif { border-color: #1E8A7A; box-shadow: inset 3px 0 0 #1E8A7A; }
+.avantage-option .chip.chip-on { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
+.avantage-bandeau { background: #1E8A7A; color: #fff; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-weight: 700; font-size: 13px; }

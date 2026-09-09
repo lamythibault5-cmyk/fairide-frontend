@@ -176,6 +176,8 @@ export function CartProvider({ children }) {
       let discount = 0;
       if (promo) {
         if (promo.type === 'percent') discount = item.price * line.qty * (promo.value / 100);
+        // Avantage Fairide : -X € par unité, plafonné au prix du produit (même règle que le serveur).
+        else if (promo.type === 'amount') discount = Math.min(promo.value, item.price) * line.qty;
         // value = N, le nombre d'articles achetés pour en obtenir 1 offert (défaut 1 = "1 acheté = 1 offert").
         else if (promo.type === 'bogo') discount = Math.floor(line.qty / ((promo.value || 1) + 1)) * item.price;
       }

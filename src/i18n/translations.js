@@ -2646,7 +2646,25 @@ export const translations = {
       wholeOrder: 'Toute la commande',
       disable: 'Désactiver',
       createPromo: 'Créer la promotion',
-      enable: 'Activer'
+      enable: 'Activer',
+      fairideTitle: 'Avantage Fairide',
+      fairideIntro: 'Sur Fairide, ton commerce garde 90 % du prix de chaque commande, là où les grandes plateformes en prennent jusqu\'à 30 %. Si tu le souhaites, tu peux en faire profiter tes clients : des prix un peu plus doux ici qu\'ailleurs, ou une livraison moins chère. Beaucoup de clients choisissent leur commerce pour ça.',
+      fairideOptional: 'Entièrement facultatif : rien ne t\'y oblige, et tu peux retirer l\'avantage à tout moment. Garder simplement la différence, c\'est très bien aussi.',
+      fairideItemsTitle: 'Sur chaque produit',
+      fairideItemsHelp: 'Un petit geste sur tous tes produits, affiché sur ta page. Les produits qui ont déjà leur propre promo gardent celle-ci (pas de cumul).',
+      fairideItemsActiveAmount: '−{v} sur chaque produit',
+      fairideItemsActivePercent: '−{v} % sur chaque produit',
+      fairideModeAmount: 'En euros',
+      fairideModePercent: 'En pourcentage',
+      fairideDeliveryTitle: 'Sur chaque livraison',
+      fairideDeliveryHelp: 'Tu prends une partie des frais de livraison à ta charge. Le livreur, lui, touche toujours l\'intégralité de sa course.',
+      fairideDeliveryActive: '−{v} sur chaque livraison',
+      fairideDeliveryFree: 'Livraison offerte',
+      fairideDeliveryMore: 'Livraison offerte, ou offerte à partir d\'un montant : réglages dans Mon commerce.',
+      fairideRemove: 'Retirer',
+      fairideSaved: 'Avantage enregistré. Merci pour tes clients !',
+      fairideRemoved: 'Avantage retiré.',
+      ownPromosTitle: 'Tes promotions'
     },
     menuImport: {
       backToReview: '← Retour à la relecture',
@@ -3789,7 +3807,9 @@ export const translations = {
       noMenuYet: "Ce restaurant n'a pas encore de plat au menu.",
       reviewsTitle: 'Avis clients',
       reviewReplyFrom: 'Réponse de {name}',
-      discoverTitle: 'Découvrir aussi'
+      discoverTitle: 'Découvrir aussi',
+      fairideAdvantageAmount: 'Avantage Fairide : {name} offre −{v} sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
+      fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.'
     },
     floatingCart: {
       title: '🛒 Ton panier',
@@ -6965,7 +6985,25 @@ export const translations = {
       wholeOrder: 'Whole order',
       disable: 'Disable',
       createPromo: 'Create the promotion',
-      enable: 'Enable'
+      enable: 'Enable',
+      fairideTitle: 'Fairide advantage',
+      fairideIntro: 'On Fairide, your business keeps 90% of every order, where big platforms take up to 30%. If you like, you can pass some of it on to your customers: slightly lower prices here than elsewhere, or a cheaper delivery. Many customers pick their business for that.',
+      fairideOptional: 'Completely optional: nothing obliges you, and you can remove it at any time. Simply keeping the difference is perfectly fine too.',
+      fairideItemsTitle: 'On every product',
+      fairideItemsHelp: 'A small gesture on all your products, shown on your page. Products with their own promo keep that one (no stacking).',
+      fairideItemsActiveAmount: '−{v} on every product',
+      fairideItemsActivePercent: '−{v}% on every product',
+      fairideModeAmount: 'In euros',
+      fairideModePercent: 'In percent',
+      fairideDeliveryTitle: 'On every delivery',
+      fairideDeliveryHelp: 'You cover part of the delivery fee. The courier still receives the full amount for the ride.',
+      fairideDeliveryActive: '−{v} on every delivery',
+      fairideDeliveryFree: 'Free delivery',
+      fairideDeliveryMore: 'Free delivery, or free above an amount: settings in My business.',
+      fairideRemove: 'Remove',
+      fairideSaved: 'Advantage saved. Thank you on behalf of your customers!',
+      fairideRemoved: 'Advantage removed.',
+      ownPromosTitle: 'Your promotions'
     },
     menuImport: {
       backToReview: '← Back to review',
@@ -8108,7 +8146,9 @@ export const translations = {
       noMenuYet: "This restaurant doesn't have any dishes on its menu yet.",
       reviewsTitle: 'Customer reviews',
       reviewReplyFrom: 'Reply from {name}',
-      discoverTitle: 'Discover more'
+      discoverTitle: 'Discover more',
+      fairideAdvantageAmount: 'Fairide advantage: {name} gives −{v} on every product, because here the platform only takes 10%.',
+      fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.'
     },
     floatingCart: {
       title: '🛒 Your cart',
@@ -11284,7 +11324,25 @@ export const translations = {
       wholeOrder: 'Hele bestelling',
       disable: 'Uitschakelen',
       createPromo: 'Promotie aanmaken',
-      enable: 'Activeren'
+      enable: 'Activeren',
+      fairideTitle: 'Fairide-voordeel',
+      fairideIntro: 'Op Fairide houdt je zaak 90% van elke bestelling, waar grote platformen tot 30% nemen. Als je wilt, kun je je klanten daarvan laten meegenieten: iets lagere prijzen hier dan elders, of een goedkopere levering. Veel klanten kiezen hun zaak daarop.',
+      fairideOptional: 'Volledig vrijblijvend: niets verplicht je, en je kunt het voordeel altijd verwijderen. Gewoon het verschil houden is ook prima.',
+      fairideItemsTitle: 'Op elk product',
+      fairideItemsHelp: 'Een klein gebaar op al je producten, getoond op je pagina. Producten met een eigen promo behouden die (geen cumulatie).',
+      fairideItemsActiveAmount: '−{v} op elk product',
+      fairideItemsActivePercent: '−{v}% op elk product',
+      fairideModeAmount: 'In euro',
+      fairideModePercent: 'In procent',
+      fairideDeliveryTitle: 'Op elke levering',
+      fairideDeliveryHelp: 'Je neemt een deel van de leveringskosten voor je rekening. De koerier ontvangt nog steeds het volledige bedrag voor de rit.',
+      fairideDeliveryActive: '−{v} op elke levering',
+      fairideDeliveryFree: 'Gratis levering',
+      fairideDeliveryMore: 'Gratis levering, of gratis vanaf een bedrag: instellingen in Mijn zaak.',
+      fairideRemove: 'Verwijderen',
+      fairideSaved: 'Voordeel opgeslagen. Bedankt namens je klanten!',
+      fairideRemoved: 'Voordeel verwijderd.',
+      ownPromosTitle: 'Je promoties'
     },
     menuImport: {
       backToReview: '← Terug naar de controle',
@@ -12427,7 +12485,9 @@ export const translations = {
       noMenuYet: 'Dit restaurant heeft nog geen gerechten op zijn menu.',
       reviewsTitle: 'Klantbeoordelingen',
       reviewReplyFrom: 'Reactie van {name}',
-      discoverTitle: 'Ontdek ook'
+      discoverTitle: 'Ontdek ook',
+      fairideAdvantageAmount: 'Fairide-voordeel: {name} geeft −{v} op elk product, omdat het platform hier maar 10% neemt.',
+      fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.'
     },
     floatingCart: {
       title: '🛒 Jouw winkelmandje',
