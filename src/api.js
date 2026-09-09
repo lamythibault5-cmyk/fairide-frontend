@@ -36,11 +36,16 @@ export function setSessionExpiredHandler(fn) {
 function handleResponse(res, data, hadToken, logoutOn401) {
   if (res.ok) return data;
   if (res.status === 401 && hadToken && logoutOn401) {
-    const error = new ApiError('Ta session a expiré. Reconnecte-toi pour continuer.', 401);
-    if (onSessionExpired) onSessionExpired();
+    const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : 'Ta session a expiré. Reconnecte-toi pour continuer.', 401);
+    error.code = data.code;
+    // Le contexte reçoit la raison : compte supprimé (le dire) ou simple session périmée.
+    if (onSessionExpired) onSessionExpired(data.code);
     throw error;
   }
-  throw new ApiError(data.error || 'Une erreur est survenue.', res.status);
+  const error = new ApiError(data.error || 'Une erreur est survenue.', res.status);
+  if (data.code) error.code = data.code;
+  if (data.field) error.field = data.field;
+  throw error;
 }
 
 export async function api(path, { method = 'GET', body, token, logoutOn401 = true } = {}) {

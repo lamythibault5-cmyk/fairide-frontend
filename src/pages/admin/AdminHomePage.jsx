@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import AccountsTable from '../../components/admin/AccountsTable';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
 import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleBadge } from './adminModules';
@@ -59,6 +60,7 @@ export default function AdminHomePage() {
             <span>🏪 {tr('adminHome.pulseRestaurants', { n: overview.restaurants.approved })}</span>
           </div>
         )}
+        {overview && <AccountsTable accounts={overview.accounts} />}
       </section>
 
       {ADMIN_GROUPS.map((groupe) => {

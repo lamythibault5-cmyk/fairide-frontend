@@ -48,11 +48,12 @@ export function AuthProvider({ children }) {
   // (voir loadDashboard), qui repartiraient donc tous en 401 en même temps et empileraient autant
   // de toasts identiques.
   useEffect(() => {
-    setSessionExpiredHandler(() => {
+    setSessionExpiredHandler((code) => {
       if (expiredRef.current) return;
       expiredRef.current = true;
       setSession(null);
-      toast(t('auth.sessionExpired'));
+      // Compte supprimé (par son titulaire ou par Fairide) : on le dit tel quel, pas « session expirée ».
+      toast(code === 'ACCOUNT_DELETED' ? t('auth.accountDeletedLogout') : t('auth.sessionExpired'));
     });
     return () => setSessionExpiredHandler(null);
   }, [toast]);

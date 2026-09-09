@@ -181,7 +181,7 @@ export default function AdminRestaurantsPage() {
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{restaurants.length}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminRestos.kpiReal')}{kpi.unlisted > 0 ? ` · ${tr('adminRestos.kpiUnlisted', { n: kpi.unlisted })}` : ''}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
           <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
           <div className="stat-card"><div className="num">{money(kpi.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>

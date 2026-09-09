@@ -486,6 +486,10 @@ export default function Auth() {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
         setPendingEmail(email.trim());
         toast(t('auth.errEmailNotVerified'));
+      } else if (err.code === 'ACCOUNT_DELETED' || err.code === 'NO_ACCOUNT') {
+        // Compte supprimé ou inexistant : on le dit, et on ouvre directement la création de compte (e-mail conservé).
+        toast(t(err.code === 'ACCOUNT_DELETED' ? 'auth.errAccountDeleted' : 'auth.errNoAccount'));
+        setMode('register');
       } else if (err.field === 'phone' || err.field === 'email') {
         const message = err.field === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken');
         setErrors({ [err.field]: message });

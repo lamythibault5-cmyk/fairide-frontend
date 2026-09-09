@@ -370,7 +370,9 @@ export const translations = {
       exportsHelp: 'DAC7 : revenus par livreur et par trimestre (identité, n° d\'entreprise, TVA, adresse, brut, retenues, IBAN), à déclarer annuellement. Fiches 281.29 : revenus d\'économie collaborative et précompte par livreur P2P, à transmettre au SPF Finances et au livreur avant le 28 février. Fichiers CSV (point-virgule).',
       quarter: 'Trimestre',
       allQuarters: 'Toute l\'année',
-      colUpdated: 'Mis à jour'
+      colUpdated: 'Mis à jour',
+      kpiAll: 'Tous les dossiers',
+      kpiReal: 'Vrais dossiers'
     },
     courierOnboarding: {
       title: 'Mon dossier livreur',
@@ -1114,7 +1116,7 @@ export const translations = {
       filterNew7: 'Nouveaux 7 j',
       filterRefunds: 'Avec remboursements',
       filterBlocked: 'Suspendus',
-      kpiTotal: 'Clients',
+      kpiTotal: 'Tous les clients',
       kpiNew: 'Nouveaux (7 j)',
       kpiActive: 'Actifs (30 j)',
       kpiSpent: 'Dépenses cumulées',
@@ -1125,7 +1127,7 @@ export const translations = {
       tierRegular: 'Réguliers (50 à 200 €)',
       tierOccasional: 'Occasionnels (< 50 €)',
       tierNone: 'Jamais commandé',
-      kpiReal: 'Vrais clients · {test} test'
+      kpiReal: 'Vrais clients'
     },
     adminPayments: {
       title: 'Paiements',
@@ -1289,7 +1291,7 @@ export const translations = {
       filterApproved: 'Approuvés',
       filterBlocked: 'Suspendus',
       allActivities: 'Toutes activités',
-      kpiTotal: 'Livreurs',
+      kpiTotal: 'Tous les livreurs',
       kpiPending: 'À valider',
       kpiAvailable: 'Disponibles',
       kpiDelivering: 'En livraison',
@@ -1299,7 +1301,7 @@ export const translations = {
       vatUnknown: 'TVA non renseignée',
       statsLine: '{n} livraison(s) · {revenue} de revenus · {cancel} annulation',
       companyNumber: 'N° d\'entreprise',
-      kpiReal: 'Vrais livreurs · {test} test',
+      kpiReal: 'Vrais livreurs',
       courierStatus: 'Statut légal',
       vehicle: 'Véhicule',
       noCourierFile: 'aucun dossier livreur commencé',
@@ -1654,7 +1656,7 @@ export const translations = {
       filterBlocked: 'Suspendus',
       allCommunes: 'Toutes les communes',
       allCuisines: 'Toutes les cuisines',
-      kpiTotal: 'Restaurants',
+      kpiTotal: 'Tous les restaurants',
       kpiPending: 'À valider',
       kpiRevenue: 'CA cumulé',
       kpiCommission: 'Commission générée',
@@ -1948,7 +1950,15 @@ export const translations = {
       markedTest: 'Compte marqué comme test : il sort des compteurs de vrais utilisateurs.',
       markedReal: 'Compte marqué comme vrai utilisateur.',
       filterDeletedAccounts: 'Supprimés',
-      kpiDeletedSuffix: ' · {n} supprimé(s)'
+      kpiDeletedSuffix: ' · {n} supprimé(s)',
+      accountsTitle: 'Comptes',
+      allAccounts: 'Tous les comptes',
+      realAccounts: 'Vrais comptes',
+      realAccountsHint: 'Vrais comptes = sans les comptes test, les démos et les comptes supprimés.',
+      accRow_clients: 'Clients',
+      accRow_drivers: 'Livreurs',
+      accRow_couriers: 'Dossiers livreurs',
+      accRow_restaurants: 'Restaurants'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -4234,7 +4244,10 @@ export const translations = {
       vehicleTitle: 'Ton véhicule',
       errVehicle: 'Choisis ton véhicule.',
       vehicleHelpBike: 'À vélo, on te propose les courses proches : jusqu\'à {km} km entre le restaurant et le client.',
-      vehicleHelpMotor: 'Motorisé, tu vois toutes les courses, les longues distances (plus de {km} km) en priorité : c\'est là qu\'on a le plus besoin de toi, mais les courtes restent accessibles.'
+      vehicleHelpMotor: 'Motorisé, tu vois toutes les courses, les longues distances (plus de {km} km) en priorité : c\'est là qu\'on a le plus besoin de toi, mais les courtes restent accessibles.',
+      errAccountDeleted: 'Ce compte n\'existe plus : il a été supprimé. Crée un nouveau compte pour continuer.',
+      errNoAccount: 'Aucun compte avec cette adresse e-mail : il n\'existe pas ou a été supprimé. Crée un compte pour continuer.',
+      accountDeletedLogout: 'Ce compte a été supprimé : tu as été déconnecté. Crée un nouveau compte pour continuer.'
     }
   },
   en: {
@@ -4604,7 +4617,9 @@ export const translations = {
       exportsHelp: 'DAC7: income per courier and quarter (identity, company number, VAT, address, gross, withholdings, IBAN), to report yearly. Forms 281.29: sharing-economy income and withholding per P2P courier, to send to the FPS Finance and the courier before 28 February. CSV files (semicolon).',
       quarter: 'Quarter',
       allQuarters: 'Whole year',
-      colUpdated: 'Updated'
+      colUpdated: 'Updated',
+      kpiAll: 'All files',
+      kpiReal: 'Real files'
     },
     courierOnboarding: {
       title: 'My courier file',
@@ -5348,7 +5363,7 @@ export const translations = {
       filterNew7: 'New 7 d',
       filterRefunds: 'With refunds',
       filterBlocked: 'Suspended',
-      kpiTotal: 'Customers',
+      kpiTotal: 'All customers',
       kpiNew: 'New (7 d)',
       kpiActive: 'Active (30 d)',
       kpiSpent: 'Total spent',
@@ -5359,7 +5374,7 @@ export const translations = {
       tierRegular: 'Regulars (€50 to €200)',
       tierOccasional: 'Occasional (< €50)',
       tierNone: 'Never ordered',
-      kpiReal: 'Real clients · {test} test'
+      kpiReal: 'Real customers'
     },
     adminPayments: {
       title: 'Payments',
@@ -5523,7 +5538,7 @@ export const translations = {
       filterApproved: 'Approved',
       filterBlocked: 'Suspended',
       allActivities: 'All activities',
-      kpiTotal: 'Couriers',
+      kpiTotal: 'All couriers',
       kpiPending: 'To validate',
       kpiAvailable: 'Available',
       kpiDelivering: 'Delivering',
@@ -5533,7 +5548,7 @@ export const translations = {
       vatUnknown: 'VAT status missing',
       statsLine: '{n} delivery(ies) · {revenue} earned · {cancel} cancellation',
       companyNumber: 'Company number',
-      kpiReal: 'Real couriers · {test} test',
+      kpiReal: 'Real couriers',
       courierStatus: 'Legal status',
       vehicle: 'Vehicle',
       noCourierFile: 'no courier file started',
@@ -5888,7 +5903,7 @@ export const translations = {
       filterBlocked: 'Suspended',
       allCommunes: 'All municipalities',
       allCuisines: 'All cuisines',
-      kpiTotal: 'Restaurants',
+      kpiTotal: 'All restaurants',
       kpiPending: 'To validate',
       kpiRevenue: 'Cumulative revenue',
       kpiCommission: 'Commission generated',
@@ -6182,7 +6197,15 @@ export const translations = {
       markedTest: 'Account marked as test: it leaves the real-user counters.',
       markedReal: 'Account marked as a real user.',
       filterDeletedAccounts: 'Deleted',
-      kpiDeletedSuffix: ' · {n} deleted'
+      kpiDeletedSuffix: ' · {n} deleted',
+      accountsTitle: 'Accounts',
+      allAccounts: 'All accounts',
+      realAccounts: 'Real accounts',
+      realAccountsHint: 'Real accounts = without test accounts, demos and deleted accounts.',
+      accRow_clients: 'Customers',
+      accRow_drivers: 'Couriers',
+      accRow_couriers: 'Courier files',
+      accRow_restaurants: 'Restaurants'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -8468,7 +8491,10 @@ export const translations = {
       vehicleTitle: 'Your vehicle',
       errVehicle: 'Choose your vehicle.',
       vehicleHelpBike: 'By bike, you are offered nearby rides: up to {km} km between the restaurant and the customer.',
-      vehicleHelpMotor: 'Motorised, you see every ride, long distances (over {km} km) first: that is where you are needed most, but short ones stay available.'
+      vehicleHelpMotor: 'Motorised, you see every ride, long distances (over {km} km) first: that is where you are needed most, but short ones stay available.',
+      errAccountDeleted: 'This account no longer exists: it was deleted. Create a new account to continue.',
+      errNoAccount: 'No account with this e-mail address: it does not exist or was deleted. Create an account to continue.',
+      accountDeletedLogout: 'This account was deleted: you have been signed out. Create a new account to continue.'
     }
   },
   nl: {
@@ -8838,7 +8864,9 @@ export const translations = {
       exportsHelp: 'DAC7: inkomsten per koerier en kwartaal (identiteit, ondernemingsnummer, btw, adres, bruto, inhoudingen, IBAN), jaarlijks aan te geven. Fiches 281.29: deeleconomie-inkomsten en bronheffing per P2P-koerier, vóór 28 februari te bezorgen aan de FOD Financiën en de koerier. CSV-bestanden (puntkomma).',
       quarter: 'Kwartaal',
       allQuarters: 'Hele jaar',
-      colUpdated: 'Bijgewerkt'
+      colUpdated: 'Bijgewerkt',
+      kpiAll: 'Alle dossiers',
+      kpiReal: 'Echte dossiers'
     },
     courierOnboarding: {
       title: 'Mijn koeriersdossier',
@@ -9582,7 +9610,7 @@ export const translations = {
       filterNew7: 'Nieuw 7 d',
       filterRefunds: 'Met terugbetalingen',
       filterBlocked: 'Geschorst',
-      kpiTotal: 'Klanten',
+      kpiTotal: 'Alle klanten',
       kpiNew: 'Nieuw (7 d)',
       kpiActive: 'Actief (30 d)',
       kpiSpent: 'Totaal uitgegeven',
@@ -9593,7 +9621,7 @@ export const translations = {
       tierRegular: 'Vaste klanten (€ 50 tot € 200)',
       tierOccasional: 'Occasioneel (< € 50)',
       tierNone: 'Nooit besteld',
-      kpiReal: 'Echte klanten · {test} test'
+      kpiReal: 'Echte klanten'
     },
     adminPayments: {
       title: 'Betalingen',
@@ -9757,7 +9785,7 @@ export const translations = {
       filterApproved: 'Goedgekeurd',
       filterBlocked: 'Geschorst',
       allActivities: 'Alle activiteiten',
-      kpiTotal: 'Koeriers',
+      kpiTotal: 'Alle koeriers',
       kpiPending: 'Te valideren',
       kpiAvailable: 'Beschikbaar',
       kpiDelivering: 'Aan het leveren',
@@ -9767,7 +9795,7 @@ export const translations = {
       vatUnknown: 'Btw-status ontbreekt',
       statsLine: '{n} levering(en) · {revenue} inkomsten · {cancel} annulering',
       companyNumber: 'Ondernemingsnummer',
-      kpiReal: 'Echte koeriers · {test} test',
+      kpiReal: 'Echte koeriers',
       courierStatus: 'Wettelijk statuut',
       vehicle: 'Voertuig',
       noCourierFile: 'geen koeriersdossier gestart',
@@ -10122,7 +10150,7 @@ export const translations = {
       filterBlocked: 'Geschorst',
       allCommunes: 'Alle gemeenten',
       allCuisines: 'Alle keukens',
-      kpiTotal: 'Restaurants',
+      kpiTotal: 'Alle restaurants',
       kpiPending: 'Te valideren',
       kpiRevenue: 'Gecumuleerde omzet',
       kpiCommission: 'Gegenereerde commissie',
@@ -10416,7 +10444,15 @@ export const translations = {
       markedTest: 'Account gemarkeerd als test: het telt niet meer mee als echte gebruiker.',
       markedReal: 'Account gemarkeerd als echte gebruiker.',
       filterDeletedAccounts: 'Verwijderd',
-      kpiDeletedSuffix: ' · {n} verwijderd'
+      kpiDeletedSuffix: ' · {n} verwijderd',
+      accountsTitle: 'Accounts',
+      allAccounts: 'Alle accounts',
+      realAccounts: 'Echte accounts',
+      realAccountsHint: 'Echte accounts = zonder testaccounts, demo\'s en verwijderde accounts.',
+      accRow_clients: 'Klanten',
+      accRow_drivers: 'Koeriers',
+      accRow_couriers: 'Koeriersdossiers',
+      accRow_restaurants: 'Restaurants'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',
@@ -12702,7 +12738,10 @@ export const translations = {
       vehicleTitle: 'Je voertuig',
       errVehicle: 'Kies je voertuig.',
       vehicleHelpBike: 'Met de fiets krijg je ritten in de buurt: tot {km} km tussen het restaurant en de klant.',
-      vehicleHelpMotor: 'Gemotoriseerd zie je alle ritten, lange afstanden (meer dan {km} km) eerst: daar heb je het meeste nut, maar korte blijven beschikbaar.'
+      vehicleHelpMotor: 'Gemotoriseerd zie je alle ritten, lange afstanden (meer dan {km} km) eerst: daar heb je het meeste nut, maar korte blijven beschikbaar.',
+      errAccountDeleted: 'Dit account bestaat niet meer: het is verwijderd. Maak een nieuw account aan om verder te gaan.',
+      errNoAccount: 'Geen account met dit e-mailadres: het bestaat niet of is verwijderd. Maak een account aan om verder te gaan.',
+      accountDeletedLogout: 'Dit account is verwijderd: je bent afgemeld. Maak een nieuw account aan om verder te gaan.'
     }
   }
 };

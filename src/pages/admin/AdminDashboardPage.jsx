@@ -8,6 +8,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import AdminBarChart from '../../components/admin/AdminBarChart';
 import { money, pct } from './adminUtils';
+import AccountsTable from '../../components/admin/AccountsTable';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const periods = (tr) => [
@@ -138,6 +139,7 @@ export default function AdminDashboardPage() {
           </>
         )}
       </div>
+      {overview && <AccountsTable accounts={overview.accounts} />}
     </div>
   );
 }

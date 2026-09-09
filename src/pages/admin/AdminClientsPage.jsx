@@ -148,7 +148,7 @@ export default function AdminClientsPage() {
       {clients && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{clients.length}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal', { test: clients.length - kpi.real - kpi.deleted })}{kpi.deleted > 0 ? tr('adminCommon.kpiDeletedSuffix', { n: kpi.deleted }) : ''}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.new7}</div><div className="label">{tr('adminClients.kpiNew')}</div></div>
           <div className="stat-card"><div className="num">{kpi.active30}</div><div className="label">{tr('adminClients.kpiActive')}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.orders')}</div></div>

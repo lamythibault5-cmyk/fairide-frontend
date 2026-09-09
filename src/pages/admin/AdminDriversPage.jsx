@@ -152,7 +152,7 @@ export default function AdminDriversPage() {
       {drivers && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{drivers.length}</div><div className="label">{tr('adminDrivers.kpiTotal')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminDrivers.kpiReal', { test: drivers.length - kpi.real - kpi.deleted })}{kpi.deleted > 0 ? tr('adminCommon.kpiDeletedSuffix', { n: kpi.deleted }) : ''}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminDrivers.kpiReal')}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminDrivers.kpiPending')}</div></div>
           <div className="stat-card"><div className="num">{kpi.available}</div><div className="label">{tr('adminDrivers.kpiAvailable')}</div></div>
           <div className="stat-card"><div className="num">{kpi.delivering}</div><div className="label">{tr('adminDrivers.kpiDelivering')}</div></div>

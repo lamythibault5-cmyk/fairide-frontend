@@ -49,6 +49,8 @@ export default function AdminCouriersPage() {
         <>
           {data && (
             <div className="stat-grid">
+              <div className="stat-card highlight"><div className="num">{(data.rows || []).length}</div><div className="label">{tr('adminCouriers.kpiAll')}</div></div>
+              <div className="stat-card"><div className="num">{nbReels}</div><div className="label">{tr('adminCouriers.kpiReal')}</div></div>
               {['pending_review', 'approved', 'blocked_threshold', 'rejected', 'draft'].map((s) => (
                 <button key={s} type="button" className={`stat-card${filtre === s ? ' highlight' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setFiltre(filtre === s ? 'all' : s)}>
                   <div className="num">{data.counts[s] || 0}</div><div className="label">{lifecycle(s)}</div>
@@ -92,6 +94,7 @@ function ViewTabs({ onglet, setOnglet, tr }) {
 }
 
 function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
+  const { t } = useLanguage();
   const [d, setD] = useState(null); const [busy, setBusy] = useState(false); const [motif, setMotif] = useState(''); const [nouveauStatut, setNouveauStatut] = useState('independent');
   const load = () => api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => toast(e.message));
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
