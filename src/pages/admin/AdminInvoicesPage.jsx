@@ -9,11 +9,14 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
-import { money, fmtDate, fmtDateTime, useDebouncedValue, downloadPdf, INVOICE_STATUS_LABELS, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
+import PeriodPicker, { usePeriod, defaultPeriod } from '../../components/admin/PeriodPicker';
+import { money, fmtDate, fmtDateTime, useDebouncedValue, downloadPdf, downloadCsv, INVOICE_STATUS_LABELS, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { useApiData, LoadState, Pagination, RestaurantLink } from './accounting/common';
+import '../../admin-finance.css';
 
-const TABS = ['Factures', 'Relevés livreurs', 'Autofacturation'];
-const tabLabels = (tr) => ({ "Factures": tr('adminInvoices.tab_invoices'), "Relevés livreurs": tr('adminInvoices.tab_driverStatements'), "Autofacturation": tr('adminInvoices.tab_selfBilling') });
+const TABS = ['Factures', 'Impayés', 'Relevés livreurs', 'Autofacturation'];
+const tabLabels = (tr) => ({ "Factures": tr('adminInvoices.tab_invoices'), "Impayés": tr('adminInvoices.tab_aged'), "Relevés livreurs": tr('adminInvoices.tab_driverStatements'), "Autofacturation": tr('adminInvoices.tab_selfBilling') });
 const PAGE_SIZE = 25;
 const statusFilters = (tr) => [{ key: '', label: tr('adminInvoices.all') }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
 
@@ -90,6 +93,7 @@ export default function AdminInvoicesPage() {
         </div>
       )}
       {tab === 'Factures' && <InvoicesTab token={token} toast={toast} presetRestaurantId={restaurantFilter} />}
+      {tab === 'Impayés' && <AgedTab token={token} toast={toast} />}
       {tab === 'Relevés livreurs' && <DriverStatementsTab token={token} toast={toast} />}
       {tab === 'Autofacturation' && <SelfBillingTab token={token} toast={toast} />}
     </div>
@@ -101,63 +105,167 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
   const [status, setStatus] = useState('');
+  const [minAmount, setMinAmount] = useState('');
+  const [maxAmount, setMaxAmount] = useState('');
   const [page, setPage] = useState(0);
-  const [data, setData] = useState(null);
   const [selectedId, setSelectedId] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
   const { sort, toggle } = useTableSort('issuedAt');
+  // Période sur la date d'émission ; « Tout » par défaut pour retrouver le comportement historique.
+  const { period, setPeriod, bounds } = usePeriod({ allowAll: true, initial: { ...defaultPeriod(), type: 'all' } });
+  const { from, to } = bounds;
 
-  function load() {
-    setData(null);
+  const state = useApiData(() => {
     const params = new URLSearchParams();
     if (q) params.set('q', q);
     if (status) params.set('status', status);
     if (presetRestaurantId) params.set('restaurantId', presetRestaurantId);
+    if (from) params.set('dateFrom', from);
+    if (to) params.set('dateTo', to);
+    if (minAmount) params.set('minAmount', minAmount);
+    if (maxAmount) params.set('maxAmount', maxAmount);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
-    api(`/admin/invoices?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message));
-  }
+    return api(`/admin/invoices?${params.toString()}`, { token });
+  }, [q, status, page, presetRestaurantId, from, to, minAmount, maxAmount]);
+  const load = state.reload;
 
-  useEffect(load, [q, status, page, presetRestaurantId]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [q, status]);
+  useEffect(() => { setPage(0); }, [q, status, from, to, minAmount, maxAmount]);
+
+  function exportCsv() {
+    const rows = state.data?.rows || [];
+    if (!rows.length) { toast(tr('adminCommon.nothingToExport')); return; }
+    downloadCsv(`factures-${Date.now()}.csv`, rows, [
+      { label: tr('adminInvoices.colNumber'), get: (i) => i.invoiceNumber }, { label: tr('adminCommon.restaurant'), get: (i) => i.restaurantName },
+      { label: tr('adminInvoices.colPeriod'), get: (i) => fmtDate(i.periodStart) }, { label: tr('adminCommon.status'), get: (i) => INVOICE_STATUS_LABELS[i.status]?.label || i.status },
+      { label: tr('adminInvoices.colHt'), get: (i) => i.subtotalHt }, { label: tr('adminCommon.vat'), get: (i) => i.vatAmount }, { label: tr('adminInvoices.colTtc'), get: (i) => i.totalTtc },
+      { label: tr('adminInvoices.colIssued'), get: (i) => fmtDate(i.issuedAt) }
+    ]);
+  }
 
   return (
     <>
-      <div className="row" style={{ gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <input placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
-        <button className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateInvoiceBtn')}</button>
+      <PeppolStatusCard token={token} toast={toast} tr={tr} />
+      <PeriodPicker period={period} onChange={setPeriod} allowAll compact />
+      <div className="fin-toolbar">
+        <input type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={minAmount} onChange={(e) => setMinAmount(e.target.value)} style={{ width: 80 }} /></label>
+        <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} style={{ width: 80 }} /></label>
+        {(minAmount || maxAmount) && <button type="button" className="btn-ghost" onClick={() => { setMinAmount(''); setMaxAmount(''); }}>✕ {tr('adminOrders.clearFilters')}</button>}
+        <span className="spacer" />
+        <button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
+        <button type="button" className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateInvoiceBtn')}</button>
       </div>
       <div className="role-pick" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
         {statusFilters(tr).map((f) => <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>)}
       </div>
 
-      {!data && <SkeletonCards count={4} />}
-      <PeppolStatusCard token={token} toast={toast} tr={tr} />
-      {data && data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noneForFilter')}</div>}
-      {data && data.rows.length > 0 && (
-        <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} onRowClick={(inv) => setSelectedId(inv.id)} showTotals format={{ subtotalHt: money, vatAmount: money, totalTtc: money }} columns={[
-          { key: 'invoiceNumber', label: tr('adminInvoices.colNumber'), get: (inv) => <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>, sortValue: (inv) => inv.invoiceNumber },
-          { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (inv) => inv.restaurantName },
-          { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
-          { key: 'status', label: tr('adminCommon.status'), get: (inv) => statusPill(inv.status), sortValue: (inv) => inv.status },
-          { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
-          { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
-          { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => money(inv.vatAmount), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
-          { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
-          { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt }
-        ]} />
-      )}
-      {data && data.total > PAGE_SIZE && (
-        <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
-          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(data.total / PAGE_SIZE) })} {tr('adminInvoices.invoicesCount', { n: data.total })}</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= data.total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
-        </div>
-      )}
+      <LoadState state={state} skeleton={4}>
+        {(data) => (
+          <>
+            {data.rows.length === 0 && <div className="empty">{tr('adminInvoices.noneForFilter')}</div>}
+            {data.rows.length > 0 && (
+              <div className="fin-table-wrap">
+                <AdminDataTable rows={data.rows} sort={sort} onSort={toggle} onRowClick={(inv) => setSelectedId(inv.id)} showTotals format={{ subtotalHt: money, vatAmount: money, totalTtc: money }} columns={[
+                  { key: 'invoiceNumber', label: tr('adminInvoices.colNumber'), get: (inv) => <b style={{ fontFamily: 'monospace' }}>{inv.invoiceNumber}</b>, sortValue: (inv) => inv.invoiceNumber },
+                  { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (inv) => <RestaurantLink id={inv.restaurantId} name={inv.restaurantName} />, sortValue: (inv) => inv.restaurantName },
+                  { key: 'periodStart', label: tr('adminInvoices.colPeriod'), get: (inv) => fmtDate(inv.periodStart), sortValue: (inv) => inv.periodStart },
+                  { key: 'status', label: tr('adminCommon.status'), get: (inv) => statusPill(inv.status), sortValue: (inv) => inv.status },
+                  { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
+                  { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
+                  { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => money(inv.vatAmount), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
+                  { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
+                  { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt }
+                ]} />
+              </div>
+            )}
+            <Pagination page={page} total={data.total} pageSize={PAGE_SIZE} onPage={setPage} countLabel={tr('adminInvoices.invoicesCount', { n: data.total })} />
+          </>
+        )}
+      </LoadState>
 
       {selectedId && <InvoiceDetailModal id={selectedId} onClose={() => setSelectedId(null)} onChanged={load} />}
       {showGenerate && <GenerateInvoiceModal onClose={() => setShowGenerate(false)} onGenerated={() => { setShowGenerate(false); load(); }} />}
     </>
+  );
+}
+
+// Impayés par ancienneté : factures émises non payées, ventilées par tranche de retard, avec relance
+// (e-mail au restaurant) et marquage « payée » confirmés.
+const BUCKETS = ['notDue', 'd0_30', 'd31_60', 'd61_90', 'd90plus'];
+const bucketLabels = (tr) => ({ notDue: tr('adminInvoices.bucketNotDue'), d0_30: tr('adminInvoices.bucket0_30'), d31_60: tr('adminInvoices.bucket31_60'), d61_90: tr('adminInvoices.bucket61_90'), d90plus: tr('adminInvoices.bucket90plus') });
+const BUCKET_TONE = { notDue: '', d0_30: 'b1', d31_60: 'b2', d61_90: 'b3', d90plus: 'b3' };
+
+function AgedTab({ token, toast }) {
+  const { t: tr } = useLanguage();
+  const state = useApiData(() => api('/admin/invoices/aged', { token }), []);
+  const [confirm, setConfirm] = useState(null); // { kind: 'remind'|'paid', inv }
+  const [busy, setBusy] = useState(false);
+  const { sort, toggle } = useTableSort('daysOverdue');
+  const labels = bucketLabels(tr);
+
+  async function run() {
+    const { kind, inv } = confirm;
+    setBusy(true);
+    try {
+      if (kind === 'remind') { await api(`/admin/invoices/${inv.id}/reminder`, { method: 'POST', token }); toast(tr('adminInvoices.toastReminderSent')); }
+      else { await api(`/admin/invoices/${inv.id}/mark-paid`, { method: 'POST', token, body: {} }); toast(tr('adminInvoices.toastMarkedPaid')); }
+      state.reload();
+    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+  }
+
+  function exportCsv() {
+    const items = state.data?.items || [];
+    if (!items.length) { toast(tr('adminCommon.nothingToExport')); return; }
+    downloadCsv(`impayes-${Date.now()}.csv`, items, [
+      { label: tr('adminInvoices.colNumber'), get: (i) => i.number }, { label: tr('adminCommon.restaurant'), get: (i) => i.restaurantName },
+      { label: tr('adminCommon.total'), get: (i) => i.total }, { label: tr('adminInvoices.colDueDate'), get: (i) => fmtDate(i.dueDate) },
+      { label: tr('adminInvoices.colDaysOverdue'), get: (i) => i.daysOverdue }, { label: tr('adminInvoices.colReminders'), get: (i) => i.reminderCount }
+    ]);
+  }
+
+  return (
+    <LoadState state={state} skeleton={3}>
+      {(d) => {
+        const items = d.items || [];
+        const totalDue = BUCKETS.reduce((s, b) => s + Number(d.buckets?.[b]?.amount || 0), 0);
+        return (
+          <>
+            <div className="fin-buckets">
+              {BUCKETS.map((b) => (
+                <div key={b} className={`fin-bucket ${BUCKET_TONE[b]}`}>
+                  <div className="num">{money(d.buckets?.[b]?.amount || 0)}</div>
+                  <div className="label">{labels[b]} · {d.buckets?.[b]?.count || 0}</div>
+                </div>
+              ))}
+              <div className="fin-bucket" style={{ background: 'rgba(59,47,181,0.12)' }}><div className="num">{money(totalDue)}</div><div className="label">{tr('adminInvoices.totalOutstanding')}</div></div>
+            </div>
+            <div className="fin-toolbar"><span className="spacer" /><button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></div>
+            {items.length === 0 && <div className="empty">{tr('adminInvoices.noOutstanding')}</div>}
+            {items.length > 0 && (
+              <div className="fin-table-wrap">
+                <AdminDataTable rows={items} sort={sort} onSort={toggle} showTotals format={{ total: money }} columns={[
+                  { key: 'number', label: tr('adminInvoices.colNumber'), get: (i) => <b style={{ fontFamily: 'monospace' }}>{i.number}</b>, sortValue: (i) => i.number },
+                  { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (i) => <RestaurantLink id={i.restaurantId} name={i.restaurantName} />, sortValue: (i) => i.restaurantName },
+                  { key: 'dueDate', label: tr('adminInvoices.colDueDate'), get: (i) => fmtDate(i.dueDate), sortValue: (i) => i.dueDate },
+                  { key: 'daysOverdue', label: tr('adminInvoices.colDaysOverdue'), get: (i) => <span className={Number(i.daysOverdue) > 30 ? 'fin-neg' : ''}>{Number(i.daysOverdue) > 0 ? i.daysOverdue : '—'}</span>, sortValue: (i) => i.daysOverdue, align: 'right' },
+                  { key: 'reminderCount', label: tr('adminInvoices.colReminders'), get: (i) => i.reminderCount || 0, sortValue: (i) => i.reminderCount || 0, align: 'right' },
+                  { key: 'total', label: tr('adminInvoices.colTtc'), get: (i) => <b>{money(i.total)}</b>, sortValue: (i) => i.total, align: 'right', sum: true },
+                  { key: 'actions', label: '', align: 'right', get: (i) => (
+                    <span className="fin-row-actions">
+                      <button type="button" className="btn-outline" onClick={(e) => { e.stopPropagation(); setConfirm({ kind: 'remind', inv: i }); }}>{tr('adminInvoices.remind')}</button>
+                      <button type="button" className="btn-outline" onClick={(e) => { e.stopPropagation(); setConfirm({ kind: 'paid', inv: i }); }}>{tr('adminInvoices.markPaid')}</button>
+                    </span>
+                  ) }
+                ]} />
+              </div>
+            )}
+            <ConfirmDialog open={confirm?.kind === 'remind'} title={tr('adminInvoices.confirmRemind', { n: confirm?.inv?.number || '' })} message={tr('adminInvoices.confirmRemindBody')} loading={busy} onConfirm={run} onCancel={() => setConfirm(null)} confirmLabel={tr('adminInvoices.remind')} />
+            <ConfirmDialog open={confirm?.kind === 'paid'} title={tr('adminInvoices.confirmMarkPaid', { n: confirm?.inv?.number || '' })} message={tr('adminInvoices.confirmMarkPaidBody')} loading={busy} onConfirm={run} onCancel={() => setConfirm(null)} confirmLabel={tr('adminInvoices.markPaid')} />
+          </>
+        );
+      }}
+    </LoadState>
   );
 }
 
@@ -308,7 +416,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
               <h3 style={{ margin: '0 0 8px', fontFamily: 'monospace' }}>{inv.invoiceNumber}</h3>
               <span className="row" style={{ gap: 6 }}>{statusPill(inv.status)}{peppolPill(inv.peppolStatus, tr)}</span>
             </div>
-            <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.namePeriodRange', { name: inv.restaurant.name, start: fmtDate(inv.periodStart), end: fmtDate(inv.periodEnd) })}</p>
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.namePeriodRange', { name: inv.restaurant.name, start: fmtDate(inv.periodStart), end: fmtDate(inv.periodEnd) })} · <RestaurantLink id={inv.restaurant.id} name={tr('adminInvoices.openRestaurant')} /></p>
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminInvoices.issuedOn', { date: fmtDateTime(inv.issuedAt) })}</p>
             {!inv.fairide.configured && (
               <p className="small" style={{ color: 'var(--red)' }}>{tr('adminInvoices.legalNotConfigured')}</p>

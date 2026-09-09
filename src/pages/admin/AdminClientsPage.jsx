@@ -1,11 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import { ErrorCard, LoadMore, ResultCount } from '../../components/admin/AdminListTools';
+import ReasonDialog from '../../components/admin/ReasonDialog';
+import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -14,10 +17,12 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
-import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, downloadCsv, useDebouncedValue, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const PAGE_SIZE = 100;
+const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'orders', 'revenue', 'last_order'];
 const J30 = 30 * 86400000; const J7 = 7 * 86400000;
 
 export default function AdminClientsPage() {
@@ -25,24 +30,27 @@ export default function AdminClientsPage() {
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
-  const [clients, setClients] = useState(null);
-  const [search, setSearch] = useState(location.state?.presetSearch || '');
+  const [searchParams] = useSearchParams();
+  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
   const [mode, setMode] = useViewMode('clients', 'cards');
-  const [filtre, setFiltre] = useState('all');
+  const [filtre, setFiltre] = useState(searchParams.get('filter') || 'all');
   const [nature, setNature] = useState('all');
   const [groupBy, setGroupBy] = useState('');
+  const [triServeur, setTriServeur] = useState('created_desc');
   const { sort, toggle } = useTableSort('totalSpent');
+  // Ajustement de solde : { client, sens: 'credit' | 'debit' } ; le montant est saisi dans le dialogue.
+  const [solde, setSolde] = useState(null);
+  const [soldeMontant, setSoldeMontant] = useState('');
+  const [soldeBusy, setSoldeBusy] = useState(false);
 
-  const load = () => api('/admin/clients', { token }).then(setClients).catch((e) => toast(e.message));
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const liste = useServerList('/admin/clients', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: filtre === 'blocked' ? 'blocked' : '' } });
+  const { rows: clients, setRows: setClients, total, loading, error, reload: load, loadMore } = liste;
 
   function openClient(c) {
     setOnglet('apercu');
@@ -54,7 +62,7 @@ export default function AdminClientsPage() {
   async function setStatus(id, status) {
     try {
       await api(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: { status } });
-      setClients((prev) => prev.map((c) => (c.id === id ? { ...c, adminStatus: status } : c)));
+      setClients((prev) => (prev || []).map((c) => (c.id === id ? { ...c, adminStatus: status } : c)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'blocked' ? tr('adminClients.toastSuspended') : tr('adminClients.toastReactivated'));
@@ -68,7 +76,7 @@ export default function AdminClientsPage() {
   }
   async function deleteClient(c) {
     const r = await api(`/admin/clients/${c.id}`, { method: 'DELETE', token });
-    setClients((prev) => prev.filter((x) => x.id !== c.id));
+    setClients((prev) => (prev || []).filter((x) => x.id !== c.id));
     if (selected?.id === c.id) { setSelected(null); setDetail(null); }
     toast(tr('adminClients.toastDeleted', { n: r.deletedOrders || 0 }));
   }
@@ -84,32 +92,49 @@ export default function AdminClientsPage() {
     try { await confirmAction.run(); } finally { setBusy(false); setConfirmAction(null); }
   }
 
+  // Crédit / débit du solde Fairide (PATCH /admin/users/:id/balance { delta, reason }) : geste
+  // commercial ou correction, motif obligatoire et journalisé côté serveur.
+  function askBalance(c, sens) { setSolde({ client: c, sens }); setSoldeMontant(''); }
+  async function ajusterSolde(reason) {
+    const montant = Number(String(soldeMontant).replace(',', '.'));
+    if (!montant || montant <= 0) { toast(tr('adminClients.toastAmountRequired')); return; }
+    const delta = solde.sens === 'debit' ? -montant : montant;
+    setSoldeBusy(true);
+    try {
+      const r = await api(`/admin/users/${solde.client.id}/balance`, { method: 'PATCH', token, body: { delta, reason } });
+      setClients((prev) => (prev || []).map((c) => (c.id === solde.client.id ? { ...c, balance: r.balance } : c)));
+      if (detail?.id === solde.client.id) setDetail((prev) => ({ ...prev, balance: r.balance }));
+      toast(tr('adminClients.toastBalanceAdjusted', { balance: money(r.balance) }));
+      refreshDetail();
+      setSolde(null);
+    } catch (e) { toast(e.message); } finally { setSoldeBusy(false); }
+  }
+
   function refreshDetail() {
     if (selected) api(`/admin/clients/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
   }
 
   function exportCsv() {
-    if (!clients || !clients.length) { toast(tr('adminCommon.nothingToExport')); return; }
-    downloadCsv(`clients-${Date.now()}.csv`, clients, [
-      { label: 'Nom', get: (c) => c.name },
-      { label: 'Email', get: (c) => c.email },
+    if (!visibles.length) { toast(tr('adminCommon.nothingToExport')); return; }
+    downloadCsv(`clients-${Date.now()}.csv`, visibles, [
+      { label: tr('adminCommon.name'), get: (c) => c.name },
+      { label: tr('adminCommon.email'), get: (c) => c.email },
       { label: tr('adminCommon.phone'), get: (c) => c.phone },
       { label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') },
       { label: tr('adminCommon.language'), get: (c) => c.language },
       { label: tr('adminCommon.accountKind'), get: (c) => (estCompteTest(c) ? 'test' : 'réel') },
       { label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt) },
-      { label: 'Commandes', get: (c) => c.orderCount },
-      { label: 'Annulations', get: (c) => c.cancelledCount },
+      { label: tr('adminCommon.orders'), get: (c) => c.orderCount },
+      { label: tr('adminCommon.cancellations'), get: (c) => c.cancelledCount },
       { label: tr('adminCommon.totalSpent'), get: (c) => c.totalSpent },
-      { label: 'Panier moyen', get: (c) => c.avgBasket },
+      { label: tr('adminCommon.avgBasket'), get: (c) => c.avgBasket },
       { label: tr('adminClients.colFrequency'), get: (c) => c.purchaseFrequency },
       { label: tr('adminCommon.lastOrder'), get: (c) => c.lastOrderAt ? fmtDate(c.lastOrderAt) : '' },
-      { label: 'Solde', get: (c) => c.balance },
-      { label: 'Statut', get: (c) => c.adminStatus }
+      { label: tr('adminCommon.balanceCol'), get: (c) => c.balance },
+      { label: tr('adminCommon.status'), get: (c) => c.adminStatus }
     ]);
   }
 
-  const filtered = filterBySearch(clients, search, (c) => [c.name, c.email, c.phone, c.city, c.postalCode]);
   const maintenant = Date.now();
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{estCompteTest(c) && <TestBadge />}</>, sortValue: (c) => c.name },
@@ -132,22 +157,30 @@ export default function AdminClientsPage() {
     month: { get: (c) => new Date(c.createdAt).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' }) },
     tier: { get: (c) => (c.totalSpent >= 200 ? tr('adminClients.tierTop') : c.totalSpent >= 50 ? tr('adminClients.tierRegular') : c.orderCount > 0 ? tr('adminClients.tierOccasional') : tr('adminClients.tierNone')) }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((c) => {
+  const visibles = useMemo(() => sortRows((clients || []).filter((c) => {
     if (!natureOk(nature, c)) return false;
     if (filtre === 'active30') return c.lastOrderAt && maintenant - c.lastOrderAt <= J30;
     if (filtre === 'new7') return maintenant - c.createdAt <= J7;
     if (filtre === 'blocked') return c.adminStatus === 'blocked';
     if (filtre === 'refunds') return c.refundCount > 0;
     return true;
-  }), colonnes, sort), [filtered, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), colonnes, sort), [clients, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (estCompteReel(c) ? 1 : 0), deleted: a.deleted + (estCompteSupprime(c) ? 1 : 0), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, deleted: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
+  const tousCharges = clients && clients.length >= total;
+
+  const boutonsSolde = (c, petit) => (
+    <>
+      <button className="btn-outline" style={petit ? { padding: '6px 14px', fontSize: 13 } : undefined} onClick={() => askBalance(c, 'credit')}>{tr('adminClients.creditBalance')}</button>
+      <button className="btn-outline" style={petit ? { padding: '6px 14px', fontSize: 13 } : undefined} onClick={() => askBalance(c, 'debit')}>{tr('adminClients.debitBalance')}</button>
+    </>
+  );
 
   return (
     <div>
       <AdminPageHeader module="clients" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
       {clients && (
         <div className="stat-grid">
-          <div className="stat-card highlight"><div className="num">{clients.length}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
+          <div className="stat-card highlight"><div className="num">{total}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.new7}</div><div className="label">{tr('adminClients.kpiNew')}</div></div>
           <div className="stat-card"><div className="num">{kpi.active30}</div><div className="label">{tr('adminClients.kpiActive')}</div></div>
@@ -156,6 +189,7 @@ export default function AdminClientsPage() {
           <div className="stat-card"><div className="num">{money(kpi.orders ? kpi.spent / kpi.orders : 0)}</div><div className="label">{tr('adminCommon.avgBasket')}</div></div>
         </div>
       )}
+      {clients && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: clients.length, total })}</p>}
       <div className="admin-control-panel">
         <input placeholder={tr('adminClients.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
@@ -164,6 +198,9 @@ export default function AdminClientsPage() {
           ))}
         </div>
         <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
+        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
+          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
+        </select>
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -172,10 +209,11 @@ export default function AdminClientsPage() {
             <option value="tier">{tr('adminCommon.groupBy')} : {tr('adminClients.groupTier')}</option>
           </select>
         )}
-        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (clients || []).length })}</span>
+        <ResultCount n={visibles.length} total={total} />
       </div>
-      {!clients && <SkeletonCards count={3} />}
-      {clients && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {error && <ErrorCard message={error} onRetry={load} />}
+      {!clients && !error && <SkeletonCards count={3} />}
+      {clients && visibles.length === 0 && !error && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {clients && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openClient}
           rowClassName={(c) => (estCompteTest(c) ? 'row-test-account' : '')} showTotals format={{ totalSpent: money, balance: money }} emptyLabel={tr('adminCommon.noResults')} />
@@ -188,6 +226,7 @@ export default function AdminClientsPage() {
               {estCompteSupprime(c) ? <DeletedBadge /> : estCompteTest(c) && <TestBadge />}
               {c.adminStatus === 'blocked' && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span>}
               {c.refundCount > 0 && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.refundsCount', { n: c.refundCount })}</span>}
+              {c.balance > 0 && <span className="pill teal">{tr('adminClients.balancePill', { balance: money(c.balance) })}</span>}
             </div>
           </div>
           <div className="small">{c.email}{c.phone ? ` · ${c.phone}` : ''}{tr('adminClients.registeredSuffix', { date: fmtDate(c.createdAt) })}</div>
@@ -198,13 +237,15 @@ export default function AdminClientsPage() {
           <div className="small">
             {tr('adminClients.ordersPerMonth', { n: c.purchaseFrequency })} · {c.lastOrderAt ? tr('adminClients.lastOrderOn', { date: fmtDate(c.lastOrderAt) }) : tr('adminClients.noOrder')}
           </div>
-          <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+          <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+            {boutonsSolde(c, true)}
             {c.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(c)}>{tr('adminCommon.suspend')}</button>}
             {c.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(c)}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(c)}>{tr('adminClients.deleteAccount')}</button>
           </div>
         </div>
       ))}
+      {clients && <LoadMore loaded={clients.length} total={total} loading={loading} onMore={loadMore} />}
 
       {selected && createPortal(
         <RecordDrawer
@@ -224,7 +265,8 @@ export default function AdminClientsPage() {
               <ProfilLine u={detail} tr={tr} />
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminClients.registeredBalance', { date: fmtDate(detail.createdAt) })} <b>{money(detail.balance)}</b></p>
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
-              <div className="row" style={{ gap: 8, marginTop: 10 }}>
+              <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                {boutonsSolde(detail, false)}
                 <TestToggleButton userId={detail.id} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={() => { refreshDetail(); load(); }} />
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
@@ -280,6 +322,23 @@ export default function AdminClientsPage() {
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
       />
+      <ReasonDialog
+        open={!!solde}
+        title={solde ? (solde.sens === 'credit' ? tr('adminClients.creditTitle', { name: solde.client.name }) : tr('adminClients.debitTitle', { name: solde.client.name })) : ''}
+        message={solde ? tr('adminClients.balanceBody', { balance: money(solde.client.balance) }) : ''}
+        label={tr('adminClients.balanceReason')}
+        placeholder={tr('adminClients.phBalanceReason')}
+        confirmLabel={solde?.sens === 'credit' ? tr('adminClients.creditBalance') : tr('adminClients.debitBalance')}
+        danger={solde?.sens === 'debit'}
+        loading={soldeBusy}
+        onConfirm={ajusterSolde}
+        onCancel={() => setSolde(null)}
+      >
+        <div className="field">
+          <label>{tr('adminClients.balanceAmount')}</label>
+          <input type="number" min="0.01" max="1000" step="0.01" value={soldeMontant} onChange={(e) => setSoldeMontant(e.target.value)} placeholder="10.00" />
+        </div>
+      </ReasonDialog>
     </div>
   );
 }

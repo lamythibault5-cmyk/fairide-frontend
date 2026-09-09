@@ -1,11 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import { ErrorCard, LoadMore, ResultCount } from '../../components/admin/AdminListTools';
+import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -15,7 +17,7 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const activityLabels = (tr) => ({
@@ -25,6 +27,8 @@ const activityLabels = (tr) => ({
 });
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const PAGE_SIZE = 100;
+const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'revenue', 'orders'];
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminDrivers.filterPending'), approved: tr('adminDrivers.filterApproved'), blocked: tr('adminDrivers.filterBlocked') });
 const VAT_LABELS = (tr) => ({ franchise: tr('adminDrivers.vatFranchise'), assujetti: tr('adminDrivers.vatSubject') });
 // Dossier coursier (statut légal, véhicule, zone) en une ligne ; le détail complet est dans Dossiers livreurs.
@@ -39,27 +43,27 @@ export default function AdminDriversPage() {
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
-  const [drivers, setDrivers] = useState(null);
-  const [search, setSearch] = useState(location.state?.presetSearch || '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('drivers', 'cards');
-  const [filtre, setFiltre] = useState('all');
+  const filtre = searchParams.get('status') || 'all';
   const [nature, setNature] = useState('all');
   const [activite, setActivite] = useState('');
   const [groupBy, setGroupBy] = useState('');
+  const [triServeur, setTriServeur] = useState('created_desc');
   const { sort, toggle } = useTableSort('deliveriesCount');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
+  const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 
-  const load = () => api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const liste = useServerList('/admin/drivers', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
+  const { rows: drivers, setRows: setDrivers, total, loading, error, reload: load, loadMore } = liste;
 
   function loadDocuments(driverId) {
     setDocuments(null);
@@ -77,7 +81,7 @@ export default function AdminDriversPage() {
   async function setStatus(id, status) {
     try {
       await api(`/admin/drivers/${id}/status`, { method: 'PATCH', token, body: { status } });
-      setDrivers((prev) => prev.map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
+      setDrivers((prev) => (prev || []).map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? tr('adminDrivers.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
@@ -92,6 +96,19 @@ export default function AdminDriversPage() {
   function askReactivate(d) {
     setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
   }
+  function askApprove(d) {
+    setConfirmAction({ title: tr('adminDrivers.confirmApprove', { name: d.name }), message: tr('adminDrivers.approveBody'), run: () => setStatus(d.id, 'approved') });
+  }
+  // Suppression définitive (DELETE /admin/drivers/:id) : refusée par le serveur si une course est en cours.
+  async function deleteDriver(d) {
+    const r = await api(`/admin/drivers/${d.id}`, { method: 'DELETE', token });
+    setDrivers((prev) => (prev || []).filter((x) => x.id !== d.id));
+    if (selected?.id === d.id) { setSelected(null); setDetail(null); }
+    toast(tr('adminDrivers.toastDeleted', { n: r.detachedDeliveries ?? r.orders ?? 0 }));
+  }
+  function askDelete(d) {
+    setConfirmAction({ title: tr('adminDrivers.confirmDelete', { name: d.name }), message: tr('adminDrivers.deleteBody', { email: d.email || '' }), danger: true, run: () => deleteDriver(d).catch((e) => toast(e.message)) });
+  }
   async function runConfirmed() {
     if (!confirmAction) return;
     setBusy(true);
@@ -103,26 +120,25 @@ export default function AdminDriversPage() {
   }
 
   function exportCsv() {
-    if (!drivers || !drivers.length) { toast(tr('adminCommon.nothingToExport')); return; }
-    downloadCsv(`livreurs-${Date.now()}.csv`, drivers, [
-      { label: 'Nom', get: (d) => d.name },
-      { label: 'Email', get: (d) => d.email },
+    if (!visibles.length) { toast(tr('adminCommon.nothingToExport')); return; }
+    downloadCsv(`livreurs-${Date.now()}.csv`, visibles, [
+      { label: tr('adminCommon.name'), get: (d) => d.name },
+      { label: tr('adminCommon.email'), get: (d) => d.email },
       { label: tr('adminCommon.phone'), get: (d) => d.phone },
       { label: tr('adminCommon.municipality'), get: (d) => [d.postalCode, d.city].filter(Boolean).join(' ') },
       { label: tr('adminCommon.language'), get: (d) => d.language },
       { label: tr('adminCommon.accountKind'), get: (d) => (estCompteTest(d) ? 'test' : 'réel') },
       { label: tr('adminDrivers.courierStatus'), get: (d) => d.courier?.statusType || '' },
       { label: tr('adminDrivers.vehicle'), get: (d) => d.courier?.vehicleType || '' },
-      { label: 'Statut', get: (d) => d.adminStatus },
+      { label: tr('adminCommon.status'), get: (d) => d.adminStatus },
       { label: tr('adminDrivers.activity'), get: (d) => d.activityStatus },
-      { label: 'Livraisons', get: (d) => d.deliveriesCount },
-      { label: 'Revenus', get: (d) => d.revenue },
-      { label: "Taux d'annulation", get: (d) => d.cancellationRate },
-      { label: 'Temps moyen livraison (min)', get: (d) => d.avgDeliveryMinutes }
+      { label: tr('adminCommon.deliveries'), get: (d) => d.deliveriesCount },
+      { label: tr('adminCommon.revenue'), get: (d) => d.revenue },
+      { label: tr('adminCommon.cancellationRate'), get: (d) => d.cancellationRate },
+      { label: tr('adminCommon.avgTime'), get: (d) => d.avgDeliveryMinutes }
     ]);
   }
 
-  const filtered = filterBySearch(drivers, search, (d) => [d.name, d.email, d.phone, d.city, d.postalCode, d.courier?.zone]);
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (d) => <><b>{d.name}</b>{estCompteTest(d) && <TestBadge />}</>, sortValue: (d) => d.name },
     { key: 'email', label: tr('adminCommon.email'), get: (d) => d.email },
@@ -136,22 +152,23 @@ export default function AdminDriversPage() {
     { key: 'revenue', label: tr('adminCommon.revenue'), get: (d) => money(d.revenue), sortValue: (d) => d.revenue, align: 'right', sum: true },
     { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (d) => pct(d.cancellationRate), sortValue: (d) => d.cancellationRate, align: 'right' },
     { key: 'avgDeliveryMinutes', label: tr('adminCommon.avgTime'), get: (d) => (d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min` : '—'), sortValue: (d) => d.avgDeliveryMinutes, align: 'right' },
-    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${d.avgRating.toFixed(1)}★ (${d.reviewCount})` : '—'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
+    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${Number(d.avgRating).toFixed(1)}★ (${d.reviewCount})` : '—'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (d) => fmtDate(d.createdAt), sortValue: (d) => d.createdAt }
   ];
   const groupes = {
     status: { get: (d) => STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus }, activity: { get: (d) => activityLabels(tr)[d.activityStatus]?.label || d.activityStatus },
     vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((d) => natureOk(nature, d) && (filtre === 'all' || d.adminStatus === filtre) && (!activite || d.activityStatus === activite)), colonnes, sort), [filtered, filtre, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visibles = useMemo(() => sortRows((drivers || []).filter((d) => natureOk(nature, d) && (!activite || d.activityStatus === activite)), colonnes, sort), [drivers, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (estCompteReel(d) ? 1 : 0), deleted: a.deleted + (estCompteSupprime(d) ? 1 : 0), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, deleted: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
+  const tousCharges = drivers && drivers.length >= total;
 
   return (
     <div>
       <AdminPageHeader module="drivers" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
       {drivers && (
         <div className="stat-grid">
-          <div className="stat-card highlight"><div className="num">{drivers.length}</div><div className="label">{tr('adminDrivers.kpiTotal')}</div></div>
+          <div className="stat-card highlight"><div className="num">{total}</div><div className="label">{tr('adminDrivers.kpiTotal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminDrivers.kpiReal')}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminDrivers.kpiPending')}</div></div>
           <div className="stat-card"><div className="num">{kpi.available}</div><div className="label">{tr('adminDrivers.kpiAvailable')}</div></div>
@@ -160,6 +177,7 @@ export default function AdminDriversPage() {
           <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminDrivers.kpiRevenue')}</div></div>
         </div>
       )}
+      {drivers && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: drivers.length, total })}</p>}
       <div className="admin-control-panel">
         <input placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
@@ -172,6 +190,9 @@ export default function AdminDriversPage() {
           <option value="">{tr('adminDrivers.allActivities')}</option>
           {Object.entries(activityLabels(tr)).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
         </select>
+        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
+          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
+        </select>
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -180,10 +201,11 @@ export default function AdminDriversPage() {
             <option value="vat">{tr('adminCommon.groupBy')} : {tr('adminCommon.vat')}</option>
           </select>
         )}
-        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (drivers || []).length })}</span>
+        <ResultCount n={visibles.length} total={total} />
       </div>
-      {!drivers && <SkeletonCards count={3} />}
-      {drivers && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {error && <ErrorCard message={error} onRetry={load} />}
+      {!drivers && !error && <SkeletonCards count={3} />}
+      {drivers && visibles.length === 0 && !error && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {drivers && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openDriver}
           rowClassName={(d) => (estCompteTest(d) ? 'row-test-account' : '')} showTotals format={{ revenue: money }} emptyLabel={tr('adminCommon.noResults')} />
@@ -207,19 +229,21 @@ export default function AdminDriversPage() {
             <div className="small">🛵 {courierLine(d, tr)}</div>
             <div className="small">
               {tr('adminDrivers.statsLine', { n: d.deliveriesCount, revenue: money(d.revenue), cancel: pct(d.cancellationRate) })}
-              {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: d.avgRating.toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
+              {d.reviewCount > 0 ? tr('adminDrivers.ratingSuffix', { rating: Number(d.avgRating).toFixed(1), n: d.reviewCount }) : tr('adminDrivers.noReviewsSuffix')}
             </div>
             <div className="small" style={{ opacity: 0.6 }}>
               {d.avgDeliveryMinutes !== null ? tr('adminDrivers.avgMinutes', { n: d.avgDeliveryMinutes }) : tr('adminDrivers.notMeasuredYet')}{tr('adminDrivers.acceptanceNotMeasurable')}
             </div>
-            <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
-              {d.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(d.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+            <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+              {d.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(d)}>{tr('adminCommon.approve')}</button>}
               {d.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(d)}>{tr('adminCommon.suspend')}</button>}
               {d.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(d)}>{tr('adminCommon.reactivate')}</button>}
+              <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(d)}>{tr('adminDrivers.deleteAccount')}</button>
             </div>
           </div>
         );
       })}
+      {drivers && <LoadMore loaded={drivers.length} total={total} loading={loading} onMore={loadMore} />}
 
       {selected && createPortal(
         <RecordDrawer
@@ -238,7 +262,7 @@ export default function AdminDriversPage() {
           {detail && onglet === 'apercu' && (
             <>
               <ProfilLine u={detail} tr={tr} />
-              <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}{detail.courier && <> · <Link to="/admin/couriers" className="small">{tr('adminDrivers.openCourierFile')}</Link></>}</p>
+              <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}{detail.courier && <> · <Link to="/admin/couriers" state={{ presetSearch: detail.email }} className="small">{tr('adminDrivers.openCourierFile')}</Link></>}</p>
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '—' })}</p>
               {(detail.payoutIban || detail.payoutAccountHolder) && (
                 <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
@@ -246,11 +270,12 @@ export default function AdminDriversPage() {
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.vat')} : {VAT_LABELS(tr)[detail.vatStatus] || tr('adminDrivers.vatUnknown')}{detail.vatNumber ? ` · ${detail.vatNumber}` : ''}</p>
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '—'}</p>
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
-              <div className="row" style={{ gap: 8, marginTop: 10 }}>
-                {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => setStatus(detail.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+              <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+                {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => askApprove(detail)}>{tr('adminCommon.approve')}</button>}
                 <TestToggleButton userId={detail.id} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={() => { refreshDetail(); load(); }} />
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
+                <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminDrivers.deleteAccount')}</button>
               </div>
               <div className="divider" />
               <h4 className="drawer-section-title">{tr('adminRestos.keyFigures')}</h4>

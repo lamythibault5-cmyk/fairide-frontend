@@ -1,0 +1,161 @@
+/* ============================================================================================
+   Groupe Finance de l'ERP admin (Comptabilité, Finance, Paiements, Factures) — styles propres au
+   groupe, importés par les pages concernées. Tout le reste (card, pill, stat-grid, admin-table,
+   record-drawer, btn-*) vient de styles.css.
+   ============================================================================================ */
+
+/* ---- Sélecteur de période partagé (PeriodPicker.jsx) ---- */
+.fin-period { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.fin-period .fin-period-types .chip { flex: none; padding: 8px 12px; }
+.fin-period-nav { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; overflow: hidden; }
+.fin-period-arrow { border: none; background: transparent; padding: 6px 12px; font-size: 18px; line-height: 1; color: var(--ink-soft); border-radius: 0; }
+.fin-period-arrow:hover:not(:disabled) { background: var(--cream-dim); }
+.fin-period-label { min-width: 120px; text-align: center; font-weight: 700; font-size: 14px; padding: 0 6px; white-space: nowrap; }
+.fin-period-inputs { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.fin-period-inputs input, .fin-period-inputs select { width: auto; padding: 6px 8px; font-size: 13px; }
+.fin-period.compact { margin-bottom: 8px; }
+@media (max-width: 640px) {
+  .fin-period-types { width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .fin-period-types::-webkit-scrollbar { display: none; }
+  .fin-period-nav { flex: 1; justify-content: space-between; }
+  .fin-period-label { flex: 1; }
+}
+
+/* ---- Barre d'onglets défilante (beaucoup d'onglets en Comptabilité) ---- */
+.fin-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.fin-tabs::-webkit-scrollbar { display: none; }
+.fin-tabs .chip { flex: none; padding: 8px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; white-space: nowrap; }
+.fin-tabs .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+.fin-tabs .chip .pill { margin-left: 6px; padding: 1px 6px; font-size: 10px; }
+
+/* ---- Barre d'outils d'un onglet : filtres à gauche, actions à droite ---- */
+.fin-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.fin-toolbar .spacer { flex: 1; }
+.fin-toolbar input[type="search"], .fin-toolbar input[type="text"] { flex: 1; min-width: 160px; }
+.fin-toolbar select { width: auto; max-width: 240px; }
+.fin-toolbar .role-pick { margin: 0; flex-wrap: wrap; }
+.fin-toolbar .role-pick .chip { flex: none; padding: 7px 11px; }
+
+/* ---- États : erreur avec réessai, vide, chargement ---- */
+.fin-error { border: 1px solid rgba(217,45,60,0.4); background: rgba(217,45,60,0.06); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.fin-error b { color: var(--red); }
+.fin-error .small { flex: 1; min-width: 160px; margin: 0; }
+
+/* ---- Vue d'ensemble : alertes de santé + actions rapides ---- */
+.fin-alerts { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; margin-bottom: 14px; }
+.fin-alert { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-chip); background: var(--cream-dim); border: 1px solid transparent; text-decoration: none; color: var(--ink); cursor: pointer; font: inherit; text-align: left; }
+.fin-alert:hover { border-color: var(--iris); }
+.fin-alert b { font-family: 'Space Grotesk', sans-serif; font-size: 18px; min-width: 28px; text-align: center; }
+.fin-alert span { flex: 1; font-size: 13px; }
+.fin-alert.tone-danger b { color: var(--red); }
+.fin-alert.tone-warn b { color: var(--iris); }
+.fin-alert.tone-ok { opacity: .8; }
+.fin-alert.tone-ok b { color: var(--teal-deep); }
+.fin-quick { display: flex; gap: 8px; flex-wrap: wrap; }
+.fin-quick button { padding: 9px 14px; font-size: 13px; }
+
+/* Graphique à deux séries (produits vs charges par mois) */
+.fin-dualchart { width: 100%; }
+.fin-dualchart svg { width: 100%; height: 150px; display: block; }
+.fin-dualchart-legend { display: flex; gap: 14px; margin-top: 6px; font-size: 12px; color: var(--ink-soft); }
+.fin-dualchart-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.fin-dualchart-axis { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: var(--ink-faint); }
+
+/* ---- Tableaux : tout défilement horizontal reste dans son conteneur ---- */
+.fin-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.fin-table-wrap .table-scroll { min-width: 0; }
+.fin-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+.fin-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fin-credit { color: var(--teal-deep); }
+.fin-debit { color: var(--ink); }
+.fin-neg { color: var(--red); }
+.fin-pos { color: var(--teal-deep); }
+.fin-row-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.fin-row-actions button { padding: 4px 10px; font-size: 12px; }
+.fin-link { color: var(--iris); text-decoration: none; font-weight: 600; }
+.fin-link:hover { text-decoration: underline; }
+.fin-status { font-size: 11px; padding: 3px 8px; }
+.fin-status.posted { background: rgba(59,47,181,0.10); color: var(--iris); }
+.fin-status.reconciled { background: rgba(42,33,133,0.12); color: var(--teal-deep); }
+.fin-status.flagged { background: rgba(217,45,60,0.12); color: var(--red); }
+.fin-status.draft { background: var(--cream-dim); color: var(--ink-soft); }
+.fin-status.paid { background: rgba(42,33,133,0.12); color: var(--teal-deep); }
+.fin-status.locked { background: rgba(42,33,133,0.12); color: var(--teal-deep); }
+.fin-status.open { background: var(--cream-dim); color: var(--ink-soft); }
+
+/* ---- Éditeur de lignes d'écriture (formulaire « Nouvelle écriture ») ---- */
+.fin-lines { display: flex; flex-direction: column; gap: 6px; }
+.fin-line { display: grid; grid-template-columns: minmax(160px, 2fr) 90px 90px 80px 32px; gap: 6px; align-items: center; }
+.fin-line input, .fin-line select { padding: 7px 8px; font-size: 13px; width: 100%; }
+.fin-line-head { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); font-weight: 700; }
+.fin-line-remove { border: none; background: transparent; color: var(--red); font-size: 16px; padding: 4px; line-height: 1; }
+.fin-balance { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border-radius: var(--radius-chip); margin-top: 10px; font-size: 13px; background: var(--cream-dim); }
+.fin-balance.ok { background: rgba(42,33,133,0.08); color: var(--teal-deep); }
+.fin-balance.ko { background: rgba(217,45,60,0.08); color: var(--red); }
+@media (max-width: 640px) {
+  .fin-line { grid-template-columns: 1fr 1fr; }
+  .fin-line > :first-child { grid-column: 1 / -1; }
+  .fin-line-head { display: none; }
+}
+
+/* ---- Formulaire générique (dépense, verrouillage) ---- */
+.fin-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px 12px; }
+.fin-form-grid .field { margin-bottom: 0; }
+.fin-form-grid .field.wide { grid-column: 1 / -1; }
+.fin-form-grid label { display: block; font-size: 12px; font-weight: 600; color: var(--ink-soft); margin-bottom: 4px; }
+.fin-totals { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 13px; }
+.fin-totals b { font-family: 'Space Grotesk', sans-serif; }
+
+/* ---- États financiers (compte de résultat, bilan) : deux colonnes ---- */
+.fin-two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.fin-statement { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 0; overflow: hidden; }
+.fin-statement-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--cream-dim); font-weight: 700; }
+.fin-statement-line { display: flex; justify-content: space-between; gap: 12px; padding: 8px 16px; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.fin-statement-line:last-child { border-bottom: none; }
+.fin-statement-line .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; opacity: .7; margin-right: 6px; }
+.fin-statement-total { display: flex; justify-content: space-between; padding: 12px 16px; border-top: 2px solid var(--line); font-weight: 700; background: var(--cream-dim); }
+.fin-result { border-left: 3px solid var(--iris); }
+.fin-result.negative { border-left-color: var(--red); }
+.fin-delta { font-size: 12px; font-weight: 600; margin-left: 8px; }
+
+/* ---- TVA : grilles avec explication ---- */
+.fin-grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.fin-grid-card { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 12px 14px; }
+.fin-grid-card .code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; font-size: 13px; }
+.fin-grid-card .amount { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; margin: 4px 0; }
+.fin-grid-card .explain { font-size: 12px; color: var(--ink-soft); line-height: 1.4; }
+
+/* ---- Clôture : grille des 12 mois ---- */
+.fin-months { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.fin-month { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; display: flex; flex-direction: column; gap: 6px; min-height: 108px; }
+.fin-month.locked { background: rgba(42,33,133,0.06); border-color: rgba(42,33,133,0.3); }
+.fin-month.current { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); }
+.fin-month.behind { border-color: rgba(217,45,60,0.5); }
+.fin-month-name { font-weight: 700; text-transform: capitalize; }
+.fin-month-meta { font-size: 12px; color: var(--ink-soft); }
+.fin-month button { margin-top: auto; padding: 6px 10px; font-size: 12px; }
+
+/* ---- Partenaires (grand livre tiers) ---- */
+.fin-partner-toggle { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; }
+.fin-partner-toggle button { border: none; background: #fff; padding: 8px 12px; font-size: 13px; color: var(--ink-soft); border-radius: 0; }
+.fin-partner-toggle button.active { background: var(--iris); color: #fff; }
+
+/* ---- Impayés par ancienneté (Factures) ---- */
+.fin-buckets { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.fin-bucket { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 12px 14px; border-left: 3px solid var(--line); }
+.fin-bucket.b1 { border-left-color: var(--iris); }
+.fin-bucket.b2 { border-left-color: var(--orange); }
+.fin-bucket.b3 { border-left-color: var(--red); }
+.fin-bucket .num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 20px; }
+.fin-bucket .label { font-size: 11px; text-transform: uppercase; color: var(--ink-soft); font-weight: 600; }
+
+/* ---- Pagination commune ---- */
+.fin-pagination { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+
+/* ---- Fiche (RecordDrawer) : sections ---- */
+.fin-drawer-section { margin: 14px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); font-weight: 700; }
+.fin-drawer-lines { border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; }
+.fin-drawer-line { display: grid; grid-template-columns: 1fr auto auto; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--cream-dim); font-size: 13px; align-items: center; }
+.fin-drawer-line:last-child { border-bottom: none; }
+.fin-drawer-line .amt { min-width: 84px; text-align: right; font-variant-numeric: tabular-nums; }
+.fin-drawer-total { display: flex; justify-content: space-between; padding: 10px 12px; background: var(--cream-dim); font-weight: 700; font-size: 13px; }

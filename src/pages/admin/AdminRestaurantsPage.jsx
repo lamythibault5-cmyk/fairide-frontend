@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import { ErrorCard, LoadMore, ResultCount } from '../../components/admin/AdminListTools';
+import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -15,13 +17,22 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
+import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
+const PAGE_SIZE = 100;
+// Tris proposés par le serveur (GET /admin/restaurants?sort=…) : portent sur TOUS les restaurants.
+const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'commune', 'revenue', 'orders'];
 // Restaurant test : de démonstration (restaurants.is_demo, créés par les seeds) ou tenu par un compte QA (+qa).
 // Les autres sont de vraies inscriptions : visibles des clients seulement une fois publiées (publicListed).
 const estTest = (r) => !!r.isDemo || estCompteTest(r);
+function natureOkResto(nature, r) {
+  if (nature === 'all') return true;
+  if (nature === 'deleted') return estCompteSupprime(r);
+  if (nature === 'test') return estTest(r) && !estCompteSupprime(r);
+  return !estTest(r) && !estCompteSupprime(r);
+}
 
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminRestos.filterPending'), approved: tr('adminRestos.filterApproved'), blocked: tr('adminRestos.filterBlocked') });
 
@@ -69,26 +80,28 @@ export default function AdminRestaurantsPage() {
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
-  const [restaurants, setRestaurants] = useState(null);
-  const [search, setSearch] = useState(location.state?.presetSearch || '');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
-  const [filtre, setFiltre] = useState('all');
-  const [nature, setNature] = useState('all'); // all | real | test
+  const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
+  const [nature, setNature] = useState('all'); // all | real | test | deleted
   const [commune, setCommune] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [groupBy, setGroupBy] = useState('');
+  const [triServeur, setTriServeur] = useState('created_desc');
   const { sort, toggle } = useTableSort('revenue');
+  const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 
-  const load = () => api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Recherche, tri et statut admin sont faits par le serveur ; nature / commune / cuisine / « carte »
+  // affinent les lignes chargées.
+  const liste = useServerList('/admin/restaurants', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
+  const { rows: restaurants, setRows: setRestaurants, total, loading, error, reload: load, loadMore } = liste;
 
   function openRestaurant(r) {
     setSelected(r);
@@ -101,7 +114,7 @@ export default function AdminRestaurantsPage() {
   async function setListing(id, publicListed) {
     try {
       await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
-      setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, publicListed } : r)));
+      setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, publicListed } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, publicListed }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
       toast(publicListed ? tr('adminRestos.publishedToast') : tr('adminRestos.unpublishedToast'));
@@ -111,7 +124,7 @@ export default function AdminRestaurantsPage() {
   async function setStatus(id, status) {
     try {
       await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status } });
-      setRestaurants((prev) => prev.map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
+      setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
@@ -120,15 +133,24 @@ export default function AdminRestaurantsPage() {
     }
   }
 
+  // Toute action qui change ce que voient les clients (publication, approbation) ou bloque un commerce
+  // passe par une confirmation, comme partout dans l'ERP.
   function askSuspend(r) {
     setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: r.name }), message: tr('adminRestos.suspendBody'), danger: true, run: () => setStatus(r.id, 'blocked') });
   }
   function askReactivate(r) {
     setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
   }
+  function askApprove(r) {
+    setConfirmAction({ title: tr('adminRestos.confirmApprove', { name: r.name }), message: tr('adminRestos.approveBody'), run: () => setStatus(r.id, 'approved') });
+  }
+  function askListing(r) {
+    const publier = !r.publicListed;
+    setConfirmAction({ title: publier ? tr('adminRestos.confirmPublish', { name: r.name }) : tr('adminRestos.confirmUnpublish', { name: r.name }), message: publier ? tr('adminRestos.publishBody') : tr('adminRestos.unpublishBody'), danger: !publier, run: () => setListing(r.id, publier) });
+  }
   async function deleteRestaurant(r) {
     const res = await api(`/admin/restaurants/${r.id}`, { method: 'DELETE', token, body: { deleteOwner: true } });
-    setRestaurants((prev) => prev.filter((x) => x.id !== r.id));
+    setRestaurants((prev) => (prev || []).filter((x) => x.id !== r.id));
     if (selected?.id === r.id) { setSelected(null); setDetail(null); }
     toast(res.ownerDeleted ? tr('adminRestos.toastDeletedWithOwner', { n: res.deletedOrders, email: res.ownerEmail || '' }) : tr('adminRestos.toastDeleted', { n: res.deletedOrders }));
   }
@@ -147,30 +169,29 @@ export default function AdminRestaurantsPage() {
   }
 
   function exportCsv() {
-    if (!restaurants || !restaurants.length) { toast(tr('adminCommon.nothingToExport')); return; }
-    downloadCsv(`restaurants-${Date.now()}.csv`, restaurants, [
-      { label: 'Nom', get: (r) => r.name },
-      { label: 'Commune', get: (r) => r.commune },
-      { label: 'Cuisine', get: (r) => r.cuisine },
-      { label: 'Statut', get: (r) => r.businessStatus },
-      { label: 'Responsable', get: (r) => r.responsibleName },
-      { label: 'Email', get: (r) => r.ownerEmail },
+    if (!visibles.length) { toast(tr('adminCommon.nothingToExport')); return; }
+    downloadCsv(`restaurants-${Date.now()}.csv`, visibles, [
+      { label: tr('adminCommon.name'), get: (r) => r.name },
+      { label: tr('adminCommon.commune'), get: (r) => r.commune },
+      { label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
+      { label: tr('adminCommon.status'), get: (r) => r.businessStatus },
+      { label: tr('adminCommon.owner'), get: (r) => r.responsibleName },
+      { label: tr('adminCommon.email'), get: (r) => r.ownerEmail },
       { label: tr('adminRestos.restoPhone'), get: (r) => r.restaurantPhone },
       { label: tr('adminRestos.ownerPhoneCol'), get: (r) => r.ownerPhone },
       { label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress },
       { label: tr('adminRestos.companyNumber'), get: (r) => r.companyNumber },
-      { label: 'TVA', get: (r) => r.vatNumber },
-      { label: 'Commandes', get: (r) => r.orderCount },
+      { label: tr('adminCommon.vat'), get: (r) => r.vatNumber },
+      { label: tr('adminCommon.orders'), get: (r) => r.orderCount },
       { label: 'CA', get: (r) => r.revenue },
       { label: tr('adminRestos.commissionGenerated'), get: (r) => r.commissionGenerated },
-      { label: 'Panier moyen', get: (r) => r.avgBasket },
-      { label: "Taux d'annulation", get: (r) => r.cancellationRate },
-      { label: "Taux d'acceptation", get: (r) => r.acceptanceRate },
+      { label: tr('adminCommon.avgBasket'), get: (r) => r.avgBasket },
+      { label: tr('adminCommon.cancellationRate'), get: (r) => r.cancellationRate },
+      { label: tr('adminRestos.acceptanceRate'), get: (r) => r.acceptanceRate },
       { label: tr('adminRestos.colAvgPrep'), get: (r) => r.avgPrepMinutes }
     ]);
   }
 
-  const filtered = filterBySearch(restaurants, search, (r) => [r.name, r.commune, r.cuisine, r.ownerEmail, r.fullAddress, r.restaurantPhone, r.ownerPhone]);
   const communes = useMemo(() => [...new Set((restaurants || []).map((r) => r.commune).filter(Boolean))].sort(), [restaurants]);
   const cuisines = useMemo(() => [...new Set((restaurants || []).map((r) => r.cuisine).filter(Boolean))].sort(), [restaurants]);
   const colonnes = [
@@ -181,7 +202,7 @@ export default function AdminRestaurantsPage() {
     { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '—'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
     { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '—', sortValue: (r) => r.fullAddress || '' },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
-    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${r.rating.toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
+    { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${Number(r.rating || 0).toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
     { key: 'revenue', label: 'CA', get: (r) => money(r.revenue), sortValue: (r) => r.revenue, align: 'right', sum: true },
     { key: 'commissionGenerated', label: tr('adminCommon.commission'), get: (r) => money(r.commissionGenerated), sortValue: (r) => r.commissionGenerated, align: 'right', sum: true },
@@ -193,15 +214,16 @@ export default function AdminRestaurantsPage() {
     commune: { get: (r) => r.commune || '—' }, cuisine: { get: (r) => r.cuisine || '—' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || (filtre === 'carte' ? !!r.conciergeStatus : r.adminStatus === filtre)) && (nature === 'all' || (nature === 'test') === estTest(r)) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) ? 0 : 1), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [restaurants, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) || estCompteSupprime(r) ? 0 : 1), deleted: a.deleted + (estCompteSupprime(r) ? 1 : 0), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, deleted: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  const tousCharges = restaurants && restaurants.length >= total;
 
   return (
     <div>
       <AdminPageHeader module="restaurants" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
       {restaurants && (
         <div className="stat-grid">
-          <div className="stat-card highlight"><div className="num">{restaurants.length}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
+          <div className="stat-card highlight"><div className="num">{total}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
           <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
@@ -209,6 +231,7 @@ export default function AdminRestaurantsPage() {
           <div className="stat-card"><div className="num">{money(kpi.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
         </div>
       )}
+      {restaurants && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: restaurants.length, total })}</p>}
       <div className="admin-control-panel">
         <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
@@ -216,13 +239,12 @@ export default function AdminRestaurantsPage() {
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}{k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : ''}</div>
           ))}
         </div>
-        <div className="role-pick" style={{ margin: 0 }}>
-          {[['all', tr('adminCommon.allM')], ['real', tr('adminRestos.filterReal')], ['test', tr('adminRestos.filterTest')]].map(([k, l]) => (
-            <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => setNature(k)}>{l}{k === 'real' && kpi.real > 0 ? ` (${kpi.real})` : ''}</div>
-          ))}
-        </div>
+        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminRestos.filterReal'), test: tr('adminRestos.filterTest'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
         <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCommunes')}</option>{communes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCuisines')}</option>{cuisines.map((c) => <option key={c} value={c}>{c}</option>)}</select>
+        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
+          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
+        </select>
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -232,11 +254,12 @@ export default function AdminRestaurantsPage() {
             <option value="business">{tr('adminCommon.groupBy')} : {tr('adminRestos.groupBusiness')}</option>
           </select>
         )}
-        <span className="small">{tr('adminCommon.countOf', { n: visibles.length, total: (restaurants || []).length })}</span>
+        <ResultCount n={visibles.length} total={total} />
       </div>
       {restaurants && nature !== 'test' && <p className="small" style={{ margin: '-4px 0 12px' }}>ℹ️ {tr('adminRestos.listingHint')}</p>}
-      {!restaurants && <SkeletonCards count={3} />}
-      {restaurants && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
+      {error && <ErrorCard message={error} onRetry={load} />}
+      {!restaurants && !error && <SkeletonCards count={3} />}
+      {restaurants && visibles.length === 0 && !error && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {restaurants && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openRestaurant}
           rowClassName={(r) => (estTest(r) ? 'row-test-account' : '')} showTotals format={{ revenue: money, commissionGenerated: money }} emptyLabel={tr('adminCommon.noResults')} />
@@ -254,7 +277,7 @@ export default function AdminRestaurantsPage() {
                 {r.conciergeStatus && <span className="pill gold">{r.conciergeStatus === 'en_cours' ? tr('adminRestos.menuInProgressPill') : tr('adminRestos.menuRequestPill')}</span>}
               </div>
             </div>
-            <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
+            <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
             <ContactCommerce r={r} tr={tr} />
             <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '—', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
             {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small">🍽️ {tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
@@ -267,8 +290,8 @@ export default function AdminRestaurantsPage() {
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
               <Link to={`/admin/restaurants/${r.id}/menu`} className={r.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
-              {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setListing(r.id, !r.publicListed)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
-              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+              {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askListing(r)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
+              {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askApprove(r)}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
               {r.adminStatus === 'blocked' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askReactivate(r)}>{tr('adminCommon.reactivate')}</button>}
               <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13, marginLeft: 'auto' }} onClick={() => askDelete(r)}>{tr('adminRestos.deleteRestaurant')}</button>
@@ -276,13 +299,15 @@ export default function AdminRestaurantsPage() {
           </div>
         );
       })}
+      {restaurants && <LoadMore loaded={restaurants.length} total={total} loading={loading} onMore={loadMore} />}
 
       {selected && (
         <RestaurantDetailModal
           selected={selected} detail={detail} orders={orders}
           onClose={() => setSelected(null)}
           onSuspend={() => askSuspend(detail)}
-          onToggleListing={() => setListing(detail.id, !detail.publicListed)}
+          onApprove={() => askApprove(detail)}
+          onToggleListing={() => askListing(detail)}
           onReactivate={() => askReactivate(detail)}
           onDelete={() => askDelete(detail)}
           onChanged={refreshDetail}
@@ -302,7 +327,7 @@ export default function AdminRestaurantsPage() {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -357,7 +382,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   return createPortal(
     <RecordDrawer
       title={selected.name}
-      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${detail.rating.toFixed(1)}★` : ''}
+      subtitle={detail ? `${detail.commune}${detail.neighborhood ? ` (${detail.neighborhood})` : ''} · ${detail.cuisine} · ${Number(detail.rating || 0).toFixed(1)}★` : ''}
       badge={biz ? <span className="pill" style={{ color: biz.color }}>{biz.label}</span> : null}
       actions={<a href={`/restaurants/${selected.id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>}
       tabs={[
@@ -394,6 +419,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
             {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
+            {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}

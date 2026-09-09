@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import AccountsTable from '../../components/admin/AccountsTable';
+import { ErrorCard } from '../../components/admin/AdminListTools';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import { money } from './adminUtils';
 import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleBadge } from './adminModules';
 
 // Accueil de l'ERP, sur le modèle du menu d'applications d'Odoo : ce qui réclame une action
@@ -12,11 +14,12 @@ import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleBadge } from './admi
 export default function AdminHomePage() {
   const { t: tr } = useLanguage();
   const { user } = useAuth();
-  const { overview } = useAdminOverview();
+  const { overview, error, refresh } = useAdminOverview();
   const attention = attentionItems(overview);
   const heure = new Date().getHours();
   const salut = heure < 12 ? tr('adminHome.morning') : heure < 18 ? tr('adminHome.afternoon') : tr('adminHome.evening');
   const prenom = (user?.firstName || user?.name || '').split(' ')[0];
+  const n = (v) => Number(v) || 0;
 
   return (
     <div className="admin-home">
@@ -29,6 +32,9 @@ export default function AdminHomePage() {
           <Link className="btn-teal" to="/admin/support?new=1">{tr('adminHome.quickTicket')}</Link>
           <Link className="btn-outline" to="/admin/tasks?new=1">{tr('adminHome.quickTask')}</Link>
           <Link className="btn-outline" to="/admin/crm?new=1">{tr('adminHome.quickProspect')}</Link>
+          <Link className="btn-outline" to="/admin/orders?today=1">{tr('adminHome.quickTodayOrders')}</Link>
+          <Link className="btn-outline" to="/admin/accounting?tab=expenses">{tr('adminHome.quickExpense')}</Link>
+          <Link className="btn-outline" to="/admin/accounting?tab=journal&new=1">{tr('adminHome.quickEntry')}</Link>
         </div>
       </div>
 
@@ -37,7 +43,9 @@ export default function AdminHomePage() {
           <h3 style={{ margin: 0, fontSize: 15 }}>{tr('adminHome.attentionTitle')}</h3>
           {overview && <span className="small">{tr('adminHome.liveCounts')}</span>}
         </div>
-        {!overview && <p className="small" style={{ margin: '8px 0 0' }}>{tr('adminCommon.loading')}</p>}
+        {!overview && !error && <p className="small" style={{ margin: '8px 0 0' }}>{tr('adminCommon.loading')}</p>}
+        {error && !overview && <div style={{ marginTop: 10 }}><ErrorCard message={error} onRetry={refresh} /></div>}
+        {error && overview && <p className="small" style={{ margin: '8px 0 0', color: 'var(--red)' }}>{tr('adminHome.staleCounts')} <button type="button" className="btn-ghost" onClick={refresh}>{tr('adminCommon.retry')}</button></p>}
         {overview && attention.length === 0 && <p className="admin-home-clear">✅ {tr('adminHome.allClear')}</p>}
         {overview && attention.length > 0 && (
           <ul className="admin-home-attention-list">
@@ -54,10 +62,12 @@ export default function AdminHomePage() {
         )}
         {overview && (
           <div className="admin-home-pulse small">
-            <span>🟢 {tr('adminHome.pulseInProgress', { n: overview.orders.inProgress })}</span>
-            <span>🛵 {tr('adminHome.pulseDrivers', { n: overview.drivers.available })}</span>
-            <span>🍽️ {tr('adminHome.pulseReservations', { n: overview.reservations.today })}</span>
-            <span>🏪 {tr('adminHome.pulseRestaurants', { n: overview.restaurants.approved })}</span>
+            <span>🟢 {tr('adminHome.pulseInProgress', { n: n(overview.orders?.inProgress) })}</span>
+            <span>🛵 {tr('adminHome.pulseDrivers', { n: n(overview.drivers?.available) })}</span>
+            {overview.drivers?.online !== undefined && <span>📡 {tr('adminHome.pulseDriversOnline', { n: n(overview.drivers?.online) })}</span>}
+            <span>🍽️ {tr('adminHome.pulseReservations', { n: n(overview.reservations?.today) })}</span>
+            <span>🏪 {tr('adminHome.pulseRestaurants', { n: n(overview.restaurants?.approved) })}</span>
+            {overview.today && <span>📦 {tr('adminHome.pulseToday', { n: n(overview.today.orders), gmv: money(overview.today.gmv) })}</span>}
           </div>
         )}
         {overview && <AccountsTable accounts={overview.accounts} />}

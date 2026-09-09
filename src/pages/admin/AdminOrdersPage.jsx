@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
@@ -14,6 +14,7 @@ import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
+import { ErrorCard, Pager, ResultCount, SelectBox, SelectionBar, runForEach, selectionColumn, useSelection } from '../../components/admin/AdminListTools';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
@@ -22,12 +23,40 @@ const filters = (tr) => [
   ...ORDER_STATUSES.map((s) => ({ key: s, label: ORDER_STATUS_LABELS[s] })),
   { key: 'noDriver', label: tr('adminCommon.noDriver') },
   { key: 'refunded', label: tr('adminOrders.filterRefunded') },
-  { key: 'late', label: tr('adminCommon.late') }
+  { key: 'late', label: tr('adminCommon.late') },
+  { key: 'stale', label: tr('adminOrders.filterStalePayment') },
+  { key: 'stuck', label: tr('adminOrders.filterStuck') }
 ];
+// Filtres « drapeau » (?x=1 dans l'adresse), à côté de ?status=.
+const DRAPEAUX = ['noDriver', 'refunded', 'late', 'stale', 'stuck'];
 
 const PAGE_SIZE = 50;
 const TYPE_LABELS = (tr) => ({ delivery: tr('adminOrders.typeDelivery'), pickup: tr('adminOrders.typePickup'), dine_in: tr('adminOrders.typeDineIn') });
 const KANBAN_COLORS = { nouveau: 'var(--orange)', preparation: 'var(--blue)', pret: 'var(--iris)', livraison: 'var(--purple)', livre: '#3FB950', refuse: 'var(--red)', annule: 'var(--ink-faint)' };
+// Colonnes dont le tri est fait par le serveur (GET /admin/orders?sort=…) : le tri porte alors sur
+// TOUTES les commandes filtrées, pas seulement la page affichée. Les autres colonnes trient la page.
+const TRI_SERVEUR = { createdAt: (dir) => (dir === 'asc' ? 'created_asc' : 'created_desc'), total: (dir) => (dir === 'asc' ? 'total_asc' : 'total_desc'), status: () => 'status', restaurantName: () => 'restaurant', clientName: () => 'client' };
+const aujourdHui = () => new Date().toISOString().slice(0, 10);
+
+// Colonnes du CSV (liste et export complet).
+const colonnesCsv = (tr) => [
+  { label: 'ID', get: (o) => o.id },
+  { label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt) },
+  { label: tr('adminCommon.restaurant'), get: (o) => o.restaurantName },
+  { label: tr('adminCommon.client'), get: (o) => o.clientName },
+  { label: tr('adminCommon.driver'), get: (o) => o.driverName || '' },
+  { label: tr('adminCommon.type'), get: (o) => o.orderType },
+  { label: tr('adminCommon.status'), get: (o) => o.status },
+  { label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? 'oui' : 'non') },
+  { label: tr('adminOrders.foodSubtotal'), get: (o) => o.subtotal },
+  { label: tr('adminOrders.delivery'), get: (o) => o.deliveryFee },
+  { label: tr('adminCommon.total'), get: (o) => o.total },
+  { label: tr('adminOrders.restoCommission'), get: (o) => o.commission },
+  { label: tr('adminOrders.deliveryShare'), get: (o) => o.deliveryFairideShare },
+  { label: tr('adminOrders.colFairide'), get: (o) => o.fairideTotalRevenue },
+  { label: tr('adminOrders.colDueRestaurant'), get: (o) => o.restaurantDue },
+  { label: tr('adminOrders.colDueDriver'), get: (o) => o.driverDue }
+];
 
 export default function AdminOrdersPage() {
   const { t: tr } = useLanguage();
@@ -35,6 +64,7 @@ export default function AdminOrdersPage() {
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState(null);
+  const [erreur, setErreur] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const [qInput, setQInput] = useState(searchParams.get('q') || '');
@@ -45,44 +75,64 @@ export default function AdminOrdersPage() {
   const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
   const [groupBy, setGroupBy] = useState('');
   const { sort, toggle } = useTableSort('createdAt');
-  const EXTRA = ['type', 'from', 'to', 'min', 'max'];
+  const [exporting, setExporting] = useState(false);
+  const sel = useSelection(orders);
+  const [bulk, setBulk] = useState(null); // { type: 'cancel' | 'assign', driver? }
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [drivers, setDrivers] = useState(null);
+  const [bulkDriverId, setBulkDriverId] = useState('');
+  const EXTRA = ['type', 'from', 'to', 'min', 'max', 'today'];
   function setParam(k, v) { const next = Object.fromEntries([...searchParams.entries()]); if (v) next[k] = v; else delete next[k]; setSearchParams(next); }
 
-  const activeFilter = searchParams.get('status')
-    || (searchParams.get('noDriver') ? 'noDriver' : searchParams.get('refunded') ? 'refunded' : searchParams.get('late') ? 'late' : '');
+  const activeFilter = searchParams.get('status') || DRAPEAUX.find((k) => searchParams.get(k)) || '';
+  const triServeur = TRI_SERVEUR[sort.key] ? TRI_SERVEUR[sort.key](sort.dir) : null;
 
-  function load() {
-    setOrders(null);
+  // Paramètres serveur = filtres de l'adresse + recherche (+ tri quand la colonne s'y prête).
+  function paramsServeur() {
     const params = new URLSearchParams();
-    params.set('limit', PAGE_SIZE);
-    params.set('offset', page * PAGE_SIZE);
     const status = searchParams.get('status');
     if (status) params.set('status', status);
-    if (searchParams.get('noDriver')) params.set('noDriver', '1');
-    if (searchParams.get('refunded')) params.set('refunded', '1');
-    if (searchParams.get('late')) params.set('late', '1');
+    for (const k of DRAPEAUX) if (searchParams.get(k)) params.set(k, '1');
     if (searchParams.get('restaurantId')) params.set('restaurantId', searchParams.get('restaurantId'));
     if (searchParams.get('driverId')) params.set('driverId', searchParams.get('driverId'));
     if (searchParams.get('clientId')) params.set('clientId', searchParams.get('clientId'));
     if (searchParams.get('type')) params.set('orderType', searchParams.get('type'));
+    // « Commandes du jour » (accueil, tableau de bord) = du jour même, sans autre borne.
+    if (searchParams.get('today')) { params.set('dateFrom', aujourdHui()); params.set('dateTo', aujourdHui()); }
     if (searchParams.get('from')) params.set('dateFrom', searchParams.get('from'));
     if (searchParams.get('to')) params.set('dateTo', searchParams.get('to'));
     if (searchParams.get('min')) params.set('minAmount', searchParams.get('min'));
     if (searchParams.get('max')) params.set('maxAmount', searchParams.get('max'));
     if (q) params.set('q', q);
-    api(`/admin/orders?${params.toString()}`, { token }).then((r) => { setOrders(r.rows); setTotal(r.total); }).catch((e) => toast(e.message));
+    if (triServeur) params.set('sort', triServeur);
+    return params;
   }
 
-  useEffect(load, [searchParams.toString(), q, page]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setPage(0); }, [searchParams.toString(), q]);
+  function load() {
+    setOrders(null); setErreur(null);
+    const params = paramsServeur();
+    params.set('limit', PAGE_SIZE);
+    params.set('offset', page * PAGE_SIZE);
+    api(`/admin/orders?${params.toString()}`, { token }).then((r) => { setOrders(r.rows); setTotal(r.total); }).catch((e) => setErreur(e.message));
+  }
+
+  useEffect(load, [searchParams.toString(), q, page, triServeur]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setPage(0); }, [searchParams.toString(), q, triServeur]);
+  // `?id=` (lien depuis un ticket, une tâche, un document…) : ouvre directement cette commande, puis
+  // retire le paramètre pour qu'un rechargement ne la rouvre pas.
+  useEffect(() => {
+    const id = searchParams.get('id');
+    if (!id) return;
+    api(`/admin/orders/${id}`, { token }).then((d) => { setSelected({ id, restaurantName: d.restaurantName, status: d.status, restaurantId: d.restaurantId }); setDetail(d); }).catch((e) => toast(e.message));
+    const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true });
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function setFilter(key) {
     const next = {};
     if (q) next.q = q;
     for (const k of EXTRA) if (searchParams.get(k)) next[k] = searchParams.get(k);
-    if (key === 'noDriver') next.noDriver = '1';
-    else if (key === 'refunded') next.refunded = '1';
-    else if (key === 'late') next.late = '1';
+    for (const k of ['restaurantId', 'driverId', 'clientId']) if (searchParams.get(k)) next[k] = searchParams.get(k);
+    if (DRAPEAUX.includes(key)) next[key] = '1';
     else if (key) next.status = key;
     setSearchParams(next);
   }
@@ -97,33 +147,64 @@ export default function AdminOrdersPage() {
     if (selected) api(`/admin/orders/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
   }
 
-  function exportCsv() {
+  // Export CSV de TOUT le jeu filtré (GET /admin/orders?export=1, jusqu'à 5000 lignes), pas seulement
+  // de la page affichée.
+  async function exportCsv() {
     if (!orders || !orders.length) { toast(tr('adminCommon.nothingToExport')); return; }
-    downloadCsv(`commandes-${Date.now()}.csv`, orders, [
-      { label: 'ID', get: (o) => o.id },
-      { label: 'Date', get: (o) => fmtDateTime(o.createdAt) },
-      { label: 'Restaurant', get: (o) => o.restaurantName },
-      { label: 'Client', get: (o) => o.clientName },
-      { label: 'Livreur', get: (o) => o.driverName || '' },
-      { label: 'Statut', get: (o) => o.status },
-      { label: 'Sous-total', get: (o) => o.subtotal },
-      { label: 'Livraison', get: (o) => o.deliveryFee },
-      { label: 'Total', get: (o) => o.total },
-      { label: 'Commission resto', get: (o) => o.commission },
-      { label: 'Part Fairide livraison', get: (o) => o.deliveryFairideShare },
-      { label: 'Revenu Fairide', get: (o) => o.fairideTotalRevenue },
-      { label: tr('adminOrders.colDueRestaurant'), get: (o) => o.restaurantDue },
-      { label: tr('adminOrders.colDueDriver'), get: (o) => o.driverDue }
-    ]);
+    setExporting(true);
+    try {
+      const params = paramsServeur();
+      params.set('export', '1');
+      const r = await api(`/admin/orders?${params.toString()}`, { token });
+      const lignes = r.rows || [];
+      downloadCsv(`commandes-${Date.now()}.csv`, lignes, colonnesCsv(tr));
+      toast(tr('adminOrders.toastExported', { n: lignes.length }));
+    } catch (e) { toast(e.message); } finally { setExporting(false); }
   }
+
+  function loadDrivers() {
+    if (drivers) return;
+    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message));
+  }
+
+  // Actions groupées : annulation ou réaffectation d'un livreur, commande par commande (le serveur n'a
+  // pas de route « en lot » pour les commandes) — chaque échec est compté, la liste est rechargée.
+  async function runBulk() {
+    if (!bulk) return;
+    setBulkBusy(true);
+    try {
+      const { ok, erreurs } = bulk.type === 'cancel'
+        ? await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/status`, { method: 'PATCH', token, body: { status: 'annule' } }))
+        : await runForEach(sel.ids, (id) => api(`/admin/orders/${id}/driver`, { method: 'PATCH', token, body: { driverId: bulk.driver.id } }));
+      toast(erreurs.length ? tr('adminCommon.bulkPartial', { ok, failed: erreurs.length, error: erreurs[0] }) : tr('adminCommon.bulkDone', { n: ok }));
+      sel.clear(); load();
+    } finally { setBulkBusy(false); setBulk(null); }
+  }
+
+  const colonnes = [
+    selectionColumn(sel, tr('adminCommon.select')),
+    { key: 'createdAt', label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt), sortValue: (o) => o.createdAt },
+    { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (o) => <b>{o.restaurantName}</b>, sortValue: (o) => o.restaurantName },
+    { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
+    { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '—' },
+    { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
+    { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
+    { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✅' : '⏳'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
+    { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
+    { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
+  ];
 
   return (
     <div>
-      <AdminPageHeader module="orders" />
-      <div className="row" style={{ gap: 8, marginBottom: 10 }}>
-        <input placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1 }} />
-        <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={[{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }]} />
-        <button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
+      <AdminPageHeader module="orders" actions={
+        <>
+          <ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={[{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }]} />
+          <button className="btn-outline" disabled={exporting} onClick={exportCsv} title={tr('adminOrders.exportAllHint')}>{exporting ? '...' : tr('adminCommon.csv')}</button>
+        </>
+      } />
+      <div className="admin-control-panel">
+        <input placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <ResultCount n={total} />
       </div>
       <div className="role-pick" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
         {filters(tr).map((f) => (
@@ -137,11 +218,12 @@ export default function AdminOrdersPage() {
           <option value="pickup">{tr('adminOrders.typePickup')}</option>
           <option value="dine_in">{tr('adminOrders.typeDineIn')}</option>
         </select>
+        <label className="small admin-inline-field"><input type="checkbox" checked={!!searchParams.get('today')} onChange={(e) => setParam('today', e.target.checked ? '1' : '')} /> {tr('adminOrders.todayOnly')}</label>
         <label className="small admin-inline-field">{tr('adminOrders.dateFrom')} <input type="date" value={searchParams.get('from') || ''} onChange={(e) => setParam('from', e.target.value)} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.dateTo')} <input type="date" value={searchParams.get('to') || ''} onChange={(e) => setParam('to', e.target.value)} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={searchParams.get('min') || ''} onChange={(e) => setParam('min', e.target.value)} style={{ width: 80 }} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={searchParams.get('max') || ''} onChange={(e) => setParam('max', e.target.value)} style={{ width: 80 }} /></label>
-        {EXTRA.some((k) => searchParams.get(k)) && <button type="button" className="btn-ghost" onClick={() => { const next = Object.fromEntries([...searchParams.entries()]); for (const k of EXTRA) delete next[k]; setSearchParams(next); }}>✕ {tr('adminOrders.clearFilters')}</button>}
+        {[...EXTRA, 'restaurantId', 'driverId', 'clientId'].some((k) => searchParams.get(k)) && <button type="button" className="btn-ghost" onClick={() => { const next = Object.fromEntries([...searchParams.entries()]); for (const k of [...EXTRA, 'restaurantId', 'driverId', 'clientId']) delete next[k]; setSearchParams(next); }}>✕ {tr('adminOrders.clearFilters')}</button>}
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -151,12 +233,22 @@ export default function AdminOrdersPage() {
             <option value="type">{tr('adminCommon.groupBy')} : {tr('adminCommon.type')}</option>
           </select>
         )}
-        <span className="small" style={{ marginLeft: 'auto' }}>{tr('adminOrders.ordersCount', { n: total })}</span>
+        {mode === 'table' && <span className="small" style={{ opacity: 0.7 }}>{triServeur ? tr('adminCommon.sortServer') : tr('adminCommon.sortPageOnly')}</span>}
       </div>
 
-      {!orders && <SkeletonCards count={4} />}
+      <SelectionBar sel={sel}>
+        <select value={bulkDriverId} onChange={(e) => setBulkDriverId(e.target.value)} onFocus={loadDrivers} style={{ maxWidth: 220 }}>
+          <option value="">{tr('adminOrders.reassignTo')}</option>
+          {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name} ({d.activityStatus})</option>)}
+        </select>
+        <button type="button" className="btn-outline" disabled={!bulkDriverId} onClick={() => { const driver = drivers?.find((d) => d.id === bulkDriverId); if (driver) setBulk({ type: 'assign', driver }); }}>{tr('adminOrders.bulkAssign')}</button>
+        <button type="button" className="btn-danger-ghost" onClick={() => setBulk({ type: 'cancel' })}>{tr('adminOrders.bulkCancel')}</button>
+      </SelectionBar>
+
+      {erreur && <ErrorCard message={erreur} onRetry={load} />}
+      {!orders && !erreur && <SkeletonCards count={4} />}
       {orders && orders.length === 0 && <div className="empty">{tr('adminOrders.noneForFilter')}</div>}
-      {orders && mode === 'kanban' && (
+      {orders && mode === 'kanban' && orders.length > 0 && (
         <KanbanBoard
           columns={ORDER_STATUSES.filter((st) => !activeFilter || !ORDER_STATUSES.includes(activeFilter) || st === activeFilter).map((st) => ({ key: st, label: ORDER_STATUS_LABELS[st] || st, color: KANBAN_COLORS[st] }))}
           items={orders}
@@ -175,26 +267,17 @@ export default function AdminOrdersPage() {
       )}
       {orders && mode === 'table' && orders.length > 0 && (
         <AdminDataTable
-          columns={[
-            { key: 'createdAt', label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt), sortValue: (o) => o.createdAt },
-            { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (o) => <b>{o.restaurantName}</b>, sortValue: (o) => o.restaurantName },
-            { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
-            { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '—' },
-            { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
-            { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
-            { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✅' : '⏳'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
-            { key: 'total', label: tr('adminCommon.total'), get: (o) => money(o.total), sortValue: (o) => o.total, align: 'right', sum: true },
-            { key: 'fairideTotalRevenue', label: tr('adminOrders.colFairide'), get: (o) => money(o.fairideTotalRevenue), sortValue: (o) => o.fairideTotalRevenue, align: 'right', sum: true }
-          ]}
+          columns={colonnes}
           rows={orders} sort={sort} onSort={toggle} onRowClick={openOrder} showTotals format={{ total: money, fairideTotalRevenue: money }}
+          rowClassName={(o) => (sel.isSelected(o.id) ? 'is-selected' : '')}
           groupBy={groupBy === 'restaurant' ? { get: (o) => o.restaurantName } : groupBy === 'status' ? { get: (o) => ORDER_STATUS_LABELS[o.status] || o.status } : groupBy === 'day' ? { get: (o) => new Date(o.createdAt).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' }) } : groupBy === 'type' ? { get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType } : null}
           emptyLabel={tr('adminOrders.noneForFilter')}
         />
       )}
       {orders && mode === 'list' && orders.map((o) => (
-        <div className="card order-card-clickable" key={o.id} onClick={() => openOrder(o)}>
+        <div className={`card order-card-clickable${sel.isSelected(o.id) ? ' is-selected' : ''}`} key={o.id} onClick={() => openOrder(o)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{o.restaurantName}</b>
+            <span className="admin-card-select"><SelectBox sel={sel} id={o.id} label={tr('adminCommon.select')} /><b>{o.restaurantName}</b></span>
             <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>
           </div>
           <div className="small">
@@ -210,24 +293,27 @@ export default function AdminOrdersPage() {
           <div className="small" style={{ opacity: 0.6, marginTop: 2 }}>{fmtDateTime(o.createdAt)}</div>
         </div>
       ))}
-      {total > PAGE_SIZE && (
-        <div className="row" style={{ justifyContent: 'center', gap: 12, marginTop: 12 }}>
-          <button className="btn-ghost" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>{tr('adminCommon.previous')}</button>
-          <span className="small">{tr('adminCommon.pageOf', { page: page + 1, pages: Math.ceil(total / PAGE_SIZE) })} {tr('adminOrders.ordersCount', { n: total })}</span>
-          <button className="btn-ghost" disabled={(page + 1) * PAGE_SIZE >= total} onClick={() => setPage((p) => p + 1)}>{tr('adminCommon.next')}</button>
-        </div>
-      )}
+      <Pager page={page} pageSize={PAGE_SIZE} total={total} onPage={setPage} />
 
       <ConfirmDialog
         open={!!kanbanMove}
         title={tr('adminOrders.confirmChangeStatus')}
-        message={kanbanMove ? tr('adminOrders.confirmChangeStatusBody', { from: kanbanMove.order.status, to: kanbanMove.status }) : ''}
+        message={kanbanMove ? tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[kanbanMove.order.status] || kanbanMove.order.status, to: ORDER_STATUS_LABELS[kanbanMove.status] || kanbanMove.status }) : ''}
         danger={kanbanMove?.status === 'annule'}
         onConfirm={async () => {
           try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
           catch (e) { toast(e.message); } finally { setKanbanMove(null); }
         }}
         onCancel={() => setKanbanMove(null)}
+      />
+      <ConfirmDialog
+        open={!!bulk}
+        title={bulk?.type === 'cancel' ? tr('adminOrders.bulkCancelTitle', { n: sel.count }) : tr('adminOrders.bulkAssignTitle', { n: sel.count })}
+        message={bulk?.type === 'cancel' ? tr('adminOrders.confirmCancelBody') : (bulk ? tr('adminOrders.newDriverMsg', { name: bulk.driver.name }) : '')}
+        danger={bulk?.type === 'cancel'}
+        loading={bulkBusy}
+        onConfirm={runBulk}
+        onCancel={() => setBulk(null)}
       />
       {selected && (
         <OrderDetailModal
@@ -239,6 +325,13 @@ export default function AdminOrdersPage() {
       )}
     </div>
   );
+}
+
+// Lien vers une autre fiche de l'ERP : la page cible pré-remplit sa recherche (`presetSearch`), comme
+// la recherche globale et le tableau de bord.
+function LienFiche({ to, name, label }) {
+  if (!name) return null;
+  return <Link to={to} state={{ presetSearch: name }} className="admin-record-link">→ {label}</Link>;
 }
 
 function OrderDetailModal({ selected, detail, onClose, onChanged }) {
@@ -266,7 +359,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
 
   function loadDrivers() {
     if (drivers) return;
-    api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
+    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message));
   }
 
   async function runConfirmed() {
@@ -287,7 +380,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
   function askStatusChange() {
     setConfirmAction({
       title: tr('adminOrders.confirmChangeStatus'),
-      message: tr('adminOrders.confirmChangeStatusBody', { from: detail.status, to: newStatus }),
+      message: tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[detail.status] || detail.status, to: ORDER_STATUS_LABELS[newStatus] || newStatus }),
       successMessage: tr('adminOrders.toastStatusChanged'),
       run: () => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus } })
     });
@@ -342,6 +435,12 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
       {detail && onglet === 'apercu' && (
         <>
+          <div className="admin-record-links">
+            <LienFiche to="/admin/restaurants" name={detail.restaurantName} label={tr('adminOrders.linkRestaurant')} />
+            <LienFiche to="/admin/clients" name={detail.clientName} label={tr('adminOrders.linkClient')} />
+            <LienFiche to="/admin/drivers" name={detail.driverName} label={tr('adminOrders.linkDriver')} />
+            <Link to={`/admin/orders?restaurantId=${detail.restaurantId || selected.restaurantId || ''}`} className="admin-record-link">→ {tr('adminOrders.linkRestaurantOrders')}</Link>
+          </div>
           {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: detail.driverPhone ? ` · ${detail.driverPhone}` : '' })}</p>}
           {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}{detail.commune ? `, ${detail.commune}` : ''}</p>}
           <p className="small" style={{ margin: '2px 0' }}>{TYPE_LABELS(tr)[detail.orderType] || detail.orderType} · {fmtDateTime(detail.createdAt)}</p>

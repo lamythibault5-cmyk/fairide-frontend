@@ -48,7 +48,10 @@ function handleResponse(res, data, hadToken, logoutOn401) {
   throw error;
 }
 
-export async function api(path, { method = 'GET', body, token, logoutOn401 = true } = {}) {
+// `withHeaders: true` renvoie { data, headers } au lieu du seul corps : les listes admin paginées
+// annoncent leur total dans l'en-tête X-Total-Count tout en gardant un tableau en réponse (voir
+// GET /admin/restaurants|drivers|clients|reviews côté serveur). Sans l'option, comportement inchangé.
+export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false } = {}) {
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
@@ -60,7 +63,15 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
     throw new ApiError("Impossible de joindre le serveur Fairide. Réessaie dans un instant.", 0);
   }
   const data = await res.json().catch(() => ({}));
-  return handleResponse(res, data, !!token, logoutOn401);
+  const corps = handleResponse(res, data, !!token, logoutOn401);
+  return withHeaders ? { data: corps, headers: res.headers } : corps;
+}
+
+// Total annoncé par une liste paginée (X-Total-Count) ; repli sur la longueur du tableau reçu quand
+// l'en-tête manque (ancien serveur, réponse non paginée) pour ne jamais afficher « 0 résultat » à tort.
+export function totalDepuisEntetes(headers, data) {
+  const n = Number(headers?.get?.('X-Total-Count'));
+  return Number.isFinite(n) && n >= 0 ? n : (Array.isArray(data) ? data.length : 0);
 }
 
 // Téléchargement d'un fichier servi par une route authentifiée (PDF de facture...). Un simple lien

@@ -1,0 +1,68 @@
+/* Compléments de l'ERP admin (importé par AdminLayout.jsx) : états d'erreur, barre de sélection,
+   tuiles « aujourd'hui vs hier », lignes cliquables, pastilles de tags. Les styles de base
+   (.admin-control-panel, .kanban, .record-drawer, .stat-card…) vivent dans styles.css. */
+
+/* Carte d'erreur : chargement raté d'une liste, ou page qui a planté (AdminErrorBoundary). */
+.admin-error-card { border: 1px solid var(--red); background: rgba(217,45,60,0.05); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.admin-error-card .admin-error-icon { font-size: 26px; line-height: 1; }
+.admin-error-card .admin-error-body { flex: 1 1 260px; min-width: 0; }
+.admin-error-card h3 { margin: 0 0 4px; font-size: 15px; color: var(--red); }
+.admin-error-card p { margin: 0 0 10px; }
+.admin-error-card pre { margin: 0 0 10px; font-size: 11px; color: var(--ink-faint); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
+
+/* Barre d'actions groupées : apparaît sous les filtres dès qu'une ligne est cochée. */
+.admin-selection-bar { position: sticky; top: 8px; z-index: 5; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; margin-bottom: 12px; background: rgba(59,47,181,0.08); border: 1px solid var(--iris); border-radius: var(--radius-chip); }
+.admin-selection-bar b { color: var(--iris); }
+.admin-selection-bar .admin-selection-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-left: auto; }
+.admin-selection-bar select { max-width: 220px; }
+.admin-select-box { width: 16px; height: 16px; cursor: pointer; accent-color: var(--iris); flex-shrink: 0; }
+.admin-table td .admin-select-box, .admin-table th .admin-select-box { display: block; margin: 0 auto; }
+.card.is-selected { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); }
+.admin-card-select { display: flex; align-items: center; gap: 8px; }
+
+/* Pagination commune (Précédent / page x sur y / Suivant) et « Afficher plus ». */
+.admin-pager { display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.admin-load-more { display: flex; justify-content: center; margin-top: 12px; }
+
+/* Nombre de résultats, à droite des filtres. */
+.admin-result-count { margin-left: auto; white-space: nowrap; }
+
+/* Tableau de bord : « aujourd'hui vs hier ». */
+.admin-today-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.admin-today-tile { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.admin-today-tile .label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); font-weight: 600; }
+.admin-today-tile .num { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; margin: 2px 0; }
+.admin-today-tile .delta { font-size: 12px; font-weight: 600; }
+.admin-today-tile .delta.up { color: var(--teal-deep); }
+.admin-today-tile .delta.down { color: var(--red); }
+.admin-today-tile .delta.flat { color: var(--ink-faint); }
+.admin-freshness { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 10px; flex-wrap: wrap; }
+
+/* Lignes de classement cliquables (tops du tableau de bord). */
+.admin-top-row { display: flex; justify-content: space-between; gap: 8px; padding: 5px 0; border: none; background: none; width: 100%; text-align: left; cursor: pointer; color: inherit; border-bottom: 1px solid var(--cream-dim); font: inherit; }
+.admin-top-row:last-child { border-bottom: none; }
+.admin-top-row:hover { color: var(--iris); }
+
+/* Liens vers une autre fiche depuis un tiroir ou une carte (« → Fiche restaurant »). */
+.admin-record-link { color: var(--iris); text-decoration: none; font-weight: 600; font-size: 12px; white-space: nowrap; }
+.admin-record-link:hover { text-decoration: underline; }
+.admin-record-links { display: flex; gap: 10px; flex-wrap: wrap; margin: 6px 0; }
+
+/* Pastilles de tags (support) : cliquables pour filtrer. */
+.admin-tag { display: inline-flex; align-items: center; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: var(--cream-dim); color: var(--ink-soft); border: 1px solid transparent; cursor: pointer; }
+.admin-tag.active { border-color: var(--iris); color: var(--iris); background: rgba(59,47,181,0.08); }
+.admin-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* Dialogue avec motif (ReasonDialog) : le champ prend toute la largeur. */
+.admin-reason-dialog input, .admin-reason-dialog textarea { width: 100%; box-sizing: border-box; }
+.admin-reason-dialog .field { margin-bottom: 10px; }
+
+/* Cartes des règles d'automatisation : actions à droite, journal en tableau. */
+.admin-rule-actions { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; flex-shrink: 0; }
+
+/* Téléphone : les barres d'actions passent sur deux lignes sans déborder. */
+@media (max-width: 640px) {
+  .admin-selection-bar .admin-selection-actions { margin-left: 0; width: 100%; }
+  .admin-result-count { margin-left: 0; width: 100%; }
+  .admin-today-grid { grid-template-columns: repeat(2, 1fr); }
+}
