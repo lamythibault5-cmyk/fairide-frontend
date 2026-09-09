@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import { isTestAccount, NatureChips, natureOk } from './adminUtils';
+import { estCompteTest, NatureChips, natureOk } from './adminUtils';
 
 // Dossiers livreurs (statuts étudiant / P2P / indépendant) : file de validation, pièces, identité,
 // compteurs légaux, contrats, journal ; paramètres légaux par année, drapeau P2P, exports DAC7 et 281.29.
@@ -34,8 +34,8 @@ export default function AdminCouriersPage() {
   const load = () => api('/admin/couriers', { token }).then(setData).catch((e) => toast(e.message));
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const lignes = useMemo(() => (data?.rows || []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && natureOk(nature, r.email)), [data, filtre, nature]);
-  const nbReels = useMemo(() => (data?.rows || []).filter((r) => !isTestAccount(r.email)).length, [data]);
+  const lignes = useMemo(() => (data?.rows || []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && natureOk(nature, r)), [data, filtre, nature]);
+  const nbReels = useMemo(() => (data?.rows || []).filter((r) => !estCompteTest(r)).length, [data]);
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
   const statut = (s) => (s ? tr(`courierOnboarding.status_${s}`) : '—');
 

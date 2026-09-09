@@ -15,13 +15,13 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
+import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 // Restaurant test : de démonstration (restaurants.is_demo, créés par les seeds) ou tenu par un compte QA (+qa).
 // Les autres sont de vraies inscriptions : visibles des clients seulement une fois publiées (publicListed).
-const estTest = (r) => !!r.isDemo || isTestAccount(r.ownerEmail);
+const estTest = (r) => !!r.isDemo || estCompteTest(r);
 
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminRestos.filterPending'), approved: tr('adminRestos.filterApproved'), blocked: tr('adminRestos.filterBlocked') });
 
@@ -62,8 +62,9 @@ export default function AdminRestaurantsPage() {
   const [groupBy, setGroupBy] = useState('');
   const { sort, toggle } = useTableSort('revenue');
 
+  const load = () => api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
   useEffect(() => {
-    api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message));
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -263,6 +264,7 @@ export default function AdminRestaurantsPage() {
           onReactivate={() => askReactivate(detail)}
           onDelete={() => askDelete(detail)}
           onChanged={refreshDetail}
+          onToggleTest={() => { refreshDetail(); load(); }}
         />
       )}
       <ConfirmDialog
@@ -278,7 +280,7 @@ export default function AdminRestaurantsPage() {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged, onToggleListing }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -366,8 +368,9 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             )}
             <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
           </div>
-          <div className="row" style={{ gap: 8, marginTop: 10 }}>
+          <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
+            {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}

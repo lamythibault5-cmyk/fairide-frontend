@@ -14,7 +14,7 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -38,8 +38,9 @@ export default function AdminClientsPage() {
   const [groupBy, setGroupBy] = useState('');
   const { sort, toggle } = useTableSort('totalSpent');
 
+  const load = () => api('/admin/clients', { token }).then(setClients).catch((e) => toast(e.message));
   useEffect(() => {
-    api('/admin/clients', { token }).then(setClients).catch((e) => toast(e.message));
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,7 +96,7 @@ export default function AdminClientsPage() {
       { label: tr('adminCommon.phone'), get: (c) => c.phone },
       { label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') },
       { label: tr('adminCommon.language'), get: (c) => c.language },
-      { label: tr('adminCommon.accountKind'), get: (c) => (isTestAccount(c.email) ? 'test' : 'réel') },
+      { label: tr('adminCommon.accountKind'), get: (c) => (estCompteTest(c) ? 'test' : 'réel') },
       { label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt) },
       { label: 'Commandes', get: (c) => c.orderCount },
       { label: 'Annulations', get: (c) => c.cancelledCount },
@@ -111,7 +112,7 @@ export default function AdminClientsPage() {
   const filtered = filterBySearch(clients, search, (c) => [c.name, c.email, c.phone, c.city, c.postalCode]);
   const maintenant = Date.now();
   const colonnes = [
-    { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{isTestAccount(c.email) && <TestBadge />}</>, sortValue: (c) => c.name },
+    { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{estCompteTest(c) && <TestBadge />}</>, sortValue: (c) => c.name },
     { key: 'email', label: tr('adminCommon.email'), get: (c) => c.email },
     { key: 'phone', label: tr('adminCommon.phone'), get: (c) => c.phone || '—' },
     { key: 'city', label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') || '—', sortValue: (c) => c.city || '' },
@@ -132,14 +133,14 @@ export default function AdminClientsPage() {
     tier: { get: (c) => (c.totalSpent >= 200 ? tr('adminClients.tierTop') : c.totalSpent >= 50 ? tr('adminClients.tierRegular') : c.orderCount > 0 ? tr('adminClients.tierOccasional') : tr('adminClients.tierNone')) }
   };
   const visibles = useMemo(() => sortRows((filtered || []).filter((c) => {
-    if (!natureOk(nature, c.email)) return false;
+    if (!natureOk(nature, c)) return false;
     if (filtre === 'active30') return c.lastOrderAt && maintenant - c.lastOrderAt <= J30;
     if (filtre === 'new7') return maintenant - c.createdAt <= J7;
     if (filtre === 'blocked') return c.adminStatus === 'blocked';
     if (filtre === 'refunds') return c.refundCount > 0;
     return true;
   }), colonnes, sort), [filtered, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (isTestAccount(c.email) ? 0 : 1), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (estCompteTest(c) ? 0 : 1), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -177,14 +178,14 @@ export default function AdminClientsPage() {
       {clients && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {clients && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openClient}
-          rowClassName={(c) => (isTestAccount(c.email) ? 'row-test-account' : '')} showTotals format={{ totalSpent: money, balance: money }} emptyLabel={tr('adminCommon.noResults')} />
+          rowClassName={(c) => (estCompteTest(c) ? 'row-test-account' : '')} showTotals format={{ totalSpent: money, balance: money }} emptyLabel={tr('adminCommon.noResults')} />
       )}
       {clients && mode === 'cards' && visibles.map((c) => (
-        <div className={`card order-card-clickable${isTestAccount(c.email) ? ' card-test-account' : ''}`} key={c.id} onClick={() => openClient(c)}>
+        <div className={`card order-card-clickable${estCompteTest(c) ? ' card-test-account' : ''}`} key={c.id} onClick={() => openClient(c)}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{c.name}</b>
             <div className="row" style={{ gap: 6 }}>
-              {isTestAccount(c.email) && <TestBadge />}
+              {estCompteTest(c) && <TestBadge />}
               {c.adminStatus === 'blocked' && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span>}
               {c.refundCount > 0 && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.refundsCount', { n: c.refundCount })}</span>}
             </div>
@@ -224,6 +225,7 @@ export default function AdminClientsPage() {
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminClients.registeredBalance', { date: fmtDate(detail.createdAt) })} <b>{money(detail.balance)}</b></p>
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                <TestToggleButton userId={detail.id} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={() => { refreshDetail(); load(); }} />
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
                 <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={() => askDelete(detail)}>{tr('adminClients.deleteAccount')}</button>

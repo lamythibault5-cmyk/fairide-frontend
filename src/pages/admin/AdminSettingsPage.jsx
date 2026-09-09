@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { isTestAccount, TestBadge, fmtDate } from './adminUtils';
+import { estCompteTest, TestBadge, fmtDate } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const SECTIONS = ['Tarification', 'Utilisateurs'];
@@ -168,20 +168,20 @@ function UserTypeGroup({ type, items, departed }) {
       {filtered.length > 0 && (
         <div className="card">
           {filtered.map((it, i) => (
-            <div key={it.id} className={`row${isTestAccount(it.email) ? ' row-test-account' : ''}`} style={{ justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < filtered.length - 1 ? '1px solid var(--cream-dim)' : 'none', flexWrap: 'wrap' }}>
+            <div key={it.id} className={`row${estCompteTest(it) ? ' row-test-account' : ''}`} style={{ justifyContent: 'space-between', gap: 10, padding: '8px 0', borderBottom: i < filtered.length - 1 ? '1px solid var(--cream-dim)' : 'none', flexWrap: 'wrap' }}>
               <div>
                 <span className="small" style={{ fontWeight: 700, marginRight: 8 }}>#{i + 1}</span>
                 {departed ? (
                   <>
                     <b>{it.email}</b>
-                    {isTestAccount(it.email) && <TestBadge />}
+                    {estCompteTest(it) && <TestBadge />}
                     {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
                     {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
                   </>
                 ) : (
                   <>
                     <b>{it.name}</b> <span className="small">{it.email}</span>
-                    {isTestAccount(it.email) && <TestBadge />}
+                    {estCompteTest(it) && <TestBadge />}
                     {it.phone && <div className="small">📞 {it.phone}</div>}
                     <div className="row" style={{ gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
                       {type === 'driver' && statusPill(it.adminStatus, tr)}

@@ -15,7 +15,7 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const activityLabels = (tr) => ({
@@ -55,8 +55,9 @@ export default function AdminDriversPage() {
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
 
+  const load = () => api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
   useEffect(() => {
-    api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message));
+    load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -109,7 +110,7 @@ export default function AdminDriversPage() {
       { label: tr('adminCommon.phone'), get: (d) => d.phone },
       { label: tr('adminCommon.municipality'), get: (d) => [d.postalCode, d.city].filter(Boolean).join(' ') },
       { label: tr('adminCommon.language'), get: (d) => d.language },
-      { label: tr('adminCommon.accountKind'), get: (d) => (isTestAccount(d.email) ? 'test' : 'réel') },
+      { label: tr('adminCommon.accountKind'), get: (d) => (estCompteTest(d) ? 'test' : 'réel') },
       { label: tr('adminDrivers.courierStatus'), get: (d) => d.courier?.statusType || '' },
       { label: tr('adminDrivers.vehicle'), get: (d) => d.courier?.vehicleType || '' },
       { label: 'Statut', get: (d) => d.adminStatus },
@@ -123,7 +124,7 @@ export default function AdminDriversPage() {
 
   const filtered = filterBySearch(drivers, search, (d) => [d.name, d.email, d.phone, d.city, d.postalCode, d.courier?.zone]);
   const colonnes = [
-    { key: 'name', label: tr('adminCommon.name'), get: (d) => <><b>{d.name}</b>{isTestAccount(d.email) && <TestBadge />}</>, sortValue: (d) => d.name },
+    { key: 'name', label: tr('adminCommon.name'), get: (d) => <><b>{d.name}</b>{estCompteTest(d) && <TestBadge />}</>, sortValue: (d) => d.name },
     { key: 'email', label: tr('adminCommon.email'), get: (d) => d.email },
     { key: 'adminStatus', label: tr('adminCommon.status'), get: (d) => <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>{STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus}</span>, sortValue: (d) => d.adminStatus },
     { key: 'activityStatus', label: tr('adminCommon.activity'), get: (d) => <span className="pill" style={{ color: activityLabels(tr)[d.activityStatus]?.color }}>{activityLabels(tr)[d.activityStatus]?.label}</span>, sortValue: (d) => d.activityStatus },
@@ -142,8 +143,8 @@ export default function AdminDriversPage() {
     status: { get: (d) => STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus }, activity: { get: (d) => activityLabels(tr)[d.activityStatus]?.label || d.activityStatus },
     vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((d) => natureOk(nature, d.email) && (filtre === 'all' || d.adminStatus === filtre) && (!activite || d.activityStatus === activite)), colonnes, sort), [filtered, filtre, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (isTestAccount(d.email) ? 0 : 1), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
+  const visibles = useMemo(() => sortRows((filtered || []).filter((d) => natureOk(nature, d) && (filtre === 'all' || d.adminStatus === filtre) && (!activite || d.activityStatus === activite)), colonnes, sort), [filtered, filtre, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (estCompteTest(d) ? 0 : 1), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
 
   return (
     <div>
@@ -185,16 +186,16 @@ export default function AdminDriversPage() {
       {drivers && visibles.length === 0 && <div className="empty">{tr('adminCommon.noResults')}</div>}
       {drivers && mode === 'table' && visibles.length > 0 && (
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openDriver}
-          rowClassName={(d) => (isTestAccount(d.email) ? 'row-test-account' : '')} showTotals format={{ revenue: money }} emptyLabel={tr('adminCommon.noResults')} />
+          rowClassName={(d) => (estCompteTest(d) ? 'row-test-account' : '')} showTotals format={{ revenue: money }} emptyLabel={tr('adminCommon.noResults')} />
       )}
       {drivers && mode === 'cards' && visibles.map((d) => {
         const act = activityLabels(tr)[d.activityStatus];
         return (
-          <div className={`card order-card-clickable${isTestAccount(d.email) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
+          <div className={`card order-card-clickable${estCompteTest(d) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <b>{d.name}</b>
               <div className="row" style={{ gap: 6 }}>
-                {isTestAccount(d.email) && <TestBadge />}
+                {estCompteTest(d) && <TestBadge />}
                 <span className="pill" style={{ color: act?.color }}>{act?.label}</span>
                 <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
                   {d.adminStatus === 'approved' ? tr('adminDrivers.approved') : d.adminStatus === 'blocked' ? tr('adminDrivers.filterBlocked') : tr('adminDrivers.pendingBadge')}
@@ -247,6 +248,7 @@ export default function AdminDriversPage() {
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
                 {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => setStatus(detail.id, 'approved')}>{tr('adminCommon.approve')}</button>}
+                <TestToggleButton userId={detail.id} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={() => { refreshDetail(); load(); }} />
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}
               </div>

@@ -8,6 +8,22 @@ import { getLanguage, getLocale } from '../../context/LanguageContext';
 export function isTestAccount(email) {
   return /\+qa/i.test(email || '');
 }
+// Compte test = marqué par le serveur (fondateur, démos, bascule admin, alias +qa). Repli sur l'e-mail pour
+// les listes qui n'exposent pas encore le drapeau. Tout ce qui n'est pas test est un vrai utilisateur.
+export function estCompteTest(u) {
+  if (!u) return false;
+  if (u.isTest !== undefined && u.isTest !== null) return !!u.isTest;
+  return isTestAccount(u.email || u.ownerEmail);
+}
+// Bouton « marquer comme test / comme vrai compte » (fiches client, livreur, restaurant).
+export function TestToggleButton({ userId, isTest, token, api, toast, onChanged, tr, small = false }) {
+  return (
+    <button type="button" className="btn-ghost" style={small ? { padding: '6px 10px', fontSize: 12 } : undefined}
+      onClick={async () => { try { await api(`/admin/users/${userId}/test`, { method: 'PATCH', token, body: { isTest: !isTest } }); toast(tr(isTest ? 'adminCommon.markedReal' : 'adminCommon.markedTest')); onChanged?.(); } catch (e) { toast(e.message); } }}>
+      {isTest ? tr('adminCommon.markReal') : tr('adminCommon.markTest')}
+    </button>
+  );
+}
 
 // Filtre « vrais comptes / comptes test » identique sur chaque liste d'utilisateurs (restaurants, clients,
 // livreurs, dossiers) : `nature` vaut 'all' | 'real' | 'test'.
@@ -20,8 +36,9 @@ export function NatureChips({ nature, onChange, realCount, labels }) {
     </div>
   );
 }
-export function natureOk(nature, email) {
-  return nature === 'all' || (nature === 'test') === isTestAccount(email);
+export function natureOk(nature, u) {
+  const test = typeof u === 'string' ? isTestAccount(u) : estCompteTest(u);
+  return nature === 'all' || (nature === 'test') === test;
 }
 
 const DRAPEAU_LANGUE = { fr: '🇫🇷 FR', en: '🇬🇧 EN', nl: '🇳🇱 NL' };
@@ -38,7 +55,7 @@ export function ProfilLine({ u, tr }) {
 }
 
 export function TestBadge() {
-  return <span className="pill test-account-pill" title={{ fr: "Compte de test (+qa dans l'email)", en: 'Test account (+qa in the email)', nl: 'Testaccount (+qa in het e-mailadres)' }[getLanguage()]}>🧪 Test</span>;
+  return <span className="pill test-account-pill" title={{ fr: 'Compte de test (fondateur, démo, essais) — pas un vrai utilisateur', en: 'Test account (founder, demo, trials) — not a real user', nl: 'Testaccount (oprichter, demo, proeven) — geen echte gebruiker' }[getLanguage()]}>🧪 Test</span>;
 }
 
 // Filtre instantané côté client (aucun aller-retour serveur), une fois la liste complète déjà chargée.

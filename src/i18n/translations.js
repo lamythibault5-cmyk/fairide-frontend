@@ -1942,7 +1942,11 @@ export const translations = {
       phoneVerified: '✅ téléphone vérifié',
       phoneUnverified: 'téléphone non vérifié',
       googleLogin: 'connexion Google',
-      privacyNote: 'Par respect de la vie privée, la console ne montre ni adresse complète, ni date de naissance, ni codes, ni mots de passe ; l\'IBAN est masqué.'
+      privacyNote: 'Par respect de la vie privée, la console ne montre ni adresse complète, ni date de naissance, ni codes, ni mots de passe ; l\'IBAN est masqué.',
+      markTest: '🧪 Marquer comme compte test',
+      markReal: '✅ Marquer comme vrai compte',
+      markedTest: 'Compte marqué comme test : il sort des compteurs de vrais utilisateurs.',
+      markedReal: 'Compte marqué comme vrai utilisateur.'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -6170,7 +6174,11 @@ export const translations = {
       phoneVerified: '✅ phone verified',
       phoneUnverified: 'phone not verified',
       googleLogin: 'Google sign-in',
-      privacyNote: 'For privacy, the console shows no full address, birth date, codes or passwords; the IBAN is masked.'
+      privacyNote: 'For privacy, the console shows no full address, birth date, codes or passwords; the IBAN is masked.',
+      markTest: '🧪 Mark as test account',
+      markReal: '✅ Mark as real account',
+      markedTest: 'Account marked as test: it leaves the real-user counters.',
+      markedReal: 'Account marked as a real user.'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -10398,7 +10406,11 @@ export const translations = {
       phoneVerified: '✅ telefoon geverifieerd',
       phoneUnverified: 'telefoon niet geverifieerd',
       googleLogin: 'Google-aanmelding',
-      privacyNote: 'Uit respect voor de privacy toont de console geen volledig adres, geboortedatum, codes of wachtwoorden; het IBAN is gemaskeerd.'
+      privacyNote: 'Uit respect voor de privacy toont de console geen volledig adres, geboortedatum, codes of wachtwoorden; het IBAN is gemaskeerd.',
+      markTest: '🧪 Markeren als testaccount',
+      markReal: '✅ Markeren als echt account',
+      markedTest: 'Account gemarkeerd als test: het telt niet meer mee als echte gebruiker.',
+      markedReal: 'Account gemarkeerd als echte gebruiker.'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',
