@@ -9,6 +9,34 @@ export function isTestAccount(email) {
   return /\+qa/i.test(email || '');
 }
 
+// Filtre « vrais comptes / comptes test » identique sur chaque liste d'utilisateurs (restaurants, clients,
+// livreurs, dossiers) : `nature` vaut 'all' | 'real' | 'test'.
+export function NatureChips({ nature, onChange, realCount, labels }) {
+  return (
+    <div className="role-pick" style={{ margin: 0 }}>
+      {[['all', labels.all], ['real', labels.real], ['test', labels.test]].map(([k, l]) => (
+        <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => onChange(k)}>{l}{k === 'real' && realCount > 0 ? ` (${realCount})` : ''}</div>
+      ))}
+    </div>
+  );
+}
+export function natureOk(nature, email) {
+  return nature === 'all' || (nature === 'test') === isTestAccount(email);
+}
+
+const DRAPEAU_LANGUE = { fr: '🇫🇷 FR', en: '🇬🇧 EN', nl: '🇳🇱 NL' };
+// Ligne « profil » d'un utilisateur pour l'admin : commune, langue de l'appli, e-mail / téléphone vérifiés,
+// connexion Google. Jamais la rue, la date de naissance, un code ou un mot de passe.
+export function ProfilLine({ u, tr }) {
+  const parts = [];
+  if (u.city || u.postalCode) parts.push(`📍 ${[u.postalCode, u.city].filter(Boolean).join(' ')}`);
+  parts.push(DRAPEAU_LANGUE[u.language] || (u.language || 'fr').toUpperCase());
+  parts.push(u.emailVerified ? tr('adminCommon.emailVerified') : tr('adminCommon.emailUnverified'));
+  parts.push(u.phoneVerified ? tr('adminCommon.phoneVerified') : tr('adminCommon.phoneUnverified'));
+  if (u.googleLinked) parts.push(tr('adminCommon.googleLogin'));
+  return <div className="small">{parts.join(' · ')}</div>;
+}
+
 export function TestBadge() {
   return <span className="pill test-account-pill" title={{ fr: "Compte de test (+qa dans l'email)", en: 'Test account (+qa in the email)', nl: 'Testaccount (+qa in het e-mailadres)' }[getLanguage()]}>🧪 Test</span>;
 }

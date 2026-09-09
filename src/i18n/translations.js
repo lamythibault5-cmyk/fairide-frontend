@@ -1120,7 +1120,8 @@ export const translations = {
       tierTop: 'Gros clients (≥ 200 €)',
       tierRegular: 'Réguliers (50 à 200 €)',
       tierOccasional: 'Occasionnels (< 50 €)',
-      tierNone: 'Jamais commandé'
+      tierNone: 'Jamais commandé',
+      kpiReal: 'Vrais clients · {test} test'
     },
     adminPayments: {
       title: 'Paiements',
@@ -1288,7 +1289,13 @@ export const translations = {
       vatSubject: 'Assujetti TVA',
       vatUnknown: 'TVA non renseignée',
       statsLine: '{n} livraison(s) · {revenue} de revenus · {cancel} annulation',
-      companyNumber: 'N° d\'entreprise'
+      companyNumber: 'N° d\'entreprise',
+      kpiReal: 'Vrais livreurs · {test} test',
+      courierStatus: 'Statut légal',
+      vehicle: 'Véhicule',
+      noCourierFile: 'aucun dossier livreur commencé',
+      statusNotChosen: 'statut non choisi',
+      openCourierFile: 'Ouvrir le dossier'
     },
     adminDocs: {
       expired: 'Expirés',
@@ -1916,7 +1923,17 @@ export const translations = {
       tabDocuments: 'Documents',
       tabFollowUp: 'Suivi & notes',
       tabActions: 'Actions',
-      tabTimeline: 'Historique'
+      tabTimeline: 'Historique',
+      filterRealAccounts: 'Vrais comptes',
+      filterTestAccounts: 'Comptes test',
+      language: 'Langue',
+      accountKind: 'Type de compte',
+      emailVerified: '✅ e-mail vérifié',
+      emailUnverified: 'e-mail non vérifié',
+      phoneVerified: '✅ téléphone vérifié',
+      phoneUnverified: 'téléphone non vérifié',
+      googleLogin: 'connexion Google',
+      privacyNote: 'Par respect de la vie privée, la console ne montre ni adresse complète, ni date de naissance, ni codes, ni mots de passe ; l\'IBAN est masqué.'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -5321,7 +5338,8 @@ export const translations = {
       tierTop: 'Top customers (≥ €200)',
       tierRegular: 'Regulars (€50 to €200)',
       tierOccasional: 'Occasional (< €50)',
-      tierNone: 'Never ordered'
+      tierNone: 'Never ordered',
+      kpiReal: 'Real clients · {test} test'
     },
     adminPayments: {
       title: 'Payments',
@@ -5489,7 +5507,13 @@ export const translations = {
       vatSubject: 'VAT registered',
       vatUnknown: 'VAT status missing',
       statsLine: '{n} delivery(ies) · {revenue} earned · {cancel} cancellation',
-      companyNumber: 'Company number'
+      companyNumber: 'Company number',
+      kpiReal: 'Real couriers · {test} test',
+      courierStatus: 'Legal status',
+      vehicle: 'Vehicle',
+      noCourierFile: 'no courier file started',
+      statusNotChosen: 'status not chosen',
+      openCourierFile: 'Open the file'
     },
     adminDocs: {
       expired: 'Expired',
@@ -6117,7 +6141,17 @@ export const translations = {
       tabDocuments: 'Documents',
       tabFollowUp: 'Follow-up & notes',
       tabActions: 'Actions',
-      tabTimeline: 'History'
+      tabTimeline: 'History',
+      filterRealAccounts: 'Real accounts',
+      filterTestAccounts: 'Test accounts',
+      language: 'Language',
+      accountKind: 'Account kind',
+      emailVerified: '✅ e-mail verified',
+      emailUnverified: 'e-mail not verified',
+      phoneVerified: '✅ phone verified',
+      phoneUnverified: 'phone not verified',
+      googleLogin: 'Google sign-in',
+      privacyNote: 'For privacy, the console shows no full address, birth date, codes or passwords; the IBAN is masked.'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -9522,7 +9556,8 @@ export const translations = {
       tierTop: 'Topklanten (≥ € 200)',
       tierRegular: 'Vaste klanten (€ 50 tot € 200)',
       tierOccasional: 'Occasioneel (< € 50)',
-      tierNone: 'Nooit besteld'
+      tierNone: 'Nooit besteld',
+      kpiReal: 'Echte klanten · {test} test'
     },
     adminPayments: {
       title: 'Betalingen',
@@ -9690,7 +9725,13 @@ export const translations = {
       vatSubject: 'Btw-plichtig',
       vatUnknown: 'Btw-status ontbreekt',
       statsLine: '{n} levering(en) · {revenue} inkomsten · {cancel} annulering',
-      companyNumber: 'Ondernemingsnummer'
+      companyNumber: 'Ondernemingsnummer',
+      kpiReal: 'Echte koeriers · {test} test',
+      courierStatus: 'Wettelijk statuut',
+      vehicle: 'Voertuig',
+      noCourierFile: 'geen koeriersdossier gestart',
+      statusNotChosen: 'statuut niet gekozen',
+      openCourierFile: 'Dossier openen'
     },
     adminDocs: {
       expired: 'Verlopen',
@@ -10318,7 +10359,17 @@ export const translations = {
       tabDocuments: 'Documenten',
       tabFollowUp: 'Opvolging & notities',
       tabActions: 'Acties',
-      tabTimeline: 'Historiek'
+      tabTimeline: 'Historiek',
+      filterRealAccounts: 'Echte accounts',
+      filterTestAccounts: 'Testaccounts',
+      language: 'Taal',
+      accountKind: 'Soort account',
+      emailVerified: '✅ e-mail geverifieerd',
+      emailUnverified: 'e-mail niet geverifieerd',
+      phoneVerified: '✅ telefoon geverifieerd',
+      phoneUnverified: 'telefoon niet geverifieerd',
+      googleLogin: 'Google-aanmelding',
+      privacyNote: 'Uit respect voor de privacy toont de console geen volledig adres, geboortedatum, codes of wachtwoorden; het IBAN is gemaskeerd.'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',

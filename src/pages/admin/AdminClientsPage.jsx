@@ -14,7 +14,7 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
-import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv } from './adminUtils';
+import { isTestAccount, TestBadge, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -34,6 +34,7 @@ export default function AdminClientsPage() {
   const [onglet, setOnglet] = useState('apercu');
   const [mode, setMode] = useViewMode('clients', 'cards');
   const [filtre, setFiltre] = useState('all');
+  const [nature, setNature] = useState('all');
   const [groupBy, setGroupBy] = useState('');
   const { sort, toggle } = useTableSort('totalSpent');
 
@@ -92,6 +93,9 @@ export default function AdminClientsPage() {
       { label: 'Nom', get: (c) => c.name },
       { label: 'Email', get: (c) => c.email },
       { label: tr('adminCommon.phone'), get: (c) => c.phone },
+      { label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') },
+      { label: tr('adminCommon.language'), get: (c) => c.language },
+      { label: tr('adminCommon.accountKind'), get: (c) => (isTestAccount(c.email) ? 'test' : 'réel') },
       { label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt) },
       { label: 'Commandes', get: (c) => c.orderCount },
       { label: 'Annulations', get: (c) => c.cancelledCount },
@@ -104,12 +108,14 @@ export default function AdminClientsPage() {
     ]);
   }
 
-  const filtered = filterBySearch(clients, search, (c) => [c.name, c.email, c.phone]);
+  const filtered = filterBySearch(clients, search, (c) => [c.name, c.email, c.phone, c.city, c.postalCode]);
   const maintenant = Date.now();
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{isTestAccount(c.email) && <TestBadge />}</>, sortValue: (c) => c.name },
     { key: 'email', label: tr('adminCommon.email'), get: (c) => c.email },
     { key: 'phone', label: tr('adminCommon.phone'), get: (c) => c.phone || '—' },
+    { key: 'city', label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') || '—', sortValue: (c) => c.city || '' },
+    { key: 'language', label: tr('adminCommon.language'), get: (c) => (c.language || 'fr').toUpperCase(), sortValue: (c) => c.language || '' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (c) => c.orderCount, align: 'right', sum: true },
     { key: 'cancelledCount', label: tr('adminCommon.cancellations'), get: (c) => c.cancelledCount, align: 'right', sum: true },
     { key: 'totalSpent', label: tr('adminCommon.spent'), get: (c) => money(c.totalSpent), sortValue: (c) => c.totalSpent, align: 'right', sum: true },
@@ -126,13 +132,14 @@ export default function AdminClientsPage() {
     tier: { get: (c) => (c.totalSpent >= 200 ? tr('adminClients.tierTop') : c.totalSpent >= 50 ? tr('adminClients.tierRegular') : c.orderCount > 0 ? tr('adminClients.tierOccasional') : tr('adminClients.tierNone')) }
   };
   const visibles = useMemo(() => sortRows((filtered || []).filter((c) => {
+    if (!natureOk(nature, c.email)) return false;
     if (filtre === 'active30') return c.lastOrderAt && maintenant - c.lastOrderAt <= J30;
     if (filtre === 'new7') return maintenant - c.createdAt <= J7;
     if (filtre === 'blocked') return c.adminStatus === 'blocked';
     if (filtre === 'refunds') return c.refundCount > 0;
     return true;
-  }), colonnes, sort), [filtered, filtre, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
+  }), colonnes, sort), [filtered, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (isTestAccount(c.email) ? 0 : 1), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -140,6 +147,7 @@ export default function AdminClientsPage() {
       {clients && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{clients.length}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal', { test: clients.length - kpi.real })}</div></div>
           <div className="stat-card"><div className="num">{kpi.new7}</div><div className="label">{tr('adminClients.kpiNew')}</div></div>
           <div className="stat-card"><div className="num">{kpi.active30}</div><div className="label">{tr('adminClients.kpiActive')}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.orders')}</div></div>
@@ -154,6 +162,7 @@ export default function AdminClientsPage() {
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>
           ))}
         </div>
+        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts') }} />
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -181,6 +190,7 @@ export default function AdminClientsPage() {
             </div>
           </div>
           <div className="small">{c.email}{c.phone ? ` · ${c.phone}` : ''}{tr('adminClients.registeredSuffix', { date: fmtDate(c.createdAt) })}</div>
+          <ProfilLine u={c} tr={tr} />
           <div className="small">
             {tr('adminFinance.ordersCount', { n: c.orderCount })}{c.cancelledCount > 0 ? tr('adminClients.cancelledSuffix', { n: c.cancelledCount }) : ''}{tr('adminClients.spentLine', { spent: money(c.totalSpent), basket: money(c.avgBasket) })}
           </div>
@@ -210,8 +220,9 @@ export default function AdminClientsPage() {
           {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
           {detail && onglet === 'apercu' && (
             <>
-              {detail.address && <p className="small" style={{ margin: '2px 0' }}>📍 {detail.address}</p>}
+              <ProfilLine u={detail} tr={tr} />
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminClients.registeredBalance', { date: fmtDate(detail.createdAt) })} <b>{money(detail.balance)}</b></p>
+              <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10 }}>
                 {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={() => askSuspend(detail)}>{tr('adminCommon.suspend')}</button>}
                 {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={() => askReactivate(detail)}>{tr('adminCommon.reactivate')}</button>}

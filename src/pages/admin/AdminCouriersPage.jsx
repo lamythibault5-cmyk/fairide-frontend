@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import { isTestAccount, NatureChips, natureOk } from './adminUtils';
 
 // Dossiers livreurs (statuts étudiant / P2P / indépendant) : file de validation, pièces, identité,
 // compteurs légaux, contrats, journal ; paramètres légaux par année, drapeau P2P, exports DAC7 et 281.29.
@@ -25,14 +26,16 @@ export default function AdminCouriersPage() {
   const toast = useToast();
   const [data, setData] = useState(null);
   const [filtre, setFiltre] = useState('pending_review');
+  const [nature, setNature] = useState('all');
   const [selection, setSelection] = useState(null);
   const [onglet, setOnglet] = useState('dossiers');
   const { sort, toggle } = useTableSort('updatedAt');
 
   const load = () => api('/admin/couriers', { token }).then(setData).catch((e) => toast(e.message));
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const lignes = useMemo(() => (data?.rows || []).filter((r) => filtre === 'all' || r.lifecycleStatus === filtre), [data, filtre]);
+  const lignes = useMemo(() => (data?.rows || []).filter((r) => (filtre === 'all' || r.lifecycleStatus === filtre) && natureOk(nature, r.email)), [data, filtre, nature]);
+  const nbReels = useMemo(() => (data?.rows || []).filter((r) => !isTestAccount(r.email)).length, [data]);
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
   const statut = (s) => (s ? tr(`courierOnboarding.status_${s}`) : '—');
 
@@ -50,6 +53,12 @@ export default function AdminCouriersPage() {
                   <div className="num">{data.counts[s] || 0}</div><div className="label">{lifecycle(s)}</div>
                 </button>
               ))}
+            </div>
+          )}
+          {data && (
+            <div className="admin-control-panel">
+              <NatureChips nature={nature} onChange={setNature} realCount={nbReels} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts') }} />
+              <span className="small">{tr('adminCommon.countOf', { n: lignes.length, total: (data.rows || []).length })}</span>
             </div>
           )}
           {!data && <SkeletonCards count={3} />}
