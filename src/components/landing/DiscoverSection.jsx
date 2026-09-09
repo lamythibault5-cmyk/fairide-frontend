@@ -20,9 +20,10 @@ export default function DiscoverSection({ restaurants }) {
     const base = restaurants.filter((r) => r.coverImageUrl && (!filtre || r.cuisine === filtre));
     const melange = [...base].sort(() => Math.random() - 0.5);
     // Une photo ne sert qu'une fois ; sans filtre, un type de commerce n'apparaît qu'une fois tant qu'il en reste d'autres.
+    const idPhoto = (u) => (String(u || '').match(/photo-[0-9a-f-]+/) || [u])[0];
     const photos = new Set(); const types = new Set(); const retenus = [];
-    for (const r of melange) { if (photos.has(r.coverImageUrl) || (!filtre && types.has(r.cuisine))) continue; photos.add(r.coverImageUrl); types.add(r.cuisine); retenus.push(r); if (retenus.length >= NB) break; }
-    for (const r of melange) { if (retenus.length >= NB) break; if (retenus.includes(r) || photos.has(r.coverImageUrl)) continue; photos.add(r.coverImageUrl); retenus.push(r); }
+    for (const r of melange) { const ph = idPhoto(r.coverImageUrl); if (photos.has(ph) || (!filtre && types.has(r.cuisine))) continue; photos.add(ph); types.add(r.cuisine); retenus.push(r); if (retenus.length >= NB) break; }
+    for (const r of melange) { if (retenus.length >= NB) break; const ph = idPhoto(r.coverImageUrl); if (retenus.includes(r) || photos.has(ph)) continue; photos.add(ph); retenus.push(r); }
     return retenus;
   }, [restaurants, filtre]);
 
