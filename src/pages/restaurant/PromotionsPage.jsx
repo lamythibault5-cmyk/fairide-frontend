@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -52,7 +52,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
           <p className="small" style={{ margin: '4px 0 0' }}>{t('promosPage.fairideIntro')}</p>
         </div>
       </div>
-      <p className="small avantage-note">{t('promosPage.fairideOptional')}</p>
+      <p className="small avantage-note">{t('promosPage.fairideOptional')} <Link to="/dashboard/menu#menu-geste-prix">{t('promosPage.fairidePricesLink')}</Link></p>
       <div className="avantage-options">
         <div className={`avantage-option ${avantage ? 'est-actif' : ''}`}>
           <b>🍽️ {t('promosPage.fairideItemsTitle')}</b>

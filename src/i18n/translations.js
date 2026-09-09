@@ -3703,7 +3703,8 @@ export const translations = {
       fairideRemove: 'Retirer',
       fairideSaved: 'Avantage enregistré. Merci pour tes clients !',
       fairideRemoved: 'Avantage retiré.',
-      ownPromosTitle: 'Tes promotions'
+      ownPromosTitle: 'Tes promotions',
+      fairidePricesLink: 'Tu peux aussi ajuster directement les prix de ta carte (± X %).'
     },
     menuImport: {
       backToReview: '← Retour à la relecture',
@@ -3744,7 +3745,20 @@ export const translations = {
       addConfirmBody: 'Les {n} plat(s) sélectionné(s) dans ce document seront ajoutés à ton menu.',
       readIntro: '{n} plat(s) lu(s) dans le document — vérifie et corrige avant d\'ajouter au menu (décoche ce que tu ne veux pas garder). Aucune photo n\'est ajoutée automatiquement : tu peux en choisir une pour chaque plat en cliquant sur sa vignette — les photos déjà présentes dans ta galerie y sont directement disponibles.',
       whatAboutExisting: 'Que faire des {n} plat(s) déjà dans ton menu ?',
-      replaceWarn: '⚠️ Les {n} plat(s) actuel(s) de ton menu seront définitivement supprimés et remplacés par la sélection ci-dessous.'
+      replaceWarn: '⚠️ Les {n} plat(s) actuel(s) de ton menu seront définitivement supprimés et remplacés par la sélection ci-dessous.',
+      priceGestureTitle: 'Un geste sur tes prix ?',
+      priceGestureIntro: 'Sur Fairide, ton commerce garde 90 % du prix. Si ces prix viennent d\'une autre plateforme ou de ta carte, tu peux les ajuster d\'un pourcentage avant de les publier, si tu le souhaites.',
+      priceSource: 'Ces prix viennent de :',
+      sourcePlatform: 'Une plateforme de livraison',
+      sourceOwn: 'Mon site ou ma carte',
+      sourcePlatformHint: 'Les grandes plateformes prennent jusqu\'à 30 % : beaucoup de commerces y gonflent leurs prix de 15 à 25 %. Ici, tu peux revenir plus près de tes vrais prix.',
+      sourceOwnHint: 'Tes prix sont déjà les bons. Un petit geste reste possible, ou garde-les tels quels : c\'est très bien aussi.',
+      customPercent: 'Autre %',
+      priceExample: 'Exemple : {before} → {after}',
+      applyPercent: 'Appliquer {p} à tous les prix',
+      applied: '{p} appliqué',
+      restorePrices: 'Remettre les prix d\'origine',
+      priceGestureOptional: 'Facultatif : tu peux aussi corriger chaque prix à la main ci-dessous, ou tout laisser tel quel.'
     },
     optionGroups: {
       groupName: 'Nom du groupe',
@@ -3926,7 +3940,18 @@ export const translations = {
       method5Button: 'Aller à ma carte',
       quickStartConcierge: '🤝 Demander à Fairide de s\'en occuper',
       methodsTitleAdmin: 'Intégrer sa carte : 4 façons de faire',
-      methodsIntroAdmin: 'Importe la carte depuis la plateforme de référence (PDF, photos, site web ou texte copié), ou pars d\'un modèle. Tout passe par la relecture avant d\'être ajouté : vérifie les prix et les descriptions comme le ferait le restaurateur.'
+      methodsIntroAdmin: 'Importe la carte depuis la plateforme de référence (PDF, photos, site web ou texte copié), ou pars d\'un modèle. Tout passe par la relecture avant d\'être ajouté : vérifie les prix et les descriptions comme le ferait le restaurateur.',
+      adjustTitle: 'Ajuster tous les prix de ta carte',
+      adjustIntro: 'Sur Fairide, ton commerce garde 90 % du prix, là où d\'autres plateformes en prennent jusqu\'à 30 %. Si tu le souhaites, baisse un peu tes prix par rapport à ces plateformes, ou ajuste-les par rapport à ta carte. Arrondi au 0,10 €. Rien ne t\'y oblige.',
+      adjustCustom: 'Pourcentage personnalisé',
+      adjustButton: 'Ajuster les prix',
+      adjustConfirm: 'Appliquer {p} aux {n} produits de ta carte ? Les prix seront arrondis au 0,10 €. Tu pourras toujours les corriger un par un ensuite.',
+      adjustYes: 'Oui, appliquer',
+      adjustNo: 'Annuler',
+      adjustInvalid: 'Indique un pourcentage différent de 0.',
+      adjustDone: '{n} prix ajustés de {p}.',
+      adjustAlt: 'Tu préfères garder tes prix et offrir une remise affichée sur chaque produit ?',
+      adjustAltLink: 'Voir l\'Avantage Fairide'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -9081,7 +9106,8 @@ export const translations = {
       fairideRemove: 'Remove',
       fairideSaved: 'Advantage saved. Thank you on behalf of your customers!',
       fairideRemoved: 'Advantage removed.',
-      ownPromosTitle: 'Your promotions'
+      ownPromosTitle: 'Your promotions',
+      fairidePricesLink: 'You can also adjust the prices on your menu directly (± X%).'
     },
     menuImport: {
       backToReview: '← Back to review',
@@ -9122,7 +9148,20 @@ export const translations = {
       addConfirmBody: 'The {n} dish(es) selected in this document will be added to your menu.',
       readIntro: '{n} dish(es) read from the document — check and correct before adding to the menu (untick what you don\'t want to keep). No photo is added automatically: you can choose one for each dish by clicking its thumbnail — photos already in your gallery are directly available there.',
       whatAboutExisting: 'What about the {n} dish(es) already in your menu?',
-      replaceWarn: '⚠️ The {n} current dish(es) of your menu will be permanently deleted and replaced by the selection below.'
+      replaceWarn: '⚠️ The {n} current dish(es) of your menu will be permanently deleted and replaced by the selection below.',
+      priceGestureTitle: 'A gesture on your prices?',
+      priceGestureIntro: 'On Fairide, your business keeps 90% of the price. If these prices come from another platform or from your own menu, you can adjust them by a percentage before publishing, if you wish.',
+      priceSource: 'These prices come from:',
+      sourcePlatform: 'A delivery platform',
+      sourceOwn: 'My website or my menu',
+      sourcePlatformHint: 'Big platforms take up to 30%: many businesses inflate their prices there by 15 to 25%. Here you can get closer to your real prices.',
+      sourceOwnHint: 'Your prices are already right. A small gesture is still possible, or keep them as they are: that is perfectly fine too.',
+      customPercent: 'Other %',
+      priceExample: 'Example: {before} → {after}',
+      applyPercent: 'Apply {p} to all prices',
+      applied: '{p} applied',
+      restorePrices: 'Restore original prices',
+      priceGestureOptional: 'Optional: you can also correct each price by hand below, or leave everything as it is.'
     },
     optionGroups: {
       groupName: 'Group name',
@@ -9304,7 +9343,18 @@ export const translations = {
       method5Button: 'Go to my menu',
       quickStartConcierge: '🤝 Ask Fairide to do it',
       methodsTitleAdmin: 'Integrate their menu: 4 ways to do it',
-      methodsIntroAdmin: 'Import the menu from the reference platform (PDF, photos, website or pasted text), or start from a template. Everything goes through review before being added: check prices and descriptions as the owner would.'
+      methodsIntroAdmin: 'Import the menu from the reference platform (PDF, photos, website or pasted text), or start from a template. Everything goes through review before being added: check prices and descriptions as the owner would.',
+      adjustTitle: 'Adjust all the prices on your menu',
+      adjustIntro: 'On Fairide, your business keeps 90% of the price, where other platforms take up to 30%. If you like, lower your prices a little compared with those platforms, or adjust them to match your menu. Rounded to €0.10. Nothing obliges you.',
+      adjustCustom: 'Custom percentage',
+      adjustButton: 'Adjust prices',
+      adjustConfirm: 'Apply {p} to the {n} products on your menu? Prices will be rounded to €0.10. You can still correct them one by one afterwards.',
+      adjustYes: 'Yes, apply',
+      adjustNo: 'Cancel',
+      adjustInvalid: 'Enter a percentage other than 0.',
+      adjustDone: '{n} prices adjusted by {p}.',
+      adjustAlt: 'Would you rather keep your prices and offer a discount shown on every product?',
+      adjustAltLink: 'See the Fairide advantage'
     },
     editResto: {
       title: 'My restaurant details',
@@ -14459,7 +14509,8 @@ export const translations = {
       fairideRemove: 'Verwijderen',
       fairideSaved: 'Voordeel opgeslagen. Bedankt namens je klanten!',
       fairideRemoved: 'Voordeel verwijderd.',
-      ownPromosTitle: 'Je promoties'
+      ownPromosTitle: 'Je promoties',
+      fairidePricesLink: 'Je kunt ook rechtstreeks de prijzen van je kaart aanpassen (± X%).'
     },
     menuImport: {
       backToReview: '← Terug naar de controle',
@@ -14500,7 +14551,20 @@ export const translations = {
       addConfirmBody: 'De {n} geselecteerde gerecht(en) uit dit document worden aan je menu toegevoegd.',
       readIntro: '{n} gerecht(en) gelezen uit het document — controleer en corrigeer vóór je ze aan het menu toevoegt (vink af wat je niet wilt houden). Er wordt geen foto automatisch toegevoegd: je kunt er per gerecht een kiezen door op de miniatuur te klikken — foto\'s die al in je galerij staan zijn daar meteen beschikbaar.',
       whatAboutExisting: 'Wat met de {n} gerecht(en) die al in je menu staan?',
-      replaceWarn: '⚠️ De {n} huidige gerecht(en) van je menu worden definitief verwijderd en vervangen door de selectie hieronder.'
+      replaceWarn: '⚠️ De {n} huidige gerecht(en) van je menu worden definitief verwijderd en vervangen door de selectie hieronder.',
+      priceGestureTitle: 'Een gebaar op je prijzen?',
+      priceGestureIntro: 'Op Fairide houdt je zaak 90% van de prijs. Komen deze prijzen van een ander platform of van je eigen kaart, dan kun je ze vóór publicatie met een percentage aanpassen, als je dat wilt.',
+      priceSource: 'Deze prijzen komen van:',
+      sourcePlatform: 'Een bezorgplatform',
+      sourceOwn: 'Mijn website of mijn kaart',
+      sourcePlatformHint: 'Grote platformen nemen tot 30%: veel zaken verhogen er hun prijzen met 15 tot 25%. Hier kun je dichter bij je echte prijzen blijven.',
+      sourceOwnHint: 'Je prijzen zijn al juist. Een klein gebaar kan nog, of laat ze zoals ze zijn: ook prima.',
+      customPercent: 'Ander %',
+      priceExample: 'Voorbeeld: {before} → {after}',
+      applyPercent: '{p} toepassen op alle prijzen',
+      applied: '{p} toegepast',
+      restorePrices: 'Oorspronkelijke prijzen herstellen',
+      priceGestureOptional: 'Optioneel: je kunt elke prijs hieronder ook handmatig aanpassen, of alles zo laten.'
     },
     optionGroups: {
       groupName: 'Naam van de groep',
@@ -14682,7 +14746,18 @@ export const translations = {
       method5Button: 'Naar mijn kaart',
       quickStartConcierge: '🤝 Fairide vragen het te doen',
       methodsTitleAdmin: 'Zijn kaart integreren: 4 manieren',
-      methodsIntroAdmin: 'Importeer de kaart vanaf het referentieplatform (pdf, foto\'s, website of gekopieerde tekst), of vertrek van een sjabloon. Alles passeert de nalezing vóór het wordt toegevoegd: controleer prijzen en beschrijvingen zoals de uitbater dat zou doen.'
+      methodsIntroAdmin: 'Importeer de kaart vanaf het referentieplatform (pdf, foto\'s, website of gekopieerde tekst), of vertrek van een sjabloon. Alles passeert de nalezing vóór het wordt toegevoegd: controleer prijzen en beschrijvingen zoals de uitbater dat zou doen.',
+      adjustTitle: 'Alle prijzen van je kaart aanpassen',
+      adjustIntro: 'Op Fairide houdt je zaak 90% van de prijs, waar andere platformen tot 30% nemen. Als je wilt, verlaag je je prijzen wat ten opzichte van die platformen, of pas je ze aan aan je kaart. Afgerond op € 0,10. Niets verplicht je.',
+      adjustCustom: 'Eigen percentage',
+      adjustButton: 'Prijzen aanpassen',
+      adjustConfirm: '{p} toepassen op de {n} producten van je kaart? De prijzen worden afgerond op € 0,10. Je kunt ze daarna nog één voor één corrigeren.',
+      adjustYes: 'Ja, toepassen',
+      adjustNo: 'Annuleren',
+      adjustInvalid: 'Geef een percentage anders dan 0 op.',
+      adjustDone: '{n} prijzen aangepast met {p}.',
+      adjustAlt: 'Liever je prijzen houden en een korting tonen op elk product?',
+      adjustAltLink: 'Bekijk het Fairide-voordeel'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',

@@ -2825,3 +2825,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .avantage-option.est-actif { border-color: #1E8A7A; box-shadow: inset 3px 0 0 #1E8A7A; }
 .avantage-option .chip.chip-on { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
 .avantage-bandeau { background: #1E8A7A; color: #fff; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-weight: 700; font-size: 13px; }
+
+/* « Geste prix » (relecture d'import et carte en ligne) : même famille visuelle que l'Avantage Fairide. */
+.geste-prix, .geste-prix-carte { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); }
+.geste-prix .chip.active, .geste-prix-carte .chip.active { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
