@@ -174,12 +174,23 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
     for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
     toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
-  const carte = d.documents.filter((x) => x.docType === 'identity_card');
+  const carte = d.documents.filter((x) => x.docType === 'identity_card' || x.docType === 'driving_licence');
+  const [autreMoyen, setAutreMoyen] = useState(false);
+  const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen;
   return (
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.identityTitle')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.identityHelp')}</p>
-      {id.status === 'verified' ? (
+      {recue ? (
+        <div className="courier-ok">✅ {t('courierOnboarding.identityReceived', { n: carte.length })}
+          <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.identityReceivedHelp')}</p>
+          <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => { fichier.current?.click(); }}>📎 {t('courierOnboarding.identityAddFile')}</button>
+            <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setAutreMoyen(true)}>{t('courierOnboarding.identityOtherWay')}</button>
+          </div>
+          <input ref={fichier} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={deposer} />
+        </div>
+      ) : id.status === 'verified' ? (
         <div className="courier-ok">✅ {t('courierOnboarding.identityVerified', { name: `${id.firstName} ${id.lastName}`.trim(), provider: t(`courierOnboarding.provider_${id.provider}`) })}
           {id.nameMatchAccount === false && <p className="small" style={{ color: 'var(--red)', margin: '6px 0 0' }}>⚠️ {t('courierOnboarding.nameMismatch')}</p>}
         </div>

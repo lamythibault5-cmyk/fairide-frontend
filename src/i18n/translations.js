@@ -581,7 +581,11 @@ export const translations = {
       toastChangeRequested: 'Demande envoyée à Fairide.',
       hide: 'Masquer',
       open: 'Ouvrir',
-      toastDocsUploaded: '{n} documents déposés.'
+      toastDocsUploaded: '{n} documents déposés.',
+      identityReceived: 'Pièce d\'identité reçue ({n} fichier(s)) : rien à refaire.',
+      identityReceivedHelp: 'Fairide vérifie ta pièce d\'identité en validant ton dossier. Tu peux passer à l\'étape suivante.',
+      identityAddFile: 'Ajouter un fichier',
+      identityOtherWay: 'Vérifier autrement (instantané)'
     },
     peppol: {
       title: 'Facturation électronique Peppol',
@@ -4850,7 +4854,11 @@ export const translations = {
       toastChangeRequested: 'Request sent to Fairide.',
       hide: 'Hide',
       open: 'Open',
-      toastDocsUploaded: '{n} documents uploaded.'
+      toastDocsUploaded: '{n} documents uploaded.',
+      identityReceived: 'Identity document received ({n} file(s)): nothing to redo.',
+      identityReceivedHelp: 'Fairide checks your identity document when validating your file. You can move on to the next step.',
+      identityAddFile: 'Add a file',
+      identityOtherWay: 'Verify another way (instant)'
     },
     peppol: {
       title: 'Peppol e-invoicing',
@@ -9119,7 +9127,11 @@ export const translations = {
       toastChangeRequested: 'Aanvraag naar Fairide verzonden.',
       hide: 'Verbergen',
       open: 'Openen',
-      toastDocsUploaded: '{n} documenten opgeladen.'
+      toastDocsUploaded: '{n} documenten opgeladen.',
+      identityReceived: 'Identiteitsbewijs ontvangen ({n} bestand(en)): niets opnieuw te doen.',
+      identityReceivedHelp: 'Fairide controleert je identiteitsbewijs bij de validatie van je dossier. Je kunt naar de volgende stap.',
+      identityAddFile: 'Bestand toevoegen',
+      identityOtherWay: 'Anders verifiëren (onmiddellijk)'
     },
     peppol: {
       title: 'Elektronische facturatie via Peppol',
