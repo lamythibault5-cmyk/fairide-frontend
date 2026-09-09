@@ -15,7 +15,7 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
-import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, pct, downloadCsv, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 
 const activityLabels = (tr) => ({
@@ -144,7 +144,7 @@ export default function AdminDriversPage() {
     vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') }
   };
   const visibles = useMemo(() => sortRows((filtered || []).filter((d) => natureOk(nature, d) && (filtre === 'all' || d.adminStatus === filtre) && (!activite || d.activityStatus === activite)), colonnes, sort), [filtered, filtre, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (estCompteTest(d) ? 0 : 1), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
+  const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (estCompteReel(d) ? 1 : 0), deleted: a.deleted + (estCompteSupprime(d) ? 1 : 0), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, deleted: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
 
   return (
     <div>
@@ -152,7 +152,7 @@ export default function AdminDriversPage() {
       {drivers && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{drivers.length}</div><div className="label">{tr('adminDrivers.kpiTotal')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminDrivers.kpiReal', { test: drivers.length - kpi.real })}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminDrivers.kpiReal', { test: drivers.length - kpi.real - kpi.deleted })}{kpi.deleted > 0 ? tr('adminCommon.kpiDeletedSuffix', { n: kpi.deleted }) : ''}</div></div>
           <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminDrivers.kpiPending')}</div></div>
           <div className="stat-card"><div className="num">{kpi.available}</div><div className="label">{tr('adminDrivers.kpiAvailable')}</div></div>
           <div className="stat-card"><div className="num">{kpi.delivering}</div><div className="label">{tr('adminDrivers.kpiDelivering')}</div></div>
@@ -167,7 +167,7 @@ export default function AdminDriversPage() {
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
           ))}
         </div>
-        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts') }} />
+        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
         <select value={activite} onChange={(e) => setActivite(e.target.value)} style={{ maxWidth: 180 }}>
           <option value="">{tr('adminDrivers.allActivities')}</option>
           {Object.entries(activityLabels(tr)).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -195,7 +195,7 @@ export default function AdminDriversPage() {
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <b>{d.name}</b>
               <div className="row" style={{ gap: 6 }}>
-                {estCompteTest(d) && <TestBadge />}
+                {estCompteSupprime(d) ? <DeletedBadge /> : estCompteTest(d) && <TestBadge />}
                 <span className="pill" style={{ color: act?.color }}>{act?.label}</span>
                 <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>
                   {d.adminStatus === 'approved' ? tr('adminDrivers.approved') : d.adminStatus === 'blocked' ? tr('adminDrivers.filterBlocked') : tr('adminDrivers.pendingBadge')}

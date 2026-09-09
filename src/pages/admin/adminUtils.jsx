@@ -27,18 +27,34 @@ export function TestToggleButton({ userId, isTest, token, api, toast, onChanged,
 
 // Filtre « vrais comptes / comptes test » identique sur chaque liste d'utilisateurs (restaurants, clients,
 // livreurs, dossiers) : `nature` vaut 'all' | 'real' | 'test'.
-export function NatureChips({ nature, onChange, realCount, labels }) {
+export function NatureChips({ nature, onChange, realCount, deletedCount = 0, labels }) {
+  const chips = [['all', labels.all], ['real', labels.real], ['test', labels.test]];
+  if (deletedCount > 0 && labels.deleted) chips.push(['deleted', labels.deleted]);
   return (
     <div className="role-pick" style={{ margin: 0 }}>
-      {[['all', labels.all], ['real', labels.real], ['test', labels.test]].map(([k, l]) => (
-        <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => onChange(k)}>{l}{k === 'real' && realCount > 0 ? ` (${realCount})` : ''}</div>
+      {chips.map(([k, l]) => (
+        <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => onChange(k)}>{l}{k === 'real' && realCount > 0 ? ` (${realCount})` : ''}{k === 'deleted' ? ` (${deletedCount})` : ''}</div>
       ))}
     </div>
   );
 }
+// Compte supprimé par son titulaire (anonymisé côté serveur) : ni un vrai utilisateur, ni un compte test.
+export function estCompteSupprime(u) {
+  if (!u) return false;
+  if (u.isDeleted !== undefined && u.isDeleted !== null) return !!u.isDeleted;
+  return /@fairide\.invalid$/i.test(u.email || u.ownerEmail || '');
+}
+// Vrai utilisateur : ni test, ni supprimé — c'est ce que comptent les « vrais comptes ».
+export function estCompteReel(u) { return !estCompteTest(u) && !estCompteSupprime(u); }
 export function natureOk(nature, u) {
-  const test = typeof u === 'string' ? isTestAccount(u) : estCompteTest(u);
-  return nature === 'all' || (nature === 'test') === test;
+  if (nature === 'all') return true;
+  const obj = typeof u === 'string' ? { email: u } : u;
+  if (nature === 'real') return estCompteReel(obj);
+  if (nature === 'deleted') return estCompteSupprime(obj);
+  return estCompteTest(obj) && !estCompteSupprime(obj);
+}
+export function DeletedBadge() {
+  return <span className="pill" style={{ opacity: 0.7 }} title={{ fr: 'Compte supprimé par son titulaire (anonymisé)', en: 'Account deleted by its owner (anonymised)', nl: 'Account verwijderd door de eigenaar (geanonimiseerd)' }[getLanguage()]}>🗑️</span>;
 }
 
 const DRAPEAU_LANGUE = { fr: '🇫🇷 FR', en: '🇬🇧 EN', nl: '🇳🇱 NL' };

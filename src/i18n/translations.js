@@ -1946,7 +1946,9 @@ export const translations = {
       markTest: '🧪 Marquer comme compte test',
       markReal: '✅ Marquer comme vrai compte',
       markedTest: 'Compte marqué comme test : il sort des compteurs de vrais utilisateurs.',
-      markedReal: 'Compte marqué comme vrai utilisateur.'
+      markedReal: 'Compte marqué comme vrai utilisateur.',
+      filterDeletedAccounts: 'Supprimés',
+      kpiDeletedSuffix: ' · {n} supprimé(s)'
     },
     help: {
       pageTitle: 'Aide et contact — Fairide',
@@ -2132,10 +2134,10 @@ export const translations = {
       sort_regles_3: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
       rider_sub: 'Saute, double-saute, enchaîne les saltos',
       rider_perdu: '🤕 Chute !',
-      rider_regles_0: 'Tu roules sur une route en bosses. Tape brièvement pour sauter, tape à nouveau en l’air pour un double saut (plus haut, plus longtemps). Maintiens appuyé pour accélérer.',
-      rider_regles_1: 'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi et chaque bout de route rapportent un point.',
+      rider_regles_0: 'Tu roules sur une route en bosses. Tape pour sauter, tape à nouveau en l’air pour un double saut. Garde le doigt appuyé après l’atterrissage pour accélérer.',
+      rider_regles_1: 'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi, chaque plat attrapé en vol et chaque bout de route rapportent un point.',
       rider_regles_2: 'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point (double salto = 2 points, triple = 3). Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.',
-      rider_regles_3: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour accélérer au sol et tourner en l’air.',
+      rider_regles_3: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour tourner en l’air, et après l’atterrissage pour accélérer.',
       arrow_sub: 'Vise les passages',
       arrow_perdu: '💢 Dans le mur !',
       arrow_regles_0: 'Ta flèche file vers le haut. Des murs descendent, chacun avec une seule ouverture.',
@@ -6178,7 +6180,9 @@ export const translations = {
       markTest: '🧪 Mark as test account',
       markReal: '✅ Mark as real account',
       markedTest: 'Account marked as test: it leaves the real-user counters.',
-      markedReal: 'Account marked as a real user.'
+      markedReal: 'Account marked as a real user.',
+      filterDeletedAccounts: 'Deleted',
+      kpiDeletedSuffix: ' · {n} deleted'
     },
     help: {
       pageTitle: 'Help and contact — Fairide',
@@ -6364,10 +6368,10 @@ export const translations = {
       sort_regles_3: 'Slide your finger (or the mouse) left and right: the basket follows.',
       rider_sub: 'Jump, double-jump, chain backflips',
       rider_perdu: '🤕 Crash!',
-      rider_regles_0: 'You ride on a bumpy road. Tap briefly to jump, tap again in the air for a double jump (higher, longer). Hold to accelerate.',
-      rider_regles_1: 'Jump over the obstacles (🪨 🚧 🛢️): touching one on the ground means a crash. Each obstacle cleared and each stretch of road earns a point.',
+      rider_regles_0: 'You ride on a bumpy road. Tap to jump, tap again in the air for a double jump. Keep your finger down after landing to speed up.',
+      rider_regles_1: 'Jump over the obstacles (🪨 🚧 🛢️): touching one on the ground is a crash. Every obstacle cleared, every dish caught mid-air and every stretch of road earns a point.',
       rider_regles_2: 'In the air, hold to rotate: each full flip is worth 1 point (double flip = 2 points, triple = 3). Release to straighten up before the ground — landing sideways means a crash.',
-      rider_regles_3: 'Tap to jump (twice for a double jump); hold (finger, mouse or Space) to accelerate on the ground and rotate in the air.',
+      rider_regles_3: 'Tap to jump (twice for a double jump); hold (finger, mouse or Space) to rotate in the air, and after landing to speed up.',
       arrow_sub: 'Aim for the gaps',
       arrow_perdu: '💢 Into the wall!',
       arrow_regles_0: 'Your arrow shoots upward. Walls come down, each with a single opening.',
@@ -10410,7 +10414,9 @@ export const translations = {
       markTest: '🧪 Markeren als testaccount',
       markReal: '✅ Markeren als echt account',
       markedTest: 'Account gemarkeerd als test: het telt niet meer mee als echte gebruiker.',
-      markedReal: 'Account gemarkeerd als echte gebruiker.'
+      markedReal: 'Account gemarkeerd als echte gebruiker.',
+      filterDeletedAccounts: 'Verwijderd',
+      kpiDeletedSuffix: ' · {n} verwijderd'
     },
     help: {
       pageTitle: 'Hulp en contact — Fairide',
@@ -10596,10 +10602,10 @@ export const translations = {
       sort_regles_3: 'Schuif je vinger (of de muis) van links naar rechts: de mand volgt.',
       rider_sub: 'Spring, dubbelspring, rijg salto’s aaneen',
       rider_perdu: '🤕 Gevallen!',
-      rider_regles_0: 'Je rijdt op een hobbelige weg. Tik kort om te springen, tik nog eens in de lucht voor een dubbele sprong (hoger, langer). Houd ingedrukt om te versnellen.',
-      rider_regles_1: 'Spring over de obstakels (🪨 🚧 🛢️): er één raken op de grond is vallen. Elk genomen obstakel en elk stuk weg levert een punt op.',
+      rider_regles_0: 'Je rijdt op een hobbelige weg. Tik om te springen, tik nog eens in de lucht voor een dubbele sprong. Houd je vinger na de landing ingedrukt om te versnellen.',
+      rider_regles_1: 'Spring over de obstakels (🪨 🚧 🛢️): er een raken op de grond is een val. Elk genomen obstakel, elk gerecht dat je in de lucht vangt en elk stuk weg levert een punt op.',
       rider_regles_2: 'In de lucht houd je ingedrukt om te draaien: elke volledige salto is 1 punt waard (dubbele salto = 2 punten, drievoudige = 3). Laat los om je recht te zetten vóór de grond — scheef landen is vallen.',
-      rider_regles_3: 'Tik om te springen (twee keer voor een dubbele sprong); houd ingedrukt (vinger, muis of spatiebalk) om te versnellen op de grond en te draaien in de lucht.',
+      rider_regles_3: 'Tik om te springen (twee keer voor een dubbele sprong); houd ingedrukt (vinger, muis of spatiebalk) om te draaien in de lucht, en na de landing om te versnellen.',
       arrow_sub: 'Richt op de openingen',
       arrow_perdu: '💢 Tegen de muur!',
       arrow_regles_0: 'Je pijl schiet omhoog. Muren dalen af, elk met één enkele opening.',

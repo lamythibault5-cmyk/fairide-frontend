@@ -14,7 +14,7 @@ import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
-import { estCompteTest, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
+import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, filterBySearch, money, fmtDate, downloadCsv, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
@@ -140,7 +140,7 @@ export default function AdminClientsPage() {
     if (filtre === 'refunds') return c.refundCount > 0;
     return true;
   }), colonnes, sort), [filtered, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (estCompteTest(c) ? 0 : 1), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (clients || []).reduce((a, c) => ({ real: a.real + (estCompteReel(c) ? 1 : 0), deleted: a.deleted + (estCompteSupprime(c) ? 1 : 0), new7: a.new7 + (maintenant - c.createdAt <= J7 ? 1 : 0), active30: a.active30 + (c.lastOrderAt && maintenant - c.lastOrderAt <= J30 ? 1 : 0), spent: a.spent + c.totalSpent, orders: a.orders + c.orderCount }), { real: 0, deleted: 0, new7: 0, active30: 0, spent: 0, orders: 0 }), [clients]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -148,7 +148,7 @@ export default function AdminClientsPage() {
       {clients && (
         <div className="stat-grid">
           <div className="stat-card highlight"><div className="num">{clients.length}</div><div className="label">{tr('adminClients.kpiTotal')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal', { test: clients.length - kpi.real })}</div></div>
+          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminClients.kpiReal', { test: clients.length - kpi.real - kpi.deleted })}{kpi.deleted > 0 ? tr('adminCommon.kpiDeletedSuffix', { n: kpi.deleted }) : ''}</div></div>
           <div className="stat-card"><div className="num">{kpi.new7}</div><div className="label">{tr('adminClients.kpiNew')}</div></div>
           <div className="stat-card"><div className="num">{kpi.active30}</div><div className="label">{tr('adminClients.kpiActive')}</div></div>
           <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.orders')}</div></div>
@@ -163,7 +163,7 @@ export default function AdminClientsPage() {
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>
           ))}
         </div>
-        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts') }} />
+        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
@@ -185,7 +185,7 @@ export default function AdminClientsPage() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{c.name}</b>
             <div className="row" style={{ gap: 6 }}>
-              {estCompteTest(c) && <TestBadge />}
+              {estCompteSupprime(c) ? <DeletedBadge /> : estCompteTest(c) && <TestBadge />}
               {c.adminStatus === 'blocked' && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span>}
               {c.refundCount > 0 && <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.refundsCount', { n: c.refundCount })}</span>}
             </div>
