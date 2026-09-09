@@ -8,6 +8,7 @@ import OrderReceipt from '../../components/OrderReceipt';
 import { buildTicketBytes, COLUMNS_58MM, COLUMNS_80MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
 import PrinterSettings, { AUTO_PRINT_KEY } from '../../components/PrinterSettings';
+import TicketEditor from '../../components/TicketEditor';
 import {
   DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
@@ -41,13 +42,24 @@ export default function OrdersPage() {
   const [autoPrint, setAutoPrint] = useState(() => { try { return localStorage.getItem(AUTO_PRINT_KEY) === '1'; } catch { return false; } });
   function choisirAutoPrint(v) { setAutoPrint(v); try { localStorage.setItem(AUTO_PRINT_KEY, v ? '1' : '0'); } catch { /* sans stockage */ } }
 
-  async function printBluetooth(order, { silencieux = false } = {}) {
+  // Nombre d'impressions déjà faites par commande (session) : affiché dans le détail, pour savoir si le
+  // ticket est déjà sorti et pouvoir le réimprimer sans hésiter quand la première sortie a raté.
+  const [impressions, setImpressions] = useState({});
+  const [editeur, setEditeur] = useState(null); // null | { order } (modification) | { order: null } (création)
+  const [recuEdite, setRecuEdite] = useState(null);
+
+  async function printBluetooth(order, { silencieux = false, copies = 1 } = {}) {
     setPrinting(true);
     try {
       if (!btPrinter.connectedDeviceName()) setBtName(await btPrinter.connect());
-      await btPrinter.printBytes(buildTicketBytes(order, restaurant, { columns: paperColumns }));
+      const octets = buildTicketBytes(order, restaurant, { columns: paperColumns });
+      for (let i = 0; i < Math.max(1, copies); i++) {
+        if (i > 0) await new Promise((r) => setTimeout(r, 600));
+        await btPrinter.printBytes(octets);
+      }
       setBtName(btPrinter.connectedDeviceName());
-      if (!silencieux) toast(t('ordersResto.toastTicketSent'));
+      setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + Math.max(1, copies) }));
+      if (!silencieux) toast(copies > 1 ? t('ordersResto.toastTicketSentN', { n: copies }) : t('ordersResto.toastTicketSent'));
       return true;
     } catch (e) {
       // Refuser le sélecteur d'appareils lève une NotFoundError : ce n'est pas une panne, inutile
@@ -157,9 +169,15 @@ export default function OrdersPage() {
 
   function printReceipt(order) {
     const prevTitle = document.title;
-    document.title = `Fairide - Commande ${order.id.slice(0, 8)}`;
+    document.title = `Fairide - Commande ${String(order.id).slice(0, 8)}`;
     window.print();
     document.title = prevTitle;
+    setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
+  }
+  function printReceiptEdite(order) {
+    setRecuEdite(order);
+    // Le portail doit être rendu avec ce ticket avant l'ouverture de la boîte d'impression.
+    setTimeout(() => { printReceipt(order); setTimeout(() => setRecuEdite(null), 500); }, 50);
   }
 
   return (
@@ -193,7 +211,7 @@ export default function OrdersPage() {
       </div>
 
       <PrinterSettings btName={btName} onConnect={connecterImprimante} onDisconnect={deconnecterImprimante} onTest={ticketDeTest} printing={printing}
-        paperColumns={paperColumns} onPaper={choosePaper} autoPrint={autoPrint} onAutoPrint={choisirAutoPrint} />
+        paperColumns={paperColumns} onPaper={choosePaper} autoPrint={autoPrint} onAutoPrint={choisirAutoPrint} onNewTicket={() => setEditeur({ order: null })} />
 
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('ordersResto.incoming')}</h2>
       {orders.length === 0 && <div className="empty">{t('ordersResto.noneYet')}</div>}
@@ -382,12 +400,19 @@ export default function OrdersPage() {
                 {btName && <span className="small" style={{ marginLeft: 'auto' }}>🔗 {btName}</span>}
               </div>
             )}
-            <div className="row" style={{ marginTop: 4, gap: 8 }}>
+            {impressions[selectedOrder.id] > 0 && (
+              <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })} {t('ordersResto.reprintHint')}</p>
+            )}
+            <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
               {btSupported && (
                 <button className="btn-teal" disabled={printing} onClick={() => printBluetooth(selectedOrder)}>
-                  {printing ? t('ordersResto.printing') : btName ? t('ordersResto.printTicket') : t('ordersResto.connectAndPrint')}
+                  {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : btName ? t('ordersResto.printTicket') : t('ordersResto.connectAndPrint')}
                 </button>
               )}
+              {btSupported && btName && (
+                <button className="btn-outline" disabled={printing} onClick={() => printBluetooth(selectedOrder, { copies: 2 })}>{t('ordersResto.printTwo')}</button>
+              )}
+              <button className="btn-outline" onClick={() => setEditeur({ order: selectedOrder })}>✏️ {t('ordersResto.editTicket')}</button>
               <button className="btn-outline" onClick={() => printReceipt(selectedOrder)}>{t('ordersResto.printDeliveryNote')}</button>
               <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
             </div>
@@ -398,7 +423,13 @@ export default function OrdersPage() {
       {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
           visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
           et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
-      {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
+      {(recuEdite || selectedOrder) && createPortal(<OrderReceipt order={recuEdite || selectedOrder} restaurant={restaurant} />, document.body)}
+      {editeur && (
+        <TicketEditor initial={editeur.order} btName={btName} printing={printing}
+          onPrintBluetooth={(ticket, copies) => printBluetooth(ticket, { copies })}
+          onPrintBrowser={printReceiptEdite}
+          onClose={() => setEditeur(null)} />
+      )}
     </div>
   );
 }

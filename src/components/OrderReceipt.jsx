@@ -36,7 +36,7 @@ export default function OrderReceipt({ order, restaurant }) {
         <b>{order.orderType === 'dine_in' ? order.reservationName : order.clientName}</b>
         {order.clientPhone && <> · {order.clientPhone}</>}
       </p>
-      {order.orderType === 'dine_in' && <p style={{ margin: '4px 0' }}>Table pour {order.partySize} personne{order.partySize > 1 ? 's' : ''}</p>}
+      {order.orderType === 'dine_in' && order.partySize > 0 && <p style={{ margin: '4px 0' }}>Table pour {order.partySize} personne{order.partySize > 1 ? 's' : ''}</p>}
       {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.instruction', { label: deliveryInstructionLabel(order.deliveryInstructions, t) })}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.note', { note: order.deliveryNote })}</p>}
       <div className="receipt-divider" />

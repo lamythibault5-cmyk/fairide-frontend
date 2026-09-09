@@ -8,6 +8,7 @@ import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
+import TicketHelp from '../components/TicketHelp';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -667,6 +668,9 @@ export default function Account() {
 
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
+          <LigneCompte icone="🖨️" titre={t('ticketHelp.rowTitle')} sous={t('ticketHelp.rowSub')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
+            {ouvertes.has('tickets') && <TicketHelp />}
+          </LigneCompte>
           <LigneCompte icone="📜" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} />}
           </LigneCompte>

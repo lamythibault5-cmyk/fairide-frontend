@@ -10,7 +10,7 @@ import { COLUMNS_58MM, COLUMNS_80MM } from '../escposTicket';
 // d'un coup d'œil si elle était encore connectée.
 export const AUTO_PRINT_KEY = 'fairide.autoPrint';
 
-export default function PrinterSettings({ btName, onConnect, onDisconnect, onTest, printing, paperColumns, onPaper, autoPrint, onAutoPrint }) {
+export default function PrinterSettings({ btName, onConnect, onDisconnect, onTest, printing, paperColumns, onPaper, autoPrint, onAutoPrint, onNewTicket }) {
   const { t } = useLanguage();
   const [ouvert, setOuvert] = useState(() => !btName);
   const supporte = btPrinter.isSupported();
@@ -40,13 +40,23 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
                 <button type="button" className={paperColumns === COLUMNS_58MM ? 'btn-teal' : 'btn-outline'} style={{ padding: '5px 11px', fontSize: 12 }} onClick={() => onPaper(COLUMNS_58MM)}>58 mm</button>
                 <button type="button" className={paperColumns === COLUMNS_80MM ? 'btn-teal' : 'btn-outline'} style={{ padding: '5px 11px', fontSize: 12 }} onClick={() => onPaper(COLUMNS_80MM)}>80 mm</button>
               </div>
+              <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                <button type="button" className="btn-outline" onClick={onNewTicket}>✏️ {t('ordersResto.newTicket')}</button>
+                <span className="small">{t('ordersResto.newTicketHelp')}</span>
+              </div>
               <label className="row" style={{ gap: 10, alignItems: 'flex-start', cursor: 'pointer', marginTop: 12 }}>
                 <input type="checkbox" checked={autoPrint} onChange={(e) => onAutoPrint(e.target.checked)} style={{ marginTop: 3, width: 'auto' }} />
                 <span><b>{t('ordersResto.autoPrint')}</b><br /><span className="small">{t('ordersResto.autoPrintHelp')}</span></span>
               </label>
             </>
           ) : (
-            <p className="small" style={{ margin: 0 }}>{raison || t('ordersResto.printNoBtHelp')}</p>
+            <>
+              <p className="small" style={{ margin: 0 }}>{raison || t('ordersResto.printNoBtHelp')}</p>
+              <div className="row" style={{ gap: 8, marginTop: 10 }}>
+                <button type="button" className="btn-outline" onClick={onNewTicket}>✏️ {t('ordersResto.newTicket')}</button>
+                <span className="small">{t('ordersResto.newTicketHelp')}</span>
+              </div>
+            </>
           )}
           <div className="printer-compat small">
             <b>{t('ordersResto.printerCompatTitle')}</b>
