@@ -18,7 +18,12 @@ export default function DiscoverSection({ restaurants }) {
   }, [restaurants]);
   const cartes = useMemo(() => {
     const base = restaurants.filter((r) => r.coverImageUrl && (!filtre || r.cuisine === filtre));
-    return [...base].sort(() => Math.random() - 0.5).slice(0, NB);
+    const melange = [...base].sort(() => Math.random() - 0.5);
+    // Une photo ne sert qu'une fois ; sans filtre, un type de commerce n'apparaît qu'une fois tant qu'il en reste d'autres.
+    const photos = new Set(); const types = new Set(); const retenus = [];
+    for (const r of melange) { if (photos.has(r.coverImageUrl) || (!filtre && types.has(r.cuisine))) continue; photos.add(r.coverImageUrl); types.add(r.cuisine); retenus.push(r); if (retenus.length >= NB) break; }
+    for (const r of melange) { if (retenus.length >= NB) break; if (retenus.includes(r) || photos.has(r.coverImageUrl)) continue; photos.add(r.coverImageUrl); retenus.push(r); }
+    return retenus;
   }, [restaurants, filtre]);
 
   if (restaurants.length === 0) return null;
