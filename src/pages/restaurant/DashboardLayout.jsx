@@ -26,7 +26,7 @@ const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 
 export default function DashboardLayout() {
   const { t } = useLanguage();
-  const { token, user } = useAuth();
+  const { token, user, actingAs, actingAdminEmail, quitterAction } = useAuth();
   const navigate = useNavigate();
   // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
   // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
@@ -165,6 +165,14 @@ export default function DashboardLayout() {
       if (list.length === 1) pickResto(list[0].id);
       // Pas encore de restaurant -> on ouvre directement le formulaire de création, pas besoin de cliquer.
       else if (list.length === 0) setNewRestoOpen(true);
+      // Le commerce a été créé automatiquement à l'inscription : l'indice local ne sert plus qu'à retenir le
+      // site web pour lire la carte (Mes produits → import depuis le web).
+      if (list.length > 0) {
+        try {
+          const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null');
+          if (h) { if (h.website) localStorage.setItem('fairide_menu_source_url', h.website); localStorage.removeItem('fairide_resto_hint'); }
+        } catch { /* rien */ }
+      }
     }).catch((e) => toast(e.message));
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast(t('dashResto.toastPaymentsValidating'));
@@ -296,6 +304,12 @@ export default function DashboardLayout() {
 
   return (
     <div>
+      {actingAs && (
+        <div className="agir-bandeau" role="status">
+          <span>🛠️ {t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
+          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} onClick={quitterAction}>{t('dashResto.actingQuit')}</button>
+        </div>
+      )}
       {myRestos.length === 1 ? (
         <h2 style={{ margin: '0 0 14px' }}>{myRestos[0].name}</h2>
       ) : (

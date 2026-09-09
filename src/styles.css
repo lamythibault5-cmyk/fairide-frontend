@@ -2806,3 +2806,11 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .email-chip { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .email-chip:hover { border-color: var(--iris); color: var(--iris); }
 .email-chip-autre { color: var(--ink-soft); font-weight: 500; }
+
+/* Bouton « + Ajouter… » discret (2e téléphone, 2e e-mail) — inscription et Mon commerce. */
+.btn-link-plus { background: none; border: 0; padding: 2px 0; margin: 0 0 10px; color: var(--iris, #3b2fb5); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.btn-link-plus:hover { text-decoration: underline; }
+.contacts-commerce .contact-ligne { margin: 2px 0 4px; }
+.contacts-commerce .contact-second { margin: 4px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; }
+/* Bandeau « Fairide agit comme le restaurateur » en haut du tableau de bord du commerce. */
+.agir-bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #fff4d6; border: 1px solid #f0d28a; color: #6b4d00; font-weight: 600; font-size: 14px; }

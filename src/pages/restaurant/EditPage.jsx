@@ -36,6 +36,11 @@ export default function EditPage() {
   const [editResponsibleName, setEditResponsibleName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editWebsite, setEditWebsite] = useState('');
+  const [editPhoneSecondary, setEditPhoneSecondary] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editEmailSecondary, setEditEmailSecondary] = useState('');
+  const [phone2Ouvert, setPhone2Ouvert] = useState(false);
+  const [email2Ouvert, setEmail2Ouvert] = useState(false);
   const [editDesc, setEditDesc] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
@@ -105,6 +110,9 @@ export default function EditPage() {
     setEditResponsibleName(restaurant.responsibleName || '');
     setEditPhone(restaurant.phone || '');
     setEditWebsite(restaurant.website || '');
+    setEditPhoneSecondary(restaurant.phoneSecondary || ''); setPhone2Ouvert(!!restaurant.phoneSecondary);
+    setEditEmail(restaurant.email || '');
+    setEditEmailSecondary(restaurant.emailSecondary || ''); setEmail2Ouvert(!!restaurant.emailSecondary);
     setEditDesc(restaurant.desc || '');
     setEditCommune(restaurant.commune || COMMUNES[0]);
     setEditNeighborhood(restaurant.neighborhood || '');
@@ -142,6 +150,7 @@ export default function EditPage() {
         body: {
           name: editName.trim(),
           legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(), phone: editPhone.trim(), website: editWebsite.trim(),
+          phoneSecondary: phone2Ouvert ? editPhoneSecondary.trim() : '', email: editEmail.trim(), emailSecondary: email2Ouvert ? editEmailSecondary.trim() : '',
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours, open: editOpenFlag
@@ -382,6 +391,34 @@ export default function EditPage() {
           <PhoneInput id="edit-tel" value={editPhone} onChange={setEditPhone} autoComplete="off" />
           <span className="small">{t('editResto.phoneHelp')}</span>
         </div>
+        {!phone2Ouvert ? (
+          <button type="button" className="btn-link-plus" onClick={() => setPhone2Ouvert(true)}>＋ {t('editResto.addSecondPhone')}</button>
+        ) : (
+          <div className="field">
+            <label htmlFor="edit-tel2">{t('editResto.secondPhone')}</label>
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <div style={{ flex: 1 }}><PhoneInput id="edit-tel2" value={editPhoneSecondary} onChange={setEditPhoneSecondary} autoComplete="off" /></div>
+              <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setEditPhoneSecondary(''); setPhone2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
+            </div>
+            <span className="small">{t('editResto.secondPhoneHelp')}</span>
+          </div>
+        )}
+        <div className="field">
+          <label htmlFor="edit-mail">{t('editResto.contactEmail')}</label>
+          <input id="edit-mail" type="email" inputMode="email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} placeholder="contact@mon-commerce.be" />
+          <span className="small">{t('editResto.contactEmailHelp')}</span>
+        </div>
+        {!email2Ouvert ? (
+          <button type="button" className="btn-link-plus" onClick={() => setEmail2Ouvert(true)}>＋ {t('editResto.addSecondEmail')}</button>
+        ) : (
+          <div className="field">
+            <label htmlFor="edit-mail2">{t('editResto.secondEmail')}</label>
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <input id="edit-mail2" type="email" inputMode="email" style={{ flex: 1 }} value={editEmailSecondary} onChange={(e) => setEditEmailSecondary(e.target.value)} placeholder="reservations@mon-commerce.be" />
+              <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setEditEmailSecondary(''); setEmail2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
+            </div>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="edit-site">{t('editResto.website')}</label>
           <input id="edit-site" inputMode="url" value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="https://www.mon-commerce.be" />

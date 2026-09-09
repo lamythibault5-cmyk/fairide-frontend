@@ -84,6 +84,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   return (
     <div>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('menuConcierge.intro')}</p>
+      <p className="small" style={{ margin: '-4px 0 10px', opacity: 0.85 }}>🔐 {t('menuConcierge.accessNote')}</p>
       <div className="field">
         <label htmlFor="concierge-platform">{t('menuConcierge.platformLabel')}</label>
         <select id="concierge-platform" value={platform} onChange={(e) => setPlatform(e.target.value)}>

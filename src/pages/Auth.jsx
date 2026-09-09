@@ -110,8 +110,49 @@ export default function Auth() {
   // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
   const [hours, setHours] = useState(null);
   const [hoursDepuisWeb, setHoursDepuisWeb] = useState(false);
+  // Contacts du commerce : le numéro du compte sert au commerce ; un 2e numéro et un 2e e-mail sont facultatifs,
+  // retirables ici comme plus tard dans « Mon commerce ».
+  const [phoneSecondary, setPhoneSecondary] = useState('');
+  const [phoneSecondaryOuvert, setPhoneSecondaryOuvert] = useState(false);
+  const [emailSecondary, setEmailSecondary] = useState('');
+  const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
+  const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'trouve' | 'rien'
   const emailDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
+  // La fiche n'a pas d'horaires mais un site web : on lit les horaires publiés sur le site (schema.org ou texte)
+  // et on les propose, à relire jour par jour. Jamais par-dessus des horaires déjà réglés à la main.
+  useEffect(() => {
+    const site = commerceTrouve?.website;
+    if (role !== 'restaurant' || !site || (hours && !hoursDepuisWeb)) return;
+    if (commerceTrouve.openingHours && horairesDepuisOsm(commerceTrouve.openingHours)) return;
+    let annule = false;
+    setHorairesSiteEtat('lecture');
+    api(`/restaurants/lookup/enrich?website=${encodeURIComponent(site)}`).then((e) => {
+      if (annule) return;
+      if (e.hours && horairesNonVides(e.hours)) { setHours(e.hours); setHoursDepuisWeb(true); setHorairesSiteEtat('trouve'); }
+      else setHorairesSiteEtat('rien');
+    }).catch(() => { if (!annule) setHorairesSiteEtat('rien'); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commerceTrouve?.website, commerceTrouve?.openingHours, role]);
+
+  // Tout ce que l'inscription sait du commerce : le serveur le crée dès que le compte est ouvert
+  // (POST /auth/register → creerRestaurant), sans second formulaire dans le tableau de bord.
+  function construireCommerce() {
+    const fiche = commerceTrouve || {};
+    return {
+      name: fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
+      openingHours: fiche.openingHours || '',
+      addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
+      commune: addressCity.trim(), neighborhood: '',
+      phone: phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
+      email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
+      website: fiche.website || '',
+      offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: !!services.dineIn,
+      deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide'
+    };
+  }
+
   useEffect(() => {
     if (role !== 'restaurant') return;
     try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, cuisineType: cuisine, customCuisine: customCuisine.trim(), hours: horairesNonVides(hours) ? hours : undefined })); } catch { /* sans stockage */ }
@@ -291,6 +332,9 @@ export default function Auth() {
       if (!vatNumber.trim()) e.vatNumber = required;
       if (!responsibleName.trim()) e.responsibleName = required;
       if (!cuisine) e.cuisine = t('auth.errCuisine');
+      if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
+      if (phoneSecondaryOuvert && phoneSecondary.trim() && phoneSecondary.trim().replace(/\D/g, '').length < 8) e.phoneSecondary = t('auth.errPhoneInvalid');
+      if (emailSecondaryOuvert && emailSecondary.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailSecondary.trim())) e.emailSecondary = t('auth.errEmailSecondary');
       if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
     }
     if (key === 'address') {
@@ -396,7 +440,8 @@ export default function Auth() {
       addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       ...(role === 'restaurant' ? {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-        vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
+        vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
+        business: construireCommerce()
       } : {}),
       ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
     });
@@ -468,7 +513,8 @@ export default function Auth() {
           addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
           ...(role === 'restaurant' ? {
             legalName: legalName.trim(), companyNumber: companyNumber.trim(),
-            vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale
+            vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
+            business: construireCommerce()
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
         });
@@ -786,8 +832,42 @@ export default function Auth() {
                 </div>
                 <div className="field">
                   <label>{t('auth.hoursTitle')}</label>
-                  <p className="small" style={{ margin: '0 0 6px' }}>{hoursDepuisWeb ? `✅ ${t('auth.hoursFromWeb')}` : t('auth.hoursHelp')}</p>
+                  <p className="small" style={{ margin: '0 0 6px' }}>
+                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : t('auth.hoursHelp')}
+                  </p>
                   <OpeningHoursEditor value={hours || {}} onChange={(h) => { setHours(h); setHoursDepuisWeb(false); }} />
+                  {fieldError('hours')}
+                </div>
+                <div className="field contacts-commerce">
+                  <label>{t('auth.contactsTitle')}</label>
+                  <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
+                  <p className="small contact-ligne">📞 <b>{phone.trim() || '—'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
+                  {!phoneSecondaryOuvert ? (
+                    <button type="button" className="btn-link-plus" onClick={() => setPhoneSecondaryOuvert(true)}>＋ {t('auth.addSecondPhone')}</button>
+                  ) : (
+                    <div className="contact-second">
+                      <label htmlFor="auth-f-tel2" className="small">{t('auth.secondPhone')}</label>
+                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                        <div style={{ flex: 1 }}><PhoneInput id="auth-f-tel2" value={phoneSecondary} onChange={setPhoneSecondary} invalid={!!errors.phoneSecondary} /></div>
+                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setPhoneSecondary(''); setPhoneSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                      </div>
+                      {fieldError('phoneSecondary')}
+                    </div>
+                  )}
+                  <p className="small contact-ligne" style={{ marginTop: 8 }}>✉️ <b>{email.trim() || t('auth.contactsEmailLater')}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsEmailFromAccount')}</span></p>
+                  {!emailSecondaryOuvert ? (
+                    <button type="button" className="btn-link-plus" onClick={() => setEmailSecondaryOuvert(true)}>＋ {t('auth.addSecondEmail')}</button>
+                  ) : (
+                    <div className="contact-second">
+                      <label htmlFor="auth-f-mail2" className="small">{t('auth.secondEmail')}</label>
+                      <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                        <input id="auth-f-mail2" type="email" inputMode="email" style={{ flex: 1 }} className={errors.emailSecondary ? 'input-invalid' : undefined} value={emailSecondary} onChange={(e) => setEmailSecondary(e.target.value)} placeholder={t('auth.phEmail')} />
+                        <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setEmailSecondary(''); setEmailSecondaryOuvert(false); }}>{t('auth.removeSecond')}</button>
+                      </div>
+                      <EmailDomainChips value={emailSecondary} onChange={setEmailSecondary} inputId="auth-f-mail2" />
+                      {fieldError('emailSecondary')}
+                    </div>
+                  )}
                 </div>
                 <div className="field">
                   <label htmlFor="auth-f-12">{t('auth.legalName')}</label>

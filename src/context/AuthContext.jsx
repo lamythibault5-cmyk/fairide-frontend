@@ -5,11 +5,28 @@ import { useLanguage } from './LanguageContext';
 
 const AuthContext = createContext(null);
 const STORAGE_KEY = 'fairide_session';
+// « Fairide s'en occupe » : l'admin ouvre le tableau de bord d'un commerce comme son restaurateur, dans un onglet
+// à part. La session d'action vit dans sessionStorage (propre à l'onglet) et arrive par le fragment d'adresse
+// (#agir=…), jamais envoyé au serveur ; la session admin, dans localStorage, reste intacte dans les autres onglets.
+const ACT_KEY = 'fairide_session_agir';
+function sessionDepuisFragment() {
+  try {
+    const m = window.location.hash.match(/[#&]agir=([^&]+)/);
+    if (!m) return null;
+    const s = JSON.parse(decodeURIComponent(atob(m[1])));
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    return s && s.token ? { ...s, actingAs: true } : null;
+  } catch { return null; }
+}
 
 export function AuthProvider({ children }) {
   const { t, language } = useLanguage();
   const toast = useToast();
   const [session, setSession] = useState(() => {
+    try {
+      const agir = sessionDepuisFragment() || JSON.parse(sessionStorage.getItem(ACT_KEY) || 'null');
+      if (agir && agir.token) return { ...agir, actingAs: true };
+    } catch { /* pas de session d'action */ }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       return raw ? JSON.parse(raw) : null;
@@ -17,11 +34,24 @@ export function AuthProvider({ children }) {
       return null;
     }
   });
+  // Cet onglet est-il un onglet « Fairide agit comme… » ? Si oui, on n'écrit jamais dans localStorage.
+  const actingRef = useRef(!!session?.actingAs);
 
   // Garde-fou anti-répétition de la déconnexion pour expiration (voir l'effet plus bas).
   const expiredRef = useRef(false);
 
   useEffect(() => {
+    if (session?.actingAs) {
+      actingRef.current = true;
+      try { sessionStorage.setItem(ACT_KEY, JSON.stringify(session)); } catch { /* sans stockage */ }
+      expiredRef.current = false;
+      return;
+    }
+    if (actingRef.current) {
+      // Fin de l'action (quitter, expiration) : on ne touche pas à la session admin des autres onglets.
+      try { sessionStorage.removeItem(ACT_KEY); } catch { /* rien */ }
+      return;
+    }
     if (session) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
       // Nouvelle session valide : on réarme le garde-fou ci-dessous, sinon une deuxième expiration
@@ -35,7 +65,7 @@ export function AuthProvider({ children }) {
   // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
   useEffect(() => {
-    if (!session?.token || !session.user || session.user.language === language) return;
+    if (!session?.token || !session.user || session.user.language === language || session.actingAs) return;
     api('/auth/me', { method: 'PATCH', token: session.token, body: { language }, logoutOn401: false })
       .then((user) => setSession((prev) => (prev ? { ...prev, user } : prev)))
       .catch(() => {});
@@ -135,10 +165,19 @@ export function AuthProvider({ children }) {
     setSession(null);
   }
 
+  // Quitter le mode « Fairide agit comme… » : l'onglet revient à la session admin (localStorage).
+  function quitterAction() {
+    try { sessionStorage.removeItem(ACT_KEY); } catch { /* rien */ }
+    window.location.assign('/admin/restaurants');
+  }
+
   const value = {
     user: session?.user || null,
     token: session?.token || null,
     role: session?.user?.role || null,
+    actingAs: !!session?.actingAs,
+    actingAdminEmail: session?.user?.actingAdminEmail || '',
+    quitterAction,
     login,
     register,
     verifyEmail,

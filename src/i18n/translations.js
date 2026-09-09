@@ -30,7 +30,8 @@ export const translations = {
       saveNote: 'Enregistrer le mot',
       toastUpdated: 'Demande mise à jour.',
       toastDone: 'Demande terminée : le restaurateur est prévenu par e-mail et voit ton mot sur sa page.',
-      intro: 'Tu modifies la carte de {name} ({n} produit(s)) avec exactement les outils du restaurateur : sections, plats, options, import d\'un PDF / d\'une photo / d\'un site, modèles, traduction. Tout ce que tu enregistres est visible par lui et par les clients immédiatement.'
+      intro: 'Tu modifies la carte de {name} ({n} produit(s)) avec exactement les outils du restaurateur : sections, plats, options, import d\'un PDF / d\'une photo / d\'un site, modèles, traduction. Tout ce que tu enregistres est visible par lui et par les clients immédiatement.',
+      fullAccessHint: 'Besoin de plus que la carte (horaires, photos, fiche, promotions) ? « Gérer ce commerce » ouvre son tableau de bord complet, comme le restaurateur.'
     },
     ticketHelp: {
       rowTitle: 'Tickets et imprimante',
@@ -214,7 +215,8 @@ export const translations = {
       addNote: 'Ajouter ou modifier une précision',
       saveNote: 'Enregistrer',
       cancelEdit: 'Annuler',
-      noteSaved: 'Précision enregistrée : l\'équipe Fairide la voit dans ta demande.'
+      noteSaved: 'Précision enregistrée : l\'équipe Fairide la voit dans ta demande.',
+      accessNote: 'En confiant ta carte à Fairide, tu autorises l\'équipe à accéder à ton tableau de bord pour la mettre en place (carte, photos, horaires). Chaque intervention est notée dans ton suivi ; tu gardes la main à tout moment.'
     },
     phoneInput: {
       country: 'Pays du numéro de téléphone'
@@ -1702,7 +1704,10 @@ export const translations = {
       menuLine: '{n} produit(s) sur la carte',
       menuTitle: 'Carte',
       conciergeLine: 'Demande « Fairide s\'en occupe » : {platform} · demandée le {date} · {status}',
-      conciergeNotes: 'Précisions : {notes}'
+      conciergeNotes: 'Précisions : {notes}',
+      manage: 'Gérer ce commerce',
+      manageHelp: 'Ouvre le tableau de bord du commerce comme le restaurateur (fiche, horaires, carte, photos, promotions…), dans un nouvel onglet. Accès valable 8 h, noté dans le suivi.',
+      manageBlocked: 'Le navigateur a bloqué l\'ouverture du nouvel onglet : autorise les fenêtres surgissantes pour fairide.be puis réessaie.'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -2977,7 +2982,15 @@ export const translations = {
       phone: 'Téléphone du commerce',
       phoneHelp: 'Le numéro de la boutique ou du restaurant (comme sur Google Maps), pas votre numéro personnel. Fairide l\'utilise pour vous joindre au sujet d\'une commande. Vide : Fairide appelle le numéro de votre compte.',
       website: 'Site web',
-      websiteHelp: 'Affiché sur ta page publique, sous ta description. Laisse vide si tu n\'en as pas.'
+      websiteHelp: 'Affiché sur ta page publique, sous ta description. Laisse vide si tu n\'en as pas.',
+      addSecondPhone: 'Ajouter un 2e numéro (facultatif)',
+      secondPhone: '2e numéro de téléphone',
+      secondPhoneHelp: 'Un autre numéro où joindre le commerce (cuisine, gérant, deuxième ligne). Retire-le s\'il ne sert plus.',
+      contactEmail: 'E-mail de contact du commerce',
+      contactEmailHelp: 'Fairide t\'écrit à cette adresse au sujet du commerce (commandes, carte, factures). Vide : l\'e-mail de ton compte.',
+      addSecondEmail: 'Ajouter un 2e e-mail (facultatif)',
+      secondEmail: '2e adresse e-mail',
+      removeSecond: 'Retirer'
     },
     ordersResto: {
       colorsTitle: '🎨 Couleurs des commandes',
@@ -3193,7 +3206,9 @@ export const translations = {
       editHours: 'Modifier les horaires',
       website: 'Site web du commerce',
       businessPhone: 'Téléphone du commerce',
-      fromFiche: 'repris de ta fiche'
+      fromFiche: 'repris de ta fiche',
+      actingBanner: 'Fairide gère ce commerce en tant que {name} ({admin}). Tout ce que tu fais ici est fait au nom du restaurateur.',
+      actingQuit: 'Quitter et revenir à l\'admin'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -4290,7 +4305,21 @@ export const translations = {
       errNoAccount: 'Aucun compte avec cette adresse e-mail : il n\'existe pas ou a été supprimé. Crée un compte pour continuer.',
       accountDeletedLogout: 'Ce compte a été supprimé : tu as été déconnecté. Crée un nouveau compte pour continuer.',
       emailSuggestions: 'Fournisseurs d\'e-mail fréquents',
-      emailOther: 'Autre…'
+      emailOther: 'Autre…',
+      hoursFromSite: 'Horaires repris de ton site web : vérifie-les jour par jour et adapte-les si besoin.',
+      hoursReadingSite: 'Lecture des horaires publiés sur ton site…',
+      errHours: 'Indique au moins un jour et un horaire d\'ouverture.',
+      errEmailSecondary: 'Adresse e-mail invalide.',
+      contactsTitle: 'Contacts du commerce',
+      contactsHelp: 'Ce sont les coordonnées que Fairide et les clients utilisent pour joindre le commerce. Un 2e numéro et un 2e e-mail sont facultatifs : tu peux les ajouter maintenant ou plus tard, et les retirer à tout moment.',
+      contactsPhoneFromAccount: 'numéro du compte, utilisé pour le commerce',
+      contactsEmailFromAccount: 'e-mail du compte, utilisé pour le commerce',
+      contactsEmailLater: 'à renseigner à la dernière étape',
+      addSecondPhone: 'Ajouter un 2e numéro (facultatif)',
+      addSecondEmail: 'Ajouter un 2e e-mail (facultatif)',
+      secondPhone: '2e numéro de téléphone',
+      secondEmail: '2e adresse e-mail',
+      removeSecond: 'Retirer'
     }
   },
   en: {
@@ -4320,7 +4349,8 @@ export const translations = {
       saveNote: 'Save the note',
       toastUpdated: 'Request updated.',
       toastDone: 'Request finished: the owner is notified by e-mail and sees your note on their page.',
-      intro: 'You are editing the menu of {name} ({n} item(s)) with exactly the owner\'s tools: sections, dishes, options, import from a PDF / photo / website, templates, translation. Everything you save is visible to them and to customers immediately.'
+      intro: 'You are editing the menu of {name} ({n} item(s)) with exactly the owner\'s tools: sections, dishes, options, import from a PDF / photo / website, templates, translation. Everything you save is visible to them and to customers immediately.',
+      fullAccessHint: 'Need more than the menu (hours, photos, details, promotions)? “Manage this business” opens its full dashboard, as the restaurateur.'
     },
     ticketHelp: {
       rowTitle: 'Tickets and printer',
@@ -4504,7 +4534,8 @@ export const translations = {
       addNote: 'Add or edit details',
       saveNote: 'Save',
       cancelEdit: 'Cancel',
-      noteSaved: 'Details saved: the Fairide team sees them in your request.'
+      noteSaved: 'Details saved: the Fairide team sees them in your request.',
+      accessNote: 'By entrusting your menu to Fairide, you allow the team to access your dashboard to set it up (menu, photos, hours). Every action is logged in your follow-up; you stay in control at all times.'
     },
     phoneInput: {
       country: 'Phone number country'
@@ -5992,7 +6023,10 @@ export const translations = {
       menuLine: '{n} item(s) on the menu',
       menuTitle: 'Menu',
       conciergeLine: '“Fairide takes care of it” request: {platform} · requested on {date} · {status}',
-      conciergeNotes: 'Details: {notes}'
+      conciergeNotes: 'Details: {notes}',
+      manage: 'Manage this business',
+      manageHelp: 'Opens the business dashboard as the restaurateur (details, hours, menu, photos, promotions…) in a new tab. Access valid 8 h, logged in the follow-up.',
+      manageBlocked: 'The browser blocked the new tab: allow pop-ups for fairide.be and try again.'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -7267,7 +7301,15 @@ export const translations = {
       phone: 'Business phone',
       phoneHelp: 'The number of the shop or restaurant (as on Google Maps), not your personal number. Fairide uses it to reach you about an order. Empty: Fairide calls the number of your account.',
       website: 'Website',
-      websiteHelp: 'Shown on your public page, under your description. Leave empty if you have none.'
+      websiteHelp: 'Shown on your public page, under your description. Leave empty if you have none.',
+      addSecondPhone: 'Add a second number (optional)',
+      secondPhone: 'Second phone number',
+      secondPhoneHelp: 'Another number to reach the business (kitchen, manager, second line). Remove it if it is no longer needed.',
+      contactEmail: 'Business contact e-mail',
+      contactEmailHelp: 'Fairide writes to this address about the business (orders, menu, invoices). Empty: your account e-mail.',
+      addSecondEmail: 'Add a second e-mail (optional)',
+      secondEmail: 'Second e-mail address',
+      removeSecond: 'Remove'
     },
     ordersResto: {
       colorsTitle: '🎨 Order colours',
@@ -7483,7 +7525,9 @@ export const translations = {
       editHours: 'Edit the hours',
       website: 'Business website',
       businessPhone: 'Business phone',
-      fromFiche: 'taken from your listing'
+      fromFiche: 'taken from your listing',
+      actingBanner: 'Fairide is managing this business as {name} ({admin}). Everything you do here is done on the restaurateur\'s behalf.',
+      actingQuit: 'Leave and go back to admin'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -8580,7 +8624,21 @@ export const translations = {
       errNoAccount: 'No account with this e-mail address: it does not exist or was deleted. Create an account to continue.',
       accountDeletedLogout: 'This account was deleted: you have been signed out. Create a new account to continue.',
       emailSuggestions: 'Common e-mail providers',
-      emailOther: 'Other…'
+      emailOther: 'Other…',
+      hoursFromSite: 'Opening hours taken from your website: check them day by day and adjust if needed.',
+      hoursReadingSite: 'Reading the opening hours published on your website…',
+      errHours: 'Enter at least one open day with its hours.',
+      errEmailSecondary: 'Invalid e-mail address.',
+      contactsTitle: 'Business contacts',
+      contactsHelp: 'These are the details Fairide and customers use to reach the business. A second phone number and a second e-mail are optional: add them now or later, and remove them at any time.',
+      contactsPhoneFromAccount: 'account number, used for the business',
+      contactsEmailFromAccount: 'account e-mail, used for the business',
+      contactsEmailLater: 'to be entered at the last step',
+      addSecondPhone: 'Add a second number (optional)',
+      addSecondEmail: 'Add a second e-mail (optional)',
+      secondPhone: 'Second phone number',
+      secondEmail: 'Second e-mail address',
+      removeSecond: 'Remove'
     }
   },
   nl: {
@@ -8610,7 +8668,8 @@ export const translations = {
       saveNote: 'Bericht opslaan',
       toastUpdated: 'Aanvraag bijgewerkt.',
       toastDone: 'Aanvraag afgerond: de uitbater krijgt een e-mail en ziet uw bericht op zijn pagina.',
-      intro: 'U bewerkt de kaart van {name} ({n} product(en)) met precies de tools van de uitbater: secties, gerechten, opties, import van een pdf / foto / website, sjablonen, vertaling. Alles wat u opslaat is meteen zichtbaar voor hem en voor de klanten.'
+      intro: 'U bewerkt de kaart van {name} ({n} product(en)) met precies de tools van de uitbater: secties, gerechten, opties, import van een pdf / foto / website, sjablonen, vertaling. Alles wat u opslaat is meteen zichtbaar voor hem en voor de klanten.',
+      fullAccessHint: 'Meer nodig dan de kaart (uren, foto\'s, fiche, promoties)? “Deze zaak beheren” opent het volledige dashboard, als de uitbater.'
     },
     ticketHelp: {
       rowTitle: 'Bonnen en printer',
@@ -8794,7 +8853,8 @@ export const translations = {
       addNote: 'Toelichting toevoegen of wijzigen',
       saveNote: 'Opslaan',
       cancelEdit: 'Annuleren',
-      noteSaved: 'Toelichting opgeslagen: het Fairide-team ziet ze in uw aanvraag.'
+      noteSaved: 'Toelichting opgeslagen: het Fairide-team ziet ze in uw aanvraag.',
+      accessNote: 'Door je kaart aan Fairide toe te vertrouwen, geef je het team toegang tot je dashboard om ze op te zetten (kaart, foto\'s, uren). Elke handeling wordt genoteerd; je houdt altijd de controle.'
     },
     phoneInput: {
       country: 'Land van het telefoonnummer'
@@ -10282,7 +10342,10 @@ export const translations = {
       menuLine: '{n} product(en) op de kaart',
       menuTitle: 'Kaart',
       conciergeLine: 'Aanvraag “Fairide regelt het”: {platform} · aangevraagd op {date} · {status}',
-      conciergeNotes: 'Toelichting: {notes}'
+      conciergeNotes: 'Toelichting: {notes}',
+      manage: 'Deze zaak beheren',
+      manageHelp: 'Opent het dashboard van de zaak als de uitbater (fiche, uren, kaart, foto\'s, promoties…) in een nieuw tabblad. Toegang 8 u geldig, genoteerd in de opvolging.',
+      manageBlocked: 'De browser blokkeerde het nieuwe tabblad: sta pop-ups toe voor fairide.be en probeer opnieuw.'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
@@ -11557,7 +11620,15 @@ export const translations = {
       phone: 'Telefoon van de zaak',
       phoneHelp: 'Het nummer van de winkel of het restaurant (zoals op Google Maps), niet uw persoonlijke nummer. Fairide gebruikt het om u over een bestelling te bereiken. Leeg: Fairide belt het nummer van uw account.',
       website: 'Website',
-      websiteHelp: 'Getoond op je publieke pagina, onder je beschrijving. Laat leeg als je er geen hebt.'
+      websiteHelp: 'Getoond op je publieke pagina, onder je beschrijving. Laat leeg als je er geen hebt.',
+      addSecondPhone: 'Tweede nummer toevoegen (optioneel)',
+      secondPhone: 'Tweede telefoonnummer',
+      secondPhoneHelp: 'Een ander nummer om de zaak te bereiken (keuken, zaakvoerder, tweede lijn). Verwijder het als het niet meer nodig is.',
+      contactEmail: 'Contact-e-mail van de zaak',
+      contactEmailHelp: 'Fairide schrijft naar dit adres over de zaak (bestellingen, kaart, facturen). Leeg: de e-mail van je account.',
+      addSecondEmail: 'Tweede e-mail toevoegen (optioneel)',
+      secondEmail: 'Tweede e-mailadres',
+      removeSecond: 'Verwijderen'
     },
     ordersResto: {
       colorsTitle: '🎨 Kleuren van bestellingen',
@@ -11773,7 +11844,9 @@ export const translations = {
       editHours: 'Uren aanpassen',
       website: 'Website van de zaak',
       businessPhone: 'Telefoon van de zaak',
-      fromFiche: 'overgenomen van je fiche'
+      fromFiche: 'overgenomen van je fiche',
+      actingBanner: 'Fairide beheert deze zaak als {name} ({admin}). Alles wat je hier doet, gebeurt namens de uitbater.',
+      actingQuit: 'Verlaten en terug naar admin'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -12870,7 +12943,21 @@ export const translations = {
       errNoAccount: 'Geen account met dit e-mailadres: het bestaat niet of is verwijderd. Maak een account aan om verder te gaan.',
       accountDeletedLogout: 'Dit account is verwijderd: je bent afgemeld. Maak een nieuw account aan om verder te gaan.',
       emailSuggestions: 'Veelgebruikte e-mailproviders',
-      emailOther: 'Andere…'
+      emailOther: 'Andere…',
+      hoursFromSite: 'Openingsuren overgenomen van je website: controleer ze dag per dag en pas aan indien nodig.',
+      hoursReadingSite: 'Openingsuren van je website worden gelezen…',
+      errHours: 'Geef minstens één open dag met uren op.',
+      errEmailSecondary: 'Ongeldig e-mailadres.',
+      contactsTitle: 'Contactgegevens van de zaak',
+      contactsHelp: 'Dit zijn de gegevens waarmee Fairide en klanten de zaak bereiken. Een tweede nummer en een tweede e-mail zijn optioneel: voeg ze nu of later toe en verwijder ze wanneer je wilt.',
+      contactsPhoneFromAccount: 'nummer van het account, gebruikt voor de zaak',
+      contactsEmailFromAccount: 'e-mail van het account, gebruikt voor de zaak',
+      contactsEmailLater: 'in te vullen bij de laatste stap',
+      addSecondPhone: 'Tweede nummer toevoegen (optioneel)',
+      addSecondEmail: 'Tweede e-mail toevoegen (optioneel)',
+      secondPhone: 'Tweede telefoonnummer',
+      secondEmail: 'Tweede e-mailadres',
+      removeSecond: 'Verwijderen'
     }
   }
 };

@@ -36,10 +36,32 @@ function ContactCommerce({ r, tr, fiche = false }) {
       <p className="small" style={style}>📍 {r.fullAddress || '—'}</p>
       <p className="small" style={style}>
         📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}
-        {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
+        {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}</>}
+        {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && r.ownerPhone !== r.restaurantPhoneSecondary && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
       </p>
+      {fiche && (r.restaurantEmail || r.restaurantEmailSecondary) && (
+        <p className="small" style={style}>
+          ✉️ {[r.restaurantEmail, r.restaurantEmailSecondary].filter(Boolean).map((e, i) => <span key={e}>{i > 0 && ' · '}<a href={`mailto:${e}`} onClick={stop}>{e}</a></span>)}
+        </p>
+      )}
     </>
   );
+}
+
+// « Fairide s'en occupe » : ouvre le tableau de bord du commerce comme le restaurateur, dans un nouvel onglet
+// (POST /admin/restaurants/:id/act-as → jeton 8 h). Même bouton dans la fiche et dans la page Carte.
+export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'btn-teal', style }) {
+  const [busy, setBusy] = useState(false);
+  async function ouvrir() {
+    setBusy(true);
+    try {
+      const d = await api(`/admin/restaurants/${id}/act-as`, { method: 'POST', token });
+      const frag = btoa(encodeURIComponent(JSON.stringify({ token: d.token, user: d.user })));
+      const w = window.open(`/dashboard#agir=${frag}`, '_blank');
+      if (!w) toast(tr('adminRestos.manageBlocked'));
+    } catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
+  return <button type="button" className={className} style={style} disabled={busy} onClick={ouvrir} title={tr('adminRestos.manageHelp')}>{busy ? '…' : `🛠️ ${tr('adminRestos.manage')}`}</button>;
 }
 
 export default function AdminRestaurantsPage() {
@@ -369,6 +391,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
           </div>
           <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <BoutonGererCommerce id={detail.id} token={token} api={api} toast={toast} tr={tr} className={detail.conciergeStatus ? 'btn-gold' : 'btn-teal'} />
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
             {!detail.isDemo && detail.ownerId && <TestToggleButton userId={detail.ownerId} isTest={estCompteTest(detail)} token={token} api={api} toast={toast} tr={tr} onChanged={onToggleTest} />}
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}

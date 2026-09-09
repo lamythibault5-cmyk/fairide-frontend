@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import MenuPage from '../restaurant/MenuPage';
+import { BoutonGererCommerce } from './AdminRestaurantsPage';
 
 // Carte d'un commerce vue par l'admin : exactement l'éditeur du restaurateur (Mes produits), branché sur
 // son restaurant — sections, plats, options, import PDF / photo / site, modèles, traduction. En tête, la
@@ -56,12 +57,14 @@ export default function AdminMenuPage() {
         actions={<>
           <Link to="/admin/restaurants" className="btn-outline" style={{ textDecoration: 'none' }}>{tr('adminMenu.back')}</Link>
           <a href={`/restaurants/${id}`} target="_blank" rel="noreferrer" className="btn-outline" style={{ textDecoration: 'none' }}>{tr('adminRestos.viewPage')}</a>
+          <BoutonGererCommerce id={id} token={token} api={api} toast={toast} tr={tr} className={d && ouverte ? 'btn-gold' : 'btn-teal'} />
         </>} />
 
       <div className="card" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🤝 {tr('adminMenu.requestTitle')}</h3>
         {!fiche && <p className="small" style={{ margin: 0 }}>{tr('adminCommon.loading')}</p>}
         {fiche && !d && <p className="small" style={{ margin: 0 }}>{tr('adminMenu.noRequest')}</p>}
+        <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{tr('adminMenu.fullAccessHint')}</p>
         {d && (
           <>
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
