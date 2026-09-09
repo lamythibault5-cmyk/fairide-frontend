@@ -1,0 +1,84 @@
+/* Application admin « Incidents & litiges » (AdminIncidentsPage.jsx + pages/admin/incidents/*).
+   Réutilise les briques de l'ERP (stat-card, fin-tabs, fin-toolbar, record-drawer, admin-table) ;
+   ici uniquement ce qui est propre aux incidents : pastilles de type/responsabilité, badge « en
+   retard », répartitions sous les KPI, formulaire de création, recherche de commande. */
+
+.inc-kpi-breakdown { display: flex; flex-wrap: wrap; gap: 6px; margin: -6px 0 14px; }
+.inc-kpi-breakdown .pill { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; border: 1px solid transparent; }
+.inc-kpi-breakdown .pill:hover { border-color: var(--line); }
+.inc-kpi-breakdown .pill.active { background: var(--iris); color: #fff; }
+.inc-kpi-breakdown .pill b { font-weight: 700; }
+.inc-kpi-breakdown .sep { width: 100%; height: 0; }
+
+/* KPI cliquables (ouverts / en retard) : un <button> qui garde exactement l'apparence d'une stat-card. */
+button.inc-kpi-btn { display: block; width: 100%; text-align: left; padding: 14px; border: 2px solid transparent; border-radius: var(--radius-chip); font: inherit; transition: border-color .15s; }
+button.inc-kpi-btn:hover { border-color: var(--line); }
+button.inc-kpi-btn.active { border-color: var(--iris); }
+button.inc-kpi-btn.inc-danger.active { border-color: var(--red); }
+button.inc-kpi-btn:active { transform: none; }
+.stat-card.inc-danger { background: rgba(217,45,60,0.08); }
+.stat-card.inc-danger .num { color: var(--red); }
+
+.inc-pill { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-chip); background: var(--cream-dim); color: var(--ink-soft); white-space: nowrap; }
+.inc-pill.type-refund, .inc-pill.type-payment { background: rgba(59,47,181,0.10); color: var(--iris); }
+.inc-pill.type-cancellation, .inc-pill.type-no_show { background: rgba(217,45,60,0.10); color: var(--red); }
+.inc-pill.type-complaint, .inc-pill.type-damage { background: rgba(255,153,0,0.14); color: #9a5a00; }
+.inc-pill.type-late { background: rgba(176,69,155,0.12); color: #7a2d6a; }
+.inc-pill.resp-restaurant { background: rgba(255,153,0,0.14); color: #9a5a00; }
+.inc-pill.resp-driver { background: rgba(59,47,181,0.10); color: var(--iris); }
+.inc-pill.resp-fairide { background: var(--ink); color: var(--cream); }
+.inc-pill.resp-client { background: rgba(176,69,155,0.12); color: #7a2d6a; }
+.inc-pill.resp-unknown { background: var(--cream-dim); color: var(--ink-faint); }
+.inc-pill.st-open { background: rgba(255,153,0,0.14); color: #9a5a00; }
+.inc-pill.st-investigating { background: rgba(59,47,181,0.10); color: var(--iris); }
+.inc-pill.st-resolved { background: rgba(46,160,67,0.14); color: #1d6b2e; }
+.inc-pill.st-rejected { background: var(--cream-dim); color: var(--ink-faint); text-decoration: line-through; }
+.inc-pill.prio-high { background: rgba(217,45,60,0.10); color: var(--red); }
+.inc-pill.prio-low { background: var(--cream-dim); color: var(--ink-faint); }
+
+.inc-overdue { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 10px; background: var(--red); color: #fff; text-transform: uppercase; letter-spacing: .03em; }
+.admin-table tr.inc-row-overdue td:first-child { box-shadow: inset 3px 0 0 var(--red); }
+.admin-table tr.inc-row-closed td { opacity: .72; }
+
+.inc-cell-order { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.inc-cell-order code { font-size: 12px; font-weight: 700; }
+.inc-cell-order .small { opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
+.inc-cell-desc { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Fiche (drawer) */
+.inc-drawer-section { margin-bottom: 18px; }
+.inc-drawer-section h4 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--ink-faint); }
+.inc-drawer-text { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; font-size: 13px; background: var(--cream-dim); border-radius: var(--radius-chip); padding: 10px 12px; }
+.inc-drawer-text.empty { opacity: .6; font-style: italic; }
+.inc-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.inc-form-grid .field.full { grid-column: 1 / -1; }
+.inc-form-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+.inc-form-actions .spacer { flex: 1; }
+.inc-refund-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.inc-refund-list li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--radius-chip); font-size: 13px; }
+.inc-refund-list li .small { flex: 1; min-width: 0; }
+.inc-notice { border: 1px dashed var(--line); border-radius: var(--radius-chip); padding: 10px 12px; font-size: 13px; color: var(--ink-soft); background: var(--cream-dim); }
+.inc-notice.warn { border-color: rgba(255,153,0,0.5); background: rgba(255,153,0,0.08); color: #9a5a00; }
+
+/* Nouvel incident : recherche de commande */
+.inc-new-card { max-width: 720px; }
+.inc-order-search { position: relative; }
+.inc-order-results { position: absolute; z-index: 5; left: 0; right: 0; top: 100%; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); box-shadow: 0 8px 24px rgba(0,0,0,0.08); max-height: 280px; overflow-y: auto; }
+.inc-order-results button { display: flex; width: 100%; justify-content: space-between; gap: 10px; align-items: center; padding: 9px 12px; border: none; background: none; text-align: left; cursor: pointer; font: inherit; border-bottom: 1px solid var(--line); }
+.inc-order-results button:last-child { border-bottom: none; }
+.inc-order-results button:hover, .inc-order-results button:focus { background: var(--cream-dim); outline: none; }
+.inc-order-results .small { opacity: .75; }
+.inc-order-picked { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid var(--iris); border-radius: var(--radius-chip); background: rgba(59,47,181,0.05); margin-bottom: 12px; }
+
+/* Partenaires */
+.inc-partners-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; }
+.inc-partners-grid .card { margin-bottom: 0; }
+.inc-partners-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 10px; }
+.inc-partners-head h3 { margin: 0; font-size: 15px; }
+.inc-rate-high { color: var(--red); font-weight: 700; }
+
+@media (max-width: 640px) {
+  .inc-form-grid { grid-template-columns: 1fr; }
+  .inc-cell-desc { max-width: 160px; }
+  .inc-cell-order .small { max-width: 140px; }
+}

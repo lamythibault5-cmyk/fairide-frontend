@@ -4,8 +4,9 @@ import AccountsTable from '../../components/admin/AccountsTable';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import useAdminRole from '../../hooks/useAdminRole';
 import { money } from './adminUtils';
-import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleBadge } from './adminModules';
+import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleAllowed, moduleBadge } from './adminModules';
 
 // Accueil de l'ERP, sur le modèle du menu d'applications d'Odoo : ce qui réclame une action
 // aujourd'hui, puis une tuile par application, rangée par famille, avec son compteur « à traiter ».
@@ -15,6 +16,8 @@ export default function AdminHomePage() {
   const { t: tr } = useLanguage();
   const { user } = useAuth();
   const { overview, error, refresh } = useAdminOverview();
+  // Tuiles limitées aux applications ouvertes au rôle du membre (Équipe & accès) ; tout tant que le rôle est inconnu.
+  const { role } = useAdminRole();
   const attention = attentionItems(overview);
   const heure = new Date().getHours();
   const salut = heure < 12 ? tr('adminHome.morning') : heure < 18 ? tr('adminHome.afternoon') : tr('adminHome.evening');
@@ -74,7 +77,7 @@ export default function AdminHomePage() {
       </section>
 
       {ADMIN_GROUPS.map((groupe) => {
-        const mods = ADMIN_MODULES.filter((m) => m.group === groupe);
+        const mods = ADMIN_MODULES.filter((m) => m.group === groupe && moduleAllowed(m, role));
         if (!mods.length) return null;
         return (
           <section key={groupe} className="admin-home-group">

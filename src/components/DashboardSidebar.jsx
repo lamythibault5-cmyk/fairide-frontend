@@ -5,7 +5,8 @@ import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
 import useAdminOverview from '../hooks/useAdminOverview';
-import { ADMIN_GROUPS, ADMIN_MODULES, moduleBadge } from '../pages/admin/adminModules';
+import useAdminRole from '../hooks/useAdminRole';
+import { ADMIN_GROUPS, ADMIN_MODULES, moduleAllowed, moduleBadge } from '../pages/admin/adminModules';
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
 // Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
@@ -64,6 +65,9 @@ function navItemsForRole(role, t) {
 // tout compte admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
 function AdminNav({ t }) {
   const { overview } = useAdminOverview();
+  // Équipe & accès : on masque les applications fermées au rôle du membre (tout reste visible tant que le
+  // rôle n'est pas connu — le serveur applique la vraie règle, voir middleware/auth.js).
+  const { role } = useAdminRole();
   return (
     <nav className="dashboard-nav admin">
       <NavLink to="/admin" end title={t('adminHome.apps')} aria-label={t('adminHome.apps')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
@@ -71,7 +75,7 @@ function AdminNav({ t }) {
         <span>{t('adminHome.apps')}</span>
       </NavLink>
       {ADMIN_GROUPS.map((groupe) => {
-        const mods = ADMIN_MODULES.filter((m) => m.group === groupe);
+        const mods = ADMIN_MODULES.filter((m) => m.group === groupe && moduleAllowed(m, role));
         if (!mods.length) return null;
         return (
           <div key={groupe} className="dashboard-nav-section">

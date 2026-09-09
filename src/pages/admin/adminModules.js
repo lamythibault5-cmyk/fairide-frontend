@@ -34,8 +34,32 @@ export const ADMIN_MODULES = [
   { key: 'documents', path: '/admin/documents', icon: '📁', group: 'services', badge: (o) => pastille(n(o.documents?.pending) + n(o.documents?.expired) + n(o.documents?.expiringSoon), n(o.documents?.expired) > 0 ? 'danger' : 'warn') },
   { key: 'tasks', path: '/admin/tasks', icon: '✅', group: 'services', badge: (o) => pastille(n(o.tasks?.overdue) + n(o.tasks?.dueSoon), n(o.tasks?.overdue) > 0 ? 'danger' : 'warn') },
   { key: 'automations', path: '/admin/automations', icon: '⚡', group: 'services', badge: aucun },
-  { key: 'settings', path: '/admin/settings', icon: '⚙️', group: 'configuration', badge: aucun }
+  { key: 'settings', path: '/admin/settings', icon: '⚙️', group: 'configuration', badge: aucun },
+  // Applications ajoutées le 2026-09-09 (« toutes les applications importantes pour un business comme Fairide »).
+  { key: 'marketing', path: '/admin/marketing', icon: '📣', group: 'croissance', badge: (o) => pastille(o.marketing?.scheduled || 0, 'info') },
+  { key: 'logistics', path: '/admin/logistics', icon: '🗺️', group: 'operations', badge: (o) => pastille(o.logistics?.zonesUncovered || 0, 'warn') },
+  { key: 'incidents', path: '/admin/incidents', icon: '🚨', group: 'operations', badge: (o) => pastille(o.incidents?.open || 0, (o.incidents?.overdue || 0) > 0 ? 'danger' : 'warn') },
+  { key: 'reports', path: '/admin/reports', icon: '📈', group: 'pilotage', badge: aucun },
+  { key: 'team', path: '/admin/team', icon: '🧑‍🤝‍🧑', group: 'configuration', badge: aucun },
+  { key: 'compliance', path: '/admin/compliance', icon: '⚖️', group: 'configuration', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
+
+// Rôles autorisés par application (Équipe & accès) : absent = tous les membres. Le serveur applique la même
+// règle par préfixe d'adresse dans middleware/auth.js (requireAdmin) ; ici on ne fait que masquer la barre latérale.
+export const MODULE_ROLES = {
+  finance: ['owner', 'admin', 'finance'], payments: ['owner', 'admin', 'finance'], invoices: ['owner', 'admin', 'finance'], accounting: ['owner', 'admin', 'finance'],
+  settings: ['owner', 'admin'], automations: ['owner', 'admin'],
+  marketing: ['owner', 'admin', 'ops'],
+  logistics: ['owner', 'admin', 'ops', 'support'],
+  incidents: ['owner', 'admin', 'ops', 'support', 'finance'],
+  reports: ['owner', 'admin', 'finance', 'ops'],
+  team: ['owner', 'admin'],
+  compliance: ['owner', 'admin', 'finance']
+};
+export function moduleAllowed(mod, role) {
+  const roles = MODULE_ROLES[mod.key];
+  return !roles || !role || roles.includes(role);
+}
 
 export function moduleByKey(key) {
   return ADMIN_MODULES.find((m) => m.key === key) || null;

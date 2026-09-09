@@ -1,0 +1,67 @@
+/* ============================================================================================
+   Application Marketing de l'ERP admin (campagnes e-mail) — styles propres à la page, importés par
+   AdminMarketingPage.jsx. Tout le reste (card, pill, stat-grid, admin-table, record-drawer, btn-*)
+   vient de styles.css.
+   ============================================================================================ */
+
+/* ---- Onglets de la page ---- */
+.mk-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.mk-tabs::-webkit-scrollbar { display: none; }
+.mk-tabs .chip { flex: none; padding: 8px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; white-space: nowrap; display: inline-flex; align-items: center; }
+.mk-tabs .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+.mk-tabs .chip .pill { padding: 1px 7px; font-size: 11px; }
+.mk-tabs .chip.active .pill { background: rgba(255,255,255,0.18); color: var(--cream); }
+
+.mk-muted { opacity: 0.65; }
+.mk-ellipsis { max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mk-section-title { margin: 0 0 10px; font-size: 15px; }
+.mk-status-filter { flex-wrap: wrap; }
+
+/* ---- Formulaire : colonne d'édition + aperçu collant ---- */
+.mk-form-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr); gap: 16px; align-items: start; }
+.mk-sticky { position: sticky; top: 12px; }
+@media (max-width: 960px) {
+  .mk-form-layout { grid-template-columns: 1fr; }
+  .mk-sticky { position: static; }
+}
+.mk-editing { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: rgba(59,47,181,0.08); }
+
+.mk-templates { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-chip { padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; line-height: 1.2; }
+.mk-chip:hover { border-color: var(--iris); color: var(--iris); }
+.mk-chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+.mk-communes { display: flex; flex-wrap: wrap; gap: 6px; }
+.mk-communes .mk-chip { padding: 4px 9px; font-size: 11.5px; }
+.mk-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 8px; }
+.mk-check { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; margin: 2px 0 6px; }
+.mk-check input { width: auto; margin: 0; }
+.mk-textarea { min-height: 220px; font-family: inherit; resize: vertical; line-height: 1.5; }
+
+/* ---- Compteur d'audience et échantillon ---- */
+.mk-audience-box { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 12px 14px; margin-top: 12px; }
+.mk-audience-count { font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 22px; color: var(--ink); }
+.mk-sample { list-style: none; margin: 6px 0 0; padding: 0; max-height: 190px; overflow: auto; font-size: 12px; }
+.mk-sample li { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+.mk-sample li:last-child { border-bottom: none; }
+
+/* ---- Aperçu de l'e-mail (approximation du gabarit d'email.js) ---- */
+.mk-email { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; }
+.mk-email-subject { padding: 10px 14px; border-bottom: 1px solid var(--line); background: var(--cream-dim); display: flex; flex-direction: column; gap: 2px; word-break: break-word; }
+.mk-email-body { padding: 18px 16px; font-family: sans-serif; color: #16233A; }
+.mk-email-body h1 { font-size: 18px; color: #16233A; margin: 0 0 12px; font-family: sans-serif; }
+.mk-email-body p { line-height: 1.5; margin: 0 0 12px; white-space: pre-line; font-size: 14px; word-break: break-word; }
+.mk-email-btn { display: inline-block; background: #1E8A7A; color: #fff; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; margin: 4px 0 16px; }
+.mk-email-body p.mk-email-footer { color: #6B7A90; font-size: 11.5px; margin: 20px 0 0; }
+
+/* ---- Tiroir : lignes d'action ---- */
+.mk-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px dashed var(--line); flex-wrap: wrap; }
+.mk-action:last-child { border-bottom: none; }
+.mk-action-text { flex: 1; min-width: 180px; }
+.mk-action h5 { margin: 0 0 2px; font-size: 13px; }
+.mk-action p { margin: 0; }
+.mk-action-controls { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.mk-action-controls input[type="datetime-local"] { padding: 6px 8px; font-size: 13px; width: auto; }
+.mk-progress { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 4px 0 10px; }
+.mk-progress span { display: block; height: 100%; background: var(--iris); transition: width 0.4s; }
+
+.mk-optout-card { max-width: 640px; }

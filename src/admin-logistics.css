@@ -1,0 +1,101 @@
+/* Application admin « Logistique » (importé par AdminLogisticsPage.jsx) : onglets, pastilles d'état des
+   livreurs et des zones, interrupteur actif/suspendu, grille de capacité, carte en direct. Les briques de
+   base (.stat-card, .admin-table, .record-drawer, .fin-tabs…) vivent dans styles.css / admin-finance.css. */
+
+.lg-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.lg-tabs::-webkit-scrollbar { display: none; }
+.lg-tabs .chip { flex: none; padding: 8px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; white-space: nowrap; }
+.lg-tabs .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+.lg-tabs .chip .pill { margin-left: 6px; padding: 1px 6px; font-size: 10px; }
+
+.lg-toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.lg-toolbar .spacer { flex: 1; }
+.lg-toolbar input[type="search"], .lg-toolbar input[type="text"] { flex: 1; min-width: 160px; }
+.lg-toolbar input[type="date"], .lg-toolbar select { width: auto; max-width: 240px; }
+.lg-toolbar .chip { padding: 7px 11px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font-size: 12px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+.lg-toolbar .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+
+/* Pastilles d'état : livreurs (online / delivering / paused / offline) et zones (active / inactive). */
+.lg-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+.lg-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.lg-pill.online { background: rgba(31,138,112,0.14); color: var(--teal-deep, #1F8A70); }
+.lg-pill.delivering { background: rgba(59,47,181,0.12); color: var(--iris); }
+.lg-pill.paused { background: rgba(217,159,38,0.16); color: #9A6A00; }
+.lg-pill.offline { background: rgba(20,18,31,0.08); color: var(--ink-soft); }
+.lg-pill.late { background: rgba(217,45,60,0.12); color: var(--red); }
+.lg-pill.test { background: var(--cream-dim); color: var(--ink-faint); }
+.lg-pill.test::before { display: none; }
+
+/* Interrupteur actif / suspendu d'une commune. */
+.lg-switch { position: relative; display: inline-flex; align-items: center; width: 40px; height: 22px; border-radius: 999px; border: none; padding: 0; background: rgba(20,18,31,0.18); cursor: pointer; transition: background .15s ease; flex-shrink: 0; }
+.lg-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.25); transition: transform .15s ease; }
+.lg-switch.on { background: var(--teal-deep, #1F8A70); }
+.lg-switch.on::after { transform: translateX(18px); }
+.lg-switch:disabled { opacity: .5; cursor: wait; }
+
+.lg-row-inactive td { background: rgba(217,45,60,0.04); }
+.lg-row-late td { background: rgba(217,45,60,0.05); }
+.lg-num { font-variant-numeric: tabular-nums; }
+.lg-muted { color: var(--ink-faint); }
+.lg-mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+/* Fraîcheur des données (auto-refresh) — même place que .admin-freshness, avec un point clignotant. */
+.lg-fresh { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; color: var(--ink-soft); }
+.lg-fresh .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--teal-deep, #1F8A70); animation: lg-blink 2s ease-in-out infinite; }
+@keyframes lg-blink { 0%, 100% { opacity: 1; } 50% { opacity: .25; } }
+
+/* Fiche zone (tiroir) : formulaire. */
+.lg-form .field { margin-bottom: 14px; }
+.lg-form input[type="number"], .lg-form textarea { width: 100%; box-sizing: border-box; }
+.lg-form .help { display: block; margin-top: 4px; font-size: 12px; color: var(--ink-faint); line-height: 1.4; }
+.lg-form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px 20px; }
+.lg-setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--cream-dim); }
+.lg-setting-row:last-child { border-bottom: none; }
+
+/* Carte en direct (Leaflet) et sa légende. */
+.lg-map { height: 420px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line); }
+.lg-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--ink-soft); }
+.lg-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg-legend i { width: 12px; height: 12px; border-radius: 50%; display: inline-block; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,0.2); }
+.lg-marker { width: 28px; height: 28px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,0.3); }
+.lg-marker span { transform: rotate(45deg); font-size: 14px; line-height: 1; }
+.lg-marker.driver { background: var(--iris); }
+.lg-marker.driver.late { background: var(--red); }
+.lg-marker.restaurant { background: var(--gold, #E8B04B); }
+.lg-marker.client { background: var(--ink); }
+.lg-marker-wrap { background: none; border: none; }
+
+/* Liste des livraisons en cours. */
+.lg-live-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.lg-live-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+.lg-live-card.late { border-color: rgba(217,45,60,0.5); }
+.lg-live-card .head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.lg-live-card b { font-size: 14px; }
+.lg-live-card .meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: 12px; color: var(--ink-soft); }
+
+/* Capacité : histogramme en CSS (commandes vs livreurs actifs, heure par heure). */
+.lg-cap-chart { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; align-items: end; height: 180px; padding: 6px 0 0; border-bottom: 1px solid var(--line); }
+.lg-cap-col { display: flex; align-items: flex-end; justify-content: center; gap: 2px; height: 100%; position: relative; }
+.lg-cap-col.overloaded { background: rgba(232,120,40,0.10); border-radius: 4px 4px 0 0; }
+.lg-cap-bar { width: 45%; min-height: 2px; border-radius: 3px 3px 0 0; }
+.lg-cap-bar.orders { background: var(--iris); }
+.lg-cap-bar.drivers { background: var(--teal-deep, #1F8A70); }
+.lg-cap-col.overloaded .lg-cap-bar.orders { background: #E87828; }
+.lg-cap-axis { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; margin-top: 4px; }
+.lg-cap-axis span { text-align: center; font-size: 10px; color: var(--ink-faint); }
+.lg-cap-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 12px; color: var(--ink-soft); }
+.lg-cap-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -2px; margin-right: 6px; }
+.lg-cap-legend i.orders { background: var(--iris); }
+.lg-cap-legend i.drivers { background: var(--teal-deep, #1F8A70); }
+.lg-cap-legend i.overloaded { background: #E87828; }
+.lg-row-overloaded td { background: rgba(232,120,40,0.10); }
+.lg-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+@media (max-width: 760px) {
+  .lg-two-col { grid-template-columns: 1fr; }
+  .lg-cap-chart { height: 140px; }
+  .lg-cap-axis span:nth-child(odd) { visibility: hidden; }
+  .lg-map { height: 320px; }
+  .lg-toolbar input[type="date"], .lg-toolbar select { max-width: 100%; }
+  .lg-setting-row { flex-direction: column; align-items: flex-start; }
+}

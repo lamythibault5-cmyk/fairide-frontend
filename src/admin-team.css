@@ -1,0 +1,71 @@
+/* Équipe & accès — styles propres à l'application (pages/admin/AdminTeamPage.jsx). Les classes
+   partagées de l'ERP (.admin-control-panel, .record-drawer, .admin-table, .pill, .chip…) vivent dans
+   styles.css / admin-erp.css ; ici seulement ce qui n'existe nulle part ailleurs. */
+
+.team-tabs { display: flex; gap: 6px; margin-bottom: 14px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.team-tabs::-webkit-scrollbar { display: none; }
+.team-tabs .chip { flex: none; padding: 8px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; white-space: nowrap; }
+.team-tabs .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+.team-tabs .chip .pill { margin-left: 6px; padding: 1px 6px; font-size: 10px; }
+
+/* Cartes des membres */
+.team-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.team-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.team-card.inactive { opacity: 0.62; background: var(--cream-dim); }
+.team-card.me { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.10); }
+.team-card-head { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.team-avatar { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 700; font-size: 15px; color: #fff; background: var(--iris); }
+.team-avatar.owner { background: var(--ink); }
+.team-avatar.finance { background: #1E8A7A; }
+.team-avatar.ops { background: #B7791F; }
+.team-avatar.support { background: #5A67D8; }
+.team-card-id { min-width: 0; flex: 1; }
+.team-card-id b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.team-card-id .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; opacity: 0.75; }
+.team-card-meta { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.team-card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; }
+.team-card-actions button { padding: 6px 10px; font-size: 12px; }
+
+/* Pastilles de rôle */
+.role-pill { font-size: 11px; padding: 3px 9px; border-radius: 999px; font-weight: 700; letter-spacing: 0.01em; background: var(--cream-dim); color: var(--ink-soft); white-space: nowrap; }
+.role-pill.owner { background: var(--ink); color: #fff; }
+.role-pill.admin { background: rgba(59,47,181,0.12); color: var(--iris); }
+.role-pill.finance { background: rgba(30,138,122,0.14); color: #166B5F; }
+.role-pill.ops { background: rgba(183,121,31,0.16); color: #8A5A12; }
+.role-pill.support { background: rgba(90,103,216,0.14); color: #3C46A0; }
+.team-status { font-size: 11px; padding: 3px 9px; border-radius: 999px; background: rgba(30,138,122,0.12); color: #166B5F; white-space: nowrap; }
+.team-status.off { background: rgba(217,45,60,0.10); color: var(--red); }
+.team-status.noaccount { background: rgba(183,121,31,0.14); color: #8A5A12; }
+
+/* Matrice rôles × applications */
+.team-matrix-wrap { overflow-x: auto; }
+.team-matrix { border-collapse: collapse; width: 100%; min-width: 560px; font-size: 13px; }
+.team-matrix th, .team-matrix td { padding: 8px 10px; border-bottom: 1px solid var(--cream-dim); text-align: center; white-space: nowrap; }
+.team-matrix th:first-child, .team-matrix td:first-child { text-align: left; position: sticky; left: 0; background: #fff; z-index: 1; }
+.team-matrix thead th { position: sticky; top: 0; background: #fff; z-index: 2; }
+.team-matrix thead th:first-child { z-index: 3; }
+.team-matrix tbody tr:hover td { background: var(--cream-dim); }
+.team-matrix .ok { color: #166B5F; font-weight: 700; }
+.team-matrix .no { color: var(--line); }
+.team-matrix .group-row td { background: var(--cream-dim); font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); text-align: left; }
+.team-role-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.team-role-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; }
+.team-role-card p { margin: 6px 0 0; }
+
+/* Formulaire d'invitation (dans le RecordDrawer) */
+.team-role-options { display: flex; flex-direction: column; gap: 6px; }
+.team-role-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-chip); cursor: pointer; background: #fff; }
+.team-role-option.active { border-color: var(--iris); background: rgba(59,47,181,0.05); }
+.team-role-option input { margin-top: 3px; accent-color: var(--iris); }
+.team-role-option .small { display: block; margin-top: 2px; opacity: 0.75; }
+.team-role-option.disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Journal d'activité */
+.team-activity-details { max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: bottom; }
+.team-activity-details.open { white-space: pre-wrap; word-break: break-word; }
+.team-activity-email { white-space: nowrap; }
+
+@media (max-width: 720px) {
+  .team-grid { grid-template-columns: 1fr; }
+  .team-card-actions button { flex: 1; }
+}

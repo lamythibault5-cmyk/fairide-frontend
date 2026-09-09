@@ -80,6 +80,12 @@ const AdminAutomationsPage = lazyPage(() => import('./pages/admin/AdminAutomatio
 const AdminAccountingPage = lazyPage(() => import('./pages/admin/AdminAccountingPage'));
 const AdminInvoicesPage = lazyPage(() => import('./pages/admin/AdminInvoicesPage'));
 const AdminSettingsPage = lazyPage(() => import('./pages/admin/AdminSettingsPage'));
+const AdminMarketingPage = lazyPage(() => import('./pages/admin/AdminMarketingPage'));
+const AdminLogisticsPage = lazyPage(() => import('./pages/admin/AdminLogisticsPage'));
+const AdminIncidentsPage = lazyPage(() => import('./pages/admin/AdminIncidentsPage'));
+const AdminReportsPage = lazyPage(() => import('./pages/admin/AdminReportsPage'));
+const AdminTeamPage = lazyPage(() => import('./pages/admin/AdminTeamPage'));
+const AdminCompliancePage = lazyPage(() => import('./pages/admin/AdminCompliancePage'));
 
 // --- Pages légales ---
 const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
@@ -167,6 +173,12 @@ export default function App() {
           <Route path="accounting" element={<AdminAccountingPage />} />
           <Route path="invoices" element={<AdminInvoicesPage />} />
           <Route path="settings" element={<AdminSettingsPage />} />
+          <Route path="marketing" element={<AdminMarketingPage />} />
+          <Route path="logistics" element={<AdminLogisticsPage />} />
+          <Route path="incidents" element={<AdminIncidentsPage />} />
+          <Route path="reports" element={<AdminReportsPage />} />
+          <Route path="team" element={<AdminTeamPage />} />
+          <Route path="compliance" element={<AdminCompliancePage />} />
         </Route>
 
         <Route path="/mentions-legales" element={<LegalNotice />} />

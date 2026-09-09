@@ -1,0 +1,50 @@
+/* Application « Rapports » (analytics) : grilles KPI, heatmap, cohortes, entonnoir. Réutilise
+   .stat-card / .card / .admin-table de styles.css et .fin-tabs / .fin-error de admin-finance.css. */
+.rep-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 14px; }
+.rep-grid .card { margin-bottom: 0; }
+.rep-card-title { margin: 0 0 10px; font-size: 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rep-card-title .spacer { flex: 1; }
+.rep-card-help { margin: -6px 0 10px; font-size: 12px; color: var(--ink-soft); }
+.rep-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.rep-chips .chip { padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
+.rep-chips .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
+
+/* Heatmap jour × heure */
+.rep-heatmap-wrap { overflow-x: auto; }
+.rep-heatmap { display: grid; grid-template-columns: 44px repeat(24, minmax(16px, 1fr)); gap: 2px; min-width: 560px; font-size: 10px; }
+.rep-heatmap .hd { color: var(--ink-soft); text-align: center; }
+.rep-heatmap .lbl { color: var(--ink-soft); font-weight: 600; display: flex; align-items: center; }
+.rep-heatmap .cell { aspect-ratio: 1; border-radius: 3px; background: var(--cream-dim); }
+
+/* Barres horizontales (fréquence) */
+.rep-bars { display: flex; flex-direction: column; gap: 6px; }
+.rep-bar-row { display: grid; grid-template-columns: 64px 1fr 48px; align-items: center; gap: 8px; font-size: 13px; }
+.rep-bar-row .val { text-align: right; font-weight: 600; }
+.rep-bar-track { background: var(--cream-dim); border-radius: 4px; height: 14px; overflow: hidden; }
+.rep-bar-fill { height: 100%; background: var(--iris); border-radius: 4px; }
+
+/* Cohortes */
+.rep-cohort td.cell { text-align: center; font-weight: 600; min-width: 52px; }
+.rep-cohort td.cell.empty { color: var(--ink-soft); opacity: .5; }
+
+/* Entonnoir */
+.rep-funnel { display: flex; flex-direction: column; gap: 8px; }
+.rep-funnel-step { display: grid; grid-template-columns: 130px 1fr 60px; gap: 8px; align-items: center; font-size: 13px; }
+.rep-funnel-step .num { text-align: right; font-weight: 700; font-family: 'Space Grotesk', sans-serif; }
+.rep-funnel-bar { height: 22px; border-radius: 4px; background: var(--iris); min-width: 2px; transition: width .25s ease; }
+.rep-funnel-conv { font-size: 11px; color: var(--ink-soft); }
+
+/* Barres empilées (inscriptions par semaine) */
+.rep-stacked svg { width: 100%; height: 150px; display: block; }
+.rep-legend { display: flex; gap: 12px; font-size: 12px; color: var(--ink-soft); margin-top: 6px; flex-wrap: wrap; }
+.rep-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+.rep-churn { border: 1px solid rgba(217,45,60,0.35); background: rgba(217,45,60,0.05); }
+.rep-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+.rep-toggle input { width: auto; margin: 0; }
+
+@media (max-width: 640px) {
+  .rep-funnel-step { grid-template-columns: 96px 1fr 48px; }
+  .rep-bar-row { grid-template-columns: 48px 1fr 40px; }
+}
