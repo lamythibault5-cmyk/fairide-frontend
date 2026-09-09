@@ -2740,3 +2740,12 @@ button.account-link-row:last-child { border-bottom: none; }
 .join-points { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--ink-soft); }
 .join-points li::before { content: '· '; }
 .join-card.join-card-iris .join-points { color: rgba(255,255,255,0.8); }
+
+/* Imprimante à tickets (components/PrinterSettings.jsx) et bouton d'impression sur chaque commande. */
+.printer-card { padding: 0; overflow: hidden; }
+.printer-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; width: 100%; background: none; border: none; padding: 14px 18px; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.printer-head-titre { font-weight: 700; font-size: 15px; }
+.printer-body { padding: 0 18px 16px; border-top: 1px dashed var(--line); padding-top: 12px; }
+.printer-compat { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+.printer-compat ul { margin: 4px 0 0; padding-left: 18px; line-height: 1.5; }
+.order-print-btn { padding: 2px 8px; font-size: 16px; line-height: 1; }

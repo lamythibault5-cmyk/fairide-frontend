@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
 import { buildTicketBytes, COLUMNS_58MM, COLUMNS_80MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
+import PrinterSettings, { AUTO_PRINT_KEY } from '../../components/PrinterSettings';
 import {
   DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
@@ -36,22 +37,64 @@ export default function OrdersPage() {
     localStorage.setItem('fairide.paperColumns', String(cols));
   }
 
-  async function printBluetooth(order) {
+  // Impression automatique de chaque nouvelle commande sur l'imprimante connectée (voir PrinterSettings).
+  const [autoPrint, setAutoPrint] = useState(() => { try { return localStorage.getItem(AUTO_PRINT_KEY) === '1'; } catch { return false; } });
+  function choisirAutoPrint(v) { setAutoPrint(v); try { localStorage.setItem(AUTO_PRINT_KEY, v ? '1' : '0'); } catch { /* sans stockage */ } }
+
+  async function printBluetooth(order, { silencieux = false } = {}) {
     setPrinting(true);
     try {
       if (!btPrinter.connectedDeviceName()) setBtName(await btPrinter.connect());
       await btPrinter.printBytes(buildTicketBytes(order, restaurant, { columns: paperColumns }));
       setBtName(btPrinter.connectedDeviceName());
-      toast(t('ordersResto.toastTicketSent'));
+      if (!silencieux) toast(t('ordersResto.toastTicketSent'));
+      return true;
     } catch (e) {
       // Refuser le sélecteur d'appareils lève une NotFoundError : ce n'est pas une panne, inutile
       // d'alarmer le restaurateur qui vient simplement de fermer la fenêtre.
       if (e?.name !== 'NotFoundError') toast(e.message || 'Impression impossible.');
       setBtName(btPrinter.connectedDeviceName());
+      return false;
     } finally {
       setPrinting(false);
     }
   }
+  async function connecterImprimante() {
+    setPrinting(true);
+    try { setBtName(await btPrinter.connect()); toast(t('ordersResto.toastPrinterConnected')); }
+    catch (e) { if (e?.name !== 'NotFoundError') toast(e.message || 'Connexion impossible.'); }
+    finally { setPrinting(false); }
+  }
+  function deconnecterImprimante() { btPrinter.disconnect(); setBtName(null); }
+  function ticketDeTest() {
+    return printBluetooth({
+      id: 'TEST0000', clientName: t('ordersResto.printerTestClient'), clientPhone: '', createdAt: Date.now(), orderType: 'pickup', paid: true,
+      items: [{ name: t('ordersResto.printerTestItem'), qty: 1, price: 0 }], subtotal: 0, deliveryFee: 0, serviceFee: 0, promoDiscount: 0, balanceUsed: 0, total: 0
+    });
+  }
+
+  // Nouvelle commande → ticket imprimé tout seul, si l'option est active et l'imprimante connectée. Les
+  // commandes déjà présentes au premier chargement ne sont jamais réimprimées ; chaque commande l'est au
+  // plus une fois (mémoire de session), même si la liste se rafraîchit ou si l'on change d'onglet.
+  const dejaVues = useRef(null);
+  useEffect(() => {
+    if (!orders) return;
+    if (dejaVues.current === null) { dejaVues.current = new Set(orders.map((o) => o.id)); return; }
+    const nouvelles = orders.filter((o) => !dejaVues.current.has(o.id) && o.paid !== false && !['annule', 'refuse'].includes(o.status));
+    nouvelles.forEach((o) => dejaVues.current.add(o.id));
+    if (!autoPrint || !btPrinter.connectedDeviceName() || nouvelles.length === 0) return;
+    let imprimees = new Set();
+    try { imprimees = new Set(JSON.parse(sessionStorage.getItem('fairide.printed') || '[]')); } catch { /* sans stockage */ }
+    (async () => {
+      for (const o of nouvelles) {
+        if (imprimees.has(o.id)) continue;
+        const ok = await printBluetooth(o, { silencieux: true });
+        if (ok) { imprimees.add(o.id); toast(t('ordersResto.toastAutoPrinted', { id: o.id.slice(0, 8) })); }
+      }
+      try { sessionStorage.setItem('fairide.printed', JSON.stringify([...imprimees].slice(-200))); } catch { /* sans stockage */ }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders]);
 
   useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
 
@@ -149,6 +192,9 @@ export default function OrdersPage() {
         )}
       </div>
 
+      <PrinterSettings btName={btName} onConnect={connecterImprimante} onDisconnect={deconnecterImprimante} onTest={ticketDeTest} printing={printing}
+        paperColumns={paperColumns} onPaper={choosePaper} autoPrint={autoPrint} onAutoPrint={choisirAutoPrint} />
+
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('ordersResto.incoming')}</h2>
       {orders.length === 0 && <div className="empty">{t('ordersResto.noneYet')}</div>}
       {sortedOrders.map((o) => {
@@ -162,9 +208,13 @@ export default function OrdersPage() {
           style={{ borderLeft: `5px solid ${stageColor}` }}
           onClick={() => setSelectedOrder(o)}
         >
-          <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, margin: '0 0 6px', background: `${stageColor}22`, color: stageColor }}>
-            {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
-          </span>
+          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: `${stageColor}22`, color: stageColor }}>
+              {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
+            </span>
+            <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+              onClick={(e) => { e.stopPropagation(); if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
+          </div>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.clientName}</b>
             <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
