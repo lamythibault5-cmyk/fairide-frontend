@@ -3698,7 +3698,8 @@ export const translations = {
       euroExUsSub: '10 % maximum, et rien sur la livraison',
       euroExDiffFigure: '300 à 550 € de plus dans la caisse du commerçant',
       euroExDiffText: 'chaque mois, pour les mêmes commandes.',
-      discoverReviews: 'avis'
+      discoverReviews: 'avis',
+      quartiersLabel: 'Déjà livrés :'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -7971,7 +7972,8 @@ export const translations = {
       euroExUsSub: '10% at most, and nothing on delivery',
       euroExDiffFigure: '€300 to €550 more in the shopkeeper\'s till',
       euroExDiffText: 'every month, for the same orders.',
-      discoverReviews: 'reviews'
+      discoverReviews: 'reviews',
+      quartiersLabel: 'Already delivered:'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -12244,7 +12246,8 @@ export const translations = {
       euroExUsSub: 'maximaal 10%, en niets op de levering',
       euroExDiffFigure: '€ 300 tot € 550 meer in de kassa van de handelaar',
       euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
-      discoverReviews: 'beoordelingen'
+      discoverReviews: 'beoordelingen',
+      quartiersLabel: 'Al geleverd:'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },

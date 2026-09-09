@@ -47,7 +47,7 @@ export default function DiscoverSection({ restaurants }) {
             </div>
             <div className="discover-tile-body">
               <b>{r.name}</b>
-              <span className="discover-tile-meta">📍 {r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
+              <span className="discover-tile-meta">📍 {r.neighborhood ? `${r.neighborhood} · ` : ''}{r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
             </div>
           </Reveal>
         ))}

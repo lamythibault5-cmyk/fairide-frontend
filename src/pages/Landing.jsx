@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
@@ -94,6 +95,12 @@ export default function Landing() {
   usePageMeta({ path: '/' });
   // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
   const restaurants = useCommercesPublics();
+  // Quartiers déjà servis (Flagey, Jourdan, Parvis…) : les plus représentés parmi les commerces publiés.
+  const quartiers = useMemo(() => {
+    const compte = new Map();
+    (restaurants || []).forEach((r) => { if (r.neighborhood) compte.set(r.neighborhood, (compte.get(r.neighborhood) || 0) + 1); });
+    return [...compte.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([q]) => q);
+  }, [restaurants]);
 
   return (
     <div className="decor-page">
@@ -124,6 +131,12 @@ export default function Landing() {
             <li>✓ {t('landing.trust2')}</li>
             <li>✓ {t('landing.trust3')}</li>
           </ul>
+          {quartiers.length > 0 && (
+            <p className="landing-quartiers">
+              <span className="landing-quartiers-label">📍 {t('landing.quartiersLabel')}</span>
+              {quartiers.map((q) => <span key={q} className="landing-quartier">{q}</span>)}
+            </p>
+          )}
         </div>
         <HeroPreview restaurants={restaurants} />
 

@@ -1348,8 +1348,15 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-sidebar {
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
   background: #fff; border-right: 1px solid var(--line); padding: 20px 14px;
+  /* La console admin compte une vingtaine d'entrées : plus haut qu'un écran de portable. La barre défile
+     donc d'elle-même (roulette, trackpad), la marque en haut et la carte profil en bas restent visibles
+     parce que c'est la nav, au milieu, qui prend le défilement. */
+  overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent;
 }
-.dashboard-sidebar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 24px; padding: 0 6px; }
+.dashboard-sidebar > .dashboard-nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-right: 2px; }
+.dashboard-sidebar > .dashboard-nav::-webkit-scrollbar { width: 6px; }
+.dashboard-sidebar > .dashboard-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.dashboard-sidebar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 16px; padding: 0 6px; flex-shrink: 0; }
 .dashboard-sidebar-brand span { font-weight: 700; font-size: 19px; color: var(--ink); letter-spacing: -0.03em; }
 .preview-mode-sidebar-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -2756,6 +2763,10 @@ button.account-link-row:last-child { border-bottom: none; }
 @media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: 18px; } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: 14px; } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
 
 /* Accueil : ligne de confiance sous les boutons de la bannière, compteur du panneau, bénéfices des portes d'entrée. */
+/* Quartiers déjà servis, sous la ligne de confiance du hero : des noms vrais, en petites étiquettes. */
+.landing-quartiers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 0; font-size: 12.5px; color: rgba(255,255,255,0.85); }
+.landing-quartiers-label { margin-right: 4px; color: rgba(255,255,255,0.7); }
+.landing-quartier { padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-weight: 600; letter-spacing: 0.01em; }
 .landing-trust { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 0; padding: 0; font-size: 12.5px; color: rgba(255,255,255,0.8); }
 .hero-preview-count { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--iris); }
 .join-points { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--ink-soft); }
