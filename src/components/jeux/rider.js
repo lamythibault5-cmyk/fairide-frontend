@@ -77,8 +77,8 @@ export function creerRider(api) {
         const boost = input.enfonce && appuiDepuisSol && dureeAppui > 0.12;
         const cible = boost ? maxi : base;
         vx = suivre(vx, cible, boost ? 2.4 : 1.6, dt);
-        vx += -pIci * U * 0.9 * dt; // descente : plus vite ; montée : moins vite
-        vx = Math.max(base * 0.72, Math.min(maxi * 1.08, vx));
+        vx += -pIci * U * 1.4 * dt; // descente : ça file ; montée : ça freine — nettement
+        vx = Math.max(base * 0.6, Math.min(maxi * 1.2, vx));
       }
       dist += vx * dt;
       const xm = xEcran() + dist;
@@ -103,10 +103,11 @@ export function creerRider(api) {
         vy += g * dt; y += vy * dt;
         // Salto seulement si l'appui a commencé pour sauter (ou en l'air) : un doigt gardé depuis le sol pour accélérer
         // ne fait pas tourner le vélo quand une bosse le décolle — sinon on chutait « sans rien faire ».
-        // Salto : rotation plus lente (un tour en ≈ 0,9 s) qui monte en douceur, et plafonnée : au-delà de
-        // trois tours dans un même vol, le vélo se redresse de lui-même — cinq saltos d'un coup, ça n'existe pas.
-        if (input.enfonce && dureeAppui > 0.3 && !appuiDepuisSol && rotation < Math.PI * 2 * 3) {
-          vitesseAngulaire = suivre(vitesseAngulaire, -7, 5, dt);
+        // Salto : seulement en tenant le doigt nettement après le saut (0,45 s), et la rotation monte lentement —
+        // un simple saut ne tourne jamais tout seul. Aucun plafond : qui continue à tourner retombe de travers
+        // et se crashe, c'est la règle.
+        if (input.enfonce && dureeAppui > 0.45 && !appuiDepuisSol) {
+          vitesseAngulaire = suivre(vitesseAngulaire, -7, 3.5, dt);
         } else {
           vitesseAngulaire *= Math.max(0, 1 - dt * 8);
           const droit = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;

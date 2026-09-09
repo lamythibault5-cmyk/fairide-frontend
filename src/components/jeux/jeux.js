@@ -108,11 +108,11 @@ export const JEUX = [
     key: 'catch', label: 'FairCatch', sub: 'Attrape les plats', emoji: '🧺',
     stockage: 'fairide_food_catch_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Perdu !',
     regles: [
-      'Des plats tombent du haut de l’écran : attrape-les tous avec ton panier.',
-      'Chaque plat attrapé rapporte un point. Un seul plat qui touche le sol, et c’est perdu.',
-      'Tous les 10 points, ça tombe plus vite et plus souvent.'
+      'But : des plats tombent du haut de l’écran, attrape-les tous dans ton panier avant qu’ils ne touchent le sol.',
+      'Score : +1 par plat attrapé. Tous les 10 points, un palier : les plats tombent plus vite et plus souvent.',
+      'Fin de partie : un seul plat qui touche le sol. Ton meilleur score est gardé et compte pour le podium.'
     ],
-    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
+    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit. Clavier : Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       joueur: '🧺', ciel: ['#221B6B', '#4A3FD0'],
       nouvelObjet: () => ({ emoji: choix(PLATS) }),
@@ -125,11 +125,11 @@ export const JEUX = [
     key: 'dodge', label: 'FairDodge', sub: 'Évite les obstacles', emoji: '🚧',
     stockage: 'fairide_dodge_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Touché !',
     regles: [
-      'Tu es le livreur. Des obstacles dévalent la route : évite-les tous.',
-      'Chaque obstacle qui passe sans te toucher rapporte un point. Un seul contact, et c’est perdu.',
-      'Tous les 10 points, la route s’accélère.'
+      'But : tu es le livreur en scooter, des obstacles dévalent la route (🚧 🪨 🕳️ 🔥 💥) — évite-les tous.',
+      'Score : +1 par obstacle passé sans le toucher. Tous les 10 points, la route accélère et les obstacles se rapprochent.',
+      'Fin de partie : un seul contact avec un obstacle. Ton meilleur score est gardé et compte pour le podium.'
     ],
-    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le scooter suit.',
+    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le scooter suit. Clavier : Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       joueur: '🛵', ciel: ['#17151F', '#3A3750'],
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
@@ -142,11 +142,11 @@ export const JEUX = [
     key: 'reaction', label: 'FairFlash', sub: 'Réflexes rapides', emoji: '🎯',
     stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '⏱️ Trop lent !',
     regles: [
-      'Une cible apparaît quelque part : tape dessus avant qu’elle ne disparaisse.',
-      'L’anneau autour de la cible se referme : c’est le temps qu’il te reste.',
-      'Tous les 8 points, tu as un peu moins de temps.'
+      'But : une cible 🎯 apparaît quelque part sur le terrain — tape dessus avant qu’elle ne disparaisse.',
+      'Score : +1 par cible touchée. L’anneau autour de la cible se referme : c’est le temps qu’il te reste (il devient rouge à la fin). Tous les 8 points, tu as un peu moins de temps.',
+      'Fin de partie : une cible qui disparaît sans avoir été touchée. Taper à côté ne coûte rien.'
     ],
-    controles: 'Tape (ou clique) sur la cible.',
+    controles: 'Tape (ou clique) sur la cible. Clavier : Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let cible = null; let reste = 0; let fenetre = 1;
       const taille = () => Math.max(30, Math.min(58, w * 0.22));
@@ -197,11 +197,11 @@ export const JEUX = [
     key: 'sort', label: 'FairSort', sub: 'Trie les bons plats', emoji: '🗑️',
     stockage: 'fairide_sort_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '🤢 Mauvais choix !',
     regles: [
-      'Des plats tombent, mais pas que : des déchets aussi. Attrape les plats, laisse passer le reste.',
-      'Un bon plat attrapé rapporte un point. Attraper un déchet, c’est perdu. Rater un plat ne coûte rien.',
-      'Plus tu montes, plus il y a de déchets dans le lot.'
+      'But : des plats tombent, mais aussi des déchets (🗑️ 🦠 💀 🧪). Attrape les plats, laisse passer les déchets.',
+      'Score : +1 par bon plat attrapé. Rater un plat ne coûte rien. Plus tu montes de niveau (tous les 10 points), plus il y a de déchets dans le lot et plus ça tombe vite.',
+      'Fin de partie : attraper un déchet. Ton meilleur score est gardé et compte pour le podium.'
     ],
-    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
+    controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit. Clavier : Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       joueur: '🧺', ciel: ['#0E3B2E', '#1F7A5A'],
       nouvelObjet: (n) => {
@@ -217,22 +217,22 @@ export const JEUX = [
     key: 'rider', label: 'FairRider', sub: 'Saute, double-saute, enchaîne les saltos', emoji: '🚴',
     stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '🤕 Chute !',
     regles: [
-      'Tu roules sur une route en bosses. Tape pour sauter, tape à nouveau en l’air pour un double saut. Garde le doigt appuyé après l’atterrissage pour accélérer.',
-      'Saute par-dessus les obstacles (🪨 🚧 🛢️) : en toucher un au sol, c’est la chute. Chaque obstacle franchi, chaque plat attrapé en vol et chaque bout de route rapportent un point.',
-      'En l’air, maintiens appuyé pour tourner : chaque salto complet vaut 1 point. Relâche pour te redresser avant le sol — retomber de travers, c’est la chute.'
+      'But : tu roules sur une route en bosses. Tape pour sauter, tape à nouveau en l’air pour un double saut. Dans les descentes tu prends de la vitesse, dans les montées tu en perds ; garde le doigt appuyé après l’atterrissage pour accélérer.',
+      'Score : +1 par obstacle (🪨 🚧 🛢️) franchi en l’air, +1 par plat attrapé en vol, +1 par bout de route parcouru, et +1 par salto complet (un double vaut 2, un triple 3). Tous les 8 points, la route va plus vite.',
+      'Salto : en l’air, garde le doigt appuyé pour tourner, relâche pour te redresser avant le sol. Fin de partie : toucher un obstacle au sol, ou retomber de travers — tourner trop longtemps sans se redresser, c’est la chute.'
     ],
-    controles: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour tourner en l’air, et après l’atterrissage pour accélérer.',
+    controles: 'Tape pour sauter (deux fois pour un double saut) ; maintiens (doigt, souris ou Espace) pour tourner en l’air, et après l’atterrissage pour accélérer. Échap ou P pour la pause.',
     creer: (api) => creerRider(api)
   },
   {
     key: 'arrow', label: 'FairArrow', sub: 'Vise les passages', emoji: '🏹',
     stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '💢 Dans le mur !',
     regles: [
-      'Ta flèche file vers le haut. Des murs descendent, chacun avec une seule ouverture.',
-      'Guide la flèche dans l’ouverture : chaque mur franchi rapporte un point. Toucher un mur, c’est perdu.',
-      'Tous les 8 points, les murs vont plus vite et les ouvertures se resserrent.'
+      'But : ta flèche file vers le haut, des murs descendent vers elle, chacun avec une seule ouverture — passe par l’ouverture.',
+      'Score : +1 par mur franchi. Tous les 8 points, les murs descendent plus vite et les ouvertures se resserrent.',
+      'Fin de partie : toucher un mur, même du bout de la flèche. Ton meilleur score est gardé et compte pour le podium.'
     ],
-    controles: 'Glisse le doigt (ou la souris) de gauche à droite : la flèche suit.',
+    controles: 'Glisse le doigt (ou la souris) de gauche à droite : la flèche suit. Clavier : Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0; let traine = [];
       const yFleche = () => h * 0.8;

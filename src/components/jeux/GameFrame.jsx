@@ -100,7 +100,29 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const [pop, setPop] = useState(0); // incrémenté à chaque point : relance l'animation du score
   // Musique de fond (musique.js) : un seul moteur pour tous les jeux, coupée par défaut.
   const [musiqueActive, setMusiqueActive] = useState(() => musique.estActive());
-  useEffect(() => musique.abonner(setMusiqueActive), []);
+  const [pisteMusique, setPisteMusique] = useState(() => musique.piste());
+  const [menuMusique, setMenuMusique] = useState(false);
+  useEffect(() => musique.abonner((a, piste) => { setMusiqueActive(a); setPisteMusique(piste); }), []);
+  // Le menu se ferme d'un clic ailleurs ou avec Échap.
+  useEffect(() => {
+    if (!menuMusique) return undefined;
+    const fermer = (e) => { if (!e.target.closest?.('.jeu-musique-menu, .jeu-musique-btn, .jeu-btn-musique')) setMenuMusique(false); };
+    const clavier = (e) => { if (e.key === 'Escape') setMenuMusique(false); };
+    document.addEventListener('pointerdown', fermer); document.addEventListener('keydown', clavier);
+    return () => { document.removeEventListener('pointerdown', fermer); document.removeEventListener('keydown', clavier); };
+  }, [menuMusique]);
+  const menuPistes = (
+    <div className="jeu-musique-menu" role="menu" aria-label={t('gameFrame.musicMenuTitle')}>
+      <div className="jeu-musique-menu-titre">{t('gameFrame.musicMenuTitle')}</div>
+      <button type="button" role="menuitemradio" aria-checked={!musiqueActive} className={`jeu-musique-item${!musiqueActive ? ' active' : ''}`} onClick={() => { musique.arreter(); setMenuMusique(false); }}>🔇 {t('gameFrame.musicNone')}</button>
+      <button type="button" role="menuitemradio" aria-checked={musiqueActive && pisteMusique === 'mix'} className={`jeu-musique-item${musiqueActive && pisteMusique === 'mix' ? ' active' : ''}`} onClick={() => { musique.choisir('mix'); setMenuMusique(false); }}>🎲 {t('gameFrame.musicMix')}</button>
+      {musique.pistes.map((id) => (
+        <button key={id} type="button" role="menuitemradio" aria-checked={musiqueActive && pisteMusique === id} className={`jeu-musique-item${musiqueActive && pisteMusique === id ? ' active' : ''}`} onClick={() => { musique.choisir(id); setMenuMusique(false); }}>
+          🎵 {t(`gameFrame.track_${id}`)}<span className="jeu-musique-sous">{t(`gameFrame.track_${id}_sub`)}</span>
+        </button>
+      ))}
+    </div>
+  );
 
   const conteneur = useRef(null);
   const canvas = useRef(null);
@@ -284,9 +306,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         <span className="jeu-best" title={t('gameFrame.bestTitle')}>🥇 {meilleur}</span>
         <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>🏆 {score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
         <span className="jeu-hud-boutons">
-          <button type="button" className={`jeu-regles-btn jeu-musique-btn${musiqueActive ? ' active' : ''}`} onClick={() => musique.basculer()} aria-pressed={musiqueActive} aria-label={musiqueActive ? t('gameFrame.musicOff') : t('gameFrame.musicOn')} title={musiqueActive ? t('gameFrame.musicOff') : t('gameFrame.musicOn')}>
-            {musiqueActive ? '🎵' : '🔇'}{large && <span className="jeu-musique-label">{t('gameFrame.music')}</span>}
-          </button>
+          <span style={{ position: 'relative' }}>
+            <button type="button" className={`jeu-regles-btn jeu-musique-btn${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique} aria-label={t('gameFrame.musicMenuTitle')} title={t('gameFrame.musicMenuTitle')}>
+              {musiqueActive ? '🎵' : '🔇'}{large && <span className="jeu-musique-label">{musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</span>}
+            </button>
+            {menuMusique && menuPistes}
+          </span>
           <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
         </span>
       </div>
@@ -320,7 +345,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
               <div className="jeu-ligne-boutons">
                 <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
-                <button type="button" className={`jeu-btn jeu-btn-ghost${musiqueActive ? ' active' : ''}`} onClick={() => musique.basculer()} aria-pressed={musiqueActive}>{musiqueActive ? '🎵' : '🔇'} {t('gameFrame.music')}</button>
+                <span style={{ position: 'relative', flex: 1, display: 'flex' }}>
+                  <button type="button" className={`jeu-btn jeu-btn-ghost jeu-btn-musique${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique}>{musiqueActive ? '🎵' : '🔇'} {musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</button>
+                  {menuMusique && menuPistes}
+                </span>
               </div>
             </div>
           </div>
