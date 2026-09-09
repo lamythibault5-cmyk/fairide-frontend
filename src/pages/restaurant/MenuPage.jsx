@@ -22,11 +22,15 @@ import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import MenuImportReview from '../../components/MenuImportReview';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
-export default function MenuPage() {
+// `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
+// (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
+export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const { token } = useAuth();
   const toast = useToast();
   const { t } = useLanguage();
-  const { restaurant, restoId, loadDashboard } = useOutletContext();
+  const contexteOutlet = useOutletContext();
+  const { restaurant, restoId, loadDashboard } = contexte || contexteOutlet || {};
+  const num = (n) => (modeAdmin ? n - 1 : n);
 
   const [translating, setTranslating] = useState(false);
   const [itemName, setItemName] = useState('');
@@ -514,10 +518,10 @@ export default function MenuPage() {
         </div>
       )}
       <div className="card" id="menu-methodes">
-        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.methodsTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 14px' }}>{t('menuPage.methodsIntro')}</p>
+        <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
 
-        {!importedItems && (
+        {!importedItems && !modeAdmin && (
           <div className="methode" id="menu-concierge">
             <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommended')}</span></div>
             <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
@@ -527,7 +531,7 @@ export default function MenuPage() {
 
         {!importedItems && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">2</span><h4>{t('menuPage.method2Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(2)}</span><h4>{t('menuPage.method2Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method2Sub')}</p>
             <MenuImportStaging restoId={restoId} token={token} disabled={importingUrl || importingText}
               onBusy={setImporting}
@@ -536,7 +540,7 @@ export default function MenuPage() {
         )}
         {!importedItems && (
           <div className="menu-import-web methode">
-            <div className="methode-tete"><span className="methode-num">3</span><h4>{t('menuPage.method3Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.method3Title')}</h4></div>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
             <div className="menu-import-web-row">
               <input ref={importUrlRef} id="menu-import-url" type="url" inputMode="url" value={importUrl} onChange={(e) => setImportUrl(e.target.value)}
@@ -550,7 +554,7 @@ export default function MenuPage() {
         )}
         {!importedItems && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">4</span><h4>{t('menuPage.method4Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(4)}</span><h4>{t('menuPage.method4Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method4Sub')}</p>
             <div className="menu-import-text">
               {!importTextOpen ? (
@@ -570,7 +574,7 @@ export default function MenuPage() {
         )}
         {!importedItems && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">5</span><h4>{t('menuPage.method5Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(5)}</span><h4>{t('menuPage.method5Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               {restaurant.menu.length === 0 && <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}</button>}

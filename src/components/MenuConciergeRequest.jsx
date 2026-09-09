@@ -19,6 +19,8 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   const [url, setUrl] = useState(urlSuggeree);
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
+  const [editNote, setEditNote] = useState(false);
+  const [noteEdit, setNoteEdit] = useState('');
 
   useEffect(() => { api(`/restaurants/${restoId}/menu/concierge`, { token }).then((r) => setDemande(r.request || null)).catch(() => setDemande(null)); }, [restoId, token]);
 
@@ -30,6 +32,13 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
     try {
       const r = await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: url.trim(), notes: notes.trim() } });
       setDemande(r.request); toast(t('menuConcierge.sent'));
+    } catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
+  async function enregistrerNote() {
+    setBusy(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/menu/concierge/${demande.id}`, { method: 'PATCH', token, body: { notes: noteEdit.trim() } });
+      setDemande(r.request); setEditNote(false); toast(t('menuConcierge.noteSaved'));
     } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
   async function annuler() {
@@ -48,11 +57,23 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
           <span className="small">{t('menuConcierge.requestedOn', { date: new Date(demande.createdAt).toLocaleDateString(getLocale()), platform: libelle(demande.platform) })}</span>
         </div>
         {demande.url && <p className="small" style={{ margin: '6px 0 0', overflowWrap: 'anywhere' }}>🔗 {demande.url}</p>}
-        {demande.adminNote && <p className="small" style={{ margin: '6px 0 0' }}>💬 {demande.adminNote}</p>}
+        {demande.notes && !editNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>📝 <b>{t('menuConcierge.yourNotes')}</b> : {demande.notes}</p>}
+        {demande.adminNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>💬 <b>{t('menuConcierge.fairideNote')}</b> : {demande.adminNote}</p>}
+        {editNote && (
+          <div className="field" style={{ marginTop: 8 }}>
+            <label htmlFor="concierge-notes-edit">{t('menuConcierge.notesLabel')}</label>
+            <textarea id="concierge-notes-edit" rows={3} value={noteEdit} onChange={(e) => setNoteEdit(e.target.value)} placeholder={t('menuConcierge.notesPlaceholder')} style={{ width: '100%' }} />
+            <div className="row" style={{ gap: 8, marginTop: 6 }}>
+              <button type="button" className="btn-teal" disabled={busy} onClick={enregistrerNote}>{busy ? '…' : t('menuConcierge.saveNote')}</button>
+              <button type="button" className="btn-ghost" disabled={busy} onClick={() => setEditNote(false)}>{t('menuConcierge.cancelEdit')}</button>
+            </div>
+          </div>
+        )}
         <p className="small" style={{ margin: '8px 0 0' }}>
           {demande.status === 'terminee' ? t('menuConcierge.doneHelp') : t('menuConcierge.pendingHelp')}
         </p>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
+          {(demande.status === 'en_attente' || demande.status === 'en_cours') && !editNote && <button type="button" className="btn-outline" disabled={busy} onClick={() => { setNoteEdit(demande.notes || ''); setEditNote(true); }}>✏️ {t('menuConcierge.addNote')}</button>}
           {demande.status === 'en_attente' && <button type="button" className="btn-ghost" disabled={busy} onClick={annuler}>{t('menuConcierge.cancel')}</button>}
           {demande.status === 'terminee' && <button type="button" className="btn-ghost" disabled={busy} onClick={() => setDemande(null)}>{t('menuConcierge.newRequest')}</button>}
         </div>

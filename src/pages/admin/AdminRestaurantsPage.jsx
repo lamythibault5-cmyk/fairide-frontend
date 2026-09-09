@@ -170,8 +170,8 @@ export default function AdminRestaurantsPage() {
     commune: { get: (r) => r.commune || '—' }, cuisine: { get: (r) => r.cuisine || '—' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
-  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || r.adminStatus === filtre) && (nature === 'all' || (nature === 'test') === estTest(r)) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
-  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), real: a.real + (estTest(r) ? 0 : 1), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, real: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  const visibles = useMemo(() => sortRows((filtered || []).filter((r) => (filtre === 'all' || (filtre === 'carte' ? !!r.conciergeStatus : r.adminStatus === filtre)) && (nature === 'all' || (nature === 'test') === estTest(r)) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [filtered, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) ? 0 : 1), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
 
   return (
     <div>
@@ -189,8 +189,8 @@ export default function AdminRestaurantsPage() {
       <div className="admin-control-panel">
         <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
-          {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
-            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
+          {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['carte', tr('adminRestos.filterMenuRequest')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
+            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}{k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : ''}</div>
           ))}
         </div>
         <div className="role-pick" style={{ margin: 0 }}>
@@ -228,11 +228,13 @@ export default function AdminRestaurantsPage() {
                 {estTest(r) && <TestBadge />}
                 {!estTest(r) && <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>}
                 <span className="pill" style={{ color: biz?.color }}>{biz?.label}</span>
+                {r.conciergeStatus && <span className="pill gold">{r.conciergeStatus === 'en_cours' ? tr('adminRestos.menuInProgressPill') : tr('adminRestos.menuRequestPill')}</span>}
               </div>
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
             <ContactCommerce r={r} tr={tr} />
             <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '—', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
+            {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small">🍽️ {tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
             {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '—'} · TVA {r.vatNumber || '—'}</div>}
             <div className="small">
               {tr('adminRestos.statsLine', { n: r.orderCount, revenue: money(r.revenue), commission: money(r.commissionGenerated), basket: money(r.avgBasket) })}
@@ -240,7 +242,8 @@ export default function AdminRestaurantsPage() {
             <div className="small">
               {tr('adminRestos.ratesLine', { cancel: pct(r.cancellationRate), accept: pct(r.acceptanceRate), prep: r.avgPrepMinutes !== null ? tr('adminRestos.prepMinutes', { n: r.avgPrepMinutes }) : tr('adminRestos.prepNotMeasured') })}
             </div>
-            <div className="row" style={{ gap: 8, marginTop: 8 }} onClick={(e) => e.stopPropagation()}>
+            <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+              <Link to={`/admin/restaurants/${r.id}/menu`} className={r.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
               {!estTest(r) && <button className={r.publicListed ? 'btn-outline' : 'btn-gold'} style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setListing(r.id, !r.publicListed)}>{r.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
               {r.adminStatus !== 'approved' && <button className="btn-teal" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setStatus(r.id, 'approved')}>{tr('adminCommon.approve')}</button>}
               {r.adminStatus !== 'blocked' && <button className="btn-danger-ghost" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => askSuspend(r)}>{tr('adminCommon.suspend')}</button>}
@@ -353,6 +356,16 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <p className="small" style={{ margin: '6px 0 2px' }}>
             {estTest(detail) ? <>🧪 {tr('adminRestos.testLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
           </p>
+          <div className="drawer-section" style={{ margin: '10px 0', padding: '10px 12px', background: 'var(--cream-dim, #f6f3ec)', borderRadius: 10 }}>
+            <p className="small" style={{ margin: 0 }}><b>🍽️ {tr('adminRestos.menuTitle')}</b> · {detail.menuItemCount !== null && detail.menuItemCount !== undefined ? tr('adminRestos.menuLine', { n: detail.menuItemCount }) : ''}</p>
+            {detail.concierge && (
+              <p className="small" style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>
+                🤝 {tr('adminRestos.conciergeLine', { platform: detail.concierge.platformLabel, date: fmtDate(detail.concierge.createdAt), status: { en_attente: tr('adminMenu.stPending'), en_cours: tr('adminMenu.stInProgress'), terminee: tr('adminMenu.stDone'), refusee: tr('adminMenu.stRefused') }[detail.concierge.status] || detail.concierge.status })}
+                {detail.concierge.notes ? `\n💬 ${tr('adminRestos.conciergeNotes', { notes: detail.concierge.notes })}` : ''}
+              </p>
+            )}
+            <Link to={`/admin/restaurants/${detail.id}/menu`} className={detail.conciergeStatus ? 'btn-gold' : 'btn-outline'} style={{ display: 'inline-block', marginTop: 8, padding: '6px 14px', fontSize: 13, textDecoration: 'none' }}>{tr('adminRestos.openMenu')}</Link>
+          </div>
           <div className="row" style={{ gap: 8, marginTop: 10 }}>
             <button className="btn-outline" onClick={startEdit}>{tr('adminRestos.editInfo')}</button>
             {!estTest(detail) && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}

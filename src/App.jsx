@@ -67,6 +67,7 @@ const AdminReviewsPage = lazyPage(() => import('./pages/admin/AdminReviewsPage')
 const AdminOrdersPage = lazyPage(() => import('./pages/admin/AdminOrdersPage'));
 const AdminCrmPage = lazyPage(() => import('./pages/admin/AdminCrmPage'));
 const AdminRestaurantsPage = lazyPage(() => import('./pages/admin/AdminRestaurantsPage'));
+const AdminMenuPage = lazyPage(() => import('./pages/admin/AdminMenuPage'));
 const AdminDriversPage = lazyPage(() => import('./pages/admin/AdminDriversPage'));
 const AdminCouriersPage = lazyPage(() => import('./pages/admin/AdminCouriersPage'));
 const AdminClientsPage = lazyPage(() => import('./pages/admin/AdminClientsPage'));
@@ -153,6 +154,7 @@ export default function App() {
           <Route path="orders" element={<AdminOrdersPage />} />
           <Route path="crm" element={<AdminCrmPage />} />
           <Route path="restaurants" element={<AdminRestaurantsPage />} />
+          <Route path="restaurants/:id/menu" element={<AdminMenuPage />} />
           <Route path="drivers" element={<AdminDriversPage />} />
           <Route path="couriers" element={<AdminCouriersPage />} />
           <Route path="clients" element={<AdminClientsPage />} />

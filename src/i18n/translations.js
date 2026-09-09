@@ -4,6 +4,34 @@
 // livreur, admin, pages légales) — voir useLanguage()/t() : fallback automatique sur fr puis sur la clé.
 export const translations = {
   fr: {
+    adminMenu: {
+      title: 'Carte de {name}',
+      titleLoading: 'Carte du commerce',
+      back: '← Restaurants',
+      requestTitle: 'Demande « Fairide s\'en occupe »',
+      noRequest: 'Aucune demande « Fairide s\'en occupe » pour ce commerce. Tu peux quand même modifier sa carte ci-dessous, exactement comme le ferait le restaurateur.',
+      requestedOn: 'Demandée le {date}',
+      seeTask: 'Voir la tâche',
+      platform: 'Plateforme de référence',
+      page: 'Page',
+      notes: 'Précisions du restaurateur',
+      noNotes: 'aucune précision',
+      stPending: 'En attente',
+      stInProgress: 'En cours',
+      stDone: 'Terminée',
+      stRefused: 'Refusée',
+      noteLabel: 'Mot pour le restaurateur',
+      notePh: 'Ex. : « Carte reprise d\'Uber Eats, prix identiques, sans les boissons — dis-nous si tu veux changer quelque chose. »',
+      noteHelp: 'Visible par le restaurateur sur sa page Mes produits, et envoyé par e-mail quand tu marques la demande terminée.',
+      take: '🛠️ Prendre en charge',
+      done: '✅ Carte intégrée, terminer',
+      refuse: 'Refuser',
+      reopen: 'Rouvrir',
+      saveNote: 'Enregistrer le mot',
+      toastUpdated: 'Demande mise à jour.',
+      toastDone: 'Demande terminée : le restaurateur est prévenu par e-mail et voit ton mot sur sa page.',
+      intro: 'Tu modifies la carte de {name} ({n} produit(s)) avec exactement les outils du restaurateur : sections, plats, options, import d\'un PDF / d\'une photo / d\'un site, modèles, traduction. Tout ce que tu enregistres est visible par lui et par les clients immédiatement.'
+    },
     ticketHelp: {
       rowTitle: 'Tickets et imprimante',
       rowSub: 'Comment imprimer, réimprimer, corriger ou créer un ticket',
@@ -176,7 +204,13 @@ export const translations = {
       pendingHelp: 'Tu n\'as rien à faire. Dès que ta carte est intégrée, elle apparaît plus bas sur cette page et tu peux tout ajuster.',
       doneHelp: 'Ta carte est en place : vérifie-la plus bas et corrige ce qui doit l\'être.',
       cancel: 'Annuler ma demande',
-      newRequest: 'Nouvelle demande'
+      newRequest: 'Nouvelle demande',
+      yourNotes: 'Tes précisions',
+      fairideNote: 'Mot de l\'équipe Fairide',
+      addNote: 'Ajouter ou modifier une précision',
+      saveNote: 'Enregistrer',
+      cancelEdit: 'Annuler',
+      noteSaved: 'Précision enregistrée : l\'équipe Fairide la voit dans ta demande.'
     },
     phoneInput: {
       country: 'Pays du numéro de téléphone'
@@ -1634,7 +1668,15 @@ export const translations = {
       street: 'Rue',
       number: 'N°',
       postalCode: 'Code postal',
-      city: 'Ville'
+      city: 'Ville',
+      filterMenuRequest: 'Carte à intégrer',
+      menuRequestPill: '🤝 Carte à intégrer',
+      menuInProgressPill: '🛠️ Carte en cours',
+      openMenu: '🍽️ Voir / modifier la carte',
+      menuLine: '{n} produit(s) sur la carte',
+      menuTitle: 'Carte',
+      conciergeLine: 'Demande « Fairide s\'en occupe » : {platform} · demandée le {date} · {status}',
+      conciergeNotes: 'Précisions : {notes}'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -2756,7 +2798,9 @@ export const translations = {
       method5Title: '✍️ Créer ma carte moi-même',
       method5Sub: 'Pars d\'une sélection de plats typiques de ta cuisine, ou ajoute tes sections et tes plats un par un, plus bas sur cette page.',
       method5Button: 'Aller à ma carte',
-      quickStartConcierge: '🤝 Demander à Fairide de s\'en occuper'
+      quickStartConcierge: '🤝 Demander à Fairide de s\'en occuper',
+      methodsTitleAdmin: 'Intégrer sa carte : 4 façons de faire',
+      methodsIntroAdmin: 'Importe la carte depuis la plateforme de référence (PDF, photos, site web ou texte copié), ou pars d\'un modèle. Tout passe par la relecture avant d\'être ajouté : vérifie les prix et les descriptions comme le ferait le restaurateur.'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -4161,6 +4205,34 @@ export const translations = {
     }
   },
   en: {
+    adminMenu: {
+      title: 'Menu of {name}',
+      titleLoading: 'Business menu',
+      back: '← Restaurants',
+      requestTitle: '“Fairide takes care of it” request',
+      noRequest: 'No “Fairide takes care of it” request for this business. You can still edit its menu below, exactly as the owner would.',
+      requestedOn: 'Requested on {date}',
+      seeTask: 'See the task',
+      platform: 'Reference platform',
+      page: 'Page',
+      notes: 'Owner\'s details',
+      noNotes: 'none',
+      stPending: 'Pending',
+      stInProgress: 'In progress',
+      stDone: 'Done',
+      stRefused: 'Declined',
+      noteLabel: 'Note to the owner',
+      notePh: 'E.g. “Menu copied from Uber Eats, same prices, without drinks — tell us if you want to change anything.”',
+      noteHelp: 'Shown to the owner on their My products page, and e-mailed when you mark the request as done.',
+      take: '🛠️ Take over',
+      done: '✅ Menu integrated, finish',
+      refuse: 'Decline',
+      reopen: 'Reopen',
+      saveNote: 'Save the note',
+      toastUpdated: 'Request updated.',
+      toastDone: 'Request finished: the owner is notified by e-mail and sees your note on their page.',
+      intro: 'You are editing the menu of {name} ({n} item(s)) with exactly the owner\'s tools: sections, dishes, options, import from a PDF / photo / website, templates, translation. Everything you save is visible to them and to customers immediately.'
+    },
     ticketHelp: {
       rowTitle: 'Tickets and printer',
       rowSub: 'How to print, reprint, edit or create a ticket',
@@ -4333,7 +4405,13 @@ export const translations = {
       pendingHelp: 'Nothing to do on your side. As soon as your menu is added, it appears further down this page and you can adjust everything.',
       doneHelp: 'Your menu is in place: check it further down and correct what needs it.',
       cancel: 'Cancel my request',
-      newRequest: 'New request'
+      newRequest: 'New request',
+      yourNotes: 'Your details',
+      fairideNote: 'Note from the Fairide team',
+      addNote: 'Add or edit details',
+      saveNote: 'Save',
+      cancelEdit: 'Cancel',
+      noteSaved: 'Details saved: the Fairide team sees them in your request.'
     },
     phoneInput: {
       country: 'Phone number country'
@@ -5791,7 +5869,15 @@ export const translations = {
       street: 'Street',
       number: 'No.',
       postalCode: 'Postal code',
-      city: 'City'
+      city: 'City',
+      filterMenuRequest: 'Menu to integrate',
+      menuRequestPill: '🤝 Menu to integrate',
+      menuInProgressPill: '🛠️ Menu in progress',
+      openMenu: '🍽️ View / edit the menu',
+      menuLine: '{n} item(s) on the menu',
+      menuTitle: 'Menu',
+      conciergeLine: '“Fairide takes care of it” request: {platform} · requested on {date} · {status}',
+      conciergeNotes: 'Details: {notes}'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -6913,7 +6999,9 @@ export const translations = {
       method5Title: '✍️ Create my menu myself',
       method5Sub: 'Start from a selection of dishes typical of your cuisine, or add your sections and dishes one by one, further down this page.',
       method5Button: 'Go to my menu',
-      quickStartConcierge: '🤝 Ask Fairide to do it'
+      quickStartConcierge: '🤝 Ask Fairide to do it',
+      methodsTitleAdmin: 'Integrate their menu: 4 ways to do it',
+      methodsIntroAdmin: 'Import the menu from the reference platform (PDF, photos, website or pasted text), or start from a template. Everything goes through review before being added: check prices and descriptions as the owner would.'
     },
     editResto: {
       title: 'My restaurant details',
@@ -8318,6 +8406,34 @@ export const translations = {
     }
   },
   nl: {
+    adminMenu: {
+      title: 'Kaart van {name}',
+      titleLoading: 'Kaart van de zaak',
+      back: '← Restaurants',
+      requestTitle: 'Aanvraag “Fairide regelt het”',
+      noRequest: 'Geen aanvraag “Fairide regelt het” voor deze zaak. U kunt de kaart hieronder toch aanpassen, precies zoals de uitbater dat zou doen.',
+      requestedOn: 'Aangevraagd op {date}',
+      seeTask: 'Taak bekijken',
+      platform: 'Referentieplatform',
+      page: 'Pagina',
+      notes: 'Toelichting van de uitbater',
+      noNotes: 'geen',
+      stPending: 'In afwachting',
+      stInProgress: 'Bezig',
+      stDone: 'Afgerond',
+      stRefused: 'Geweigerd',
+      noteLabel: 'Bericht voor de uitbater',
+      notePh: 'Bv. “Kaart overgenomen van Uber Eats, zelfde prijzen, zonder dranken — laat weten als u iets wilt wijzigen.”',
+      noteHelp: 'Zichtbaar voor de uitbater op zijn pagina Mijn producten, en gemaild wanneer u de aanvraag afrondt.',
+      take: '🛠️ In behandeling nemen',
+      done: '✅ Kaart geïntegreerd, afronden',
+      refuse: 'Weigeren',
+      reopen: 'Heropenen',
+      saveNote: 'Bericht opslaan',
+      toastUpdated: 'Aanvraag bijgewerkt.',
+      toastDone: 'Aanvraag afgerond: de uitbater krijgt een e-mail en ziet uw bericht op zijn pagina.',
+      intro: 'U bewerkt de kaart van {name} ({n} product(en)) met precies de tools van de uitbater: secties, gerechten, opties, import van een pdf / foto / website, sjablonen, vertaling. Alles wat u opslaat is meteen zichtbaar voor hem en voor de klanten.'
+    },
     ticketHelp: {
       rowTitle: 'Bonnen en printer',
       rowSub: 'Hoe een bon printen, herprinten, aanpassen of aanmaken',
@@ -8490,7 +8606,13 @@ export const translations = {
       pendingHelp: 'Je hoeft niets te doen. Zodra je kaart is toegevoegd, verschijnt ze lager op deze pagina en kun je alles aanpassen.',
       doneHelp: 'Je kaart staat klaar: controleer ze lager op de pagina en corrigeer wat nodig is.',
       cancel: 'Mijn aanvraag annuleren',
-      newRequest: 'Nieuwe aanvraag'
+      newRequest: 'Nieuwe aanvraag',
+      yourNotes: 'Uw toelichting',
+      fairideNote: 'Bericht van het Fairide-team',
+      addNote: 'Toelichting toevoegen of wijzigen',
+      saveNote: 'Opslaan',
+      cancelEdit: 'Annuleren',
+      noteSaved: 'Toelichting opgeslagen: het Fairide-team ziet ze in uw aanvraag.'
     },
     phoneInput: {
       country: 'Land van het telefoonnummer'
@@ -9948,7 +10070,15 @@ export const translations = {
       street: 'Straat',
       number: 'Nr.',
       postalCode: 'Postcode',
-      city: 'Stad'
+      city: 'Stad',
+      filterMenuRequest: 'Kaart te integreren',
+      menuRequestPill: '🤝 Kaart te integreren',
+      menuInProgressPill: '🛠️ Kaart in behandeling',
+      openMenu: '🍽️ Kaart bekijken / aanpassen',
+      menuLine: '{n} product(en) op de kaart',
+      menuTitle: 'Kaart',
+      conciergeLine: 'Aanvraag “Fairide regelt het”: {platform} · aangevraagd op {date} · {status}',
+      conciergeNotes: 'Toelichting: {notes}'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
@@ -11070,7 +11200,9 @@ export const translations = {
       method5Title: '✍️ Mijn kaart zelf maken',
       method5Sub: 'Begin met een selectie typische gerechten van je keuken, of voeg je secties en gerechten één voor één toe, lager op deze pagina.',
       method5Button: 'Naar mijn kaart',
-      quickStartConcierge: '🤝 Fairide vragen het te doen'
+      quickStartConcierge: '🤝 Fairide vragen het te doen',
+      methodsTitleAdmin: 'Zijn kaart integreren: 4 manieren',
+      methodsIntroAdmin: 'Importeer de kaart vanaf het referentieplatform (pdf, foto\'s, website of gekopieerde tekst), of vertrek van een sjabloon. Alles passeert de nalezing vóór het wordt toegevoegd: controleer prijzen en beschrijvingen zoals de uitbater dat zou doen.'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',
