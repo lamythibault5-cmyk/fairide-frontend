@@ -71,7 +71,7 @@ export default function DriverDashboard() {
   // Véhicule déclaré (dossier coursier) : explique pourquoi certaines courses n'apparaissent pas (vélo) ou
   // pourquoi les longues distances sont en tête (motorisé).
   const [vehicule, setVehicule] = useState(null);
-  useEffect(() => { api('/couriers/me', { token }).then((d) => setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: 4 })).catch(() => {}); }, [token]);
+  useEffect(() => { api('/couriers/me', { token }).then((d) => setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm })).catch(() => {}); }, [token]);
 
   async function load() {
     try {
@@ -298,6 +298,7 @@ export default function DriverDashboard() {
           {vehicule?.type && (
             <p className="small" style={{ margin: '-6px 0 10px' }}>
               {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
+              {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: Number(vehicule.base || 0).toFixed(2), baseKm: vehicule.baseKm, rate: Number(vehicule.rate || 0).toFixed(2) })}</>}
             </p>
           )}
           {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
@@ -319,7 +320,7 @@ export default function DriverDashboard() {
               {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
               <DeliveryTiming order={o} />
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-                <span className="small">{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</span>
+                <span className="small">{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</span>
                 <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
               </div>
             </div>
@@ -342,7 +343,7 @@ export default function DriverDashboard() {
           <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
           {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</div>
+          <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
           <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
             <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
             <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
@@ -368,7 +369,7 @@ export default function DriverDashboard() {
             <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
           )}
           <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: o.deliveryFee.toFixed(2) })}</div>
+          <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
             <input

@@ -341,7 +341,9 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
   const c = d.courier;
   const [nom, setNom] = useState(`${c.identity.firstName} ${c.identity.lastName}`.trim() || d.user?.name || '');
   const [accepte, setAccepte] = useState(false);
-  const signe = d.contracts.find((k) => k.contractType === c.statusType);
+  const versionCourante = d.contractVersions?.[c.statusType];
+  const ancien = d.contracts.find((k) => k.contractType === c.statusType);
+  const signe = ancien && (!versionCourante || ancien.version === versionCourante) ? ancien : null;
   const apercu = () => ouvrirPdf(`${API_BASE}/couriers/me/contract/preview`, token, t('courierOnboarding.previewFailed'));
   return (
     <div className="card">
@@ -353,6 +355,7 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
         </div>
       ) : (
         <>
+          {ancien && <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>}
           <button type="button" className="btn-outline" onClick={apercu}>📄 {t('courierOnboarding.contractPreview')}</button>
           <div className="field" style={{ marginTop: 12 }}>
             <label>{t('courierOnboarding.typedName')}</label>

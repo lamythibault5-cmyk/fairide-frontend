@@ -118,7 +118,9 @@ export const translations = {
       errRead: 'Coche la case pour confirmer que tu as lu le contrat.',
       errName: 'Tape ton nom complet.',
       accepted: 'Contrat accepté. Merci, et bienvenue !',
-      foot: 'Toute modification de la commission, de l\'abonnement ou du contrat t\'est annoncée au moins 30 jours à l\'avance, par e-mail et ici même.'
+      foot: 'Toute modification de la commission, de l\'abonnement ou du contrat t\'est annoncée au moins 30 jours à l\'avance, par e-mail et ici même.',
+      newVersion: 'Nouvelle version du contrat ({version}) à accepter',
+      newVersionHelp: 'Tu avais accepté la version {old} le {date}. Les tarifs de livraison (part du livreur selon son véhicule) sont maintenant écrits noir sur blanc : relis et accepte à nouveau, ton acceptation précédente reste archivée.'
     },
     driverTerms: {
       rowTitle: 'Mon contrat et mes conditions',
@@ -152,7 +154,7 @@ export const translations = {
       usageBlocked: 'Plafond atteint : les nouvelles courses sont bloquées. Change de statut dans ton dossier livreur pour continuer.',
       payTitle: 'Comment je suis payé',
       pay1: 'Le client paie en ligne à la commande ; l\'argent est encaissé par Stripe, jamais par Fairide.',
-      pay2: 'À chaque course livrée, les frais de livraison te reviennent à 100 % (aucune commission Fairide) et le pourboire du client aussi, intégralement.',
+      pay2: 'À chaque course livrée, tu touches le tarif livreur de la course (aucune commission Fairide dessus) et le pourboire du client, intégralement.',
       pay3: 'Versement chaque lundi sur ton compte bancaire : toutes les courses de la semaine précédente, en un seul virement Stripe. Même rythme que les restaurants.',
       payWithholdingP2p: 'Économie collaborative : {taux} de précompte sont retenus sur chaque course et reversés au SPF Finances ; le reçu de chaque course montre le brut, la retenue et le net.',
       payWithholdingStudent: 'Étudiant : {taux} de cotisation de solidarité sont retenus sur chaque course (cotisations ordinaires une fois le quota d\'heures dépassé).',
@@ -180,7 +182,9 @@ export const translations = {
       taxStudent: 'Revenus d\'étudiant, fiche annuelle',
       taxP2p: 'Précompte libératoire, fiche 281.29',
       taxIndependent: 'Déclaration DAC7 par Fairide, tu déclares tes revenus',
-      changeStatus: 'Envie de changer de statut ?'
+      changeStatus: 'Envie de changer de statut ?',
+      payRates: 'Tarif livreur : forfait de {base} jusqu\'à {km} km, puis {motor} par km supplémentaire si tu es motorisé (scooter, voiture) ou {bike} par km à vélo — les {diff} par km de différence couvrent le carburant et l\'usure du véhicule motorisé. Le tarif de chaque course est affiché avant que tu l\'acceptes.',
+      newVersion: 'Nouvelle version {version} du contrat (tu avais signé la {old}) : les tarifs par km y sont écrits. Merci de la relire et de la signer à nouveau depuis ton dossier livreur.'
     },
     menuConcierge: {
       intro: 'Indique sur quelle plateforme (ou quel site) ta carte est la plus à jour. L\'équipe Fairide la reprend telle quelle : plats, prix, descriptions, sections. Tu suis l\'avancement ici même et tu pourras tout ajuster ensuite.',
@@ -1219,7 +1223,12 @@ export const translations = {
       section_users: 'Utilisateurs',
       section_reviews: 'Avis',
       section_promos: 'Codes promo',
-      movedApps: 'Les avis et les codes promo ont désormais leur propre application dans le menu (Opérations › Avis, Croissance › Promotions).'
+      movedApps: 'Les avis et les codes promo ont désormais leur propre application dans le menu (Opérations › Avis, Croissance › Promotions).',
+      perKmExtraHint: 'Ce que paie le client au-delà de la distance de base. Le véhicule du livreur n\'étant pas connu à la commande, ce tarif ne dépend pas du véhicule.',
+      driverPerKmMotor: 'Part livreur par km — motorisé (scooter, voiture)',
+      driverPerKmMotorHint: 'Plafonné à 0,70 €/km. Figé à la prise en charge de la course. Au-dessus du tarif client, Fairide paie la différence.',
+      driverPerKmBike: 'Part livreur par km — vélo / vélo électrique',
+      driverPerKmBikeHint: 'La différence avec le tarif motorisé représente le carburant et l\'usure ; en dessous du tarif client, elle reste à Fairide (marge vélo, écriture comptable dédiée).'
     },
     adminTasks: {
       title: 'Tâches / Activités',
@@ -3063,7 +3072,8 @@ export const translations = {
       longDistance: '🛣️ Longue distance · {km} km',
       shortDistance: '{km} km',
       bikeRule: '🚲 Tu roules à vélo : on te propose les courses jusqu\'à {km} km. Change de véhicule dans ton dossier livreur si besoin.',
-      motorRule: '🛵 Motorisé : les longues distances (plus de {km} km) sont en tête de liste, les courtes restent disponibles.'
+      motorRule: '🛵 Motorisé : les longues distances (plus de {km} km) sont en tête de liste, les courtes restent disponibles.',
+      rateRule: 'Ta part : {base} € de forfait jusqu\'à {baseKm} km, puis {rate} €/km.'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -4336,7 +4346,9 @@ export const translations = {
       errRead: 'Tick the box to confirm you have read the contract.',
       errName: 'Type your full name.',
       accepted: 'Contract accepted. Thank you, and welcome!',
-      foot: 'Any change to the commission, the subscription or the contract is announced to you at least 30 days in advance, by e-mail and right here.'
+      foot: 'Any change to the commission, the subscription or the contract is announced to you at least 30 days in advance, by e-mail and right here.',
+      newVersion: 'New contract version ({version}) to accept',
+      newVersionHelp: 'You accepted version {old} on {date}. Delivery rates (courier share by vehicle) are now written in black and white: read it again and accept, your previous acceptance stays archived.'
     },
     driverTerms: {
       rowTitle: 'My contract and my terms',
@@ -4370,7 +4382,7 @@ export const translations = {
       usageBlocked: 'Ceiling reached: new rides are blocked. Change status in your courier file to continue.',
       payTitle: 'How I get paid',
       pay1: 'The customer pays online when ordering; the money is collected by Stripe, never by Fairide.',
-      pay2: 'For each delivered ride, the delivery fee is 100% yours (no Fairide commission) and so is the customer\'s tip, in full.',
+      pay2: 'For each delivered ride, you get the courier rate of the ride (no Fairide commission on it) and the customer\'s tip, in full.',
       pay3: 'Paid out every Monday to your bank account: all rides of the previous week, in one Stripe transfer. Same rhythm as restaurants.',
       payWithholdingP2p: 'Sharing economy: {taux} withholding tax is deducted from each ride and paid to the tax authorities; each ride receipt shows gross, deduction and net.',
       payWithholdingStudent: 'Student: {taux} solidarity contribution is deducted from each ride (ordinary contributions once the hour quota is exceeded).',
@@ -4398,7 +4410,9 @@ export const translations = {
       taxStudent: 'Student income, yearly form',
       taxP2p: 'Final withholding tax, 281.29 form',
       taxIndependent: 'DAC7 declaration by Fairide, you declare your income',
-      changeStatus: 'Want to change status?'
+      changeStatus: 'Want to change status?',
+      payRates: 'Courier rate: {base} flat up to {km} km, then {motor} per extra km if you are motorised (scooter, car) or {bike} per km by bike — the {diff} per km difference covers fuel and wear of the motorised vehicle. Each ride\'s rate is shown before you accept it.',
+      newVersion: 'New contract version {version} (you signed {old}): the per-km rates are now written in it. Please read it again and sign it from your courier file.'
     },
     menuConcierge: {
       intro: 'Tell us on which platform (or website) your menu is most up to date. The Fairide team copies it as is: dishes, prices, descriptions, sections. You follow the progress right here and can adjust everything afterwards.',
@@ -5437,7 +5451,12 @@ export const translations = {
       section_users: 'Users',
       section_reviews: 'Reviews',
       section_promos: 'Promo codes',
-      movedApps: 'Reviews and promo codes now have their own app in the menu (Operations › Reviews, Growth › Promotions).'
+      movedApps: 'Reviews and promo codes now have their own app in the menu (Operations › Reviews, Growth › Promotions).',
+      perKmExtraHint: 'What the customer pays beyond the base distance. The courier\'s vehicle is unknown at order time, so this rate does not depend on it.',
+      driverPerKmMotor: 'Courier share per km — motorised (scooter, car)',
+      driverPerKmMotorHint: 'Capped at €0.70/km. Fixed when the ride is taken. Above the customer rate, Fairide pays the difference.',
+      driverPerKmBike: 'Courier share per km — bike / e-bike',
+      driverPerKmBikeHint: 'The gap with the motorised rate stands for fuel and wear; below the customer rate, it stays with Fairide (bike margin, dedicated accounting entry).'
     },
     adminTasks: {
       title: 'Tasks / Activities',
@@ -7281,7 +7300,8 @@ export const translations = {
       longDistance: '🛣️ Long distance · {km} km',
       shortDistance: '{km} km',
       bikeRule: '🚲 You ride a bike: rides up to {km} km are offered to you. Change your vehicle in your courier file if needed.',
-      motorRule: '🛵 Motorised: long distances (over {km} km) come first, short ones stay available.'
+      motorRule: '🛵 Motorised: long distances (over {km} km) come first, short ones stay available.',
+      rateRule: 'Your share: €{base} flat up to {baseKm} km, then €{rate}/km.'
     },
     dashResto: {
       today: 'Today',
@@ -8554,7 +8574,9 @@ export const translations = {
       errRead: 'Vink het vakje aan om te bevestigen dat je het contract hebt gelezen.',
       errName: 'Typ je volledige naam.',
       accepted: 'Contract aanvaard. Bedankt, en welkom!',
-      foot: 'Elke wijziging van de commissie, het abonnement of het contract wordt je minstens 30 dagen vooraf aangekondigd, per e-mail en hier.'
+      foot: 'Elke wijziging van de commissie, het abonnement of het contract wordt je minstens 30 dagen vooraf aangekondigd, per e-mail en hier.',
+      newVersion: 'Nieuwe versie van het contract ({version}) te aanvaarden',
+      newVersionHelp: 'Je aanvaardde versie {old} op {date}. De leveringstarieven (aandeel van de koerier volgens voertuig) staan nu zwart op wit: lees opnieuw en aanvaard, je vorige aanvaarding blijft gearchiveerd.'
     },
     driverTerms: {
       rowTitle: 'Mijn contract en mijn voorwaarden',
@@ -8588,7 +8610,7 @@ export const translations = {
       usageBlocked: 'Plafond bereikt: nieuwe ritten zijn geblokkeerd. Wijzig je statuut in je koeriersdossier om verder te gaan.',
       payTitle: 'Hoe ik betaald word',
       pay1: 'De klant betaalt online bij het bestellen; het geld wordt geïnd door Stripe, nooit door Fairide.',
-      pay2: 'Bij elke geleverde rit is de leveringsvergoeding 100% voor jou (geen Fairide-commissie), net als de fooi van de klant, volledig.',
+      pay2: 'Bij elke geleverde rit krijg je het koerierstarief van de rit (geen Fairide-commissie erop) en de fooi van de klant, volledig.',
       pay3: 'Elke maandag gestort op je bankrekening: alle ritten van de vorige week, in één Stripe-overschrijving. Hetzelfde ritme als de restaurants.',
       payWithholdingP2p: 'Deeleconomie: {taux} bedrijfsvoorheffing wordt op elke rit ingehouden en doorgestort aan de FOD Financiën; het ontvangstbewijs van elke rit toont bruto, inhouding en netto.',
       payWithholdingStudent: 'Student: {taux} solidariteitsbijdrage wordt op elke rit ingehouden (gewone bijdragen zodra het urenquotum overschreden is).',
@@ -8616,7 +8638,9 @@ export const translations = {
       taxStudent: 'Studenteninkomen, jaarlijkse fiche',
       taxP2p: 'Bevrijdende voorheffing, fiche 281.29',
       taxIndependent: 'DAC7-aangifte door Fairide, jij geeft je inkomsten aan',
-      changeStatus: 'Van statuut veranderen?'
+      changeStatus: 'Van statuut veranderen?',
+      payRates: 'Koerierstarief: {base} forfait tot {km} km, daarna {motor} per extra km als je gemotoriseerd bent (scooter, auto) of {bike} per km met de fiets — het verschil van {diff} per km dekt brandstof en slijtage van het gemotoriseerde voertuig. Het tarief van elke rit zie je vóór je ze aanneemt.',
+      newVersion: 'Nieuwe versie {version} van het contract (je tekende {old}): de tarieven per km staan er nu in. Lees ze opnieuw en onderteken vanuit je koeriersdossier.'
     },
     menuConcierge: {
       intro: 'Geef aan op welk platform (of welke website) je kaart het meest actueel is. Het Fairide-team neemt ze over zoals ze is: gerechten, prijzen, beschrijvingen, secties. Je volgt de voortgang hier en kunt daarna alles aanpassen.',
@@ -9655,7 +9679,12 @@ export const translations = {
       section_users: 'Gebruikers',
       section_reviews: 'Beoordelingen',
       section_promos: 'Promocodes',
-      movedApps: 'Beoordelingen en promocodes hebben nu hun eigen app in het menu (Operaties › Beoordelingen, Groei › Promoties).'
+      movedApps: 'Beoordelingen en promocodes hebben nu hun eigen app in het menu (Operaties › Beoordelingen, Groei › Promoties).',
+      perKmExtraHint: 'Wat de klant betaalt boven de basisafstand. Het voertuig van de koerier is bij de bestelling niet gekend, dus dit tarief hangt er niet van af.',
+      driverPerKmMotor: 'Koeriersaandeel per km — gemotoriseerd (scooter, auto)',
+      driverPerKmMotorHint: 'Geplafonneerd op € 0,70/km. Vastgelegd bij het opnemen van de rit. Boven het klanttarief betaalt Fairide het verschil.',
+      driverPerKmBike: 'Koeriersaandeel per km — fiets / e-bike',
+      driverPerKmBikeHint: 'Het verschil met het gemotoriseerde tarief staat voor brandstof en slijtage; onder het klanttarief blijft het bij Fairide (fietsmarge, aparte boeking).'
     },
     adminTasks: {
       title: 'Taken / Activiteiten',
@@ -11499,7 +11528,8 @@ export const translations = {
       longDistance: '🛣️ Lange afstand · {km} km',
       shortDistance: '{km} km',
       bikeRule: '🚲 Je rijdt met de fiets: ritten tot {km} km worden je aangeboden. Wijzig je voertuig in je koeriersdossier indien nodig.',
-      motorRule: '🛵 Gemotoriseerd: lange afstanden (meer dan {km} km) staan bovenaan, korte blijven beschikbaar.'
+      motorRule: '🛵 Gemotoriseerd: lange afstanden (meer dan {km} km) staan bovenaan, korte blijven beschikbaar.',
+      rateRule: 'Jouw aandeel: € {base} forfait tot {baseKm} km, daarna € {rate}/km.'
     },
     dashResto: {
       today: 'Vandaag',

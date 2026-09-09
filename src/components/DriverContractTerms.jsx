@@ -29,7 +29,12 @@ export default function DriverContractTerms() {
   if (erreur) return <p className="small">{erreur}</p>;
   if (!d) return <p className="small">{t('accountUi.loading')}</p>;
   const c = d.courier; const L = d.legal || {}; const statut = c.statusType;
-  const signe = statut ? d.contracts.find((k) => k.contractType === statut) : null;
+  const P = d.pricing || {};
+  const eur2 = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
+  // Contrat signé dans sa version courante ; une version plus ancienne reste consultable mais doit être re-signée.
+  const versionCourante = d.contractVersions?.[statut];
+  const ancien = statut ? d.contracts.find((k) => k.contractType === statut) : null;
+  const signe = ancien && (!versionCourante || ancien.version === versionCourante) ? ancien : null;
   const sit = d.situation;
 
   const conditions = {
@@ -65,6 +70,9 @@ export default function DriverContractTerms() {
         <>
           <p style={{ margin: '0 0 4px' }}><b>{statut === 'student' ? '🎓 ' : statut === 'p2p' ? '🤝 ' : '🧾 '}{t(`courierOnboarding.status_${statut}`)}</b></p>
           <p className="small" style={{ margin: '0 0 10px' }}>{t(`courierOnboarding.status_${statut}_desc`)}</p>
+          {ancien && !signe && (
+            <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>
+          )}
           {signe ? (
             <div className="paiement-encart">
               <b>✅ {t('driverTerms.contractSigned', { date: new Date(signe.signedAt).toLocaleDateString(getLocale()), version: signe.version })}</b>
@@ -115,10 +123,11 @@ export default function DriverContractTerms() {
       <ol className="paiement-etapes">
         <li>{t('driverTerms.pay1')}</li>
         <li>{t('driverTerms.pay2')}</li>
+        <li>{t('driverTerms.payRates', { base: eur2(P.deliveryBaseFee), km: Number(P.deliveryBaseKm || 0), motor: eur2(P.driverPerKmMotor), bike: eur2(P.driverPerKmBike), diff: eur2((P.driverPerKmMotor || 0) - (P.driverPerKmBike || 0)) })}</li>
         <li><b>{t('driverTerms.pay3')}</b></li>
         {retenue && <li>{retenue}</li>}
         <li>{t('driverTerms.pay4')}</li>
-        <li>{t('driverTerms.pay5', { km: 4 })}</li>
+        <li>{t('driverTerms.pay5', { km: P.bikeMaxKm || 4 })}</li>
       </ol>
 
       {/* Comparatif des trois statuts */}

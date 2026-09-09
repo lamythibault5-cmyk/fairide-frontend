@@ -33,7 +33,7 @@ export default function InvoicesPage() {
       .sort((a, b) => a.createdAt - b.createdAt);
   }, [orders, month]);
   const totals = useMemo(() => ({
-    deliveryFees: monthOrders.reduce((a, o) => a + o.deliveryFee, 0),
+    deliveryFees: monthOrders.reduce((a, o) => a + Number(o.driverFee ?? o.deliveryFee), 0),
     tips: monthOrders.reduce((a, o) => a + o.tipAmount, 0)
   }), [monthOrders]);
 
@@ -88,7 +88,7 @@ export default function InvoicesPage() {
                 <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
                   <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
                   <td style={{ padding: '6px 4px' }}>{o.restaurantName}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.deliveryFee.toFixed(2)}€</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.driverFee ?? o.deliveryFee).toFixed(2)}€</td>
                   <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${o.tipAmount.toFixed(2)}€` : '—'}</td>
                 </tr>
               ))}

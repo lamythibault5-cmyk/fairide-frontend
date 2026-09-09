@@ -55,7 +55,13 @@ export default function RestaurantContract({ restoId }) {
         <div className="stat-card"><div className="num">0 %</div><div className="label">{t('restoContract.kDelivery')}</div></div>
       </div>
 
-      {d.acceptedAt ? (
+      {d.acceptedAt && d.acceptedVersion && d.acceptedVersion !== d.version && (
+        <div className="paiement-encart" style={{ marginBottom: 12, borderLeft: '4px solid var(--gold, #d9a441)' }}>
+          <b>🆕 {t('restoContract.newVersion', { version: d.version })}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('restoContract.newVersionHelp', { old: d.acceptedVersion, date: new Date(d.acceptedAt).toLocaleDateString(getLocale()) })}</p>
+        </div>
+      )}
+      {d.acceptedAt && (!d.acceptedVersion || d.acceptedVersion === d.version) ? (
         <div className="paiement-encart" style={{ marginBottom: 12 }}>
           <b>✅ {t('restoContract.acceptedOn', { date: new Date(d.acceptedAt).toLocaleDateString(getLocale()), name: d.acceptedName })}</b>
           <p className="small" style={{ margin: '4px 0 0', overflowWrap: 'anywhere' }}>{t('restoContract.version', { version: d.acceptedVersion || d.version })}{d.hash ? ` · ${t('restoContract.hash')} ${d.hash.slice(0, 16)}…` : ''}</p>
@@ -85,7 +91,7 @@ export default function RestaurantContract({ restoId }) {
         </div>
       ))}
 
-      {!d.acceptedAt && (
+      {(!d.acceptedAt || (d.acceptedVersion && d.acceptedVersion !== d.version)) && (
         <div className="paiement-encart" style={{ marginTop: 12 }}>
           <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
             <input type="checkbox" checked={lu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />

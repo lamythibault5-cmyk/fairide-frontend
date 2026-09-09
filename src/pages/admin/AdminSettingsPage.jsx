@@ -16,7 +16,9 @@ const pricingFields = (tr) => [
   { key: 'deliveryFairideRate', label: tr('adminSettings.deliveryShareLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.deliveryShareHint') },
   { key: 'deliveryBaseFee', label: tr('adminSettings.baseDeliveryRate'), suffix: '€', hint: tr('adminSettings.baseFeeHint') },
   { key: 'deliveryBaseKm', label: tr('adminSettings.baseDistance'), suffix: 'km' },
-  { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km' },
+  { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km', hint: tr('adminSettings.perKmExtraHint') },
+  { key: 'driverPerKmMotor', label: tr('adminSettings.driverPerKmMotor'), suffix: '€/km', hint: tr('adminSettings.driverPerKmMotorHint') },
+  { key: 'driverPerKmBike', label: tr('adminSettings.driverPerKmBike'), suffix: '€/km', hint: tr('adminSettings.driverPerKmBikeHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
   { key: 'vatRateDeliveryShare', label: tr('adminSettings.vatDeliveryShare'), suffix: '%', isRate: true, hint: tr('adminSettings.vatDeliveryHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }
