@@ -1581,7 +1581,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-regles-btn:active { transform: scale(0.94); }
 .jeu-cadre {
   position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--line);
-  background: linear-gradient(180deg, #F7F5F0 0%, #E9E6DE 100%);
+  background: linear-gradient(180deg, #1B1830 0%, #14121F 100%);
   touch-action: none; user-select: none; -webkit-user-select: none;
 }
 .jeu-canvas { display: block; cursor: pointer; }
@@ -2445,6 +2445,8 @@ button.account-link-row:last-child { border-bottom: none; }
 /* Filtres alimentaires de la barre de recherche (Bio, Vegan) : des interrupteurs, cumulables avec la
    recherche, la commune et le type de commerce. */
 .diet-filters { display: flex; gap: 6px; flex: none; }
+button.recherche-pastille { font: inherit; cursor: pointer; }
+.recherche-pastille.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 .diet-chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 9px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
 .diet-chip:hover { border-color: var(--iris); }
 .diet-chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }

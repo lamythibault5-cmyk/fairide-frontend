@@ -176,13 +176,13 @@ export default function RestaurantList() {
     }
   }
 
-  // Bio et Vegan prennent place dans la même rangée que les types de commerce, juste après « Tous » : ce sont des
-  // filtres au même titre (cumulables entre eux et avec un type), pas une rubrique à part.
+  // Bio et Vegan sont dans la même rangée que les types de commerce, en fin de liste : des filtres comme les
+  // autres (cumulables entre eux et avec un type), sans mise en avant.
   const cuisineOptions = [
     { value: '', emoji: '🍽️', label: t('restaurantList.allCuisines') },
+    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) })),
     { value: '__bio', emoji: '🌿', label: t('restaurantList.chipBio'), regime: 'bio' },
-    { value: '__vegan', emoji: '🌱', label: t('restaurantList.chipVegan'), regime: 'vegan' },
-    ...RESTAURANT_TYPES.map((rt) => ({ value: rt.value, emoji: rt.emoji, label: restaurantTypeLabel(rt.value, t) }))
+    { value: '__vegan', emoji: '🌱', label: t('restaurantList.chipVegan'), regime: 'vegan' }
   ];
   const chipActive = (opt) => (opt.regime === 'bio' ? bio : opt.regime === 'vegan' ? vegan : cuisine === opt.value);
   const surChip = (opt) => {

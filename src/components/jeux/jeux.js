@@ -77,12 +77,14 @@ function creerChute(api, cfg) {
       fondDegrade(ctx, w, h, cfg.ciel[0], cfg.ciel[1]);
       const t = tailleObjet();
       // Sol : une bande qui ancre le joueur, sinon il flotte.
-      ctx.fillStyle = 'rgba(20,18,31,.08)';
+      ctx.fillStyle = 'rgba(0,0,0,.28)';
       ctx.fillRect(0, h - t * 0.55, w, t * 0.55);
+      ctx.fillStyle = 'rgba(200,240,60,.35)';
+      ctx.fillRect(0, h - t * 0.55, w, 2);
       for (const o of objets) {
         // Ombre au sol qui grandit à l'approche : on lit où l'objet va tomber.
         const k = Math.max(0, Math.min(1, o.y / h));
-        ctx.fillStyle = `rgba(20,18,31,${(0.05 + k * 0.13).toFixed(3)})`;
+        ctx.fillStyle = `rgba(0,0,0,${(0.12 + k * 0.28).toFixed(3)})`;
         ctx.beginPath(); ctx.ellipse(o.x, h - t * 0.45, t * (0.2 + k * 0.25), t * 0.07, 0, 0, Math.PI * 2); ctx.fill();
         emoji(ctx, o.emoji, o.x, o.y, o.taille, Math.sin(o.phase) * o.balance);
       }
@@ -112,7 +114,7 @@ export const JEUX = [
     ],
     controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#EEF0FF', '#FFFFFF'],
+      joueur: '🧺', ciel: ['#221B6B', '#4A3FD0'],
       nouvelObjet: () => ({ emoji: choix(PLATS) }),
       intervalle: (n) => Math.max(0.42, 0.96 - n * 0.072),
       vitesse: (n) => aleatoire(0.128 + n * 0.0224, 0.269 + n * 0.035),
@@ -129,7 +131,7 @@ export const JEUX = [
     ],
     controles: 'Glisse le doigt (ou la souris) de gauche à droite : le scooter suit.',
     creer: (api) => creerChute(api, {
-      joueur: '🛵', ciel: ['#F4F2ED', '#FFFFFF'],
+      joueur: '🛵', ciel: ['#17151F', '#3A3750'],
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
       intervalle: (n) => Math.max(0.54, 1.2 - n * 0.078),
       vitesse: (n) => aleatoire(0.115 + n * 0.019, 0.231 + n * 0.032),
@@ -174,13 +176,13 @@ export const JEUX = [
           return undefined;
         },
         draw(ctx) {
-          fondDegrade(ctx, w, h, '#FFF7EC', '#FFFFFF');
+          fondDegrade(ctx, w, h, '#3A1550', '#8A3E9C');
           if (!cible) return;
           const t = taille();
           // L’anneau qui se referme : la fraction de temps restante, lisible sans chiffre.
           ctx.beginPath();
           ctx.arc(cible.x, cible.y, t * 0.72, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (reste / fenetre));
-          ctx.strokeStyle = reste / fenetre < 0.3 ? '#D92D3C' : IRIS;
+          ctx.strokeStyle = reste / fenetre < 0.3 ? '#FF6B6B' : LIME;
           ctx.lineWidth = 4;
           ctx.lineCap = 'round';
           ctx.stroke();
@@ -201,7 +203,7 @@ export const JEUX = [
     ],
     controles: 'Glisse le doigt (ou la souris) de gauche à droite : le panier suit.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#EAF7EE', '#FFFFFF'],
+      joueur: '🧺', ciel: ['#0E3B2E', '#1F7A5A'],
       nouvelObjet: (n) => {
         const mauvais = Math.random() < Math.min(0.45, 0.22 + n * 0.03);
         return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
@@ -268,22 +270,22 @@ export const JEUX = [
           return undefined;
         },
         draw(ctx) {
-          fondDegrade(ctx, w, h, '#FFFFFF', '#EEF0FF');
+          fondDegrade(ctx, w, h, '#14121F', '#2B2377');
           const yt = yFleche();
-          for (const tr of traine) { ctx.globalAlpha = tr.reste / 0.25 * 0.35; ctx.fillStyle = IRIS; ctx.beginPath(); ctx.arc(tr.x, yt + h * 0.05, 3, 0, Math.PI * 2); ctx.fill(); }
+          for (const tr of traine) { ctx.globalAlpha = tr.reste / 0.25 * 0.5; ctx.fillStyle = LIME; ctx.beginPath(); ctx.arc(tr.x, yt + h * 0.05, 3, 0, Math.PI * 2); ctx.fill(); }
           ctx.globalAlpha = 1;
           for (const m of murs) {
-            ctx.fillStyle = INK;
+            ctx.fillStyle = '#E9E6DE';
             ctx.beginPath(); ctx.roundRect(0, m.y, Math.max(0, m.x), m.ep, 4); ctx.fill();
             ctx.beginPath(); ctx.roundRect(m.x + m.largeur, m.y, Math.max(0, w - m.x - m.largeur), m.ep, 4); ctx.fill();
           }
           // La flèche : un fût et une pointe, inclinés dans le sens du mouvement.
           const yf = yFleche(); const L = Math.max(34, h * 0.09);
           ctx.save(); ctx.translate(ax, yf); ctx.rotate(Math.max(-0.5, Math.min(0.5, inclinaison)));
-          ctx.strokeStyle = IRIS; ctx.lineWidth = 3; ctx.lineCap = 'round';
+          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 3; ctx.lineCap = 'round';
           ctx.beginPath(); ctx.moveTo(0, L * 0.45); ctx.lineTo(0, -L * 0.35); ctx.stroke();
           ctx.fillStyle = LIME; ctx.beginPath(); ctx.moveTo(0, -L * 0.6); ctx.lineTo(-9, -L * 0.3); ctx.lineTo(9, -L * 0.3); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = IRIS; ctx.lineWidth = 2; ctx.stroke();
+          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 2; ctx.stroke();
           ctx.beginPath(); ctx.moveTo(0, L * 0.45); ctx.lineTo(-7, L * 0.62); ctx.moveTo(0, L * 0.45); ctx.lineTo(7, L * 0.62); ctx.stroke();
           ctx.restore();
         }

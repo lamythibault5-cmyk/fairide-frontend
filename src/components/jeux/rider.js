@@ -25,7 +25,7 @@ export function creerRider(api) {
   // Saisie
   let appuiPrec = false; let dureeAppui = 0; let appuiDepuisSol = false;
   // Rendu
-  let camY = 0; let ecrasement = 0; let vEcrasement = 0; let roue = 0; let penche = 0; let poussiere = []; let flash = null; let traits = [];
+  let camY = 0; let ecrasement = 0; let vEcrasement = 0; let roue = 0; let pedale = 0; let vRoue = 0; let penche = 0; let poussiere = []; let flash = null; let traits = [];
   // Monde
   let obstacles = []; let bonus = []; let prochainObstacle = 0; let prochainBonus = 0; let prochainJalon = 0; let serie = 0;
 
@@ -48,7 +48,7 @@ export function creerRider(api) {
       dist = 0; y = sol(xEcran()); vy = 0; vx = w * 0.5; auSol = true; sautsRestants = 0; tempsSaut = 0;
       angle = Math.atan(pente(xEcran())); vitesseAngulaire = 0; rotation = 0;
       appuiPrec = false; dureeAppui = 0; appuiDepuisSol = false;
-      camY = 0; ecrasement = 0; vEcrasement = 0; roue = 0; penche = 0; poussiere = []; flash = null; traits = [];
+      camY = 0; ecrasement = 0; vEcrasement = 0; roue = 0; pedale = 0; vRoue = 0; penche = 0; poussiere = []; flash = null; traits = [];
       obstacles = []; bonus = []; prochainObstacle = xEcran() + w * 2.6; prochainBonus = xEcran() + w * 1.4; prochainJalon = w * 3; serie = 0;
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
@@ -64,8 +64,8 @@ export function creerRider(api) {
       if (!presse && input.enfonce && !appuiPrec) presse = true;
       if (input.enfonce) dureeAppui += dt; else { dureeAppui = 0; appuiDepuisSol = false; }
       if (presse) {
-        if (auSol) { decoller(U * 0.92); sautsRestants = 1; rotation = 0; poussierer(xEcran(), y, 5, 80); }
-        else if (sautsRestants > 0) { sautsRestants--; decoller(U * 0.8); rotation = 0; poussierer(xEcran(), y, 7, 60); }
+        if (auSol) { decoller(U * 0.88); sautsRestants = 1; rotation = 0; poussierer(xEcran(), y, 5, 80); }
+        else if (sautsRestants > 0) { sautsRestants--; decoller(U * 0.78); poussierer(xEcran(), y, 7, 60); }
         appuiDepuisSol = false;
       }
       appuiPrec = input.enfonce;
@@ -83,7 +83,7 @@ export function creerRider(api) {
       dist += vx * dt;
       const xm = xEcran() + dist;
       const ySol = sol(xm); const p = pente(xm);
-      const g = U * 1.6;
+      const g = U * 1.35;
 
       // --- Sol / vol
       if (auSol) {
@@ -99,16 +99,18 @@ export function creerRider(api) {
       if (!auSol) {
         tempsSaut += dt;
         // Saut variable : garder le doigt pendant le début de l'envol le prolonge un peu.
-        if (input.enfonce && tempsSaut < 0.18 && vy < 0) vy -= U * 1.5 * dt;
+        if (input.enfonce && tempsSaut < 0.18 && vy < 0) vy -= U * 1.2 * dt;
         vy += g * dt; y += vy * dt;
         // Salto seulement si l'appui a commencé pour sauter (ou en l'air) : un doigt gardé depuis le sol pour accélérer
         // ne fait pas tourner le vélo quand une bosse le décolle — sinon on chutait « sans rien faire ».
-        if (input.enfonce && dureeAppui > 0.3 && !appuiDepuisSol) {
-          vitesseAngulaire = suivre(vitesseAngulaire, -11, 10, dt); // salto : la rotation monte en douceur
+        // Salto : rotation plus lente (un tour en ≈ 0,9 s) qui monte en douceur, et plafonnée : au-delà de
+        // trois tours dans un même vol, le vélo se redresse de lui-même — cinq saltos d'un coup, ça n'existe pas.
+        if (input.enfonce && dureeAppui > 0.3 && !appuiDepuisSol && rotation < Math.PI * 2 * 3) {
+          vitesseAngulaire = suivre(vitesseAngulaire, -7, 5, dt);
         } else {
-          vitesseAngulaire *= Math.max(0, 1 - dt * 12);
+          vitesseAngulaire *= Math.max(0, 1 - dt * 8);
           const droit = Math.round(angle / (Math.PI * 2)) * Math.PI * 2;
-          angle = suivre(angle, droit, 8, dt); // relâché : le vélo se redresse
+          angle = suivre(angle, droit, 6, dt); // relâché : le vélo se redresse, sans à-coup
         }
         angle += vitesseAngulaire * dt; rotation += Math.abs(vitesseAngulaire * dt);
         if (y >= ySol) {
@@ -134,7 +136,9 @@ export function creerRider(api) {
       penche = suivre(penche, accel, 6, dt);
       vEcrasement += (-ecrasement * 90 - vEcrasement * 12) * dt;
       ecrasement += vEcrasement * dt;
-      roue += (vx / (t * 0.28)) * dt;
+      if (auSol) { vRoue = vx / (t * 0.28); pedale += vRoue * 0.6 * dt; }
+      else vRoue *= Math.max(0, 1 - dt * 1.2);
+      roue += vRoue * dt;
 
       // --- Points de route, obstacles, bonus
       if (dist >= prochainJalon) { prochainJalon += w * 3; api.marquer(1); api.effet?.(xEcran(), y - t * 1.3, '+1'); }
@@ -177,15 +181,15 @@ export function creerRider(api) {
     },
     draw(ctx) {
       const t = taille();
-      fondDegrade(ctx, w, h, '#EEF0FF', '#FFFFFF');
+      fondDegrade(ctx, w, h, '#2A2180', '#7B6CF0');
       // Nuages (parallaxe lente)
-      ctx.fillStyle = 'rgba(59,47,181,.06)';
+      ctx.fillStyle = 'rgba(255,255,255,.10)';
       for (let i = 0; i < 4; i++) {
         const cx = ((i * w * 0.37 - dist * 0.12) % (w * 1.4) + w * 1.4) % (w * 1.4) - w * 0.2;
         ctx.beginPath(); ctx.ellipse(cx, h * (0.1 + (i % 2) * 0.09) + camY * 0.15, w * 0.12, h * 0.035, 0, 0, Math.PI * 2); ctx.fill();
       }
       // Collines lointaines (parallaxe moyenne)
-      ctx.fillStyle = 'rgba(59,47,181,.10)';
+      ctx.fillStyle = 'rgba(20,18,31,.22)';
       ctx.beginPath(); ctx.moveTo(0, h + 10);
       for (let sx = 0; sx <= w; sx += 4) { const xx = sx + dist * 0.35; ctx.lineTo(sx, h * 0.5 + camY * 0.5 + Math.sin(xx / (w * 0.3)) * h * 0.06 + Math.sin(xx / (w * 0.13) + 2) * h * 0.025); }
       ctx.lineTo(w, h + 10); ctx.closePath(); ctx.fill();
@@ -196,7 +200,7 @@ export function creerRider(api) {
       ctx.beginPath(); ctx.moveTo(0, h + camY + 10);
       for (let sx = 0; sx <= w; sx += 3) ctx.lineTo(sx, sol(sx + dist));
       ctx.lineTo(w, h + camY + 10); ctx.closePath();
-      ctx.fillStyle = IRIS; ctx.fill();
+      ctx.fillStyle = '#17151F'; ctx.fill();
       ctx.beginPath();
       for (let sx = 0; sx <= w; sx += 3) { const yy = sol(sx + dist); if (sx === 0) ctx.moveTo(sx, yy); else ctx.lineTo(sx, yy); }
       ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
@@ -222,10 +226,10 @@ export function creerRider(api) {
       // Ombre du vélo (plus petite quand il est haut)
       const ySolIci = sol(xEcran() + dist);
       const haut = Math.max(0, ySolIci - y);
-      ctx.fillStyle = `rgba(20,18,31,${(0.2 * Math.max(0.25, 1 - haut / (h * 0.6))).toFixed(3)})`;
+      ctx.fillStyle = `rgba(0,0,0,${(0.4 * Math.max(0.25, 1 - haut / (h * 0.6))).toFixed(3)})`;
       ctx.beginPath(); ctx.ellipse(xEcran(), ySolIci - 2, t * 0.42 * Math.max(0.5, 1 - haut / (h * 0.9)), t * 0.09, 0, 0, Math.PI * 2); ctx.fill();
       // Traînées de vitesse
-      ctx.strokeStyle = 'rgba(59,47,181,.35)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,255,255,.45)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
       for (const tr of traits) { ctx.globalAlpha = tr.reste / 0.22; ctx.beginPath(); ctx.moveTo(tr.x, tr.y); ctx.lineTo(tr.x - tr.l, tr.y); ctx.stroke(); }
       ctx.globalAlpha = 1;
       // Poussière
@@ -233,7 +237,7 @@ export function creerRider(api) {
       for (const pp of poussiere) { ctx.globalAlpha = Math.max(0, pp.reste * 2.2); ctx.beginPath(); ctx.arc(pp.x, pp.y, 2.2, 0, Math.PI * 2); ctx.fill(); }
       ctx.globalAlpha = 1;
       // Le vélo et son cycliste
-      dessinerVelo(ctx, xEcran(), y, t, angle, roue, ecrasement, penche);
+      dessinerVelo(ctx, xEcran(), y, t, angle, roue, pedale, ecrasement, penche);
       ctx.restore();
 
       if (flash) {
@@ -252,7 +256,7 @@ export function creerRider(api) {
 // Le vélo, dessiné : point de contact (x, y) = le sol sous les roues, taille t ≈ empattement, angle = inclinaison,
 // roue = angle des roues (elles tournent avec la distance), ecrasement = suspension (0 = repos), penche = posture
 // du cycliste (-1 en l'air vers le haut, +1 en accélération : il se couche sur le guidon).
-function dessinerVelo(ctx, x, y, t, angle, roue, ecrasement, penche) {
+function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche) {
   const r = t * 0.28; // rayon des roues
   ctx.save();
   ctx.translate(x, y);
@@ -275,7 +279,7 @@ function dessinerVelo(ctx, x, y, t, angle, roue, ecrasement, penche) {
   }
   // Cadre
   const pedalier = { x: -t * 0.04, y: -r * 0.9 }; const selle = { x: -t * 0.2, y: -r * 2.35 }; const guidon = { x: t * 0.3, y: -r * 2.5 };
-  ctx.strokeStyle = IRIS; ctx.lineWidth = Math.max(2, r * 0.22);
+  ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = Math.max(2, r * 0.22);
   ctx.beginPath();
   ctx.moveTo(arriere.x, arriere.y); ctx.lineTo(pedalier.x, pedalier.y); ctx.lineTo(selle.x, selle.y); ctx.lineTo(arriere.x, arriere.y);
   ctx.moveTo(selle.x, selle.y); ctx.lineTo(guidon.x - t * 0.02, guidon.y + r * 0.2); ctx.lineTo(pedalier.x, pedalier.y);
@@ -286,7 +290,7 @@ function dessinerVelo(ctx, x, y, t, angle, roue, ecrasement, penche) {
   ctx.beginPath(); ctx.moveTo(guidon.x - t * 0.06, guidon.y); ctx.lineTo(guidon.x + t * 0.08, guidon.y - r * 0.15); ctx.stroke();
   ctx.beginPath(); ctx.moveTo(selle.x - t * 0.08, selle.y - r * 0.05); ctx.lineTo(selle.x + t * 0.06, selle.y - r * 0.05); ctx.stroke();
   // Pédales (tournent avec les roues)
-  const pa = roue * 0.6; const lp = r * 0.45;
+  const pa = pedale; const lp = r * 0.45;
   const pied1 = { x: pedalier.x + Math.cos(pa) * lp, y: pedalier.y + Math.sin(pa) * lp };
   const pied2 = { x: pedalier.x - Math.cos(pa) * lp, y: pedalier.y - Math.sin(pa) * lp };
   ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.14);
@@ -297,13 +301,13 @@ function dessinerVelo(ctx, x, y, t, angle, roue, ecrasement, penche) {
   const longBuste = r * 1.9;
   const epaule = { x: bassin.x + Math.sin(inclinaison) * longBuste, y: bassin.y - Math.cos(inclinaison) * longBuste };
   // Jambes : cuisse bassin → genou → pied sur la pédale (le genou se déduit, un peu vers l'avant)
-  ctx.strokeStyle = IRIS; ctx.lineWidth = Math.max(2.5, r * 0.3);
+  ctx.strokeStyle = '#5B4FE0'; ctx.lineWidth = Math.max(2.5, r * 0.3);
   for (const pied of [pied1, pied2]) {
     const genou = { x: (bassin.x + pied.x) / 2 + r * 0.55, y: (bassin.y + pied.y) / 2 - r * 0.15 };
     ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(genou.x, genou.y); ctx.lineTo(pied.x, pied.y); ctx.stroke();
   }
   // Buste
-  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(3, r * 0.38);
+  ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = Math.max(3, r * 0.38);
   ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(epaule.x, epaule.y); ctx.stroke();
   // Bras vers le guidon
   ctx.lineWidth = Math.max(2, r * 0.24);

@@ -157,11 +157,13 @@ export default function SearchPage() {
           <button type="button" className="recherche-effacer" onClick={() => { setRequete(''); champ.current?.focus(); }} aria-label={t('search.clear')}>✕</button>
         )}
       </form>
-      <div className="diet-filters recherche-regimes" role="group" aria-label={t('search.dietFilters')}>
-        <button type="button" className={`diet-chip${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
-        <button type="button" className={`diet-chip${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
-        {filtreRegime && <span className="small">{t('search.dietHint')}</span>}
-      </div>
+      {filtreRegime && (
+        <div className="recherche-pastilles" role="group" aria-label={t('search.dietFilters')} style={{ margin: '0 0 12px' }}>
+          {bio && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setBio(false)}>{t('search.filterBio')} ✕</button>}
+          {vegan && <button type="button" className="pill recherche-pastille active" aria-pressed onClick={() => setVegan(false)}>{t('search.filterVegan')} ✕</button>}
+          <span className="small">{t('search.dietHint')}</span>
+        </div>
+      )}
 
       {/* Avant la première lettre, on montre par où commencer : les cuisines et les communes, qui sont
           ce qu'on cherche le plus, plus le chemin vers l'aide. Une page vide avec un champ ne dit
@@ -176,6 +178,8 @@ export default function SearchPage() {
                   <span aria-hidden="true">{c.emoji}</span> {c.value}
                 </Link>
               ))}
+              <button type="button" className={`pill recherche-pastille${bio ? ' active' : ''}`} aria-pressed={bio} onClick={() => setBio((v) => !v)}>{t('search.filterBio')}</button>
+              <button type="button" className={`pill recherche-pastille${vegan ? ' active' : ''}`} aria-pressed={vegan} onClick={() => setVegan((v) => !v)}>{t('search.filterVegan')}</button>
             </div>
           </div>
           <div className="card">
