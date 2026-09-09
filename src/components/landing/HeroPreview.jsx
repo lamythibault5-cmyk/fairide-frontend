@@ -6,6 +6,8 @@ import { getOpenStatus } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Colonne droite de la bannière d'accueil : ce que Fairide EST, montré plutôt que dessiné. Un choix de
+// commune, puis trois commerces déjà partenaires, sans jamais prétendre connaître la position du visiteur
+// (aucune géolocalisation avant connexion : le titre dit « déjà sur Fairide », pas « près de toi »). Un choix de
 // commune (le geste d'entrée de toute plateforme de livraison) et trois vrais commerces partenaires avec
 // leur photo, lus sur l'API publique. Remplace l'ancien grand vélo lime, qui occupait 40 % de la bannière
 // sans rien apprendre au visiteur ; la marque garde sa signature en petit, à côté de l'accroche.
@@ -57,10 +59,11 @@ export default function HeroPreview({ restaurants }) {
   }, [restaurants]);
 
   return (
-    <div className="hero-preview" aria-label={t('landing.heroPreviewTitle')}>
+    <div className="hero-preview" aria-label={t('landing.heroPreviewTitle2')}>
       <div className="hero-preview-head">
         <span className="hero-preview-dot" aria-hidden="true" />
-        <span>{t('landing.heroPreviewTitle')}</span>
+        <span>{t('landing.heroPreviewTitle2')}</span>
+        {restaurants.length > 0 && <span className="hero-preview-count">{t('landing.heroPreviewCount', { n: restaurants.length })}</span>}
       </div>
       {choix.length === 0 ? (
         <div className="hero-preview-list">

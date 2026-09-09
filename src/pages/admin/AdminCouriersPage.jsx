@@ -86,7 +86,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const load = () => api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => toast(e.message));
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message); } finally { setBusy(false); } }
-  if (!d) return null;
+  if (!d) return <div className="card"><SkeletonCards count={2} /></div>;
   const c = d.courier; const s = d.situation;
   const statut = (x) => (x ? tr(`courierOnboarding.status_${x}`) : '—');
   return (

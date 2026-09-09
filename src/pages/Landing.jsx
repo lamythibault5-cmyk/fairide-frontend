@@ -45,24 +45,27 @@ function HeroFrame() {
 function joinCards(t) {
   return [
     {
-      key: 'client',
+      key: 'client', icon: '🛍️',
       eyebrow: t('landing.joinClientRole'),
       title: t('landing.joinClientTitle'),
+      points: [t('landing.joinClientP1'), t('landing.joinClientP2')],
       link: t('landing.joinClientLink'),
       to: '/login?audience=client',
       iris: true
     },
     {
-      key: 'restaurant',
+      key: 'restaurant', icon: '🏪',
       eyebrow: t('landing.joinRestaurantRole'),
       title: t('landing.joinRestaurantTitle'),
+      points: [t('landing.joinRestaurantP1'), t('landing.joinRestaurantP2')],
       link: t('landing.joinRestaurantLink'),
       to: '/login?audience=partner&role=restaurant'
     },
     {
-      key: 'driver',
+      key: 'driver', icon: '🛵',
       eyebrow: t('landing.joinDriverRole'),
       title: t('landing.joinDriverTitle'),
+      points: [t('landing.joinDriverP1'), t('landing.joinDriverP2')],
       link: t('landing.joinDriverLink'),
       to: '/login?audience=partner&role=driver'
     }
@@ -116,6 +119,11 @@ export default function Landing() {
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
+          <ul className="landing-trust" aria-label={t('landing.trustLineAria')}>
+            <li>✓ {t('landing.trust1')}</li>
+            <li>✓ {t('landing.trust2')}</li>
+            <li>✓ {t('landing.trust3')}</li>
+          </ul>
         </div>
         <HeroPreview restaurants={restaurants} />
 
@@ -188,8 +196,9 @@ export default function Landing() {
             className={c.iris ? 'join-card join-card-iris' : 'join-card'}
           >
             <div>
-              <span className="join-eyebrow">{c.eyebrow}</span>
+              <span className="join-eyebrow">{c.icon} {c.eyebrow}</span>
               <h3>{c.title}</h3>
+              <ul className="join-points">{c.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>
             </div>
             <span className="join-link">{c.link}</span>
           </Reveal>

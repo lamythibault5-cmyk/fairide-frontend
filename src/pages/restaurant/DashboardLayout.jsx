@@ -114,6 +114,10 @@ export default function DashboardLayout() {
 
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
   const [ordersLoaded, setOrdersLoaded] = useState(false);
+  // Échec du premier chargement (réseau, serveur en redéploiement) : sans ceci la page restait vide, sans
+  // rien d'autre qu'un toast, et il fallait recharger à la main. Deux reprises automatiques, puis un bouton.
+  const [erreurChargement, setErreurChargement] = useState(null);
+  const tentatives = useRef(0);
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
 
   const [connecting, setConnecting] = useState(false);
@@ -202,8 +206,15 @@ export default function DashboardLayout() {
       // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
       // useNewOrderAlert).
       setOrdersLoaded(true);
+      setErreurChargement(null); tentatives.current = 0;
     } catch (e) {
-      toast(e.message);
+      if (!restaurant) {
+        // Objet neuf à chaque échec : un message identique ne suffirait pas à déclencher un nouveau rendu.
+        setErreurChargement({ message: e.message, n: tentatives.current });
+        if (tentatives.current < 2) { tentatives.current += 1; setTimeout(() => loadDashboard(id), 2500 * tentatives.current); }
+      } else {
+        toast(e.message);
+      }
     }
   }
 
@@ -444,6 +455,16 @@ export default function DashboardLayout() {
           s'il est en train de modifier son menu ou de consulter ses avis. */}
       {restaurant && <NewOrderAlertBar {...orderAlert} />}
 
+      {!restaurant && myRestos.length > 0 && !surCarte && (
+        erreurChargement && erreurChargement.n >= 2 ? (
+          <div className="card" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 28, marginBottom: 6 }}>📡</div>
+            <b>{t('dashResto.loadFailedTitle')}</b>
+            <p className="small" style={{ margin: '6px auto 12px', maxWidth: 420 }}>{erreurChargement.message}</p>
+            <button type="button" className="btn-teal" onClick={() => { tentatives.current = 0; setErreurChargement(null); loadDashboard(restoId); }}>{t('dashResto.loadRetry')}</button>
+          </div>
+        ) : <SkeletonCards count={3} />
+      )}
       {(restaurant || (surCarte && myRestos.length === 0)) && (
         <div className="page-fade" key={chemin}>
           <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />

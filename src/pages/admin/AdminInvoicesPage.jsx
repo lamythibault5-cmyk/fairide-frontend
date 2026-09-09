@@ -39,7 +39,7 @@ function PeppolStatusCard({ token, toast, tr }) {
     setBusy(true);
     try { const r = await api('/admin/peppol/test', { method: 'POST', token }); toast(tr('adminInvoices.peppolTestOk', { num: r.numero, id: r.recipient })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
-  if (!etat) return null;
+  if (!etat) return <SkeletonCards count={1} />;
   const c = etat.counts?.commission || {};
   return (
     <div className="card" style={{ marginBottom: 12 }}>

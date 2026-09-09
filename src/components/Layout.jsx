@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -47,6 +47,29 @@ export default function Layout() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  // Filet contre la « page vide » : quelle qu'en soit la cause (module manquant, réponse jamais arrivée,
+  // rendu avorté), si la zone de contenu n'affiche ni texte ni squelette 2,5 s après un changement de page,
+  // elle est remontée (mêmes effets qu'une actualisation, sans en avoir l'air) ; si elle reste vide,
+  // rechargement complet, au plus une fois toutes les deux minutes pour ne jamais boucler.
+  const [remontage, setRemontage] = useState(0);
+  const zone = useRef(null);
+  useEffect(() => {
+    let remonte = false;
+    const vide = () => {
+      const el = zone.current; if (!el || document.visibilityState !== 'visible') return false;
+      if (el.querySelector('.skeleton, canvas, iframe, img, video, input, table')) return false;
+      return (el.innerText || '').trim().length === 0 && el.getBoundingClientRect().height < 40;
+    };
+    const t1 = setTimeout(() => { if (vide()) { remonte = true; setRemontage((n) => n + 1); } }, 2500);
+    const t2 = setTimeout(() => {
+      if (!remonte || !vide()) return;
+      let dernier = 0; try { dernier = Number(sessionStorage.getItem('fairide_reload_vide') || 0); } catch { /* sans stockage */ }
+      if (Date.now() - dernier < 120000) return;
+      try { sessionStorage.setItem('fairide_reload_vide', String(Date.now())); } catch { /* sans stockage */ }
+      window.location.reload();
+    }, 6000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [location.pathname]);
   const { previewMode } = usePreviewMode();
   const [rightSlot, setRightSlot] = useState(null);
   // Le restaurateur en mode aperçu voit le panier flottant comme un vrai client (voir RestaurantMenu.jsx
@@ -85,7 +108,7 @@ export default function Layout() {
             {estSousSectionCompte(location.pathname) && (
               <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">{t('nav.backToAccount')}</Link>
             )}
-            <div className="page-fade" key={cleTransition(location.pathname)}>
+            <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
               <Suspense fallback={attentePage}>
                 <Outlet context={{ setRightSlot }} />
               </Suspense>
@@ -172,7 +195,7 @@ export default function Layout() {
         </div>
       </div>
       <div className={`wrap${fondCuisine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
-        <div className="page-fade" key={cleTransition(location.pathname)}>
+        <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
           <Suspense fallback={attentePage}>
             <Outlet />
           </Suspense>

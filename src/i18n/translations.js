@@ -2979,7 +2979,9 @@ export const translations = {
       servicesTitle: 'Services proposés',
       servicesHelp: 'Coche ce que ton commerce propose ; tu pourras changer à tout moment.',
       toastServicesRequired: 'Choisis au moins un service (livraison, à emporter ou réservation).',
-      prefilledFromSignup: 'Tout ce que tu as donné à l\'inscription est déjà repris ci-dessous : vérifie, complète les horaires, et crée ton restaurant.'
+      prefilledFromSignup: 'Tout ce que tu as donné à l\'inscription est déjà repris ci-dessous : vérifie, complète les horaires, et crée ton restaurant.',
+      loadFailedTitle: 'Impossible de charger ton tableau de bord',
+      loadRetry: 'Réessayer'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -3474,9 +3476,21 @@ export const translations = {
       heroPreviewClosed: 'Fermé',
       heroPreviewAll: 'Voir les {n} commerces',
       discoverEyebrow: 'Découvre',
-      discoverTitle: 'Les commerces qui livrent chez toi',
+      discoverTitle: 'Les commerces partenaires à Bruxelles',
       discoverAll: 'Tous les commerces ({n})',
-      discoverAllTypes: 'Tout'
+      discoverAllTypes: 'Tout',
+      heroPreviewTitle2: 'Déjà sur Fairide',
+      heroPreviewCount: '{n} commerces à Bruxelles',
+      trustLineAria: 'Ce que Fairide garantit',
+      trust1: 'Parcours les commerces sans créer de compte',
+      trust2: 'Paiement sécurisé par Stripe',
+      trust3: 'Aucune géolocalisation avant ta commande',
+      joinClientP1: 'Suivi du livreur en direct, jusqu\'à ta porte',
+      joinClientP2: 'Le prix du commerce, sans commission cachée sur tes plats',
+      joinRestaurantP1: 'Commission plafonnée à 10 % HTVA, versement chaque lundi',
+      joinRestaurantP2: 'Carte importée pour toi, factures et Peppol automatiques',
+      joinDriverP1: '100 % des frais de livraison et des pourboires pour toi',
+      joinDriverP2: 'Étudiant, particulier ou indépendant : tu choisis ton statut'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -7027,7 +7041,9 @@ export const translations = {
       servicesTitle: 'Services offered',
       servicesHelp: 'Tick what your business offers; you can change it any time.',
       toastServicesRequired: 'Choose at least one service (delivery, takeaway or reservation).',
-      prefilledFromSignup: 'Everything you gave at sign-up is already filled in below: check it, complete the opening hours, and create your restaurant.'
+      prefilledFromSignup: 'Everything you gave at sign-up is already filled in below: check it, complete the opening hours, and create your restaurant.',
+      loadFailedTitle: 'Your dashboard could not be loaded',
+      loadRetry: 'Try again'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -7522,9 +7538,21 @@ export const translations = {
       heroPreviewClosed: 'Closed',
       heroPreviewAll: 'See all {n} businesses',
       discoverEyebrow: 'Discover',
-      discoverTitle: 'The businesses that deliver to you',
+      discoverTitle: 'Partner businesses in Brussels',
       discoverAll: 'All businesses ({n})',
-      discoverAllTypes: 'All'
+      discoverAllTypes: 'All',
+      heroPreviewTitle2: 'Already on Fairide',
+      heroPreviewCount: '{n} businesses in Brussels',
+      trustLineAria: 'What Fairide guarantees',
+      trust1: 'Browse the businesses without an account',
+      trust2: 'Secure payment by Stripe',
+      trust3: 'No geolocation before you order',
+      joinClientP1: 'Live courier tracking, right to your door',
+      joinClientP2: 'The business\'s own price, no hidden commission on your dishes',
+      joinRestaurantP1: 'Commission capped at 10% excl. VAT, paid out every Monday',
+      joinRestaurantP2: 'Menu imported for you, automatic invoices and Peppol',
+      joinDriverP1: '100% of delivery fees and tips for you',
+      joinDriverP2: 'Student, private individual or self-employed: you choose your status'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -11075,7 +11103,9 @@ export const translations = {
       servicesTitle: 'Aangeboden diensten',
       servicesHelp: 'Vink aan wat je zaak aanbiedt; je kunt dit altijd wijzigen.',
       toastServicesRequired: 'Kies minstens één dienst (levering, afhalen of reservatie).',
-      prefilledFromSignup: 'Alles wat je bij de inschrijving gaf, staat hieronder al ingevuld: controleer, vul de openingsuren aan en maak je restaurant aan.'
+      prefilledFromSignup: 'Alles wat je bij de inschrijving gaf, staat hieronder al ingevuld: controleer, vul de openingsuren aan en maak je restaurant aan.',
+      loadFailedTitle: 'Je dashboard kon niet worden geladen',
+      loadRetry: 'Opnieuw proberen'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -11570,9 +11600,21 @@ export const translations = {
       heroPreviewClosed: 'Gesloten',
       heroPreviewAll: 'Alle {n} zaken bekijken',
       discoverEyebrow: 'Ontdek',
-      discoverTitle: 'De zaken die bij jou leveren',
+      discoverTitle: 'Partnerzaken in Brussel',
       discoverAll: 'Alle zaken ({n})',
-      discoverAllTypes: 'Alles'
+      discoverAllTypes: 'Alles',
+      heroPreviewTitle2: 'Al op Fairide',
+      heroPreviewCount: '{n} zaken in Brussel',
+      trustLineAria: 'Wat Fairide garandeert',
+      trust1: 'Bekijk de zaken zonder account',
+      trust2: 'Veilige betaling via Stripe',
+      trust3: 'Geen geolocatie vóór je bestelling',
+      joinClientP1: 'Koerier live volgen, tot aan je deur',
+      joinClientP2: 'De prijs van de zaak, zonder verborgen commissie op je gerechten',
+      joinRestaurantP1: 'Commissie beperkt tot 10% excl. btw, elke maandag uitbetaald',
+      joinRestaurantP2: 'Kaart voor jou geïmporteerd, automatische facturen en Peppol',
+      joinDriverP1: '100% van de leveringskosten en fooien voor jou',
+      joinDriverP2: 'Student, particulier of zelfstandige: jij kiest je statuut'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
