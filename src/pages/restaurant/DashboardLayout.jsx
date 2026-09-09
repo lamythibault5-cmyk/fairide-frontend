@@ -240,6 +240,8 @@ export default function DashboardLayout() {
       return;
     }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
+    let telephoneFiche = '';
+    try { telephoneFiche = String(JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}').phone || ''); } catch { /* sans stockage */ }
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
@@ -247,7 +249,7 @@ export default function DashboardLayout() {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn, phone: telephoneFiche
         }
       });
       setMyRestos((prev) => [...prev, r]);

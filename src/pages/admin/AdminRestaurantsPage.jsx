@@ -25,6 +25,23 @@ const estTest = (r) => !!r.isDemo || isTestAccount(r.ownerEmail);
 
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminRestos.filterPending'), approved: tr('adminRestos.filterApproved'), blocked: tr('adminRestos.filterBlocked') });
 
+// Coordonnées d'un commerce pour l'admin : adresse complète, téléphone du commerce (lien d'appel) et, s'il
+// diffère, celui du gérant. Un commerce sans numéro propre affiche le numéro du compte : on peut toujours appeler.
+function ContactCommerce({ r, tr, fiche = false }) {
+  const stop = (e) => e.stopPropagation();
+  const tel = (n) => <a href={`tel:${String(n).replace(/[^+\d]/g, '')}`} onClick={stop} style={{ fontWeight: 600 }}>{n}</a>;
+  const style = { margin: '2px 0' };
+  return (
+    <>
+      <p className="small" style={style}>📍 {r.fullAddress || '—'}</p>
+      <p className="small" style={style}>
+        📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}
+        {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
+      </p>
+    </>
+  );
+}
+
 export default function AdminRestaurantsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -115,7 +132,9 @@ export default function AdminRestaurantsPage() {
       { label: 'Statut', get: (r) => r.businessStatus },
       { label: 'Responsable', get: (r) => r.responsibleName },
       { label: 'Email', get: (r) => r.ownerEmail },
-      { label: tr('adminCommon.phone'), get: (r) => r.ownerPhone },
+      { label: tr('adminRestos.restoPhone'), get: (r) => r.restaurantPhone },
+      { label: tr('adminRestos.ownerPhoneCol'), get: (r) => r.ownerPhone },
+      { label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress },
       { label: tr('adminRestos.companyNumber'), get: (r) => r.companyNumber },
       { label: 'TVA', get: (r) => r.vatNumber },
       { label: 'Commandes', get: (r) => r.orderCount },
@@ -128,7 +147,7 @@ export default function AdminRestaurantsPage() {
     ]);
   }
 
-  const filtered = filterBySearch(restaurants, search, (r) => [r.name, r.commune, r.cuisine, r.ownerEmail]);
+  const filtered = filterBySearch(restaurants, search, (r) => [r.name, r.commune, r.cuisine, r.ownerEmail, r.fullAddress, r.restaurantPhone, r.ownerPhone]);
   const communes = useMemo(() => [...new Set((restaurants || []).map((r) => r.commune).filter(Boolean))].sort(), [restaurants]);
   const cuisines = useMemo(() => [...new Set((restaurants || []).map((r) => r.cuisine).filter(Boolean))].sort(), [restaurants]);
   const colonnes = [
@@ -136,6 +155,8 @@ export default function AdminRestaurantsPage() {
     { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{tr('adminRestos.alwaysListed')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
     { key: 'commune', label: tr('adminCommon.commune'), get: (r) => r.commune },
     { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
+    { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '—'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
+    { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '—', sortValue: (r) => r.fullAddress || '' },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
     { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${r.rating.toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
@@ -210,7 +231,8 @@ export default function AdminRestaurantsPage() {
               </div>
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {r.rating.toFixed(1)}★</div>
-            <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || r.ownerEmail, phone: r.phone ? ` · ${r.phone}` : '' })}</div>
+            <ContactCommerce r={r} tr={tr} />
+            <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '—', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
             {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '—'} · TVA {r.vatNumber || '—'}</div>}
             <div className="small">
               {tr('adminRestos.statsLine', { n: r.orderCount, revenue: money(r.revenue), commission: money(r.commissionGenerated), basket: money(r.avgBasket) })}
@@ -283,7 +305,9 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
   function startEdit() {
     setForm({
       name: detail.name, commune: detail.commune, responsibleName: detail.responsibleName,
-      companyNumber: detail.companyNumber, vatNumber: detail.vatNumber, legalName: detail.legalName
+      companyNumber: detail.companyNumber, vatNumber: detail.vatNumber, legalName: detail.legalName,
+      phone: detail.restaurantPhone || '', addressStreet: detail.addressStreet || '', addressNumber: detail.addressNumber || '',
+      addressPostalCode: detail.addressPostalCode || '', addressCity: detail.addressCity || ''
     });
     setEditing(true);
   }
@@ -321,8 +345,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
       {detail && onglet === 'apercu' && !editing && (
         <>
-          <p className="small" style={{ margin: '2px 0' }}>📍 {[detail.addressStreet, detail.addressNumber].filter(Boolean).join(' ')}{detail.addressCity ? `, ${detail.addressPostalCode} ${detail.addressCity}` : detail.address}</p>
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: detail.phone ? ` · ${detail.phone}` : '' })}</p>
+          <ContactCommerce r={detail} tr={tr} fiche />
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: '' })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
@@ -353,6 +377,15 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
         <div>
           <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           <div className="field"><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+          <div className="field"><label>{tr('adminRestos.restoPhone')}</label><input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+32 2 000 00 00" /></div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 3 }}><label>{tr('adminRestos.street')}</label><input value={form.addressStreet} onChange={(e) => setForm({ ...form, addressStreet: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.number')}</label><input value={form.addressNumber} onChange={(e) => setForm({ ...form, addressNumber: e.target.value })} /></div>
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.postalCode')}</label><input value={form.addressPostalCode} onChange={(e) => setForm({ ...form, addressPostalCode: e.target.value })} /></div>
+            <div className="field" style={{ flex: 2 }}><label>{tr('adminRestos.city')}</label><input value={form.addressCity} onChange={(e) => setForm({ ...form, addressCity: e.target.value })} /></div>
+          </div>
           <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
           <div className="field"><label>{tr('adminRestos.legalName')}</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>

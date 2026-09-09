@@ -10,6 +10,7 @@ import { formatDateFr } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
 import AddressSearch from '../../components/AddressSearch';
 import AddressRecognition from '../../components/AddressRecognition';
+import PhoneInput from '../../components/PhoneInput';
 
 // Valeurs envoyées au backend (en français, stockées telles quelles) ; le libellé affiché est traduit.
 const RESTO_DELETION_REASONS = [
@@ -33,6 +34,7 @@ export default function EditPage() {
   const [editCompanyNumber, setEditCompanyNumber] = useState('');
   const [editVatNumber, setEditVatNumber] = useState('');
   const [editResponsibleName, setEditResponsibleName] = useState('');
+  const [editPhone, setEditPhone] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
@@ -100,6 +102,7 @@ export default function EditPage() {
     setEditCompanyNumber(restaurant.companyNumber || '');
     setEditVatNumber(restaurant.vatNumber || '');
     setEditResponsibleName(restaurant.responsibleName || '');
+    setEditPhone(restaurant.phone || '');
     setEditDesc(restaurant.desc || '');
     setEditCommune(restaurant.commune || COMMUNES[0]);
     setEditNeighborhood(restaurant.neighborhood || '');
@@ -136,7 +139,7 @@ export default function EditPage() {
         method: 'PATCH', token,
         body: {
           name: editName.trim(),
-          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(),
+          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(), phone: editPhone.trim(),
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours, open: editOpenFlag
@@ -372,6 +375,11 @@ export default function EditPage() {
           </div>
         </div>
         <div className="field"><label>{t('editResto.manager')}</label><input value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder={t('editResto.phManager')} /></div>
+        <div className="field">
+          <label htmlFor="edit-tel">{t('editResto.phone')}</label>
+          <PhoneInput id="edit-tel" value={editPhone} onChange={setEditPhone} autoComplete="off" />
+          <span className="small">{t('editResto.phoneHelp')}</span>
+        </div>
 
         <div className="divider" />
         <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.address')}</h4>

@@ -1625,7 +1625,16 @@ export const translations = {
       listingHint: 'Un vrai restaurant qui s\'inscrit n\'apparaît ici qu\'à l\'admin, jamais aux clients, tant qu\'il n\'est pas publié d\'un clic. Les restaurants test (démo) restent toujours visibles sur le site.',
       testLine: 'Restaurant test (démo) : toujours visible sur le site, c\'est lui qui reçoit les changements de visuels.',
       listedLine: 'Vraie inscription, publiée : les clients la voient.',
-      unlistedLine: 'Vraie inscription, non publiée : visible par l\'admin seulement.'
+      unlistedLine: 'Vraie inscription, non publiée : visible par l\'admin seulement.',
+      restoPhone: 'Tél. commerce',
+      ownerPhoneCol: 'Tél. gérant',
+      ownerPhoneShort: 'gérant',
+      noRestoPhone: 'pas de numéro du commerce',
+      addressCol: 'Adresse',
+      street: 'Rue',
+      number: 'N°',
+      postalCode: 'Code postal',
+      city: 'Ville'
     },
     adminOrders: {
       noneForFilter: 'Aucune commande pour ce filtre.',
@@ -2856,7 +2865,9 @@ export const translations = {
       switchPool: 'Repasser au pool de livreurs Fairide',
       reasonOther: 'Autre raison',
       delivery: 'Livraison',
-      toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour enregistrer.'
+      toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour enregistrer.',
+      phone: 'Téléphone du commerce',
+      phoneHelp: 'Le numéro de la boutique ou du restaurant (comme sur Google Maps), pas votre numéro personnel. Fairide l\'utilise pour vous joindre au sujet d\'une commande. Vide : Fairide appelle le numéro de votre compte.'
     },
     ordersResto: {
       colorsTitle: '🎨 Couleurs des commandes',
@@ -5771,7 +5782,16 @@ export const translations = {
       listingHint: 'A real restaurant that signs up appears here to admins only, never to customers, until it is published with one click. Test (demo) restaurants always stay visible on the site.',
       testLine: 'Test (demo) restaurant: always visible on the site, it is the one that receives visual changes.',
       listedLine: 'Real sign-up, published: customers can see it.',
-      unlistedLine: 'Real sign-up, not published: visible to admins only.'
+      unlistedLine: 'Real sign-up, not published: visible to admins only.',
+      restoPhone: 'Business phone',
+      ownerPhoneCol: 'Owner phone',
+      ownerPhoneShort: 'owner',
+      noRestoPhone: 'no business number',
+      addressCol: 'Address',
+      street: 'Street',
+      number: 'No.',
+      postalCode: 'Postal code',
+      city: 'City'
     },
     adminOrders: {
       noneForFilter: 'No order for this filter.',
@@ -7002,7 +7022,9 @@ export const translations = {
       switchPool: 'Switch back to the Fairide courier pool',
       reasonOther: 'Other reason',
       delivery: 'Delivery',
-      toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to save.'
+      toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to save.',
+      phone: 'Business phone',
+      phoneHelp: 'The number of the shop or restaurant (as on Google Maps), not your personal number. Fairide uses it to reach you about an order. Empty: Fairide calls the number of your account.'
     },
     ordersResto: {
       colorsTitle: '🎨 Order colours',
@@ -9917,7 +9939,16 @@ export const translations = {
       listingHint: 'Een echt restaurant dat zich inschrijft verschijnt hier alleen voor admins, nooit voor klanten, tot het met één klik gepubliceerd wordt. Testrestaurants (demo) blijven altijd zichtbaar op de site.',
       testLine: 'Testrestaurant (demo): altijd zichtbaar op de site, dit is het restaurant dat visuele wijzigingen krijgt.',
       listedLine: 'Echte inschrijving, gepubliceerd: klanten zien ze.',
-      unlistedLine: 'Echte inschrijving, niet gepubliceerd: alleen zichtbaar voor admins.'
+      unlistedLine: 'Echte inschrijving, niet gepubliceerd: alleen zichtbaar voor admins.',
+      restoPhone: 'Tel. zaak',
+      ownerPhoneCol: 'Tel. beheerder',
+      ownerPhoneShort: 'beheerder',
+      noRestoPhone: 'geen nummer van de zaak',
+      addressCol: 'Adres',
+      street: 'Straat',
+      number: 'Nr.',
+      postalCode: 'Postcode',
+      city: 'Stad'
     },
     adminOrders: {
       noneForFilter: 'Geen bestelling voor deze filter.',
@@ -11148,7 +11179,9 @@ export const translations = {
       switchPool: 'Terug naar de Fairide-koerierspool',
       reasonOther: 'Andere reden',
       delivery: 'Levering',
-      toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om op te slaan.'
+      toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om op te slaan.',
+      phone: 'Telefoon van de zaak',
+      phoneHelp: 'Het nummer van de winkel of het restaurant (zoals op Google Maps), niet uw persoonlijke nummer. Fairide gebruikt het om u over een bestelling te bereiken. Leeg: Fairide belt het nummer van uw account.'
     },
     ordersResto: {
       colorsTitle: '🎨 Kleuren van bestellingen',
