@@ -2666,3 +2666,9 @@ button.account-link-row:last-child { border-bottom: none; }
 /* Mon compte livreur : contrat, conditions, paiement, comparatif des statuts (DriverContractTerms.jsx). */
 .driver-terms-table td:first-child { font-weight: 700; white-space: nowrap; }
 .driver-terms-table td { vertical-align: top; font-size: 12px; line-height: 1.4; }
+
+/* Mon compte restaurateur : contrat de partenariat (RestaurantContract.jsx), blocs dépliables. */
+.resto-contract-groupe { border-top: 1px dashed var(--line); }
+.resto-contract-tete { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: none; padding: 10px 0; font: inherit; font-weight: 700; font-size: 14px; color: inherit; cursor: pointer; text-align: left; }
+.resto-contract-clauses { margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 1.5; }
+.resto-contract-clauses li { margin-bottom: 8px; }
