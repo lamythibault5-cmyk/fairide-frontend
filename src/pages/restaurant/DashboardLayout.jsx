@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
+import { formatFullSchedule } from '../../openingHours';
 import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -66,6 +67,10 @@ export default function DashboardLayout() {
   const [offersPickup, setOffersPickup] = useState(true);
   const [offersDineIn, setOffersDineIn] = useState(false);
   const [openingHoursTexte, setOpeningHoursTexte] = useState('');
+  const [siteWeb, setSiteWeb] = useState('');
+  const [telephoneCommerce, setTelephoneCommerce] = useState('');
+  const [horairesDepuisInscription, setHorairesDepuisInscription] = useState(false);
+  const [modifierHoraires, setModifierHoraires] = useState(false);
   // Ce que la reconnaissance d'adresse a trouvé à l'inscription (voir Auth.jsx) : commune, quartier,
   // adresse, et le commerce référencé sur Internet si le restaurateur l'a désigné.
   useEffect(() => {
@@ -82,7 +87,9 @@ export default function DashboardLayout() {
         if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
       }
       if (h.openingHours) setOpeningHoursTexte(h.openingHours);
-      if (h.hours && typeof h.hours === 'object') setHours(h.hours);
+      if (h.hours && typeof h.hours === 'object') { setHours(h.hours); setHorairesDepuisInscription(true); }
+      if (h.website) setSiteWeb(h.website);
+      if (h.phone) setTelephoneCommerce(h.phone);
       // Quartier depuis la position du commerce et description publiée sur son site : préremplis, modifiables.
       if ((h.lat && h.lng) || h.website) {
         const q = new URLSearchParams(); if (h.lat && h.lng) { q.set('lat', h.lat); q.set('lng', h.lng); } if (h.website) q.set('website', h.website);
@@ -240,8 +247,7 @@ export default function DashboardLayout() {
       return;
     }
     const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
-    let telephoneFiche = '';
-    try { telephoneFiche = String(JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}').phone || ''); } catch { /* sans stockage */ }
+    const telephoneFiche = telephoneCommerce.trim();
     try {
       const r = await api('/restaurants', {
         method: 'POST', token,
@@ -249,7 +255,7 @@ export default function DashboardLayout() {
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn, phone: telephoneFiche
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn, phone: telephoneFiche, website: siteWeb.trim()
         }
       });
       setMyRestos((prev) => [...prev, r]);
@@ -325,7 +331,12 @@ export default function DashboardLayout() {
             {t('dashResto.createNote')}
           </p>
 
-          {commerceDejaChoisi && <p className="small" style={{ margin: '0 0 10px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('dashResto.prefilledFromSignup')}</p>}
+          {commerceDejaChoisi && (
+            <div className="paiement-encart" style={{ marginBottom: 12 }}>
+              <b>✅ {t('dashResto.prefilledFromSignup')}</b>
+              <p className="small" style={{ margin: '4px 0 0' }}>{t('dashResto.reviewHelp')}</p>
+            </div>
+          )}
           {!commerceDejaChoisi && <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
             if (!f) return;
             if (f.name) setName(f.name);
@@ -377,13 +388,35 @@ export default function DashboardLayout() {
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.openingHours')}</h4>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('dashResto.openingHoursRequired')}</p>
-          <OpeningHoursEditor value={hours} onChange={setHours} />
+          {horairesDepuisInscription && !modifierHoraires && hours ? (
+            <div className="paiement-encart" style={{ marginBottom: 10 }}>
+              <p className="small" style={{ margin: '0 0 4px' }}>✅ {t('dashResto.hoursFromSignup')}</p>
+              <div className="closed-banner-schedule" style={{ margin: '0 0 6px' }}>{formatFullSchedule(hours, t).map((line) => <span key={line}>{line}</span>)}</div>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setModifierHoraires(true)}>✏️ {t('dashResto.editHours')}</button>
+            </div>
+          ) : (
+            <>
+              <p className="small" style={{ margin: '0 0 10px' }}>{t('dashResto.openingHoursRequired')}</p>
+              <OpeningHoursEditor value={hours} onChange={setHours} />
+            </>
+          )}
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.presentationOptional')}</h4>
           <div className="field"><label>{t('dashResto.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
           <div className="field"><label>{t('dashResto.coverUrl')}</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor="new-resto-site">{t('dashResto.website')}</label>
+              <input id="new-resto-site" inputMode="url" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} placeholder="https://www.mon-commerce.be" />
+              {siteWeb && commerceDejaChoisi && <span className="small">✅ {t('dashResto.fromFiche')}</span>}
+            </div>
+            <div className="field" style={{ flex: 1 }}>
+              <label htmlFor="new-resto-tel">{t('dashResto.businessPhone')}</label>
+              <input id="new-resto-tel" type="tel" value={telephoneCommerce} onChange={(e) => setTelephoneCommerce(e.target.value)} placeholder="+32 2 000 00 00" />
+              {telephoneCommerce && commerceDejaChoisi && <span className="small">✅ {t('dashResto.fromFiche')}</span>}
+            </div>
+          </div>
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.servicesTitle')}</h4>

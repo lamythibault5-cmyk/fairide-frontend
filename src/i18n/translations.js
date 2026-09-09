@@ -652,7 +652,11 @@ export const translations = {
       fHours: 'Horaires (texte libre)',
       fHoursPh: 'Ex : Lu-Sa 11:30-14:30, 18:00-22:30',
       fCuisine: 'Type de cuisine',
-      fCuisinePh: 'Ex : pizza, sushi, friterie…'
+      fCuisinePh: 'Ex : pizza, sushi, friterie…',
+      noWebsite: 'pas de site web trouvé',
+      noHours: 'pas d\'horaires trouvés (tu les rempliras juste en dessous)',
+      contactLater: 'Le téléphone et l\'e-mail de ton compte sont ceux que tu viens de donner. Le numéro public du commerce et son site restent modifiables plus tard dans Mon commerce.',
+      correct: 'Corriger la fiche'
     },
     paiementLivreur: {
       howTitle: 'Comment tu es payé',
@@ -2953,7 +2957,9 @@ export const translations = {
       delivery: 'Livraison',
       toastAddressConfirm: 'L\'adresse ne correspond à aucune adresse connue : coche « Je confirme que cette adresse est correcte » pour enregistrer.',
       phone: 'Téléphone du commerce',
-      phoneHelp: 'Le numéro de la boutique ou du restaurant (comme sur Google Maps), pas votre numéro personnel. Fairide l\'utilise pour vous joindre au sujet d\'une commande. Vide : Fairide appelle le numéro de votre compte.'
+      phoneHelp: 'Le numéro de la boutique ou du restaurant (comme sur Google Maps), pas votre numéro personnel. Fairide l\'utilise pour vous joindre au sujet d\'une commande. Vide : Fairide appelle le numéro de votre compte.',
+      website: 'Site web',
+      websiteHelp: 'Affiché sur ta page publique, sous ta description. Laisse vide si tu n\'en as pas.'
     },
     ordersResto: {
       colorsTitle: '🎨 Couleurs des commandes',
@@ -3161,9 +3167,15 @@ export const translations = {
       servicesTitle: 'Services proposés',
       servicesHelp: 'Coche ce que ton commerce propose ; tu pourras changer à tout moment.',
       toastServicesRequired: 'Choisis au moins un service (livraison, à emporter ou réservation).',
-      prefilledFromSignup: 'Tout ce que tu as donné à l\'inscription est déjà repris ci-dessous : vérifie, complète les horaires, et crée ton restaurant.',
+      prefilledFromSignup: 'Déjà encodé depuis ton inscription',
       loadFailedTitle: 'Impossible de charger ton tableau de bord',
-      loadRetry: 'Réessayer'
+      loadRetry: 'Réessayer',
+      reviewHelp: 'Tout ce que tu as donné à l\'inscription est déjà encodé : nom, type, adresse, horaires, site web, téléphone. Relis, corrige si besoin, puis crée ton commerce.',
+      hoursFromSignup: 'Horaires repris de ton inscription',
+      editHours: 'Modifier les horaires',
+      website: 'Site web du commerce',
+      businessPhone: 'Téléphone du commerce',
+      fromFiche: 'repris de ta fiche'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -3672,7 +3684,17 @@ export const translations = {
       joinRestaurantP1: 'Commission plafonnée à 10 % HTVA, versement chaque lundi',
       joinRestaurantP2: 'Carte importée pour toi, factures et Peppol automatiques',
       joinDriverP1: '100 % des frais de livraison et des pourboires pour toi',
-      joinDriverP2: 'Étudiant, particulier ou indépendant : tu choisis ton statut'
+      joinDriverP2: 'Étudiant, particulier ou indépendant : tu choisis ton statut',
+      euroExTitle: 'Exemple concret : un petit commerce',
+      euroExVolumeLabel: 'Tes commandes',
+      euroExVolumeSub: '5 commandes par jour à 20 €, 25 jours par mois',
+      euroExThemLabel: 'Les grandes plateformes prennent',
+      euroExThemSub: '22 à 32 % de commission chaque mois',
+      euroExUsLabel: 'Fairide prend',
+      euroExUsSub: '10 % maximum, et rien sur la livraison',
+      euroExDiffFigure: '300 à 550 € de plus dans ta caisse',
+      euroExDiffText: 'chaque mois, pour les mêmes commandes.',
+      discoverReviews: 'avis'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -4899,7 +4921,11 @@ export const translations = {
       fHours: 'Opening hours (free text)',
       fHoursPh: 'E.g. Mon-Sat 11:30-14:30, 18:00-22:30',
       fCuisine: 'Type of cuisine',
-      fCuisinePh: 'E.g. pizza, sushi, fries…'
+      fCuisinePh: 'E.g. pizza, sushi, fries…',
+      noWebsite: 'no website found',
+      noHours: 'no opening hours found (you will fill them in just below)',
+      contactLater: 'Your account phone and e-mail are the ones you just entered. The business\'s public number and website can be changed later in My business.',
+      correct: 'Correct the details'
     },
     paiementLivreur: {
       howTitle: 'How you get paid',
@@ -7200,7 +7226,9 @@ export const translations = {
       delivery: 'Delivery',
       toastAddressConfirm: 'The address does not match any known address: tick “I confirm this address is correct” to save.',
       phone: 'Business phone',
-      phoneHelp: 'The number of the shop or restaurant (as on Google Maps), not your personal number. Fairide uses it to reach you about an order. Empty: Fairide calls the number of your account.'
+      phoneHelp: 'The number of the shop or restaurant (as on Google Maps), not your personal number. Fairide uses it to reach you about an order. Empty: Fairide calls the number of your account.',
+      website: 'Website',
+      websiteHelp: 'Shown on your public page, under your description. Leave empty if you have none.'
     },
     ordersResto: {
       colorsTitle: '🎨 Order colours',
@@ -7408,9 +7436,15 @@ export const translations = {
       servicesTitle: 'Services offered',
       servicesHelp: 'Tick what your business offers; you can change it any time.',
       toastServicesRequired: 'Choose at least one service (delivery, takeaway or reservation).',
-      prefilledFromSignup: 'Everything you gave at sign-up is already filled in below: check it, complete the opening hours, and create your restaurant.',
+      prefilledFromSignup: 'Already filled in from your sign-up',
       loadFailedTitle: 'Your dashboard could not be loaded',
-      loadRetry: 'Try again'
+      loadRetry: 'Try again',
+      reviewHelp: 'Everything you gave at sign-up is already filled in: name, type, address, opening hours, website, phone. Read it through, correct if needed, then create your business.',
+      hoursFromSignup: 'Opening hours taken from your sign-up',
+      editHours: 'Edit the hours',
+      website: 'Business website',
+      businessPhone: 'Business phone',
+      fromFiche: 'taken from your listing'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -7919,7 +7953,17 @@ export const translations = {
       joinRestaurantP1: 'Commission capped at 10% excl. VAT, paid out every Monday',
       joinRestaurantP2: 'Menu imported for you, automatic invoices and Peppol',
       joinDriverP1: '100% of delivery fees and tips for you',
-      joinDriverP2: 'Student, private individual or self-employed: you choose your status'
+      joinDriverP2: 'Student, private individual or self-employed: you choose your status',
+      euroExTitle: 'A concrete example: a small business',
+      euroExVolumeLabel: 'Your orders',
+      euroExVolumeSub: '5 orders a day at €20, 25 days a month',
+      euroExThemLabel: 'The big platforms take',
+      euroExThemSub: '22 to 32% commission every month',
+      euroExUsLabel: 'Fairide takes',
+      euroExUsSub: '10% at most, and nothing on delivery',
+      euroExDiffFigure: '€300 to €550 more in your till',
+      euroExDiffText: 'every month, for the same orders.',
+      discoverReviews: 'reviews'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -9146,7 +9190,11 @@ export const translations = {
       fHours: 'Openingsuren (vrije tekst)',
       fHoursPh: 'Bv. ma-za 11:30-14:30, 18:00-22:30',
       fCuisine: 'Soort keuken',
-      fCuisinePh: 'Bv. pizza, sushi, frituur…'
+      fCuisinePh: 'Bv. pizza, sushi, frituur…',
+      noWebsite: 'geen website gevonden',
+      noHours: 'geen openingsuren gevonden (je vult ze net hieronder in)',
+      contactLater: 'De telefoon en e-mail van je account zijn die je net opgaf. Het publieke nummer en de website van de zaak kun je later aanpassen in Mijn zaak.',
+      correct: 'Fiche corrigeren'
     },
     paiementLivreur: {
       howTitle: 'Hoe je betaald wordt',
@@ -11447,7 +11495,9 @@ export const translations = {
       delivery: 'Levering',
       toastAddressConfirm: 'Het adres komt met geen gekend adres overeen: vink “Ik bevestig dat dit adres juist is” aan om op te slaan.',
       phone: 'Telefoon van de zaak',
-      phoneHelp: 'Het nummer van de winkel of het restaurant (zoals op Google Maps), niet uw persoonlijke nummer. Fairide gebruikt het om u over een bestelling te bereiken. Leeg: Fairide belt het nummer van uw account.'
+      phoneHelp: 'Het nummer van de winkel of het restaurant (zoals op Google Maps), niet uw persoonlijke nummer. Fairide gebruikt het om u over een bestelling te bereiken. Leeg: Fairide belt het nummer van uw account.',
+      website: 'Website',
+      websiteHelp: 'Getoond op je publieke pagina, onder je beschrijving. Laat leeg als je er geen hebt.'
     },
     ordersResto: {
       colorsTitle: '🎨 Kleuren van bestellingen',
@@ -11655,9 +11705,15 @@ export const translations = {
       servicesTitle: 'Aangeboden diensten',
       servicesHelp: 'Vink aan wat je zaak aanbiedt; je kunt dit altijd wijzigen.',
       toastServicesRequired: 'Kies minstens één dienst (levering, afhalen of reservatie).',
-      prefilledFromSignup: 'Alles wat je bij de inschrijving gaf, staat hieronder al ingevuld: controleer, vul de openingsuren aan en maak je restaurant aan.',
+      prefilledFromSignup: 'Al ingevuld vanuit je inschrijving',
       loadFailedTitle: 'Je dashboard kon niet worden geladen',
-      loadRetry: 'Opnieuw proberen'
+      loadRetry: 'Opnieuw proberen',
+      reviewHelp: 'Alles wat je bij de inschrijving opgaf is al ingevuld: naam, type, adres, openingsuren, website, telefoon. Lees na, verbeter indien nodig en maak je zaak aan.',
+      hoursFromSignup: 'Openingsuren overgenomen van je inschrijving',
+      editHours: 'Uren aanpassen',
+      website: 'Website van de zaak',
+      businessPhone: 'Telefoon van de zaak',
+      fromFiche: 'overgenomen van je fiche'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -12166,7 +12222,17 @@ export const translations = {
       joinRestaurantP1: 'Commissie beperkt tot 10% excl. btw, elke maandag uitbetaald',
       joinRestaurantP2: 'Kaart voor jou geïmporteerd, automatische facturen en Peppol',
       joinDriverP1: '100% van de leveringskosten en fooien voor jou',
-      joinDriverP2: 'Student, particulier of zelfstandige: jij kiest je statuut'
+      joinDriverP2: 'Student, particulier of zelfstandige: jij kiest je statuut',
+      euroExTitle: 'Concreet voorbeeld: een kleine zaak',
+      euroExVolumeLabel: 'Jouw bestellingen',
+      euroExVolumeSub: '5 bestellingen per dag van € 20, 25 dagen per maand',
+      euroExThemLabel: 'De grote platformen nemen',
+      euroExThemSub: '22 tot 32% commissie elke maand',
+      euroExUsLabel: 'Fairide neemt',
+      euroExUsSub: 'maximaal 10%, en niets op de levering',
+      euroExDiffFigure: '€ 300 tot € 550 meer in je kassa',
+      euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
+      discoverReviews: 'beoordelingen'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },

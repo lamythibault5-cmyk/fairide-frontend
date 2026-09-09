@@ -6,7 +6,7 @@ import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
-import HeroPreview, { CommunePicker, useCommercesPublics } from '../components/landing/HeroPreview';
+import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
 
@@ -111,8 +111,8 @@ export default function Landing() {
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
           <p className="landing-sub">{t('landing.sub')}</p>
-          {/* Le geste d'entrée : sa commune, puis les commerces qui livrent chez soi — sans compte. */}
-          <CommunePicker />
+          {/* Pas de sélecteur de commune ici : l'intérieur de l'app (liste, carte) est réservé aux comptes.
+              Le visiteur voit la vitrine « Découvre » plus bas, puis crée son compte. */}
           {/* Les trois types de compte, toujours proposés ensemble : client, commerce, livreur. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
@@ -156,22 +156,43 @@ export default function Landing() {
         <div className="euro-rows">
           <div>
             <div className="euro-row-top">
-              <span className="euro-name">fairide</span>
-              <span className="euro-cut">{t('landing.euroUsCut')}</span>
-            </div>
-            <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>
-            <p className="euro-legend">{t('landing.euroUsLegend')}</p>
-          </div>
-          <div>
-            <div className="euro-row-top">
               <span className="euro-name">{t('landing.euroThemName')}</span>
               <span className="euro-cut">{t('landing.euroThemCut')}</span>
             </div>
             <div className="euro-track"><div className="euro-fill euro-fill-them" /></div>
             <p className="euro-legend">{t('landing.euroThemLegend')}</p>
           </div>
+          <div>
+            <div className="euro-row-top">
+              <span className="euro-name euro-name-us">fairide</span>
+              <span className="euro-cut">{t('landing.euroUsCut')}</span>
+            </div>
+            <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>
+            <p className="euro-legend">{t('landing.euroUsLegend')}</p>
+          </div>
         </div>
-        <p className="euro-note"><b>{t('landing.euroNoteFigure')}</b> {t('landing.euroNoteText')}</p>
+        {/* Exemple concret : un petit commerce, 5 commandes par jour à 20 €, 25 jours. Trois tuiles, une différence. */}
+        <div className="euro-example" aria-label={t('landing.euroExTitle')}>
+          <p className="euro-ex-title">{t('landing.euroExTitle')}</p>
+          <div className="euro-ex-grid">
+            <div className="euro-ex-card">
+              <span className="euro-ex-label">{t('landing.euroExVolumeLabel')}</span>
+              <b>2 500 €</b>
+              <span className="euro-ex-sub">{t('landing.euroExVolumeSub')}</span>
+            </div>
+            <div className="euro-ex-card them">
+              <span className="euro-ex-label">{t('landing.euroExThemLabel')}</span>
+              <b>550 à 800 €</b>
+              <span className="euro-ex-sub">{t('landing.euroExThemSub')}</span>
+            </div>
+            <div className="euro-ex-card us">
+              <span className="euro-ex-label">{t('landing.euroExUsLabel')}</span>
+              <b>250 €</b>
+              <span className="euro-ex-sub">{t('landing.euroExUsSub')}</span>
+            </div>
+          </div>
+          <p className="euro-ex-diff"><b>{t('landing.euroExDiffFigure')}</b> {t('landing.euroExDiffText')}</p>
+        </div>
       </Reveal>
 
       <Reveal as="h2" className="section-title">{t('landing.howItWorks')}</Reveal>

@@ -30,7 +30,7 @@ export default function DiscoverSection({ restaurants }) {
             <span className="pill hero discover-eyebrow">{t('landing.discoverEyebrow')}</span>
             <h2 className="section-title" style={{ margin: '6px 0 0' }}>{t('landing.discoverTitle')}</h2>
           </div>
-          <Link to="/restaurants" className="discover-all">{t('landing.discoverAll', { n: restaurants.length })} →</Link>
+          <Link to="/restaurants" className="btn-outline discover-all">{t('landing.discoverAll', { n: restaurants.length })} →</Link>
         </div>
         <div className="discover-filtres" role="tablist">
           <button type="button" role="tab" aria-selected={!filtre} className={`chip${!filtre ? ' active' : ''}`} onClick={() => setFiltre('')}>{t('landing.discoverAllTypes')}</button>
@@ -40,11 +40,14 @@ export default function DiscoverSection({ restaurants }) {
       <div className="discover-grid">
         {cartes.map((r, i) => (
           <Reveal as={Link} key={r.id} to={`/restaurants/${r.id}`} className="discover-tile" delay={(i % 4) * 70}>
-            <div className="discover-tile-img"><img loading="lazy" src={r.coverImageUrl} alt={r.name} /></div>
+            <div className="discover-tile-img">
+              <img loading="lazy" src={r.coverImageUrl} alt={r.name} />
+              <span className="discover-tile-cuisine">{r.cuisine}</span>
+              {r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)}</span>}
+            </div>
             <div className="discover-tile-body">
               <b>{r.name}</b>
-              <span className="small">{r.cuisine} · {r.commune}</span>
-              {r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)} <span className="small">({r.reviewCount})</span></span>}
+              <span className="discover-tile-meta">📍 {r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
             </div>
           </Reveal>
         ))}

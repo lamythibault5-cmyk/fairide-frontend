@@ -87,6 +87,9 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
   function saisirALaMain() { setOrigine('manuel'); publier({ ...FICHE_VIDE, postalCode: cp.trim() }); }
   function revoirListe() { setFiche(null); setOrigine(null); onSelect?.(null); }
   const modifier = (champ) => (e) => publier({ ...fiche, [champ]: e.target.value });
+  // Fiche trouvée sur le web : relecture d'abord, champs seulement si on veut corriger. Saisie manuelle : champs tout de suite.
+  const [corriger, setCorriger] = useState(false);
+  const adresseFiche = fiche ? [`${fiche.street || ''} ${fiche.number || ''}`.trim(), [fiche.postalCode, fiche.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') : '';
 
   return (
     <div className={`business-search${compact ? ' compact' : ''}`}>
@@ -139,6 +142,15 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
           <p className="small" style={{ margin: '4px 0 8px', opacity: 0.8 }}>{origine === 'web' ? t('businessSearch.verifyFields') : t('businessSearch.manualHelp')}</p>
           {compact ? (
             <p className="small" style={{ margin: 0 }}>{t('businessSearch.compactHint')}</p>
+          ) : origine === 'web' && !corriger ? (
+            <div className="business-fiche-relecture">
+              <p className="small" style={{ margin: '0 0 2px' }}>📍 {adresseFiche || '—'}</p>
+              <p className="small" style={{ margin: '0 0 2px' }}>🌐 {fiche.website ? fiche.website : <i>{t('businessSearch.noWebsite')}</i>}</p>
+              <p className="small" style={{ margin: '0 0 2px' }}>🕒 {fiche.openingHours ? fiche.openingHours : <i>{t('businessSearch.noHours')}</i>}</p>
+              {fiche.cuisine && <p className="small" style={{ margin: '0 0 2px' }}>🍽️ {fiche.cuisine}</p>}
+              <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('businessSearch.contactLater')}</p>
+              <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12, marginTop: 4 }} onClick={() => setCorriger(true)}>✏️ {t('businessSearch.correct')}</button>
+            </div>
           ) : (
             <div className="business-fiche-grid">
               <label className="business-fiche-field span2"><span>{t('businessSearch.fName')}</span><input value={fiche.name} onChange={modifier('name')} /></label>
@@ -146,9 +158,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               <label className="business-fiche-field"><span>{t('businessSearch.fNumber')}</span><input value={fiche.number} onChange={modifier('number')} /></label>
               <label className="business-fiche-field"><span>{t('businessSearch.fPostal')}</span><input value={fiche.postalCode} inputMode="numeric" maxLength={4} onChange={modifier('postalCode')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fCity')}</span><input value={fiche.city} onChange={modifier('city')} /></label>
-              <label className="business-fiche-field"><span>{t('businessSearch.fPhone')}</span><input value={fiche.phone} type="tel" onChange={modifier('phone')} /></label>
-              <label className="business-fiche-field"><span>{t('businessSearch.fEmail')}</span><input value={fiche.email} type="email" onChange={modifier('email')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fWebsite')}</span><input value={fiche.website} onChange={modifier('website')} placeholder="https://" /></label>
+              <label className="business-fiche-field span2"><span>{t('businessSearch.fHours')}</span><input value={fiche.openingHours} onChange={modifier('openingHours')} placeholder={t('businessSearch.fHoursPh')} /></label>
               <label className="business-fiche-field span2"><span>{t('businessSearch.fCuisine')}</span><input value={fiche.cuisine} onChange={modifier('cuisine')} placeholder={t('businessSearch.fCuisinePh')} /></label>
             </div>
           )}

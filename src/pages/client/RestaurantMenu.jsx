@@ -209,6 +209,13 @@ export default function RestaurantMenu() {
           <span className="small">{restaurant.reviewCount > 0 ? t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restaurantList.newBadge')}</span>
         </div>
         <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
+        {(restaurant.website || restaurant.phone) && (
+          <p className="small" style={{ margin: '0 0 6px' }}>
+            {restaurant.website && <a href={restaurant.website} target="_blank" rel="noreferrer">🌐 {restaurant.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a>}
+            {restaurant.website && restaurant.phone ? ' · ' : ''}
+            {restaurant.phone && <a href={`tel:${restaurant.phone.replace(/[^+\d]/g, '')}`}>📞 {restaurant.phone}</a>}
+          </p>
+        )}
         {restaurant.hours && (
           openStatus.isExceptionalClosure ? (
             <div className="closed-banner">

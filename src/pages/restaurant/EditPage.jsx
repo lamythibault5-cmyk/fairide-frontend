@@ -35,6 +35,7 @@ export default function EditPage() {
   const [editVatNumber, setEditVatNumber] = useState('');
   const [editResponsibleName, setEditResponsibleName] = useState('');
   const [editPhone, setEditPhone] = useState('');
+  const [editWebsite, setEditWebsite] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [editCommune, setEditCommune] = useState('');
   const [editNeighborhood, setEditNeighborhood] = useState('');
@@ -103,6 +104,7 @@ export default function EditPage() {
     setEditVatNumber(restaurant.vatNumber || '');
     setEditResponsibleName(restaurant.responsibleName || '');
     setEditPhone(restaurant.phone || '');
+    setEditWebsite(restaurant.website || '');
     setEditDesc(restaurant.desc || '');
     setEditCommune(restaurant.commune || COMMUNES[0]);
     setEditNeighborhood(restaurant.neighborhood || '');
@@ -139,7 +141,7 @@ export default function EditPage() {
         method: 'PATCH', token,
         body: {
           name: editName.trim(),
-          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(), phone: editPhone.trim(),
+          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(), phone: editPhone.trim(), website: editWebsite.trim(),
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
           coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours, open: editOpenFlag
@@ -379,6 +381,11 @@ export default function EditPage() {
           <label htmlFor="edit-tel">{t('editResto.phone')}</label>
           <PhoneInput id="edit-tel" value={editPhone} onChange={setEditPhone} autoComplete="off" />
           <span className="small">{t('editResto.phoneHelp')}</span>
+        </div>
+        <div className="field">
+          <label htmlFor="edit-site">{t('editResto.website')}</label>
+          <input id="edit-site" inputMode="url" value={editWebsite} onChange={(e) => setEditWebsite(e.target.value)} placeholder="https://www.mon-commerce.be" />
+          <span className="small">{t('editResto.websiteHelp')}</span>
         </div>
 
         <div className="divider" />

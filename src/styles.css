@@ -1088,7 +1088,21 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   font-size: 14.5px; color: rgba(255,255,255,0.82); max-width: 62ch;
 }
 .euro-note b { color: var(--lime); font-weight: 500; }
-@media (max-width: 640px) { .euro-block { padding: 24px 18px; } }
+.euro-name-us { color: var(--lime); }
+/* Exemple concret sous les deux barres : trois tuiles (volume, grandes plateformes, Fairide) et la différence. */
+.euro-example { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.18); }
+.euro-ex-title { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.72); }
+.euro-ex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.euro-ex-card { background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.euro-ex-card b { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.03em; line-height: 1.1; font-weight: 800; color: var(--cream); }
+.euro-ex-card.them b { color: rgba(255,255,255,0.85); text-decoration: line-through rgba(255,255,255,0.35) 2px; }
+.euro-ex-card.us { background: rgba(200,240,60,0.14); border-color: rgba(200,240,60,0.45); }
+.euro-ex-card.us b { color: var(--lime); }
+.euro-ex-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.7); }
+.euro-ex-sub { font-size: 12.5px; color: rgba(255,255,255,0.7); }
+.euro-ex-diff { margin: 16px 0 0; font-size: 16px; color: rgba(255,255,255,0.9); }
+.euro-ex-diff b { color: var(--lime); font-size: 20px; }
+@media (max-width: 640px) { .euro-block { padding: 24px 18px; } .euro-ex-grid { grid-template-columns: 1fr; } }
 
 /* Les trois portes d'entrée (client / commerce / livreur) étaient des photos
    Unsplash sous un voile dégradé — trois images génériques qui ne disaient rien
@@ -2715,24 +2729,31 @@ button.account-link-row:last-child { border-bottom: none; }
 .feature-icon-svg { color: var(--iris); display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 12px; background: rgba(59,47,181,0.08); margin-bottom: 14px; }
 
 /* Vitrine « Découvre les commerces » (components/landing/DiscoverSection.jsx). */
-.discover-section { margin: 6px 0 36px; }
-.discover-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+/* Vitrine « Découvre » (components/landing/DiscoverSection.jsx) : un panneau crème posé sur la page, des cartes
+   photo avec le type de cuisine et la note sur l'image, le nom et la commune dessous. */
+.discover-section { margin: 6px 0 36px; padding: 26px 26px 28px; background: var(--cream, #FBF8F1); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 18px 50px rgba(20, 18, 31, 0.08); }
+.discover-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .pill.hero.discover-eyebrow { color: var(--iris); }
-.discover-all { font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; }
-.discover-all:hover { text-decoration: underline; }
-.discover-filtres { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
-.discover-filtres .chip { padding: 7px 12px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+.discover-all { font-size: 14px; font-weight: 700; text-decoration: none; padding: 9px 16px; border-radius: 999px; white-space: nowrap; }
+.discover-filtres { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4px 16px; padding: 2px 4px 6px; }
+.discover-filtres::-webkit-scrollbar { display: none; }
+.discover-filtres .chip { flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.discover-filtres .chip:hover { border-color: var(--iris); color: var(--iris); }
 .discover-filtres .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
-.discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-.discover-tile { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; transition: border-color .15s ease, transform .2s ease; }
-.discover-tile:hover { border-color: var(--iris); transform: translateY(-3px); }
-.discover-tile-img { aspect-ratio: 4 / 3; overflow: hidden; background: var(--cream-dim); }
-.discover-tile-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .4s ease; }
-.discover-tile:hover .discover-tile-img img { transform: scale(1.04); }
-.discover-tile-body { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 2px; }
-.discover-tile-body b { font-size: 15px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.discover-tile-rating { font-size: 12.5px; font-weight: 700; color: var(--iris); margin-top: 4px; }
-@media (max-width: 640px) { .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile-body b { font-size: 14px; } }
+.discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.discover-tile { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.04); transition: transform .25s ease, box-shadow .25s ease, border-color .15s ease; }
+.discover-tile:hover { transform: translateY(-4px); border-color: rgba(59, 47, 181, 0.35); box-shadow: 0 16px 34px rgba(20, 18, 31, 0.14); }
+.discover-tile-img { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--cream-dim); }
+.discover-tile-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
+.discover-tile:hover .discover-tile-img img { transform: scale(1.06); }
+.discover-tile-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20, 18, 31, 0.55) 0%, rgba(20, 18, 31, 0) 45%); pointer-events: none; }
+.discover-tile-cuisine { position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: var(--iris); font-size: 12px; font-weight: 700; letter-spacing: 0.01em; backdrop-filter: blur(6px); }
+.discover-tile-rating { position: absolute; right: 10px; top: 10px; z-index: 1; padding: 4px 9px; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.18); }
+.discover-tile-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; }
+.discover-tile-body b { font-size: 15.5px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.discover-tile-meta { font-size: 13px; color: var(--ink-soft); }
+.discover-tile-reviews { color: var(--ink-soft); opacity: 0.8; }
+@media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: 18px; } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: 14px; } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
 
 /* Accueil : ligne de confiance sous les boutons de la bannière, compteur du panneau, bénéfices des portes d'entrée. */
 .landing-trust { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 0; padding: 0; font-size: 12.5px; color: rgba(255,255,255,0.8); }
