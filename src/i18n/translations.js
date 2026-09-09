@@ -3559,7 +3559,7 @@ export const translations = {
       back: 'Retour',
       cancel: 'Annuler',
       save: 'Enregistrer',
-      slogan: 'Paie ta commande, pas la plateforme.',
+      slogan: 'Payer le repas, pas la plateforme.',
       subtotal: 'Sous-total',
       verifiedByFairide: 'Restaurant vérifié par Fairide',
       verifiedShort: 'resto vérifié'
@@ -12105,7 +12105,7 @@ export const translations = {
       back: 'Terug',
       cancel: 'Annuleren',
       save: 'Opslaan',
-      slogan: 'Betaal je maaltijd, niet het platform.',
+      slogan: 'Betaal de maaltijd, niet het platform.',
       subtotal: 'Subtotaal',
       verifiedByFairide: 'Restaurant geverifieerd door Fairide',
       verifiedShort: 'geverifieerd'
