@@ -5,15 +5,22 @@ import { getLanguage, getLocale } from '../../context/LanguageContext';
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
 // (voir routes/auth.js, isQaTestAccount) : un alias "+qa" dans l'adresse email (ex: toi+qa1@gmail.com).
 // Aucun champ base de données dédié — dérivé à la volée de l'email déjà présent dans chaque liste admin.
-export function isTestAccount(email) {
-  return /\+qa/i.test(email || '');
+// Repli quand le serveur n'a pas posé le drapeau : mêmes motifs que testAccounts.js côté serveur.
+const DOMAINES_TEST = ['test.com', 'fairide.dev', 'example.com', 'example.org', 'example.net', 'fairide.invalid', 'test.fairide.be'];
+export function isTestAccount(email, name = '') {
+  const e = String(email || '').trim().toLowerCase(); const n = String(name || '').trim().toLowerCase();
+  if (!e) return false;
+  if (/\+qa/.test(e)) return true;
+  if (DOMAINES_TEST.includes(e.split('@')[1] || '')) return true;
+  if (/^test[-_.]/.test(e) || /-\d{10,}@/.test(e)) return true;
+  return /^test\b/.test(n);
 }
 // Compte test = marqué par le serveur (fondateur, démos, bascule admin, alias +qa). Repli sur l'e-mail pour
 // les listes qui n'exposent pas encore le drapeau. Tout ce qui n'est pas test est un vrai utilisateur.
 export function estCompteTest(u) {
   if (!u) return false;
-  if (u.isTest !== undefined && u.isTest !== null) return !!u.isTest;
-  return isTestAccount(u.email || u.ownerEmail);
+  if (u.isTest) return true;
+  return isTestAccount(u.email || u.ownerEmail, u.name || u.responsibleName);
 }
 // Bouton « marquer comme test / comme vrai compte » (fiches client, livreur, restaurant).
 export function TestToggleButton({ userId, isTest, token, api, toast, onChanged, tr, small = false }) {
