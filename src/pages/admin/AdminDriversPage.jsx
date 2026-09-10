@@ -53,6 +53,12 @@ export default function AdminDriversPage() {
   const [mode, setMode] = useViewMode('drivers', 'cards');
   const filtre = searchParams.get('status') || 'all';
   const [nature, setNature] = useState('all');
+  // Type de livreur (statut légal du dossier coursier) : student | p2p | independent | none (pas encore choisi).
+  const [typeLivreur, setTypeLivreur] = useState('all');
+  const TYPES_LIVREUR = ['student', 'p2p', 'independent'];
+  const typeDe = (d) => d.courier?.statusType || 'none';
+  const libelleType = (k) => (k === 'none' ? tr('adminDrivers.statusNotChosen') : tr(`courierOnboarding.status_${k}`));
+  const emojiType = (k) => ({ student: '🎓', p2p: '🤝', independent: '💼' }[k] || '❔');
   const [activite, setActivite] = useState('');
   const [groupBy, setGroupBy] = useState('');
   const [triServeur, setTriServeur] = useState('created_desc');
@@ -157,9 +163,18 @@ export default function AdminDriversPage() {
   ];
   const groupes = {
     status: { get: (d) => STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus }, activity: { get: (d) => activityLabels(tr)[d.activityStatus]?.label || d.activityStatus },
-    vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') }
+    vat: { get: (d) => VAT_LABELS(tr)[d.vatStatus] || tr('adminDrivers.vatUnknown') },
+    courierType: { get: (d) => `${emojiType(typeDe(d))} ${libelleType(typeDe(d))}` }
   };
-  const visibles = useMemo(() => sortRows((drivers || []).filter((d) => natureOk(nature, d) && (!activite || d.activityStatus === activite)), colonnes, sort), [drivers, nature, activite, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Vue fiches : découpe en sections quand un regroupement est choisi (l'ordre des types est fixe : étudiants, P2P, indépendants, non choisi).
+  function sectionsCartes(liste, groupe) {
+    if (!groupe) return [[null, liste]];
+    const ordre = (d) => (groupBy === 'courierType' ? ['student', 'p2p', 'independent', 'none'].indexOf(typeDe(d)) : 0);
+    const m = new Map();
+    [...liste].sort((a, b) => ordre(a) - ordre(b)).forEach((d) => { const k = groupe.get(d); if (!m.has(k)) m.set(k, []); m.get(k).push(d); });
+    return [...m.entries()];
+  }
+  const visibles = useMemo(() => sortRows((drivers || []).filter((d) => natureOk(nature, d) && (!activite || d.activityStatus === activite) && (typeLivreur === 'all' || typeDe(d) === typeLivreur)), colonnes, sort), [drivers, nature, activite, typeLivreur, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const kpi = useMemo(() => (drivers || []).reduce((a, d) => ({ real: a.real + (estCompteReel(d) ? 1 : 0), deleted: a.deleted + (estCompteSupprime(d) ? 1 : 0), pending: a.pending + (d.adminStatus === 'pending' ? 1 : 0), available: a.available + (d.activityStatus === 'disponible' && d.adminStatus === 'approved' ? 1 : 0), delivering: a.delivering + (d.activityStatus === 'en_livraison' ? 1 : 0), deliveries: a.deliveries + d.deliveriesCount, revenue: a.revenue + d.revenue }), { real: 0, deleted: 0, pending: 0, available: 0, delivering: 0, deliveries: 0, revenue: 0 }), [drivers]);
   const tousCharges = drivers && drivers.length >= total;
 
@@ -185,6 +200,13 @@ export default function AdminDriversPage() {
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>
           ))}
         </div>
+        <div className="role-pick" style={{ margin: 0 }} role="group" aria-label={tr('adminDrivers.courierStatus')}>
+          {['all', ...TYPES_LIVREUR, 'none'].map((k) => {
+            const n = k === 'all' ? (drivers || []).length : (drivers || []).filter((d) => typeDe(d) === k).length;
+            if (k === 'none' && n === 0) return null;
+            return <div key={k} className={`chip${typeLivreur === k ? ' active' : ''}`} onClick={() => setTypeLivreur(k)}>{k === 'all' ? tr('adminDrivers.allTypes') : `${emojiType(k)} ${libelleType(k)}`}{drivers ? ` (${n})` : ''}</div>;
+          })}
+        </div>
         <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
         <select value={activite} onChange={(e) => setActivite(e.target.value)} style={{ maxWidth: 180 }}>
           <option value="">{tr('adminDrivers.allActivities')}</option>
@@ -193,14 +215,13 @@ export default function AdminDriversPage() {
         <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
           {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
         </select>
-        {mode === 'table' && (
-          <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
+        <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
+            <option value="courierType">{tr('adminCommon.groupBy')} : {tr('adminDrivers.courierType')}</option>
             <option value="status">{tr('adminCommon.groupBy')} : {tr('adminCommon.status')}</option>
             <option value="activity">{tr('adminCommon.groupBy')} : {tr('adminCommon.activity')}</option>
             <option value="vat">{tr('adminCommon.groupBy')} : {tr('adminCommon.vat')}</option>
-          </select>
-        )}
+        </select>
         <ResultCount n={visibles.length} total={total} />
       </div>
       {error && <ErrorCard message={error} onRetry={load} />}
@@ -210,7 +231,10 @@ export default function AdminDriversPage() {
         <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} groupBy={groupBy ? groupes[groupBy] : null} onRowClick={openDriver}
           rowClassName={(d) => (estCompteTest(d) ? 'row-test-account' : '')} showTotals format={{ revenue: money }} emptyLabel={tr('adminCommon.noResults')} />
       )}
-      {drivers && mode === 'cards' && visibles.map((d) => {
+      {drivers && mode === 'cards' && sectionsCartes(visibles, groupBy ? groupes[groupBy] : null).map(([titre, liste]) => (
+        <div key={titre || 'tous'}>
+          {titre && <h4 className="drawer-section-title" style={{ margin: '14px 0 8px' }}>{titre} <span className="small" style={{ opacity: 0.7 }}>({liste.length})</span></h4>}
+          {liste.map((d) => {
         const act = activityLabels(tr)[d.activityStatus];
         return (
           <div className={`card order-card-clickable${estCompteTest(d) ? ' card-test-account' : ''}`} key={d.id} onClick={() => openDriver(d)}>
@@ -242,7 +266,9 @@ export default function AdminDriversPage() {
             </div>
           </div>
         );
-      })}
+          })}
+        </div>
+      ))}
       {drivers && <LoadMore loaded={drivers.length} total={total} loading={loading} onMore={loadMore} />}
 
       {selected && createPortal(

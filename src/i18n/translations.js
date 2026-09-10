@@ -2085,7 +2085,9 @@ export const translations = {
       deleteAccount: 'Supprimer le compte',
       confirmDelete: 'Supprimer définitivement {name} ?',
       deleteBody: 'Le compte {email}, son dossier livreur, ses relevés et autofacturations seront effacés ; ses courses passées sont détachées. Refusé si une course est en cours. Irréversible.',
-      toastDeleted: 'Compte livreur supprimé ({n} course(s) détachée(s)).'
+      toastDeleted: 'Compte livreur supprimé ({n} course(s) détachée(s)).',
+      allTypes: 'Tous types',
+      courierType: 'Type de livreur'
     },
     adminDocs: {
       expired: 'Expirés',
@@ -7525,7 +7527,9 @@ export const translations = {
       deleteAccount: 'Delete account',
       confirmDelete: 'Permanently delete {name}?',
       deleteBody: 'The account {email}, its courier file, statements and self-billing invoices will be erased; past deliveries are detached. Refused while a delivery is in progress. Irreversible.',
-      toastDeleted: 'Courier account deleted ({n} delivery(ies) detached).'
+      toastDeleted: 'Courier account deleted ({n} delivery(ies) detached).',
+      allTypes: 'All types',
+      courierType: 'Courier type'
     },
     adminDocs: {
       expired: 'Expired',
@@ -12965,7 +12969,9 @@ export const translations = {
       deleteAccount: 'Account verwijderen',
       confirmDelete: '{name} definitief verwijderen?',
       deleteBody: 'Het account {email}, het koeriersdossier, de overzichten en zelffacturen worden gewist; vroegere leveringen worden losgekoppeld. Geweigerd zolang een levering bezig is. Onomkeerbaar.',
-      toastDeleted: 'Koeriersaccount verwijderd ({n} levering(en) losgekoppeld).'
+      toastDeleted: 'Koeriersaccount verwijderd ({n} levering(en) losgekoppeld).',
+      allTypes: 'Alle types',
+      courierType: 'Type koerier'
     },
     adminDocs: {
       expired: 'Verlopen',
