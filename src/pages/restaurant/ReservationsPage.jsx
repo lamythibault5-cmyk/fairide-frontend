@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import ReservationSteps from '../../components/ReservationSteps';
+import FloorPlan, { AREA_ICONS, areaLabel } from '../../components/FloorPlan';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { statusLabel } from '../../orderStatus';
@@ -121,7 +122,7 @@ export default function ReservationsPage() {
 // ------------------------------------------------------------------------------------------------
 // AGENDA — jour (grille salle × heures + liste) ou semaine (sept colonnes), saisie manuelle, actions.
 // ------------------------------------------------------------------------------------------------
-function Agenda({ token, toast, restoId, tables, restaurant }) {
+function Agenda({ token, toast, restoId, tables, setTables, restaurant }) {
   const { t, locale } = useLanguage();
   const [date, setDate] = useState(() => isoDuJour(new Date()));
   const [vue, setVue] = useState('jour');
@@ -130,6 +131,8 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
   const [chargement, setChargement] = useState(true);
   const [ouverte, setOuverte] = useState(null);
   const [formulaire, setFormulaire] = useState(false);
+  // Réservation sans table qu'on place sur le plan : un appui sur une table libre l'attribue.
+  const [placer, setPlacer] = useState(null);
   const [version, setVersion] = useState(0);
   const recharger = () => setVersion((v) => v + 1);
 
@@ -233,6 +236,30 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
           onDone={(r) => { setFormulaire(false); setDate(isoDuJour(new Date(r.startAt))); setVue('jour'); setOuverte(r.id); recharger(); }} />
       )}
 
+      {placer && (
+        <div className="card">
+          <div className="row" style={{ alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>{t('resa.placeOnPlanTitle', { name: placer.reservationName })}</h3>
+            <button type="button" className="btn-ghost" onClick={() => setPlacer(null)}>{t('resa.close')}</button>
+          </div>
+          <FloorPlan restoId={restoId} token={token} toast={toast} tables={tables} setTables={setTables} restaurant={restaurant}
+            dateInitiale={isoDuJour(new Date(placer.startAt))}
+            heureInitiale={new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Brussels', hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(placer.startAt))}
+            assigner={{
+              reservation: placer,
+              onChoisir: async (tb) => {
+                try {
+                  const maj = await api(`/restaurants/${restoId}/reservations/${placer.id}`, { method: 'PATCH', token, body: { tableId: tb.id, notifier: false } });
+                  majReservation(maj);
+                  toast(t('resa.toastTableAssigned', { n: tb.number ?? tb.name }));
+                  setPlacer(null);
+                  recharger();
+                } catch (e) { toast(e.message); }
+              }
+            }} />
+        </div>
+      )}
+
       {chargement && <p className="small">{t('resa.loading')}</p>}
 
       {!chargement && vue === 'semaine' && semaine && (
@@ -262,8 +289,8 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
                   {tablesActives.map((tb) => (
                     <Fragment key={tb.id}>
                       <div className="resa-grid-table">
-                        <b title={tb.name}>{tb.name}</b>
-                        <span className="small">{t('resa.seatsShort', { n: tb.seats })}{tb.zone ? ` · ${tb.zone}` : ''}</span>
+                        <b title={tb.name}>{tb.number != null ? `${tb.number} · ` : ''}{tb.name}</b>
+                        <span className="small">{t('resa.seatsShort', { n: tb.seats })} · {AREA_ICONS[tb.area] || ''} {areaLabel(t, tb.area)}</span>
                       </div>
                       <div className="resa-grid-piste">
                         {actives.filter((r) => r.tableId === tb.id).map((r) => {
@@ -301,7 +328,7 @@ function Agenda({ token, toast, restoId, tables, restaurant }) {
             {duJour.slice().sort((a, b) => a.startAt - b.startAt).map((r) => (
               <LigneReservation key={r.id} r={r} tables={tables || []} ouverte={ouverte === r.id}
                 onToggle={() => setOuverte(ouverte === r.id ? null : r.id)}
-                token={token} toast={toast} restoId={restoId} onMaj={majReservation} onRecharger={recharger} />
+                token={token} toast={toast} restoId={restoId} onMaj={majReservation} onRecharger={recharger} onPlacer={() => setPlacer(r)} />
             ))}
           </div>
         </>
@@ -338,7 +365,7 @@ function VueSemaine({ lundi, reservations, onJour }) {
   );
 }
 
-function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId, onMaj, onRecharger }) {
+function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId, onMaj, onRecharger, onPlacer }) {
   const { t } = useLanguage();
   const table = tables.find((tb) => tb.id === r.tableId);
   const [enCours, setEnCours] = useState(null);
@@ -376,7 +403,7 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
           <b>{r.reservationName}{r.arrival === 'arrive' ? ' ✅' : r.arrival === 'no_show' ? ' ❌' : ''}</b>
           <span className="small">
             {t('resa.nPeople', { n: r.partySize })}
-            {table ? ` · ${table.name}` : t('resa.noTableAssigned')}
+            {table ? ` · ${table.number != null ? `${table.number} · ` : ''}${table.name} ${AREA_ICONS[table.area] || ''}` : t('resa.noTableAssigned')}
             {r.itemCount > 0 ? t('resa.dishesOrdered', { n: r.itemCount }) : ''}
             {r.depositAmount > 0 ? ` · 💳 ${euros(r.depositAmount)} ${ACOMPTE_LABEL[r.depositStatus] ? t(`resa.${ACOMPTE_LABEL[r.depositStatus]}`) : ''}` : ''}
             {r.note ? ' · 💬' : ''}{r.internalNote ? ' · 📝' : ''}
@@ -413,6 +440,7 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
                 </>
               )}
               <button type="button" className="btn-ghost" onClick={() => setDeplacement((d) => !d)}>{t('resa.moveEdit')}</button>
+              {!r.tableId && onPlacer && <button type="button" className="btn-outline" onClick={onPlacer}>{t('resa.placeOnPlan')}</button>}
             </div>
           )}
           {finie && r.arrival && (
@@ -453,7 +481,7 @@ function LigneReservation({ r, tables, ouverte, onToggle, token, toast, restoId,
                   <select value={r.tableId || ''} disabled={!!enCours}
                     onChange={(e) => action('table', () => champ({ tableId: e.target.value || null, notifier: false }))}>
                     <option value="">{t('resa.automatic')}</option>
-                    {tables.filter((tb) => tb.active).map((tb) => <option key={tb.id} value={tb.id}>{tb.name} ({t('resa.seatsShort', { n: tb.seats })}{tb.zone ? `, ${tb.zone}` : ''})</option>)}
+                    {tables.filter((tb) => tb.active).map((tb) => <option key={tb.id} value={tb.id}>{tb.number != null ? `${tb.number} · ` : ''}{tb.name} ({t('resa.seatsShort', { n: tb.seats })}, {areaLabel(t, tb.area)})</option>)}
                   </select>
                 </div>
               </div>
@@ -756,35 +784,24 @@ function Reglages({ token, toast, restaurant, restoId, loadDashboard, tables }) 
 }
 
 // ------------------------------------------------------------------------------------------------
-// PLAN DE SALLE — les tables, leur zone (type) et leur acompte propre.
+// PLAN DE SALLE — le plan interactif (FloorPlan : dessin, occupation), puis la liste compacte des
+// tables pour corriger vite un numéro, un nom, des places ou un acompte sans ouvrir chaque fiche.
 // ------------------------------------------------------------------------------------------------
 function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
   const { t } = useLanguage();
-  const [nom, setNom] = useState('');
-  const [places, setPlaces] = useState(2);
-  const [zone, setZone] = useState('');
-  const [ajout, setAjout] = useState(false);
   const [enCours, setEnCours] = useState(null);
   const acompteActif = !!restaurant?.reservationDepositEnabled;
-  const zones = useMemo(() => [...new Set((tables || []).map((tb) => tb.zone).filter(Boolean))], [tables]);
 
-  async function ajouterTable(e) {
-    e.preventDefault();
-    if (!nom.trim()) { toast(t('resa.toastTableName')); return; }
-    setAjout(true);
-    try {
-      const t = await api(`/restaurants/${restoId}/tables`, { method: 'POST', token, body: { name: nom.trim(), seats: Number(places), zone: zone.trim() } });
-      setTables((l) => [...(l || []), t]);
-      setNom(''); setPlaces(2);
-      toast(t('resa.toastTableAdded'));
-    } catch (err) { toast(err.message); } finally { setAjout(false); }
-  }
   async function modifier(id, champs) {
     setEnCours(id);
     try {
-      const t = await api(`/restaurants/${restoId}/tables/${id}`, { method: 'PATCH', token, body: champs });
-      setTables((l) => l.map((x) => (x.id === id ? t : x)));
-    } catch (err) { toast(err.message); } finally { setEnCours(null); }
+      const maj = await api(`/restaurants/${restoId}/tables/${id}`, { method: 'PATCH', token, body: champs });
+      setTables((l) => l.map((x) => (x.id === id ? maj : x)));
+    } catch (err) {
+      toast(err.message);
+      // Valeur refusée (numéro déjà pris…) : on remet ce que le serveur connaît.
+      api(`/restaurants/${restoId}/tables`, { token }).then(setTables).catch(() => {});
+    } finally { setEnCours(null); }
   }
   async function supprimer(id) {
     setEnCours(id);
@@ -804,91 +821,94 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
   const actives = (tables || []).filter((tb) => tb.active);
   const totalPlaces = actives.reduce((a, tb) => a + Number(tb.seats || 0), 0);
   const plusGrande = actives.reduce((m, tb) => Math.max(m, Number(tb.seats || 0)), 0);
+  const triees = (tables || []).slice().sort((a, b) => (a.number ?? 9999) - (b.number ?? 9999) || a.sortOrder - b.sortOrder);
+  const terrasse = actives.filter((tb) => tb.area === 'outside').length;
 
   return (
-    <div className="card">
-      <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.yourTables')}</h3>
-      <p className="small" style={{ margin: '0 0 12px' }}>
-        {t('resa.zoneIntro1')} <b>zone</b>
-        {' '}{t('resa.zoneIntro2')}
-      </p>
-      {tables === null && <p className="small">{t('resa.loading')}</p>}
-      {tables !== null && tables.length === 0 && (
-        <p className="small" style={{ margin: '0 0 12px', padding: '9px 11px', background: 'var(--cream-dim)', borderRadius: 9 }}>
-          {t('resa.noTablesWarn1')} <b>{t('resa.noTablesWarn2')}</b>.
-        </p>
-      )}
-      {tables !== null && tables.length > 0 && (
-        <>
-          <div className="service-table-wrap">
-            <table className="service-table plan-table">
-              <thead>
-                <tr><th>{t('resa.table')}</th><th>{t('resa.zone')}</th><th className="col-actif">{t('resa.seats')}</th>{acompteActif && <th className="col-actif">{t('resa.deposit')}</th>}<th className="col-actif">{t('resa.open')}</th><th className="col-actif"> </th></tr>
-              </thead>
-              <tbody>
-                {tables.map((tb) => (
-                  <tr key={tb.id} className={tb.active ? '' : 'service-off'}>
-                    <td>
-                      <input value={tb.name} disabled={enCours === tb.id} style={{ padding: '5px 8px', fontSize: 13 }}
-                        onChange={(e) => local(tb.id, { name: e.target.value })}
-                        onBlur={(e) => e.target.value.trim() !== '' && modifier(tb.id, { name: e.target.value.trim() })} />
-                    </td>
-                    <td>
-                      <input value={tb.zone || ''} list="resa-zones" placeholder={t('resa.phZone')} disabled={enCours === tb.id} style={{ maxWidth: 120, padding: '5px 8px', fontSize: 13 }}
-                        onChange={(e) => local(tb.id, { zone: e.target.value })}
-                        onBlur={(e) => modifier(tb.id, { zone: e.target.value.trim() })} />
-                    </td>
-                    <td className="col-actif">
-                      <input type="number" min="1" max="30" value={tb.seats} disabled={enCours === tb.id} style={{ width: 62, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
-                        onChange={(e) => local(tb.id, { seats: e.target.value })}
-                        onBlur={(e) => Number(e.target.value) >= 1 && modifier(tb.id, { seats: Number(e.target.value) })} />
-                    </td>
-                    {acompteActif && (
-                      <td className="col-actif">
-                        <input type="number" min="0" max="500" step="0.5" value={tb.depositAmount ?? ''} placeholder={t('resa.phRule')} disabled={enCours === tb.id}
-                          title={t('resa.titleDepositCell')}
-                          style={{ width: 72, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
-                          onChange={(e) => local(tb.id, { depositAmount: e.target.value === '' ? null : e.target.value })}
-                          onBlur={(e) => modifier(tb.id, { depositAmount: e.target.value === '' ? null : Number(e.target.value) })} />
-                      </td>
-                    )}
-                    <td className="col-actif">
-                      <label className="service-toggle">
-                        <input type="checkbox" checked={tb.active} disabled={enCours === tb.id} onChange={(e) => modifier(tb.id, { active: e.target.checked })} />
-                        <span className="sr-only">{t('resa.tableOpenSr', { name: tb.name })}</span>
-                      </label>
-                    </td>
-                    <td className="col-actif">
-                      <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} disabled={enCours === tb.id} onClick={() => supprimer(tb.id)}>🗑️</button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <datalist id="resa-zones">{zones.map((z) => <option key={z} value={z} />)}</datalist>
-          <p className="small" style={{ margin: '10px 0 0' }}>
-            {t('resa.tablesSummary', { n: actives.length, seats: totalPlaces, max: plusGrande || 0 })}
-            {zones.length > 0 && t('resa.zonesList', { zones: zones.join(', ') })}
+    <>
+      <div className="card">
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.yourTables')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{t('resa.planIntro')}</p>
+        <FloorPlan restoId={restoId} token={token} toast={toast} tables={tables} setTables={setTables} restaurant={restaurant} />
+      </div>
+
+      <div className="card">
+        <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('resa.tablesList')}</h3>
+        {tables === null && <p className="small">{t('resa.loading')}</p>}
+        {tables !== null && tables.length === 0 && (
+          <p className="small" style={{ margin: 0, padding: '9px 11px', background: 'var(--cream-dim)', borderRadius: 9 }}>
+            {t('resa.noTablesWarn1')} <b>{t('resa.noTablesWarn2')}</b>.
           </p>
-        </>
-      )}
-      <form onSubmit={ajouterTable} className="row" style={{ gap: 8, marginTop: 14, alignItems: 'flex-end', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 150px' }}>
-          <label htmlFor="table-nom">{t('resa.tableName')}</label>
-          <input id="table-nom" value={nom} placeholder={t('resa.phTableName')} onChange={(e) => setNom(e.target.value)} />
-        </div>
-        <div style={{ flex: '1 1 120px' }}>
-          <label htmlFor="table-zone">{t('resa.zone')}</label>
-          <input id="table-zone" value={zone} list="resa-zones" placeholder={t('resa.phZone')} onChange={(e) => setZone(e.target.value)} />
-        </div>
-        <div style={{ flex: '0 0 96px' }}>
-          <label htmlFor="table-places">{t('resa.seats')}</label>
-          <input id="table-places" type="number" min="1" max="30" value={places} onChange={(e) => setPlaces(e.target.value)} />
-        </div>
-        <button className="btn-teal" disabled={ajout}>{ajout ? '…' : t('resa.add')}</button>
-      </form>
-    </div>
+        )}
+        {tables !== null && tables.length > 0 && (
+          <>
+            <div className="service-table-wrap">
+              <table className="service-table plan-table">
+                <thead>
+                  <tr>
+                    <th className="col-actif">{t('resa.colNumber')}</th>
+                    <th>{t('resa.table')}</th>
+                    <th>{t('resa.zone')}</th>
+                    <th className="col-actif">{t('resa.seats')}</th>
+                    {acompteActif && <th className="col-actif">{t('resa.deposit')}</th>}
+                    <th className="col-actif">{t('resa.open')}</th>
+                    <th className="col-actif"> </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {triees.map((tb) => (
+                    <tr key={tb.id} className={tb.active ? '' : 'service-off'}>
+                      <td className="col-actif">
+                        <input type="number" min="1" max="999" value={tb.number ?? ''} disabled={enCours === tb.id} aria-label={t('resa.colNumber')}
+                          style={{ width: 58, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
+                          onChange={(e) => local(tb.id, { number: e.target.value === '' ? null : Number(e.target.value) })}
+                          onBlur={(e) => modifier(tb.id, { number: e.target.value === '' ? null : Number(e.target.value) })} />
+                      </td>
+                      <td>
+                        <input value={tb.name} disabled={enCours === tb.id} style={{ padding: '5px 8px', fontSize: 13 }} aria-label={t('resa.tableName')}
+                          onChange={(e) => local(tb.id, { name: e.target.value })}
+                          onBlur={(e) => e.target.value.trim() !== '' && modifier(tb.id, { name: e.target.value.trim() })} />
+                      </td>
+                      <td>
+                        <span className="pill" title={tb.zone || undefined}>{AREA_ICONS[tb.area]} {areaLabel(t, tb.area)}</span>
+                        {tb.joinable && <span className="small" title={t('resa.joinableTitle')}> 🔗</span>}
+                      </td>
+                      <td className="col-actif">
+                        <input type="number" min="1" max="30" value={tb.seats} disabled={enCours === tb.id} aria-label={t('resa.seats')} style={{ width: 62, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
+                          onChange={(e) => local(tb.id, { seats: e.target.value })}
+                          onBlur={(e) => Number(e.target.value) >= 1 && modifier(tb.id, { seats: Number(e.target.value) })} />
+                      </td>
+                      {acompteActif && (
+                        <td className="col-actif">
+                          <input type="number" min="0" max="500" step="0.5" value={tb.depositAmount ?? ''} placeholder={t('resa.phRule')} disabled={enCours === tb.id}
+                            title={t('resa.titleDepositCell')} aria-label={t('resa.deposit')}
+                            style={{ width: 72, padding: '5px 6px', fontSize: 13, textAlign: 'center' }}
+                            onChange={(e) => local(tb.id, { depositAmount: e.target.value === '' ? null : e.target.value })}
+                            onBlur={(e) => modifier(tb.id, { depositAmount: e.target.value === '' ? null : Number(e.target.value) })} />
+                        </td>
+                      )}
+                      <td className="col-actif">
+                        <label className="service-toggle">
+                          <input type="checkbox" checked={tb.active} disabled={enCours === tb.id} onChange={(e) => modifier(tb.id, { active: e.target.checked })} />
+                          <span className="sr-only">{t('resa.tableOpenSr', { name: tb.name })}</span>
+                        </label>
+                      </td>
+                      <td className="col-actif">
+                        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} disabled={enCours === tb.id} onClick={() => supprimer(tb.id)} aria-label={t('resa.deleteTableSr', { name: tb.name })}>🗑️</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="small" style={{ margin: '10px 0 0' }}>
+              {t('resa.tablesSummary', { n: actives.length, seats: totalPlaces, max: plusGrande || 0 })}
+              {terrasse > 0 && ` · ${t('resa.outsideCount', { n: terrasse })}`}
+            </p>
+          </>
+        )}
+      </div>
+    </>
   );
 }
 

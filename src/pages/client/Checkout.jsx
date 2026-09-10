@@ -109,6 +109,9 @@ export default function Checkout() {
   const [partySize, setPartySize] = useState(2);
   const [reservationName, setReservationName] = useState(user.name || '');
   const [reservationNote, setReservationNote] = useState('');
+  // Où le client préfère être installé : '' (peu importe), 'inside' ou 'outside'. Une préférence, pas
+  // une condition — le serveur replie sur une autre zone et le dit dans la confirmation.
+  const [zonePreference, setZonePreference] = useState('');
   // Disponibilité réelle du restaurant pour la date et le groupe choisis (créneaux libres, règles,
   // acompte) — voir GET /restaurants/:id/availability. Remplace la grille fixe 9h–22h pour la table.
   const [dispo, setDispo] = useState(null);
@@ -187,7 +190,7 @@ export default function Checkout() {
     if (fulfillmentType !== 'dine_in' || !restaurantId || !scheduleDate || !partySize) { setDispo(null); return undefined; }
     let annule = false;
     setDispoChargement(true);
-    api(`/restaurants/${restaurantId}/availability?date=${scheduleDate}&partySize=${Number(partySize)}`)
+    api(`/restaurants/${restaurantId}/availability?date=${scheduleDate}&partySize=${Number(partySize)}${zonePreference ? `&zone=${zonePreference}` : ''}`)
       .then((d) => {
         if (annule) return;
         setDispo(d);
@@ -197,7 +200,7 @@ export default function Checkout() {
       .finally(() => { if (!annule) setDispoChargement(false); });
     return () => { annule = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, restaurantId, scheduleDate, partySize]);
+  }, [fulfillmentType, restaurantId, scheduleDate, partySize, zonePreference]);
 
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
@@ -276,7 +279,7 @@ export default function Checkout() {
             addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
             deliveryInstructions, deliveryNote: deliveryNote.trim()
           } : {}),
-          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim() } : {}),
+          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim(), zonePreference: zonePreference || null } : {}),
           useBalance
         }
       });
@@ -520,6 +523,21 @@ export default function Checkout() {
                     <input id="checkout-f-8" value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
                   </div>
                 </div>
+                {/* Intérieur ou terrasse : « Terrasse » n'apparaît que si la salle en a une. */}
+                <div className="field">
+                  <span className="small" style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>{t('checkout.zoneQuestion')}</span>
+                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }} role="group" aria-label={t('checkout.zoneQuestion')}>
+                    {[['', 'zoneAny'], ['inside', 'zoneInside'], ...((restaurant.hasOutsideTables || dispo?.zones?.outside) ? [['outside', 'zoneOutside']] : [])].map(([valeur, cle]) => (
+                      <button type="button" key={cle} className={zonePreference === valeur ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 12px', fontSize: 13 }}
+                        aria-pressed={zonePreference === valeur} onClick={() => setZonePreference(valeur)}>
+                        {valeur === 'inside' ? '🏠 ' : valeur === 'outside' ? '🌤️ ' : ''}{t(`checkout.${cle}`)}
+                      </button>
+                    ))}
+                  </div>
+                  {zonePreference && creneauChoisi && creneauChoisi.zoneDisponible === false && (
+                    <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.zoneNotAtThisTime', { zone: t(zonePreference === 'outside' ? 'checkout.zoneOutside' : 'checkout.zoneInside') })}</p>
+                  )}
+                </div>
                 <div className="field">
                   <label htmlFor="checkout-f-9">{t('checkout.reservationNote')}</label>
                   <input id="checkout-f-9" value={reservationNote} maxLength={500} onChange={(e) => setReservationNote(e.target.value)} placeholder={t('checkout.reservationNotePlaceholder')} />
@@ -647,6 +665,14 @@ export default function Checkout() {
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.tableAtColon')}</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.reservedNameOfColon')}</b> {pendingOrder.reservationName}</p>
                 <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.partySizeColon')}</b> {pendingOrder.partySize}</p>
+                {(pendingOrder.tableNumber != null || pendingOrder.tableName) && (
+                  <p className="small" style={{ margin: '0 0 4px' }}>
+                    <b>{t('checkout.tableColon')}</b>{' '}
+                    {pendingOrder.tableNumber != null ? t('checkout.tableNumber', { n: pendingOrder.tableNumber }) : pendingOrder.tableName}
+                    {pendingOrder.tableZone ? ` · ${t(`checkout.zoneLabel_${pendingOrder.tableZone}`)}` : ''}
+                    {pendingOrder.zoneRespected === false && <span style={{ color: 'var(--ink-soft)' }}> — {t('checkout.zoneFallback')}</span>}
+                  </p>
+                )}
                 {pendingOrder.scheduledFor && (
                   <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
                 )}
