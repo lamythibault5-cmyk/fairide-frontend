@@ -73,6 +73,7 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
           )}
           <div className="printer-compat small printer-app-guide">
             <b>📱 {t('ordersResto.appStepsTitle')}</b>
+            <p style={{ margin: '4px 0 0' }}>{t('ordersResto.appNativeSoon')}</p>
             <p style={{ margin: '4px 0 6px' }}>{appareil.installee ? `✅ ${t('ordersResto.appInstalled')}` : t(`ordersResto.appInstallHint_${appareil.type}`)}</p>
             <ol style={{ margin: '0 0 10px 18px', padding: 0 }}>{etapes.map((e, i) => <li key={i} style={{ margin: '2px 0' }}>{e}</li>)}</ol>
           </div>
