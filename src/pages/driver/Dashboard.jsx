@@ -71,6 +71,8 @@ export default function DriverDashboard() {
   // Véhicule déclaré (dossier coursier) : explique pourquoi certaines courses n'apparaissent pas (vélo) ou
   // pourquoi les longues distances sont en tête (motorisé).
   const [vehicule, setVehicule] = useState(null);
+  const [sac, setSac] = useState(null);
+  useEffect(() => { api('/couriers/me', { token }).then((d) => setSac(d.courier?.bag || null)).catch(() => {}); }, [token]);
   useEffect(() => { api('/couriers/me', { token }).then((d) => setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm })).catch(() => {}); }, [token]);
 
   async function load() {
@@ -294,6 +296,12 @@ export default function DriverDashboard() {
         <div className="empty">{t('dashDriver.pausedText')}</div>
       ) : (
         <>
+          {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
+            <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
+              <b>🟢 {t('dashDriver.bagTitle')}</b>
+              <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
+            </div>
+          )}
           <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
           {vehicule?.type && (
             <p className="small" style={{ margin: '-6px 0 10px' }}>

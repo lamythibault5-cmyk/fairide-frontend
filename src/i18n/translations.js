@@ -1025,7 +1025,22 @@ export const translations = {
       approveBody: 'Le dossier passe en « validé » : le livreur peut travailler avec ce statut. Motif facultatif, noté au journal.',
       rejectBody: 'Le livreur recevra le motif par e-mail et devra corriger son dossier.',
       suspendBody: 'Le livreur ne pourra plus prendre de course tant que le dossier est suspendu.',
-      acceptOrdinaryBody: 'Le livreur étudiant continue au-delà du plafond, avec cotisations ordinaires.'
+      acceptOrdinaryBody: 'Le livreur étudiant continue au-delà du plafond, avec cotisations ordinaires.',
+      bag: 'Sac de livraison',
+      bagDeposit_due: 'caution à verser',
+      bagDeposit_paid: 'sac remis, caution versée',
+      bagDeposit_returned: 'sac rendu, à rembourser',
+      bagDeposit_refunded: 'caution remboursée',
+      bagDeposit_kept: 'caution conservée',
+      bagDeposit_none: 'sac personnel',
+      bagMarkPaid: 'Sac remis, caution reçue',
+      bagMarkPaidBody: 'Confirme que le sac Fairide a été remis au livreur et que la caution de {amount} € a été reçue.',
+      bagMarkReturned: 'Sac rendu en bon état',
+      bagMarkReturnedBody: 'Le livreur a rendu le sac propre et en bon état : la caution devra lui être remboursée.',
+      bagMarkKept: 'Sac non rendu / abîmé',
+      bagMarkKeptBody: 'La caution de {amount} € sera conservée. Le livreur en sera informé dans son dossier.',
+      bagMarkRefunded: 'Caution remboursée',
+      bagMarkRefundedBody: 'Confirme que les {amount} € ont été remboursés au livreur.'
     },
     courierOnboarding: {
       title: 'Mon dossier livreur',
@@ -1238,7 +1253,15 @@ export const translations = {
       identityReceived: 'Pièce d\'identité reçue ({n} fichier(s)) : rien à refaire.',
       identityReceivedHelp: 'Fairide vérifie ta pièce d\'identité en validant ton dossier. Tu peux passer à l\'étape suivante.',
       identityAddFile: 'Ajouter un fichier',
-      identityOtherWay: 'Vérifier autrement (instantané)'
+      identityOtherWay: 'Vérifier autrement (instantané)',
+      fBag: 'Sac de livraison',
+      fBagHelp: 'Ton propre sac, ou un sac Fairide contre une caution de {amount} € remboursée quand tu le rends en bon état.',
+      bagDeposit_due: 'Sac Fairide demandé : caution de {amount} € à verser à la remise du sac.',
+      bagDeposit_paid: 'Sac Fairide remis, caution de {amount} € versée. Elle te sera remboursée quand tu rendras le sac en bon état.',
+      bagDeposit_returned: 'Sac rendu en bon état : la caution de {amount} € est en cours de remboursement.',
+      bagDeposit_refunded: 'Caution de {amount} € remboursée. Merci !',
+      bagDeposit_kept: 'Sac non rendu ou abîmé : la caution de {amount} € a été conservée.',
+      bagDeposit_none: 'Sac personnel.'
     },
     peppol: {
       title: 'Facturation électronique Peppol',
@@ -4208,7 +4231,14 @@ export const translations = {
       shortDistance: '{km} km',
       bikeRule: '🚲 Tu roules à vélo : on te propose les courses jusqu\'à {km} km. Change de véhicule dans ton dossier livreur si besoin.',
       motorRule: '🛵 Motorisé : les longues distances (plus de {km} km) sont en tête de liste, les courtes restent disponibles.',
-      rateRule: 'Ta part : {base} € de forfait jusqu\'à {baseKm} km, puis {rate} €/km.'
+      rateRule: 'Ta part : {base} € de forfait jusqu\'à {baseKm} km, puis {rate} €/km.',
+      bagTitle: 'Ton sac Fairide',
+      bag_due: 'Il te sera remis contre une caution de {amount} €, remboursée quand tu quittes Fairide et rends le sac en bon état. Fairide te contacte pour la remise.',
+      bag_paid: 'Sac remis, caution de {amount} € versée. Prends-en soin : elle t\'est remboursée quand tu le rends en bon état.',
+      bag_returned: 'Sac rendu en bon état : le remboursement de la caution de {amount} € est en cours.',
+      bag_refunded: 'Caution de {amount} € remboursée.',
+      bag_kept: 'Sac non rendu ou abîmé : la caution de {amount} € a été conservée.',
+      bag_none: 'Sac personnel.'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -5403,7 +5433,14 @@ export const translations = {
       addSecondEmail: 'Ajouter un 2e e-mail (facultatif)',
       secondPhone: '2e numéro de téléphone',
       secondEmail: '2e adresse e-mail',
-      removeSecond: 'Retirer'
+      removeSecond: 'Retirer',
+      bagTitle: 'Ton sac de livraison',
+      bagHelp: 'Un sac isotherme est indispensable pour livrer. Tu as le tien, ou tu peux demander un sac Fairide.',
+      bag_own: 'J\'ai mon propre sac',
+      bag_fairide: 'Je demande un sac Fairide',
+      bagOwnHelp: 'Propre et isotherme, c\'est tout ce qu\'il faut. Rien à faire de plus.',
+      bagFairideHelp: 'Caution de {amount} €, remise à la réception du sac. Elle t\'est remboursée intégralement quand tu quittes Fairide et rends le sac en bon état.',
+      errBag: 'Choisis une option pour le sac de livraison.'
     }
   },
   en: {
@@ -6428,7 +6465,22 @@ export const translations = {
       approveBody: 'The file becomes "validated": the courier can work under this status. Optional reason, logged.',
       rejectBody: 'The courier will receive the reason by e-mail and must correct the file.',
       suspendBody: 'The courier will not be able to take deliveries while the file is suspended.',
-      acceptOrdinaryBody: 'The student courier continues beyond the cap, with ordinary contributions.'
+      acceptOrdinaryBody: 'The student courier continues beyond the cap, with ordinary contributions.',
+      bag: 'Delivery bag',
+      bagDeposit_due: 'deposit to pay',
+      bagDeposit_paid: 'bag handed over, deposit paid',
+      bagDeposit_returned: 'bag returned, to refund',
+      bagDeposit_refunded: 'deposit refunded',
+      bagDeposit_kept: 'deposit kept',
+      bagDeposit_none: 'own bag',
+      bagMarkPaid: 'Bag handed over, deposit received',
+      bagMarkPaidBody: 'Confirm the Fairide bag was handed to the courier and the €{amount} deposit was received.',
+      bagMarkReturned: 'Bag returned in good condition',
+      bagMarkReturnedBody: 'The courier returned the bag clean and in good condition: the deposit must be refunded.',
+      bagMarkKept: 'Bag not returned / damaged',
+      bagMarkKeptBody: 'The €{amount} deposit will be kept. The courier will see it in their file.',
+      bagMarkRefunded: 'Deposit refunded',
+      bagMarkRefundedBody: 'Confirm the €{amount} were refunded to the courier.'
     },
     courierOnboarding: {
       title: 'My courier file',
@@ -6641,7 +6693,15 @@ export const translations = {
       identityReceived: 'Identity document received ({n} file(s)): nothing to redo.',
       identityReceivedHelp: 'Fairide checks your identity document when validating your file. You can move on to the next step.',
       identityAddFile: 'Add a file',
-      identityOtherWay: 'Verify another way (instant)'
+      identityOtherWay: 'Verify another way (instant)',
+      fBag: 'Delivery bag',
+      fBagHelp: 'Your own bag, or a Fairide bag against a €{amount} deposit refunded when you return it in good condition.',
+      bagDeposit_due: 'Fairide bag requested: €{amount} deposit to pay when the bag is handed over.',
+      bagDeposit_paid: 'Fairide bag handed over, €{amount} deposit paid. It will be refunded when you return the bag in good condition.',
+      bagDeposit_returned: 'Bag returned in good condition: the €{amount} deposit is being refunded.',
+      bagDeposit_refunded: '€{amount} deposit refunded. Thank you!',
+      bagDeposit_kept: 'Bag not returned or damaged: the €{amount} deposit was kept.',
+      bagDeposit_none: 'Own bag.'
     },
     peppol: {
       title: 'Peppol e-invoicing',
@@ -9611,7 +9671,14 @@ export const translations = {
       shortDistance: '{km} km',
       bikeRule: '🚲 You ride a bike: rides up to {km} km are offered to you. Change your vehicle in your courier file if needed.',
       motorRule: '🛵 Motorised: long distances (over {km} km) come first, short ones stay available.',
-      rateRule: 'Your share: €{base} flat up to {baseKm} km, then €{rate}/km.'
+      rateRule: 'Your share: €{base} flat up to {baseKm} km, then €{rate}/km.',
+      bagTitle: 'Your Fairide bag',
+      bag_due: 'It will be handed over against a €{amount} deposit, refunded when you leave Fairide and return the bag in good condition. Fairide will contact you for the handover.',
+      bag_paid: 'Bag handed over, €{amount} deposit paid. Take care of it: it is refunded when you return it in good condition.',
+      bag_returned: 'Bag returned in good condition: the €{amount} deposit refund is on its way.',
+      bag_refunded: '€{amount} deposit refunded.',
+      bag_kept: 'Bag not returned or damaged: the €{amount} deposit was kept.',
+      bag_none: 'Own bag.'
     },
     dashResto: {
       today: 'Today',
@@ -10806,7 +10873,14 @@ export const translations = {
       addSecondEmail: 'Add a second e-mail (optional)',
       secondPhone: 'Second phone number',
       secondEmail: 'Second e-mail address',
-      removeSecond: 'Remove'
+      removeSecond: 'Remove',
+      bagTitle: 'Your delivery bag',
+      bagHelp: 'An insulated bag is essential for deliveries. You have your own, or you can ask for a Fairide bag.',
+      bag_own: 'I have my own bag',
+      bag_fairide: 'I would like a Fairide bag',
+      bagOwnHelp: 'Clean and insulated, that is all it takes. Nothing more to do.',
+      bagFairideHelp: 'Deposit of €{amount}, paid when you receive the bag. It is fully refunded when you leave Fairide and return the bag in good condition.',
+      errBag: 'Choose an option for the delivery bag.'
     }
   },
   nl: {
@@ -11831,7 +11905,22 @@ export const translations = {
       approveBody: 'Het dossier wordt "gevalideerd": de koerier kan met deze status werken. Optionele reden, gelogd.',
       rejectBody: 'De koerier ontvangt de reden per e-mail en moet het dossier corrigeren.',
       suspendBody: 'De koerier kan geen leveringen aannemen zolang het dossier geschorst is.',
-      acceptOrdinaryBody: 'De studentenkoerier gaat verder boven het plafond, met gewone bijdragen.'
+      acceptOrdinaryBody: 'De studentenkoerier gaat verder boven het plafond, met gewone bijdragen.',
+      bag: 'Bezorgtas',
+      bagDeposit_due: 'waarborg te betalen',
+      bagDeposit_paid: 'tas overhandigd, waarborg betaald',
+      bagDeposit_returned: 'tas terug, terug te betalen',
+      bagDeposit_refunded: 'waarborg terugbetaald',
+      bagDeposit_kept: 'waarborg ingehouden',
+      bagDeposit_none: 'eigen tas',
+      bagMarkPaid: 'Tas overhandigd, waarborg ontvangen',
+      bagMarkPaidBody: 'Bevestig dat de Fairide-tas aan de koerier werd overhandigd en de waarborg van € {amount} ontvangen is.',
+      bagMarkReturned: 'Tas in goede staat terug',
+      bagMarkReturnedBody: 'De koerier bracht de tas proper en in goede staat terug: de waarborg moet terugbetaald worden.',
+      bagMarkKept: 'Tas niet terug / beschadigd',
+      bagMarkKeptBody: 'De waarborg van € {amount} wordt ingehouden. De koerier ziet dit in zijn dossier.',
+      bagMarkRefunded: 'Waarborg terugbetaald',
+      bagMarkRefundedBody: 'Bevestig dat de € {amount} aan de koerier werden terugbetaald.'
     },
     courierOnboarding: {
       title: 'Mijn koeriersdossier',
@@ -12044,7 +12133,15 @@ export const translations = {
       identityReceived: 'Identiteitsbewijs ontvangen ({n} bestand(en)): niets opnieuw te doen.',
       identityReceivedHelp: 'Fairide controleert je identiteitsbewijs bij de validatie van je dossier. Je kunt naar de volgende stap.',
       identityAddFile: 'Bestand toevoegen',
-      identityOtherWay: 'Anders verifiëren (onmiddellijk)'
+      identityOtherWay: 'Anders verifiëren (onmiddellijk)',
+      fBag: 'Bezorgtas',
+      fBagHelp: 'Je eigen tas, of een Fairide-tas tegen een waarborg van € {amount}, terugbetaald als je ze in goede staat terugbrengt.',
+      bagDeposit_due: 'Fairide-tas gevraagd: waarborg van € {amount} te betalen bij overhandiging.',
+      bagDeposit_paid: 'Fairide-tas overhandigd, waarborg van € {amount} betaald. Je krijgt hem terug als je de tas in goede staat terugbrengt.',
+      bagDeposit_returned: 'Tas in goede staat teruggebracht: de waarborg van € {amount} wordt terugbetaald.',
+      bagDeposit_refunded: 'Waarborg van € {amount} terugbetaald. Bedankt!',
+      bagDeposit_kept: 'Tas niet teruggebracht of beschadigd: de waarborg van € {amount} werd ingehouden.',
+      bagDeposit_none: 'Eigen tas.'
     },
     peppol: {
       title: 'Elektronische facturatie via Peppol',
@@ -15014,7 +15111,14 @@ export const translations = {
       shortDistance: '{km} km',
       bikeRule: '🚲 Je rijdt met de fiets: ritten tot {km} km worden je aangeboden. Wijzig je voertuig in je koeriersdossier indien nodig.',
       motorRule: '🛵 Gemotoriseerd: lange afstanden (meer dan {km} km) staan bovenaan, korte blijven beschikbaar.',
-      rateRule: 'Jouw aandeel: € {base} forfait tot {baseKm} km, daarna € {rate}/km.'
+      rateRule: 'Jouw aandeel: € {base} forfait tot {baseKm} km, daarna € {rate}/km.',
+      bagTitle: 'Je Fairide-tas',
+      bag_due: 'Je krijgt ze tegen een waarborg van € {amount}, terugbetaald wanneer je Fairide verlaat en de tas in goede staat terugbrengt. Fairide neemt contact op voor de overhandiging.',
+      bag_paid: 'Tas overhandigd, waarborg van € {amount} betaald. Draag er zorg voor: je krijgt hem terug als je ze in goede staat terugbrengt.',
+      bag_returned: 'Tas in goede staat teruggebracht: de terugbetaling van de waarborg van € {amount} is bezig.',
+      bag_refunded: 'Waarborg van € {amount} terugbetaald.',
+      bag_kept: 'Tas niet teruggebracht of beschadigd: de waarborg van € {amount} werd ingehouden.',
+      bag_none: 'Eigen tas.'
     },
     dashResto: {
       today: 'Vandaag',
@@ -16209,7 +16313,14 @@ export const translations = {
       addSecondEmail: 'Tweede e-mail toevoegen (optioneel)',
       secondPhone: 'Tweede telefoonnummer',
       secondEmail: 'Tweede e-mailadres',
-      removeSecond: 'Verwijderen'
+      removeSecond: 'Verwijderen',
+      bagTitle: 'Je bezorgtas',
+      bagHelp: 'Een isothermische tas is onmisbaar om te leveren. Je hebt er zelf een, of je kunt een Fairide-tas vragen.',
+      bag_own: 'Ik heb mijn eigen tas',
+      bag_fairide: 'Ik vraag een Fairide-tas',
+      bagOwnHelp: 'Proper en isothermisch, meer is niet nodig. Niets extra te doen.',
+      bagFairideHelp: 'Waarborg van € {amount}, te betalen bij ontvangst van de tas. Je krijgt hem volledig terug wanneer je Fairide verlaat en de tas in goede staat terugbrengt.',
+      errBag: 'Kies een optie voor de bezorgtas.'
     }
   }
 };

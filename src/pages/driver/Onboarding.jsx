@@ -229,7 +229,7 @@ function Champ({ label, children, help }) {
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const c = d.courier; const legal = d.legal;
-  const [f, setF] = useState({ birthDate: c.birthDate, nationalNumber: '', iban: c.iban, zone: c.zone, vehicleType: c.vehicleType, licenceNumber: c.licenceNumber, licencePlate: c.licencePlate,
+  const [f, setF] = useState({ birthDate: c.birthDate, nationalNumber: '', iban: c.iban, zone: c.zone, vehicleType: c.vehicleType, licenceNumber: c.licenceNumber, licencePlate: c.licencePlate, bagOption: c.bag?.option || '',
     schoolName: c.student.school, academicYear: c.student.academicYear, fullTimeSchooling: c.student.fullTimeSchooling, studentHoursRemaining: c.student.hoursRemainingDeclared ?? '',
     p2pNonProfessional: c.p2p.nonProfessionalDeclared, p2pWithholdingConsent: c.p2p.withholdingConsent, p2pTaxConsent: c.p2p.taxDataConsent,
     companyNumber: c.independent.companyNumber, vatStatus: c.independent.vatStatus, vatNumber: c.independent.vatNumber, legalName: c.independent.legalName, seatAddress: c.independent.seatAddress,
@@ -242,6 +242,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   async function enregistrer() {
     const body = { ...f };
     if (!body.nationalNumber) delete body.nationalNumber;
+    if (!body.bagOption) delete body.bagOption;
     if (body.studentHoursRemaining === '') delete body.studentHoursRemaining;
     for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
     const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }), t('courierOnboarding.toastSaved'));
@@ -279,6 +280,13 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
           <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
           <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
         </>)}
+        <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
+          <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
+            <option value="">—</option>
+            <option value="own">{t('auth.bag_own')}</option>
+            <option value="fairide">{t('auth.bag_fairide')}</option>
+          </select>
+        </Champ>
       </div>
 
       {c.statusType === 'student' && (<>

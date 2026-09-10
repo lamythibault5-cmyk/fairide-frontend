@@ -86,6 +86,7 @@ export default function Auth() {
   // Livreur : statut légal et véhicule choisis dès l'inscription (voir routes/auth.js validerLivreur).
   const [courierStatus, setCourierStatus] = useState('');
   const [vehicleType, setVehicleType] = useState('');
+  const [bagOption, setBagOption] = useState(''); // 'own' | 'fairide' — sac de livraison
   const [courierOptions, setCourierOptions] = useState(null);
   useEffect(() => {
     if (role !== 'driver' || courierOptions) return;
@@ -319,6 +320,7 @@ export default function Auth() {
       if (role === 'driver') {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
+        if (!bagOption) e.bagOption = t('auth.errBag');
         if (courierStatus === 'independent' && !companyNumber.trim()) e.companyNumber = required;
       }
     }
@@ -443,7 +445,7 @@ export default function Auth() {
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {})
     });
     await televerserDocumentsLivreur(data.token);
     toast(t('auth.welcome', { name: data.user.name }));
@@ -516,7 +518,7 @@ export default function Auth() {
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType } : {})
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {})
         });
         if (data.needsVerification) {
           setPendingEmail(data.email);
@@ -808,6 +810,20 @@ export default function Auth() {
                           {['velo', 'velo_electrique'].includes(vehicleType) ? t('auth.vehicleHelpBike', { km: courierOptions?.bikeMaxKm || 4 }) : t('auth.vehicleHelpMotor', { km: courierOptions?.bikeMaxKm || 4 })}
                         </p>
                       )}
+                    </div>
+                    <div className="field">
+                      <label>{t('auth.bagTitle')}</label>
+                      <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.bagHelp')}</p>
+                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup">
+                        {['own', 'fairide'].map((b) => (
+                          <div key={b} role="radio" aria-checked={bagOption === b} tabIndex={0} className={`statut-carte${bagOption === b ? ' active' : ''}`}
+                            onClick={() => setBagOption(b)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBagOption(b); }}>
+                            <b>{b === 'own' ? '🎒 ' : '🟢 '}{t(`auth.bag_${b}`)}</b>
+                            <span className="small">{b === 'own' ? t('auth.bagOwnHelp') : t('auth.bagFairideHelp', { amount: courierOptions?.bagDeposit || 40 })}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {fieldError('bagOption')}
                     </div>
                   </>
                 )}
