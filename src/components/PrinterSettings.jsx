@@ -10,11 +10,24 @@ import { COLUMNS_58MM, COLUMNS_80MM } from '../escposTicket';
 // d'un coup d'œil si elle était encore connectée.
 export const AUTO_PRINT_KEY = 'fairide.autoPrint';
 
+// Tout le monde utilise Fairide dans l'application (installée depuis le navigateur) : le mode d'emploi de
+// l'impression est donc donné pour l'appareil en cours — Android, iPhone/iPad ou ordinateur — et dit si
+// l'on est bien dans l'application installée ou encore dans un onglet du navigateur.
+function appareilCourant() {
+  if (typeof navigator === 'undefined') return { type: 'desktop', installee: false };
+  const ua = navigator.userAgent || '';
+  const type = /iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 'ios' : /Android/i.test(ua) ? 'android' : 'desktop';
+  const installee = (typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  return { type, installee };
+}
+
 export default function PrinterSettings({ btName, onConnect, onDisconnect, onTest, printing, paperColumns, onPaper, autoPrint, onAutoPrint, onNewTicket }) {
   const { t } = useLanguage();
   const [ouvert, setOuvert] = useState(() => !btName);
   const supporte = btPrinter.isSupported();
   const raison = btPrinter.unsupportedReason();
+  const appareil = appareilCourant();
+  const etapes = [1, 2, 3].map((n) => t(`ordersResto.appSteps_${appareil.type}_${n}`));
 
   return (
     <div className="card printer-card">
@@ -58,6 +71,11 @@ export default function PrinterSettings({ btName, onConnect, onDisconnect, onTes
               </div>
             </>
           )}
+          <div className="printer-compat small printer-app-guide">
+            <b>📱 {t('ordersResto.appStepsTitle')}</b>
+            <p style={{ margin: '4px 0 6px' }}>{appareil.installee ? `✅ ${t('ordersResto.appInstalled')}` : t(`ordersResto.appInstallHint_${appareil.type}`)}</p>
+            <ol style={{ margin: '0 0 10px 18px', padding: 0 }}>{etapes.map((e, i) => <li key={i} style={{ margin: '2px 0' }}>{e}</li>)}</ol>
+          </div>
           <div className="printer-compat small">
             <b>{t('ordersResto.printerCompatTitle')}</b>
             <ul>
