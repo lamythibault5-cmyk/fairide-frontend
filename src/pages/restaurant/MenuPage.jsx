@@ -414,6 +414,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // « Démarrer en 1 clic » : ajoute d'un coup la sélection rapide de plats typiques de la cuisine du commerce
+  // (prix indicatifs) ; tout se corrige ensuite dans « Ton menu », plus bas.
+  const platsUnClic = quickTemplateItems(restaurant.cuisine);
+  function demarrerEnUnClic() { applyStarterItems(platsUnClic); }
+
   async function applyStarterItems(items) {
     if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setApplyingStarter(true);
@@ -559,6 +564,16 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       <div className="card" id="menu-methodes">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
+        {!importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
+          <div className="methode methode-un-clic">
+            <div className="methode-tete"><span className="methode-num">🚀</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
+            <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="btn-teal" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
+              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.oneClickChoose')}</button>
+            </div>
+          </div>
+        )}
 
         {!importedItems && !modeAdmin && (
           <div className="methode" id="menu-concierge">
@@ -643,6 +658,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              {platsUnClic.length > 0 && <button className="btn-teal" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>}
               <button className="btn-gold" onClick={allerAuConcierge}>{t('menuPage.quickStartConcierge')}</button>
               <button className="btn-teal" onClick={allerALImportWeb}>{t('menuPage.quickStartFromWeb')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
@@ -669,6 +685,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             <button type="button" className="btn-teal menu-plus" onClick={() => setCreatingSection(true)} title={t('menuPage.newSection')} aria-label={t('menuPage.newSection')}>＋ <span>{t('menuPage.newSectionShort')}</span></button>
           )}
         </div>
+        <p className="small" style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('menuPage.afterCreateHelp')}</p>
         <p className="small" style={{ margin: '0 0 12px' }}>
           {t('menuPage.menuHelp')}
         </p>

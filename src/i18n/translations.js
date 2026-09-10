@@ -3976,7 +3976,13 @@ export const translations = {
       adjustInvalid: 'Indique un pourcentage différent de 0.',
       adjustDone: '{n} prix ajustés de {p}.',
       adjustAlt: 'Tu préfères garder tes prix et offrir une remise affichée sur chaque produit ?',
-      adjustAltLink: 'Voir l\'Avantage Fairide'
+      adjustAltLink: 'Voir l\'Avantage Fairide',
+      oneClickTitle: 'Démarrer en 1 clic',
+      oneClickFastest: 'Le plus rapide',
+      oneClickSub: '{n} plats typiques d\'une cuisine {cuisine}, avec des prix indicatifs, ajoutés d\'un seul clic. Tu corriges ensuite les noms, les prix et les photos plus bas, dans « Ton menu ».',
+      oneClickButton: '🚀 Démarrer en 1 clic ({n} plats)',
+      oneClickChoose: 'Choisir les plats moi-même',
+      afterCreateHelp: 'Une fois ta carte créée (par l\'une des méthodes ci-dessus), c\'est ici que tu la règles : corrige une erreur en cliquant sur un plat, ajoute une section ou un plat avec ＋, supprime ce qui ne sert plus.'
     },
     editResto: {
       title: 'Infos de mon restaurant',
@@ -9420,7 +9426,13 @@ export const translations = {
       adjustInvalid: 'Enter a percentage other than 0.',
       adjustDone: '{n} prices adjusted by {p}.',
       adjustAlt: 'Would you rather keep your prices and offer a discount shown on every product?',
-      adjustAltLink: 'See the Fairide advantage'
+      adjustAltLink: 'See the Fairide advantage',
+      oneClickTitle: 'Start in 1 click',
+      oneClickFastest: 'The fastest',
+      oneClickSub: '{n} typical dishes of a {cuisine} kitchen, with indicative prices, added in a single click. You then correct names, prices and photos below, in “Your menu”.',
+      oneClickButton: '🚀 Start in 1 click ({n} dishes)',
+      oneClickChoose: 'Pick the dishes myself',
+      afterCreateHelp: 'Once your menu is created (with one of the methods above), this is where you fine-tune it: fix a mistake by clicking a dish, add a section or a dish with ＋, remove what you no longer need.'
     },
     editResto: {
       title: 'My restaurant details',
@@ -14864,7 +14876,13 @@ export const translations = {
       adjustInvalid: 'Geef een percentage anders dan 0 op.',
       adjustDone: '{n} prijzen aangepast met {p}.',
       adjustAlt: 'Liever je prijzen houden en een korting tonen op elk product?',
-      adjustAltLink: 'Bekijk het Fairide-voordeel'
+      adjustAltLink: 'Bekijk het Fairide-voordeel',
+      oneClickTitle: 'Start in 1 klik',
+      oneClickFastest: 'Het snelste',
+      oneClickSub: '{n} typische gerechten van een {cuisine}-keuken, met richtprijzen, in één klik toegevoegd. Daarna corrigeer je namen, prijzen en foto\'s hieronder, in “Je menu”.',
+      oneClickButton: '🚀 Start in 1 klik ({n} gerechten)',
+      oneClickChoose: 'Zelf de gerechten kiezen',
+      afterCreateHelp: 'Zodra je kaart is aangemaakt (met een van de methodes hierboven), stel je ze hier bij: corrigeer een fout door op een gerecht te klikken, voeg een sectie of gerecht toe met ＋, verwijder wat je niet meer nodig hebt.'
     },
     editResto: {
       title: 'Gegevens van mijn restaurant',

@@ -2832,3 +2832,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* « Geste prix » (relecture d'import et carte en ligne) : même famille visuelle que l'Avantage Fairide. */
 .geste-prix, .geste-prix-carte { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); }
 .geste-prix .chip.active, .geste-prix-carte .chip.active { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
+
+/* Mon menu : la méthode « Démarrer en 1 clic », mise en avant au-dessus des autres quand la carte est vide. */
+.methode-un-clic { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
+.methode-un-clic .methode-num { background: #1E8A7A; color: #fff; }
