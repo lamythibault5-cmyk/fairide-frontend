@@ -328,7 +328,9 @@ export default function DashboardLayout() {
       const r = await api(`/restaurants/${restoId}/connect/onboard`, { method: 'POST', token });
       window.location.href = r.url;
     } catch (e) {
-      toast(e.message);
+      // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
+      if (e.code === 'LEGAL_INFO_REQUIRED' || /LEGAL_INFO_REQUIRED|numéro d'entreprise/i.test(e.message || '')) { toast(t('dashResto.toastLegalFirst')); navigate('/account?ouvrir=paiement&retour=/dashboard'); }
+      else toast(e.message);
       setConnecting(false);
     }
   }

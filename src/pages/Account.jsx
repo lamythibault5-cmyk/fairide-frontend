@@ -179,11 +179,21 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
+  // Commerce du compte (id, commandes) ; rappelé après un enregistrement depuis la sous-section Paiement.
+  function rechargerRestaurant() {
     if (role !== 'restaurant') return;
     api('/restaurants/mine/dashboard', { token }).then((list) => {
-      if (list[0]) { setRestoId(list[0].id); api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {}); }
+      if (list[0]) {
+        setRestoId(list[0].id);
+        api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
+        // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
+        api(`/restaurants/${list[0].id}`).then(setRestaurant).catch(() => {});
+      }
     }).catch((e) => toast(e.message));
+  }
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    rechargerRestaurant();
     if (new URLSearchParams(window.location.search).get('subscribed')) {
       toast(t('accountUi.toastSubActivating'));
       window.history.replaceState({}, '', '/account');
@@ -700,7 +710,7 @@ export default function Account() {
           <div id="section-paiement">
             <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
-              <PaiementRestaurant restaurant={restaurant} orders={commandesResto} />
+              <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
           <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>

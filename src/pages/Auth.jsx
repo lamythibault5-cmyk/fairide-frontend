@@ -255,6 +255,8 @@ export default function Auth() {
   }
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState('');
+  const [pendingChannel, setPendingChannel] = useState('email'); // 'sms' | 'email' : par où le code est parti
+  const [pendingPhone, setPendingPhone] = useState('');
   const [code, setCode] = useState('');
   const [resending, setResending] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
@@ -330,8 +332,7 @@ export default function Auth() {
     }
     if (key === 'business') {
       if (!legalName.trim()) e.legalName = required;
-      if (!companyNumber.trim()) e.companyNumber = required;
-      if (!vatNumber.trim()) e.vatNumber = required;
+      // Numéro d'entreprise et de TVA : demandés plus tard (Mon compte › Paiement), pas à l'inscription.
       if (!responsibleName.trim()) e.responsibleName = required;
       if (!cuisine) e.cuisine = t('auth.errCuisine');
       if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
@@ -522,7 +523,8 @@ export default function Auth() {
         });
         if (data.needsVerification) {
           setPendingEmail(data.email);
-          toast(t('auth.errVerificationSent'));
+          setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
+          toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
         } else if (data.token) {
           await televerserDocumentsLivreur(data.token);
         }
@@ -652,9 +654,9 @@ export default function Auth() {
             <BrandMark size={26} />
             <span>fairide</span>
           </div>
-          <h2 style={{ marginTop: 0 }}>{t('auth.verifyTitle')}</h2>
+          <h2 style={{ marginTop: 0 }}>{t(pendingChannel === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle')}</h2>
           <p className="small" style={{ marginBottom: 14 }}>
-            {t('auth.verifyText', { email: pendingEmail })}
+            {pendingChannel === 'sms' ? t('auth.verifyTextSms', { phone: pendingPhone }) : t('auth.verifyText', { email: pendingEmail })}
           </p>
           <form onSubmit={submitCode}>
             <div className="field">
@@ -891,27 +893,7 @@ export default function Auth() {
                     value={legalName} onChange={(e) => setLegalName(e.target.value)} placeholder={t('auth.phLegalName')} />
                   {fieldError('legalName')}
                 </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="auth-f-13">{t('auth.companyNumber')}</label>
-                    <input id="auth-f-13" className={errors.companyNumber ? 'input-invalid' : undefined}
-                      value={companyNumber} onChange={(e) => setCompanyNumber(e.target.value)} placeholder="0123.456.789" />
-                    {fieldError('companyNumber')}
-                  </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="auth-f-14">{t('auth.vatNumber')}</label>
-                    <input id="auth-f-14" className={errors.vatNumber ? 'input-invalid' : undefined}
-                      value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} placeholder="BE0123.456.789" />
-                    {fieldError('vatNumber')}
-                  </div>
-                </div>
-                {verifSociete && (
-                  <p className="small company-check" style={{ margin: '-4px 0 10px' }}>
-                    {verifSociete.valid === true && <>✅ {t('auth.companyVerified', { name: verifSociete.legalName || '', address: verifSociete.address || '' })}</>}
-                    {verifSociete.valid === false && <>⚠️ {t('auth.companyNotFound')}</>}
-                    {verifSociete.valid === null && verifSociete.error === 'indisponible' && <>{t('auth.companyCheckUnavailable')}</>}
-                  </p>
-                )}
+                <p className="small" style={{ margin: '-4px 0 12px', opacity: 0.8 }}>{t('auth.legalLaterHint')}</p>
                 <div className="field">
                   <label htmlFor="auth-f-15">{t('auth.responsibleName')}</label>
                   <input id="auth-f-15" className={errors.responsibleName ? 'input-invalid' : undefined}

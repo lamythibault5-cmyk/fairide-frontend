@@ -1570,7 +1570,19 @@ export const translations = {
       colCommission: 'Commission Fairide',
       colNet: 'Te revient',
       total: 'Total',
-      receiptsNote: 'La commission est indiquée hors TVA ; la facture mensuelle dans « Factures » fait foi. Les pourboires et les frais de livraison ne passent pas par ton compte : ils vont directement au livreur.'
+      receiptsNote: 'La commission est indiquée hors TVA ; la facture mensuelle dans « Factures » fait foi. Les pourboires et les frais de livraison ne passent pas par ton compte : ils vont directement au livreur.',
+      legalTitle: 'Avant d\'activer les paiements : ton commerce',
+      legalIntro: 'Stripe et la facturation ont besoin du numéro d\'entreprise et du numéro de TVA du commerce. Ils n\'ont pas été demandés à l\'inscription : c\'est ici qu\'on les renseigne, une seule fois.',
+      legalNameLabel: 'Nom légal (raison sociale)',
+      companyNumberLabel: 'Numéro d\'entreprise (BCE)',
+      vatNumberLabel: 'Numéro de TVA',
+      legalSave: 'Enregistrer',
+      legalSaved: 'Numéros enregistrés. Tu peux activer les paiements.',
+      legalMissing: 'Indique le numéro d\'entreprise et le numéro de TVA.',
+      legalDone: 'Numéros enregistrés : {legal} · BCE {n} · TVA {vat}',
+      legalEdit: 'Modifier',
+      companyVerified: '✅ Entreprise vérifiée : {name}',
+      companyNotFound: '⚠️ Numéro introuvable dans le registre : vérifie-le.'
     },
     addressSearch: {
       label: 'Rechercher l\'adresse',
@@ -4558,7 +4570,8 @@ export const translations = {
       fromFiche: 'repris de ta fiche',
       actingBanner: 'Fairide gère ce commerce en tant que {name} ({admin}). Tout ce que tu fais ici est fait au nom du restaurateur.',
       actingQuit: 'Quitter et revenir à l\'admin',
-      toastAutoCreated: '{name} est prêt : ton commerce a été créé avec ce que tu as indiqué à l\'inscription. Tu peux tout ajuster dans Mon commerce.'
+      toastAutoCreated: '{name} est prêt : ton commerce a été créé avec ce que tu as indiqué à l\'inscription. Tu peux tout ajuster dans Mon commerce.',
+      toastLegalFirst: 'Renseigne d\'abord le numéro d\'entreprise et le numéro de TVA du commerce.'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -5716,7 +5729,11 @@ export const translations = {
       bag_fairide: 'Je demande un sac Fairide',
       bagOwnHelp: 'Propre et isotherme, c\'est tout ce qu\'il faut. Rien à faire de plus.',
       bagFairideHelp: 'Caution de {amount} €, remise à la réception du sac. Elle t\'est remboursée intégralement quand tu quittes Fairide et rends le sac en bon état.',
-      errBag: 'Choisis une option pour le sac de livraison.'
+      errBag: 'Choisis une option pour le sac de livraison.',
+      legalLaterHint: 'Le numéro d\'entreprise et le numéro de TVA te seront demandés plus tard, au moment d\'activer les paiements. Rien d\'autre à préparer maintenant.',
+      verifyTitleSms: 'Confirme ton numéro',
+      verifyTextSms: 'On t\'a envoyé un code à 6 chiffres par SMS au {phone}. Entre-le ci-dessous pour activer ton compte.',
+      errVerificationSentSms: 'Un code de confirmation t\'a été envoyé par SMS.'
     }
   },
   en: {
@@ -7286,7 +7303,19 @@ export const translations = {
       colCommission: 'Fairide commission',
       colNet: 'Comes to you',
       total: 'Total',
-      receiptsNote: 'The commission is shown excluding VAT; the monthly invoice under “Invoices” is the reference. Tips and delivery fees do not go through your account: they go directly to the courier.'
+      receiptsNote: 'The commission is shown excluding VAT; the monthly invoice under “Invoices” is the reference. Tips and delivery fees do not go through your account: they go directly to the courier.',
+      legalTitle: 'Before activating payments: your business',
+      legalIntro: 'Stripe and invoicing need the business\'s company number and VAT number. They were not asked at sign-up: this is where you enter them, once.',
+      legalNameLabel: 'Legal name',
+      companyNumberLabel: 'Company number (CBE)',
+      vatNumberLabel: 'VAT number',
+      legalSave: 'Save',
+      legalSaved: 'Numbers saved. You can activate payments.',
+      legalMissing: 'Enter the company number and the VAT number.',
+      legalDone: 'Numbers saved: {legal} · CBE {n} · VAT {vat}',
+      legalEdit: 'Edit',
+      companyVerified: '✅ Company verified: {name}',
+      companyNotFound: '⚠️ Number not found in the register: check it.'
     },
     addressSearch: {
       label: 'Search the address',
@@ -10274,7 +10303,8 @@ export const translations = {
       fromFiche: 'taken from your listing',
       actingBanner: 'Fairide is managing this business as {name} ({admin}). Everything you do here is done on the restaurateur\'s behalf.',
       actingQuit: 'Leave and go back to admin',
-      toastAutoCreated: '{name} is ready: your business was created from what you gave at sign-up. You can adjust everything in My business.'
+      toastAutoCreated: '{name} is ready: your business was created from what you gave at sign-up. You can adjust everything in My business.',
+      toastLegalFirst: 'First enter the business\'s company number and VAT number.'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -11432,7 +11462,11 @@ export const translations = {
       bag_fairide: 'I would like a Fairide bag',
       bagOwnHelp: 'Clean and insulated, that is all it takes. Nothing more to do.',
       bagFairideHelp: 'Deposit of €{amount}, paid when you receive the bag. It is fully refunded when you leave Fairide and return the bag in good condition.',
-      errBag: 'Choose an option for the delivery bag.'
+      errBag: 'Choose an option for the delivery bag.',
+      legalLaterHint: 'Your company number and VAT number will be asked later, when you activate payments. Nothing else to prepare now.',
+      verifyTitleSms: 'Confirm your phone number',
+      verifyTextSms: 'We sent you a 6-digit code by SMS to {phone}. Enter it below to activate your account.',
+      errVerificationSentSms: 'A confirmation code has been sent to you by SMS.'
     }
   },
   nl: {
@@ -13002,7 +13036,19 @@ export const translations = {
       colCommission: 'Fairide-commissie',
       colNet: 'Komt jou toe',
       total: 'Totaal',
-      receiptsNote: 'De commissie is exclusief btw; de maandelijkse factuur onder “Facturen” is de referentie. Fooien en leveringskosten passeren niet via jouw rekening: ze gaan rechtstreeks naar de koerier.'
+      receiptsNote: 'De commissie is exclusief btw; de maandelijkse factuur onder “Facturen” is de referentie. Fooien en leveringskosten passeren niet via jouw rekening: ze gaan rechtstreeks naar de koerier.',
+      legalTitle: 'Vóór het activeren van betalingen: je zaak',
+      legalIntro: 'Stripe en de facturatie hebben het ondernemingsnummer en btw-nummer van de zaak nodig. Ze werden niet gevraagd bij de inschrijving: hier vul je ze één keer in.',
+      legalNameLabel: 'Wettelijke naam',
+      companyNumberLabel: 'Ondernemingsnummer (KBO)',
+      vatNumberLabel: 'Btw-nummer',
+      legalSave: 'Opslaan',
+      legalSaved: 'Nummers opgeslagen. Je kunt de betalingen activeren.',
+      legalMissing: 'Geef het ondernemingsnummer en het btw-nummer op.',
+      legalDone: 'Nummers opgeslagen: {legal} · KBO {n} · btw {vat}',
+      legalEdit: 'Wijzigen',
+      companyVerified: '✅ Onderneming gecontroleerd: {name}',
+      companyNotFound: '⚠️ Nummer niet gevonden in het register: controleer het.'
     },
     addressSearch: {
       label: 'Adres zoeken',
@@ -15990,7 +16036,8 @@ export const translations = {
       fromFiche: 'overgenomen van je fiche',
       actingBanner: 'Fairide beheert deze zaak als {name} ({admin}). Alles wat je hier doet, gebeurt namens de uitbater.',
       actingQuit: 'Verlaten en terug naar admin',
-      toastAutoCreated: '{name} is klaar: je zaak is aangemaakt met wat je bij de inschrijving opgaf. Je kunt alles aanpassen in Mijn zaak.'
+      toastAutoCreated: '{name} is klaar: je zaak is aangemaakt met wat je bij de inschrijving opgaf. Je kunt alles aanpassen in Mijn zaak.',
+      toastLegalFirst: 'Vul eerst het ondernemingsnummer en het btw-nummer van de zaak in.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -17148,7 +17195,11 @@ export const translations = {
       bag_fairide: 'Ik vraag een Fairide-tas',
       bagOwnHelp: 'Proper en isothermisch, meer is niet nodig. Niets extra te doen.',
       bagFairideHelp: 'Waarborg van € {amount}, te betalen bij ontvangst van de tas. Je krijgt hem volledig terug wanneer je Fairide verlaat en de tas in goede staat terugbrengt.',
-      errBag: 'Kies een optie voor de bezorgtas.'
+      errBag: 'Kies een optie voor de bezorgtas.',
+      legalLaterHint: 'Je ondernemingsnummer en btw-nummer worden later gevraagd, bij het activeren van de betalingen. Verder niets voor te bereiden.',
+      verifyTitleSms: 'Bevestig je nummer',
+      verifyTextSms: 'We hebben je een 6-cijferige code per sms gestuurd naar {phone}. Voer ze hieronder in om je account te activeren.',
+      errVerificationSentSms: 'Er is een bevestigingscode per sms naar je gestuurd.'
     }
   }
 };
