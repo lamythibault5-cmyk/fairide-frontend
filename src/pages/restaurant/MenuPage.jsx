@@ -75,6 +75,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const importUrlRef = useRef(null);
   const [importText, setImportText] = useState('');
   const [importTextOpen, setImportTextOpen] = useState(false);
+  // Une fois la carte créée, les méthodes de création se replient : la page commence par ce qui compte
+  // (la carte telle qu'elle est en ligne) et les outils de modification. Un clic les rouvre pour ajouter des plats.
+  const [methodesOuvertes, setMethodesOuvertes] = useState(false);
+  const carteVide = restaurant.menu.length === 0;
+  const methodesVisibles = carteVide || methodesOuvertes;
   const [importingText, setImportingText] = useState(false);
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
@@ -554,43 +559,19 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
   return (
     <div>
-      {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
-          enchaîne naturellement dessus. Le bouton est réutilisable — le serveur ne retraduit que
-          les plats dont le texte a bougé depuis la dernière fois. */}
-      {restaurant.menu.length > 0 && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.translateTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            {t('menuPage.translateIntro')}
-          </p>
-          <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
-            {translating ? t('menuPage.translating') : t('menuPage.translateButton')}
+      <div className="menu-etape">
+        <span className="menu-etape-num">1</span>
+        <div>
+          <h2 className="menu-etape-titre">{t('menuPage.stepCreate')}</h2>
+          <p className="small" style={{ margin: 0 }}>{carteVide ? t('menuPage.stepCreateHelpEmpty') : t('menuPage.stepCreateHelpDone', { n: restaurant.menu.length })}</p>
+        </div>
+        {!carteVide && (
+          <button type="button" className="btn-outline" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={() => setMethodesOuvertes((o) => !o)}>
+            {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.showMethods')}
           </button>
-        </div>
-      )}
-      {restaurant.menu.length > 0 && !modeAdmin && (
-        <div className="card geste-prix-carte" id="menu-geste-prix">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>💚 {t('menuPage.adjustTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>
-          <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            {[-20, -15, -10, -5, 5, 10].map((v) => (
-              <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
-            ))}
-            <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
-            <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
-          </div>
-          {ajustConfirm && (
-            <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>
-              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirm', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
-              <div className="row" style={{ gap: 8 }}>
-                <button type="button" className="btn-teal" disabled={ajusting} onClick={ajusterTousLesPrix}>{ajusting ? '…' : t('menuPage.adjustYes')}</button>
-                <button type="button" className="btn-ghost" onClick={() => setAjustConfirm(false)}>{t('menuPage.adjustNo')}</button>
-              </div>
-            </div>
-          )}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('menuPage.adjustAlt')} <Link to="/dashboard/promotions">{t('menuPage.adjustAltLink')}</Link></p>
-        </div>
-      )}
+        )}
+      </div>
+      {methodesVisibles && (
       <div className="card" id="menu-methodes">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
@@ -691,6 +672,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           />
         )}
       </div>
+      )}
 
       {restaurant.menu.length === 0 && !startChoiceMade && (
         <div className="card" id="menu-demarrage" style={{ border: '2px solid var(--teal)' }}>
@@ -720,6 +702,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         </div>
       )}
 
+      <div className="menu-etape" id="menu-modifier">
+        <span className="menu-etape-num">2</span>
+        <div>
+          <h2 className="menu-etape-titre">{t('menuPage.stepEdit')}</h2>
+          <p className="small" style={{ margin: 0 }}>{t('menuPage.stepEditHelp')}</p>
+        </div>
+      </div>
       <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
@@ -727,10 +716,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             <button type="button" className="btn-teal menu-plus" onClick={() => setCreatingSection(true)} title={t('menuPage.newSection')} aria-label={t('menuPage.newSection')}>＋ <span>{t('menuPage.newSectionShort')}</span></button>
           )}
         </div>
-        <p className="small" style={{ margin: '0 0 6px', fontWeight: 600 }}>{t('menuPage.afterCreateHelp')}</p>
-        <p className="small" style={{ margin: '0 0 12px' }}>
-          {t('menuPage.menuHelp')}
-        </p>
+        <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.afterCreateHelp')}</p>
+        <details className="menu-legende">
+          <summary className="small">{t('menuPage.iconsLegend')}</summary>
+          <p className="small" style={{ margin: '6px 0 0' }}>{t('menuPage.menuHelp')}</p>
+        </details>
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>{t('menuPage.noSection')}</div>
         )}
@@ -969,6 +959,53 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           )}
         </>
+      )}
+
+      {restaurant.menu.length > 0 && !modeAdmin && (
+        <div className="menu-etape" id="menu-plus-loin">
+          <span className="menu-etape-num">3</span>
+          <div>
+            <h2 className="menu-etape-titre">{t('menuPage.stepMore')}</h2>
+            <p className="small" style={{ margin: 0 }}>{t('menuPage.stepMoreHelp')}</p>
+          </div>
+        </div>
+      )}
+      {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
+          enchaîne naturellement dessus. Le bouton est réutilisable — le serveur ne retraduit que
+          les plats dont le texte a bougé depuis la dernière fois. */}
+      {restaurant.menu.length > 0 && (
+        <div className="card">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.translateTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 12px' }}>
+            {t('menuPage.translateIntro')}
+          </p>
+          <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
+            {translating ? t('menuPage.translating') : t('menuPage.translateButton')}
+          </button>
+        </div>
+      )}
+      {restaurant.menu.length > 0 && !modeAdmin && (
+        <div className="card geste-prix-carte" id="menu-geste-prix">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>💚 {t('menuPage.adjustTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>
+          <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+            {[-20, -15, -10, -5, 5, 10].map((v) => (
+              <button key={v} type="button" className={`chip${Number(ajustPct) === v ? ' active' : ''}`} onClick={() => setAjustPct(String(v))}>{v > 0 ? '+' : ''}{v} %</button>
+            ))}
+            <input type="number" step="1" min="-50" max="50" value={ajustPct} onChange={(e) => setAjustPct(e.target.value)} placeholder="%" style={{ width: 90 }} aria-label={t('menuPage.adjustCustom')} />
+            <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} disabled={!ajustPct || Number(ajustPct) === 0} onClick={() => setAjustConfirm(true)}>{t('menuPage.adjustButton')}</button>
+          </div>
+          {ajustConfirm && (
+            <div className="card" style={{ marginTop: 10, padding: 12, border: '1px solid var(--line)' }}>
+              <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.adjustConfirm', { n: restaurant.menu.length, p: `${Number(ajustPct) > 0 ? '+' : ''}${Number(ajustPct)} %` })}</p>
+              <div className="row" style={{ gap: 8 }}>
+                <button type="button" className="btn-teal" disabled={ajusting} onClick={ajusterTousLesPrix}>{ajusting ? '…' : t('menuPage.adjustYes')}</button>
+                <button type="button" className="btn-ghost" onClick={() => setAjustConfirm(false)}>{t('menuPage.adjustNo')}</button>
+              </div>
+            </div>
+          )}
+          <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('menuPage.adjustAlt')} <Link to="/dashboard/promotions">{t('menuPage.adjustAltLink')}</Link></p>
+        </div>
       )}
 
       <ConfirmDialog
