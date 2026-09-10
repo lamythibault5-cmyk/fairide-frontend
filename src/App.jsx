@@ -29,6 +29,7 @@ import NotFound from './pages/NotFound';
 const SearchPage = lazyPage(() => import('./pages/client/SearchPage'));
 const Checkout = lazyPage(() => import('./pages/client/Checkout'));
 const ReservationWizard = lazyPage(() => import('./pages/client/ReservationWizard'));
+const ReserverPage = lazyPage(() => import('./pages/client/ReserverPage'));
 const Favorites = lazyPage(() => import('./pages/client/Favorites'));
 const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
@@ -118,6 +119,8 @@ export default function App() {
         <Route path="/restaurants" element={<RestaurantList />} />
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
         <Route path="/restaurants/:id/reserver" element={<ReservationWizard />} />
+        {/* Lien public de réservation (fiche Google, Instagram, Facebook, site, QR) — voir ReserverPage. */}
+        <Route path="/reserver/:id" element={<ReserverPage />} />
         {/* Publique comme la liste : chercher un commerce ou un plat ne demande pas de compte. Les
             résultats personnels (commandes) n'apparaissent que connecté. */}
         <Route path="/recherche" element={<SearchPage />} />

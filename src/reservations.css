@@ -1,0 +1,131 @@
+/* Module Réservations (src/pages/restaurant/ReservationsPage.jsx + src/components/reservations/*).
+   Complète les règles .resa-* de styles.css : états métier, cahier du jour, messagerie, bons cadeaux,
+   intégration (lien, QR, extraits de code) et impression de la liste du jour. Aplats stricts, filets 1px. */
+
+/* ---- États d'une réservation (pastille et bloc de la grille) --------------------------------- */
+.resa-etat { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; white-space: nowrap; }
+.resa-etat::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.resa-etat-a_confirmer { background: rgba(217,45,60,0.12); color: var(--red); }
+.resa-etat-confirmee { background: rgba(59,47,181,0.10); color: var(--iris); }
+.resa-etat-table_prete { background: rgba(224,122,31,0.14); color: var(--orange); }
+.resa-etat-installee { background: rgba(46,158,91,0.14); color: #1F7A45; }
+.resa-etat-terminee { background: var(--cream-dim); color: var(--ink-soft); }
+.resa-etat-no_show { background: rgba(217,45,60,0.10); color: var(--red); }
+.resa-etat-annulee, .resa-etat-refusee { background: var(--cream-dim); color: var(--ink-soft); text-decoration: line-through; }
+
+.resa-bloc.resa-bloc-e-a_confirmer { border-left-color: var(--red); }
+.resa-bloc.resa-bloc-e-confirmee { border-left-color: var(--iris); }
+.resa-bloc.resa-bloc-e-table_prete { border-left-color: var(--orange); }
+.resa-bloc.resa-bloc-e-installee { border-left-color: #2E9E5B; background: rgba(46,158,91,0.12); }
+.resa-bloc.resa-bloc-e-terminee { opacity: .55; }
+
+/* ---- Barre d'outils de l'agenda (recherche, filtres, export) --------------------------------- */
+.resa-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.resa-outils .resa-recherche { flex: 1 1 200px; min-width: 0; position: relative; }
+.resa-outils .resa-recherche input { padding-left: 32px; }
+.resa-outils .resa-recherche::before { content: '🔎'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+.resa-filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+.resa-filtres button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 5px 11px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.resa-filtres button.actif { background: var(--ink); border-color: var(--ink); color: #fff; }
+.resa-filtres button b { font-weight: 800; margin-left: 4px; }
+
+/* Actions rapides sur une ligne : gros boutons tactiles, une main libre suffit. */
+.resa-rapides { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.resa-rapides button { min-height: 40px; padding: 8px 14px; font-size: 13px; font-weight: 700; border-radius: 10px; }
+.resa-rapides .btn-outline.danger { border-color: var(--red); color: var(--red); }
+.resa-rapides .btn-outline.ok { border-color: #2E9E5B; color: #1F7A45; }
+
+.resa-ligne-corps .resa-tags { display: inline-flex; flex-wrap: wrap; gap: 4px; margin-left: 6px; vertical-align: middle; }
+.resa-tag { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(200,240,60,0.45); color: var(--ink); }
+.resa-tag.alerte { background: rgba(217,45,60,0.12); color: var(--red); }
+
+/* Fiche client (note salle, étiquettes, historique) dans le détail d'une réservation. */
+.resa-fiche { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.resa-fiche h4 { margin: 0 0 6px; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.resa-fiche .resa-historique { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.resa-fiche .resa-historique span { font-size: 12px; padding: 3px 8px; border-radius: 999px; background: var(--cream-dim); }
+.resa-etiquettes { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.resa-etiquettes button { border: 1px dashed var(--line); background: #fff; border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+.resa-etiquettes button.actif { border-style: solid; background: var(--ink); color: #fff; border-color: var(--ink); }
+
+/* ---- Messagerie ------------------------------------------------------------------------------- */
+.resa-modeles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.resa-modeles button { border: 1px solid var(--line); background: #fff; border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.resa-modeles button.actif { background: var(--iris); border-color: var(--iris); color: #fff; }
+.resa-messages-liste { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; max-height: 200px; overflow: auto; }
+.resa-message { padding: 6px 0; border-bottom: 1px solid var(--cream-dim); font-size: 13px; }
+.resa-message .small { display: block; }
+
+/* ---- Réglages : capacité, blocages ------------------------------------------------------------- */
+.resa-blocs-liste { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.resa-bloc-ligne { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; flex-wrap: wrap; }
+.resa-bloc-ligne b { text-transform: capitalize; }
+.resa-bloc-ligne .small { flex: 1; min-width: 120px; }
+.resa-doc { padding: 10px 12px; background: var(--cream-dim); border-radius: 10px; font-size: 13px; }
+.resa-doc ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ---- Intégration : lien, QR, extraits --------------------------------------------------------- */
+.resa-integration-grille { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 720px) { .resa-integration-grille { grid-template-columns: 1fr 1fr; } }
+.resa-snippet { position: relative; background: #14121F; color: #F4F2ED; border-radius: 10px; padding: 12px 14px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.45; white-space: pre-wrap; word-break: break-all; margin: 0; }
+.resa-snippet-actions { display: flex; gap: 6px; margin-top: 6px; }
+.resa-qr { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.resa-qr svg { width: 160px; height: 160px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.resa-qr svg path { fill: #14121F; }
+.resa-bouton-demo { display: inline-block; background: #3B2FB5; color: #fff !important; text-decoration: none; font-weight: 700; padding: 12px 18px; border-radius: 12px; font-family: inherit; }
+.resa-etapes { margin: 0; padding-left: 20px; }
+.resa-etapes li { margin-bottom: 6px; }
+.resa-etapes summary { cursor: pointer; font-weight: 700; }
+
+/* ---- Bons cadeaux ----------------------------------------------------------------------------- */
+.bon-liste { display: flex; flex-direction: column; gap: 8px; }
+.bon-ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.bon-ligne:hover { border-color: var(--iris); }
+.bon-ligne .bon-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 800; letter-spacing: .06em; }
+.bon-ligne .bon-montants { margin-left: auto; text-align: right; }
+.bon-ligne .bon-montants b { font-size: 15px; }
+.bon-statut { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .03em; }
+.bon-statut-active { background: rgba(46,158,91,0.14); color: #1F7A45; }
+.bon-statut-used { background: var(--cream-dim); color: var(--ink-soft); }
+.bon-statut-expired, .bon-statut-cancelled { background: rgba(217,45,60,0.10); color: var(--red); }
+.bon-carte { border: 2px solid #14121F; border-radius: 16px; padding: 22px 24px; background: #fff; max-width: 460px; position: relative; overflow: hidden; }
+.bon-carte::after { content: '🎁'; position: absolute; right: 18px; top: 14px; font-size: 34px; opacity: .9; }
+.bon-carte .bon-carte-resto { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-soft); }
+.bon-carte .bon-carte-titre { font-size: 22px; font-weight: 800; margin: 4px 0 10px; }
+.bon-carte .bon-carte-montant { font-size: 40px; font-weight: 900; line-height: 1; color: #3B2FB5; }
+.bon-carte .bon-carte-code { margin: 14px 0 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 20px; font-weight: 800; letter-spacing: .12em; padding: 8px 12px; border: 1px dashed #14121F; border-radius: 10px; display: inline-block; }
+.bon-carte .bon-carte-message { font-style: italic; margin: 8px 0; }
+.bon-carte .bon-carte-pied { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+.bon-usages { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.bon-usages div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 3px 0; }
+
+/* ---- Statistiques ----------------------------------------------------------------------------- */
+.resa-services { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.resa-jauge { height: 10px; border-radius: 999px; background: var(--cream-dim); overflow: hidden; margin: 6px 0; }
+.resa-jauge > i { display: block; height: 100%; background: var(--iris); }
+.resa-tendance { display: flex; align-items: flex-end; gap: 4px; height: 120px; overflow-x: auto; padding-bottom: 4px; }
+.resa-tendance > div { flex: 1 0 28px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 2px; }
+.resa-tendance > div i { display: block; width: 100%; background: var(--iris); border-radius: 4px 4px 0 0; min-height: 2px; }
+.resa-tendance > div span { font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+
+/* ---- Vide / chargement ------------------------------------------------------------------------ */
+.resa-vide { text-align: center; padding: 26px 14px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: 12px; }
+.resa-vide b { display: block; color: var(--ink); margin-bottom: 4px; }
+
+/* ---- Impression de la liste du jour ----------------------------------------------------------- */
+.resa-print-zone { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  .resa-print-zone, .resa-print-zone * { visibility: visible; }
+  .resa-print-zone { display: block; position: absolute; left: 0; top: 0; width: 100%; padding: 12px; font-family: sans-serif; color: #000; }
+  .resa-print-zone h1 { font-size: 18px; margin: 0 0 4px; }
+  .resa-print-zone table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .resa-print-zone th, .resa-print-zone td { border-bottom: 1px solid #999; padding: 6px 4px; text-align: left; vertical-align: top; }
+  .resa-print-zone th { border-bottom: 2px solid #000; }
+  .bon-print-zone { display: block !important; }
+}
+
+@media (max-width: 600px) {
+  .resa-services { grid-template-columns: 1fr; }
+  .resa-rapides button { flex: 1 1 45%; }
+}

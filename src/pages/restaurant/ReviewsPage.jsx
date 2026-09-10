@@ -50,7 +50,11 @@ export default function ReviewsPage() {
           {reviews.reviews.map((r) => (
             <div key={r.id} style={{ padding: '10px 0', borderBottom: '1px solid var(--cream-dim)' }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
-                <b style={{ fontSize: 13 }}>{r.clientName}</b>
+                <b style={{ fontSize: 13 }}>
+                  {r.clientName}
+                  {/* Avis laissé après une réservation de table (commande dine_in) : dit d'où il vient. */}
+                  {r.orderType === 'dine_in' && <span className="pill" style={{ marginLeft: 8, fontWeight: 600 }}>🍽️ {t('reviewsResto.afterReservation')}</span>}
+                </b>
                 <StarsDisplay value={r.foodRating} />
               </div>
               {r.foodComment && <p className="small" style={{ margin: '4px 0 0' }}>{r.foodComment}</p>}
@@ -75,7 +79,7 @@ export default function ReviewsPage() {
                     style={{ width: '100%' }}
                   />
                   <div className="row" style={{ gap: 8, marginTop: 6 }}>
-                    <button type="button" className="btn-teal" disabled={saving} onClick={() => saveReply(r.id)}>{saving ? '...' : 'Enregistrer'}</button>
+                    <button type="button" className="btn-teal" disabled={saving} onClick={() => saveReply(r.id)}>{saving ? '...' : t('reviewsResto.save')}</button>
                     <button type="button" className="btn-ghost" onClick={() => setEditingId(null)}>{t('reviewsResto.cancel')}</button>
                   </div>
                 </div>

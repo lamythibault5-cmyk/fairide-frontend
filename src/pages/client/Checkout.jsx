@@ -101,6 +101,10 @@ export default function Checkout() {
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
+  // Bon cadeau du commerce (vendu au comptoir, voir Réservations → Bons cadeaux côté restaurateur) :
+  // vérifié à la saisie, déduit côté serveur à la création de la commande.
+  const [giftCode, setGiftCode] = useState('');
+  const [giftCheck, setGiftCheck] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState(reservationOnly ? 'dine_in' : 'delivery');
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions(7, libellesDates)[0].value : '');
@@ -280,7 +284,8 @@ export default function Checkout() {
             deliveryInstructions, deliveryNote: deliveryNote.trim()
           } : {}),
           ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim(), zonePreference: zonePreference || null } : {}),
-          useBalance
+          useBalance,
+          giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined
         }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
@@ -400,6 +405,24 @@ export default function Checkout() {
                 <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
               </label>
             )}
+            <details style={{ marginTop: 10 }} open={!!giftCode}>
+              <summary className="small" style={{ cursor: 'pointer' }}>🎁 {t('checkout.giftVoucherSummary')}</summary>
+              <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
+                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} aria-label={t('checkout.giftVoucherSummary')} />
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
+                  onClick={async () => {
+                    setGiftCheck('loading');
+                    try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
+                    catch (e) { setGiftCheck(null); toast(e.message); }
+                  }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
+              </div>
+              {giftCheck && giftCheck !== 'loading' && (
+                <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
+                  {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
+                </p>
+              )}
+            </details>
           </div>
           )}
 
@@ -704,6 +727,7 @@ export default function Checkout() {
                   <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
+              {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span>🎁 {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
               <div className="line total"><span>{t('checkout.totalToPay')}</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
             </div>

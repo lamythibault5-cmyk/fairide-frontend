@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
+import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import '../floor-plan.css';
 
@@ -75,6 +76,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
   const [enregistrement, setEnregistrement] = useState(false);
   const [enCours, setEnCours] = useState(null);
   const [glisse, setGlisse] = useState(null);
+  const [confirmation, setConfirmation] = useState(null);
   const dragRef = useRef(null);
   const acompteActif = !!restaurant?.reservationDepositEnabled;
 
@@ -202,8 +204,11 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       setSelection(copie.id);
     } catch (e) { toast(e.message); } finally { setEnCours(null); }
   }
+  // Confirmations via ConfirmDialog et non window.confirm : les dialogues natifs sont supprimés ou
+  // muets dans une PWA installée et dans les webviews — le contexte d'usage d'une tablette de salle.
   async function supprimer(tb) {
-    if (!window.confirm(t('floorPlan.confirmDelete', { name: tb.name }))) return;
+    if (!confirmation || confirmation.type !== 'suppr' || confirmation.id !== tb.id) { setConfirmation({ type: 'suppr', id: tb.id, tb }); return; }
+    setConfirmation(null);
     setEnCours('suppr');
     try {
       const r = await api(`/restaurants/${restoId}/tables/${tb.id}`, { method: 'DELETE', token });
@@ -222,7 +227,8 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
     } catch (e) { toast(e.message); return false; } finally { setEnCours(null); }
   }
   async function numeroter() {
-    if (!window.confirm(t('floorPlan.confirmAutoNumber'))) return;
+    if (!confirmation || confirmation.type !== 'num') { setConfirmation({ type: 'num' }); return; }
+    setConfirmation(null);
     setEnCours('num');
     try {
       const maj = await api(`/restaurants/${restoId}/tables/auto-number`, { method: 'POST', token });
@@ -359,6 +365,13 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
           <FicheOccupation tb={choisie} etat={occupation?.[choisie.id] || null} onFermer={() => setSelection(null)} />
         )}
       </div>
+      <ConfirmDialog open={!!confirmation} danger={confirmation?.type === 'suppr'}
+        title={confirmation?.type === 'suppr' ? t('floorPlan.confirmDeleteTitle') : t('floorPlan.confirmAutoNumberTitle')}
+        message={confirmation?.type === 'suppr' ? t('floorPlan.confirmDelete', { name: confirmation.tb?.name || '' }) : t('floorPlan.confirmAutoNumber')}
+        confirmLabel={confirmation?.type === 'suppr' ? t('floorPlan.delete') : t('floorPlan.autoNumber')}
+        loading={!!enCours}
+        onCancel={() => setConfirmation(null)}
+        onConfirm={() => (confirmation?.type === 'suppr' ? supprimer(confirmation.tb) : numeroter())} />
     </div>
   );
 }
