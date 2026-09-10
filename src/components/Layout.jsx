@@ -53,6 +53,13 @@ export default function Layout() {
   // rechargement complet, au plus une fois toutes les deux minutes pour ne jamais boucler.
   const [remontage, setRemontage] = useState(0);
   const zone = useRef(null);
+  // Changer de section (tableau de bord, compte, pages publiques) ramène toujours en haut de la page : sans
+  // cela, on arrivait au milieu de la nouvelle section avec le défilement de la précédente. Les ancres (#…)
+  // gardent leur cible.
+  useEffect(() => {
+    if (location.hash) return;
+    window.scrollTo({ top: 0 });
+  }, [location.pathname]);
   useEffect(() => {
     let remonte = false;
     const vide = () => {

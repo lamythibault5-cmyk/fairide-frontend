@@ -661,7 +661,7 @@ export const translations = {
       stRefused: 'Refusée',
       noteLabel: 'Mot pour le restaurateur',
       notePh: 'Ex. : « Carte reprise d\'Uber Eats, prix identiques, sans les boissons — dis-nous si tu veux changer quelque chose. »',
-      noteHelp: 'Visible par le restaurateur sur sa page Mes produits, et envoyé par e-mail quand tu marques la demande terminée.',
+      noteHelp: 'Visible par le restaurateur sur sa page Mon menu, et envoyé par e-mail quand tu marques la demande terminée.',
       take: '🛠️ Prendre en charge',
       done: '✅ Carte intégrée, terminer',
       refuse: 'Refuser',
@@ -3148,7 +3148,7 @@ export const translations = {
       s2Title: 'Modifier les informations et le menu du restaurant',
       s2p1: '**Infos du restaurant** (nom, adresse, description, photo d\'accueil, logo, horaires, fermetures exceptionnelles, type de cuisine, frais de livraison...) : section « Mon commerce » dans le menu de gauche.',
       s2p2: 'Un changement d\'horaires ou de fermeture exceptionnelle est visible immédiatement par les clients — pas besoin d\'attendre une validation.',
-      s2p3: '**Menu** (plats, prix, disponibilité, photos, groupes d\'options comme les sauces ou suppléments) : section « Mes produits » dans le menu de gauche — disponible dès que le restaurant est créé.',
+      s2p3: '**Menu** (plats, prix, disponibilité, photos, groupes d\'options comme les sauces ou suppléments) : section « Mon menu » dans le menu de gauche — disponible dès que le restaurant est créé.',
       s2l1: 'Chaque section du menu (Entrées, Plats, Mitraillettes...) peut avoir ses propres plats, être renommée, réorganisée ou supprimée.',
       s2l2: 'Une section peut aussi avoir sa propre photo (icône 🖼️ sur la section), utilisée par défaut pour tous les plats de cette section qui n\'ont pas déjà la leur — pratique pour éviter d\'uploader la même photo plat par plat. Après l\'avoir choisie, il est possible de l\'appliquer directement à certains plats précis ou à tous d\'un coup.',
       s2l3: 'Un plat peut être marqué « indisponible » temporairement (rupture de stock) sans avoir à le supprimer.',
@@ -4322,7 +4322,8 @@ export const translations = {
       businessPhone: 'Téléphone du commerce',
       fromFiche: 'repris de ta fiche',
       actingBanner: 'Fairide gère ce commerce en tant que {name} ({admin}). Tout ce que tu fais ici est fait au nom du restaurateur.',
-      actingQuit: 'Quitter et revenir à l\'admin'
+      actingQuit: 'Quitter et revenir à l\'admin',
+      toastAutoCreated: '{name} est prêt : ton commerce a été créé avec ce que tu as indiqué à l\'inscription. Tu peux tout ajuster dans Mon commerce.'
     },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
@@ -4475,7 +4476,8 @@ export const translations = {
       phoneCodeSentEmail: 'Code envoyé par e-mail à {email} (pas encore de SMS chez Fairide). Saisis-le ci-dessous.',
       phoneVerifiedToast: 'Numéro de téléphone vérifié, merci !',
       phoneVerifyLater: 'Plus tard',
-      confirm: 'Confirmer'
+      confirm: 'Confirmer',
+      backToDashboard: 'Retour au tableau de bord'
     },
     resa: {
       title: '📅 Réservations',
@@ -4727,7 +4729,7 @@ export const translations = {
       customerPreviewLower: 'aperçu client',
       previewModeBanner: '👁️ Mode aperçu client',
       leave: 'Quitter',
-      myMenu: 'Mes produits',
+      myMenu: 'Mon menu',
       courierFile: 'Mon dossier livreur'
     },
     footer: {
@@ -6103,7 +6105,7 @@ export const translations = {
       stRefused: 'Declined',
       noteLabel: 'Note to the owner',
       notePh: 'E.g. “Menu copied from Uber Eats, same prices, without drinks — tell us if you want to change anything.”',
-      noteHelp: 'Shown to the owner on their My products page, and e-mailed when you mark the request as done.',
+      noteHelp: 'Shown to the owner on their My menu page, and e-mailed when you mark the request as done.',
       take: '🛠️ Take over',
       done: '✅ Menu integrated, finish',
       refuse: 'Decline',
@@ -8590,7 +8592,7 @@ export const translations = {
       s2Title: 'Editing the restaurant\'s details and menu',
       s2p1: '**Restaurant details** (name, address, description, cover photo, logo, hours, exceptional closures, cuisine type, delivery fees...): “My business” section in the left menu.',
       s2p2: 'A change of hours or an exceptional closure is visible to customers immediately — no need to wait for validation.',
-      s2p3: '**Menu** (dishes, prices, availability, photos, option groups such as sauces or extras): “My products” section in the left menu — available as soon as the restaurant is created.',
+      s2p3: '**Menu** (dishes, prices, availability, photos, option groups such as sauces or extras): “My menu” section in the left menu — available as soon as the restaurant is created.',
       s2l1: 'Each menu section (Starters, Mains, Mitraillettes...) can have its own dishes, be renamed, reordered or deleted.',
       s2l2: 'A section can also have its own photo (🖼️ icon on the section), used by default for all dishes of that section without their own — handy to avoid uploading the same photo dish by dish. Once chosen, it can be applied directly to specific dishes or to all at once.',
       s2l3: 'A dish can be marked “unavailable” temporarily (out of stock) without having to delete it.',
@@ -9764,7 +9766,8 @@ export const translations = {
       businessPhone: 'Business phone',
       fromFiche: 'taken from your listing',
       actingBanner: 'Fairide is managing this business as {name} ({admin}). Everything you do here is done on the restaurateur\'s behalf.',
-      actingQuit: 'Leave and go back to admin'
+      actingQuit: 'Leave and go back to admin',
+      toastAutoCreated: '{name} is ready: your business was created from what you gave at sign-up. You can adjust everything in My business.'
     },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
@@ -9917,7 +9920,8 @@ export const translations = {
       phoneCodeSentEmail: 'Code sent by e-mail to {email} (Fairide does not send text messages yet). Enter it below.',
       phoneVerifiedToast: 'Phone number verified, thank you!',
       phoneVerifyLater: 'Later',
-      confirm: 'Confirm'
+      confirm: 'Confirm',
+      backToDashboard: 'Back to the dashboard'
     },
     resa: {
       title: '📅 Reservations',
@@ -10169,7 +10173,7 @@ export const translations = {
       customerPreviewLower: 'customer preview',
       previewModeBanner: '👁️ Customer preview mode',
       leave: 'Leave',
-      myMenu: 'My products',
+      myMenu: 'My menu',
       courierFile: 'My courier file'
     },
     footer: {
@@ -11545,7 +11549,7 @@ export const translations = {
       stRefused: 'Geweigerd',
       noteLabel: 'Bericht voor de uitbater',
       notePh: 'Bv. “Kaart overgenomen van Uber Eats, zelfde prijzen, zonder dranken — laat weten als u iets wilt wijzigen.”',
-      noteHelp: 'Zichtbaar voor de uitbater op zijn pagina Mijn producten, en gemaild wanneer u de aanvraag afrondt.',
+      noteHelp: 'Zichtbaar voor de uitbater op zijn pagina Mijn menu, en gemaild wanneer u de aanvraag afrondt.',
       take: '🛠️ In behandeling nemen',
       done: '✅ Kaart geïntegreerd, afronden',
       refuse: 'Weigeren',
@@ -14032,7 +14036,7 @@ export const translations = {
       s2Title: 'De gegevens en het menu van het restaurant wijzigen',
       s2p1: '**Restaurantgegevens** (naam, adres, beschrijving, omslagfoto, logo, uren, uitzonderlijke sluitingen, type keuken, leveringskosten...): onderdeel “Mijn zaak” in het linkermenu.',
       s2p2: 'Een wijziging van uren of een uitzonderlijke sluiting is meteen zichtbaar voor klanten — geen validatie af te wachten.',
-      s2p3: '**Menu** (gerechten, prijzen, beschikbaarheid, foto\'s, optiegroepen zoals sauzen of extra\'s): onderdeel “Mijn producten” in het linkermenu — beschikbaar zodra het restaurant is aangemaakt.',
+      s2p3: '**Menu** (gerechten, prijzen, beschikbaarheid, foto\'s, optiegroepen zoals sauzen of extra\'s): onderdeel “Mijn menu” in het linkermenu — beschikbaar zodra het restaurant is aangemaakt.',
       s2l1: 'Elke menusectie (Voorgerechten, Hoofdgerechten, Mitraillettes...) kan eigen gerechten hebben, hernoemd, herschikt of verwijderd worden.',
       s2l2: 'Een sectie kan ook een eigen foto hebben (🖼️-icoon op de sectie), standaard gebruikt voor alle gerechten van die sectie zonder eigen foto — handig om niet gerecht per gerecht dezelfde foto te uploaden. Na de keuze kan ze rechtstreeks op bepaalde gerechten of op alle tegelijk toegepast worden.',
       s2l3: 'Een gerecht kan tijdelijk als “niet beschikbaar” gemarkeerd worden (uitverkocht) zonder het te verwijderen.',
@@ -15206,7 +15210,8 @@ export const translations = {
       businessPhone: 'Telefoon van de zaak',
       fromFiche: 'overgenomen van je fiche',
       actingBanner: 'Fairide beheert deze zaak als {name} ({admin}). Alles wat je hier doet, gebeurt namens de uitbater.',
-      actingQuit: 'Verlaten en terug naar admin'
+      actingQuit: 'Verlaten en terug naar admin',
+      toastAutoCreated: '{name} is klaar: je zaak is aangemaakt met wat je bij de inschrijving opgaf. Je kunt alles aanpassen in Mijn zaak.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
@@ -15359,7 +15364,8 @@ export const translations = {
       phoneCodeSentEmail: 'Code per e-mail verstuurd naar {email} (Fairide verstuurt nog geen sms). Vul hem hieronder in.',
       phoneVerifiedToast: 'Telefoonnummer geverifieerd, bedankt!',
       phoneVerifyLater: 'Later',
-      confirm: 'Bevestigen'
+      confirm: 'Bevestigen',
+      backToDashboard: 'Terug naar het dashboard'
     },
     resa: {
       title: '📅 Reservaties',
@@ -15611,7 +15617,7 @@ export const translations = {
       customerPreviewLower: 'klantvoorbeeld',
       previewModeBanner: '👁️ Klantvoorbeeldmodus',
       leave: 'Verlaten',
-      myMenu: 'Mijn producten',
+      myMenu: 'Mijn menu',
       courierFile: 'Mijn koeriersdossier'
     },
     footer: {

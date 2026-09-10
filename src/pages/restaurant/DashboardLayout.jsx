@@ -163,8 +163,15 @@ export default function DashboardLayout() {
       setMyRestos(list);
       // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
       if (list.length === 1) pickResto(list[0].id);
-      // Pas encore de restaurant -> on ouvre directement le formulaire de création, pas besoin de cliquer.
-      else if (list.length === 0) setNewRestoOpen(true);
+      // Pas encore de restaurant (compte ouvert avant la création automatique, ou création échouée à
+      // l'inscription) : on le crée tout de suite depuis ce que l'inscription a retenu, sans rien demander ;
+      // le formulaire ne s'ouvre qu'en dernier recours, déjà prérempli.
+      else if (list.length === 0) {
+        creerDepuisIndice().then((r) => {
+          if (r) { setMyRestos([r]); pickResto(r.id); toast(t('dashResto.toastAutoCreated', { name: r.name })); }
+          else setNewRestoOpen(true);
+        });
+      }
       // Le commerce a été créé automatiquement à l'inscription : l'indice local ne sert plus qu'à retenir le
       // site web pour lire la carte (Mes produits → import depuis le web).
       if (list.length > 0) {
@@ -236,6 +243,32 @@ export default function DashboardLayout() {
   function pickResto(id) {
     setRestoId(id);
     loadDashboard(id);
+  }
+
+  // Création silencieuse depuis l'indice d'inscription (fairide_resto_hint) : il faut au moins un nom et des horaires.
+  async function creerDepuisIndice() {
+    let h = null;
+    try { h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null'); } catch { return null; }
+    if (!h || !h.name || !h.hours || !Object.values(h.hours).some((c) => Array.isArray(c) && c.length)) return null;
+    const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
+    const cuisineChoisie = h.cuisineType === 'Autre' && h.customCuisine ? h.customCuisine
+      : (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) ? h.cuisineType
+        : (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) ? typeDevine : 'Autre';
+    const sv = h.services || {};
+    try {
+      const r = await api('/restaurants', {
+        method: 'POST', token,
+        body: {
+          name: String(h.name).trim(), commune: h.commune || user?.addressCity || '', neighborhood: h.neighborhood || '', cuisine: cuisineChoisie, desc: '',
+          addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
+          hours: h.hours, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
+          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false, offersDineIn: !!sv.dineIn,
+          phone: h.phone || '', website: h.website || ''
+        }
+      });
+      try { if (h.website) localStorage.setItem('fairide_menu_source_url', h.website); localStorage.removeItem('fairide_resto_hint'); } catch { /* rien */ }
+      return r;
+    } catch { return null; }
   }
 
   async function createResto() {
@@ -493,7 +526,7 @@ export default function DashboardLayout() {
                 </button>
               ) : (
                 // Activation fermée jusqu'à fin septembre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
-                <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn')}</Link>
+                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn')}</Link>
               )}
             />
           )}

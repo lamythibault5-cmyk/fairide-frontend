@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -132,7 +132,17 @@ export default function Account() {
 
   // Les rangées dépliées. Plusieurs peuvent l'être à la fois : replier la précédente quand on en
   // ouvre une autre ferait disparaître ce qu'on était en train de comparer.
-  const [ouvertes, setOuvertes] = useState(() => new Set());
+  // ?ouvrir=paiement (depuis le tableau de bord, par exemple) : la sous-section arrive déjà dépliée et à l'écran ;
+  // ?retour=/dashboard ajoute un bouton pour revenir d'où l'on vient.
+  const [searchParams] = useSearchParams();
+  const sectionDemandee = searchParams.get('ouvrir') || '';
+  const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
+  const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
+  useEffect(() => {
+    if (!sectionDemandee) return;
+    const id = setTimeout(() => document.getElementById(`section-${sectionDemandee}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    return () => clearTimeout(id);
+  }, [sectionDemandee]);
   function basculer(cle) {
     setOuvertes((prev) => { const n = new Set(prev); if (n.has(cle)) n.delete(cle); else n.add(cle); return n; });
   }
@@ -674,9 +684,12 @@ export default function Account() {
           <LigneCompte icone="📜" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} />}
           </LigneCompte>
-          <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
-            <PaiementRestaurant restaurant={restaurant} orders={commandesResto} />
-          </LigneCompte>
+          <div id="section-paiement">
+            <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+              {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
+              <PaiementRestaurant restaurant={restaurant} orders={commandesResto} />
+            </LigneCompte>
+          </div>
           <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
