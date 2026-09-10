@@ -41,6 +41,7 @@ export const ADMIN_MODULES = [
   { key: 'incidents', path: '/admin/incidents', icon: '🚨', group: 'operations', badge: (o) => pastille(o.incidents?.open || 0, (o.incidents?.overdue || 0) > 0 ? 'danger' : 'warn') },
   { key: 'reports', path: '/admin/reports', icon: '📈', group: 'pilotage', badge: aucun },
   { key: 'team', path: '/admin/team', icon: '🧑‍🤝‍🧑', group: 'configuration', badge: aucun },
+  { key: 'messages', path: '/admin/messages', icon: '💬', group: 'services', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
   { key: 'compliance', path: '/admin/compliance', icon: '⚖️', group: 'configuration', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
 
@@ -54,7 +55,8 @@ export const MODULE_ROLES = {
   incidents: ['owner', 'admin', 'ops', 'support', 'finance'],
   reports: ['owner', 'admin', 'finance', 'ops'],
   team: ['owner', 'admin'],
-  compliance: ['owner', 'admin', 'finance']
+  compliance: ['owner', 'admin', 'finance'],
+  messages: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {
   const roles = MODULE_ROLES[mod.key];

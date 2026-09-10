@@ -3,6 +3,8 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
+import { useToast } from '../context/ToastContext';
+import useInbox from '../hooks/useInbox';
 import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
@@ -47,6 +49,33 @@ export default function Layout() {
   const { user, role, logout } = useAuth();
   const { t } = useLanguage();
   const location = useLocation();
+  const toast = useToast();
+  // Messages de Fairide : pastille sur « Mon compte », toast quand un nouveau message arrive pendant
+  // que l'app est ouverte (une fois par hausse du compteur, jamais au premier chargement), et préfixe
+  // « (n) » dans le titre de l'onglet tant qu'il reste du non lu.
+  const { unread: nonLus, loadedAt: nonLusChargesA } = useInbox();
+  const nonLusPrecedents = useRef(null);
+  useEffect(() => {
+    if (!nonLusChargesA) return;
+    if (nonLusPrecedents.current !== null && nonLus > nonLusPrecedents.current) toast(t('inbox.newMessageToast'));
+    nonLusPrecedents.current = nonLus;
+  }, [nonLus, nonLusChargesA]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    // Les pages posent leur propre titre (usePageMeta), parfois après ce rendu (chargement différé) :
+    // on observe <title> et on remet le préfixe à chaque changement, sans boucler (on ne réécrit que
+    // si le préfixe attendu manque).
+    const el = document.querySelector('title');
+    const appliquer = () => {
+      const brut = document.title.replace(/^\(\d+\) /, '');
+      const voulu = nonLus > 0 ? `(${nonLus}) ${brut}` : brut;
+      if (document.title !== voulu) document.title = voulu;
+    };
+    appliquer();
+    if (!el || typeof MutationObserver === 'undefined') return undefined;
+    const obs = new MutationObserver(appliquer);
+    obs.observe(el, { childList: true, characterData: true, subtree: true });
+    return () => { obs.disconnect(); document.title = document.title.replace(/^\(\d+\) /, ''); };
+  }, [nonLus]);
   // Filet contre la « page vide » : quelle qu'en soit la cause (module manquant, réponse jamais arrivée,
   // rendu avorté), si la zone de contenu n'affiche ni texte ni squelette 2,5 s après un changement de page,
   // elle est remontée (mêmes effets qu'une actualisation, sans en avoir l'air) ; si elle reste vide,
@@ -195,7 +224,12 @@ export default function Layout() {
               {!user.isAdmin && role === 'driver' && (
                 <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.deliveries')}</NavLink>
               )}
-              {!user.isAdmin && <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.account')}</NavLink>}
+              {!user.isAdmin && (
+                <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>
+                  {t('nav.account')}
+                  {nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
+                </NavLink>
+              )}
               {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
             </nav>
           )}

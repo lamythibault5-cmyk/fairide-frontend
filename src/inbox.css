@@ -1,0 +1,63 @@
+/* Messages de Fairide côté utilisateur (src/components/InboxSection.jsx, src/hooks/useInbox.js) :
+   pastille non lu dans la nav du haut, rangée « Messages » de Mon compte, liste des conversations,
+   bulles, réactions, formulaire. Les composants partagés gardent leurs styles de styles.css. */
+
+.inbox-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Pastille « n non lus » à côté de « Mon compte » dans la nav du haut (la barre latérale a déjà
+   .dashboard-nav-link .nav-badge dans styles.css). */
+.role-nav a .nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; font-size: 11px; font-weight: 700; background: var(--iris); color: #fff; vertical-align: middle; }
+
+.inbox-list-wrap, .inbox-thread, .inbox-new { display: flex; flex-direction: column; gap: 12px; }
+.inbox-list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.inbox-list-head .btn-outline { padding: 8px 12px; font-size: 13px; }
+
+.inbox-error { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-chip); background: rgba(214, 69, 69, 0.08); color: var(--red); font-size: 13px; }
+
+.inbox-empty { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 26px 12px; text-align: center; color: var(--ink-soft); background: var(--cream-dim); border-radius: var(--radius-chip); }
+.inbox-empty > span:first-child { font-size: 28px; }
+.inbox-empty b { color: var(--ink); }
+
+.inbox-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.inbox-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 6px; border: 0; border-bottom: 1px solid var(--line); background: transparent; font: inherit; text-align: left; cursor: pointer; color: var(--ink); border-radius: 0; }
+.inbox-list li:last-child .inbox-item { border-bottom: 0; }
+.inbox-item:hover, .inbox-item:focus-visible { background: var(--cream-dim); outline: none; }
+.inbox-item:focus-visible { box-shadow: inset 0 0 0 2px var(--iris); }
+.inbox-item-dot { flex: 0 0 8px; width: 8px; height: 8px; border-radius: 50%; background: transparent; }
+.inbox-item.is-unread .inbox-item-dot { background: var(--iris); }
+.inbox-item-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.inbox-item-text b, .inbox-item-text .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.inbox-item-text b { font-weight: 600; }
+.inbox-item.is-unread .inbox-item-text b { font-weight: 800; }
+.inbox-item-date { flex: 0 0 auto; color: var(--ink-faint); white-space: nowrap; }
+
+.inbox-back { align-self: flex-start; background: transparent; border: 0; padding: 4px 0; font: inherit; font-size: 13px; font-weight: 600; color: var(--iris); cursor: pointer; }
+.inbox-back:hover { text-decoration: underline; }
+.inbox-thread-subject { margin: 0; font-size: 16px; }
+.inbox-closed { margin: 0; padding: 8px 10px; border-radius: var(--radius-chip); background: var(--cream-dim); }
+
+.inbox-bubbles { list-style: none; margin: 0; padding: 4px 0; display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
+.inbox-bubble { display: flex; flex-direction: column; gap: 2px; max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; }
+.inbox-bubble.from-admin { align-self: flex-start; background: var(--cream-dim); border-bottom-left-radius: 4px; }
+.inbox-bubble.from-me { align-self: flex-end; background: rgba(59, 47, 181, 0.10); border-bottom-right-radius: 4px; }
+.inbox-bubble.is-reaction { padding: 6px 10px; }
+.inbox-bubble.is-reaction .inbox-bubble-body { font-size: 22px; line-height: 1.2; }
+.inbox-bubble-author { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+.inbox-bubble-body { white-space: pre-wrap; word-break: break-word; }
+.inbox-bubble-date { font-size: 11px; color: var(--ink-faint); align-self: flex-end; }
+
+.inbox-reactions { display: flex; gap: 6px; flex-wrap: wrap; }
+.inbox-reaction { width: 40px; height: 36px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 18px; cursor: pointer; transition: transform .12s, border-color .12s; }
+.inbox-reaction:hover:not(:disabled), .inbox-reaction:focus-visible { transform: scale(1.12); border-color: var(--iris); outline: none; }
+.inbox-reaction:disabled { opacity: .5; cursor: default; }
+
+.inbox-reply { display: flex; flex-direction: column; gap: 6px; }
+.inbox-reply textarea, .inbox-new textarea { width: 100%; resize: vertical; }
+.inbox-actions { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.inbox-counter { color: var(--ink-faint); margin-right: auto; }
+.inbox-new h4 { margin: 0; }
+
+@media (max-width: 600px) {
+  .inbox-bubble { max-width: 92%; }
+  .inbox-item-date { display: none; }
+}

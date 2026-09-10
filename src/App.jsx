@@ -86,6 +86,7 @@ const AdminIncidentsPage = lazyPage(() => import('./pages/admin/AdminIncidentsPa
 const AdminReportsPage = lazyPage(() => import('./pages/admin/AdminReportsPage'));
 const AdminTeamPage = lazyPage(() => import('./pages/admin/AdminTeamPage'));
 const AdminCompliancePage = lazyPage(() => import('./pages/admin/AdminCompliancePage'));
+const AdminMessagesPage = lazyPage(() => import('./pages/admin/AdminMessagesPage'));
 
 // --- Pages légales ---
 const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
@@ -179,6 +180,7 @@ export default function App() {
           <Route path="reports" element={<AdminReportsPage />} />
           <Route path="team" element={<AdminTeamPage />} />
           <Route path="compliance" element={<AdminCompliancePage />} />
+          <Route path="messages" element={<AdminMessagesPage />} />
         </Route>
 
         <Route path="/mentions-legales" element={<LegalNotice />} />

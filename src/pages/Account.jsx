@@ -13,6 +13,8 @@ import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
+import InboxSection from '../components/InboxSection';
+import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
 import { StarsDisplay } from '../components/Stars';
@@ -136,6 +138,7 @@ export default function Account() {
   // ?retour=/dashboard ajoute un bouton pour revenir d'où l'on vient.
   const [searchParams] = useSearchParams();
   const sectionDemandee = searchParams.get('ouvrir') || '';
+  const { unread: nonLus } = useInbox();
   const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
   const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
   useEffect(() => {
@@ -865,6 +868,12 @@ export default function Account() {
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
           « Mes infos », avec le reste de ce qui concerne la personne. */}
       <div className="card account-groupe" aria-label={t('accountUi.support')}>
+        {/* Messages de Fairide : /account?ouvrir=messages (lien des e-mails, toast) arrive dessus déplié. */}
+        <div id="section-messages">
+          <LigneCompte icone="✉️" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : t('inbox.rowSub')} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
+            {ouvertes.has('messages') && <InboxSection />}
+          </LigneCompte>
+        </div>
         <LigneCompte to="/aide" icone="🛟" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
         <LigneCompte
           icone="💬" titre={t('accountUi.chat')} sous={t('accountUi.chatSub')}
