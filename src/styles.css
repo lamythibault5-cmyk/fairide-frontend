@@ -2870,3 +2870,8 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .discover-info-text { margin: 0; color: rgba(255, 255, 255, .86); line-height: 1.45; }
 .discover-info .discover-info-btn { text-decoration: none; padding: 8px 14px; font-size: 13.5px; }
 @media (max-width: 640px) { .discover-info { grid-column: 1 / -1; min-height: 0; padding: 14px 14px; } .discover-info-title { font-size: 17px; } }
+
+/* Mon menu › copier-coller guidé depuis le site ou la page plateforme du commerce. */
+.copier-coller { margin-top: 12px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line); background: var(--cream-dim, #f6f3ec); }
+.copier-coller-etapes { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+.copier-coller-etapes li { line-height: 1.5; }

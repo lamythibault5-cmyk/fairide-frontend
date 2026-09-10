@@ -435,6 +435,34 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // Copier-coller guidé : les plateformes (Uber Eats, Deliveroo, Takeaway) bloquent la lecture automatique par lien,
+  // mais le restaurateur, lui, a accès à sa page. On l'ouvre pour lui dans un nouvel onglet, il sélectionne tout,
+  // copie, revient et colle : l'agent IA reconstruit la carte depuis le texte (import-text).
+  const tactile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+  function urlDeMaPage() {
+    const saisie = importUrl.trim();
+    if (saisie) return /^https?:\/\//i.test(saisie) ? saisie : `https://${saisie}`;
+    try { return localStorage.getItem('fairide_menu_source_url') || restaurant?.website || ''; } catch { return restaurant?.website || ''; }
+  }
+  function ouvrirMaPage() {
+    const url = urlDeMaPage();
+    if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
+    if (!importUrl.trim()) setImportUrl(url);
+    window.open(url, '_blank', 'noopener');
+  }
+  function ouvrirCollage() {
+    setImportTextOpen(true);
+    setTimeout(() => { const el = document.getElementById('menu-import-textarea'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); el?.focus(); }, 80);
+  }
+  async function collerDepuisPressePapiers() {
+    try {
+      const texte = await navigator.clipboard.readText();
+      if (!texte || texte.trim().length < 40) { toast(t('menuPage.toastClipboardEmpty')); return; }
+      setImportText(texte);
+      toast(t('menuPage.toastPasted', { n: texte.length }));
+    } catch { toast(t('menuPage.toastClipboardDenied')); }
+  }
+
   async function handleImportUrl() {
     const url = importUrl.trim();
     if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
@@ -446,6 +474,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ }
     } catch (err) {
       toast(err.message);
+      // Plateforme qui bloque la lecture : on ouvre tout de suite le plan B (copier-coller), sans rien redemander.
+      if (/bloque|blocks|blokkeert|403|429/i.test(err.message || '')) { try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ } ouvrirCollage(); }
     } finally {
       setImportingUrl(false);
     }
@@ -604,6 +634,15 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               </button>
             </div>
             <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('menuPage.importUrlHint')}</p>
+            <div className="copier-coller">
+              <b>📋 {t('menuPage.copyPasteTitle')}</b>
+              <p className="small" style={{ margin: '4px 0 8px' }}>{t('menuPage.copyPasteIntro')}</p>
+              <ol className="copier-coller-etapes">
+                <li>{t('menuPage.copyPasteStep1')} <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 13, marginLeft: 6 }} onClick={ouvrirMaPage}>{t('menuPage.openMyPage')} ↗</button></li>
+                <li>{tactile ? t('menuPage.copyPasteStep2Mobile') : t('menuPage.copyPasteStep2Desktop')}</li>
+                <li>{t('menuPage.copyPasteStep3')} <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 13, marginLeft: 6 }} onClick={ouvrirCollage}>{t('menuPage.copyPasteGo')}</button></li>
+              </ol>
+            </div>
           </div>
         )}
         {!importedItems && (
@@ -616,8 +655,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               ) : (
                 <>
                   <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importTextIntro')}</p>
-                  <textarea rows={8} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={t('menuPage.importTextPlaceholder')} disabled={importingText} style={{ width: '100%' }} />
+                  <textarea id="menu-import-textarea" rows={8} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={t('menuPage.importTextPlaceholder')} disabled={importingText} style={{ width: '100%' }} />
                   <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                    {typeof navigator !== 'undefined' && navigator.clipboard?.readText && (
+                      <button type="button" className="btn-outline" disabled={importingText} onClick={collerDepuisPressePapiers}>📋 {t('menuPage.pasteFromClipboard')}</button>
+                    )}
                     <button type="button" className="btn-teal" disabled={importingText} onClick={handleImportText}>{importingText ? t('menuPage.importUrlReading') : t('menuPage.importTextButton')}</button>
                     <button type="button" className="btn-ghost" disabled={importingText} onClick={() => { setImportTextOpen(false); setImportText(''); }}>{t('menuPage.cancel')}</button>
                   </div>
