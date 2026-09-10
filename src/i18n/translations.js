@@ -4866,7 +4866,16 @@ export const translations = {
       euroExDiffText: 'chaque mois, pour les mêmes commandes.',
       discoverReviews: 'avis',
       quartiersLabel: 'Déjà livrés :',
-      ordersOpenNote: 'Commandes ouvertes le 10 octobre. Dès aujourd\'hui : découvrir les commerces, créer son compte, inscrire son commerce ou devenir livreur.'
+      ordersOpenNote: 'Commandes ouvertes le 10 octobre. Dès aujourd\'hui : découvrir les commerces, créer son compte, inscrire son commerce ou devenir livreur.',
+      discoverInfoEyebrow: 'Et ce n\'est qu\'un aperçu',
+      discoverInfoTitle: '{n} commerces du quartier t\'attendent',
+      discoverInfoBusinesses: 'commerces',
+      discoverInfoCommunes: 'communes',
+      discoverInfoCuisines: 'types de cuisine',
+      discoverInfoCommission: 'de commission max.',
+      discoverInfoText: 'Restaurants, boulangeries, boucheries, épiceries, night shops… Chaque commande soutient un commerce du quartier : 90 % du prix lui revient, et le livreur garde toute la livraison.',
+      discoverInfoCta: 'Voir tous les commerces',
+      discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -10335,7 +10344,16 @@ export const translations = {
       euroExDiffText: 'every month, for the same orders.',
       discoverReviews: 'reviews',
       quartiersLabel: 'Already delivered:',
-      ordersOpenNote: 'Orders open on 10 October. From today: discover the businesses, create an account, list a business or become a courier.'
+      ordersOpenNote: 'Orders open on 10 October. From today: discover the businesses, create an account, list a business or become a courier.',
+      discoverInfoEyebrow: 'And that is just a glimpse',
+      discoverInfoTitle: '{n} local businesses are waiting for you',
+      discoverInfoBusinesses: 'businesses',
+      discoverInfoCommunes: 'communes',
+      discoverInfoCuisines: 'cuisine types',
+      discoverInfoCommission: 'max. commission',
+      discoverInfoText: 'Restaurants, bakeries, butchers, groceries, night shops… Every order supports a local business: 90% of the price goes to it, and the courier keeps the whole delivery fee.',
+      discoverInfoCta: 'See all businesses',
+      discoverInfoJoin: 'List my business'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -15804,7 +15822,16 @@ export const translations = {
       euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
       discoverReviews: 'beoordelingen',
       quartiersLabel: 'Al geleverd:',
-      ordersOpenNote: 'Bestellen vanaf 10 oktober. Vanaf vandaag: zaken ontdekken, een account aanmaken, je zaak inschrijven of koerier worden.'
+      ordersOpenNote: 'Bestellen vanaf 10 oktober. Vanaf vandaag: zaken ontdekken, een account aanmaken, je zaak inschrijven of koerier worden.',
+      discoverInfoEyebrow: 'En dit is maar een voorproefje',
+      discoverInfoTitle: '{n} buurtzaken wachten op je',
+      discoverInfoBusinesses: 'zaken',
+      discoverInfoCommunes: 'gemeenten',
+      discoverInfoCuisines: 'soorten keuken',
+      discoverInfoCommission: 'commissie max.',
+      discoverInfoText: 'Restaurants, bakkers, slagers, kruideniers, nachtwinkels… Elke bestelling steunt een buurtzaak: 90% van de prijs gaat naar haar, en de koerier houdt de volledige levering.',
+      discoverInfoCta: 'Alle zaken bekijken',
+      discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },

@@ -27,6 +27,11 @@ export default function DiscoverSection({ restaurants }) {
     return retenus;
   }, [restaurants, filtre]);
 
+  // Tuile d'information qui remplit la fin de la grille (grid-column: auto / -1) : chiffres de la vitrine et
+  // deux portes d'entrée, plutôt qu'un trou blanc quand le nombre de cartes ne tombe pas juste.
+  const nbCommunes = new Set(restaurants.map((r) => r.commune).filter(Boolean)).size;
+  const nbCuisines = new Set(restaurants.map((r) => r.cuisine).filter(Boolean)).size;
+
   if (restaurants.length === 0) return null;
   return (
     <section className="discover-section">
@@ -57,6 +62,21 @@ export default function DiscoverSection({ restaurants }) {
             </div>
           </Reveal>
         ))}
+        <Reveal className="discover-info" delay={(cartes.length % 4) * 70}>
+          <span className="discover-info-eyebrow">{t('landing.discoverInfoEyebrow')}</span>
+          <b className="discover-info-title">{t('landing.discoverInfoTitle', { n: restaurants.length })}</b>
+          <div className="discover-info-stats">
+            <span><b>{restaurants.length}</b> {t('landing.discoverInfoBusinesses')}</span>
+            <span><b>{nbCommunes}</b> {t('landing.discoverInfoCommunes')}</span>
+            <span><b>{nbCuisines}</b> {t('landing.discoverInfoCuisines')}</span>
+            <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>
+          </div>
+          <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
+            <Link to="/restaurants" className="btn-hero-ghost discover-info-btn">{t('landing.discoverInfoCta')}</Link>
+            <Link to="/login?audience=partner&role=restaurant" className="btn-hero-ghost discover-info-btn">🏪 {t('landing.discoverInfoJoin')}</Link>
+          </div>
+        </Reveal>
       </div>
     </section>
   );
