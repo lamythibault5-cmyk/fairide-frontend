@@ -5,6 +5,19 @@
 export const translations = {
   fr: {
     reserver: {
+      pageTitle: 'Réserver une table chez {name}',
+      title: 'Réserver une table',
+      notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',
+      browse: 'Voir les commerces',
+      reviews: '{rating} / 5 · {count} avis',
+      hours: 'Horaires d\'ouverture',
+      loginNote: 'Choisissez votre date et votre créneau ; un compte Fairide (gratuit) vous sera demandé juste avant de confirmer, puis vous reviendrez ici.',
+      seeMenu: 'Voir la carte',
+      noReservations: '{name} ne prend pas de réservation en ligne pour le moment.',
+      opensOn: 'Les réservations en ligne chez {name} ouvrent le {date}.',
+      opensHelp: 'Revenez à cette date : le formulaire sera ici.',
+      callMeanwhile: 'En attendant, appelez le {phone}.',
+      poweredBy: 'Réservation propulsée par Fairide — la plateforme belge à commission réduite.'
     },
     floorPlan: {
       area_inside: 'Intérieur',
@@ -6053,6 +6066,19 @@ export const translations = {
   },
   en: {
     reserver: {
+      pageTitle: 'Book a table at {name}',
+      title: 'Book a table',
+      notFound: 'This business does not exist or is no longer on Fairide.',
+      browse: 'Browse businesses',
+      reviews: '{rating} / 5 · {count} reviews',
+      hours: 'Opening hours',
+      loginNote: 'Pick your date and slot; a (free) Fairide account will be requested just before confirming, then you come back here.',
+      seeMenu: 'See the menu',
+      noReservations: '{name} is not taking online reservations at the moment.',
+      opensOn: 'Online reservations at {name} open on {date}.',
+      opensHelp: 'Come back on that date: the form will be here.',
+      callMeanwhile: 'Meanwhile, call {phone}.',
+      poweredBy: 'Reservation powered by Fairide — the Belgian low-commission platform.'
     },
     floorPlan: {
       area_inside: 'Inside',
@@ -12101,6 +12127,19 @@ export const translations = {
   },
   nl: {
     reserver: {
+      pageTitle: 'Een tafel reserveren bij {name}',
+      title: 'Een tafel reserveren',
+      notFound: 'Deze zaak bestaat niet of staat niet meer op Fairide.',
+      browse: 'Zaken bekijken',
+      reviews: '{rating} / 5 · {count} beoordelingen',
+      hours: 'Openingsuren',
+      loginNote: 'Kies je datum en tijdslot; een (gratis) Fairide-account wordt gevraagd net voor je bevestigt, daarna kom je hier terug.',
+      seeMenu: 'De kaart bekijken',
+      noReservations: '{name} neemt momenteel geen onlinereserveringen aan.',
+      opensOn: 'Onlinereserveringen bij {name} openen op {date}.',
+      opensHelp: 'Kom terug op die datum: het formulier staat dan hier.',
+      callMeanwhile: 'Bel intussen {phone}.',
+      poweredBy: 'Reservering via Fairide — het Belgische platform met lage commissie.'
     },
     floorPlan: {
       area_inside: 'Binnen',
