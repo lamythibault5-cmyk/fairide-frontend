@@ -126,6 +126,7 @@ export default function Landing() {
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
+          <p className="small landing-ouverture">🗓️ {t('landing.ordersOpenNote')}</p>
           <ul className="landing-trust" aria-label={t('landing.trustLineAria')}>
             <li>✓ {t('landing.trust1')}</li>
             <li>✓ {t('landing.trust2')}</li>

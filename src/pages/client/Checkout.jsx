@@ -10,6 +10,7 @@ import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../or
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { categoryKind, resolveItemImage } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { commandesOuvertes, dateOuvertureCommandes } from '../../launch';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -585,9 +586,13 @@ export default function Checkout() {
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
             <span>{cart.count > 0 ? t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
-            <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-              {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
-            </button>
+            {commandesOuvertes(user) ? (
+              <button className="btn-gold" disabled={placing} onClick={placeOrder}>
+                {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
+              </button>
+            ) : (
+              <span className="small" style={{ fontWeight: 600 }}>🗓️ {t('checkout.ordersOpenSoon', { date: dateOuvertureCommandes(getLocale()) })}</span>
+            )}
           </div>
         </>
       )}

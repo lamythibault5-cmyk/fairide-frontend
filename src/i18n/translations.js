@@ -4865,7 +4865,8 @@ export const translations = {
       euroExDiffFigure: '300 à 550 € de plus dans la caisse du commerçant',
       euroExDiffText: 'chaque mois, pour les mêmes commandes.',
       discoverReviews: 'avis',
-      quartiersLabel: 'Déjà livrés :'
+      quartiersLabel: 'Déjà livrés :',
+      ordersOpenNote: 'Commandes ouvertes le 10 octobre. Dès aujourd\'hui : découvrir les commerces, créer son compte, inscrire son commerce ou devenir livreur.'
     },
     menuCategories: {
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
@@ -4928,7 +4929,8 @@ export const translations = {
       reviewReplyFrom: 'Réponse de {name}',
       discoverTitle: 'Découvrir aussi',
       fairideAdvantageAmount: 'Avantage Fairide : {name} offre −{v} sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
-      fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.'
+      fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
+      ordersOpenBanner: 'Les commandes ouvrent le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.'
     },
     floatingCart: {
       title: '🛒 Ton panier',
@@ -4941,7 +4943,8 @@ export const translations = {
       conflictTitle: 'Panier d\'un autre commerce',
       conflictMessage: 'Ton panier contient déjà des articles de {restaurant}. Un panier ne peut contenir que des produits d\'un même commerce — le vider pour commander ici à la place ?',
       conflictConfirm: 'Vider et continuer',
-      conflictCancel: 'Annuler'
+      conflictCancel: 'Annuler',
+      ordersOpenSoon: 'Les commandes ouvrent le {date} : ton panier t\'attend.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -5087,7 +5090,8 @@ export const translations = {
       toastNoReservation: 'Ce restaurant ne propose pas la réservation de table.',
       toastNoOnlineOrder: 'Ce restaurant ne prend plus de commande en ligne — seule la réservation de table est possible.',
       dateToday: 'Aujourd\'hui',
-      dateTomorrow: 'Demain'
+      dateTomorrow: 'Demain',
+      ordersOpenSoon: 'Les commandes ouvrent le {date}. Ton panier est conservé jusque-là.'
     },
     orders: {
       title: 'Mes commandes',
@@ -10330,7 +10334,8 @@ export const translations = {
       euroExDiffFigure: '€300 to €550 more in the shopkeeper\'s till',
       euroExDiffText: 'every month, for the same orders.',
       discoverReviews: 'reviews',
-      quartiersLabel: 'Already delivered:'
+      quartiersLabel: 'Already delivered:',
+      ordersOpenNote: 'Orders open on 10 October. From today: discover the businesses, create an account, list a business or become a courier.'
     },
     menuCategories: {
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
@@ -10393,7 +10398,8 @@ export const translations = {
       reviewReplyFrom: 'Reply from {name}',
       discoverTitle: 'Discover more',
       fairideAdvantageAmount: 'Fairide advantage: {name} gives −{v} on every product, because here the platform only takes 10%.',
-      fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.'
+      fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.',
+      ordersOpenBanner: 'Orders open on {date}. Until then, browse the menu, build your cart and save your favourite businesses.'
     },
     floatingCart: {
       title: '🛒 Your cart',
@@ -10406,7 +10412,8 @@ export const translations = {
       conflictTitle: 'Cart from another shop',
       conflictMessage: 'Your cart already has items from {restaurant}. A cart can only hold products from one shop at a time — clear it to order here instead?',
       conflictConfirm: 'Clear and continue',
-      conflictCancel: 'Cancel'
+      conflictCancel: 'Cancel',
+      ordersOpenSoon: 'Orders open on {date}: your cart is waiting for you.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -10552,7 +10559,8 @@ export const translations = {
       toastNoReservation: 'This restaurant does not offer table reservations.',
       toastNoOnlineOrder: 'This restaurant no longer takes online orders — only table reservation is possible.',
       dateToday: 'Today',
-      dateTomorrow: 'Tomorrow'
+      dateTomorrow: 'Tomorrow',
+      ordersOpenSoon: 'Orders open on {date}. Your cart is kept until then.'
     },
     orders: {
       title: 'My orders',
@@ -15795,7 +15803,8 @@ export const translations = {
       euroExDiffFigure: '€ 300 tot € 550 meer in de kassa van de handelaar',
       euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
       discoverReviews: 'beoordelingen',
-      quartiersLabel: 'Al geleverd:'
+      quartiersLabel: 'Al geleverd:',
+      ordersOpenNote: 'Bestellen vanaf 10 oktober. Vanaf vandaag: zaken ontdekken, een account aanmaken, je zaak inschrijven of koerier worden.'
     },
     menuCategories: {
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
@@ -15858,7 +15867,8 @@ export const translations = {
       reviewReplyFrom: 'Reactie van {name}',
       discoverTitle: 'Ontdek ook',
       fairideAdvantageAmount: 'Fairide-voordeel: {name} geeft −{v} op elk product, omdat het platform hier maar 10% neemt.',
-      fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.'
+      fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.',
+      ordersOpenBanner: 'Bestellen kan vanaf {date}. Tot dan: bekijk de kaart, stel je winkelmandje samen en bewaar je favoriete zaken.'
     },
     floatingCart: {
       title: '🛒 Jouw winkelmandje',
@@ -15871,7 +15881,8 @@ export const translations = {
       conflictTitle: 'Winkelmandje van een andere zaak',
       conflictMessage: 'Je winkelmandje bevat al artikelen van {restaurant}. Een winkelmandje kan maar producten van één zaak tegelijk bevatten — leegmaken om hier te bestellen?',
       conflictConfirm: 'Leegmaken en verdergaan',
-      conflictCancel: 'Annuleren'
+      conflictCancel: 'Annuleren',
+      ordersOpenSoon: 'Bestellen kan vanaf {date}: je winkelmandje wacht op je.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -16017,7 +16028,8 @@ export const translations = {
       toastNoReservation: 'Dit restaurant biedt geen tafelreservaties aan.',
       toastNoOnlineOrder: 'Dit restaurant neemt geen online bestellingen meer — enkel tafelreservatie is mogelijk.',
       dateToday: 'Vandaag',
-      dateTomorrow: 'Morgen'
+      dateTomorrow: 'Morgen',
+      ordersOpenSoon: 'Bestellen kan vanaf {date}. Je winkelmandje blijft tot dan bewaard.'
     },
     orders: {
       title: 'Mijn bestellingen',

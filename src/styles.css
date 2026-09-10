@@ -2836,3 +2836,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* Mon menu : la méthode « Démarrer en 1 clic », mise en avant au-dessus des autres quand la carte est vide. */
 .methode-un-clic { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
 .methode-un-clic .methode-num { background: #1E8A7A; color: #fff; }
+
+/* Ouverture des commandes (10 octobre 2026) : bandeau sur la fiche commerce et note sur l'accueil. */
+.ouverture-bandeau { background: #fff4d6; color: #6b4d00; border: 1px solid #f0d28a; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-weight: 600; font-size: 13px; }
+.landing-ouverture { margin: 10px 0 0; opacity: .9; font-weight: 600; }

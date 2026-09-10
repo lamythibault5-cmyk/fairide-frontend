@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useCart } from '../context/CartContext';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, getLocale } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
+import { commandesOuvertes, dateOuvertureCommandes } from '../launch';
 
 // Panier persistant sur toutes les pages (monté une seule fois dans Layout.jsx), toujours en bas à
 // gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
@@ -15,6 +17,8 @@ export default function FloatingCart() {
   const cart = useCart();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
+  const ouvert = commandesOuvertes(user);
   const [expanded, setExpanded] = useState(false);
   // Chargé à la demande (à l'ouverture) : ce composant n'a pas forcément le menu du restaurant sous la
   // main puisqu'il peut être affiché depuis n'importe quelle page, pas seulement celle du restaurant.
@@ -120,9 +124,13 @@ export default function FloatingCart() {
             survit donc au changement de page. Sans ce setExpanded(false), le récap complet restait
             déployé par-dessus la page de commande, qu'il recouvre en partie — alors même qu'on
             venait de la demander. On repart de la bulle, comme au premier ajout. */}
-        <button type="button" className="floating-cart-order-btn" onClick={() => { setExpanded(false); navigate('/checkout'); }}>
-          {t('floatingCart.order')}
-        </button>
+        {ouvert ? (
+          <button type="button" className="floating-cart-order-btn" onClick={() => { setExpanded(false); navigate('/checkout'); }}>
+            {t('floatingCart.order')}
+          </button>
+        ) : (
+          <p className="small" style={{ margin: '6px 0' }}>🗓️ {t('floatingCart.ordersOpenSoon', { date: dateOuvertureCommandes(getLocale()) })}</p>
+        )}
         <button type="button" className="floating-cart-clear-link" onClick={() => cart.clearLines()}>🗑️ {t('floatingCart.clear')}</button>
       </div>
     </div>

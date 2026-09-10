@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { commandesOuvertes, dateOuvertureCommandes } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
@@ -258,6 +259,11 @@ export default function RestaurantMenu() {
             <Suspense fallback={<div style={{ height: 220 }} />}>
               <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />
             </Suspense>
+          </div>
+        )}
+        {!commandesOuvertes(user) && (
+          <div className="ouverture-bandeau" role="status">
+            🗓️ {t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureCommandes(getLocale()) })}
           </div>
         )}
         {restaurant.fairideAdvantage && (
