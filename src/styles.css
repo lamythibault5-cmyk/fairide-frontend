@@ -1959,14 +1959,17 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
    sur le média lui-même, AVANT le voile, rend au plat sa couleur sans toucher au plancher de contraste
    du texte (qui ne dépend que du voile). Mesuré à l'œil sur les plans sombres et le flambé : le rouge
    des tomates et l'orange de la flamme reviennent, le blanc des vestes ne sature pas. */
-.cuisine-fond-media { filter: saturate(1.18) contrast(1.04); }
+.cuisine-fond-media { filter: saturate(1.35) contrast(1.1) brightness(1.04); }
 
 /* Le voile est ce qui rend tout le reste possible. Une vidéo change de luminosité d'une image à
    l'autre : contrairement à une photo, son pire pixel ne se calcule pas. Le voile impose donc un
    plancher indépendant de ce qui passe à l'écran — même devant une image entièrement noire, le fond
-   ne descend pas sous le blanc à 55 %, soit un gris 140. C'est ce plancher, et non la vidéo, qui
-   décide du contraste : encre pleine à 5,5:1 dessus. */
-.cuisine-fond-voile { position: absolute; inset: 0; background: rgba(255, 255, 255, .55); }
+   ne descend pas sous le blanc à 48 %, soit un gris 122. C'est ce plancher, et non la vidéo, qui
+   décide du contraste : encre pleine à 3,7:1 dessus — suffisant pour les titres et gros textes posés à
+   nu sur le fond (seuil 3:1) ; les paragraphes, eux, vivent dans des cartes à 84 % de blanc qui gardent
+   leur propre plancher. Demande du fondateur (2026-09-10) : un fond « un peu plus voyant et clair »,
+   d'où le voile abaissé de 55 % à 48 % et la vidéo plus saturée juste au-dessus. */
+.cuisine-fond-voile { position: absolute; inset: 0; background: rgba(255, 255, 255, .48); }
 
 /* Le contenu passe au-dessus du fond. Classe dédiée et non `.wrap` en général : élever tout .wrap
    en créerait un contexte d'empilement sur chaque page du site, ce qui piégerait sous lui les
@@ -2028,7 +2031,7 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
    toute la largeur, sans marge où le mouvement pourrait vivre seul, et une vidéo trop présente
    derrière une colonne pleine fatigue plus qu'elle ne séduit. */
 @media (max-width: 700px) {
-  .cuisine-fond-voile { background: rgba(255, 255, 255, .64); }
+  .cuisine-fond-voile { background: rgba(255, 255, 255, .58); }
   .wrap-fond .card { background: rgba(255, 255, 255, .9); }
 }
 
