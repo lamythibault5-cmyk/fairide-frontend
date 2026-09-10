@@ -3104,7 +3104,7 @@ export const translations = {
       draftWarning: 'Version du 7 septembre 2026 — Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Mentions légales',
       publisherTitle: 'Éditeur du site',
-      publisher: 'Fairide SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 — TVA : BE 1042.169.780 — RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nReprésentant légal : Thibault Lamy, administrateur\nEmail : contact@fairide.be — Téléphone : +32 474 20 07 13\nCompte bancaire : IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
+      publisher: 'Fairide SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 — TVA : BE 1042.169.780 — RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nReprésentant légal : Thibault Lamy, administrateur\nEmail : contact@fairide.be — Téléphone : +32 491 97 99 80\nCompte bancaire : IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hébergement',
       hosting: 'Frontend hébergé par Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).\nBackend et base de données hébergés par Railway Corporation.',
       ipTitle: 'Propriété intellectuelle',
@@ -3192,7 +3192,7 @@ export const translations = {
       s9q4a: 'L\'historique des commandes se trouve dans la section Commandes du tableau de bord. Les factures et relevés se trouvent dans la section Factures.',
       s10Title: 'Aide',
       s10p1: 'Une question sur l\'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? L\'assistant Fairide 🤖 répond directement dans le tableau de bord — bulle de discussion en bas à droite de l\'écran, sur n\'importe quelle page.',
-      s10p2: 'Pour toute autre question, le support Fairide est joignable par e-mail à [contact@fairide.be](mailto:contact@fairide.be) ou par téléphone au [+32 474 20 07 13](tel:+32474200713).'
+      s10p2: 'Pour toute autre question, le support Fairide est joignable par e-mail à [contact@fairide.be](mailto:contact@fairide.be) ou par téléphone au [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
       catch_sub: 'Attrape les plats',
@@ -8592,7 +8592,7 @@ export const translations = {
       draftWarning: 'Version of 7 September 2026 — Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
       title: 'Legal notice',
       publisherTitle: 'Site publisher',
-      publisher: 'Fairide SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 — VAT: BE 1042.169.780 — RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nLegal representative: Thibault Lamy, director\nEmail: contact@fairide.be — Phone: +32 474 20 07 13\nBank account: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
+      publisher: 'Fairide SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 — VAT: BE 1042.169.780 — RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nLegal representative: Thibault Lamy, director\nEmail: contact@fairide.be — Phone: +32 491 97 99 80\nBank account: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hosting',
       hosting: 'Frontend hosted by Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, USA).\nBackend and database hosted by Railway Corporation.',
       ipTitle: 'Intellectual property',
@@ -8680,7 +8680,7 @@ export const translations = {
       s9q4a: 'The order history is in the Orders section of the dashboard. Invoices and statements are in the Invoices section.',
       s10Title: 'Help',
       s10p1: 'A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The Fairide assistant 🤖 answers directly in the dashboard — chat bubble at the bottom right of the screen, on any page.',
-      s10p2: 'For any other question, Fairide support can be reached by e-mail at [contact@fairide.be](mailto:contact@fairide.be) or by phone on [+32 474 20 07 13](tel:+32474200713).'
+      s10p2: 'For any other question, Fairide support can be reached by e-mail at [contact@fairide.be](mailto:contact@fairide.be) or by phone on [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
       catch_sub: 'Catch the dishes',
@@ -14080,7 +14080,7 @@ export const translations = {
       draftWarning: 'Versie van 7 september 2026 — Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe.',
       title: 'Wettelijke vermeldingen',
       publisherTitle: 'Uitgever van de site',
-      publisher: 'Fairide SRL\nBesloten vennootschap (BV/SRL) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 — BTW: BE 1042.169.780 — RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nWettelijke vertegenwoordiger: Thibault Lamy, bestuurder\nE-mail: contact@fairide.be — Telefoon: +32 474 20 07 13\nBankrekening: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
+      publisher: 'Fairide SRL\nBesloten vennootschap (BV/SRL) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 — BTW: BE 1042.169.780 — RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nWettelijke vertegenwoordiger: Thibault Lamy, bestuurder\nE-mail: contact@fairide.be — Telefoon: +32 491 97 99 80\nBankrekening: IBAN BE79 3632 8202 6833 (BIC BBRUBEBB)',
       hostingTitle: 'Hosting',
       hosting: 'Frontend gehost door Vercel Inc. (340 S Lemon Ave #4133, Walnut, CA 91789, VS).\nBackend en database gehost door Railway Corporation.',
       ipTitle: 'Intellectuele eigendom',
@@ -14168,7 +14168,7 @@ export const translations = {
       s9q4a: 'De bestelgeschiedenis staat in het onderdeel Bestellingen van het dashboard. Facturen en overzichten staan in het onderdeel Facturen.',
       s10Title: 'Hulp',
       s10p1: 'Een vraag over het gebruik van Fairide (het menu wijzigen, een bestelstatus begrijpen, een factuur...)? De Fairide-assistent 🤖 antwoordt rechtstreeks in het dashboard — chatbel rechtsonder op het scherm, op elke pagina.',
-      s10p2: 'Voor elke andere vraag is de Fairide-ondersteuning bereikbaar per e-mail op [contact@fairide.be](mailto:contact@fairide.be) of telefonisch op [+32 474 20 07 13](tel:+32474200713).'
+      s10p2: 'Voor elke andere vraag is de Fairide-ondersteuning bereikbaar per e-mail op [contact@fairide.be](mailto:contact@fairide.be) of telefonisch op [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
       catch_sub: 'Vang de gerechten',

@@ -10,7 +10,7 @@ export default function ContactSection({ messageInitial = '' }) {
   const INFO_CARDS = [
     { icon: '✉️', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
     { icon: '📍', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
-    { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 474 20 07 13'] }
+    { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 491 97 99 80'] }
   ];
   const ROLES = [
     { value: 'client', label: t('contact.roleClient') },
