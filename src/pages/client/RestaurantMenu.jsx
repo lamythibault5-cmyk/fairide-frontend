@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { commandesOuvertes, dateOuvertureCommandes } from '../../launch';
+import { commandesOuvertes, dateOuvertureCommandes, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
@@ -263,7 +263,9 @@ export default function RestaurantMenu() {
         )}
         {!commandesOuvertes(user) && (
           <div className="ouverture-bandeau" role="status">
-            🗓️ {t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureCommandes(getLocale()) })}
+            🗓️ {reservationsOuvertes(user)
+              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureCommandes(getLocale()) })
+              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureCommandes(getLocale()), dateResa: dateOuvertureReservations(getLocale()) })}
           </div>
         )}
         {restaurant.fairideAdvantage && (
@@ -283,7 +285,7 @@ export default function RestaurantMenu() {
             {restaurant.freeDelivery ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name }) : restaurant.freeDeliveryMinOrder != null ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) }) : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}
           </div>
         )}
-        {restaurant.offersDineIn && (
+        {restaurant.offersDineIn && (reservationsOuvertes(user) ? (
           <button
             type="button"
             className="btn-outline btn-block"
@@ -291,7 +293,11 @@ export default function RestaurantMenu() {
           >
             {t('restaurantMenu.reserveTable')}
           </button>
-        )}
+        ) : (
+          <button type="button" className="btn-outline btn-block" disabled title={t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}>
+            🗓️ {t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}
+          </button>
+        ))}
       </div>
 
       {onlineOrderingDisabled && (
