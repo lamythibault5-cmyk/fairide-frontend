@@ -8,17 +8,22 @@ import { musique } from './musique';
 // commun vit ici et une seule fois : la boucle requestAnimationFrame avec un dt réel et plafonné, la
 // saisie pointeur/clavier normalisée en coordonnées du cadre, le canvas mis à l'échelle du dpr, le
 // meilleur score par jeu, la pause automatique quand l'onglet passe en arrière-plan, le bouton 📖
-// qui ouvre les règles, la musique de fond (coupée par défaut, voir musique.js), et une couche
-// d'effets partagée : textes flottants « +1 », éclats de particules, annonce de niveau, flash de chute.
-// Les jeux la déclenchent via api.effet(x, y, texte) et api.eclat(x, y, couleur, n) — sans rien connaître
-// de React ni du canvas.
+// qui ouvre les règles, la musique de fond (coupée par défaut, voir musique.js), le compte à rebours
+// « Prêt ? → Go ! » avant chaque partie, et une couche d'effets partagée : textes flottants « +1 »,
+// éclats de particules, annonce de niveau, flash de chute. Les jeux la déclenchent via
+// api.effet(x, y, texte) et api.eclat(x, y, couleur, n) — sans rien connaître de React ni du canvas.
 //
 // POURQUOI UN CANVAS. Les anciennes versions rendaient chaque objet en <span> repositionné par React
 // seize fois par seconde. Ici on dessine une image par rafraîchissement d'écran, sans passer par React :
 // c'est ce qui rend le mouvement continu. React ne voit passer que le score et l'état de la partie.
 
 const DT_MAX = 0.05; // au-delà (onglet réveillé, saccade), on avance d'un pas plafonné plutôt que de sauter
+const COMPTE_PRET = 0.7; // « Prêt ? » puis « Go ! » : une seconde en tout, assez pour poser le doigt
+const COMPTE_TOTAL = 1.1;
+const VITESSE_CLAVIER = 1.3; // flèches ← → : largeurs de terrain par seconde
 const IRIS = '#3B2FB5'; const LIME = '#C8F03C';
+// Une ligne de règles = une icône + son texte ; le libellé avant le premier « : » est mis en gras.
+const ICONES_REGLES = ['🎯', '🏆', '💀', '🕹️'];
 
 function lireMeilleur(cle) {
   try { return Number(localStorage.getItem(cle)) || 0; } catch { return 0; }
@@ -30,6 +35,15 @@ export function tJeu(t, jeu, champ, defaut) {
   const cle = `jeux.${jeu.key}_${champ}`;
   const v = t(cle);
   return v === cle ? defaut : v;
+}
+// Même repli pour les textes du moteur : la clé manquante n'est jamais affichée telle quelle.
+const tDef = (t, cle, defaut, vars) => { const v = t(cle, vars); return v === cle ? defaut : v; };
+
+// « But : … » → <b>But :</b> … (le libellé reste court, sinon on n'y touche pas).
+function LigneRegle({ texte }) {
+  const i = texte.indexOf(':');
+  if (i <= 0 || i > 24) return texte;
+  return <><b>{texte.slice(0, i + 1)}</b>{texte.slice(i + 1)}</>;
 }
 
 // Couche d'effets : mise à jour et dessin indépendants du jeu, par-dessus son rendu.
@@ -43,7 +57,8 @@ function creerEffets() {
         particules.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 40, r: 2 + Math.random() * 3, couleur, reste: 0.55, duree: 0.55 });
       }
     },
-    annoncer(texte) { annonce = { texte, reste: 1.3, duree: 1.3 }; },
+    // Annonce au centre du terrain (niveau franchi, compte à rebours) ; yk = hauteur relative.
+    annoncer(texte, duree = 1.3, yk = 0.3, grand = false) { annonce = { texte, reste: duree, duree, yk, grand }; },
     flasher() { flash = 1; },
     vider() { textes = []; particules = []; annonce = null; flash = 0; },
     update(dt) {
@@ -64,8 +79,11 @@ function creerEffets() {
         const k = t.reste / t.duree;
         ctx.globalAlpha = Math.min(1, k * 1.6);
         ctx.font = `800 ${large ? 20 : 15}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,18,31,.55)'; ctx.strokeText(t.texte, t.x, t.y);
-        ctx.fillStyle = t.couleur; ctx.fillText(t.texte, t.x, t.y);
+        // Un « Parfait ! +2 » né au bord du terrain est ramené dedans : jamais de texte coupé.
+        const demi = ctx.measureText(t.texte).width / 2 + 4;
+        const x = Math.max(demi, Math.min(w - demi, t.x)); const y = Math.max(12, t.y);
+        ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(20,18,31,.55)'; ctx.strokeText(t.texte, x, y);
+        ctx.fillStyle = t.couleur; ctx.fillText(t.texte, x, y);
       }
       ctx.globalAlpha = 1;
       if (annonce) {
@@ -74,8 +92,9 @@ function creerEffets() {
         const sortie = Math.min(1, k * 4); // disparition en fin
         const alpha = Math.min(entree, sortie);
         const echelle = 0.85 + 0.15 * entree;
-        ctx.save(); ctx.globalAlpha = alpha; ctx.translate(w / 2, h * 0.3); ctx.scale(echelle, echelle);
-        ctx.font = `900 ${large ? 30 : 18}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const px = (annonce.grand ? 1.5 : 1) * (large ? 30 : 18);
+        ctx.save(); ctx.globalAlpha = alpha; ctx.translate(w / 2, h * annonce.yk); ctx.scale(echelle, echelle);
+        ctx.font = `900 ${px}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(20,18,31,.6)'; ctx.strokeText(annonce.texte, 0, 0);
         ctx.fillStyle = LIME; ctx.fillText(annonce.texte, 0, 0);
         ctx.restore();
@@ -85,14 +104,20 @@ function creerEffets() {
   };
 }
 
+const dansChampTexte = (e) => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '') || e.target?.isContentEditable;
+// Souris + survol : un clavier est probablement là, on peut suggérer « Espace pour rejouer ».
+const clavierProbable = () => { try { return window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch { return false; } };
+
 // onStartRequest(demarrer) : le parent décide quand la partie commence (il peut d'abord demander un
 // pseudo, voir GameSocial.jsx) et appelle demarrer() lui-même. onScore(score) : fin de partie.
 export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false, onStartRequest, onScore }) {
   const { t } = useLanguage();
   const onScoreRef = useRef(onScore);
   onScoreRef.current = onScore;
+  const tRef = useRef(t);
+  tRef.current = t;
   const [taille, setTaille] = useState({ w: width, h: height });
-  const [status, setStatus] = useState('idle'); // idle | playing | paused | lost
+  const [status, setStatus] = useState('idle'); // idle | countdown | playing | paused | lost
   const [score, setScore] = useState(0);
   const [meilleur, setMeilleur] = useState(() => lireMeilleur(jeu.stockage));
   const [nouveauRecord, setNouveauRecord] = useState(false);
@@ -127,15 +152,17 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const conteneur = useRef(null);
   const canvas = useRef(null);
   const instance = useRef(null);
-  const effets = useRef(creerEffets());
+  const effets = useRef(null);
+  if (!effets.current) effets.current = creerEffets();
   const scoreRef = useRef(0);
   const meilleurRef = useRef(meilleur);
   const statusRef = useRef(status);
   const tailleRef = useRef(taille);
-  const input = useRef({ x: null, y: null, enfonce: false, tapes: [] });
+  const input = useRef({ x: null, y: null, enfonce: false, tapes: [], gauche: false, droite: false });
   const raf = useRef(0);
   const derniereImage = useRef(0);
   const finRaf = useRef(0);
+  const commencerRef = useRef(null);
 
   statusRef.current = status;
   tailleRef.current = taille;
@@ -185,7 +212,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         const avant = niveau();
         scoreRef.current += n; setScore(scoreRef.current); setPop((p) => p + 1);
         // Palier franchi : une annonce dans le terrain, sans passer par React.
-        if (niveau() > avant) effets.current.annoncer(t('gameFrame.levelUp', { n: niveau() + 1 }));
+        if (niveau() > avant) effets.current.annoncer(tRef.current('gameFrame.levelUp', { n: niveau() + 1 }));
       },
       perdre() {
         if (statusRef.current !== 'playing') return;
@@ -202,6 +229,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       // Effets partagés : « +1 » flottant, éclat de particules.
       effet(x, y, texte, couleur) { effets.current.texte(x, y, texte, couleur); },
       eclat(x, y, couleur, n) { effets.current.eclat(x, y, couleur, n); },
+      // Textes affichés dans le terrain (« Pfiou ! »…) : traduits par le moteur, dans la langue courante.
+      t: (cle, vars) => tRef.current(cle, vars),
       niveau,
       score: () => scoreRef.current
     };
@@ -228,6 +257,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       const dt = Math.min(DT_MAX, (maintenant - derniereImage.current) / 1000);
       derniereImage.current = maintenant;
       const inp = input.current;
+      // Flèches ← → : un pointeur virtuel qui glisse à vitesse constante (les jeux ne voient qu'un x).
+      if (inp.gauche !== inp.droite) {
+        const { w, h } = tailleRef.current;
+        inp.x = Math.max(0, Math.min(w, (inp.x ?? w / 2) + (inp.droite ? 1 : -1) * w * VITESSE_CLAVIER * dt));
+        if (inp.y == null) inp.y = h / 2;
+      }
       instance.current.update(dt, { x: inp.x, y: inp.y, enfonce: inp.enfonce, tapes: inp.tapes, niveau: niveau() });
       inp.tapes = [];
       effets.current.update(dt);
@@ -236,6 +271,25 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     };
     raf.current = requestAnimationFrame(pas);
     return () => cancelAnimationFrame(raf.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
+
+  // Compte à rebours « Prêt ? → Go ! » : le terrain est dessiné (immobile) avec l'annonce par-dessus, puis
+  // la partie démarre. Les tapes faites pendant le compte ne comptent pas.
+  useEffect(() => {
+    if (status !== 'countdown') return undefined;
+    const debut = performance.now(); let precedent = debut; let go = false;
+    effets.current.annoncer(tDef(t, 'gameFrame.ready', 'Prêt ?'), COMPTE_PRET, 0.42, true);
+    const boucle = (m) => {
+      const dt = Math.min(DT_MAX, (m - precedent) / 1000); precedent = m;
+      const ecoule = (m - debut) / 1000;
+      if (!go && ecoule >= COMPTE_PRET) { go = true; effets.current.annoncer(tDef(t, 'gameFrame.go', 'Go !'), COMPTE_TOTAL - COMPTE_PRET + 0.25, 0.42, true); }
+      effets.current.update(dt); dessiner();
+      if (ecoule >= COMPTE_TOTAL) { input.current.tapes = []; setStatus('playing'); return; }
+      finRaf.current = requestAnimationFrame(boucle);
+    };
+    finRaf.current = requestAnimationFrame(boucle);
+    return () => cancelAnimationFrame(finRaf.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
@@ -254,25 +308,46 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   }, [status]);
 
   // Onglet en arrière-plan : on met en pause plutôt que de laisser le jeu « rattraper » d'un coup au
-  // retour — perdre parce qu'on a répondu à un message n'est pas du jeu.
+  // retour — perdre parce qu'on a répondu à un message n'est pas du jeu. (Le compte à rebours aussi.)
   useEffect(() => {
-    const surVisibilite = () => { if (document.hidden && statusRef.current === 'playing') setStatus('paused'); };
+    const surVisibilite = () => {
+      if (!document.hidden) return;
+      if (statusRef.current === 'playing' || statusRef.current === 'countdown') setStatus('paused');
+      input.current.enfonce = false; input.current.gauche = false; input.current.droite = false;
+    };
     document.addEventListener('visibilitychange', surVisibilite);
     return () => document.removeEventListener('visibilitychange', surVisibilite);
   }, []);
 
-  // Clavier : Espace = maintenir (FairRider) ; Échap ou P = pause / reprise.
+  // Clavier : Espace = maintenir (FairRider) ou (re)commencer ; ← → = déplacer ; Échap ou P = pause / reprise.
   useEffect(() => {
     const bas = (e) => {
-      if (e.code === 'Space' && statusRef.current === 'playing') { e.preventDefault(); input.current.enfonce = true; }
+      if (dansChampTexte(e)) return;
+      const st = statusRef.current;
+      // Sur un bouton (atteint au clavier), Espace et Entrée restent au bouton : pas de double action.
+      if ((e.code === 'Space' || e.code === 'Enter') && e.target?.tagName !== 'BUTTON') {
+        if (st === 'playing') { e.preventDefault(); input.current.enfonce = true; }
+        else if ((st === 'idle' || st === 'lost') && !reglesOuvertes && !e.repeat) { e.preventDefault(); commencerRef.current?.(); }
+        else if (st === 'paused' && !reglesOuvertes && !e.repeat) { e.preventDefault(); setStatus('playing'); }
+      }
+      if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+        if (st === 'playing' || st === 'countdown') e.preventDefault();
+        input.current[e.code === 'ArrowLeft' ? 'gauche' : 'droite'] = true;
+      }
       if ((e.code === 'Escape' || e.code === 'KeyP') && !reglesOuvertes) {
-        if (statusRef.current === 'playing') setStatus('paused');
-        else if (statusRef.current === 'paused') setStatus('playing');
+        if (st === 'playing') setStatus('paused');
+        else if (st === 'paused') setStatus('playing');
       }
     };
-    const haut = (e) => { if (e.code === 'Space') input.current.enfonce = false; };
-    window.addEventListener('keydown', bas); window.addEventListener('keyup', haut);
-    return () => { window.removeEventListener('keydown', bas); window.removeEventListener('keyup', haut); };
+    const haut = (e) => {
+      if (e.code === 'Space' || e.code === 'Enter') input.current.enfonce = false;
+      if (e.code === 'ArrowLeft') input.current.gauche = false;
+      if (e.code === 'ArrowRight') input.current.droite = false;
+    };
+    // Fenêtre quittée touche enfoncée : on relâche tout, sinon le joueur file tout seul au retour.
+    const relacher = () => { input.current.enfonce = false; input.current.gauche = false; input.current.droite = false; };
+    window.addEventListener('keydown', bas); window.addEventListener('keyup', haut); window.addEventListener('blur', relacher);
+    return () => { window.removeEventListener('keydown', bas); window.removeEventListener('keyup', haut); window.removeEventListener('blur', relacher); };
   }, [reglesOuvertes]);
 
   function coord(e) {
@@ -282,24 +357,26 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   function surPointeurBas(e) {
     const p = coord(e); input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
     input.current.tapes.push(p);
-    canvas.current.setPointerCapture?.(e.pointerId);
+    try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché : sans capture, le glissé marche quand même */ }
   }
   function surPointeurMouv(e) { const p = coord(e); input.current.x = p.x; input.current.y = p.y; }
   function surPointeurHaut() { input.current.enfonce = false; }
 
   function demarrer() {
     scoreRef.current = 0; setScore(0); setNouveauRecord(false);
-    input.current = { x: null, y: null, enfonce: false, tapes: [] };
+    input.current = { x: null, y: null, enfonce: false, tapes: [], gauche: false, droite: false };
     instance.current?.reset();
     effets.current.vider();
-    setStatus('playing');
+    setStatus('countdown');
   }
   function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
-  function ouvrirRegles() { if (statusRef.current === 'playing') setStatus('paused'); setReglesOuvertes(true); }
+  commencerRef.current = commencer;
+  function ouvrirRegles() { if (statusRef.current === 'playing' || statusRef.current === 'countdown') setStatus('paused'); setReglesOuvertes(true); }
 
   const { w, h } = taille;
   const niv = niveau();
   const progression = niv >= jeu.maxNiveau ? 1 : (score % jeu.pointsParNiveau) / jeu.pointsParNiveau;
+  const lignesRegles = [...jeu.regles.map((r, i) => tJeu(t, jeu, `regles_${i}`, r)), tJeu(t, jeu, 'regles_3', jeu.controles)];
   return (
     <div className={`jeu${large ? ' jeu--large' : ''}${fill ? ' jeu--fill' : ''}`}>
       <div className="jeu-hud">
@@ -364,12 +441,15 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           </div>
         )}
         {status === 'lost' && !reglesOuvertes && (
-          <div className="jeu-overlay">
+          // La carte de fin arrive avec un demi-temps de retard (CSS) : on voit d'abord la chute.
+          <div className="jeu-overlay jeu-overlay--fin">
             <div className="jeu-carte">
               <span className="jeu-titre">{tJeu(t, jeu, 'perdu', jeu.perdu)}</span>
               <span className={`jeu-score-final${nouveauRecord ? ' record' : ''}`}>{score}</span>
               <span className="jeu-sous">{nouveauRecord ? t('gameFrame.newRecordLine') : t('gameFrame.bestScore', { n: meilleur })}</span>
+              <span className="jeu-sous jeu-fin-niveau">{tDef(t, 'gameFrame.levelReached', `Niveau ${niv + 1} atteint`, { n: niv + 1 })}</span>
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.playAgain')}</button>
+              {clavierProbable() && <span className="jeu-sous jeu-touche">{tDef(t, 'gameFrame.spaceHint', 'Espace ou Entrée pour rejouer')}</span>}
             </div>
           </div>
         )}
@@ -377,11 +457,15 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           <div className="jeu-overlay" role="dialog" aria-label={t('gameFrame.rulesOf', { game: jeu.label })}>
             <div className="jeu-carte jeu-regles">
               <span className="jeu-titre">{jeu.emoji} {jeu.label}</span>
-              <ul>
-                {jeu.regles.map((r, i) => <li key={r}>{tJeu(t, jeu, `regles_${i}`, r)}</li>)}
-              </ul>
-              <p className="jeu-controles"><b>{t('gameFrame.controls')}</b> {tJeu(t, jeu, 'regles_3', jeu.controles)}</p>
-              <p className="jeu-controles">{t('gameFrame.keyboardHint')}</p>
+              {/* Quatre lignes — but, score, fin de partie, commandes — dans une zone qui défile si le terrain est
+                  petit ; le bouton reste sous les yeux. */}
+              <div className="jeu-regles-corps">
+                <ul>
+                  {lignesRegles.map((r, i) => (
+                    <li key={r}><span className="jeu-regles-ico" aria-hidden="true">{ICONES_REGLES[i]}</span><span><LigneRegle texte={r} /></span></li>
+                  ))}
+                </ul>
+              </div>
               {/* Ouvrir les règles en pleine partie a mis le jeu en pause : les refermer reprend la partie,
                   sans repasser par l'écran « En pause » qui ferait un clic de plus pour rien. */}
               <button type="button" className="jeu-btn" onClick={() => { setReglesOuvertes(false); if (status === 'paused') setStatus('playing'); }}>

@@ -1584,11 +1584,17 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   background: linear-gradient(180deg, #1B1830 0%, #14121F 100%);
   touch-action: none; user-select: none; -webkit-user-select: none;
 }
-.jeu-canvas { display: block; cursor: pointer; }
+.jeu-canvas { display: block; cursor: pointer; touch-action: none; -webkit-touch-callout: none; }
 .jeu-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 8px;
   background: rgba(20, 18, 31, 0.74); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  animation: jeu-apparait .22s ease-out both;
 }
+/* Carte de fin : un demi-temps de retard, le temps de voir la chute (flash rouge, éclats) avant le score. */
+.jeu-overlay--fin { animation-delay: .5s; }
+@keyframes jeu-apparait { from { opacity: 0; } to { opacity: 1; } }
+.jeu-overlay--fin .jeu-carte { animation: jeu-monte .3s ease-out .5s both; }
+@keyframes jeu-monte { from { transform: translateY(10px); } to { transform: none; } }
 .jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; color: #fff; text-align: center; }
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
@@ -1599,10 +1605,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-btn:hover { filter: brightness(1.06); }
 .jeu-btn:active { transform: scale(0.97); }
 .jeu-btn-ghost { background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.4); }
-/* Les règles : une liste courte, alignée à gauche, qui défile si le terrain est trop petit pour tout. */
-.jeu-regles { align-items: stretch; text-align: left; overflow-y: auto; }
-.jeu-regles .jeu-titre { text-align: center; }
-.jeu-regles ul { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 4px; font-size: 11px; line-height: 1.45; }
+/* Les règles : quatre lignes (but, score, fin, commandes) alignées à gauche, chacune derrière une icône.
+   Seul le corps défile si le terrain est trop petit : le titre et le bouton restent en place, atteignables. */
+.jeu-regles { align-items: stretch; text-align: left; overflow: hidden; min-height: 0; }
+.jeu-regles .jeu-titre { text-align: center; flex-shrink: 0; }
+.jeu-regles .jeu-btn { flex-shrink: 0; }
+.jeu-regles-corps { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding-right: 2px; }
+.jeu-regles ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 11px; line-height: 1.45; }
+.jeu-regles li { display: grid; grid-template-columns: 18px 1fr; column-gap: 6px; align-items: start; overflow-wrap: anywhere; }
+.jeu-regles li b { color: var(--lime); }
+.jeu-regles-ico { font-size: 13px; line-height: 1.3; text-align: center; }
+.jeu-fin-niveau { color: rgba(255,255,255,0.7); }
+.jeu-touche { font-size: 10px; color: rgba(255,255,255,0.55); }
 .jeu-controles { margin: 0; font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.85); }
 .jeu-actions { display: flex; gap: 8px; min-height: 26px; }
 /* Progression vers le prochain palier, score qui « saute » à chaque point, écran de fin plus lisible. */
@@ -1632,7 +1646,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-emoji { font-size: 52px; }
 .jeu--large .jeu-score-final { font-size: 56px; }
 .jeu--large .jeu-progress { height: 6px; }
-@media (prefers-reduced-motion: reduce) { .jeu-score-val.pop, .jeu-score-final.record { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .jeu-score-val.pop, .jeu-score-final.record, .jeu-overlay, .jeu-overlay--fin .jeu-carte { animation: none; } }
 .jeu-actions button { padding: 4px 10px; font-size: 11px; background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
 .jeu-actions button:hover { background: var(--line); }
 /* Plein écran : tout en plus grand… */
@@ -1640,10 +1654,15 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-score { grid-column: auto; text-align: center; }
 .jeu--large .jeu-regles-btn { grid-column: auto; grid-row: auto; }
 .jeu--large .jeu-regles-btn { width: 34px; height: 34px; font-size: 18px; }
+/* Le bouton musique porte le nom de la piste en grand : il s'élargit au lieu de déborder sur le 📖. */
+.jeu--large .jeu-musique-btn { width: auto; padding: 0 10px; }
 .jeu--large .jeu-titre { font-size: 20px; }
 .jeu--large .jeu-sous { font-size: 14px; }
 .jeu--large .jeu-btn { font-size: 15px; padding: 11px 16px; }
 .jeu--large .jeu-regles ul, .jeu--large .jeu-controles { font-size: 14px; }
+.jeu--large .jeu-regles li { grid-template-columns: 22px 1fr; column-gap: 8px; }
+.jeu--large .jeu-regles-ico { font-size: 17px; }
+.jeu--large .jeu-touche { font-size: 12px; }
 .jeu--large .jeu-actions { min-height: 34px; }
 .jeu--large .jeu-actions button { font-size: 14px; padding: 8px 16px; }
 /* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
