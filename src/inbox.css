@@ -61,3 +61,7 @@
   .inbox-bubble { max-width: 92%; }
   .inbox-item-date { display: none; }
 }
+
+/* Messages en tête de Mon compte : bordure iris, et ambre tant qu'il reste des non-lus. */
+.account-groupe-messages { border-left: 4px solid var(--iris, #3b2fb5); }
+.account-groupe-messages.a-non-lus { border-left-color: #d9a441; background: linear-gradient(90deg, #fff8e6 0%, #fff 60%); }
