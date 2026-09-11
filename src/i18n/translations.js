@@ -3734,6 +3734,7 @@ export const translations = {
       closed: '🔒 Fermé',
       supermarket: 'Supermarché',
       freeFrom: '🚴 Offerte dès {min}€',
+      heading: 'Restaurants et commerces à Bruxelles',
       pageTitle: 'Restaurants et commerces à Bruxelles — Fairide',
       freeDeliveryPill: '🚴 Livraison offerte',
       deliveryDiscountPill: '🚴 -{amount}€ livraison'
@@ -5364,6 +5365,7 @@ export const translations = {
     },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Aide',
       favorites: 'Favoris',
       search: 'Recherche',
       orders: 'Mes commandes',
@@ -9869,6 +9871,7 @@ export const translations = {
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
       freeFrom: '🚴 Free from €{min}',
+      heading: 'Restaurants and businesses in Brussels',
       pageTitle: 'Restaurants and businesses in Brussels — Fairide',
       freeDeliveryPill: '🚴 Free delivery',
       deliveryDiscountPill: '🚴 -€{amount} delivery'
@@ -11499,6 +11502,7 @@ export const translations = {
     },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Help',
       favorites: 'Favorites',
       search: 'Search',
       orders: 'My orders',
@@ -16004,6 +16008,7 @@ export const translations = {
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
       freeFrom: '🚴 Gratis vanaf €{min}',
+      heading: 'Restaurants en zaken in Brussel',
       pageTitle: 'Restaurants en zaken in Brussel — Fairide',
       freeDeliveryPill: '🚴 Gratis levering',
       deliveryDiscountPill: '🚴 -€{amount} levering'
@@ -17634,6 +17639,7 @@ export const translations = {
     },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Hulp',
       favorites: 'Favorieten',
       search: 'Zoeken',
       orders: 'Mijn bestellingen',

@@ -199,10 +199,12 @@ export default function RestaurantMenu() {
           </div>
         )}
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <h2 className="restaurant-header-name-row" style={{ marginBottom: 2 }}>
+          {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
+              référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
+          <h1 className="restaurant-header-name-row" style={{ marginBottom: 2 }}>
             <span>{restaurant.name}</span>
             {restaurant.certified && <CertifiedBadge size={20} />}
-          </h2>
+          </h1>
           <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />
         </div>
         <div className="row" style={{ gap: 6, margin: '2px 0' }}>

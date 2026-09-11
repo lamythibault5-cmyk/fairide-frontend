@@ -265,6 +265,9 @@ export default function RestaurantList() {
 
   return (
     <div>
+      {/* La page n'avait aucun h1 : son titre de niveau 1 était la marque de l'en-tête, donc son
+          sujet, pour un moteur, était « fairide » et non les restaurants de Bruxelles. */}
+      <h1 className="page-title">{t('restoListUi.heading')}</h1>
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}

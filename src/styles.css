@@ -150,9 +150,9 @@ a { color: inherit; }
    se détache. C'est voulu : la marque flotte dans l'en-tête au lieu d'y être encadrée. */
 .brand .mark { border-radius: 24%; }
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-.brand h1 { font-size: 30px; color: var(--cream); line-height: 1; letter-spacing: -0.03em; }
+.brand .brand-name { display: block; font-weight: 700; font-size: 30px; color: var(--cream); line-height: 1; letter-spacing: -0.03em; }
 .brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
-@media (max-width: 640px) { .brand h1 { font-size: 24px; } }
+@media (max-width: 640px) { .brand .brand-name { font-size: 24px; } }
 /* Le mot « fairide » reste affiché à TOUTES les largeurs, à côté du vélo.
 
    Il était masqué sous 520px, à une époque où la rangée devait aussi loger un filigrane fixe
@@ -163,7 +163,7 @@ a { color: inherit; }
    C'est le SLOGAN qui saute en premier quand la place manque, puis le lien « Connexion » : le
    bouton d'inscription mène de toute façon à un écran qui propose les deux onglets. */
 @media (max-width: 640px) { .brand-slogan { display: none; } }
-@media (max-width: 520px) { .brand h1 { font-size: 20px; } .brand { gap: 10px; } }
+@media (max-width: 520px) { .brand .brand-name { font-size: 20px; } .brand { gap: 10px; } }
 
 /* Le filigrane « fairide » fixé en haut à droite a été supprimé le 3 septembre 2026.
 
@@ -812,6 +812,12 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    tronque avec des points de suspension si trop long (.rest-card-name-text, carte de la liste), la
    pastille elle-même ne rétrécit jamais et reste toujours entièrement visible. */
 .rest-card-name, .restaurant-header-name-row { display: flex; align-items: center; gap: 5px; min-width: 0; }
+/* 1.5em reproduit la taille par défaut d'un <h2>, que cet élément était avant de devenir le
+   <h1> de la fiche. Sans cette ligne, le défaut de <h1> (2em) l'agrandirait d'un tiers. */
+.restaurant-header-name-row { font-size: 1.5em; }
+/* Le h1 d'une page de contenu. Distinct de .section-title, qui découpe l'intérieur d'une
+   page : celui-ci en annonce le sujet, et il n'y en a qu'un. */
+.page-title { font-size: clamp(23px, 3.2vw, 30px); letter-spacing: -0.03em; margin: 0 0 16px; }
 .rest-card-name-text { min-width: 0; }
 .certified-badge { color: var(--teal); flex-shrink: 0; }
 
