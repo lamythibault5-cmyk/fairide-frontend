@@ -987,12 +987,38 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    le texte blanc. Une colonne de grille ne peut structurellement pas empiéter
    sur sa voisine, donc le défaut ne peut pas revenir en changeant une valeur.
    Le drapeau belge reste en absolu (coin haut-droit), d'où le position: relative. */
+/* Bannière PLEINE LARGEUR, en aplat franc.
+
+   Posée en carte arrondie de 960px au milieu du blanc, et rendue translucide par
+   .wrap-fond pour laisser voir la vidéo, elle se lisait comme un encadré flottant. À pleine
+   largeur et en aplat, elle fusionne avec l'en-tête, qui est déjà iris : les deux ne font plus
+   qu'un seul champ, sans couture ni blanc sur les côtés.
+
+   100vw inclut la largeur de la barre de défilement, donc le bloc dépasse un peu de la zone
+   visible. `margin-left: 50%` + `translateX(-50%)` le recentrent : le dépassement devient
+   symétrique de quelques pixels de chaque côté au lieu de partir entièrement à droite et de
+   décaler le contenu. Le `overflow-x: clip` posé sur html (tout en haut de ce fichier) le rogne
+   sans jamais créer de barre horizontale.
+
+   Le -24px annule le paddingTop posé en inline sur .wrap par Layout.jsx : sans lui, une bande
+   blanche de 24px sépare la bannière iris de l'en-tête iris, et c'est justement la couture
+   qu'on cherche à faire disparaître. Valeur couplée à Layout.jsx. */
 .landing-hero {
   position: relative; overflow: hidden;
   background: var(--iris); color: var(--cream);
-  border-radius: var(--radius);
-  padding: 54px 34px 0;
-  margin: 0 0 20px;
+  width: 100vw;
+  margin-left: 50%;
+  transform: translateX(-50%);
+  margin-top: -24px;
+  margin-bottom: 28px;
+  padding: 54px 24px 0;
+}
+
+/* Même gabarit que .hero-inner dans l'en-tête : 960px centrés. C'est ce qui donne à l'accroche
+   et à la marque de l'en-tête un bord gauche commun. */
+.landing-hero-inner {
+  position: relative;
+  max-width: 960px; margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 38%);
   grid-template-areas: "text preview" "stats stats";
@@ -1000,6 +1026,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   column-gap: 36px;
 }
 .landing-hero .hero-preview { grid-area: preview; }
+.landing-hero .addition { grid-area: preview; justify-self: end; max-width: 420px; width: 100%; }
 /* Signature de marque : le cadre à l'échelle, en petit, posé sur la même ligne que l'accroche. */
 .landing-hero-signature { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
 .landing-hero-signature .landing-frame { width: 66px; height: auto; flex: 0 0 auto; }
@@ -1980,7 +2007,10 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
    blanche, que le voile laisse passer a 255. Voir le detail sous chaque regle. */
 
 /* Banniere : son texte le plus pale est a 78 % d opacite. */
-.wrap-fond .landing-hero { background: rgba(59, 47, 181, .86); }
+/* La bannière garde son aplat plein sous le fond vidéo : à 86 % d'opacité, la vidéo
+   transparaissait et le champ iris n'était plus franc. Les autres blocs de la page gardent
+   leur translucidité, eux sont bien posés SUR la vidéo. */
+.wrap-fond .landing-hero { background: var(--iris); }
 
 /* Bloc « ou va ton euro » : ses legendes sont a 72 % d opacite, les plus fragiles de la page. */
 .wrap-fond .euro-block { background: rgba(59, 47, 181, .9); }

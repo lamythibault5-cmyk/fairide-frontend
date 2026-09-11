@@ -110,6 +110,7 @@ export default function Landing() {
     <div className="decor-page">
 
       <div className="landing-hero">
+        <div className="landing-hero-inner">
         <div className="be-flag" title={t('landing.proudlyBelgian')}>
           <span className="be-flag-stripe" style={{ background: '#000' }} />
           <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
@@ -126,7 +127,7 @@ export default function Landing() {
               Le visiteur voit la vitrine « Découvre » plus bas, puis crée son compte. */}
           {/* Les trois types de compte, toujours proposés ensemble : client, commerce, livreur. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
+            <button className="btn-gold" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
             <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
@@ -152,6 +153,7 @@ export default function Landing() {
           <div className="stats-bar-item"><b>10 %</b><span>{t('landing.statCommission')}</span></div>
           <div className="stats-bar-item"><b>19</b><span>{t('landing.statCommunes')}</span></div>
           <div className="stats-bar-item"><b>100 %</b><span>{t('landing.statLocal')}</span></div>
+        </div>
         </div>
       </div>
 
