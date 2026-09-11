@@ -92,10 +92,17 @@ export default function DashboardLayout() {
       if (h.phone) setTelephoneCommerce(h.phone);
       // Quartier depuis la position du commerce et description publiée sur son site : préremplis, modifiables.
       if ((h.lat && h.lng) || h.website) {
-        const q = new URLSearchParams(); if (h.lat && h.lng) { q.set('lat', h.lat); q.set('lng', h.lng); } if (h.website) q.set('website', h.website);
+        const q = new URLSearchParams(); if (h.lat && h.lng) { q.set('lat', h.lat); q.set('lng', h.lng); } if (h.website) q.set('website', h.website); if (h.name) q.set('name', h.name);
         api(`/restaurants/lookup/enrich?${q.toString()}`).then((e) => {
           if (e.neighborhood) setNeighborhood((v) => v || e.neighborhood);
           if (e.description) setDesc((v) => v || e.description);
+          // Type de commerce deviné depuis le site, seulement si rien n'a été retenu à l'inscription.
+          if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) setCuisine((v) => (!v || v === RESTAURANT_TYPES[0].value ? e.cuisine : v));
+          // Horaires publiés sur le site du commerce : proposés tant que rien n'a été réglé à la main.
+          if (e.hours && Object.values(e.hours).some((c) => Array.isArray(c) && c.length)) {
+            setHours((v) => (v && Object.values(v).some((c) => Array.isArray(c) && c.length) ? v : e.hours));
+            setHorairesDepuisInscription(true);
+          }
           if (e.city && COMMUNES.includes(e.city) && !COMMUNES.includes(h.commune)) setCommune(e.city);
         }).catch(() => { /* enrichissement facultatif */ });
       }

@@ -6086,7 +6086,11 @@ export const translations = {
       legalLaterHint: 'Le numéro d\'entreprise et le numéro de TVA te seront demandés plus tard, au moment d\'activer les paiements. Rien d\'autre à préparer maintenant.',
       verifyTitleSms: 'Confirme ton numéro',
       verifyTextSms: 'On t\'a envoyé un code à 6 chiffres par SMS au {phone}. Entre-le ci-dessous pour activer ton compte.',
-      errVerificationSentSms: 'Un code de confirmation t\'a été envoyé par SMS.'
+      errVerificationSentSms: 'Un code de confirmation t\'a été envoyé par SMS.',
+      hoursSiteSource: 'voir la page lue',
+      hoursSiteNone: 'Aucun horaire trouvé sur ton site : indique-les ci-dessous, ça prend une minute.',
+      hoursSiteRetry: 'Relire mon site',
+      cuisineFromSite: 'Type repris de ton site : change-le si ce n\'est pas le bon.'
     }
   },
   en: {
@@ -12172,7 +12176,11 @@ export const translations = {
       legalLaterHint: 'Your company number and VAT number will be asked later, when you activate payments. Nothing else to prepare now.',
       verifyTitleSms: 'Confirm your phone number',
       verifyTextSms: 'We sent you a 6-digit code by SMS to {phone}. Enter it below to activate your account.',
-      errVerificationSentSms: 'A confirmation code has been sent to you by SMS.'
+      errVerificationSentSms: 'A confirmation code has been sent to you by SMS.',
+      hoursSiteSource: 'see the page we read',
+      hoursSiteNone: 'No opening hours found on your website: enter them below, it takes a minute.',
+      hoursSiteRetry: 'Read my website again',
+      cuisineFromSite: 'Type taken from your website: change it if it is not right.'
     }
   },
   nl: {
@@ -18258,7 +18266,11 @@ export const translations = {
       legalLaterHint: 'Je ondernemingsnummer en btw-nummer worden later gevraagd, bij het activeren van de betalingen. Verder niets voor te bereiden.',
       verifyTitleSms: 'Bevestig je nummer',
       verifyTextSms: 'We hebben je een 6-cijferige code per sms gestuurd naar {phone}. Voer ze hieronder in om je account te activeren.',
-      errVerificationSentSms: 'Er is een bevestigingscode per sms naar je gestuurd.'
+      errVerificationSentSms: 'Er is een bevestigingscode per sms naar je gestuurd.',
+      hoursSiteSource: 'bekijk de gelezen pagina',
+      hoursSiteNone: 'Geen openingsuren gevonden op je website: vul ze hieronder in, dat duurt een minuut.',
+      hoursSiteRetry: 'Mijn website opnieuw lezen',
+      cuisineFromSite: 'Type overgenomen van je website: pas het aan als het niet klopt.'
     }
   }
 };

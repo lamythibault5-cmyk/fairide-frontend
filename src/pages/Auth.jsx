@@ -118,24 +118,37 @@ export default function Auth() {
   const [emailSecondary, setEmailSecondary] = useState('');
   const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
   const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'trouve' | 'rien'
+  const [horairesSiteSource, setHorairesSiteSource] = useState('');
+  const [typeDepuisSite, setTypeDepuisSite] = useState(false); // le type affiché vient du site, pas d'un choix
+  const [relireSite, setRelireSite] = useState(0);
   const emailDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
   // La fiche n'a pas d'horaires mais un site web : on lit les horaires publiés sur le site (schema.org ou texte)
   // et on les propose, à relire jour par jour. Jamais par-dessus des horaires déjà réglés à la main.
   useEffect(() => {
-    const site = commerceTrouve?.website;
-    if (role !== 'restaurant' || !site || (hours && !hoursDepuisWeb)) return;
-    if (commerceTrouve.openingHours && horairesDepuisOsm(commerceTrouve.openingHours)) return;
+    const site = String(commerceTrouve?.website || '').trim();
+    // Horaires déjà réglés à la main, ou fiche OpenStreetMap qui les publie déjà : on n'y touche pas.
+    if (role !== 'restaurant' || site.length < 6 || (hours && !hoursDepuisWeb)) return undefined;
+    if (commerceTrouve.openingHours && horairesDepuisOsm(commerceTrouve.openingHours)) return undefined;
     let annule = false;
-    setHorairesSiteEtat('lecture');
-    api(`/restaurants/lookup/enrich?website=${encodeURIComponent(site)}`).then((e) => {
-      if (annule) return;
-      if (e.hours && horairesNonVides(e.hours)) { setHours(e.hours); setHoursDepuisWeb(true); setHorairesSiteEtat('trouve'); }
-      else setHorairesSiteEtat('rien');
-    }).catch(() => { if (!annule) setHorairesSiteEtat('rien'); });
-    return () => { annule = true; };
+    // Anti-rebond : le champ « site web » de la fiche remonte à chaque frappe, on attend la fin de la saisie.
+    const minuteur = setTimeout(() => {
+      setHorairesSiteEtat('lecture');
+      const nom = commerceTrouve?.name || '';
+      api(`/restaurants/lookup/enrich?website=${encodeURIComponent(site)}&name=${encodeURIComponent(nom)}`).then((e) => {
+        if (annule) return;
+        if (e.hours && horairesNonVides(e.hours)) { setHours(e.hours); setHoursDepuisWeb(true); setHorairesSiteEtat('trouve'); setHorairesSiteSource(e.hoursSource || site); }
+        else { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); }
+        // Type de commerce : proposé seulement si le restaurateur n'a rien choisi lui-même.
+        if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) {
+          setCuisine((v) => (!v || typeDepuisSite ? e.cuisine : v));
+          setTypeDepuisSite(true);
+        }
+      }).catch(() => { if (!annule) { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); } });
+    }, 700);
+    return () => { annule = true; clearTimeout(minuteur); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commerceTrouve?.website, commerceTrouve?.openingHours, role]);
+  }, [commerceTrouve?.website, commerceTrouve?.openingHours, role, relireSite]);
 
   // Tout ce que l'inscription sait du commerce : le serveur le crée dès que le compte est ouvert
   // (POST /auth/register → creerRestaurant), sans second formulaire dans le tableau de bord.
@@ -838,21 +851,30 @@ export default function Auth() {
                 {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
                 <div className="field">
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
-                  <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+                  <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => { setCuisine(e.target.value); setTypeDepuisSite(false); }}>
                     <option value="">{t('auth.cuisinePlaceholder')}</option>
                     {RESTAURANT_TYPES.map((rt) => <option key={rt.value} value={rt.value}>{rt.emoji ? `${rt.emoji} ` : ''}{rt.value}</option>)}
                   </select>
                   {cuisine === 'Autre' && (
                     <input style={{ marginTop: 6 }} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} aria-label={t('dashResto.specifyType')} />
                   )}
-                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.cuisineHelp')}</p>
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
                 <div className="field">
                   <label>{t('auth.hoursTitle')}</label>
                   <p className="small" style={{ margin: '0 0 6px' }}>
                     {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : t('auth.hoursHelp')}
+                    {horairesSiteEtat === 'trouve' && horairesSiteSource && (
+                      <>{' '}<a href={horairesSiteSource} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
+                    )}
                   </p>
+                  {horairesSiteEtat === 'rien' && !hoursDepuisWeb && (
+                    <p className="small" style={{ margin: '-2px 0 8px', opacity: 0.85 }}>
+                      {t('auth.hoursSiteNone')}{' '}
+                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => setRelireSite((n) => n + 1)}>{t('auth.hoursSiteRetry')}</button>
+                    </p>
+                  )}
                   <OpeningHoursEditor value={hours || {}} onChange={(h) => { setHours(h); setHoursDepuisWeb(false); }} />
                   {fieldError('hours')}
                 </div>
