@@ -7,10 +7,9 @@ import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
-import HeroAddition from '../components/HeroAddition';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
-import { useCommercesPublics } from '../components/landing/HeroPreview';
+import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
 
@@ -143,10 +142,7 @@ export default function Landing() {
             </p>
           )}
         </div>
-        {/* Le ticket prend la place de la carte d'aperçu dans la colonne droite. Le fond vidéo,
-            le panneau et la liste de confiance ne bougent pas : la bannière ne dit plus seulement
-            que la commission est plafonnée, elle le montre sur une addition. */}
-        <HeroAddition />
+        <HeroPreview restaurants={restaurants} />
 
         <div className="stats-bar">
           <div className="stats-bar-item"><b>10 %</b><span>{t('landing.statCommission')}</span></div>
