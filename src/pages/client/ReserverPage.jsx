@@ -26,7 +26,7 @@ export default function ReserverPage() {
   const [restaurant, setRestaurant] = useState(null);
   const [erreur, setErreur] = useState('');
 
-  usePageMeta({ title: restaurant ? t('reserver.pageTitle', { name: restaurant.name }) : t('reserver.title') });
+  usePageMeta({ title: restaurant ? t('reserver.pageTitle', { name: restaurant.name }) : t('reserver.title'), path: `/reserver/${id}` });
 
   useEffect(() => {
     let annule = false;

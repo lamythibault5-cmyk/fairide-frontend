@@ -5363,6 +5363,12 @@ export const translations = {
       verifiedByFairide: 'Restaurant vérifié par Fairide',
       verifiedShort: 'resto vérifié'
     },
+    seo: {
+      homeDescription: "Commande chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 %, contre 22 à 32 % sur les grandes plateformes.",
+      listDescription: "Tous les restaurants, supermarchés, boulangeries et night shops livrés par Fairide dans les 19 communes de Bruxelles.",
+      restaurantTitle: "{name}, {cuisine} à {commune} — Fairide",
+      restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande."
+    },
     nav: {
       restaurants: 'Restaurants',
       help: 'Aide',
@@ -11500,6 +11506,12 @@ export const translations = {
       verifiedByFairide: 'Restaurant verified by Fairide',
       verifiedShort: 'verified'
     },
+    seo: {
+      homeDescription: "Order from the restaurants and local shops in your Brussels neighbourhood. Commission capped at 10%, against 22 to 32% on the big platforms.",
+      listDescription: "Every restaurant, supermarket, bakery and night shop delivered by Fairide across the 19 communes of Brussels.",
+      restaurantTitle: "{name}, {cuisine} in {commune} — Fairide",
+      restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order."
+    },
     nav: {
       restaurants: 'Restaurants',
       help: 'Help',
@@ -17636,6 +17648,12 @@ export const translations = {
       subtotal: 'Subtotaal',
       verifiedByFairide: 'Restaurant geverifieerd door Fairide',
       verifiedShort: 'geverifieerd'
+    },
+    seo: {
+      homeDescription: "Bestel bij de restaurants en handelszaken in jouw Brusselse buurt. Commissie beperkt tot 10 %, tegenover 22 tot 32 % bij de grote platformen.",
+      listDescription: "Alle restaurants, supermarkten, bakkerijen en nachtwinkels die Fairide levert in de 19 gemeenten van Brussel.",
+      restaurantTitle: "{name}, {cuisine} in {commune} — Fairide",
+      restaurantDescription: "Bestel bij {name} in {commune} en laat het met de fiets leveren. Op Fairide houdt de zaak 90 % van je bestelling."
     },
     nav: {
       restaurants: 'Restaurants',

@@ -19,6 +19,8 @@ import AutoScrollRow from '../../components/AutoScrollRow';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus, formatCountdown, formatDaySchedule, formatFullSchedule, formatDateFr, dayLabel } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
+import useJsonLd from '../../seo/useJsonLd';
+import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
@@ -44,7 +46,21 @@ export default function RestaurantMenu() {
   // Page publique (consultable sans compte, voir App.jsx) — chaque restaurant a besoin de son propre
   // titre/canonical, sinon index.html sert le même <link rel="canonical" href="/"> partout et Google
   // considère la fiche comme un doublon de l'accueil plutôt que de l'indexer pour elle-même.
-  usePageMeta({ title: restaurant ? `${restaurant.name} — Fairide` : undefined, path: `/restaurants/${id}` });
+  /* Titre, description et image construits depuis la fiche : c'est ce qui distingue cette page
+     des autres aux yeux d'un moteur, et ce qui s'affiche quand le lien est partagé. */
+  usePageMeta({
+    title: restaurant ? t('seo.restaurantTitle', { name: restaurant.name, cuisine: restaurant.cuisine || '', commune: restaurant.commune || '' }) : undefined,
+    description: restaurant ? (restaurant.desc || t('seo.restaurantDescription', { name: restaurant.name, commune: restaurant.commune || 'Bruxelles' })) : undefined,
+    path: `/restaurants/${id}`,
+    image: restaurant?.coverImageUrl || undefined,
+    type: 'restaurant'
+  });
+  useJsonLd(restaurant ? restaurantJsonLd(restaurant, { url: `${SITE_URL}/restaurants/${id}` }) : null, 'ld-restaurant');
+  useJsonLd(restaurant ? breadcrumbJsonLd([
+    { name: 'Fairide', path: '/' },
+    { name: t('restoListUi.heading'), path: '/restaurants' },
+    { name: restaurant.name, path: `/restaurants/${id}` }
+  ]) : null, 'ld-breadcrumb');
   const [now, setNow] = useState(() => new Date());
   useEffect(() => {
     const clock = setInterval(() => setNow(new Date()), 30000);
