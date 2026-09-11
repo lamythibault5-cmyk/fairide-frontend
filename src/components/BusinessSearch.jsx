@@ -125,6 +125,10 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
                   <span className="business-zone-emoji" aria-hidden="true">{EMOJI_TYPE[r.type] || '🏪'}</span>
                   <span className="business-zone-text">
                     <b>{r.name}</b>
+                    {/* Déjà sur Fairide : on le laisse dans la liste (le masquer ferait croire qu'il
+                        manque) et on le laisse choisissable — le rapprochement peut se tromper et on
+                        ne bloque jamais une vraie inscription sur un doute. */}
+                    {r.dejaInscrit && <span className="pill gold" style={{ marginLeft: 6 }}>{t('businessSearch.alreadyPill')}</span>}
                     <span className="small">{adresse(r) || t('businessSearch.noAddress')}{r.cuisine ? ` · ${r.cuisine.split(';')[0]}` : ''}</span>
                   </span>
                 </button>
@@ -141,6 +145,11 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
             <b>{origine === 'web' ? `✅ ${t('businessSearch.found', { name: fiche.name })}` : `✍️ ${t('businessSearch.manualTitle')}`}</b>
             <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={revoirListe}>← {t('businessSearch.backToList')}</button>
           </div>
+          {fiche.dejaInscrit && (
+            <p className="small" style={{ margin: '4px 0 8px', background: 'var(--cream-dim)', borderLeft: '3px solid var(--gold, #C9A227)', padding: '8px 10px', borderRadius: 6 }}>
+              {t('businessSearch.alreadyWarning')}
+            </p>
+          )}
           <p className="small" style={{ margin: '4px 0 8px', opacity: 0.8 }}>{origine === 'web' ? t('businessSearch.verifyFields') : t('businessSearch.manualHelp')}</p>
           {compact ? (
             <p className="small" style={{ margin: 0 }}>{t('businessSearch.compactHint')}</p>
