@@ -16,7 +16,9 @@ async function ouvrirPdf(url, token, messageErreur) {
   } catch (e) { alert(e.message); }
 }
 
-const GROUPES = ['fairide', 'commerce', 'argent', 'cadre'];
+// Ordre de lecture : ce que chacun s'engage à faire, l'argent, puis le cadre et les dispositions
+// générales (données, confidentialité, durée, responsabilité, droit applicable).
+const GROUPES = ['fairide', 'commerce', 'argent', 'cadre', 'general'];
 
 export default function RestaurantContract({ restoId }) {
   const { t } = useLanguage();

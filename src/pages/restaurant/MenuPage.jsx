@@ -21,6 +21,7 @@ import MenuImportStaging, { MenuImportReport } from '../../components/MenuImport
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import MenuImportReview from '../../components/MenuImportReview';
 import MenuDrafts from '../../components/MenuDrafts';
+import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
@@ -588,6 +589,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
   return (
     <div>
+      <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin={modeAdmin} onConfirmed={() => loadDashboard(restoId)} />
       <div className="menu-etape">
         <span className="menu-etape-num">1</span>
         <div>
