@@ -2883,3 +2883,8 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .menu-etape-titre { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
 .menu-legende { margin: 0 0 12px; }
 .menu-legende summary { cursor: pointer; color: var(--iris, #3b2fb5); font-weight: 600; }
+
+/* Vitrine de l'accueil : simples illustrations, sans lien vers les fiches (l'intérieur est réservé aux comptes). */
+.discover-tile-static { cursor: default; }
+.discover-tile-static:hover { transform: none; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.04); border-color: var(--line); }
+.discover-tile-static:hover .discover-tile-img img { transform: none; }

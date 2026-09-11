@@ -41,7 +41,6 @@ export default function DiscoverSection({ restaurants }) {
             <span className="pill hero discover-eyebrow">{t('landing.discoverEyebrow')}</span>
             <h2 className="section-title" style={{ margin: '6px 0 0' }}>{t('landing.discoverTitle')}</h2>
           </div>
-          <Link to="/restaurants" className="btn-outline discover-all">{t('landing.discoverAll', { n: restaurants.length })} →</Link>
         </div>
         <div className="discover-filtres" role="tablist">
           <button type="button" role="tab" aria-selected={!filtre} className={`chip${!filtre ? ' active' : ''}`} onClick={() => setFiltre('')}>{t('landing.discoverAllTypes')}</button>
@@ -50,7 +49,7 @@ export default function DiscoverSection({ restaurants }) {
       </Reveal>
       <div className="discover-grid">
         {cartes.map((r, i) => (
-          <Reveal as={Link} key={r.id} to={`/restaurants/${r.id}`} className="discover-tile" delay={(i % 4) * 70}>
+          <Reveal key={r.id} className="discover-tile discover-tile-static" delay={(i % 4) * 70} aria-hidden="true">
             <div className="discover-tile-img">
               <img loading="lazy" src={r.coverImageUrl} alt={r.name} />
               <span className="discover-tile-cuisine">{r.cuisine}</span>
@@ -73,7 +72,6 @@ export default function DiscoverSection({ restaurants }) {
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-            <Link to="/restaurants" className="btn-hero-ghost discover-info-btn">{t('landing.discoverInfoCta')}</Link>
             <Link to="/login?audience=partner&role=restaurant" className="btn-hero-ghost discover-info-btn">🏪 {t('landing.discoverInfoJoin')}</Link>
           </div>
         </Reveal>
