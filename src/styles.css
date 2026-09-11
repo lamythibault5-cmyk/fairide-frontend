@@ -2855,3 +2855,80 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .discover-tile-static { cursor: default; }
 .discover-tile-static:hover { transform: none; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.04); border-color: var(--line); }
 .discover-tile-static:hover .discover-tile-img img { transform: none; }
+
+/* ---------------------------------------------------------------------------
+   Le ticket. Une feuille blanche posée sur l'iris : la bannière garde ses deux
+   couleurs de marque, et le lime n'y apparaît qu'une fois, en aplat sous du
+   texte --ink, la seule façon dont la spec l'autorise hors fond iris.
+   --------------------------------------------------------------------------- */
+.addition {
+  background: var(--cream); color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px;
+  /* Toutes les lignes de droite sont des montants : la chasse fixe est une
+     décision de lisibilité, pas un effet. Sans elle la colonne tremble d'une
+     ligne à l'autre, et un ticket qui tremble ne prouve rien. */
+  font-variant-numeric: tabular-nums;
+}
+.addition-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--line);
+}
+.addition-head h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+.addition-head span { font-size: 12.5px; color: var(--ink-faint); }
+
+/* Trois colonnes : intitulé / quantité / montant. Pas de `column-gap`, car la
+   gouttière est portée par le padding gauche des cellules, et c'est ce qui
+   permet au surlignage plus bas d'être une bande continue plutôt que trois
+   blocs séparés par des trous. */
+.bill { display: grid; grid-template-columns: 1fr auto auto; }
+.bill-row, .bill-keep { display: contents; }
+.bill-lbl, .bill-qty, .bill-amt { display: flex; align-items: baseline; padding: 7px 0; line-height: 1.35; }
+.bill-lbl { font-size: 15px; }
+.bill-qty { justify-content: flex-end; padding-left: 16px; font-size: 13px; color: var(--ink-faint); }
+.bill-amt { justify-content: flex-end; padding-left: 20px; font-size: 15px; font-weight: 500; white-space: nowrap; }
+.bill-rule { grid-column: 1 / -1; height: 1px; background: var(--line); margin: 7px 0; }
+.bill-muted .bill-lbl, .bill-muted .bill-amt { color: var(--ink-soft); font-weight: 400; }
+.bill-sum .bill-lbl { font-weight: 700; }
+.bill-sum .bill-amt { font-weight: 700; font-size: 20px; letter-spacing: -0.02em; }
+
+/* Le surligneur. Il ne se déplace jamais : il reste sur « le commerce garde »,
+   qui est le chiffre qu'on veut faire regarder, et c'est le montant qui chute
+   dessous quand on bascule à 30 %. */
+.bill-keep .bill-lbl, .bill-keep .bill-qty, .bill-keep .bill-amt {
+  background: var(--lime); color: var(--ink); font-weight: 700;
+  padding-top: 10px; padding-bottom: 10px;
+  transition: background .16s linear, color .16s linear;
+}
+.bill-keep .bill-lbl { border-radius: var(--radius-chip) 0 0 var(--radius-chip); }
+.bill-keep .bill-amt { border-radius: 0 var(--radius-chip) var(--radius-chip) 0; }
+
+/* En mode « ailleurs » le surligneur s'éteint, car le lime appartient à Fairide
+   et n'a rien à faire sous le chiffre d'un concurrent. Mais la ligne GARDE sa
+   graisse et son encre pleine. Une version l'avait passée en gris avec le
+   reste : tout le bas du ticket devenait alors d'un seul ton et l'œil n'avait
+   plus rien où se poser, au moment précis où le chiffre chute. */
+.bill[data-mode="them"] .bill-keep .bill-lbl,
+.bill[data-mode="them"] .bill-keep .bill-qty,
+.bill[data-mode="them"] .bill-keep .bill-amt { background: transparent; color: var(--ink); }
+
+/* Le paragraphe reste dans le DOM même vide : c'est une région aria-live, et
+   une région insérée en même temps que son texte n'est pas annoncée de façon
+   fiable. D'où le `:not(:empty)` : le filet et la marge n'apparaissent qu'avec
+   la phrase, et le ticket ne saute pas quand elle disparaît. */
+.bill-delta { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-soft); }
+.bill-delta:not(:empty) { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+.bill-delta b { color: var(--ink); font-weight: 700; }
+
+/* Deux états, jamais trois : c'est une comparaison, pas un sélecteur de forfait. */
+.bill-toggle { display: flex; margin-top: 16px; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; }
+.bill-toggle button {
+  flex: 1; appearance: none; border: 0; background: var(--cream); color: var(--ink-soft);
+  font: inherit; font-size: 13.5px; font-weight: 500; padding: 11px 10px; cursor: pointer;
+}
+.bill-toggle button + button { border-left: 1px solid var(--line); }
+.bill-toggle button[aria-pressed="true"] { background: var(--iris); color: var(--cream); }
+.bill-foot { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink-faint); }
+
+/* Le ticket dans la bannière : même emplacement que la carte d'aperçu qu'il remplace. */
+.landing-hero .addition { align-self: center; max-width: 420px; width: 100%; }
