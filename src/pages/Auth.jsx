@@ -985,10 +985,14 @@ export default function Auth() {
                     street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={addressCity}
                     onResult={(r) => {
                       if (r.commune && !addressCity.trim()) setAddressCity(r.commune);
-                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ name: ancien.name, cuisine: ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      // { ...ancien } et pas une fiche neuve : cet indice porte aussi les horaires, les
+                      // services et les contacts saisis aux étapes précédentes. Les écraser ici privait
+                      // le tableau de bord de quoi recréer le commerce, et le restaurateur se retrouvait
+                      // à tout ressaisir une seconde fois.
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
                     }}
                     onPickCandidate={(c, r) => {
-                      try { localStorage.setItem('fairide_resto_hint', JSON.stringify({ name: c.name, cuisine: c.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
                     }}
                     onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
                   />

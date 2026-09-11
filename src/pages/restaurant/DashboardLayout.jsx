@@ -252,11 +252,15 @@ export default function DashboardLayout() {
     loadDashboard(id);
   }
 
-  // Création silencieuse depuis l'indice d'inscription (fairide_resto_hint) : il faut au moins un nom et des horaires.
+  // Création silencieuse depuis l'indice d'inscription (fairide_resto_hint) : un nom suffit. Les
+  // horaires ne sont plus exigés ici — le serveur (fromSignup) crée alors le commerce fermé, à ouvrir
+  // dès que le restaurateur pose ses horaires. Tout ressaisir parce qu'il manquait un champ n'avait
+  // aucun sens : il a déjà rempli le formulaire d'inscription une fois.
   async function creerDepuisIndice() {
     let h = null;
     try { h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null'); } catch { return null; }
-    if (!h || !h.name || !h.hours || !Object.values(h.hours).some((c) => Array.isArray(c) && c.length)) return null;
+    if (!h || !h.name) return null;
+    const horairesValides = h.hours && Object.values(h.hours).some((c) => Array.isArray(c) && c.length);
     const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
     const cuisineChoisie = h.cuisineType === 'Autre' && h.customCuisine ? h.customCuisine
       : (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) ? h.cuisineType
@@ -268,7 +272,8 @@ export default function DashboardLayout() {
         body: {
           name: String(h.name).trim(), commune: h.commune || user?.addressCity || '', neighborhood: h.neighborhood || '', cuisine: cuisineChoisie, desc: '',
           addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
-          hours: h.hours, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
+          hours: horairesValides ? h.hours : null, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
+          fromSignup: true,
           offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false, offersDineIn: !!sv.dineIn,
           phone: h.phone || '', website: h.website || ''
         }

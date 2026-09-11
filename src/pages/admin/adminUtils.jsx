@@ -214,9 +214,9 @@ export const DOCUMENT_EXPIRY_LABELS = avecCouleurs(
     nl: { expired: '⚠️ Verlopen', expiring_soon: '🕐 Verloopt binnenkort', valid: '✅ Geldig' } }
 );
 const CIBLES = {
-  fr: { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket', document: 'Document', invoice: 'Facture' },
-  en: { restaurant: 'Restaurant', driver: 'Courier', client: 'Customer', order: 'Order', crm_prospect: 'CRM prospect', ticket: 'Ticket', document: 'Document', invoice: 'Invoice' },
-  nl: { restaurant: 'Restaurant', driver: 'Koerier', client: 'Klant', order: 'Bestelling', crm_prospect: 'CRM-prospect', ticket: 'Ticket', document: 'Document', invoice: 'Factuur' }
+  fr: { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket', document: 'Document', invoice: 'Facture', user: 'Compte' },
+  en: { restaurant: 'Restaurant', driver: 'Courier', client: 'Customer', order: 'Order', crm_prospect: 'CRM prospect', ticket: 'Ticket', document: 'Document', invoice: 'Invoice', user: 'Account' },
+  nl: { restaurant: 'Restaurant', driver: 'Koerier', client: 'Klant', order: 'Bestelling', crm_prospect: 'CRM-prospect', ticket: 'Ticket', document: 'Document', invoice: 'Factuur', user: 'Account' }
 };
 export const DOCUMENT_TARGET_TYPE_LABELS = parLangue(CIBLES);
 
