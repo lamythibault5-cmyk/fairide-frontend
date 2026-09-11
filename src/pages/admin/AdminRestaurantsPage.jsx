@@ -400,6 +400,14 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <ContactCommerce r={detail} tr={tr} fiche />
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: '' })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
+          {/* D'où vient la fiche remplie à l'inscription. Un commerce saisi à la main est un commerce
+              comme un autre — c'est juste qu'aucune source extérieure ne confirme son nom et son adresse. */}
+          {detail.signupBusinessSource === 'manuel' && (
+            <p className="small" style={{ margin: '2px 0', color: 'var(--gold-dark, #8a6d1f)' }}>{tr('adminRestos.sourceManual')}</p>
+          )}
+          {detail.signupBusinessSource === 'recherche' && (
+            <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
+          )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
           <p className="small" style={{ margin: '6px 0 2px' }}>

@@ -70,7 +70,9 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
 
   useEffect(() => { if (listeRef.current) listeRef.current.scrollTop = 0; }, [filtre]);
 
-  function publier(f) { setFiche(f); onSelect?.(f); }
+  // Le parent reçoit aussi d'où vient la fiche : choisie dans la liste, ou tapée à la main faute de
+  // l'y avoir trouvée. L'inscription se déroule pareil dans les deux cas ; c'est l'admin qui le saura.
+  function publier(f, source) { const avec = { ...f, source: source || origine || 'manuel' }; setFiche(avec); onSelect?.(avec); }
 
   async function choisir(r) {
     let f = { ...FICHE_VIDE, ...r };
@@ -81,10 +83,10 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
     f.name = r.name;
     if (!f.postalCode) f.postalCode = cp.trim();
     setOrigine('web');
-    publier(f);
+    publier(f, 'web');
   }
 
-  function saisirALaMain() { setOrigine('manuel'); publier({ ...FICHE_VIDE, postalCode: cp.trim() }); }
+  function saisirALaMain() { setOrigine('manuel'); publier({ ...FICHE_VIDE, postalCode: cp.trim() }, 'manuel'); }
   function revoirListe() { setFiche(null); setOrigine(null); onSelect?.(null); }
   const modifier = (champ) => (e) => publier({ ...fiche, [champ]: e.target.value });
   // Fiche trouvée sur le web : relecture d'abord, champs seulement si on veut corriger. Saisie manuelle : champs tout de suite.

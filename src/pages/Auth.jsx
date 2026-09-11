@@ -163,7 +163,10 @@ export default function Auth() {
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: !!services.dineIn,
-      deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide'
+      deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
+      // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
+      // cas l'inscription aboutit à un vrai commerce, la provenance n'est qu'une mention pour l'admin.
+      businessSource: fiche.source === 'web' ? 'recherche' : fiche.source === 'manuel' ? 'manuel' : 'inconnu'
     };
   }
 
