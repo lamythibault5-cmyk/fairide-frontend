@@ -3448,7 +3448,7 @@ export const translations = {
       s9q4: 'Où retrouver l\'historique et les relevés',
       s9q4a: 'L\'historique des commandes se trouve dans la section Commandes du tableau de bord. Les factures et relevés se trouvent dans la section Factures.',
       s10Title: 'Aide',
-      s10p1: 'Une question sur l\'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? L\'assistant Fairide 🤖 répond directement dans le tableau de bord — bulle de discussion en bas à droite de l\'écran, sur n\'importe quelle page.',
+      s10p1: "Une question sur l'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? Le centre d'aide rassemble les réponses aux questions les plus fréquentes.",
       s10p2: 'Pour toute autre question, le support Fairide est joignable par e-mail à [contact@fairide.be](mailto:contact@fairide.be) ou par téléphone au [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -4754,8 +4754,6 @@ export const translations = {
       support: 'Assistance',
       needHelp: 'Besoin d\'aide ?',
       needHelpSub: 'Les réponses aux questions fréquentes',
-      chat: 'Chatter avec nous',
-      chatSub: 'L\'assistant Fairide, tout de suite',
       feedback: 'Donner mon avis sur Fairide',
       feedbackSub: 'Ce qui te plaît, ce qui manque',
       share: 'Partager Fairide',
@@ -5929,16 +5927,6 @@ export const translations = {
       stepIndicator: 'Étape {current} sur {total}',
       next: 'Suivant →',
       back: '← Précédent'
-    },
-    assistant: {
-      greeting: "Bonjour ! Je suis l'assistant Fairide 🤖 Pose-moi tes questions sur les commandes, les livraisons, les commissions ou comment devenir partenaire !",
-      errorFallback: 'Désolé, une erreur est survenue. Réessaie dans un instant !',
-      header: '🤖 Assistant Fairide',
-      inputPlaceholder: 'Écris ta question...',
-      send: 'Envoyer',
-      tooltipText: '👋 Une question sur Fairide ? Je suis là pour t\'aider !',
-      closeAria: 'Fermer',
-      openAria: "Ouvrir l'assistant Fairide"
     },
     contact: {
       eyebrow: 'Une question ?',
@@ -9595,7 +9583,7 @@ export const translations = {
       s9q4: 'Where to find history and statements',
       s9q4a: 'The order history is in the Orders section of the dashboard. Invoices and statements are in the Invoices section.',
       s10Title: 'Help',
-      s10p1: 'A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The Fairide assistant 🤖 answers directly in the dashboard — chat bubble at the bottom right of the screen, on any page.',
+      s10p1: "A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The help centre gathers the answers to the most common questions.",
       s10p2: 'For any other question, Fairide support can be reached by e-mail at [contact@fairide.be](mailto:contact@fairide.be) or by phone on [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -10901,8 +10889,6 @@ export const translations = {
       support: 'Support',
       needHelp: 'Need help?',
       needHelpSub: 'Answers to frequent questions',
-      chat: 'Chat with us',
-      chatSub: 'The Fairide assistant, right away',
       feedback: 'Give my feedback on Fairide',
       feedbackSub: 'What you like, what is missing',
       share: 'Share Fairide',
@@ -12076,16 +12062,6 @@ export const translations = {
       stepIndicator: 'Step {current} of {total}',
       next: 'Next →',
       back: '← Back'
-    },
-    assistant: {
-      greeting: "Hi! I'm the Fairide assistant 🤖 Ask me anything about orders, deliveries, commissions, or how to become a partner!",
-      errorFallback: 'Sorry, something went wrong. Try again in a moment!',
-      header: '🤖 Fairide Assistant',
-      inputPlaceholder: 'Type your question...',
-      send: 'Send',
-      tooltipText: '👋 A question about Fairide? I\'m here to help!',
-      closeAria: 'Close',
-      openAria: 'Open the Fairide assistant'
     },
     contact: {
       eyebrow: 'Got a question?',
@@ -15742,7 +15718,7 @@ export const translations = {
       s9q4: 'Waar de geschiedenis en de overzichten te vinden',
       s9q4a: 'De bestelgeschiedenis staat in het onderdeel Bestellingen van het dashboard. Facturen en overzichten staan in het onderdeel Facturen.',
       s10Title: 'Hulp',
-      s10p1: 'Een vraag over het gebruik van Fairide (het menu wijzigen, een bestelstatus begrijpen, een factuur...)? De Fairide-assistent 🤖 antwoordt rechtstreeks in het dashboard — chatbel rechtsonder op het scherm, op elke pagina.',
+      s10p1: "Een vraag over het gebruik van Fairide (het menu wijzigen, een bestelstatus begrijpen, een factuur...)? Het helpcentrum bundelt de antwoorden op de meest gestelde vragen.",
       s10p2: 'Voor elke andere vraag is de Fairide-ondersteuning bereikbaar per e-mail op [contact@fairide.be](mailto:contact@fairide.be) of telefonisch op [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -17048,8 +17024,6 @@ export const translations = {
       support: 'Ondersteuning',
       needHelp: 'Hulp nodig?',
       needHelpSub: 'Antwoorden op veelgestelde vragen',
-      chat: 'Chat met ons',
-      chatSub: 'De Fairide-assistent, meteen',
       feedback: 'Mijn mening over Fairide geven',
       feedbackSub: 'Wat je bevalt, wat ontbreekt',
       share: 'Fairide delen',
@@ -18223,16 +18197,6 @@ export const translations = {
       stepIndicator: 'Stap {current} van {total}',
       next: 'Volgende →',
       back: '← Terug'
-    },
-    assistant: {
-      greeting: 'Hallo! Ik ben de Fairide-assistent 🤖 Stel me je vragen over bestellingen, leveringen, commissies of hoe je partner kan worden!',
-      errorFallback: 'Sorry, er is een fout opgetreden. Probeer het straks opnieuw!',
-      header: '🤖 Fairide-assistent',
-      inputPlaceholder: 'Typ je vraag...',
-      send: 'Versturen',
-      tooltipText: '👋 Een vraag over Fairide? Ik help je graag verder!',
-      closeAria: 'Sluiten',
-      openAria: 'De Fairide-assistent openen'
     },
     contact: {
       eyebrow: 'Een vraag?',

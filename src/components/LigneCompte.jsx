@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 //
 // Quatre variantes selon les props :
 // - `to`        : un lien vers une page.
-// - `onClick`   : une action (ouvrir l'assistant, partager). Un <button>, pas un <a href="#"> déguisé —
+// - `onClick`   : une action (partager Fairide). Un <button>, pas un <a href="#"> déguisé —
 //                 un lien qui ne mène nulle part est annoncé comme tel par les lecteurs d'écran et
 //                 s'ouvre dans un nouvel onglet au clic du milieu.
 // - `children`  : une rangée qui se DÉPLIE (`ouverte`, `onClick` pour basculer) et montre un

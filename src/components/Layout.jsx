@@ -9,7 +9,6 @@ import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import CuisineBackdrop from './CuisineBackdrop';
-import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
@@ -160,7 +159,6 @@ export default function Layout() {
         </div>
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
-        <AssistantWidget />
       </>
     );
   }
@@ -246,7 +244,6 @@ export default function Layout() {
       </div>
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
-      <AssistantWidget />
       {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
           mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
           apportait rien, et sa présence obligeait .hero-inner à réserver 88 à 108px de largeur

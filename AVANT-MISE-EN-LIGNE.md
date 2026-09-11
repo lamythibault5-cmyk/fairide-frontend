@@ -84,7 +84,7 @@ reçoivent aussi des données personnelles, vérifié dans le code :
 | Service | Ce qu'il reçoit | Où |
 |---|---|---|
 | **Nominatim** (OpenStreetMap) | **l'adresse du domicile des clients**, pour la géolocaliser | `geocode.js` |
-| **Anthropic** | **le texte que les clients écrivent** dans l'assistant | `routes/assistant.js` |
+| **Anthropic** | **le texte des cartes envoyées par les commerçants** (import et traduction de menus) | `routes/menuImport.js`, `routes/menuTranslate.js` |
 | **OSRM** | position du livreur et adresse de livraison | `DeliveryTrackingMap.jsx` |
 | **Cloudinary** | photos envoyées par les commerçants | `cloudinary.js` |
 | **Sentry** | adresse IP et pages visitées (désormais après consentement) | `main.jsx` |
