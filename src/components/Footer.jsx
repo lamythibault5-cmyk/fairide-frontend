@@ -17,7 +17,10 @@ export default function Footer() {
         </div>
         <div className="footer-col">
           <h4>{t('footer.join')}</h4>
-          <Link to="/login?audience=client" className="small">{t('footer.orderNow')}</Link>
+          {/* Vers la liste, pas vers /login : c'était le seul lien « Commander » du pied de
+              page et il menait à un mur de connexion, ce qui coupait le visiteur comme le robot
+              du catalogue. */}
+          <Link to="/restaurants" className="small">{t('footer.orderNow')}</Link>
           <Link to="/login?audience=partner&role=restaurant" className="small">{t('footer.addBusiness')}</Link>
           <Link to="/login?audience=partner&role=driver" className="small">{t('footer.becomeDriver')}</Link>
         </div>

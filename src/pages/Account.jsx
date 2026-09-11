@@ -887,10 +887,6 @@ export default function Account() {
           « Mes infos », avec le reste de ce qui concerne la personne. */}
       <div className="card account-groupe" aria-label={t('accountUi.support')}>
         <LigneCompte to="/aide" icone="🛟" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
-        <LigneCompte
-          icone="💬" titre={t('accountUi.chat')} sous={t('accountUi.chatSub')}
-          onClick={() => window.dispatchEvent(new Event('fairide:assistant-ouvrir'))}
-        />
         <LigneCompte to="/aide?sujet=avis" icone="⭐" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
         <LigneCompte icone="🔗" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
         <LigneCompte to="/aide?sujet=bug" icone="🐞" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />

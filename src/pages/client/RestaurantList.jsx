@@ -18,6 +18,8 @@ import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, r
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
+import useJsonLd from '../../seo/useJsonLd';
+import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -127,12 +129,19 @@ export default function RestaurantList() {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
-  usePageMeta({ title: t('restoListUi.pageTitle'), path: '/restaurants' });
+  usePageMeta({ title: t('restoListUi.pageTitle'), description: t('seo.listDescription'), path: '/restaurants' });
+  useJsonLd(breadcrumbJsonLd([
+    { name: 'Fairide', path: '/' },
+    { name: t('restoListUi.heading'), path: '/restaurants' }
+  ]), 'ld-breadcrumb');
   const homeCommune = matchCommune(user?.addressCity);
   // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :
   // la liste s'ouvre déjà filtrée, sans que l'URL ne change de forme.
   const filtresInitiaux = useLocation().state || {};
   const [restaurants, setRestaurants] = useState([]);
+  /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
+     sa zone morte temporelle et la page planterait au montage. */
+  useJsonLd(restaurantListJsonLd(restaurants, { url: `${SITE_URL}/restaurants` }), 'ld-list');
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(new Set());
   const [loading, setLoading] = useState(true);
@@ -265,6 +274,9 @@ export default function RestaurantList() {
 
   return (
     <div>
+      {/* La page n'avait aucun h1 : son titre de niveau 1 était la marque de l'en-tête, donc son
+          sujet, pour un moteur, était « fairide » et non les restaurants de Bruxelles. */}
+      <h1 className="page-title">{t('restoListUi.heading')}</h1>
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}

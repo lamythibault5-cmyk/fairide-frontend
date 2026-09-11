@@ -3448,7 +3448,7 @@ export const translations = {
       s9q4: 'Où retrouver l\'historique et les relevés',
       s9q4a: 'L\'historique des commandes se trouve dans la section Commandes du tableau de bord. Les factures et relevés se trouvent dans la section Factures.',
       s10Title: 'Aide',
-      s10p1: 'Une question sur l\'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? L\'assistant Fairide 🤖 répond directement dans le tableau de bord — bulle de discussion en bas à droite de l\'écran, sur n\'importe quelle page.',
+      s10p1: "Une question sur l'utilisation de Fairide (modifier le menu, comprendre un statut de commande, une facture...) ? Le centre d'aide rassemble les réponses aux questions les plus fréquentes.",
       s10p2: 'Pour toute autre question, le support Fairide est joignable par e-mail à [contact@fairide.be](mailto:contact@fairide.be) ou par téléphone au [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -3734,6 +3734,7 @@ export const translations = {
       closed: '🔒 Fermé',
       supermarket: 'Supermarché',
       freeFrom: '🚴 Offerte dès {min}€',
+      heading: 'Restaurants et commerces à Bruxelles',
       pageTitle: 'Restaurants et commerces à Bruxelles — Fairide',
       freeDeliveryPill: '🚴 Livraison offerte',
       deliveryDiscountPill: '🚴 -{amount}€ livraison'
@@ -4754,8 +4755,6 @@ export const translations = {
       support: 'Assistance',
       needHelp: 'Besoin d\'aide ?',
       needHelpSub: 'Les réponses aux questions fréquentes',
-      chat: 'Chatter avec nous',
-      chatSub: 'L\'assistant Fairide, tout de suite',
       feedback: 'Donner mon avis sur Fairide',
       feedbackSub: 'Ce qui te plaît, ce qui manque',
       share: 'Partager Fairide',
@@ -5364,8 +5363,15 @@ export const translations = {
       verifiedByFairide: 'Restaurant vérifié par Fairide',
       verifiedShort: 'resto vérifié'
     },
+    seo: {
+      homeDescription: "Commande chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 %, contre 22 à 32 % sur les grandes plateformes.",
+      listDescription: "Tous les restaurants, supermarchés, boulangeries et night shops livrés par Fairide dans les 19 communes de Bruxelles.",
+      restaurantTitle: "{name}, {cuisine} à {commune} — Fairide",
+      restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande."
+    },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Aide',
       favorites: 'Favoris',
       search: 'Recherche',
       orders: 'Mes commandes',
@@ -5929,16 +5935,6 @@ export const translations = {
       stepIndicator: 'Étape {current} sur {total}',
       next: 'Suivant →',
       back: '← Précédent'
-    },
-    assistant: {
-      greeting: "Bonjour ! Je suis l'assistant Fairide 🤖 Pose-moi tes questions sur les commandes, les livraisons, les commissions ou comment devenir partenaire !",
-      errorFallback: 'Désolé, une erreur est survenue. Réessaie dans un instant !',
-      header: '🤖 Assistant Fairide',
-      inputPlaceholder: 'Écris ta question...',
-      send: 'Envoyer',
-      tooltipText: '👋 Une question sur Fairide ? Je suis là pour t\'aider !',
-      closeAria: 'Fermer',
-      openAria: "Ouvrir l'assistant Fairide"
     },
     contact: {
       eyebrow: 'Une question ?',
@@ -9595,7 +9591,7 @@ export const translations = {
       s9q4: 'Where to find history and statements',
       s9q4a: 'The order history is in the Orders section of the dashboard. Invoices and statements are in the Invoices section.',
       s10Title: 'Help',
-      s10p1: 'A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The Fairide assistant 🤖 answers directly in the dashboard — chat bubble at the bottom right of the screen, on any page.',
+      s10p1: "A question about using Fairide (editing the menu, understanding an order status, an invoice...)? The help centre gathers the answers to the most common questions.",
       s10p2: 'For any other question, Fairide support can be reached by e-mail at [contact@fairide.be](mailto:contact@fairide.be) or by phone on [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -9881,6 +9877,7 @@ export const translations = {
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
       freeFrom: '🚴 Free from €{min}',
+      heading: 'Restaurants and businesses in Brussels',
       pageTitle: 'Restaurants and businesses in Brussels — Fairide',
       freeDeliveryPill: '🚴 Free delivery',
       deliveryDiscountPill: '🚴 -€{amount} delivery'
@@ -10901,8 +10898,6 @@ export const translations = {
       support: 'Support',
       needHelp: 'Need help?',
       needHelpSub: 'Answers to frequent questions',
-      chat: 'Chat with us',
-      chatSub: 'The Fairide assistant, right away',
       feedback: 'Give my feedback on Fairide',
       feedbackSub: 'What you like, what is missing',
       share: 'Share Fairide',
@@ -11511,8 +11506,15 @@ export const translations = {
       verifiedByFairide: 'Restaurant verified by Fairide',
       verifiedShort: 'verified'
     },
+    seo: {
+      homeDescription: "Order from the restaurants and local shops in your Brussels neighbourhood. Commission capped at 10%, against 22 to 32% on the big platforms.",
+      listDescription: "Every restaurant, supermarket, bakery and night shop delivered by Fairide across the 19 communes of Brussels.",
+      restaurantTitle: "{name}, {cuisine} in {commune} — Fairide",
+      restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order."
+    },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Help',
       favorites: 'Favorites',
       search: 'Search',
       orders: 'My orders',
@@ -12076,16 +12078,6 @@ export const translations = {
       stepIndicator: 'Step {current} of {total}',
       next: 'Next →',
       back: '← Back'
-    },
-    assistant: {
-      greeting: "Hi! I'm the Fairide assistant 🤖 Ask me anything about orders, deliveries, commissions, or how to become a partner!",
-      errorFallback: 'Sorry, something went wrong. Try again in a moment!',
-      header: '🤖 Fairide Assistant',
-      inputPlaceholder: 'Type your question...',
-      send: 'Send',
-      tooltipText: '👋 A question about Fairide? I\'m here to help!',
-      closeAria: 'Close',
-      openAria: 'Open the Fairide assistant'
     },
     contact: {
       eyebrow: 'Got a question?',
@@ -15742,7 +15734,7 @@ export const translations = {
       s9q4: 'Waar de geschiedenis en de overzichten te vinden',
       s9q4a: 'De bestelgeschiedenis staat in het onderdeel Bestellingen van het dashboard. Facturen en overzichten staan in het onderdeel Facturen.',
       s10Title: 'Hulp',
-      s10p1: 'Een vraag over het gebruik van Fairide (het menu wijzigen, een bestelstatus begrijpen, een factuur...)? De Fairide-assistent 🤖 antwoordt rechtstreeks in het dashboard — chatbel rechtsonder op het scherm, op elke pagina.',
+      s10p1: "Een vraag over het gebruik van Fairide (het menu wijzigen, een bestelstatus begrijpen, een factuur...)? Het helpcentrum bundelt de antwoorden op de meest gestelde vragen.",
       s10p2: 'Voor elke andere vraag is de Fairide-ondersteuning bereikbaar per e-mail op [contact@fairide.be](mailto:contact@fairide.be) of telefonisch op [+32 491 97 99 80](tel:+32491979980).'
     },
     jeux: {
@@ -16028,6 +16020,7 @@ export const translations = {
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
       freeFrom: '🚴 Gratis vanaf €{min}',
+      heading: 'Restaurants en zaken in Brussel',
       pageTitle: 'Restaurants en zaken in Brussel — Fairide',
       freeDeliveryPill: '🚴 Gratis levering',
       deliveryDiscountPill: '🚴 -€{amount} levering'
@@ -17048,8 +17041,6 @@ export const translations = {
       support: 'Ondersteuning',
       needHelp: 'Hulp nodig?',
       needHelpSub: 'Antwoorden op veelgestelde vragen',
-      chat: 'Chat met ons',
-      chatSub: 'De Fairide-assistent, meteen',
       feedback: 'Mijn mening over Fairide geven',
       feedbackSub: 'Wat je bevalt, wat ontbreekt',
       share: 'Fairide delen',
@@ -17658,8 +17649,15 @@ export const translations = {
       verifiedByFairide: 'Restaurant geverifieerd door Fairide',
       verifiedShort: 'geverifieerd'
     },
+    seo: {
+      homeDescription: "Bestel bij de restaurants en handelszaken in jouw Brusselse buurt. Commissie beperkt tot 10 %, tegenover 22 tot 32 % bij de grote platformen.",
+      listDescription: "Alle restaurants, supermarkten, bakkerijen en nachtwinkels die Fairide levert in de 19 gemeenten van Brussel.",
+      restaurantTitle: "{name}, {cuisine} in {commune} — Fairide",
+      restaurantDescription: "Bestel bij {name} in {commune} en laat het met de fiets leveren. Op Fairide houdt de zaak 90 % van je bestelling."
+    },
     nav: {
       restaurants: 'Restaurants',
+      help: 'Hulp',
       favorites: 'Favorieten',
       search: 'Zoeken',
       orders: 'Mijn bestellingen',
@@ -18223,16 +18221,6 @@ export const translations = {
       stepIndicator: 'Stap {current} van {total}',
       next: 'Volgende →',
       back: '← Terug'
-    },
-    assistant: {
-      greeting: 'Hallo! Ik ben de Fairide-assistent 🤖 Stel me je vragen over bestellingen, leveringen, commissies of hoe je partner kan worden!',
-      errorFallback: 'Sorry, er is een fout opgetreden. Probeer het straks opnieuw!',
-      header: '🤖 Fairide-assistent',
-      inputPlaceholder: 'Typ je vraag...',
-      send: 'Versturen',
-      tooltipText: '👋 Een vraag over Fairide? Ik help je graag verder!',
-      closeAria: 'Sluiten',
-      openAria: 'De Fairide-assistent openen'
     },
     contact: {
       eyebrow: 'Een vraag?',

@@ -7,6 +7,8 @@ import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import usePageMeta from '../hooks/usePageMeta';
+import useJsonLd from '../seo/useJsonLd';
+import { organizationJsonLd } from '../seo/jsonLd';
 import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
@@ -92,7 +94,8 @@ function steps(t) {
 export default function Landing() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  usePageMeta({ path: '/' });
+  usePageMeta({ description: t('seo.homeDescription'), path: '/' });
+  useJsonLd(organizationJsonLd(), 'ld-organization');
   // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
   const restaurants = useCommercesPublics();
   // Quartiers déjà servis (Flagey, Jourdan, Parvis…) : les plus représentés parmi les commerces publiés.

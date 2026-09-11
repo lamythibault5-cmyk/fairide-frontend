@@ -9,7 +9,6 @@ import BrandMark from './BrandMark';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import CuisineBackdrop from './CuisineBackdrop';
-import AssistantWidget from './AssistantWidget';
 import LanguageSwitcher from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
@@ -160,7 +159,6 @@ export default function Layout() {
         </div>
         <CookieBanner />
         {seesClientCart && <FloatingCart />}
-        <AssistantWidget />
       </>
     );
   }
@@ -182,7 +180,10 @@ export default function Layout() {
               <BrandMark size={leanHeader ? 34 : 48} />
               {!leanHeader && (
                 <div className="brand-text">
-                  <h1>fairide</h1>
+                  {/* <span> et non <h1> : la marque est présente sur toutes les pages, elle y
+                      confisquait donc le titre de niveau 1. Le h1 appartient au contenu de la
+                      page. Rendu inchangé, voir .brand-name dans styles.css. */}
+                  <span className="brand-name">fairide</span>
                   <span className="brand-slogan">{t('common.slogan')}</span>
                 </div>
               )}
@@ -208,6 +209,17 @@ export default function Layout() {
             )}
             <LanguageSwitcher />
           </div>
+          {/* Sans cette nav, aucun lien crawlable ne mène de l'accueil vers /restaurants :
+              l'autre <nav> ne s'affiche que pour un visiteur connecté, et un robot ne l'est
+              jamais. Les fiches de commerce sont publiques et indexables par intention, mais
+              restaient introuvables en pratique. C'est aussi le chemin qu'un visiteur veut :
+              regarder avant de créer un compte. */}
+          {!user && !leanHeader && (
+            <nav className="role-nav">
+              <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
+              <NavLink to="/aide" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.help')}</NavLink>
+            </nav>
+          )}
           {user && (
             <nav className="role-nav">
               {/* Le compte admin ne voit jamais la nav client/restaurateur/livreur, seulement l'ERP —
@@ -237,16 +249,17 @@ export default function Layout() {
         </div>
       </div>
       <div className={`wrap${fondCuisine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
-        <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
+        {/* <main> manquait sur toute la branche publique, celle qui sert les pages
+            indexables. La branche tableau de bord en a une depuis toujours. */}
+        <main className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
           <Suspense fallback={attentePage}>
             <Outlet />
           </Suspense>
-        </div>
+        </main>
         <Footer />
       </div>
       <CookieBanner />
       {seesClientCart && <FloatingCart />}
-      <AssistantWidget />
       {/* Pas de filigrane ici : cette branche affiche déjà la bannière .hero, avec le vélo ET le
           mot « fairide » à vingt pixels de l'endroit où le filigrane se serait posé. Il n'y
           apportait rien, et sa présence obligeait .hero-inner à réserver 88 à 108px de largeur
