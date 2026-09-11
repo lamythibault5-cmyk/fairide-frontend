@@ -720,7 +720,6 @@ export default function Account() {
             {restaurant.subscriptionStatus === 'trialing' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subTrialIntro')}
-                {restaurant.freeTrialMonths > 1 ? t('accountUi.subEarlyBird', { n: restaurant.freeTrialMonths }) : ''}
                 {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subFirstCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : '.'}
               </p>
             )}
@@ -746,7 +745,6 @@ export default function Account() {
             {restaurant.subscriptionStatus === 'inactive' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subInactiveIntro')}
-                {restaurant.freeTrialMonths > 1 ? t('accountUi.subEarlyBird2', { n: restaurant.freeTrialMonths }) : ''}
                 {' '}{t('accountUi.subPendingValidation')}
               </p>
             )}
@@ -767,7 +765,7 @@ export default function Account() {
                   <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
                 </div>
                 <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: restaurant.freeTrialMonths > 1 ? t('accountUi.freeMonths', { n: restaurant.freeTrialMonths }) : t('accountUi.firstMonthFree') })}
+                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: t('accountUi.firstMonthFree') })}
                 </button>
               </div>
             )}

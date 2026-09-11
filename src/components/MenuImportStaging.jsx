@@ -6,7 +6,8 @@ import { useLanguage } from '../context/LanguageContext';
 // ajouter, en retirer, et voit une estimation du temps de lecture. 2) L'analyse tourne page par page, avec
 // l'avancement (« document 2 sur 5 »), un bilan par page — plats trouvés, page trop chargée, page illisible —
 // puis tous les plats fusionnés partent dans la liste de relecture (MenuImportReview) via onDone(items).
-const MAX_DOCS = 12;
+const MAX_DOCS = 25; // une carte complète tient rarement sur plus de 25 pages ou photos
+const CONCURRENCE = 2; // deux documents lus en parallèle : une carte de 25 pages reste sous les ~20 min
 const SECONDES_PAR_DOC = [45, 100]; // fourchette observée par document (Claude lit un PDF ou une photo)
 const BEAUCOUP_DE_PLATS = 45; // au-delà, on invite à vérifier qu'il ne manque rien sur cette page
 
@@ -35,7 +36,7 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
   const { t } = useLanguage();
   const [fichiers, setFichiers] = useState([]);
   const [etat, setEtat] = useState('attente'); // attente | analyse | termine
-  const [index, setIndex] = useState(0);
+  const [termines, setTermines] = useState(0); // documents déjà lus (les lectures avancent par paquets de CONCURRENCE)
   const [bilans, setBilans] = useState([]); // [{ name, status: 'ok'|'trop'|'echec', count, message }]
   const entree = useRef(null);
 
@@ -48,34 +49,48 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
   }
   function retirer(i) { setFichiers((f) => f.filter((_, k) => k !== i)); }
 
+  // Les documents partent CONCURRENCE par CONCURRENCE : l'attente annoncée tient compte de ce parallélisme.
   const estimation = (n) => {
-    const min = Math.max(1, Math.round((n * SECONDES_PAR_DOC[0]) / 60)); const max = Math.max(min + (n > 1 ? 1 : 0), Math.round((n * SECONDES_PAR_DOC[1]) / 60));
+    const paquets = Math.ceil(Math.max(0, n) / CONCURRENCE);
+    const min = Math.max(1, Math.round((paquets * SECONDES_PAR_DOC[0]) / 60)); const max = Math.max(min + (n > 1 ? 1 : 0), Math.round((paquets * SECONDES_PAR_DOC[1]) / 60));
     return { min, max };
   };
 
   async function analyser() {
     if (!fichiers.length) return;
-    setEtat('analyse'); setBilans([]); onBusy?.(true);
-    const tous = []; const vus = new Set(); const resultats = [];
-    for (let i = 0; i < fichiers.length; i++) {
-      setIndex(i);
-      const f = fichiers[i];
-      try {
-        const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { files: [f], token, fieldName: 'files' });
-        const items = r.items || [];
-        for (const it of items) { const cle = `${it.name.toLowerCase()}|${it.price}`; if (!vus.has(cle)) { vus.add(cle); tous.push(it); } }
-        resultats.push({ name: f.name, status: items.length >= BEAUCOUP_DE_PLATS ? 'trop' : 'ok', count: items.length });
-      } catch (err) {
-        const message = err.message || '';
-        resultats.push({ name: f.name, status: /trop de plats|too many/i.test(message) ? 'trop' : 'echec', count: 0, message });
+    setEtat('analyse'); setBilans([]); setTermines(0); onBusy?.(true);
+    // Pool de CONCURRENCE lectures simultanées : chaque document part seul vers import-preview, et les
+    // bilans restent rangés dans l'ordre de dépôt même si les réponses reviennent dans le désordre.
+    const resultats = new Array(fichiers.length);
+    let suivant = 0; let faits = 0;
+    // Le bilan affiche seulement le resume par document : les plats eux-memes partent dans onDone.
+    const sansItems = (r) => ({ name: r.name, status: r.status, count: r.count, message: r.message });
+    async function ouvrier() {
+      while (suivant < fichiers.length) {
+        const i = suivant; suivant += 1;
+        const f = fichiers[i];
+        try {
+          const r = await apiUpload(`/restaurants/${restoId}/menu/import-preview`, { files: [f], token, fieldName: 'files' });
+          const items = r.items || [];
+          resultats[i] = { name: f.name, status: items.length >= BEAUCOUP_DE_PLATS ? 'trop' : 'ok', count: items.length, items };
+        } catch (err) {
+          const message = err.message || '';
+          resultats[i] = { name: f.name, status: /trop de plats|too many/i.test(message) ? 'trop' : 'echec', count: 0, message, items: [] };
+        }
+        faits += 1; setTermines(faits); setBilans(resultats.filter(Boolean).map(sansItems));
       }
-      setBilans([...resultats]);
     }
-    setEtat('termine'); onBusy?.(false);
-    if (tous.length) onDone(tous, resultats);
+    await Promise.all(Array.from({ length: Math.min(CONCURRENCE, fichiers.length) }, () => ouvrier()));
+    const tous = []; const vus = new Set();
+    for (const r of resultats) {
+      for (const it of (r?.items || [])) { const cle = `${it.name.toLowerCase()}|${it.price}`; if (!vus.has(cle)) { vus.add(cle); tous.push(it); } }
+    }
+    const bilansFinaux = resultats.filter(Boolean).map(sansItems);
+    setBilans(bilansFinaux); setEtat('termine'); onBusy?.(false);
+    if (tous.length) onDone(tous, bilansFinaux);
   }
 
-  function recommencer() { setFichiers([]); setBilans([]); setEtat('attente'); }
+  function recommencer() { setFichiers([]); setBilans([]); setTermines(0); setEtat('attente'); }
 
   const est = estimation(fichiers.length);
   return (
@@ -99,6 +114,7 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
             <button type="button" className={fichiers.length ? 'btn-outline' : 'btn-teal'} disabled={disabled || fichiers.length >= MAX_DOCS} onClick={() => entree.current?.click()}>
               {fichiers.length ? t('menuPage.stagingAddMore') : t('menuPage.chooseFiles')}
             </button>
+            {fichiers.length > 0 && <span className="small">{t('menuPage.stagingCount', { n: fichiers.length, max: MAX_DOCS })}</span>}
             {fichiers.length > 0 && (
               <button type="button" className="btn-teal" disabled={disabled} onClick={analyser}>
                 <b>2.</b> {t('menuPage.stagingAnalyze', { n: fichiers.length })}
@@ -118,9 +134,9 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
         <div className="menu-staging-progress" role="status">
           {etat === 'analyse' && (
             <>
-              <p style={{ margin: '0 0 6px', fontWeight: 700 }}>⏳ {t('menuPage.stagingProgress', { i: index + 1, n: fichiers.length, name: fichiers[index]?.name || '' })}</p>
-              <div className="courier-bar"><div style={{ width: `${Math.round(((index) / fichiers.length) * 100)}%` }} /></div>
-              <p className="small" style={{ margin: '6px 0 0' }}>{t('menuPage.stagingRemaining', { min: estimation(fichiers.length - index).min, max: estimation(fichiers.length - index).max })}</p>
+              <p style={{ margin: '0 0 6px', fontWeight: 700 }}>⏳ {t('menuPage.stagingProgress', { i: Math.min(termines + 1, fichiers.length), n: fichiers.length, name: fichiers[Math.min(termines, fichiers.length - 1)]?.name || '' })}</p>
+              <div className="courier-bar"><div style={{ width: `${Math.round((termines / fichiers.length) * 100)}%` }} /></div>
+              <p className="small" style={{ margin: '6px 0 0' }}>{t('menuPage.stagingRemaining', { min: estimation(fichiers.length - termines).min, max: estimation(fichiers.length - termines).max })}</p>
             </>
           )}
           <MenuImportReport bilans={bilans} />

@@ -20,6 +20,7 @@ import { galleryForSection } from '../../menuCategories';
 import MenuImportStaging, { MenuImportReport } from '../../components/MenuImportStaging';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import MenuImportReview from '../../components/MenuImportReview';
+import MenuDrafts from '../../components/MenuDrafts';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
@@ -97,6 +98,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // deux allers-retours réseau — sans ce verrou, un second clic envoyait une deuxième suppression et
   // le restaurateur récupérait une erreur pour une action qui avait pourtant réussi.
   const [confirmBusy, setConfirmBusy] = useState(false);
+  // Remise à zéro de toute la carte (plats, sections, suppléments) pour la refaire de zéro.
+  const [resetting, setResetting] = useState(false);
   // Override d'affichage local le temps que loadDashboard confirme le nouvel ordre côté serveur — évite
   // l'aller-retour visible (retour à l'ancien ordre puis saut au nouveau) entre le lâcher et le rechargement.
   const [localOrder, setLocalOrder] = useState({});
@@ -419,6 +422,32 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // « Tout réinitialiser » : le restaurateur repart d'une carte vide (changement de concept, carte de
+  // test à jeter). Les brouillons ne sont pas touchés — ils servent justement à repartir d'une base.
+  function demanderReset() {
+    setConfirm({
+      title: t('menuPage.resetConfirmTitle'),
+      message: t('menuPage.resetConfirmBody', { n: restaurant.menu.length }),
+      confirmLabel: t('menuPage.resetButton'),
+      onConfirm: reinitialiserCarte
+    });
+  }
+  async function reinitialiserCarte() {
+    if (confirmBusy || resetting) return;
+    setConfirmBusy(true); setResetting(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/menu`, { method: 'DELETE', token, body: { confirm: true } });
+      await loadDashboard(restoId);
+      setStartChoiceMade(false);
+      setMethodesOuvertes(true);
+      toast(t('menuPage.resetDone', { n: r.deleted }));
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setConfirmBusy(false); setResetting(false); setConfirm(null);
+    }
+  }
+
   // « Démarrer en 1 clic » : ajoute d'un coup la sélection rapide de plats typiques de la cuisine du commerce
   // (prix indicatifs) ; tout se corrige ensuite dans « Ton menu », plus bas.
   const platsUnClic = quickTemplateItems(restaurant.cuisine);
@@ -575,17 +604,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       <div className="card" id="menu-methodes">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
-        {!importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
-          <div className="methode methode-un-clic">
-            <div className="methode-tete"><span className="methode-num">🚀</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
-            <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
-            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button type="button" className="btn-teal" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
-              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.oneClickChoose')}</button>
-            </div>
-          </div>
-        )}
-
         {!importedItems && !modeAdmin && (
           <div className="methode" id="menu-concierge">
             <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommended')}</span></div>
@@ -659,6 +677,17 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           </div>
         )}
+        {!importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
+          <div className="methode methode-un-clic">
+            <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
+            <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+              <button type="button" className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
+              <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.oneClickChoose')}</button>
+            </div>
+          </div>
+        )}
+
         {importedItems && importReport && <MenuImportReport bilans={importReport} />}
         {importedItems && (
           <MenuImportReview
@@ -682,13 +711,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              {platsUnClic.length > 0 && <button className="btn-teal" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>}
               <button className="btn-gold" onClick={allerAuConcierge}>{t('menuPage.quickStartConcierge')}</button>
               <button className="btn-teal" onClick={allerALImportWeb}>{t('menuPage.quickStartFromWeb')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
                 {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
               </button>
               <button className="btn-ghost" onClick={() => setStartChoiceMade(true)}>{t('menuPage.createMyself')}</button>
+              {platsUnClic.length > 0 && <button className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>}
             </div>
           ) : (
             <TemplatePicker
@@ -984,6 +1013,18 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </button>
         </div>
       )}
+      <MenuDrafts restoId={restoId} token={token} menuCount={restaurant.menu.length} onPublished={() => loadDashboard(restoId)} />
+
+      {restaurant.menu.length > 0 && (
+        <div className="card" id="menu-reset">
+          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.resetTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.resetIntro')}</p>
+          <button type="button" className="btn-danger-ghost" disabled={resetting} onClick={demanderReset}>
+            {resetting ? '…' : t('menuPage.resetButton', { n: restaurant.menu.length })}
+          </button>
+        </div>
+      )}
+
       {restaurant.menu.length > 0 && !modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>💚 {t('menuPage.adjustTitle')}</h3>
