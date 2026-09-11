@@ -153,6 +153,7 @@ export default function Layout() {
               <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
               <Link to="/cgv">{t('footer.terms')}</Link>
               <Link to="/confidentialite">{t('footer.privacy')}</Link>
+              <Link to="/cookies">{t('footer.cookies')}</Link>
             </div>
           </main>
           {rightSlot && <aside className="dashboard-right">{rightSlot}</aside>}

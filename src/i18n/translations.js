@@ -3299,6 +3299,29 @@ export const translations = {
       lawTitle: 'Droit applicable',
       law: 'Les présentes conditions sont soumises au droit belge. Tout litige relève des tribunaux compétents de l\'arrondissement judiciaire de Bruxelles.'
     },
+    cookiesPolicy: {
+      pageTitle: 'Politique des cookies — Fairide',
+      title: 'Politique des cookies',
+      updated: 'Dernière mise à jour : 11 septembre 2026.',
+      whatTitle: 'Qu\'est-ce qu\'un cookie ?',
+      what: 'Un cookie est un petit fichier déposé par un site dans votre navigateur. Fairide utilise aussi le « stockage local » du navigateur (localStorage et sessionStorage), qui joue le même rôle : retenir des informations d\'une page à l\'autre. Cette politique couvre les deux. Elle s\'applique au site fairide.be et à l\'application Fairide installée depuis le navigateur.',
+      technicalTitle: 'Cookies et stockages strictement nécessaires',
+      technical: 'Ils sont indispensables au fonctionnement du service et ne demandent pas votre consentement : **votre session** (jeton de connexion, conservé jusqu\'à 30 jours ou jusqu\'à votre déconnexion), **votre panier** (contenu et commerce choisi, le temps de la visite), **votre choix concernant la bannière cookies**, et les **protections techniques** (limitation des abus, sécurité des formulaires). Sans eux, impossible de se connecter, de commander ou de réserver.',
+      preferencesTitle: 'Préférences',
+      preferences: 'Pour vous faciliter la vie, Fairide retient dans votre navigateur : la **langue** choisie (français, anglais, néerlandais), le **thème** d\'affichage, la **musique** choisie dans les mini-jeux et vos meilleurs scores, l\'imprimante de tickets et le papier choisis par un commerce, les onglets et filtres ouverts dans le tableau de bord. Ces informations ne quittent pas votre appareil et ne servent à aucun suivi.',
+      thirdPartyTitle: 'Services tiers',
+      thirdParty: 'Certaines fonctions font appel à des services extérieurs qui peuvent déposer leurs propres cookies, uniquement lorsque vous les utilisez : **Stripe** (paiement sécurisé et vérification d\'identité, [politique de Stripe](https://stripe.com/fr-be/privacy)), **Google** (connexion « Se connecter avec Google », seulement si vous cliquez dessus), les fonds de **carte OpenStreetMap** et les **photos** hébergées par Unsplash (chargement d\'images, sans cookie de suivi de notre part). Fairide ne partage aucune donnée de navigation avec ces services au-delà de ce qui est nécessaire à la fonction demandée.',
+      noTrackingTitle: 'Pas de publicité, pas de traceurs',
+      noTracking: 'Fairide n\'utilise **aucun cookie publicitaire**, aucun pixel de réseau social et aucun outil de statistiques tiers (pas de Google Analytics, pas de Meta Pixel). Les chiffres dont nous avons besoin (commandes, réservations, avis) viennent de notre propre base, liée à votre compte, et sont décrits dans la politique de confidentialité.',
+      manageTitle: 'Gérer ou supprimer les cookies',
+      manage: 'Vous pouvez à tout moment refuser ou supprimer les cookies et le stockage local dans les réglages de votre navigateur (Chrome, Safari, Firefox, Edge : « Confidentialité » puis « Données de site »). Supprimer ces données vous déconnecte et vide votre panier ; le site continue de fonctionner. La bannière affichée à la première visite vous permet de refuser tout ce qui n\'est pas strictement nécessaire ; votre choix est conservé un an et peut être modifié en supprimant les données du site.',
+      durationTitle: 'Durées de conservation',
+      duration: 'Session de connexion : 30 jours au plus. Panier : le temps de la visite. Préférences (langue, thème, musique, scores, imprimante) : jusqu\'à suppression par vous. Choix de la bannière : 12 mois. Cookies Stripe et Google : selon leurs propres politiques, uniquement sur leurs pages ou lors de leur utilisation.',
+      contactTitle: 'Questions',
+      contact: 'Pour toute question sur les cookies ou vos données : [contact@fairide.be](mailto:contact@fairide.be). Responsable du traitement : Fairide SRL, BCE 1042.169.780.',
+      seePrivacy: 'Politique de confidentialité',
+      seeLegal: 'Mentions légales'
+    },
     privacy: {
       pageTitle: 'Politique de confidentialité — Fairide',
       draftWarning: 'Version du 7 septembre 2026 — Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
@@ -5317,12 +5340,14 @@ export const translations = {
       legalNotice: 'Mentions légales',
       privacy: 'Confidentialité',
       terms: 'CGV',
-      bottom: '© Fairide SRL — BCE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be'
+      bottom: '© Fairide SRL — BCE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be',
+      cookies: 'Cookies'
     },
     cookies: {
       text: "Fairide utilise des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Avec ton accord uniquement, nous activons aussi un outil de rapport d'erreurs qui nous aide à corriger les pannes. Aucun tracking publicitaire.",
       accept: 'Accepter',
-      refuse: 'Refuser'
+      refuse: 'Refuser',
+      more: 'Politique des cookies'
     },
     notFound: {
       title: 'Cette page n\'existe pas',
@@ -9360,6 +9385,29 @@ export const translations = {
       lawTitle: 'Applicable law',
       law: 'These terms are governed by Belgian law. Any dispute falls under the jurisdiction of the competent courts of the judicial district of Brussels.'
     },
+    cookiesPolicy: {
+      pageTitle: 'Cookie policy — Fairide',
+      title: 'Cookie policy',
+      updated: 'Last updated: 11 September 2026.',
+      whatTitle: 'What is a cookie?',
+      what: 'A cookie is a small file placed by a website in your browser. Fairide also uses the browser\'s “local storage” (localStorage and sessionStorage), which plays the same role: remembering information from one page to the next. This policy covers both. It applies to the fairide.be website and to the Fairide app installed from the browser.',
+      technicalTitle: 'Strictly necessary cookies and storage',
+      technical: 'They are essential to the service and do not require your consent: **your session** (login token, kept up to 30 days or until you log out), **your cart** (contents and chosen business, for the duration of the visit), **your choice about the cookie banner**, and **technical protections** (abuse limits, form security). Without them you cannot log in, order or book.',
+      preferencesTitle: 'Preferences',
+      preferences: 'To make things easier, Fairide remembers in your browser: the chosen **language** (French, English, Dutch), the display **theme**, the **music** chosen in the mini-games and your best scores, the ticket printer and paper chosen by a business, the tabs and filters open in the dashboard. This information never leaves your device and is not used for tracking.',
+      thirdPartyTitle: 'Third-party services',
+      thirdParty: 'Some features rely on external services that may set their own cookies, only when you use them: **Stripe** (secure payment and identity verification, [Stripe\'s policy](https://stripe.com/privacy)), **Google** (“Sign in with Google”, only if you click it), **OpenStreetMap** map tiles and **photos** hosted by Unsplash (image loading, no tracking cookie on our side). Fairide shares no browsing data with these services beyond what the requested feature needs.',
+      noTrackingTitle: 'No advertising, no trackers',
+      noTracking: 'Fairide uses **no advertising cookie**, no social-network pixel and no third-party analytics tool (no Google Analytics, no Meta Pixel). The figures we need (orders, reservations, reviews) come from our own database, linked to your account, and are described in the privacy policy.',
+      manageTitle: 'Managing or deleting cookies',
+      manage: 'You can refuse or delete cookies and local storage at any time in your browser settings (Chrome, Safari, Firefox, Edge: “Privacy” then “Site data”). Deleting this data logs you out and empties your cart; the site keeps working. The banner shown on the first visit lets you refuse everything that is not strictly necessary; your choice is kept for one year and can be changed by deleting the site data.',
+      durationTitle: 'Retention periods',
+      duration: 'Login session: 30 days at most. Cart: the duration of the visit. Preferences (language, theme, music, scores, printer): until you delete them. Banner choice: 12 months. Stripe and Google cookies: according to their own policies, only on their pages or when you use them.',
+      contactTitle: 'Questions',
+      contact: 'For any question about cookies or your data: [contact@fairide.be](mailto:contact@fairide.be). Data controller: Fairide SRL, CBE 1042.169.780.',
+      seePrivacy: 'Privacy policy',
+      seeLegal: 'Legal notice'
+    },
     privacy: {
       pageTitle: 'Privacy policy — Fairide',
       draftWarning: 'Version of 7 September 2026 — Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert.',
@@ -11378,12 +11426,14 @@ export const translations = {
       legalNotice: 'Legal notice',
       privacy: 'Privacy',
       terms: 'Terms',
-      bottom: '© Fairide SRL — CBE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be'
+      bottom: '© Fairide SRL — CBE 1042.169.780 — Avenue du Castel 30, 1200 Woluwe-Saint-Lambert — contact@fairide.be',
+      cookies: 'Cookies'
     },
     cookies: {
       text: 'Fairide uses technical cookies necessary for the site to work (login, cart). Only with your consent, we also enable an error-reporting tool that helps us fix breakages. No advertising tracking.',
       accept: 'Accept',
-      refuse: 'Refuse'
+      refuse: 'Refuse',
+      more: 'Cookie policy'
     },
     notFound: {
       title: 'This page does not exist',
@@ -15421,6 +15471,29 @@ export const translations = {
       lawTitle: 'Toepasselijk recht',
       law: 'Deze voorwaarden zijn onderworpen aan het Belgische recht. Elk geschil valt onder de bevoegde rechtbanken van het gerechtelijk arrondissement Brussel.'
     },
+    cookiesPolicy: {
+      pageTitle: 'Cookiebeleid — Fairide',
+      title: 'Cookiebeleid',
+      updated: 'Laatst bijgewerkt: 11 september 2026.',
+      whatTitle: 'Wat is een cookie?',
+      what: 'Een cookie is een klein bestand dat een website in je browser plaatst. Fairide gebruikt ook de “lokale opslag” van de browser (localStorage en sessionStorage), die dezelfde rol speelt: informatie onthouden van pagina tot pagina. Dit beleid dekt beide. Het geldt voor de website fairide.be en voor de Fairide-app die vanuit de browser wordt geïnstalleerd.',
+      technicalTitle: 'Strikt noodzakelijke cookies en opslag',
+      technical: 'Ze zijn onmisbaar voor de dienst en vereisen geen toestemming: **je sessie** (inlogtoken, tot 30 dagen of tot je uitlogt), **je winkelmandje** (inhoud en gekozen zaak, tijdens het bezoek), **je keuze over de cookiebanner**, en **technische beveiligingen** (misbruikbeperking, formulierbeveiliging). Zonder deze kun je niet inloggen, bestellen of reserveren.',
+      preferencesTitle: 'Voorkeuren',
+      preferences: 'Om het je gemakkelijk te maken onthoudt Fairide in je browser: de gekozen **taal** (Frans, Engels, Nederlands), het **weergavethema**, de **muziek** gekozen in de minigames en je beste scores, de ticketprinter en het papier gekozen door een zaak, de geopende tabbladen en filters in het dashboard. Deze informatie verlaat je toestel niet en dient niet om je te volgen.',
+      thirdPartyTitle: 'Diensten van derden',
+      thirdParty: 'Sommige functies gebruiken externe diensten die eigen cookies kunnen plaatsen, alleen wanneer je ze gebruikt: **Stripe** (veilige betaling en identiteitscontrole, [beleid van Stripe](https://stripe.com/nl-be/privacy)), **Google** (“Inloggen met Google”, alleen als je erop klikt), **OpenStreetMap**-kaartlagen en **foto\'s** gehost door Unsplash (laden van afbeeldingen, geen volgcookie van onze kant). Fairide deelt geen surfgegevens met deze diensten buiten wat de gevraagde functie nodig heeft.',
+      noTrackingTitle: 'Geen reclame, geen trackers',
+      noTracking: 'Fairide gebruikt **geen reclamecookies**, geen pixels van sociale netwerken en geen statistiektools van derden (geen Google Analytics, geen Meta Pixel). De cijfers die we nodig hebben (bestellingen, reservaties, beoordelingen) komen uit onze eigen databank, gekoppeld aan je account, en worden beschreven in het privacybeleid.',
+      manageTitle: 'Cookies beheren of verwijderen',
+      manage: 'Je kunt cookies en lokale opslag altijd weigeren of verwijderen in de instellingen van je browser (Chrome, Safari, Firefox, Edge: “Privacy” en dan “Sitegegevens”). Deze gegevens verwijderen logt je uit en maakt je winkelmandje leeg; de site blijft werken. De banner bij het eerste bezoek laat je alles weigeren wat niet strikt noodzakelijk is; je keuze wordt een jaar bewaard en kan worden gewijzigd door de sitegegevens te verwijderen.',
+      durationTitle: 'Bewaartermijnen',
+      duration: 'Inlogsessie: maximaal 30 dagen. Winkelmandje: de duur van het bezoek. Voorkeuren (taal, thema, muziek, scores, printer): tot je ze verwijdert. Bannerkeuze: 12 maanden. Cookies van Stripe en Google: volgens hun eigen beleid, alleen op hun pagina\'s of bij gebruik.',
+      contactTitle: 'Vragen',
+      contact: 'Voor vragen over cookies of je gegevens: [contact@fairide.be](mailto:contact@fairide.be). Verwerkingsverantwoordelijke: Fairide SRL, KBO 1042.169.780.',
+      seePrivacy: 'Privacybeleid',
+      seeLegal: 'Wettelijke vermeldingen'
+    },
     privacy: {
       pageTitle: 'Privacybeleid — Fairide',
       draftWarning: 'Versie van 7 september 2026 — Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe.',
@@ -17439,12 +17512,14 @@ export const translations = {
       legalNotice: 'Wettelijke vermeldingen',
       privacy: 'Privacy',
       terms: 'Voorwaarden',
-      bottom: '© Fairide SRL — KBO 1042.169.780 — Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe — contact@fairide.be'
+      bottom: '© Fairide SRL — KBO 1042.169.780 — Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe — contact@fairide.be',
+      cookies: 'Cookies'
     },
     cookies: {
       text: 'Fairide gebruikt technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Alleen met jouw toestemming schakelen we ook een tool voor foutrapportage in die ons helpt storingen op te lossen. Geen advertentietracking.',
       accept: 'Accepteren',
-      refuse: 'Weigeren'
+      refuse: 'Weigeren',
+      more: 'Cookiebeleid'
     },
     notFound: {
       title: 'Deze pagina bestaat niet',

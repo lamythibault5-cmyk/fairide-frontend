@@ -26,6 +26,7 @@ export default function Footer() {
           <Link to="/mentions-legales" className="small">{t('footer.legalNotice')}</Link>
           <Link to="/confidentialite" className="small">{t('footer.privacy')}</Link>
           <Link to="/cgv" className="small">{t('footer.terms')}</Link>
+          <Link to="/cookies" className="small">{t('footer.cookies')}</Link>
         </div>
       </div>
       <div className="footer-bottom small">{t('footer.bottom')}</div>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { getConsent, setConsent } from '../consent';
 
@@ -33,7 +34,7 @@ export default function CookieBanner() {
       }}
     >
       <span className="small" style={{ color: 'var(--cream)', maxWidth: 620 }}>
-        {t('cookies.text')}
+        {t('cookies.text')} <Link to="/cookies" style={{ color: 'var(--cream)', textDecoration: 'underline' }}>{t('cookies.more')}</Link>
       </span>
       <div className="row" style={{ gap: 10 }}>
         <button className="btn-gold" style={{ padding: '8px 18px', fontSize: 13 }} onClick={() => choose('accepted')}>

@@ -93,6 +93,7 @@ const AdminMessagesPage = lazyPage(() => import('./pages/admin/AdminMessagesPage
 const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
 const Terms = lazyPage(() => import('./pages/legal/Terms'));
 const Privacy = lazyPage(() => import('./pages/legal/Privacy'));
+const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 
@@ -189,6 +190,7 @@ export default function App() {
         <Route path="/mentions-legales" element={<LegalNotice />} />
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
+        <Route path="/cookies" element={<CookiesPolicy />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />
 
