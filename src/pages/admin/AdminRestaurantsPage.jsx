@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -102,6 +102,15 @@ export default function AdminRestaurantsPage() {
   // affinent les lignes chargées.
   const liste = useServerList('/admin/restaurants', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
   const { rows: restaurants, setRows: setRestaurants, total, loading, error, reload: load, loadMore } = liste;
+  // Compteurs de TOUTE la base (GET /admin/restaurants/stats). Ils étaient calculés sur les lignes
+  // chargées, donc sur le sous-ensemble déjà filtré : en filtrant « à valider », « vrais comptes »
+  // ne comptait plus que les vrais comptes parmi ceux à valider. Un compteur qui change de sens selon
+  // le filtre ne veut plus rien dire. Si la route n'est pas disponible, on retombe sur l'ancien calcul.
+  const [stats, setStats] = useState(null);
+  const chargerStats = useCallback(() => {
+    api('/admin/restaurants/stats', { token }).then(setStats).catch(() => setStats(null));
+  }, [token]);
+  useEffect(() => { chargerStats(); }, [chargerStats]);
 
   function openRestaurant(r) {
     setSelected(r);
@@ -118,6 +127,7 @@ export default function AdminRestaurantsPage() {
       if (selected?.id === id) setSelected((prev) => ({ ...prev, publicListed }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
       toast(publicListed ? tr('adminRestos.publishedToast') : tr('adminRestos.unpublishedToast'));
+      chargerStats();
     } catch (e) { toast(e.message); }
   }
 
@@ -128,6 +138,7 @@ export default function AdminRestaurantsPage() {
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
+      chargerStats();
     } catch (e) {
       toast(e.message);
     }
@@ -216,6 +227,16 @@ export default function AdminRestaurantsPage() {
   };
   const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [restaurants, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) || estCompteSupprime(r) ? 0 : 1), deleted: a.deleted + (estCompteSupprime(r) ? 1 : 0), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, deleted: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
+  // Chiffres affichés en tête et sur les pastilles : ceux du serveur (toute la base) dès qu'ils sont
+  // là, sinon ceux des lignes chargées — pour que la page reste lisible même sans la route.
+  const chiffres = stats
+    ? { pending: stats.pending, real: stats.real, deleted: stats.deleted, orders: stats.orders, revenue: stats.revenue, commission: stats.commission }
+    : kpi;
+  const compteurStatut = (k) => {
+    if (!stats) return k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : '';
+    const n = { all: stats.total, pending: stats.pending, carte: stats.menuRequests, approved: stats.approved, blocked: stats.blocked }[k];
+    return Number.isFinite(n) ? ` (${n})` : '';
+  };
   const tousCharges = restaurants && restaurants.length >= total;
 
   return (
@@ -223,12 +244,12 @@ export default function AdminRestaurantsPage() {
       <AdminPageHeader module="restaurants" actions={<><ViewSwitcher mode={mode} onChange={setMode} labels={{ aria: tr('adminKanban.viewAria') }} modes={MODES(tr)} /><button className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button></>} />
       {restaurants && (
         <div className="stat-grid">
-          <div className="stat-card highlight"><div className="num">{total}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
-          <div className="stat-card"><div className="num" style={{ color: kpi.pending > 0 ? 'var(--gold-deep)' : undefined }}>{kpi.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
-          <div className="stat-card"><div className="num">{kpi.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
-          <div className="stat-card"><div className="num">{money(kpi.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
-          <div className="stat-card"><div className="num">{money(kpi.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
+          <div className="stat-card highlight"><div className="num">{stats ? stats.total : total}</div><div className="label">{tr('adminRestos.kpiTotal')}</div></div>
+          <div className="stat-card"><div className="num" style={{ color: chiffres.pending > 0 ? 'var(--gold-deep)' : undefined }}>{chiffres.pending}</div><div className="label">{tr('adminRestos.kpiPending')}</div></div>
+          <div className="stat-card"><div className="num">{chiffres.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
+          <div className="stat-card"><div className="num">{chiffres.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
+          <div className="stat-card"><div className="num">{money(chiffres.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
+          <div className="stat-card"><div className="num">{money(chiffres.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
         </div>
       )}
       {restaurants && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: restaurants.length, total })}</p>}
@@ -236,10 +257,10 @@ export default function AdminRestaurantsPage() {
         <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['carte', tr('adminRestos.filterMenuRequest')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
-            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}{k === 'carte' && kpi.carte > 0 ? ` (${kpi.carte})` : ''}</div>
+            <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{compteurStatut(k)}</div>
           ))}
         </div>
-        <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminRestos.filterReal'), test: tr('adminRestos.filterTest'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
+        <NatureChips nature={nature} onChange={setNature} allCount={stats ? stats.total : undefined} realCount={chiffres.real} testCount={stats ? stats.test : undefined} deletedCount={chiffres.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminRestos.filterReal'), test: tr('adminRestos.filterTest'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
         <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCommunes')}</option>{communes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCuisines')}</option>{cuisines.map((c) => <option key={c} value={c}>{c}</option>)}</select>
         <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>

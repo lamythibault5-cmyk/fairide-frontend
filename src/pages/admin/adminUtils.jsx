@@ -34,13 +34,16 @@ export function TestToggleButton({ userId, isTest, token, api, toast, onChanged,
 
 // Filtre « vrais comptes / comptes test » identique sur chaque liste d'utilisateurs (restaurants, clients,
 // livreurs, dossiers) : `nature` vaut 'all' | 'real' | 'test'.
-export function NatureChips({ nature, onChange, realCount, deletedCount = 0, labels }) {
-  const chips = [['all', labels.all], ['real', labels.real], ['test', labels.test]];
-  if (deletedCount > 0 && labels.deleted) chips.push(['deleted', labels.deleted]);
+// allCount / testCount sont facultatifs : sans eux, seul « vrais comptes » est chiffré, comme avant.
+// Quand la page les fournit (compteurs calculés sur toute la base, pas sur les lignes chargées), chaque
+// pastille porte son nombre — on voit d'un coup d'œil où sont les commerces, sans changer de filtre.
+export function NatureChips({ nature, onChange, realCount, testCount, allCount, deletedCount = 0, labels }) {
+  const chips = [['all', labels.all, allCount], ['real', labels.real, realCount], ['test', labels.test, testCount]];
+  if (deletedCount > 0 && labels.deleted) chips.push(['deleted', labels.deleted, deletedCount]);
   return (
     <div className="role-pick" style={{ margin: 0 }}>
-      {chips.map(([k, l]) => (
-        <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => onChange(k)}>{l}{k === 'real' && realCount > 0 ? ` (${realCount})` : ''}{k === 'deleted' ? ` (${deletedCount})` : ''}</div>
+      {chips.map(([k, l, n]) => (
+        <div key={k} className={`chip${nature === k ? ' active' : ''}`} onClick={() => onChange(k)}>{l}{Number.isFinite(n) ? ` (${n})` : ''}</div>
       ))}
     </div>
   );
