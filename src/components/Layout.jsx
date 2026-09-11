@@ -1,6 +1,7 @@
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import { useToast } from '../context/ToastContext';
@@ -46,6 +47,8 @@ function isDashboardPath(pathname) {
 const RESTAURANT_DETAIL_PATH = /^\/restaurants\/[^/]+$/;
 export default function Layout() {
   const { user, role, logout } = useAuth();
+  // En-tête escamotable : il s'efface quand on descend, revient quand on remonte.
+  const enteteCache = useEnteteDefilement();
   const { t } = useLanguage();
   const location = useLocation();
   const toast = useToast();
@@ -166,7 +169,8 @@ export default function Layout() {
   return (
     <>
       {fondCuisine && <CuisineBackdrop />}
-      <div className={`hero${leanHeader ? ' hero-lean' : ''}`}>
+      {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
+      <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
         <div className="hero-inner">
           {/* Le sélecteur de langue est le DERNIER élément de la rangée, et non plus celui du
               milieu. La rangée contient trois blocs dont deux changent de largeur avec la langue

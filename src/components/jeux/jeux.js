@@ -25,7 +25,7 @@
 // moteur le fournit ; le français de jeux.js n'est que le repli. Les règles (regles + controles) sont
 // aussi traduites par le moteur, clé par clé : jeux.<key>_regles_0..3.
 
-import { aleatoire, choix, emoji, fondDegrade, IRIS, LIME } from './dessin';
+import { aleatoire, choix, emoji, fondDegrade, halo, IRIS, LIME } from './dessin';
 import { creerRider } from './rider';
 
 const OR = '#FFD166';
@@ -137,11 +137,12 @@ function creerChute(api, cfg) {
     draw(ctx) {
       fondDegrade(ctx, w, h, cfg.ciel[0], cfg.ciel[1]);
       const t = tailleObjet(); const sol = ySol();
-      // Sol : une bande qui ancre le joueur, sinon il flotte.
-      ctx.fillStyle = 'rgba(0,0,0,.28)';
+      // Sol : une bande CLAIRE, pas une ombre. En sombre sur un ciel sombre, la ligne d'arrivée des
+      // objets disparaissait — c'est pourtant là que tout se joue. Le liseré lime la souligne franchement.
+      ctx.fillStyle = 'rgba(255,255,255,.13)';
       ctx.fillRect(0, h - t * 0.55, w, t * 0.55);
-      ctx.fillStyle = 'rgba(200,240,60,.35)';
-      ctx.fillRect(0, h - t * 0.55, w, 2);
+      ctx.fillStyle = 'rgba(200,240,60,.9)';
+      ctx.fillRect(0, h - t * 0.55, w, 2.5);
       for (const o of objets) {
         const k = borner(o.y / sol, 0, 1);
         // Objet en train de s'effacer au sol : il rétrécit et pâlit.
@@ -158,6 +159,8 @@ function creerChute(api, cfg) {
           ctx.strokeStyle = o.or ? OR : ROUGE; ctx.lineWidth = 2;
           ctx.beginPath(); ctx.arc(o.x, o.y, t * 0.78 * pulse, 0, Math.PI * 2); ctx.stroke();
         }
+        // Le halo passe sous l'emoji : c'est lui qui rend l'objet lisible sur un fond sombre.
+        halo(ctx, o.x, o.y, t * 0.82, '255,255,255', 0.45);
         emoji(ctx, o.emoji, o.x, o.y, o.taille * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance);
         ctx.globalAlpha = 1;
       }
@@ -171,6 +174,7 @@ function creerChute(api, cfg) {
       ctx.translate(joueurX, h - t * 0.55);
       const sq = borner(rebond, -0.3, 0.3);
       ctx.scale(1 + sq * 0.5, 1 - sq * 0.6);
+      halo(ctx, 0, -t * 0.65, t * 1.0, '255,255,255', 0.4);
       emoji(ctx, cfg.joueur, 0, -t * 0.65, t * 1.45, borner((cibleX - joueurX) / (w * 0.6), -0.25, 0.25));
       ctx.restore();
     }
@@ -192,7 +196,7 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#221B6B', '#4A3FD0'], demiContact: 1.35,
+      joueur: '🧺', ciel: ['#2A2280', '#5F51EC'], demiContact: 1.35,
       // Un plat sur dix est doré : il vaut 3 et tombe un peu plus vite.
       nouvelObjet: () => (Math.random() < 0.1 ? { emoji: choix(PLATS), or: true, points: 3, vitesseFacteur: 1.2 } : { emoji: choix(PLATS) }),
       intervalle: (n) => Math.max(0.42, 0.96 - n * 0.072),
@@ -210,7 +214,7 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🛵', ciel: ['#17151F', '#3A3750'], eclat: ORANGE,
+      joueur: '🛵', ciel: ['#2E2752', '#7A6FB0'], eclat: ORANGE,
       // Contact « juste » (1 taille d'objet) : on ne perd pas sur un obstacle qui n'a fait qu'effleurer le dessin.
       demiContact: 1.02,
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
@@ -274,7 +278,7 @@ export const JEUX = [
           return undefined;
         },
         draw(ctx) {
-          fondDegrade(ctx, w, h, '#3A1550', '#8A3E9C');
+          fondDegrade(ctx, w, h, '#4A1C66', '#A64FBC');
           if (!cible) return;
           const t = taille(); const k = reste / fenetre;
           // Piste de l'anneau, puis l'anneau qui se referme : la fraction de temps restante, lisible sans
@@ -305,7 +309,7 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#0E3B2E', '#1F7A5A'], eclat: LIME, demiContact: 1.3,
+      joueur: '🧺', ciel: ['#14573F', '#33B07E'], eclat: LIME, demiContact: 1.3,
       nouvelObjet: (n) => {
         const mauvais = Math.random() < Math.min(0.45, 0.22 + n * 0.03);
         return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
@@ -402,7 +406,7 @@ export const JEUX = [
           return undefined;
         },
         draw(ctx) {
-          fondDegrade(ctx, w, h, '#14121F', '#2B2377');
+          fondDegrade(ctx, w, h, '#2B2550', '#5548C8');
           const yf = yFleche(); const L = longueur();
           // Le prochain mur à franchir : son ouverture est éclairée, pour lire d'un coup d'œil où viser.
           let prochain = null;

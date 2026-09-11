@@ -18,6 +18,19 @@ export function emoji(ctx, e, x, y, taille, angle = 0, miroir = false) {
   ctx.restore();
 }
 
+// Pastille lumineuse posée DERRIÈRE un objet. Sur les ciels sombres des jeux, un emoji sombre
+// (🍩, 🪨, 🛵, le panier violet) se confondait avec le décor : on ne voyait littéralement pas ce qui
+// tombait. Un dégradé radial très doux le détache du fond sans le cerner d'un trait, qui aurait durci
+// le dessin. rgb = composantes seules (« 255,255,255 »), force = opacité au centre.
+export function halo(ctx, x, y, r, rgb = '255,255,255', force = 0.5) {
+  const g = ctx.createRadialGradient(x, y, r * 0.08, x, y, r);
+  g.addColorStop(0, `rgba(${rgb},${force})`);
+  g.addColorStop(0.55, `rgba(${rgb},${(force * 0.4).toFixed(3)})`);
+  g.addColorStop(1, `rgba(${rgb},0)`);
+  ctx.fillStyle = g;
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+}
+
 export function fondDegrade(ctx, w, h, haut, bas) {
   const g = ctx.createLinearGradient(0, 0, 0, h);
   g.addColorStop(0, haut);

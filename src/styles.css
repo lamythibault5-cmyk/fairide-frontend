@@ -126,7 +126,14 @@ a { color: inherit; }
   top: 0;
   z-index: 40;
   overflow: hidden;
+  /* Escamotage au défilement (voir useEnteteDefilement.js) : on translate, on ne masque pas. La place
+     reste réservée dans le flux — rien ne saute sous l'en-tête — et l'animation tient sur le
+     compositeur, sans recalcul de mise en page à chaque image. */
+  transition: transform .26s cubic-bezier(.4, 0, .2, 1);
+  will-change: transform;
 }
+.hero-cache { transform: translateY(-100%); }
+@media (prefers-reduced-motion: reduce) { .hero { transition: none; } }
 /* Variante allégée : fiche resto consultée sans compte (voir Layout.jsx, leanHeader) — juste la marque,
    pas de nav de rôle ni de module Connexion/Inscription, pour laisser un maximum de place au menu. */
 .hero-lean { padding: 8px 20px; }

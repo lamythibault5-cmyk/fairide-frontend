@@ -1,4 +1,4 @@
-import { aleatoire, choix, suivre, emoji, fondDegrade, LIME, INK } from './dessin';
+import { aleatoire, choix, suivre, emoji, fondDegrade, halo, LIME, INK } from './dessin';
 
 // FairRider — le vélo sur la piste, façon « Rider » : UNE seule commande.
 //
@@ -14,6 +14,13 @@ import { aleatoire, choix, suivre, emoji, fondDegrade, LIME, INK } from './dessi
 // y vers le bas comme le canvas ; un angle négatif = nez qui se lève.
 
 // ---------- Réglages (à ajuster ici, nulle part ailleurs) ----------
+// Tranche d'intégration de la physique : 1/120 s. Deux fois la cadence d'un écran ordinaire, assez
+// fin pour que les contacts au sol et les réceptions ne dépendent plus du moment où l'image tombe,
+// assez large pour rester à deux pas par image (mesuré au banc d'essai, coût négligeable).
+const PAS_PHYSIQUE = 1 / 120;
+// Retard maximal rattrapé d'un coup : au-delà (onglet en arrière-plan, longue pause), on laisse filer
+// plutôt que de rejouer trente tranches d'affilée — la moto ferait un bond.
+const ACCUM_MAX = 0.25;
 const GRAVITE = 1.15; // g, en U/s² : assez lourd pour qu'on sente le poids du vélo
 const CROISIERE = 0.55; // vitesse « moteur au ralenti » (doigt levé), niveau 0
 const CROISIERE_NIVEAU = 0.03; // + par niveau
@@ -33,6 +40,7 @@ const PARFAIT = 0.14; // écart en dessous duquel l'atterrissage est « parfait 
 const SUIVI_PENTE = 12; // vitesse à laquelle l'inclinaison suit la pente au sol (1/s)
 const DUREE_TAP = 0.1; // un simple tap vaut un appui de cette durée
 const CAM_SUIVI = 5; // rattrapage vertical de la caméra (1/s)
+const CAM_SUIVI_X = 16; // rattrapage horizontal (1/s) : absorbe les à-coups de vitesse sans laisser dériver
 const CAM_AVANCE = 0.08; // recul du vélo sur l'écran (fraction de la largeur) quand on est à fond
 const CAM_HAUTEUR = 0.35; // sur les gros sauts, la caméra ne suit qu'une partie de la hauteur : le sol reste en vue plus longtemps
 const SECOUSSE = 0.02; // amplitude de la secousse d'écran par U/s de vitesse verticale à l'atterrissage
@@ -58,6 +66,7 @@ export function creerRider(api) {
   // Objets du monde
   let obstacles = []; let bonus = []; let prochainJalon = 0;
   // Rendu
+  let accumule = 0; // reliquat de temps non encore intégré (voir PAS_PHYSIQUE)
   let camX = 0; let camY = 0; let decal = 0; let ecrasement = 0; let vEcrasement = 0;
   let roue = 0; let vRoue = 0; let pedale = 0; let penche = 0; let air = 0; let secousse = 0;
   let poussiere = []; let traits = []; let flash = null; let derniereChute = null;
@@ -179,14 +188,30 @@ export function creerRider(api) {
       y = sol(x); vx = croisiere(0); vy = 0; auSol = true; tempsVol = 0;
       angle = Math.atan(pente(x)); omega = 0; angleDepart = angle; flips = 0; serie = 0; serieObstacles = 0; obstaclesVol = 0;
       pulse = 0;
-      decal = w * 0.32; camX = x - decal; camY = y - h * 0.55; ecrasement = 0; vEcrasement = 0;
+      decal = w * 0.32; camX = x - decal; camY = y - h * 0.55; ecrasement = 0; vEcrasement = 0; accumule = 0;
       roue = 0; vRoue = 0; pedale = 0; penche = 0; air = 0; secousse = 0;
       poussiere = []; traits = []; flash = null;
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
     etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, derniereChute }; },
+    // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
+    // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
+    // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
+    // ressort de suspension et la rotation intégraient des tranches inégales, et ça se voyait surtout
+    // aux réceptions, en petites saccades. Ici chaque tranche est identique ; seul le nombre de
+    // tranches par image change. Le reliquat est reporté à l'image suivante, jamais perdu.
     update(dt, input) {
+      accumule = Math.min(accumule + dt, ACCUM_MAX);
+      let fin;
+      while (accumule >= PAS_PHYSIQUE) {
+        accumule -= PAS_PHYSIQUE;
+        fin = this.pasPhysique(PAS_PHYSIQUE, input);
+        if (fin !== undefined) { accumule = 0; break; }
+      }
+      return fin;
+    },
+    pasPhysique(dt, input) {
       const n = input.niveau; const u = U(); const t = taille();
       const g = GRAVITE * u; const base = croisiere(n); const plafond = maxi(n);
 
@@ -295,7 +320,10 @@ export function creerRider(api) {
 
       // --- Caméra : suivi vertical souple, léger recul du vélo quand on va vite, secousse à l'impact.
       decal = suivre(decal, w * (0.32 - CAM_AVANCE * borner(vx / plafond, 0, 1.2)), 3, dt);
-      camX = x - decal;
+      // La caméra suivait x au pixel près : toute variation de vitesse (relance, pente, réception)
+      // passait telle quelle dans le défilement du décor. Un rattrapage souple absorbe ces à-coups
+      // sans laisser la moto dériver — à la vitesse maximale, le retard reste sous 8 % de l'écran.
+      camX = suivre(camX, x - decal, CAM_SUIVI_X, dt);
       camY = suivre(camY, y - h * 0.55 + Math.min(Math.max(0, ySol - y), h * 0.5) * CAM_HAUTEUR, CAM_SUIVI, dt);
       secousse = Math.max(0, secousse - dt * 18);
       if (vx > plafond * 0.8 && Math.random() < dt * 45) traits.push({ x: x - t * aleatoire(0.6, 1.4), y: y - t * aleatoire(0.1, 1.2), l: t * aleatoire(0.5, 1.3), reste: 0.22 });
@@ -334,7 +362,7 @@ export function creerRider(api) {
       ctx.beginPath(); ctx.moveTo(xDeb, bas);
       for (let px = xDeb; px <= xFin; px += PAS) ctx.lineTo(px, sol(px));
       ctx.lineTo(xFin, bas); ctx.closePath();
-      ctx.fillStyle = '#17151F'; ctx.fill();
+      ctx.fillStyle = '#241F38'; ctx.fill();
       ctx.beginPath();
       for (let px = xDeb; px <= xFin; px += PAS) { const yy = sol(px); if (px === xDeb) ctx.moveTo(px, yy); else ctx.lineTo(px, yy); }
       ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
@@ -351,11 +379,14 @@ export function creerRider(api) {
         if (o.x < camX - t || o.x > xFin + t) continue;
         const yy = sol(o.x);
         ctx.fillStyle = 'rgba(20,18,31,.14)'; ctx.beginPath(); ctx.ellipse(o.x, yy + 2, t * 0.34, t * 0.09, 0, 0, Math.PI * 2); ctx.fill();
+        halo(ctx, o.x, yy - t * 0.32, t * 0.5, '255,255,255', 0.4);
         emoji(ctx, o.emoji, o.x, yy - t * 0.32, t * 0.78);
       }
       for (const b of bonus) {
         if (b.pris || b.x < camX - t || b.x > xFin + t) continue;
-        emoji(ctx, b.emoji, b.x, b.y + Math.sin(b.phase) * 3, t * 0.62, Math.sin(b.phase * 0.7) * 0.15);
+        const by = b.y + Math.sin(b.phase) * 3;
+        halo(ctx, b.x, by, t * 0.52, '255,209,102', 0.55);
+        emoji(ctx, b.emoji, b.x, by, t * 0.62, Math.sin(b.phase * 0.7) * 0.15);
       }
       // Ombre du vélo (plus petite et plus pâle quand il est haut)
       const ySolIci = sol(x); const haut = Math.max(0, ySolIci - y);
