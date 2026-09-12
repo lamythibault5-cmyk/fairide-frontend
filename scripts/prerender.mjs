@@ -32,6 +32,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnv } from 'vite';
 
 import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../src/i18n/translations.js';
 import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
@@ -41,7 +42,15 @@ import {
 
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(RACINE, 'dist');
-const API = process.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
+
+// L'adresse de l'API est résolue EXACTEMENT comme le fait Vite pour l'application : `loadEnv` lit
+// les fichiers .env, .env.production et .env.local en plus des variables d'environnement du
+// système. Lire `process.env` seul suffisait sur Vercel, où les variables viennent du tableau de
+// bord, mais pas en local : le pré-rendu serait allé chercher les commerces sur le backend de
+// production pendant que l'application construite pointait ailleurs, et les deux se seraient
+// contredits dans le même dist/.
+const env = loadEnv('production', RACINE, 'VITE_');
+const API = env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 const MAX_DESCRIPTION = 160;
 const OG_LOCALE = { fr: 'fr_BE', nl: 'nl_BE', en: 'en_GB' };
 
@@ -191,7 +200,13 @@ async function commercesPublics() {
   } catch (e) {
     // Un déploiement ne doit pas échouer parce que l'API dort : les pages statiques valent d'être
     // publiées seules, et les fiches seront reprises au déploiement suivant.
-    console.warn(`[prerender] fiches de commerce ignorées, l'API n'a pas répondu : ${e.message}`);
+    //
+    // Le message nomme l'adresse ET la variable, parce que c'est la panne silencieuse la plus
+    // probable de ce script : un VITE_API_BASE absent ou injoignable depuis la machine de
+    // construction produit un site complet, un plan du site amputé de toutes ses fiches, et aucune
+    // erreur visible ailleurs que dans ce journal.
+    console.warn(`[prerender] AUCUNE FICHE DE COMMERCE PRÉ-RENDUE : ${API} n'a pas répondu (${e.message}).`);
+    console.warn('[prerender] Vérifier VITE_API_BASE dans les variables d\'environnement du déploiement.');
     return null;
   }
 }
