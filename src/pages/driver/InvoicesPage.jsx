@@ -89,7 +89,7 @@ export default function InvoicesPage() {
                   <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
                   <td style={{ padding: '6px 4px' }}>{o.restaurantName}</td>
                   <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.driverFee ?? o.deliveryFee).toFixed(2)}€</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${o.tipAmount.toFixed(2)}€` : '—'}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${o.tipAmount.toFixed(2)}€` : '-'}</td>
                 </tr>
               ))}
             </tbody>

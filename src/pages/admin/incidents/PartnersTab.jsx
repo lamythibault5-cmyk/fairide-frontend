@@ -20,7 +20,7 @@ function TablePartenaires({ titre, rows, type, onPick, tr, csvName }) {
     { key: 'incidents', label: tr('adminIncidents.colIncidents'), get: (r) => r.incidents, align: 'right', sum: true },
     { key: 'open', label: tr('adminIncidents.colOpen'), get: (r) => r.open, align: 'right', sum: true },
     { key: 'orders', label: tr('adminCommon.orders'), get: (r) => r.orders, align: 'right' },
-    { key: 'rate', label: tr('adminIncidents.colRate'), get: (r) => (r.rate === null ? '—' : <span className={r.rate >= 0.1 ? 'inc-rate-high' : ''}>{pct(r.rate, 1)}</span>), sortValue: (r) => (r.rate === null ? -1 : r.rate), align: 'right' },
+    { key: 'rate', label: tr('adminIncidents.colRate'), get: (r) => (r.rate === null ? '-' : <span className={r.rate >= 0.1 ? 'inc-rate-high' : ''}>{pct(r.rate, 1)}</span>), sortValue: (r) => (r.rate === null ? -1 : r.rate), align: 'right' },
     { key: 'refunded', label: tr('adminIncidents.colRefunded'), get: (r) => money(r.refunded), sortValue: (r) => r.refunded, align: 'right', sum: true }
   ];
   function exporter() {

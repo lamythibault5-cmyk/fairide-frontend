@@ -37,7 +37,7 @@ export default function AssigneeSelect({ value, onChange, allowEmpty = true, emp
   return (
     <select id={id} value={value || ''} onChange={(e) => onChange(e.target.value)} style={style} autoFocus={autoFocus}>
       {allowEmpty && <option value="">{emptyLabel || tr('adminCommon.unassigned')}</option>}
-      {options.map((a) => <option key={a.email} value={a.email}>{a.name && a.name !== a.email ? `${a.name} (${a.email})` : a.email}{user?.email === a.email ? ` — ${tr('adminCommon.me')}` : ''}</option>)}
+      {options.map((a) => <option key={a.email} value={a.email}>{a.name && a.name !== a.email ? `${a.name} (${a.email})` : a.email}{user?.email === a.email ? ` · ${tr('adminCommon.me')}` : ''}</option>)}
     </select>
   );
 }

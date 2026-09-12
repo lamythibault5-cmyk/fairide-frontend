@@ -192,7 +192,7 @@ export default function useNewOrderAlert(orders, ready) {
   useEffect(() => {
     const base = baseTitleRef.current || 'Fairide';
     document.title = newCount > 0
-      ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''} — ${base}`
+      ? `(${newCount}) Nouvelle${newCount > 1 ? 's' : ''} commande${newCount > 1 ? 's' : ''}, ${base}`
       : base;
     return () => { document.title = base; };
   }, [newCount]);

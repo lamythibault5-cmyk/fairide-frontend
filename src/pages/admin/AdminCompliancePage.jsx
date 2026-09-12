@@ -91,7 +91,7 @@ function RequestsTab({ refreshKey }) {
     { key: 'channel', label: tr('adminCompliance.colChannel'), get: (r) => tr(`adminCompliance.channel_${r.channel}`), sortValue: (r) => r.channel },
     { key: 'createdAt', label: tr('adminCompliance.colReceived'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt },
     { key: 'dueAt', label: tr('adminCommon.dueDate'), get: (r) => <>{fmtDate(r.dueAt)}{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}</>, sortValue: (r) => r.dueAt },
-    { key: 'handledBy', label: tr('adminCompliance.colHandler'), get: (r) => r.handledBy || '—', sortValue: (r) => r.handledBy || '' }
+    { key: 'handledBy', label: tr('adminCompliance.colHandler'), get: (r) => r.handledBy || '-', sortValue: (r) => r.handledBy || '' }
   ];
 
   return (
@@ -102,7 +102,7 @@ function RequestsTab({ refreshKey }) {
           <button type="button" className="stat-card highlight" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('open')}><div className="num">{kpis.open}</div><div className="label">{tr('adminCompliance.kpiOpen')}</div></button>
           <button type="button" className={`stat-card${kpis.overdue > 0 ? ' is-alert' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('overdue')}><div className="num">{kpis.overdue}</div><div className="label">{tr('adminCompliance.kpiOverdue')}</div></button>
           <button type="button" className="stat-card" style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setStatus('done')}><div className="num">{kpis.done30d}</div><div className="label">{tr('adminCompliance.kpiDone30d')}</div></button>
-          <div className="stat-card"><div className="num">{kpis.avgDays === null || kpis.avgDays === undefined ? '—' : kpis.avgDays}</div><div className="label">{tr('adminCompliance.kpiAvgDays')}</div></div>
+          <div className="stat-card"><div className="num">{kpis.avgDays === null || kpis.avgDays === undefined ? '-' : kpis.avgDays}</div><div className="label">{tr('adminCompliance.kpiAvgDays')}</div></div>
         </div>
       )}
 
@@ -206,7 +206,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
           <DrawerRow label={tr('adminCompliance.colReceived')} value={fmtDateTime(r.createdAt)} />
           <DrawerRow label={tr('adminCommon.dueDate')} value={<>{fmtDate(r.dueAt)}{r.overdue && <span className="compliance-overdue">{tr('adminCompliance.overdue')}</span>}</>} strong={r.overdue} />
           {r.doneAt && <DrawerRow label={tr('adminCompliance.closedOn')} value={fmtDateTime(r.doneAt)} />}
-          <DrawerRow label={tr('adminCompliance.colHandler')} value={r.handledBy || '—'} />
+          <DrawerRow label={tr('adminCompliance.colHandler')} value={r.handledBy || '-'} />
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCommon.message')}</h4>
           {r.message ? <div className="compliance-message">{r.message}</div> : <p className="small" style={{ opacity: 0.7 }}>{tr('adminCompliance.noMessage')}</p>}

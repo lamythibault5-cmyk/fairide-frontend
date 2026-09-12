@@ -168,7 +168,7 @@ export default function CampaignForm({ initial, templates, onSaved, onCancel }) 
                     <ul className="mk-sample">
                       {apercu.sample.map((s, i) => (
                         <li key={`${s.email}-${i}`}>
-                          <span><b>{s.name || '—'}</b> <span className="mk-muted">{s.email}</span></span>
+                          <span><b>{s.name || '-'}</b> <span className="mk-muted">{s.email}</span></span>
                           <span className="mk-muted">{tr(`adminMarketing.role_${s.role}`)}{s.commune ? ` · ${s.commune}` : ''}{s.lang ? ` · ${String(s.lang).toUpperCase()}` : ''}</span>
                         </li>
                       ))}

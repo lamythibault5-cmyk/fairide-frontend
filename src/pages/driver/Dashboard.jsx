@@ -374,7 +374,7 @@ export default function DriverDashboard() {
           <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
           {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
           {o.deliveryInstructions && (
-            <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
+            <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
           )}
           <DeliveryTiming order={o} />
           <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>

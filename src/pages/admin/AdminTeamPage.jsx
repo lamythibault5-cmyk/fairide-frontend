@@ -418,7 +418,7 @@ function RolesTab({ token, tr }) {
                       <td>{m.icon} {tr(`adminModules.${m.key}`)}</td>
                       {ordre.map((r) => (
                         <td key={r} aria-label={autorise(r, m.key) ? tr('adminTeam.allowed') : tr('adminTeam.notAllowed')}>
-                          {autorise(r, m.key) ? <span className="ok">✓</span> : <span className="no">—</span>}
+                          {autorise(r, m.key) ? <span className="ok">✓</span> : <span className="no">-</span>}
                         </td>
                       ))}
                     </tr>
@@ -488,7 +488,7 @@ function ActiviteTab({ token, tr, membres }) {
     ), sortValue: (a) => a.targetType },
     { key: 'details', label: tr('adminTeam.details'), get: (a) => {
       const txt = resumeDetails(a.details);
-      if (!txt) return <span className="small" style={{ opacity: 0.5 }}>—</span>;
+      if (!txt) return <span className="small" style={{ opacity: 0.5 }}>-</span>;
       const open = ouvert === a.id;
       return <span className={`small team-activity-details${open ? ' open' : ''}`} title={open ? undefined : txt} onClick={(e) => { e.stopPropagation(); setOuvert(open ? null : a.id); }} style={{ cursor: 'pointer' }}>{open ? JSON.stringify(a.details, null, 1) : txt}</span>;
     }, sortValue: (a) => resumeDetails(a.details) }
@@ -499,7 +499,7 @@ function ActiviteTab({ token, tr, membres }) {
       <div className="admin-control-panel">
         <select value={email} onChange={(e) => setEmail(e.target.value)} aria-label={tr('adminTeam.member')} style={{ maxWidth: 260 }}>
           <option value="">{tr('adminTeam.allMembers')}</option>
-          {emails.map((m) => <option key={m} value={m}>{nomDe(m) === m ? m : `${nomDe(m)} — ${m}`}</option>)}
+          {emails.map((m) => <option key={m} value={m}>{nomDe(m) === m ? m : `${nomDe(m)}, ${m}`}</option>)}
         </select>
         <select value={action} onChange={(e) => setAction(e.target.value)} aria-label={tr('adminTeam.action')} style={{ maxWidth: 260 }}>
           <option value="">{tr('adminTeam.allActions')}</option>

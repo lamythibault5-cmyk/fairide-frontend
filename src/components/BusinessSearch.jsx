@@ -155,7 +155,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
             <p className="small" style={{ margin: 0 }}>{t('businessSearch.compactHint')}</p>
           ) : origine === 'web' && !corriger ? (
             <div className="business-fiche-relecture">
-              <p className="small" style={{ margin: '0 0 2px' }}>📍 {adresseFiche || '—'}</p>
+              <p className="small" style={{ margin: '0 0 2px' }}>📍 {adresseFiche || '-'}</p>
               <p className="small" style={{ margin: '0 0 2px' }}>🌐 {fiche.website ? fiche.website : <i>{t('businessSearch.noWebsite')}</i>}</p>
               <p className="small" style={{ margin: '0 0 2px' }}>🕒 {fiche.openingHours ? fiche.openingHours : <i>{t('businessSearch.noHours')}</i>}</p>
               {fiche.cuisine && <p className="small" style={{ margin: '0 0 2px' }}>🍽️ {fiche.cuisine}</p>}

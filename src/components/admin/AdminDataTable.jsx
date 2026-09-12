@@ -43,12 +43,12 @@ function sommes(columns, rows) {
   return out;
 }
 
-export default function AdminDataTable({ columns, rows, sort, onSort, groupBy, onRowClick, rowClassName, emptyLabel = '—', showTotals = false, format = {} }) {
+export default function AdminDataTable({ columns, rows, sort, onSort, groupBy, onRowClick, rowClassName, emptyLabel = '-', showTotals = false, format = {} }) {
   const tries = useMemo(() => sortRows(rows || [], columns, sort), [rows, columns, sort]);
   const groupes = useMemo(() => {
     if (!groupBy) return null;
     const map = new Map();
-    for (const r of tries) { const k = groupBy.get(r) ?? '—'; if (!map.has(k)) map.set(k, []); map.get(k).push(r); }
+    for (const r of tries) { const k = groupBy.get(r) ?? '-'; if (!map.has(k)) map.set(k, []); map.get(k).push(r); }
     return [...map.entries()];
   }, [tries, groupBy]);
   const fmt = (col, v) => (format[col.key] ? format[col.key](v) : (typeof v === 'number' ? v.toLocaleString('fr-BE', { maximumFractionDigits: 2 }) : v));

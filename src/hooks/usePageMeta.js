@@ -3,9 +3,9 @@ import { useLanguage } from '../context/LanguageContext';
 import { SITE_URL } from '../seo/jsonLd';
 
 const DEFAULT_TITLES = {
-  fr: 'Fairide — Livraison de repas et commerces locaux à Bruxelles, commission réduite',
-  en: 'Fairide — Meal delivery and local businesses in Brussels, reduced commission',
-  nl: 'Fairide — Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie'
+  fr: 'Fairide · Livraison de repas et commerces locaux à Bruxelles, commission réduite',
+  en: 'Fairide · Meal delivery and local businesses in Brussels, reduced commission',
+  nl: 'Fairide · Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie'
 };
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 const OG_LOCALE = { fr: 'fr_BE', nl: 'nl_BE', en: 'en_GB' };

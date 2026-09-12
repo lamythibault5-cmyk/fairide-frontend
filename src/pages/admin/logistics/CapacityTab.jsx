@@ -59,7 +59,7 @@ export default function CapacityTab() {
               <div className="stat-grid">
                 <KpiCard value={d.summary.ordersTotal} label={tr('adminLogistics.kpiOrdersTotal')} highlight />
                 <KpiCard value={d.summary.driversDistinct} label={tr('adminLogistics.kpiDriversDistinct')} />
-                <KpiCard value={d.summary.peakHour === null ? '—' : tr('adminLogistics.hourFmt', { h: String(d.summary.peakHour).padStart(2, '0') })} label={tr('adminLogistics.kpiPeakHour')} />
+                <KpiCard value={d.summary.peakHour === null ? '-' : tr('adminLogistics.hourFmt', { h: String(d.summary.peakHour).padStart(2, '0') })} label={tr('adminLogistics.kpiPeakHour')} />
                 <KpiCard value={tension} label={tr('adminLogistics.kpiOverloadedHours')} warn={tension > 0} />
               </div>
 

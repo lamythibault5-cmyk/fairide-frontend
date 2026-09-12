@@ -512,7 +512,7 @@ export default function Checkout() {
                           restaurant ferme tôt. */}
                       {(dispo?.creneaux || []).map((c) => (
                         <option key={c.heure} value={c.heure} disabled={!c.disponible}>
-                          {c.heure}{!c.disponible ? ` — ${c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable')}` : (c.acompte > 0 ? ` · 💳 ${c.acompte.toFixed(2)}€` : '')}
+                          {c.heure}{!c.disponible ? ` · ${c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable')}` : (c.acompte > 0 ? ` · 💳 ${c.acompte.toFixed(2)}€` : '')}
                         </option>
                       ))}
                     </select>
@@ -693,7 +693,7 @@ export default function Checkout() {
                     <b>{t('checkout.tableColon')}</b>{' '}
                     {pendingOrder.tableNumber != null ? t('checkout.tableNumber', { n: pendingOrder.tableNumber }) : pendingOrder.tableName}
                     {pendingOrder.tableZone ? ` · ${t(`checkout.zoneLabel_${pendingOrder.tableZone}`)}` : ''}
-                    {pendingOrder.zoneRespected === false && <span style={{ color: 'var(--ink-soft)' }}> — {t('checkout.zoneFallback')}</span>}
+                    {pendingOrder.zoneRespected === false && <span style={{ color: 'var(--ink-soft)' }}> · {t('checkout.zoneFallback')}</span>}
                   </p>
                 )}
                 {pendingOrder.scheduledFor && (

@@ -100,11 +100,11 @@ export default function ZonesTab() {
     },
     { key: 'restaurants', label: tr('adminCommon.restaurants'), align: 'right', get: (z) => z.restaurants, sum: true },
     { key: 'ordersLast30d', label: tr('adminLogistics.colOrders30d'), align: 'right', get: (z) => z.ordersLast30d, sum: true },
-    { key: 'avgDeliveryMinutes30d', label: tr('adminLogistics.colAvgMinutes'), align: 'right', get: (z) => (z.avgDeliveryMinutes30d === null ? <span className="lg-muted">—</span> : tr('adminLogistics.minutesShort', { n: z.avgDeliveryMinutes30d })), sortValue: (z) => z.avgDeliveryMinutes30d },
+    { key: 'avgDeliveryMinutes30d', label: tr('adminLogistics.colAvgMinutes'), align: 'right', get: (z) => (z.avgDeliveryMinutes30d === null ? <span className="lg-muted">-</span> : tr('adminLogistics.minutesShort', { n: z.avgDeliveryMinutes30d })), sortValue: (z) => z.avgDeliveryMinutes30d },
     { key: 'driversApproved', label: tr('adminCommon.drivers'), align: 'right', get: (z) => z.driversApproved, sum: true },
-    { key: 'feeExtra', label: tr('adminLogistics.colFeeExtra'), align: 'right', get: (z) => (z.feeExtra ? `+${z.feeExtra.toFixed(2)} €` : <span className="lg-muted">—</span>), sortValue: (z) => z.feeExtra },
-    { key: 'etaExtraMinutes', label: tr('adminLogistics.colEtaExtra'), align: 'right', get: (z) => (z.etaExtraMinutes ? `+${z.etaExtraMinutes} min` : <span className="lg-muted">—</span>), sortValue: (z) => z.etaExtraMinutes },
-    { key: 'notes', label: tr('adminCommon.notes'), get: (z) => (z.notes ? <span className="small" title={z.notes}>{z.notes.length > 40 ? z.notes.slice(0, 40) + '…' : z.notes}</span> : <span className="lg-muted">—</span>) }
+    { key: 'feeExtra', label: tr('adminLogistics.colFeeExtra'), align: 'right', get: (z) => (z.feeExtra ? `+${z.feeExtra.toFixed(2)} €` : <span className="lg-muted">-</span>), sortValue: (z) => z.feeExtra },
+    { key: 'etaExtraMinutes', label: tr('adminLogistics.colEtaExtra'), align: 'right', get: (z) => (z.etaExtraMinutes ? `+${z.etaExtraMinutes} min` : <span className="lg-muted">-</span>), sortValue: (z) => z.etaExtraMinutes },
+    { key: 'notes', label: tr('adminCommon.notes'), get: (z) => (z.notes ? <span className="small" title={z.notes}>{z.notes.length > 40 ? z.notes.slice(0, 40) + '…' : z.notes}</span> : <span className="lg-muted">-</span>) }
   ];
 
   return (
@@ -160,7 +160,7 @@ export default function ZonesTab() {
               >
                 <DrawerRow label={tr('adminCommon.restaurants')} value={ouverte.restaurants} />
                 <DrawerRow label={tr('adminLogistics.colOrders30d')} value={ouverte.ordersLast30d} />
-                <DrawerRow label={tr('adminLogistics.colAvgMinutes')} value={ouverte.avgDeliveryMinutes30d === null ? '—' : tr('adminLogistics.minutesShort', { n: ouverte.avgDeliveryMinutes30d })} />
+                <DrawerRow label={tr('adminLogistics.colAvgMinutes')} value={ouverte.avgDeliveryMinutes30d === null ? '-' : tr('adminLogistics.minutesShort', { n: ouverte.avgDeliveryMinutes30d })} />
                 <DrawerRow label={tr('adminCommon.drivers')} value={ouverte.driversApproved} />
                 <DrawerRow label={tr('adminLogistics.updatedAt')} value={fmtDateTime(ouverte.updatedAt)} />
                 <div className="lg-form" style={{ marginTop: 16 }}>

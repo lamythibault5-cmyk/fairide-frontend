@@ -496,7 +496,7 @@ function FicheOccupation({ tb, etat, onFermer }) {
   const resa = (r, titre) => (
     <div className="fp-resa">
       <span className="small">{titre}</span>
-      <b>{r.name || '—'} · {t('floorPlan.nPeople', { n: r.partySize })}</b>
+      <b>{r.name || '-'} · {t('floorPlan.nPeople', { n: r.partySize })}</b>
       <span>{heureLocale(r.from)} → {heureLocale(r.to)}</span>
       {r.tableIds && r.tableIds.length > 1 && <span className="small"> · {t('floorPlan.combined')}</span>}
       {r.zonePreference && <span className="small"> · {t('floorPlan.wanted', { zone: areaLabel(t, r.zonePreference) })}</span>}

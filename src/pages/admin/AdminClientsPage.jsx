@@ -139,15 +139,15 @@ export default function AdminClientsPage() {
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (c) => <><b>{c.name}</b>{estCompteTest(c) && <TestBadge />}</>, sortValue: (c) => c.name },
     { key: 'email', label: tr('adminCommon.email'), get: (c) => c.email },
-    { key: 'phone', label: tr('adminCommon.phone'), get: (c) => c.phone || '—' },
-    { key: 'city', label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') || '—', sortValue: (c) => c.city || '' },
+    { key: 'phone', label: tr('adminCommon.phone'), get: (c) => c.phone || '-' },
+    { key: 'city', label: tr('adminCommon.municipality'), get: (c) => [c.postalCode, c.city].filter(Boolean).join(' ') || '-', sortValue: (c) => c.city || '' },
     { key: 'language', label: tr('adminCommon.language'), get: (c) => (c.language || 'fr').toUpperCase(), sortValue: (c) => c.language || '' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (c) => c.orderCount, align: 'right', sum: true },
     { key: 'cancelledCount', label: tr('adminCommon.cancellations'), get: (c) => c.cancelledCount, align: 'right', sum: true },
     { key: 'totalSpent', label: tr('adminCommon.spent'), get: (c) => money(c.totalSpent), sortValue: (c) => c.totalSpent, align: 'right', sum: true },
     { key: 'avgBasket', label: tr('adminCommon.avgBasket'), get: (c) => money(c.avgBasket), sortValue: (c) => c.avgBasket, align: 'right' },
     { key: 'purchaseFrequency', label: tr('adminCommon.frequency'), get: (c) => c.purchaseFrequency, align: 'right' },
-    { key: 'lastOrderAt', label: tr('adminCommon.lastOrder'), get: (c) => (c.lastOrderAt ? fmtDate(c.lastOrderAt) : '—'), sortValue: (c) => c.lastOrderAt || 0 },
+    { key: 'lastOrderAt', label: tr('adminCommon.lastOrder'), get: (c) => (c.lastOrderAt ? fmtDate(c.lastOrderAt) : '-'), sortValue: (c) => c.lastOrderAt || 0 },
     { key: 'balance', label: tr('adminCommon.balanceCol'), get: (c) => money(c.balance), sortValue: (c) => c.balance, align: 'right', sum: true },
     { key: 'adminStatus', label: tr('adminCommon.status'), get: (c) => (c.adminStatus === 'blocked' ? <span className="pill" style={{ color: 'var(--red)' }}>{tr('adminClients.suspended')}</span> : <span className="pill teal">{tr('adminClients.activeBadge')}</span>), sortValue: (c) => c.adminStatus },
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (c) => fmtDate(c.createdAt), sortValue: (c) => c.createdAt }
@@ -279,12 +279,12 @@ export default function AdminClientsPage() {
               <DrawerRow label={tr('adminCommon.totalSpent')} value={money(detail.totalSpent)} strong />
               <DrawerRow label={tr('adminCommon.avgBasket')} value={money(detail.avgBasket)} strong />
               <DrawerRow label={tr('adminClients.purchaseFrequency')} value={tr('adminClients.ordersPerMonth', { n: detail.purchaseFrequency })} strong />
-              <DrawerRow label={tr('adminCommon.lastOrder')} value={detail.lastOrderAt ? fmtDate(detail.lastOrderAt) : '—'} strong />
+              <DrawerRow label={tr('adminCommon.lastOrder')} value={detail.lastOrderAt ? fmtDate(detail.lastOrderAt) : '-'} strong />
               {(detail.refunds || []).length > 0 && (
                 <>
                   <div className="divider" />
                   <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCommon.refunds')}</h4>
-                  {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.restaurantName} — ${r.reason || r.responsibility}`} value={money(r.amount)} />)}
+                  {detail.refunds.map((r) => <DrawerRow key={r.id} label={`${r.restaurantName}, ${r.reason || r.responsibility}`} value={money(r.amount)} />)}
                 </>
               )}
             </>

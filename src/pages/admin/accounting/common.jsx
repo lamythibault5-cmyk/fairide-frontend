@@ -71,15 +71,15 @@ export function Pagination({ page, total, pageSize, onPage, countLabel }) {
 // Liens vers les fiches : mêmes chemins que le reste de l'ERP (recherche pré-remplie pour les listes
 // restaurants / livreurs, paramètre q pour la commande).
 export function RestaurantLink({ id, name, className = 'fin-link' }) {
-  if (!name && !id) return '—';
+  if (!name && !id) return '-';
   return <Link to="/admin/restaurants" state={{ presetSearch: name || id }} className={className} onClick={(e) => e.stopPropagation()}>{name || id}</Link>;
 }
 export function DriverLink({ id, name, className = 'fin-link' }) {
-  if (!name && !id) return '—';
+  if (!name && !id) return '-';
   return <Link to="/admin/drivers" state={{ presetSearch: name || id }} className={className} onClick={(e) => e.stopPropagation()}>{name || id}</Link>;
 }
 export function OrderLink({ id, className = 'fin-link' }) {
-  if (!id) return '—';
+  if (!id) return '-';
   return <Link to={`/admin/orders?q=${encodeURIComponent(id)}`} className={className} onClick={(e) => e.stopPropagation()}>#{String(id).slice(0, 8)}</Link>;
 }
 

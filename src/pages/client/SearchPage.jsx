@@ -60,7 +60,7 @@ export default function SearchPage() {
   const { t } = useLanguage();
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  usePageMeta({ title: 'Recherche — Fairide', path: '/recherche' });
+  usePageMeta({ title: 'Recherche · Fairide', path: '/recherche' });
 
   const [requete, setRequete] = useState('');
   const [bio, setBio] = useState(false);

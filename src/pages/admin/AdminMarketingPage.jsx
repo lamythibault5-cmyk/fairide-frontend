@@ -82,13 +82,13 @@ export default function AdminMarketingPage() {
     { key: 'name', label: tr('adminMarketing.colName'), get: (c) => <><b>{c.name}</b><div className="small mk-muted mk-ellipsis">{c.subject}</div></>, sortValue: (c) => c.name },
     { key: 'status', label: tr('adminCommon.status'), get: (c) => <StatusPill status={c.status} tr={tr} />, sortValue: (c) => STATUSES.indexOf(c.status) },
     { key: 'audience', label: tr('adminMarketing.colAudience'), get: (c) => <span className="small">{resumeAudience(c.audience, tr)}</span>, sortValue: (c) => (c.audience?.roles || []).join(',') },
-    { key: 'recipients', label: tr('adminMarketing.colRecipients'), get: (c) => (c.recipientsCount || (c.status === 'draft' ? '—' : 0)), sortValue: (c) => c.recipientsCount || 0, align: 'right' },
+    { key: 'recipients', label: tr('adminMarketing.colRecipients'), get: (c) => (c.recipientsCount || (c.status === 'draft' ? '-' : 0)), sortValue: (c) => c.recipientsCount || 0, align: 'right' },
     { key: 'progress', label: tr('adminMarketing.colProgress'), get: (c) => {
-      if (c.status === 'draft') return '—';
+      if (c.status === 'draft') return '-';
       const part = c.recipientsCount ? Math.min(100, Math.round(((c.sentCount + c.failedCount) / c.recipientsCount) * 100)) : 0;
       return <><span>{c.sentCount}</span>{c.failedCount > 0 && <span style={{ color: 'var(--red)' }}> / {c.failedCount}</span>}{c.status === 'sending' && <div className="admin-progress"><span style={{ width: `${part}%` }} /></div>}</>;
     }, sortValue: (c) => c.sentCount || 0, align: 'right' },
-    { key: 'when', label: tr('adminMarketing.colWhen'), get: (c) => (c.status === 'scheduled' && c.scheduledAt ? `⏰ ${fmtDateTime(c.scheduledAt)}` : c.sentAt ? fmtDateTime(c.sentAt) : '—'), sortValue: (c) => new Date(c.sentAt || c.scheduledAt || 0).getTime() || 0 },
+    { key: 'when', label: tr('adminMarketing.colWhen'), get: (c) => (c.status === 'scheduled' && c.scheduledAt ? `⏰ ${fmtDateTime(c.scheduledAt)}` : c.sentAt ? fmtDateTime(c.sentAt) : '-'), sortValue: (c) => new Date(c.sentAt || c.scheduledAt || 0).getTime() || 0 },
     { key: 'createdAt', label: tr('adminMarketing.colCreated'), get: (c) => fmtDateTime(c.createdAt), sortValue: (c) => new Date(c.createdAt || 0).getTime() || 0 }
   ];
 

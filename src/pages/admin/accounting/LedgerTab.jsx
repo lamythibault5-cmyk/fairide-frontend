@@ -122,7 +122,7 @@ function PartnerLedger({ token, toast, periodKey, type }) {
     { key: 'due', label: tr('adminAccounting.due'), get: (r) => money(r.due), sortValue: (r) => r.due, align: 'right', sum: true },
     { key: 'paid', label: tr('adminAccounting.paid'), get: (r) => <span className="fin-credit">{money(r.paid)}</span>, sortValue: (r) => r.paid, align: 'right', sum: true },
     { key: 'balance', label: tr('adminAccounting.balance'), get: (r) => <SignedMoney value={r.balance} strong />, sortValue: (r) => r.balance, align: 'right', sum: true },
-    { key: 'lastMovement', label: tr('adminAccounting.lastMovement'), get: (r) => <span className="small">{r.lastMovement ? fmtDate(r.lastMovement) : '—'}</span>, sortValue: (r) => r.lastMovement || 0 }
+    { key: 'lastMovement', label: tr('adminAccounting.lastMovement'), get: (r) => <span className="small">{r.lastMovement ? fmtDate(r.lastMovement) : '-'}</span>, sortValue: (r) => r.lastMovement || 0 }
   ];
 
   return (

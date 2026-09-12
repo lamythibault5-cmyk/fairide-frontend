@@ -131,7 +131,7 @@ function PaymentsListTab({ token, toast }) {
                   { key: 'clientName', label: tr('adminCommon.client'), get: (r) => r.clientName },
                   { key: 'paymentMode', label: tr('adminPayments.colMode'), get: (r) => r.paymentMode || tr('adminPayments.unknownMode') },
                   { key: 'paid', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: r.paid ? 'var(--teal-deep)' : 'var(--gold-deep)' }}>{r.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge')}</span>, sortValue: (r) => (r.paid ? 1 : 0) },
-                  { key: 'refundTotal', label: tr('adminPayments.colRefunded'), get: (r) => (r.refundTotal > 0 ? <span className="fin-neg">{money(r.refundTotal)}</span> : '—'), sortValue: (r) => r.refundTotal || 0, align: 'right', sum: true },
+                  { key: 'refundTotal', label: tr('adminPayments.colRefunded'), get: (r) => (r.refundTotal > 0 ? <span className="fin-neg">{money(r.refundTotal)}</span> : '-'), sortValue: (r) => r.refundTotal || 0, align: 'right', sum: true },
                   { key: 'total', label: tr('adminCommon.amount'), get: (r) => money(r.total), sortValue: (r) => r.total, align: 'right', sum: true }
                 ]} />
               </div>

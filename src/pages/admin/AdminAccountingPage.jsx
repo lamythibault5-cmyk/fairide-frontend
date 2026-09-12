@@ -147,7 +147,7 @@ function OverviewTab({ token, periodKey, period, go }) {
           <div className="stat-card"><div className="num">{money(income.data.totalExpenses)}</div><div className="label">{tr('adminAccounting.kpiExpenses')} <DeltaBadge current={income.data.totalExpenses} previous={income.data.previous?.totalExpenses} /></div></div>
           <div className="stat-card"><div className="num">{money(income.data.vatNet)}</div><div className="label">{tr('adminAccounting.kpiVatNet')}</div></div>
           <div className="stat-card"><div className="num">{stripe.data ? money(stripe.data.stripeAvailable) : '…'}</div><div className="label">{tr('adminAccounting.kpiStripe')}</div></div>
-          <div className="stat-card"><div className="num">{bank === null ? (sheet.error ? '—' : '…') : money(bank)}</div><div className="label">{tr('adminAccounting.kpiBank')}</div></div>
+          <div className="stat-card"><div className="num">{bank === null ? (sheet.error ? '-' : '…') : money(bank)}</div><div className="label">{tr('adminAccounting.kpiBank')}</div></div>
           {overview.data && <div className="stat-card"><div className="num">{money(overview.data.restaurantDueBalance)}</div><div className="label">{tr('adminAccounting.dueRestaurants')}</div></div>}
           {overview.data && <div className="stat-card"><div className="num">{money(overview.data.driverDueBalance)}</div><div className="label">{tr('adminAccounting.dueDrivers')}</div></div>}
         </div>
@@ -268,7 +268,7 @@ function JournalTab({ token, toast, dateFrom, dateTo, searchParams, go }) {
     { key: 'date', label: tr('adminCommon.date'), get: (r) => <span className="small">{fmtDateTime(r.date)}</span>, sortValue: (r) => r.date },
     { key: 'account', label: tr('adminAccounting.account'), get: (r) => <span><span className="fin-mono" style={{ opacity: 0.7 }}>{r.accountCode}</span> {r.accountName}</span>, sortValue: (r) => r.accountCode },
     { key: 'entryType', label: tr('adminCommon.type'), get: (r) => <span className="small">{ACCOUNTING_ENTRY_TYPE_LABELS[r.entryType] || r.entryType}</span>, sortValue: (r) => r.entryType },
-    { key: 'partner', label: tr('adminAccounting.partner'), get: (r) => <span className="small">{[r.restaurantName, r.driverName, r.clientName].filter(Boolean).join(' · ') || '—'}</span>, sortValue: (r) => r.restaurantName || r.driverName || r.clientName || '' },
+    { key: 'partner', label: tr('adminAccounting.partner'), get: (r) => <span className="small">{[r.restaurantName, r.driverName, r.clientName].filter(Boolean).join(' · ') || '-'}</span>, sortValue: (r) => r.restaurantName || r.driverName || r.clientName || '' },
     { key: 'debit', label: tr('adminAccounting.debit'), get: (r) => (r.debit > 0 ? money(r.debit) : ''), sortValue: (r) => r.debit, align: 'right', sum: true },
     { key: 'credit', label: tr('adminAccounting.credit'), get: (r) => (r.credit > 0 ? <span className="fin-credit">{money(r.credit)}</span> : ''), sortValue: (r) => r.credit, align: 'right', sum: true },
     { key: 'status', label: tr('adminCommon.status'), get: (r) => <StatusPill status={r.status} labels={statusLabels} />, sortValue: (r) => r.status }

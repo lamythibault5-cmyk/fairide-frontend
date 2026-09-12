@@ -73,7 +73,7 @@ export default function InvoicesPage() {
 
   const fairide = invoice?.fairide;
   const periodLabel = new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
-  const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]} — ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
+  const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
   return (
     <div>

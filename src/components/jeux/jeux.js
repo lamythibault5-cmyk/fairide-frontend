@@ -208,7 +208,7 @@ export const JEUX = [
     key: 'dodge', label: 'FairDodge', sub: 'Évite les obstacles', emoji: '🚧',
     stockage: 'fairide_dodge_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Touché !',
     regles: [
-      'But : tu livres en scooter et la route est semée d’obstacles (🚧 🪨 🕳️ 🔥 💥) — faufile-toi sans rien toucher.',
+      'But : tu livres en scooter et la route est semée d’obstacles (🚧 🪨 🕳️ 🔥 💥), faufile-toi sans rien toucher.',
       'Score : +1 par obstacle évité, +1 de bonus « Pfiou ! » quand il te frôle. Tous les 10 points, la route accélère et les obstacles se rapprochent.',
       'Fin de partie : un seul choc et le scooter s’arrête. Ton record est gardé et compte pour le podium.'
     ],
@@ -336,7 +336,7 @@ export const JEUX = [
     key: 'arrow', label: 'FairArrow', sub: 'Vise les passages', emoji: '🏹',
     stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '💢 Dans le mur !',
     regles: [
-      'But : ta flèche fonce vers le haut, des murs descendent avec chacun une seule ouverture — vise le passage.',
+      'But : ta flèche fonce vers le haut, des murs descendent avec chacun une seule ouverture, vise le passage.',
       'Score : +1 par mur traversé. Le passage à viser est éclairé en vert et la pointe passe au vert quand tu es aligné. Tous les 8 points, les murs accélèrent et les ouvertures rétrécissent.',
       'Fin de partie : la pointe touche un mur. Ton record est gardé et compte pour le podium.'
     ],

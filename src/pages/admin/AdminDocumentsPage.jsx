@@ -102,7 +102,7 @@ export default function AdminDocumentsPage() {
     { key: 'documentType', label: tr('adminCommon.type'), get: (d) => DOCUMENT_TYPE_LABELS[d.documentType] || d.documentType },
     { key: 'targetName', label: tr('adminDocs.colTarget'), get: (d) => <LienCible d={d} />, sortValue: (d) => `${d.targetType} ${d.targetName || ''}` },
     { key: 'verificationStatus', label: tr('adminDocs.colVerification'), get: (d) => <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span>, sortValue: (d) => d.verificationStatus },
-    { key: 'expiresAt', label: tr('adminDocs.colExpiry'), get: (d) => (d.expiresAt ? <span style={{ color: DOCUMENT_EXPIRY_LABELS[d.expiryState]?.color }}>{fmtDate(d.expiresAt)}</span> : '—'), sortValue: (d) => d.expiresAt || 9e15 },
+    { key: 'expiresAt', label: tr('adminDocs.colExpiry'), get: (d) => (d.expiresAt ? <span style={{ color: DOCUMENT_EXPIRY_LABELS[d.expiryState]?.color }}>{fmtDate(d.expiresAt)}</span> : '-'), sortValue: (d) => d.expiresAt || 9e15 },
     { key: 'createdAt', label: tr('adminDocs.colAdded'), get: (d) => fmtDateTime(d.createdAt), sortValue: (d) => d.createdAt }
   ];
 
@@ -363,7 +363,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       {d && !editing && (
         <>
           <div className="admin-record-links"><LienCible d={d} /></div>
-          <DrawerRow label={tr('adminDocs.colExpiry')} value={d.expiresAt ? <span style={{ color: DOCUMENT_EXPIRY_LABELS[d.expiryState]?.color }}>{fmtDate(d.expiresAt)} {d.expiryState ? `· ${DOCUMENT_EXPIRY_LABELS[d.expiryState].label}` : ''}</span> : '—'} strong />
+          <DrawerRow label={tr('adminDocs.colExpiry')} value={d.expiresAt ? <span style={{ color: DOCUMENT_EXPIRY_LABELS[d.expiryState]?.color }}>{fmtDate(d.expiresAt)} {d.expiryState ? `· ${DOCUMENT_EXPIRY_LABELS[d.expiryState].label}` : ''}</span> : '-'} strong />
           <DrawerRow label={tr('adminDocs.colAdded')} value={tr('adminDocs.addedBy', { email: d.uploadedByEmail, date: fmtDateTime(d.createdAt) })} />
           {d.notes && <p className="small" style={{ margin: '6px 0', whiteSpace: 'pre-wrap' }}>{d.notes}</p>}
 

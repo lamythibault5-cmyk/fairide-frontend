@@ -148,7 +148,7 @@ export function ClosingTab({ token, toast, period }) {
                   <span className={`pill fin-status ${locked ? 'locked' : 'open'}`}>{locked ? tr('adminAccounting.periodLocked') : isCurrent ? tr('adminAccounting.periodCurrent') : future ? tr('adminAccounting.periodFuture') : tr('adminAccounting.periodOpen')}</span>
                 </div>
                 <span className="fin-month-meta">{tr('adminAccounting.entriesCount', { n: p.entryCount || 0 })}</span>
-                {locked && p.lockedAt && <span className="fin-month-meta">{tr('adminAccounting.lockedOn', { date: fmtDate(p.lockedAt), by: p.lockedBy || '—' })}</span>}
+                {locked && p.lockedAt && <span className="fin-month-meta">{tr('adminAccounting.lockedOn', { date: fmtDate(p.lockedAt), by: p.lockedBy || '-' })}</span>}
                 {locked
                   ? <button type="button" className="btn-danger-ghost" disabled={busy} onClick={() => setConfirm({ kind: 'unlock', month: m })}>{tr('adminAccounting.unlock')}</button>
                   : !future && <button type="button" className={behind ? 'btn-teal' : 'btn-outline'} disabled={busy} onClick={() => setConfirm({ kind: 'lock', month: m })}>{tr('adminAccounting.lock')}</button>}

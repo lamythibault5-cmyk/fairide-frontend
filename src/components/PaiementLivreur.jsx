@@ -70,7 +70,7 @@ export default function PaiementLivreur({ user, deliveries }) {
                   <td>{new Date(o.createdAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}</td>
                   <td>{o.restaurantName} → {o.commune || o.address}</td>
                   <td>{euro(o.deliveryFee)}</td>
-                  <td>{pourboire(o) > 0 ? euro(pourboire(o)) : '—'}</td>
+                  <td>{pourboire(o) > 0 ? euro(pourboire(o)) : '-'}</td>
                   <td><b>{euro(Number(o.deliveryFee || 0) + pourboire(o))}</b></td>
                 </tr>
               ))}
