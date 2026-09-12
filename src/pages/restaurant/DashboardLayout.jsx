@@ -184,7 +184,11 @@ export default function DashboardLayout() {
       if (list.length > 0) {
         try {
           const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null');
-          if (h) { if (h.website) localStorage.setItem('fairide_menu_source_url', h.website); localStorage.removeItem('fairide_resto_hint'); }
+          if (h) {
+            if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
+            ouvrirDemandeCarte(list[0]?.id, h);
+            localStorage.removeItem('fairide_resto_hint');
+          }
         } catch { /* rien */ }
       }
     }).catch((e) => toast(e.message));
@@ -256,6 +260,27 @@ export default function DashboardLayout() {
   // horaires ne sont plus exigés ici — le serveur (fromSignup) crée alors le commerce fermé, à ouvrir
   // dès que le restaurateur pose ses horaires. Tout ressaisir parce qu'il manquait un champ n'avait
   // aucun sens : il a déjà rempli le formulaire d'inscription une fois.
+  /* LA CARTE EST DEMANDÉE AVANT LA PREMIÈRE CONNEXION.
+     Si le commerçant a dit à l'inscription qu'il était déjà sur Uber Eats, Deliveroo, Takeaway ou
+     qu'il a un site (voir l'étape « business » d'Auth.jsx), la demande « Fairide s'en occupe » part
+     ici, dès que le commerce existe — il ne peut pas la poser lui-même plus tôt, elle a besoin de
+     l'identifiant du commerce. Il découvre donc un tableau de bord où sa carte est déjà en
+     préparation, au lieu d'une carte vide et de six méthodes à comparer.
+
+     Silencieux par construction : un échec ne doit pas gâcher l'arrivée. Le 409 (« une demande est
+     déjà en cours ») n'est pas une erreur ici, c'est le résultat attendu si la page a été rechargée.
+     Dans tous les cas la demande reste faisable à la main depuis Mes produits. */
+  async function ouvrirDemandeCarte(idResto, indice) {
+    const platform = indice?.menuPlatform;
+    if (!idResto || !platform) return;
+    try {
+      await api(`/restaurants/${idResto}/menu/concierge`, {
+        method: 'POST', token,
+        body: { platform, url: indice.menuUrl || '', notes: '' }
+      });
+    } catch { /* déjà ouverte, hors ligne, ou refusée : la demande reste faisable à la main */ }
+  }
+
   async function creerDepuisIndice() {
     let h = null;
     try { h = JSON.parse(localStorage.getItem('fairide_resto_hint') || 'null'); } catch { return null; }
@@ -278,7 +303,11 @@ export default function DashboardLayout() {
           phone: h.phone || '', website: h.website || ''
         }
       });
-      try { if (h.website) localStorage.setItem('fairide_menu_source_url', h.website); localStorage.removeItem('fairide_resto_hint'); } catch { /* rien */ }
+      try {
+        if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
+        ouvrirDemandeCarte(r?.id, h);
+        localStorage.removeItem('fairide_resto_hint');
+      } catch { /* rien */ }
       return r;
     } catch { return null; }
   }
@@ -316,6 +345,7 @@ export default function DashboardLayout() {
       try {
         const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
         if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
+        ouvrirDemandeCarte(r?.id, h);
         localStorage.removeItem('fairide_resto_hint');
       } catch { /* rien */ }
       setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
