@@ -12,7 +12,7 @@ function Statement({ title, lines, total, totalLabel, tone }) {
   return (
     <div className="fin-statement">
       <div className="fin-statement-head"><span>{title}</span><span>{money(total)}</span></div>
-      {lines.length === 0 && <div className="fin-statement-line" style={{ opacity: 0.6 }}><span>—</span><span /></div>}
+      {lines.length === 0 && <div className="fin-statement-line" style={{ opacity: 0.6 }}><span>-</span><span /></div>}
       {lines.map((l) => (
         <div key={l.code} className="fin-statement-line"><span><span className="code">{l.code}</span>{l.name}</span><span className={tone}>{money(l.amount)}</span></div>
       ))}

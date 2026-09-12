@@ -130,7 +130,7 @@ export default function AdminDashboardPage() {
         <KpiCard label={tr('adminCommon.avgBasket')} kpi={kpi.avgBasket} format={money} />
         <KpiCard label={tr('adminCommon.cancellationRate')} kpi={kpi.cancellationRate} format={(v) => pct(v)} invert />
         <div className="stat-card"><div className="num">{pct(kpi.deliverySuccessRate)}</div><div className="label">{tr('adminDash.deliverySuccess')}</div></div>
-        <div className="stat-card"><div className="num">{kpi.avgDeliveryMinutes !== null ? tr('adminRestos.minutes', { n: kpi.avgDeliveryMinutes }) : '—'}</div><div className="label">{tr('adminDash.avgDeliveryTime')}</div></div>
+        <div className="stat-card"><div className="num">{kpi.avgDeliveryMinutes !== null ? tr('adminRestos.minutes', { n: kpi.avgDeliveryMinutes }) : '-'}</div><div className="label">{tr('adminDash.avgDeliveryTime')}</div></div>
         <div className="stat-card"><div className="num">{kpi.activeRestaurants}</div><div className="label">{tr('adminDash.activeRestaurants')}</div></div>
         <div className="stat-card"><div className="num">{kpi.activeDrivers}</div><div className="label">{tr('adminDash.activeDrivers')}</div></div>
         <div className="stat-card"><div className="num">{kpi.activeClients}</div><div className="label">{tr('adminDash.activeClients')}</div></div>
@@ -204,7 +204,7 @@ function TodayTile({ label, value, pct: variation, to, invert }) {
   return (
     <Link to={to} className="admin-today-tile" style={{ textDecoration: 'none', color: 'inherit' }}>
       <div className="label">{label}</div>
-      <div className="num">{value ?? '—'}</div>
+      <div className="num">{value ?? '-'}</div>
       <div className={`delta ${cls}`}>
         {variation === null || variation === undefined ? tr('adminDash.noYesterday') : variation === 0 ? tr('adminDash.sameAsYesterday') : `${up ? '▲' : '▼'} ${tr('adminDash.vsYesterday', { pct: Math.abs(variation) })}`}
       </div>

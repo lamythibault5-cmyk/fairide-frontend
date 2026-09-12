@@ -6,7 +6,7 @@ import { useState } from 'react';
 //
 // columns : [{ key, label, color? , hint? }]   items : tableau   columnOf(item) → key
 // renderCard(item) → contenu de la carte   onOpen(item)   onMove(item, key) (absent = lecture seule)
-export default function KanbanBoard({ columns, items, columnOf, renderCard, onOpen, onMove, emptyLabel = '—', footer }) {
+export default function KanbanBoard({ columns, items, columnOf, renderCard, onOpen, onMove, emptyLabel = '-', footer }) {
   const [survol, setSurvol] = useState(null);
   const [glisse, setGlisse] = useState(null);
   const parColonne = Object.fromEntries(columns.map((c) => [c.key, []]));

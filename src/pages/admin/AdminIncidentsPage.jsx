@@ -98,15 +98,15 @@ export default function AdminIncidentsPage() {
 
   const colonnes = useMemo(() => [
     { key: 'createdAt', label: tr('adminCommon.date'), get: (i) => <span className="small">{fmtDateTime(i.createdAt)}</span>, sortValue: (i) => i.createdAt, width: 130 },
-    { key: 'order', label: tr('adminIncidents.colOrder'), get: (i) => <span className="inc-cell-order"><code>#{i.orderShort}</code><span className="small">{i.restaurantName || '—'}{i.clientName ? ` → ${i.clientName}` : ''}</span></span>, sortValue: (i) => i.restaurantName || '' },
+    { key: 'order', label: tr('adminIncidents.colOrder'), get: (i) => <span className="inc-cell-order"><code>#{i.orderShort}</code><span className="small">{i.restaurantName || '-'}{i.clientName ? ` → ${i.clientName}` : ''}</span></span>, sortValue: (i) => i.restaurantName || '' },
     { key: 'type', label: tr('adminCommon.type'), get: (i) => <IncPill kind="type" value={i.type} label={typeLabel(tr, i.type)} />, sortValue: (i) => i.type },
     { key: 'responsibility', label: tr('adminIncidents.responsibility'), get: (i) => <IncPill kind="resp" value={i.responsibility} label={respLabel(tr, i.responsibility)} />, sortValue: (i) => i.responsibility },
     { key: 'status', label: tr('adminCommon.status'), get: (i) => <><IncPill kind="st" value={i.status} label={statusLabel(tr, i.status)} />{i.overdue && <span className="inc-overdue">{tr('adminIncidents.overdue')}</span>}</>, sortValue: (i) => `${i.overdue ? '0' : '1'}-${i.status}` },
     { key: 'priority', label: tr('adminCommon.priority'), get: (i) => <IncPill kind="prio" value={i.priority} label={priorityLabel(tr, i.priority)} />, sortValue: (i) => ({ high: 3, normal: 2, low: 1 }[i.priority] || 0) },
-    { key: 'amount', label: tr('adminCommon.amount'), get: (i) => (i.amount === null || i.amount === undefined ? '—' : money(i.amount)), sortValue: (i) => i.amount || 0, align: 'right' },
-    { key: 'description', label: tr('adminIncidents.description'), get: (i) => <span className="inc-cell-desc small" title={i.description}>{i.description || '—'}</span>, sortValue: (i) => i.description },
-    { key: 'assignedTo', label: tr('adminIncidents.assignedTo'), get: (i) => <span className="small">{i.assignedTo || '—'}</span>, sortValue: (i) => i.assignedTo || '' },
-    { key: 'dueAt', label: tr('adminIncidents.dueAt'), get: (i) => <span className="small" style={i.overdue ? { color: 'var(--red)', fontWeight: 700 } : undefined}>{estOuvert(i) ? fmtDateTime(i.dueAt) : '—'}</span>, sortValue: (i) => (estOuvert(i) ? i.dueAt : 0) }
+    { key: 'amount', label: tr('adminCommon.amount'), get: (i) => (i.amount === null || i.amount === undefined ? '-' : money(i.amount)), sortValue: (i) => i.amount || 0, align: 'right' },
+    { key: 'description', label: tr('adminIncidents.description'), get: (i) => <span className="inc-cell-desc small" title={i.description}>{i.description || '-'}</span>, sortValue: (i) => i.description },
+    { key: 'assignedTo', label: tr('adminIncidents.assignedTo'), get: (i) => <span className="small">{i.assignedTo || '-'}</span>, sortValue: (i) => i.assignedTo || '' },
+    { key: 'dueAt', label: tr('adminIncidents.dueAt'), get: (i) => <span className="small" style={i.overdue ? { color: 'var(--red)', fontWeight: 700 } : undefined}>{estOuvert(i) ? fmtDateTime(i.dueAt) : '-'}</span>, sortValue: (i) => (estOuvert(i) ? i.dueAt : 0) }
   ], [tr]);
 
   const onglets = [

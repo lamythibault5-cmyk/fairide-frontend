@@ -44,7 +44,7 @@ function ContactCommerce({ r, tr, fiche = false }) {
   const style = { margin: '2px 0' };
   return (
     <>
-      <p className="small" style={style}>📍 {r.fullAddress || '—'}</p>
+      <p className="small" style={style}>📍 {r.fullAddress || '-'}</p>
       <p className="small" style={style}>
         📞 {r.restaurantPhone ? tel(r.restaurantPhone) : <span style={{ opacity: 0.7 }}>{tr('adminRestos.noRestoPhone')}</span>}
         {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}</>}
@@ -210,8 +210,8 @@ export default function AdminRestaurantsPage() {
     { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{tr('adminRestos.alwaysListed')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
     { key: 'commune', label: tr('adminCommon.commune'), get: (r) => r.commune },
     { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (r) => r.cuisine },
-    { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '—'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
-    { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '—', sortValue: (r) => r.fullAddress || '' },
+    { key: 'phone', label: tr('adminCommon.phone'), get: (r) => (r.restaurantPhone || r.ownerPhone ? <a href={`tel:${String(r.restaurantPhone || r.ownerPhone).replace(/[^+\d]/g, '')}`} onClick={(e) => e.stopPropagation()}>{r.restaurantPhone || r.ownerPhone}</a> : '-'), sortValue: (r) => r.restaurantPhone || r.ownerPhone || '' },
+    { key: 'fullAddress', label: tr('adminRestos.addressCol'), get: (r) => r.fullAddress || '-', sortValue: (r) => r.fullAddress || '' },
     { key: 'businessStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: BUSINESS_STATUS_LABELS[r.businessStatus]?.color }}>{BUSINESS_STATUS_LABELS[r.businessStatus]?.label}</span>, sortValue: (r) => r.businessStatus },
     { key: 'rating', label: tr('adminCommon.rating'), get: (r) => `${Number(r.rating || 0).toFixed(1)}★`, sortValue: (r) => r.rating, align: 'right' },
     { key: 'orderCount', label: tr('adminCommon.orders'), get: (r) => r.orderCount, align: 'right', sum: true },
@@ -222,7 +222,7 @@ export default function AdminRestaurantsPage() {
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (r) => fmtDate(r.createdAt), sortValue: (r) => r.createdAt }
   ];
   const groupes = {
-    commune: { get: (r) => r.commune || '—' }, cuisine: { get: (r) => r.cuisine || '—' },
+    commune: { get: (r) => r.commune || '-' }, cuisine: { get: (r) => r.cuisine || '-' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
   const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [restaurants, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -300,9 +300,9 @@ export default function AdminRestaurantsPage() {
             </div>
             <div className="small">{r.commune} · {r.cuisine} · {Number(r.rating || 0).toFixed(1)}★</div>
             <ContactCommerce r={r} tr={tr} />
-            <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '—', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
+            <div className="small">{tr('adminRestos.ownerLine', { name: r.responsibleName || '-', phone: r.ownerEmail ? ` · ${r.ownerEmail}` : '' })}</div>
             {r.menuItemCount !== null && r.menuItemCount !== undefined && <div className="small">🍽️ {tr('adminRestos.menuLine', { n: r.menuItemCount })}</div>}
-            {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '—'} · TVA {r.vatNumber || '—'}</div>}
+            {(r.companyNumber || r.vatNumber) && <div className="small">{tr('adminRestos.companyNumber')} {r.companyNumber || '-'} · TVA {r.vatNumber || '-'}</div>}
             <div className="small">
               {tr('adminRestos.statsLine', { n: r.orderCount, revenue: money(r.revenue), commission: money(r.commissionGenerated), basket: money(r.avgBasket) })}
             </div>
@@ -419,8 +419,8 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       {detail && onglet === 'apercu' && !editing && (
         <>
           <ContactCommerce r={detail} tr={tr} fiche />
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '—', email: detail.email, phone: '' })}</p>
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '—', n: detail.companyNumber || '—', vat: detail.vatNumber || '—' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '-', email: detail.email, phone: '' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '-', n: detail.companyNumber || '-', vat: detail.vatNumber || '-' })}</p>
           {/* D'où vient la fiche remplie à l'inscription. Un commerce saisi à la main est un commerce
               comme un autre — c'est juste qu'aucune source extérieure ne confirme son nom et son adresse. */}
           {detail.signupBusinessSource === 'manuel' && (
@@ -516,7 +516,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
                 <h4 className="drawer-section-title" style={{ margin: 0 }}>{tr('adminRestos.commercialOrigin')}</h4>
                 <Link to="/admin/crm" state={{ presetSearch: crmProspect.name }} className="small">{tr('adminRestos.viewInCrm')}</Link>
               </div>
-              <div className="small">{tr('adminRestos.crmOwnerLine', { owner: crmProspect.ownerEmail || '—', source: crmProspect.source || '—' })}</div>
+              <div className="small">{tr('adminRestos.crmOwnerLine', { owner: crmProspect.ownerEmail || '-', source: crmProspect.source || '-' })}</div>
               <div className="small">{tr('adminRestos.convertedOn', { date: fmtDate(crmProspect.convertedAt) })}</div>
               <div className="divider" />
             </>

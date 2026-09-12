@@ -23,6 +23,15 @@
           "value": "no-cache"
         }
       ]
+    },
+    {
+      "source": "/(notre-histoire|aide|restaurants|cgv|confidentialite|cookies|mentions-legales)(/.*)?",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
     }
   ]
 }

@@ -194,7 +194,7 @@ export default function PromotionsPage() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div>
               <span className="pill teal">🏷️ {p.label}</span>
-              <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? ' — inactive' : ''}</div>
+              <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? ' · inactive' : ''}</div>
             </div>
             <div className="row" style={{ gap: 6 }}>
               <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={togglingId === p.id} onClick={() => toggleActive(p)}>

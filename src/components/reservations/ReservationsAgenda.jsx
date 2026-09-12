@@ -315,7 +315,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
 
               {/* Feuille de service imprimable (visible seulement à l'impression, voir reservations.css). */}
               <div className="resa-print-zone" aria-hidden="true">
-                <h1>{restaurant?.name} — {libelleJour(date, false, locale)}</h1>
+                <h1>{restaurant?.name}, {libelleJour(date, false, locale)}</h1>
                 <p>{t('resa.daySummary', { n: actives.length, c: couverts, k: tablesActives.length })}</p>
                 <table>
                   <thead><tr><th>{t('resa.time')}</th><th>{t('resa.name')}</th><th>{t('resa.ppl')}</th><th>{t('resa.table')}</th><th>{t('resa.phone')}</th><th>{t('resa.printStatus')}</th><th>{t('resa.printNotes')}</th></tr></thead>

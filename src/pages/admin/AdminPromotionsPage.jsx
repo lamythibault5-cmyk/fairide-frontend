@@ -105,8 +105,8 @@ export default function AdminPromotionsPage() {
     { key: 'type', label: tr('adminCommon.type'), get: (p) => <span className="pill teal">{libelleType(p.type)}</span>, sortValue: (p) => p.type },
     { key: 'value', label: tr('adminPromos.value'), get: (p) => (p.type === 'client_balance' ? `${p.value} €` : tr('adminPromos.monthsValue', { n: p.value })), sortValue: (p) => p.value, align: 'right' },
     { key: 'usesCount', label: tr('adminPromos.uses'), get: (p) => { const part = p.maxUses ? Math.min(100, Math.round((p.usesCount / p.maxUses) * 100)) : null; return <>{p.usesCount}{p.maxUses ? ` / ${p.maxUses}` : ''}{part !== null && <div className="admin-progress"><span style={{ width: `${part}%` }} /></div>}</>; }, sortValue: (p) => p.usesCount, align: 'right', sum: true },
-    { key: 'expiresAt', label: tr('adminPromos.expiresAt'), get: (p) => (p.expiresAt ? fmtDate(p.expiresAt) : '—'), sortValue: (p) => p.expiresAt || 9e15 },
-    { key: 'createdAt', label: tr('adminPromos.createdOn'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '—'), sortValue: (p) => p.createdAt || 0 },
+    { key: 'expiresAt', label: tr('adminPromos.expiresAt'), get: (p) => (p.expiresAt ? fmtDate(p.expiresAt) : '-'), sortValue: (p) => p.expiresAt || 9e15 },
+    { key: 'createdAt', label: tr('adminPromos.createdOn'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '-'), sortValue: (p) => p.createdAt || 0 },
     { key: 'status', label: tr('adminCommon.status'), get: etat, sortValue: (p) => (p.active ? 1 : 0) },
     { key: 'actions', label: tr('adminCommon.actions'), get: (p) => (
       <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }} onClick={(e) => e.stopPropagation()}>
@@ -232,7 +232,7 @@ function PromoDrawer({ p, onClose, onPatch, onToggle, onDelete, libelleType, eta
       {onglet === 'infos' && (
         <>
           <DrawerRow label={tr('adminPromos.uses')} value={`${p.usesCount}${p.maxUses ? ` / ${p.maxUses}` : ''}`} strong />
-          <DrawerRow label={tr('adminPromos.createdOn')} value={p.createdAt ? fmtDate(p.createdAt) : '—'} />
+          <DrawerRow label={tr('adminPromos.createdOn')} value={p.createdAt ? fmtDate(p.createdAt) : '-'} />
           {p.type === 'client_balance' && <DrawerRow label={tr('adminPromos.statOffered')} value={money((p.usesCount || 0) * Number(p.value || 0))} />}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCommon.edit')}</h4>

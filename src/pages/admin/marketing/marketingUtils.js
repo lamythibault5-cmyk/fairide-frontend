@@ -41,7 +41,7 @@ export function resumeAudience(a, tr) {
   const src = a && typeof a === 'object' ? a : {};
   const parts = [];
   const roles = Array.isArray(src.roles) ? src.roles.filter((r) => ROLES.includes(r)) : [];
-  parts.push(roles.length ? roles.map((r) => tr(`adminMarketing.role_${r}`)).join(', ') : '—');
+  parts.push(roles.length ? roles.map((r) => tr(`adminMarketing.role_${r}`)).join(', ') : '-');
   const communes = Array.isArray(src.communes) ? src.communes : [];
   parts.push(communes.length === 0 ? tr('adminMarketing.audAllCommunes') : communes.length === 1 ? communes[0] : tr('adminMarketing.audCommunes', { n: communes.length }));
   if (src.lang) parts.push(tr('adminMarketing.audLang', { lang: String(src.lang).toUpperCase() }));

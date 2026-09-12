@@ -127,7 +127,7 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
           )}
           {c.scheduledAt && c.status === 'scheduled' && <DrawerRow label={tr('adminMarketing.scheduledAt')} value={fmtDateTime(c.scheduledAt)} strong />}
           {c.sentAt && <DrawerRow label={tr('adminMarketing.sentAt')} value={fmtDateTime(c.sentAt)} />}
-          <DrawerRow label={tr('adminMarketing.createdBy')} value={c.createdBy || '—'} />
+          <DrawerRow label={tr('adminMarketing.createdBy')} value={c.createdBy || '-'} />
           <DrawerRow label={tr('adminMarketing.colCreated')} value={fmtDateTime(c.createdAt)} />
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminMarketing.bodyPreview')}</h4>
@@ -158,7 +158,7 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
                 <tbody>
                   {sends.map((s) => (
                     <tr key={s.id}>
-                      <td><b>{s.name || '—'}</b><div className="small mk-muted">{s.email}</div>{s.error && <div className="small" style={{ color: 'var(--red)' }}>{s.error}</div>}</td>
+                      <td><b>{s.name || '-'}</b><div className="small mk-muted">{s.email}</div>{s.error && <div className="small" style={{ color: 'var(--red)' }}>{s.error}</div>}</td>
                       <td><SendStatePill status={s.status} tr={tr} /></td>
                       <td className="small">{fmtDateTime(s.sentAt)}</td>
                     </tr>

@@ -33,7 +33,7 @@ function toAscii(str) {
     .replace(/æ/g, 'ae').replace(/Æ/g, 'AE')
     .replace(/[’‘]/g, "'")
     .replace(/[“”]/g, '"')
-    .replace(/[–—]/g, '-')
+    .replace(/[–, ]/g, '-')
     .replace(/€/g, 'EUR')
     .replace(/[^\x20-\x7e\n]/g, '');
 }

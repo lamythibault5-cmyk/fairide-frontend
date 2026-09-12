@@ -7,8 +7,8 @@ import { useReport, SectionCard } from './common';
 // Onglet Partenaires : performance des restaurants et des livreurs sur la période, tables triables,
 // liens vers les fiches (presetSearch, comme la page Commandes). Le bouton CSV de l'en-tête exporte
 // les restaurants ; les livreurs ont leur propre bouton.
-const note = (v) => (v === null || v === undefined ? '—' : `${v.toFixed(1)} ★`);
-const tauxOuTiret = (v) => (v === null || v === undefined ? '—' : pct(v));
+const note = (v) => (v === null || v === undefined ? '-' : `${v.toFixed(1)} ★`);
+const tauxOuTiret = (v) => (v === null || v === undefined ? '-' : pct(v));
 
 export default function PartnersTab({ token, query, onExport }) {
   const { t: tr } = useLanguage();
@@ -23,7 +23,7 @@ export default function PartnersTab({ token, query, onExport }) {
     { key: 'orders', label: tr('adminCommon.paidOrders'), get: (r) => r.orders, align: 'right', sum: true },
     { key: 'gmv', label: 'GMV', get: (r) => money(r.gmv), sortValue: (r) => r.gmv, align: 'right', sum: true },
     { key: 'acceptanceRate', label: tr('adminReports.acceptance'), get: (r) => tauxOuTiret(r.acceptanceRate), sortValue: (r) => r.acceptanceRate ?? -1, align: 'right' },
-    { key: 'avgPrepMinutes', label: tr('adminReports.prepTime'), get: (r) => (r.avgPrepMinutes === null ? '—' : tr('adminRestos.minutes', { n: r.avgPrepMinutes })), sortValue: (r) => r.avgPrepMinutes ?? -1, align: 'right' },
+    { key: 'avgPrepMinutes', label: tr('adminReports.prepTime'), get: (r) => (r.avgPrepMinutes === null ? '-' : tr('adminRestos.minutes', { n: r.avgPrepMinutes })), sortValue: (r) => r.avgPrepMinutes ?? -1, align: 'right' },
     { key: 'rating', label: tr('adminCommon.rating'), get: (r) => note(r.rating), sortValue: (r) => r.rating ?? -1, align: 'right' },
     { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (r) => tauxOuTiret(r.cancellationRate), sortValue: (r) => r.cancellationRate ?? -1, align: 'right' },
     { key: 'refunds', label: tr('adminCommon.refunds'), get: (r) => money(r.refunds), sortValue: (r) => r.refunds, align: 'right', sum: true }
@@ -33,7 +33,7 @@ export default function PartnersTab({ token, query, onExport }) {
     { key: 'deliveries', label: tr('adminCommon.deliveries'), get: (r) => r.deliveries, align: 'right', sum: true },
     { key: 'onTimeRate', label: tr('adminReports.onTime'), get: (r) => tauxOuTiret(r.onTimeRate), sortValue: (r) => r.onTimeRate ?? -1, align: 'right' },
     { key: 'rating', label: tr('adminCommon.rating'), get: (r) => note(r.rating), sortValue: (r) => r.rating ?? -1, align: 'right' },
-    { key: 'avgDistanceKm', label: tr('adminReports.avgDistance'), get: (r) => (r.avgDistanceKm === null ? '—' : r.avgDistanceKm.toFixed(1)), sortValue: (r) => r.avgDistanceKm ?? -1, align: 'right' },
+    { key: 'avgDistanceKm', label: tr('adminReports.avgDistance'), get: (r) => (r.avgDistanceKm === null ? '-' : r.avgDistanceKm.toFixed(1)), sortValue: (r) => r.avgDistanceKm ?? -1, align: 'right' },
     { key: 'earnings', label: tr('adminReports.earnings'), get: (r) => money(r.earnings), sortValue: (r) => r.earnings, align: 'right', sum: true }
   ];
   const fmt = { gmv: money, refunds: money, earnings: money };

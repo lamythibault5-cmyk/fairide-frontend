@@ -884,7 +884,7 @@ export default function Auth() {
                 <div className="field contacts-commerce">
                   <label>{t('auth.contactsTitle')}</label>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
-                  <p className="small contact-ligne">📞 <b>{phone.trim() || '—'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
+                  <p className="small contact-ligne">📞 <b>{phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
                   {!phoneSecondaryOuvert ? (
                     <button type="button" className="btn-link-plus" onClick={() => setPhoneSecondaryOuvert(true)}>＋ {t('auth.addSecondPhone')}</button>
                   ) : (

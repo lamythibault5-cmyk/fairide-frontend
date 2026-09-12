@@ -53,17 +53,17 @@ export default function FleetTab() {
   const columns = [
     { key: 'name', label: tr('adminCommon.driver'), get: (d) => (<span><b>{d.name}</b>{d.phone && <span className="small lg-muted" style={{ display: 'block' }}>{d.phone}</span>}</span>), sortValue: (d) => d.name },
     { key: 'status', label: tr('adminCommon.status'), get: (d) => <span className={`lg-pill ${d.status}`}>{libelles[d.status] || d.status}</span>, sortValue: (d) => STATUTS.indexOf(d.status) },
-    { key: 'vehicleType', label: tr('adminLogistics.colVehicle'), get: (d) => vehicules[d.vehicleType] || (d.vehicleType ? d.vehicleType : <span className="lg-muted">—</span>), sortValue: (d) => d.vehicleType || '' },
+    { key: 'vehicleType', label: tr('adminLogistics.colVehicle'), get: (d) => vehicules[d.vehicleType] || (d.vehicleType ? d.vehicleType : <span className="lg-muted">-</span>), sortValue: (d) => d.vehicleType || '' },
     { key: 'lastSeen', label: tr('adminLogistics.colLastSeen'), get: (d) => (d.lastSeen ? fmtDateTime(d.lastSeen) : <span className="lg-muted">{tr('adminLogistics.neverSeen')}</span>), sortValue: (d) => d.lastSeen || 0 },
-    { key: 'commune', label: tr('adminCommon.commune'), get: (d) => d.commune || <span className="lg-muted">—</span>, sortValue: (d) => d.commune || '' },
+    { key: 'commune', label: tr('adminCommon.commune'), get: (d) => d.commune || <span className="lg-muted">-</span>, sortValue: (d) => d.commune || '' },
     { key: 'deliveriesToday', label: tr('adminLogistics.colToday'), align: 'right', get: (d) => d.deliveriesToday, sum: true },
     { key: 'deliveries30d', label: tr('adminLogistics.col30d'), align: 'right', get: (d) => d.deliveries30d, sum: true },
-    { key: 'rating', label: tr('adminCommon.rating'), align: 'right', get: (d) => (d.rating === null ? <span className="lg-muted">—</span> : `★ ${d.rating.toFixed(1)}`), sortValue: (d) => d.rating ?? -1 },
+    { key: 'rating', label: tr('adminCommon.rating'), align: 'right', get: (d) => (d.rating === null ? <span className="lg-muted">-</span> : `★ ${d.rating.toFixed(1)}`), sortValue: (d) => d.rating ?? -1 },
     {
       key: 'currentOrderId', label: tr('adminLogistics.colCurrentOrder'), sortValue: (d) => (d.currentOrderId ? 1 : 0),
       get: (d) => (d.currentOrderId
         ? <Link to={`/admin/orders?q=${encodeURIComponent(d.currentOrderId)}`} className="admin-record-link" onClick={(e) => e.stopPropagation()} title={tr('adminLogistics.viewOrder')}>#{d.currentOrderId.slice(0, 8)} →</Link>
-        : <span className="lg-muted">—</span>)
+        : <span className="lg-muted">-</span>)
     }
   ];
 

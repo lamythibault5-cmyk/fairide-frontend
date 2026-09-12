@@ -20,7 +20,7 @@ const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewC
 const estBas = (r) => r.foodRating <= 2 || (r.deliveryRating && r.deliveryRating <= 2);
 
 function Etoiles({ n }) {
-  if (!n) return <span className="small">—</span>;
+  if (!n) return <span className="small">-</span>;
   return <span className="admin-stars" aria-label={`${n}/5`}>{'★'.repeat(n)}<span>{'★'.repeat(5 - n)}</span></span>;
 }
 
@@ -70,7 +70,7 @@ export default function AdminReviewsPage() {
 
   const stats = useMemo(() => {
     const l = reviews || [];
-    const moy = (arr) => (arr.length ? (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1) : '—');
+    const moy = (arr) => (arr.length ? (arr.reduce((s, v) => s + v, 0) / arr.length).toFixed(1) : '-');
     return {
       food: moy(l.map((r) => r.foodRating).filter(Boolean)),
       delivery: moy(l.map((r) => r.deliveryRating).filter(Boolean)),
@@ -104,7 +104,7 @@ export default function AdminReviewsPage() {
     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => r.restaurantName },
     { key: 'foodRating', label: tr('adminReviews.foodRating'), get: (r) => <Etoiles n={r.foodRating} />, sortValue: (r) => r.foodRating, align: 'right' },
     { key: 'deliveryRating', label: tr('adminReviews.deliveryRating'), get: (r) => <Etoiles n={r.deliveryRating} />, sortValue: (r) => r.deliveryRating || 0, align: 'right' },
-    { key: 'comments', label: tr('adminReviews.filterComments'), get: (r) => <span className="small" style={{ whiteSpace: 'normal' }}>{[r.foodComment, r.deliveryComment].filter(Boolean).join(' · ') || '—'}</span>, sortValue: (r) => (r.foodComment || r.deliveryComment ? 1 : 0) },
+    { key: 'comments', label: tr('adminReviews.filterComments'), get: (r) => <span className="small" style={{ whiteSpace: 'normal' }}>{[r.foodComment, r.deliveryComment].filter(Boolean).join(' · ') || '-'}</span>, sortValue: (r) => (r.foodComment || r.deliveryComment ? 1 : 0) },
     { key: 'links', label: tr('adminCommon.actions'), get: (r) => <span className="row" style={{ gap: 6 }}><LiensAvis r={r} tr={tr} /><button className="btn-danger-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setASupprimer(r); }}>{tr('adminCommon.delete')}</button></span>, sortValue: () => 0 }
   ];
 

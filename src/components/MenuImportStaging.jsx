@@ -22,7 +22,7 @@ export function MenuImportReport({ bilans }) {
         <li key={`${b.name}-${i}`}>
           <span className="menu-staging-icon" aria-hidden="true">{b.status === 'ok' ? '✅' : b.status === 'trop' ? '⚠️' : '❌'}</span>
           <span className="menu-staging-name">
-            <b>{b.name}</b> — {b.status === 'ok' && t('menuPage.stagingPageOk', { n: b.count })}
+            <b>{b.name}</b> · {b.status === 'ok' && t('menuPage.stagingPageOk', { n: b.count })}
             {b.status === 'trop' && (b.count ? t('menuPage.stagingPageMany', { n: b.count }) : t('menuPage.stagingPageTooMany'))}
             {b.status === 'echec' && (b.message || t('menuPage.stagingPageFail'))}
           </span>

@@ -116,20 +116,49 @@ export default function Landing() {
         </div>
 
         <div className="landing-hero-text">
+          {/* L'AFFICHE : ce qu'on veut voir sans défiler, et rien d'autre. Ce groupe existe pour
+              qu'une seule règle CSS puisse lui donner la hauteur du premier écran sur téléphone —
+              ce qui repousse mécaniquement sous la ligne de flottaison ce qui le suit (les gages
+              de confiance, les quartiers servis, l'aperçu des commerces, les chiffres). Sans lui,
+              ces blocs remontaient dans l'écran d'accueil et le premier contact avec le site
+              était un mur de texte. Sur écran large il ne fait rien : un <div> de plus dans une
+              colonne qui empile déjà ses enfants. */}
+          <div className="landing-hero-affiche">
           <div className="landing-hero-signature"><HeroFrame /><span className="pill hero">{t('landing.pill')}</span></div>
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
-          <p className="landing-sub">{t('landing.sub')}</p>
+          {/* Deux accroches, une seule visible : la longue au-delà de 640px, la courte en deçà.
+              C'est un choix en CSS et non en JS (matchMedia + état) parce qu'un choix en JS se fait
+              APRÈS le premier rendu : sur téléphone, la phrase longue s'afficherait le temps d'une
+              image avant d'être remplacée, et la bannière sauterait au chargement. Les deux textes
+              sont donc dans le DOM, et `display: none` les départage — ce qui les retire aussi bien
+              de l'écran que des lecteurs d'écran, jamais les deux à la fois. */}
+          <p className="landing-sub landing-sub-long">{t('landing.sub')}</p>
+          <p className="landing-sub landing-sub-court">{t('landing.subCourt')}</p>
           {/* Pas de sélecteur de commune ici : l'intérieur de l'app (liste, carte) est réservé aux comptes.
               Le visiteur voit la vitrine « Découvre » plus bas, puis crée son compte. */}
           {/* Les trois types de compte, toujours proposés ensemble : client, commerce, livreur. */}
+          {/* Sur téléphone, seul « Commander » survit dans la bannière : trois boutons pleine
+              largeur empilés, c'est trois fois la même forme et aucune hiérarchie, et les deux
+              autres s'adressent à un public (commerçant, livreur) qui ne représente pas la
+              majorité des visiteurs. Ils ne disparaissent pas pour autant — la ligne
+              .landing-partner-line juste en dessous les remplace, et la rangée « Rejoindre »
+              plus bas dans la page porte les trois portes d'entrée en entier. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
-            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
-            <button className="btn-hero-ghost" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
+            <button className="btn-hero-ghost landing-cta-principal" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
+            <button className="btn-hero-ghost landing-cta-partenaire" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
+            <button className="btn-hero-ghost landing-cta-partenaire" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
           </div>
-          <p className="small landing-ouverture">🗓️ {t('landing.ordersOpenNote')}</p>
+          {/* `audience=partner` sans `role` : la page d'inscription propose alors les trois types de
+              compte (voir Auth.jsx, la lecture de `audience` et `role`). Une ligne qui dit
+              « commerce OU livreur » ne peut pas pointer vers l'un des deux. */}
+          <p className="landing-partner-line">
+            {t('landing.partnerQuestion')} <Link to="/login?audience=partner">{t('landing.partnerLink')}</Link>
+          </p>
+          <p className="small landing-ouverture landing-ouverture-long">🗓️ {t('landing.ordersOpenNote')}</p>
+          <p className="small landing-ouverture landing-ouverture-court">{t('landing.ordersOpenCourt')}</p>
+          </div>
           <ul className="landing-trust" aria-label={t('landing.trustLineAria')}>
             <li>✓ {t('landing.trust1')}</li>
             <li>✓ {t('landing.trust2')}</li>

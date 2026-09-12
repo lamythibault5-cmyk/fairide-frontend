@@ -7,7 +7,7 @@ import { useLanguage, getLocale } from '../../../context/LanguageContext';
 export { useApiData, LoadState, ErrorState } from '../accounting/common';
 
 export function fmtTime(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   return new Date(ts).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 

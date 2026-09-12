@@ -957,7 +957,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
         <div>
           <div className="small" style={{ opacity: 0.7 }}>{label}</div>
-          <div>{currentValue || '—'}</div>
+          <div>{currentValue || '-'}</div>
         </div>
         <button type="button" className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} onClick={() => setEditing(true)}>{t('accountUi.change')}</button>
       </div>

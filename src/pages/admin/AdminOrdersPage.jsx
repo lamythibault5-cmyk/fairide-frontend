@@ -186,7 +186,7 @@ export default function AdminOrdersPage() {
     { key: 'createdAt', label: tr('adminCommon.date'), get: (o) => fmtDateTime(o.createdAt), sortValue: (o) => o.createdAt },
     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (o) => <b>{o.restaurantName}</b>, sortValue: (o) => o.restaurantName },
     { key: 'clientName', label: tr('adminCommon.client'), get: (o) => o.clientName },
-    { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '—' },
+    { key: 'driverName', label: tr('adminCommon.driver'), get: (o) => o.driverName || '-' },
     { key: 'orderType', label: tr('adminCommon.type'), get: (o) => TYPE_LABELS(tr)[o.orderType] || o.orderType },
     { key: 'status', label: tr('adminCommon.status'), get: (o) => <span className={`status-badge status-${o.status}`}>{ORDER_STATUS_LABELS[o.status] || o.status}</span>, sortValue: (o) => o.status },
     { key: 'paid', label: tr('adminOrders.colPaid'), get: (o) => (o.paid ? '✅' : '⏳'), sortValue: (o) => (o.paid ? 1 : 0), align: 'right' },
@@ -470,13 +470,13 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       {detail && onglet === 'historique' && (
         <>
           <h4 className="drawer-section-title">{tr('adminOrders.timeline')}</h4>
-          {(detail.timeline || []).length === 0 && <div className="small">—</div>}
+          {(detail.timeline || []).length === 0 && <div className="small">-</div>}
           {(detail.timeline || []).map((step, i) => <DrawerRow key={i} label={step.label} value={fmtDateTime(step.at)} />)}
           {entries && entries.length > 0 && (
             <>
               <div className="divider" />
               <h4 className="drawer-section-title">{tr('adminOrders.entries')}</h4>
-              {entries.map((e) => <DrawerRow key={e.id} label={`${ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType} — ${e.accountCode}`} value={e.debit > 0 ? `-${money(e.debit)}` : money(e.credit)} />)}
+              {entries.map((e) => <DrawerRow key={e.id} label={`${ACCOUNTING_ENTRY_TYPE_LABELS[e.entryType] || e.entryType}, ${e.accountCode}`} value={e.debit > 0 ? `-${money(e.debit)}` : money(e.credit)} />)}
             </>
           )}
         </>

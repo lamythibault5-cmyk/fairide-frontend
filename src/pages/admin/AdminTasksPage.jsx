@@ -117,9 +117,9 @@ export default function AdminTasksPage() {
     { key: 'title', label: tr('adminCommon.title'), get: (t) => <b>{t.title}</b>, sortValue: (t) => t.title },
     { key: 'status', label: tr('adminCommon.status'), get: (t) => <span className="pill" style={{ color: TASK_STATUS_LABELS[t.status]?.color }}>{TASK_STATUS_LABELS[t.status]?.label}</span>, sortValue: (t) => TASK_STATUSES.indexOf(t.status) },
     { key: 'priority', label: tr('adminCommon.priority'), get: (t) => <span style={{ color: TASK_PRIORITY_LABELS[t.priority]?.color }}>{TASK_PRIORITY_LABELS[t.priority]?.label}</span>, sortValue: (t) => ({ low: 0, medium: 1, high: 2 }[t.priority] ?? 0) },
-    { key: 'dueAt', label: tr('adminCommon.dueDate'), get: (t) => (t.dueAt ? <span style={{ color: t.dueState === 'overdue' ? 'var(--red)' : t.dueState === 'due_soon' ? 'var(--gold-deep)' : 'inherit' }}>{fmtDateTime(t.dueAt)}</span> : '—'), sortValue: (t) => t.dueAt || 9e15 },
-    { key: 'assignedToEmail', label: tr('adminCommon.owner'), get: (t) => t.assignedToEmail || '—', sortValue: (t) => t.assignedToEmail || '' },
-    { key: 'target', label: tr('adminTasks.linkedRecord'), get: (t) => (t.targetType ? <LienCible t={t} /> : '—'), sortValue: (t) => `${t.targetType || ''} ${t.targetName || ''}` },
+    { key: 'dueAt', label: tr('adminCommon.dueDate'), get: (t) => (t.dueAt ? <span style={{ color: t.dueState === 'overdue' ? 'var(--red)' : t.dueState === 'due_soon' ? 'var(--gold-deep)' : 'inherit' }}>{fmtDateTime(t.dueAt)}</span> : '-'), sortValue: (t) => t.dueAt || 9e15 },
+    { key: 'assignedToEmail', label: tr('adminCommon.owner'), get: (t) => t.assignedToEmail || '-', sortValue: (t) => t.assignedToEmail || '' },
+    { key: 'target', label: tr('adminTasks.linkedRecord'), get: (t) => (t.targetType ? <LienCible t={t} /> : '-'), sortValue: (t) => `${t.targetType || ''} ${t.targetName || ''}` },
     { key: 'createdAt', label: tr('adminTasks.createdOn'), get: (t) => fmtDate(t.createdAt), sortValue: (t) => t.createdAt }
   ];
 
@@ -356,7 +356,7 @@ function TaskDrawer({ id, onClose, onChanged }) {
       {t && !editing && (
         <>
           {t.targetType && <div className="admin-record-links"><LienCible t={t} /></div>}
-          <DrawerRow label={tr('adminCommon.dueDate')} value={t.dueAt ? <span style={{ color: t.dueState === 'overdue' ? 'var(--red)' : t.dueState === 'due_soon' ? 'var(--gold-deep)' : 'inherit' }}>{fmtDateTime(t.dueAt)}</span> : '—'} strong />
+          <DrawerRow label={tr('adminCommon.dueDate')} value={t.dueAt ? <span style={{ color: t.dueState === 'overdue' ? 'var(--red)' : t.dueState === 'due_soon' ? 'var(--gold-deep)' : 'inherit' }}>{fmtDateTime(t.dueAt)}</span> : '-'} strong />
           <DrawerRow label={tr('adminTasks.createdOn')} value={tr('adminTasks.createdBy', { email: t.createdByEmail, date: fmtDate(t.createdAt) })} />
           {t.completedAt && <DrawerRow label={tr('adminTasks.completedOnLabel')} value={fmtDateTime(t.completedAt)} />}
           {t.notes && <p className="small" style={{ margin: '8px 0', whiteSpace: 'pre-wrap' }}>{t.notes}</p>}

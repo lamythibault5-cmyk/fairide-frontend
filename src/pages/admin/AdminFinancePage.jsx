@@ -159,7 +159,7 @@ export default function AdminFinancePage() {
                     { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => <span className="small">{fmtDateTime(r.createdAt)} · <OrderLink id={r.id} /></span>, sortValue: (r) => r.createdAt },
                     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b><RestaurantLink id={r.restaurantId} name={r.restaurantName} /></b>, sortValue: (r) => r.restaurantName },
                     { key: 'clientName', label: tr('adminCommon.client'), get: (r) => r.clientName },
-                    { key: 'driverName', label: tr('adminCommon.driver'), get: (r) => (r.driverName ? <DriverLink id={r.driverId} name={r.driverName} /> : '—') },
+                    { key: 'driverName', label: tr('adminCommon.driver'), get: (r) => (r.driverName ? <DriverLink id={r.driverId} name={r.driverName} /> : '-') },
                     { key: 'total', label: tr('adminCommon.total'), get: (r) => money(r.total), sortValue: (r) => r.total, align: 'right', sum: true },
                     { key: 'commission', label: tr('adminCommon.commission'), get: (r) => money(r.commission), sortValue: (r) => r.commission, align: 'right', sum: true },
                     { key: 'deliveryFairideShare', label: tr('adminFinance.fairideShareCol'), get: (r) => money(r.deliveryFairideShare), sortValue: (r) => r.deliveryFairideShare, align: 'right', sum: true },
@@ -172,7 +172,7 @@ export default function AdminFinancePage() {
                     { key: 'createdAt', label: tr('adminCommon.date'), get: (r) => <span className="small">{fmtDate(r.createdAt)} · <OrderLink id={r.orderId} /></span>, sortValue: (r) => r.createdAt },
                     { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (r) => <b><RestaurantLink id={r.restaurantId} name={r.restaurantName} /></b>, sortValue: (r) => r.restaurantName },
                     { key: 'responsibility', label: tr('adminFinance.responsibility'), get: (r) => r.responsibility },
-                    { key: 'reason', label: tr('adminFinance.reasonCol'), get: (r) => r.reason || '—' },
+                    { key: 'reason', label: tr('adminFinance.reasonCol'), get: (r) => r.reason || '-' },
                     { key: 'amount', label: tr('adminCommon.amount'), get: (r) => <span className="fin-neg">{money(r.amount)}</span>, sortValue: (r) => r.amount, align: 'right', sum: true }
                   ]} />
                 )}

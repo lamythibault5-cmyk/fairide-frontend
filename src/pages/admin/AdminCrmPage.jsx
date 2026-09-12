@@ -136,7 +136,7 @@ export default function AdminCrmPage() {
       {stats && (
         <div className="stat-grid" style={{ marginBottom: 16 }}>
           <div className="stat-card highlight"><div className="num">{pct(stats.conversionRate, 1)}</div><div className="label">{tr('adminCrm.conversionRate')}</div></div>
-          <div className="stat-card"><div className="num">{stats.avgDaysToConversion !== null ? `${stats.avgDaysToConversion} j` : '—'}</div><div className="label">{tr('adminCrm.avgTimeToSign')}</div></div>
+          <div className="stat-card"><div className="num">{stats.avgDaysToConversion !== null ? `${stats.avgDaysToConversion} j` : '-'}</div><div className="label">{tr('adminCrm.avgTimeToSign')}</div></div>
           <div className="stat-card"><div className="num">{stats.converted}</div><div className="label">{tr('adminCrm.newPartners')}</div></div>
           <div className="stat-card"><div className="num">{stats.newProspects}</div><div className="label">{tr('adminCrm.newProspects')}</div></div>
         </div>
@@ -181,13 +181,13 @@ export default function AdminCrmPage() {
         <AdminDataTable
           columns={[
             { key: 'name', label: tr('adminCommon.name'), get: (p) => <b>{p.name}</b>, sortValue: (p) => p.name },
-            { key: 'commune', label: tr('adminCommon.commune'), get: (p) => p.commune || '—' },
-            { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (p) => p.cuisine || '—' },
+            { key: 'commune', label: tr('adminCommon.commune'), get: (p) => p.commune || '-' },
+            { key: 'cuisine', label: tr('adminCommon.cuisine'), get: (p) => p.cuisine || '-' },
             { key: 'stage', label: tr('adminCrm.colStage'), get: (p) => <span className="pill teal">{CRM_STAGE_LABELS[p.stage]}</span>, sortValue: (p) => CRM_STAGES.indexOf(p.stage) },
             { key: 'priority', label: tr('adminCommon.priority'), get: (p) => <span style={{ color: CRM_PRIORITY_LABELS[p.priority]?.color }}>{CRM_PRIORITY_LABELS[p.priority]?.label}</span>, sortValue: (p) => ({ low: 0, medium: 1, high: 2 }[p.priority] ?? 0) },
-            { key: 'ownerEmail', label: tr('adminCrm.colOwner'), get: (p) => p.ownerEmail || '—' },
-            { key: 'nextFollowUpAt', label: tr('adminCrm.colNextFollowUp'), get: (p) => (p.nextFollowUpAt ? <span style={{ color: relanceEnRetard(p) ? 'var(--red)' : 'inherit' }}>{fmtDate(p.nextFollowUpAt)}</span> : '—'), sortValue: (p) => p.nextFollowUpAt || 9e15 },
-            { key: 'createdAt', label: tr('adminCrm.colCreated'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '—'), sortValue: (p) => p.createdAt || 0 }
+            { key: 'ownerEmail', label: tr('adminCrm.colOwner'), get: (p) => p.ownerEmail || '-' },
+            { key: 'nextFollowUpAt', label: tr('adminCrm.colNextFollowUp'), get: (p) => (p.nextFollowUpAt ? <span style={{ color: relanceEnRetard(p) ? 'var(--red)' : 'inherit' }}>{fmtDate(p.nextFollowUpAt)}</span> : '-'), sortValue: (p) => p.nextFollowUpAt || 9e15 },
+            { key: 'createdAt', label: tr('adminCrm.colCreated'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '-'), sortValue: (p) => p.createdAt || 0 }
           ]}
           rows={filtered} sort={sort} onSort={toggle} onRowClick={(p) => setSelectedId(p.id)} emptyLabel={tr('adminKanban.empty')}
         />
@@ -403,8 +403,8 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
       {!p && !erreur && <div className="small">{tr('adminCommon.loading')}</div>}
       {p && onglet === 'infos' && !editing && (
         <>
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.contactLine', { name: p.contactName || '—', email: p.contactEmail ? ` · ${p.contactEmail}` : '', phone: p.contactPhone ? ` · ${p.contactPhone}` : '' })}</p>
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.priorityLine', { priority: CRM_PRIORITY_LABELS[p.priority]?.label, owner: p.ownerEmail || '—', source: p.source || '—' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.contactLine', { name: p.contactName || '-', email: p.contactEmail ? ` · ${p.contactEmail}` : '', phone: p.contactPhone ? ` · ${p.contactPhone}` : '' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.priorityLine', { priority: CRM_PRIORITY_LABELS[p.priority]?.label, owner: p.ownerEmail || '-', source: p.source || '-' })}</p>
           {p.nextFollowUpAt && <p className="small" style={{ margin: '2px 0', color: relanceEnRetard(p) ? 'var(--red)' : 'inherit' }}>{tr('adminCrm.nextFollowUpLine', { date: fmtDate(p.nextFollowUpAt) })}</p>}
           {p.stage === 'perdu' && p.lossReason && <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminCrm.lossReasonLine', { reason: p.lossReason })}</p>}
           {p.convertedRestaurantId && <p className="small" style={{ margin: '2px 0' }}>{tr('adminCrm.convertedLine', { name: p.convertedRestaurantName, date: fmtDate(p.convertedAt) })} · <Link to="/admin/restaurants" state={{ presetSearch: p.convertedRestaurantName }} className="admin-record-link">→ {tr('adminCommon.restaurant')}</Link></p>}
@@ -444,8 +444,8 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
             <DrawerRow key={tk.id} label={<Link to={`/admin/tasks?id=${tk.id}`} className="admin-record-link">{tk.title}</Link>} value={<span style={{ color: TASK_STATUS_LABELS[tk.status]?.color }}>{TASK_STATUS_LABELS[tk.status]?.label}{tk.dueAt ? ` · ${fmtDateTime(tk.dueAt)}` : ''}</span>} />
           ))}
           <div className="divider" />
-          <DrawerRow label={tr('adminCrm.nextFollowUp')} value={p.nextFollowUpAt ? fmtDate(p.nextFollowUpAt) : '—'} strong />
-          <DrawerRow label={tr('adminCrm.colOwner')} value={p.ownerEmail || '—'} />
+          <DrawerRow label={tr('adminCrm.nextFollowUp')} value={p.nextFollowUpAt ? fmtDate(p.nextFollowUpAt) : '-'} strong />
+          <DrawerRow label={tr('adminCrm.colOwner')} value={p.ownerEmail || '-'} />
         </>
       )}
       {p && onglet === 'notes' && (

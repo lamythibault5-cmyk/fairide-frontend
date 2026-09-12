@@ -18,7 +18,7 @@ import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadg
 // Dossiers livreurs (statuts étudiant / P2P / indépendant) : file de validation, pièces, identité,
 // compteurs légaux, contrats, journal ; paramètres légaux par année, drapeau P2P, exports DAC7 et 281.29.
 const euro = (n) => `${Number(n || 0).toFixed(2)} €`;
-const fmt = (d) => (d ? new Date(d).toLocaleDateString(getLocale()) : '—');
+const fmt = (d) => (d ? new Date(d).toLocaleDateString(getLocale()) : '-');
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const couleurCycle = (s) => (s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
 
@@ -48,14 +48,14 @@ export default function AdminCouriersPage() {
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
-  const statut = (s) => (s ? tr(`courierOnboarding.status_${s}`) : '—');
+  const statut = (s) => (s ? tr(`courierOnboarding.status_${s}`) : '-');
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estCompteTest(r) && <TestBadge />}<div className="small">{r.email}</div></>, sortValue: (r) => r.name },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => statut(r.statusType), sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
-    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? `✅ ${r.identity.provider || ''}` : r.identity?.status === 'pending' ? '⏳' : '—'), sortValue: (r) => r.identity?.status || '' },
-    { key: 'situation', label: tr('adminCouriers.colCap'), get: (r) => (r.situation && r.situation.type !== 'none' ? `${Math.round(r.situation.pct * 100)} %` : '—'), sortValue: (r) => (r.situation ? r.situation.pct : -1), align: 'right' },
-    { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '—'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '—'}`, sortValue: (r) => r.zone || '' },
+    { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? `✅ ${r.identity.provider || ''}` : r.identity?.status === 'pending' ? '⏳' : '-'), sortValue: (r) => r.identity?.status || '' },
+    { key: 'situation', label: tr('adminCouriers.colCap'), get: (r) => (r.situation && r.situation.type !== 'none' ? `${Math.round(r.situation.pct * 100)} %` : '-'), sortValue: (r) => (r.situation ? r.situation.pct : -1), align: 'right' },
+    { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'requested', label: tr('adminCouriers.colRequested'), get: (r) => (r.requestedStatusType ? `→ ${statut(r.requestedStatusType)}` : ''), sortValue: (r) => r.requestedStatusType || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
@@ -116,8 +116,8 @@ export default function AdminCouriersPage() {
                 </div>
               </div>
               <div className="small">{r.email}</div>
-              <div className="small">🪪 {statut(r.statusType)} · {r.identity?.status === 'verified' ? `✅ ${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `⏳ ${tr('adminCouriers.colIdentity')}` : `— ${tr('adminCouriers.colIdentity')}`}{r.situation && r.situation.type !== 'none' ? ` · ${tr('adminCouriers.colCap')} ${Math.round(r.situation.pct * 100)} %` : ''}</div>
-              <div className="small">🛵 {r.zone || '—'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '—'}{r.requestedStatusType ? ` · → ${statut(r.requestedStatusType)}` : ''}</div>
+              <div className="small">🪪 {statut(r.statusType)} · {r.identity?.status === 'verified' ? `✅ ${tr('adminCouriers.colIdentity')}` : r.identity?.status === 'pending' ? `⏳ ${tr('adminCouriers.colIdentity')}` : `· ${tr('adminCouriers.colIdentity')}`}{r.situation && r.situation.type !== 'none' ? ` · ${tr('adminCouriers.colCap')} ${Math.round(r.situation.pct * 100)} %` : ''}</div>
+              <div className="small">🛵 {r.zone || '-'} · {r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}{r.requestedStatusType ? ` · → ${statut(r.requestedStatusType)}` : ''}</div>
               <div className="small" style={{ opacity: 0.6 }}>{tr('adminCouriers.colUpdated')} {fmt(r.updatedAt)}</div>
             </div>
           ))}
@@ -147,7 +147,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message); } finally { setBusy(false); } }
-  const statut = (x) => (x ? tr(`courierOnboarding.status_${x}`) : '—');
+  const statut = (x) => (x ? tr(`courierOnboarding.status_${x}`) : '-');
   const c = d?.courier; const s = d?.situation;
 
   const drawer = (contenu) => createPortal(
@@ -181,9 +181,9 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={statut(c.statusType)} strong />
-          <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '—'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '—'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
-          <DrawerRow label="IBAN" value={c.iban || '—'} />
-          <DrawerRow label={tr('adminCouriers.bag')} value={c.bag?.option ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`)} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}${c.bag.note ? ` · ${c.bag.note}` : ''}` : '—'} />
+          <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
+          <DrawerRow label="IBAN" value={c.iban || '-'} />
+          <DrawerRow label={tr('adminCouriers.bag')} value={c.bag?.option ? `${tr(`auth.bag_${c.bag.option}`)}${c.bag.option === 'fairide' ? ` · ${tr(`adminCouriers.bagDeposit_${c.bag.depositStatus}`)} (${Number(c.bag.depositAmount || 40).toFixed(0)} €)` : ''}${c.bag.note ? ` · ${c.bag.note}` : ''}` : '-'} />
           {c.bag?.option === 'fairide' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
               {c.bag.depositStatus === 'due' && <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.bagMarkPaid'), message: tr('adminCouriers.bagMarkPaidBody', { amount: Number(c.bag.depositAmount || 40).toFixed(0) }), run: () => agir(() => api(`/admin/couriers/${c.id}/bag`, { method: 'PATCH', token, body: { depositStatus: 'paid' } }), tr('adminCommon.toastStatusUpdated')) })}>{tr('adminCouriers.bagMarkPaid')}</button>}
@@ -192,17 +192,17 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
               {c.bag.depositStatus === 'returned' && <button className="btn-teal" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.bagMarkRefunded'), message: tr('adminCouriers.bagMarkRefundedBody', { amount: Number(c.bag.depositAmount || 40).toFixed(0) }), run: () => agir(() => api(`/admin/couriers/${c.id}/bag`, { method: 'PATCH', token, body: { depositStatus: 'refunded' } }), tr('adminCommon.toastStatusUpdated')) })}>{tr('adminCouriers.bagMarkRefunded')}</button>}
             </div>
           )}
-          <DrawerRow label={tr('courierOnboarding.fBirthDate')} value={c.birthDate || '—'} />
-          <DrawerRow label={tr('courierOnboarding.fNrn')} value={c.nationalNumberMasked || '—'} />
-          {c.statusType === 'student' && <DrawerRow label={tr('adminCouriers.student')} value={`${c.student.school || '—'} · ${c.student.academicYear || '—'} · Student@work ${c.student.hoursRemainingDeclared ?? '—'} h`} />}
-          {c.statusType === 'independent' && <DrawerRow label={tr('adminCouriers.company')} value={`${c.independent.legalName || '—'} · BCE ${c.independent.companyNumber || '—'} · ${c.independent.vatStatus === 'assujetti' ? c.independent.vatNumber : tr('courierOnboarding.vatFranchiseShort')} ${c.independent.companyVerified ? '✅' : ''}`} />}
+          <DrawerRow label={tr('courierOnboarding.fBirthDate')} value={c.birthDate || '-'} />
+          <DrawerRow label={tr('courierOnboarding.fNrn')} value={c.nationalNumberMasked || '-'} />
+          {c.statusType === 'student' && <DrawerRow label={tr('adminCouriers.student')} value={`${c.student.school || '-'} · ${c.student.academicYear || '-'} · Student@work ${c.student.hoursRemainingDeclared ?? '-'} h`} />}
+          {c.statusType === 'independent' && <DrawerRow label={tr('adminCouriers.company')} value={`${c.independent.legalName || '-'} · BCE ${c.independent.companyNumber || '-'} · ${c.independent.vatStatus === 'assujetti' ? c.independent.vatNumber : tr('courierOnboarding.vatFranchiseShort')} ${c.independent.companyVerified ? '✅' : ''}`} />}
           {c.statusType === 'p2p' && <DrawerRow label={tr('adminCouriers.consents')} value={`${c.p2p.nonProfessionalDeclared ? '✅' : '❌'} ${tr('adminCouriers.nonPro')} · ${c.p2p.withholdingConsent ? '✅' : '❌'} ${tr('adminCouriers.withholding')} · ${c.p2p.taxDataConsent ? '✅' : '❌'} ${tr('adminCouriers.taxData')}`} />}
-          {d.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}>🔄 {tr('adminCouriers.requestedChange', { to: statut(d.requestedStatusType), reason: d.requestedStatusReason || '—' })}</p>}
+          {d.requestedStatusType && <p className="small" style={{ color: 'var(--gold-deep)' }}>🔄 {tr('adminCouriers.requestedChange', { to: statut(d.requestedStatusType), reason: d.requestedStatusReason || '-' })}</p>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secIdentity')}</h4>
           <DrawerRow label={tr('adminCommon.status')} value={`${c.identity.status}${c.identity.provider ? ` (${c.identity.provider})` : ''}`} />
-          <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${c.identity.firstName} ${c.identity.lastName}`.trim() || '—'} />
-          <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${c.identity.nameMatchAccount === null ? '—' : c.identity.nameMatchAccount ? '✅' : '❌'} · Stripe ${c.identity.nameMatchStripe === null ? '—' : c.identity.nameMatchStripe ? '✅' : '❌'}`} />
+          <DrawerRow label={tr('adminCouriers.verifiedName')} value={`${c.identity.firstName} ${c.identity.lastName}`.trim() || '-'} />
+          <DrawerRow label={tr('adminCouriers.nameMatch')} value={`${tr('adminCouriers.account')} ${c.identity.nameMatchAccount === null ? '-' : c.identity.nameMatchAccount ? '✅' : '❌'} · Stripe ${c.identity.nameMatchStripe === null ? '-' : c.identity.nameMatchStripe ? '✅' : '❌'}`} />
           {c.identity.status !== 'verified' && (
             <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
               <button className="btn-outline" disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markIdentityOk'), message: tr('adminCouriers.identityOkBody'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: true, firstName: d.user?.name?.split(' ')[0], lastName: d.user?.name?.split(' ').slice(1).join(' ') } }), tr('adminCouriers.toastIdentityOk')) })}>{tr('adminCouriers.markIdentityOk')}</button>
@@ -212,17 +212,17 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {c.statusType === 'independent' && !c.independent.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: d.contracts.length })}</h4>
-          {d.contracts.map((k) => <div key={k.id} className="small">✍️ {tr(`courierOnboarding.status_${k.contractType}`)} {k.version} — {new Date(k.signedAt).toLocaleString(getLocale())} — {k.typedName} — <code>{k.documentHash.slice(0, 12)}…</code>{k.pdfUrl && <> — <a href={k.pdfUrl} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
-          {d.contracts.length === 0 && <p className="small">—</p>}
+          {d.contracts.map((k) => <div key={k.id} className="small">✍️ {tr(`courierOnboarding.status_${k.contractType}`)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{k.documentHash.slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={k.pdfUrl} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
+          {d.contracts.length === 0 && <p className="small">-</p>}
         </>
       )}
       {onglet === 'documents' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secDocs', { n: d.documents.length })}</h4>
-          {d.documents.length === 0 && <p className="small">—</p>}
+          {d.documents.length === 0 && <p className="small">-</p>}
           {d.documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
-              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` — ${x.rejectedReason}` : ''}</span>
+              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
               {!x.verifiedAt && (
                 <span className="row" style={{ gap: 4 }}>
                   <button className="btn-outline" style={{ padding: '2px 10px', fontSize: 12 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.acceptDoc', { doc: tr(`courierOnboarding.doc_${x.docType}`) }), run: () => agir(() => api(`/admin/couriers/${id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } })) })}>✓ {tr('adminCouriers.accept')}</button>
@@ -262,8 +262,8 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'journal' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secLog')}</h4>
-          {d.events.length === 0 && <p className="small">—</p>}
-          <div className="small">{d.events.map((e, i) => <div key={i} style={{ padding: '2px 0' }}>{new Date(e.created_at).toLocaleString(getLocale())} — <b>{e.event}</b> {e.details && Object.keys(e.details).length ? <span style={{ opacity: 0.7 }}>{JSON.stringify(e.details).slice(0, 120)}</span> : null}</div>)}</div>
+          {d.events.length === 0 && <p className="small">-</p>}
+          <div className="small">{d.events.map((e, i) => <div key={i} style={{ padding: '2px 0' }}>{new Date(e.created_at).toLocaleString(getLocale())}, <b>{e.event}</b> {e.details && Object.keys(e.details).length ? <span style={{ opacity: 0.7 }}>{JSON.stringify(e.details).slice(0, 120)}</span> : null}</div>)}</div>
         </>
       )}
     </>

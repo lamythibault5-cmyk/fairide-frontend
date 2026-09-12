@@ -271,10 +271,10 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         </Champ>
         <Champ label={t('courierOnboarding.fIban')}><input value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
         <Champ label={t('courierOnboarding.fZone')}>
-          <select value={f.zone} onChange={set('zone')}><option value="">—</option>{d.zones.map((z) => <option key={z} value={z}>{z}</option>)}</select>
+          <select value={f.zone} onChange={set('zone')}><option value="">-</option>{d.zones.map((z) => <option key={z} value={z}>{z}</option>)}</select>
         </Champ>
         <Champ label={t('courierOnboarding.fVehicle')}>
-          <select value={f.vehicleType} onChange={set('vehicleType')}><option value="">—</option>{d.vehicles.map((v) => <option key={v} value={v}>{t(`courierOnboarding.vehicle_${v}`)}</option>)}</select>
+          <select value={f.vehicleType} onChange={set('vehicleType')}><option value="">-</option>{d.vehicles.map((v) => <option key={v} value={v}>{t(`courierOnboarding.vehicle_${v}`)}</option>)}</select>
         </Champ>
         {motorise && (<>
           <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
@@ -282,7 +282,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         </>)}
         <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
           <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
-            <option value="">—</option>
+            <option value="">-</option>
             <option value="own">{t('auth.bag_own')}</option>
             <option value="fairide">{t('auth.bag_fairide')}</option>
           </select>
@@ -314,7 +314,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         <div className="courier-grid">
           <Champ label={t('courierOnboarding.fBce')} help={c.independent.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
           <Champ label={t('courierOnboarding.fVatStatus')}>
-            <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">—</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euro(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
+            <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euro(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
           </Champ>
           {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
           <Champ label={t('courierOnboarding.fLegalName')}><input value={f.legalName} onChange={set('legalName')} /></Champ>
@@ -338,7 +338,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
                 <div key={x.id} className="small" style={{ marginTop: 4 }}>
                   {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a>
                   {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
-                  {x.rejectedReason && <span style={{ color: 'var(--red)' }}> — {x.rejectedReason}</span>}
+                  {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
                   {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
                 </div>
               ))}
@@ -449,7 +449,7 @@ function Compteurs({ d, t, token, action, busy }) {
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📊 {t('courierOnboarding.countersTitle')} {legal.year}</h3>
       <p className="small" style={{ margin: '0 0 8px' }}>{s.type === 'hours' ? t('courierOnboarding.hoursUsed', { used: s.used, max: s.max }) : t('courierOnboarding.incomeUsed', { used: euro(s.used), max: euro(s.max) })}</p>
       <div className={`courier-bar ${tone}`}><div style={{ width: `${pct}%` }} /></div>
-      <p className="small" style={{ margin: '6px 0 0' }}>{pct} %{pct >= 80 && pct < 100 ? ` — ⚠️ ${t('courierOnboarding.alertNear')}` : ''}{pct >= 100 ? ` — 🚫 ${t('courierOnboarding.alertBlocked')}` : ''}</p>
+      <p className="small" style={{ margin: '6px 0 0' }}>{pct} %{pct >= 80 && pct < 100 ? ` · ⚠️ ${t('courierOnboarding.alertNear')}` : ''}{pct >= 100 ? ` · 🚫 ${t('courierOnboarding.alertBlocked')}` : ''}</p>
       {c.statusType === 'p2p' && <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.withholdingSoFar', { amount: euro(th.withholdingTotal) })}</p>}
       <div className="row" style={{ gap: 8, alignItems: 'flex-end', marginTop: 10, flexWrap: 'wrap' }}>
         <div className="field" style={{ margin: 0, flex: '1 1 220px' }}>

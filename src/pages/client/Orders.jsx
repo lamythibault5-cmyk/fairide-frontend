@@ -226,7 +226,7 @@ export default function Orders() {
             <div className="small">📍 {o.address}</div>
           )}
           {o.deliveryInstructions && (
-            <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` — ${o.deliveryNote}` : ''}</div>
+            <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
           )}
           {o.driverName && (
             <div className="small">{t('orders.driver', { name: o.driverName, phone: o.driverPhone ? ` · ${o.driverPhone}` : '' })}</div>
@@ -278,7 +278,7 @@ export default function Orders() {
             <>
               {o.reservationDepositStatus === 'pending' && o.reservationDepositAmount > 0 && (
                 <button className="btn-gold" style={{ marginTop: 8 }} disabled={cancellingId === o.id} onClick={() => payDeposit(o.id)}>
-                  {t('orders.payDeposit')} — {o.reservationDepositAmount.toFixed(2)}€
+                  {t('orders.payDeposit')}, {o.reservationDepositAmount.toFixed(2)}€
                 </button>
               )}
               {o.reservationCancelDeadline && Date.now() < o.reservationCancelDeadline && (

@@ -18,7 +18,7 @@ export function KpiCard({ label, value, changePct = null, invert = false, highli
   const bon = invert ? !up : up;
   return (
     <div className={`stat-card${highlight ? ' highlight' : ''}`}>
-      <div className="num">{value ?? '—'}</div>
+      <div className="num">{value ?? '-'}</div>
       <div className="label">{label}</div>
       {changePct !== null && changePct !== 0 && (
         <div className="small" style={{ color: bon ? 'var(--teal-deep)' : 'var(--red)', marginTop: 2 }}>

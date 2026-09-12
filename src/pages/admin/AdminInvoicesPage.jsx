@@ -50,10 +50,10 @@ function PeppolStatusCard({ token, toast, tr }) {
         <div>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🧾 {tr('adminInvoices.peppolCardTitle')}</h3>
           <p className="small" style={{ margin: '0 0 4px' }}>
-            {etat.configured ? tr('adminInvoices.peppolConfigured', { provider: etat.provider, id: etat.fairidePeppolId }) : tr('adminInvoices.peppolNotConfigured', { id: etat.fairidePeppolId || '—' })}
+            {etat.configured ? tr('adminInvoices.peppolConfigured', { provider: etat.provider, id: etat.fairidePeppolId }) : tr('adminInvoices.peppolNotConfigured', { id: etat.fairidePeppolId || '-' })}
           </p>
           <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? '✅ ' + tr('adminInvoices.fairideRegistered') : '⚠️ ' + tr('adminInvoices.fairideNotRegistered')}</p>
-          {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? '✅ ' : '❌ '}{etat.providerCheck.message}{etat.keyHint ? ` — clé ${etat.keyHint}` : ''}</p>}
+          {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? '✅ ' : '❌ '}{etat.providerCheck.message}{etat.keyHint ? ` · clé ${etat.keyHint}` : ''}</p>}
           <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
         </div>
         {etat.configured && (
@@ -248,7 +248,7 @@ function AgedTab({ token, toast }) {
                   { key: 'number', label: tr('adminInvoices.colNumber'), get: (i) => <b style={{ fontFamily: 'monospace' }}>{i.number}</b>, sortValue: (i) => i.number },
                   { key: 'restaurantName', label: tr('adminCommon.restaurant'), get: (i) => <RestaurantLink id={i.restaurantId} name={i.restaurantName} />, sortValue: (i) => i.restaurantName },
                   { key: 'dueDate', label: tr('adminInvoices.colDueDate'), get: (i) => fmtDate(i.dueDate), sortValue: (i) => i.dueDate },
-                  { key: 'daysOverdue', label: tr('adminInvoices.colDaysOverdue'), get: (i) => <span className={Number(i.daysOverdue) > 30 ? 'fin-neg' : ''}>{Number(i.daysOverdue) > 0 ? i.daysOverdue : '—'}</span>, sortValue: (i) => i.daysOverdue, align: 'right' },
+                  { key: 'daysOverdue', label: tr('adminInvoices.colDaysOverdue'), get: (i) => <span className={Number(i.daysOverdue) > 30 ? 'fin-neg' : ''}>{Number(i.daysOverdue) > 0 ? i.daysOverdue : '-'}</span>, sortValue: (i) => i.daysOverdue, align: 'right' },
                   { key: 'reminderCount', label: tr('adminInvoices.colReminders'), get: (i) => i.reminderCount || 0, sortValue: (i) => i.reminderCount || 0, align: 'right' },
                   { key: 'total', label: tr('adminInvoices.colTtc'), get: (i) => <b>{money(i.total)}</b>, sortValue: (i) => i.total, align: 'right', sum: true },
                   { key: 'actions', label: '', align: 'right', get: (i) => (
@@ -680,7 +680,7 @@ function SelfBillingTab({ token, toast }) {
           { key: 'vatStatus', label: tr('adminCommon.vat'), get: (inv) => <span className="pill">{vatStatusLabels(tr)[inv.vatStatus] || inv.vatStatus}</span>, sortValue: (inv) => inv.vatStatus },
           { key: 'peppolStatus', label: 'Peppol', get: (inv) => peppolPill(inv.peppolStatus, tr), sortValue: (inv) => inv.peppolStatus },
           { key: 'subtotalHt', label: tr('adminInvoices.colHt'), get: (inv) => money(inv.subtotalHt), sortValue: (inv) => inv.subtotalHt, align: 'right', sum: true },
-          { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '—'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
+          { key: 'vatAmount', label: tr('adminCommon.vat'), get: (inv) => (inv.vatStatus === 'assujetti' ? money(inv.vatAmount) : '-'), sortValue: (inv) => inv.vatAmount, align: 'right', sum: true },
           { key: 'totalTtc', label: tr('adminInvoices.colTtc'), get: (inv) => <b>{money(inv.totalTtc)}</b>, sortValue: (inv) => inv.totalTtc, align: 'right', sum: true },
           { key: 'issuedAt', label: tr('adminInvoices.colIssued'), get: (inv) => fmtDate(inv.issuedAt), sortValue: (inv) => inv.issuedAt },
           { key: 'actions', label: '', get: (inv) => <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(inv); }}>{tr('adminInvoices.pdf')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendEmail(inv); }}>{tr('adminInvoices.send')}</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); downloadInvoiceUbl(inv); }}>UBL</button><button className="btn-outline" style={{ padding: '4px 10px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); sendPeppol(inv); }}>Peppol</button></span>, align: 'right' }

@@ -71,9 +71,9 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
 
   const columns = [
     { key: 'expenseDate', label: tr('adminCommon.date'), get: (r) => <span className="small">{fmtDate(r.expenseDate)}</span>, sortValue: (r) => r.expenseDate },
-    { key: 'supplier', label: tr('adminAccounting.supplier'), get: (r) => <b>{r.supplier || '—'}</b>, sortValue: (r) => r.supplier || '' },
-    { key: 'description', label: tr('adminAccounting.description'), get: (r) => <span className="small">{r.description || '—'}</span> },
-    { key: 'category', label: tr('adminCommon.category'), get: (r) => <span className="small">{cats[r.category] || r.category || '—'}</span>, sortValue: (r) => r.category || '' },
+    { key: 'supplier', label: tr('adminAccounting.supplier'), get: (r) => <b>{r.supplier || '-'}</b>, sortValue: (r) => r.supplier || '' },
+    { key: 'description', label: tr('adminAccounting.description'), get: (r) => <span className="small">{r.description || '-'}</span> },
+    { key: 'category', label: tr('adminCommon.category'), get: (r) => <span className="small">{cats[r.category] || r.category || '-'}</span>, sortValue: (r) => r.category || '' },
     { key: 'amountExclVat', label: tr('adminInvoices.colHt'), get: (r) => money(r.amountExclVat), sortValue: (r) => r.amountExclVat, align: 'right', sum: true },
     { key: 'vatAmount', label: tr('adminCommon.vat'), get: (r) => <span className="small">{money(r.vatAmount)} ({Number(r.vatRate || 0)}%)</span>, sortValue: (r) => r.vatAmount, align: 'right', sum: true },
     { key: 'amountInclVat', label: tr('adminInvoices.colTtc'), get: (r) => <b>{money(r.amountInclVat)}</b>, sortValue: (r) => r.amountInclVat, align: 'right', sum: true },

@@ -169,7 +169,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
             <li key={d.id}>
               <span className="menu-staging-icon" aria-hidden="true">🗂️</span>
               <span className="menu-staging-name">
-                <b>{d.name}</b> <span className="small">— {t('menuPage.draftsCount', { n: d.itemCount })} · {t('menuPage.draftsUpdated', { date: dateCourte(d.updatedAt) })}</span>
+                <b>{d.name}</b> <span className="small">· {t('menuPage.draftsCount', { n: d.itemCount })} · {t('menuPage.draftsUpdated', { date: dateCourte(d.updatedAt) })}</span>
                 {d.publishedAt && <span className="pill teal" style={{ marginLeft: 6 }}>{t('menuPage.draftsPublishedOn', { date: dateCourte(d.publishedAt) })}</span>}
               </span>
               <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 13 }} onClick={() => (ouvert?.id === d.id ? setOuvert(null) : ouvrir(d.id))}>

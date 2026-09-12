@@ -150,15 +150,15 @@ export default function AdminDriversPage() {
     { key: 'email', label: tr('adminCommon.email'), get: (d) => d.email },
     { key: 'adminStatus', label: tr('adminCommon.status'), get: (d) => <span className="pill" style={{ color: d.adminStatus === 'approved' ? 'var(--teal-deep)' : d.adminStatus === 'blocked' ? 'var(--red)' : 'inherit' }}>{STATUT_ADMIN(tr)[d.adminStatus] || d.adminStatus}</span>, sortValue: (d) => d.adminStatus },
     { key: 'activityStatus', label: tr('adminCommon.activity'), get: (d) => <span className="pill" style={{ color: activityLabels(tr)[d.activityStatus]?.color }}>{activityLabels(tr)[d.activityStatus]?.label}</span>, sortValue: (d) => d.activityStatus },
-    { key: 'courierStatus', label: tr('adminDrivers.courierStatus'), get: (d) => (d.courier?.statusType ? tr(`courierOnboarding.status_${d.courier.statusType}`) : '—'), sortValue: (d) => d.courier?.statusType || '' },
-    { key: 'vehicle', label: tr('adminDrivers.vehicle'), get: (d) => (d.courier?.vehicleType ? tr(`courierOnboarding.vehicle_${d.courier.vehicleType}`) : '—'), sortValue: (d) => d.courier?.vehicleType || '' },
-    { key: 'city', label: tr('adminCommon.municipality'), get: (d) => [d.postalCode, d.city].filter(Boolean).join(' ') || '—', sortValue: (d) => d.city || '' },
-    { key: 'vatStatus', label: tr('adminCommon.vat'), get: (d) => VAT_LABELS(tr)[d.vatStatus] || '—', sortValue: (d) => d.vatStatus || '' },
+    { key: 'courierStatus', label: tr('adminDrivers.courierStatus'), get: (d) => (d.courier?.statusType ? tr(`courierOnboarding.status_${d.courier.statusType}`) : '-'), sortValue: (d) => d.courier?.statusType || '' },
+    { key: 'vehicle', label: tr('adminDrivers.vehicle'), get: (d) => (d.courier?.vehicleType ? tr(`courierOnboarding.vehicle_${d.courier.vehicleType}`) : '-'), sortValue: (d) => d.courier?.vehicleType || '' },
+    { key: 'city', label: tr('adminCommon.municipality'), get: (d) => [d.postalCode, d.city].filter(Boolean).join(' ') || '-', sortValue: (d) => d.city || '' },
+    { key: 'vatStatus', label: tr('adminCommon.vat'), get: (d) => VAT_LABELS(tr)[d.vatStatus] || '-', sortValue: (d) => d.vatStatus || '' },
     { key: 'deliveriesCount', label: tr('adminCommon.deliveries'), get: (d) => d.deliveriesCount, align: 'right', sum: true },
     { key: 'revenue', label: tr('adminCommon.revenue'), get: (d) => money(d.revenue), sortValue: (d) => d.revenue, align: 'right', sum: true },
     { key: 'cancellationRate', label: tr('adminCommon.cancellationRate'), get: (d) => pct(d.cancellationRate), sortValue: (d) => d.cancellationRate, align: 'right' },
-    { key: 'avgDeliveryMinutes', label: tr('adminCommon.avgTime'), get: (d) => (d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min` : '—'), sortValue: (d) => d.avgDeliveryMinutes, align: 'right' },
-    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${Number(d.avgRating).toFixed(1)}★ (${d.reviewCount})` : '—'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
+    { key: 'avgDeliveryMinutes', label: tr('adminCommon.avgTime'), get: (d) => (d.avgDeliveryMinutes !== null ? `${d.avgDeliveryMinutes} min` : '-'), sortValue: (d) => d.avgDeliveryMinutes, align: 'right' },
+    { key: 'avgRating', label: tr('adminCommon.rating'), get: (d) => (d.reviewCount > 0 ? `${Number(d.avgRating).toFixed(1)}★ (${d.reviewCount})` : '-'), sortValue: (d) => (d.reviewCount > 0 ? d.avgRating : null), align: 'right' },
     { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (d) => fmtDate(d.createdAt), sortValue: (d) => d.createdAt }
   ];
   const groupes = {
@@ -289,12 +289,12 @@ export default function AdminDriversPage() {
             <>
               <ProfilLine u={detail} tr={tr} />
               <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}{detail.courier && <> · <Link to="/admin/couriers" state={{ presetSearch: detail.email }} className="small">{tr('adminDrivers.openCourierFile')}</Link></>}</p>
-              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '—' })}</p>
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '-' })}</p>
               {(detail.payoutIban || detail.payoutAccountHolder) && (
-                <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')} — {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
+                <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')}, {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
               )}
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.vat')} : {VAT_LABELS(tr)[detail.vatStatus] || tr('adminDrivers.vatUnknown')}{detail.vatNumber ? ` · ${detail.vatNumber}` : ''}</p>
-              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '—'}</p>
+              <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.companyNumber')} : {detail.companyNumber || '-'}</p>
               <p className="small" style={{ margin: '2px 0', opacity: 0.7 }}>{tr('adminCommon.privacyNote')}</p>
               <div className="row" style={{ gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
                 {detail.adminStatus !== 'approved' && <button className="btn-teal" onClick={() => askApprove(detail)}>{tr('adminCommon.approve')}</button>}

@@ -48,7 +48,7 @@ export default function AdminNotesPanel({ targetType, targetId, notes, onAdded, 
       {(!notes || notes.length === 0) && <div className="small" style={{ opacity: 0.6 }}>{tr('adminNotes.none')}</div>}
       {notes && notes.map((n) => (
         <div key={n.id} style={{ padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-          <div className="small">{n.channel && `${CRM_NOTE_CHANNEL_LABELS[n.channel]} — `}{n.text}</div>
+          <div className="small">{n.channel && `${CRM_NOTE_CHANNEL_LABELS[n.channel]}, `}{n.text}</div>
           <div className="small" style={{ opacity: 0.5 }}>{n.authorEmail} · {fmtDateTime(n.createdAt)}</div>
         </div>
       ))}

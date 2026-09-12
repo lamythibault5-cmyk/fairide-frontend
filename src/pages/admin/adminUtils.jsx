@@ -81,7 +81,7 @@ export function ProfilLine({ u, tr }) {
 }
 
 export function TestBadge() {
-  return <span className="pill test-account-pill" title={{ fr: 'Compte de test (fondateur, démo, essais) — pas un vrai utilisateur', en: 'Test account (founder, demo, trials) — not a real user', nl: 'Testaccount (oprichter, demo, proeven) — geen echte gebruiker' }[getLanguage()]}>🧪 Test</span>;
+  return <span className="pill test-account-pill" title={{ fr: 'Compte de test (fondateur, démo, essais), pas un vrai utilisateur', en: 'Test account (founder, demo, trials), not a real user', nl: 'Testaccount (oprichter, demo, proeven), geen echte gebruiker' }[getLanguage()]}>🧪 Test</span>;
 }
 
 // Filtre instantané côté client (aucun aller-retour serveur), une fois la liste complète déjà chargée.
@@ -99,12 +99,12 @@ export function money(n) {
 }
 
 export function fmtDate(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   return new Date(ts).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function fmtDateTime(ts) {
-  if (!ts) return '—';
+  if (!ts) return '-';
   return new Date(ts).toLocaleDateString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
@@ -266,7 +266,7 @@ const REGLES = {
 export const AUTOMATION_RULES_META = parLangue(REGLES);
 
 export function pct(n, digits = 0) {
-  if (n === null || n === undefined) return '—';
+  if (n === null || n === undefined) return '-';
   return `${(Number(n) * 100).toFixed(digits)}%`;
 }
 

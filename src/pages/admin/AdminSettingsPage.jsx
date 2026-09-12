@@ -88,7 +88,7 @@ export default function AdminSettingsPage() {
             </p>
             {pricingFields(tr).map((f) => (
               <div className="field" key={f.key}>
-                <label>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> — {f.hint}</span> : null}</label>
+                <label>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> · {f.hint}</span> : null}</label>
                 <input
                   type="number" step="0.01"
                   value={pricingForm[f.key]}
@@ -175,8 +175,8 @@ function UserTypeGroup({ type, items, departed }) {
                   <>
                     <b>{it.email}</b>
                     {estCompteTest(it) && <TestBadge />}
-                    {it.restaurantName && <span className="small"> — {it.restaurantName}</span>}
-                    {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` — ${it.comment}` : ''}</div>}
+                    {it.restaurantName && <span className="small"> · {it.restaurantName}</span>}
+                    {it.reason && <div className="small" style={{ opacity: 0.7 }}>{it.reason}{it.comment ? ` · ${it.comment}` : ''}</div>}
                   </>
                 ) : (
                   <>

@@ -145,9 +145,9 @@ export default function AdminSupportPage() {
     { key: 'status', label: tr('adminCommon.status'), get: (t) => <span className="pill" style={{ color: TICKET_STATUS_LABELS[t.status]?.color }}>{TICKET_STATUS_LABELS[t.status]?.label}</span>, sortValue: (t) => TICKET_STATUSES.indexOf(t.status) },
     { key: 'priority', label: tr('adminCommon.priority'), get: (t) => <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>, sortValue: (t) => ({ low: 0, medium: 1, high: 2, urgent: 3 }[t.priority] ?? 0) },
     { key: 'category', label: tr('adminCommon.category'), get: (t) => TICKET_CATEGORY_LABELS[t.category], sortValue: (t) => t.category },
-    { key: 'requester', label: tr('adminSupport.requester'), get: (t) => t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '—', sortValue: (t) => t.requesterName || '' },
-    { key: 'assignedToEmail', label: tr('adminSupport.assignedTo'), get: (t) => t.assignedToEmail || '—', sortValue: (t) => t.assignedToEmail || '' },
-    { key: 'slaDueAt', label: tr('adminSupport.slaCol'), get: (t) => (t.slaDueAt ? <span style={{ color: slaDepasse(t) ? 'var(--red)' : 'inherit' }}>{fmtDateTime(t.slaDueAt)}{slaDepasse(t) ? ' ⚠️' : ''}</span> : '—'), sortValue: (t) => (t.resolvedAt || ['resolu', 'ferme'].includes(t.status) ? 9e15 : (t.slaDueAt || 9e15 - 1)) },
+    { key: 'requester', label: tr('adminSupport.requester'), get: (t) => t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '-', sortValue: (t) => t.requesterName || '' },
+    { key: 'assignedToEmail', label: tr('adminSupport.assignedTo'), get: (t) => t.assignedToEmail || '-', sortValue: (t) => t.assignedToEmail || '' },
+    { key: 'slaDueAt', label: tr('adminSupport.slaCol'), get: (t) => (t.slaDueAt ? <span style={{ color: slaDepasse(t) ? 'var(--red)' : 'inherit' }}>{fmtDateTime(t.slaDueAt)}{slaDepasse(t) ? ' ⚠️' : ''}</span> : '-'), sortValue: (t) => (t.resolvedAt || ['resolu', 'ferme'].includes(t.status) ? 9e15 : (t.slaDueAt || 9e15 - 1)) },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (t) => fmtDateTime(t.updatedAt), sortValue: (t) => t.updatedAt }
   ];
 
@@ -175,7 +175,7 @@ export default function AdminSupportPage() {
           <div className="stat-card highlight"><div className="num">{stats.created}</div><div className="label">{tr('adminSupport.ticketsCreated')}</div></div>
           <div className="stat-card"><div className="num">{stats.resolved}</div><div className="label">{tr('adminSupport.ticketsResolved')}</div></div>
           <div className="stat-card"><div className="num">{pct(stats.resolutionRate, 0)}</div><div className="label">{tr('adminSupport.resolutionRate')}</div></div>
-          <div className="stat-card"><div className="num">{stats.avgResolutionHours !== null ? `${stats.avgResolutionHours} h` : '—'}</div><div className="label">{tr('adminSupport.avgResolutionTime')}</div></div>
+          <div className="stat-card"><div className="num">{stats.avgResolutionHours !== null ? `${stats.avgResolutionHours} h` : '-'}</div><div className="label">{tr('adminSupport.avgResolutionTime')}</div></div>
           <button type="button" className={`stat-card${slaOnly ? ' highlight' : ''}`} style={{ textAlign: 'left', border: 0, cursor: 'pointer' }} onClick={() => setSlaOnly((v) => !v)}><div className="num" style={{ color: stats.slaBreached > 0 ? 'var(--red)' : 'inherit' }}>{stats.slaBreached}</div><div className="label">{tr('adminSupport.slaBreached')}</div></button>
         </div>
       )}
@@ -248,7 +248,7 @@ export default function AdminSupportPage() {
             <>
               <b>{t.subject}</b>
               <div className="small">{t.ticketNumber} · <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span>{t.escalated ? ' · ⚠️' : ''}{slaDepasse(t) ? ` · ${tr('adminSupport.slaShort')}` : ''}</div>
-              <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '—'}</div>
+              <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '-'}</div>
             </>
           )}
         />
@@ -267,7 +267,7 @@ export default function AdminSupportPage() {
             </div>
           </div>
           <div className="small">{t.ticketNumber} · {TICKET_CATEGORY_LABELS[t.category]} · <span style={{ color: TICKET_PRIORITY_LABELS[t.priority]?.color }}>{TICKET_PRIORITY_LABELS[t.priority]?.label}</span></div>
-          <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '—'}{t.assignedToEmail ? tr('adminSupport.assignedSuffix', { email: t.assignedToEmail }) : ''}</div>
+          <div className="small">{t.requesterName || t.linkedClientName || t.linkedDriverName || t.linkedRestaurantName || '-'}{t.assignedToEmail ? tr('adminSupport.assignedSuffix', { email: t.assignedToEmail }) : ''}</div>
           <Tags tags={t.tags} actif={tag} onPick={setTag} />
           <div className="small" style={{ opacity: 0.6, marginTop: 2 }}>{fmtDateTime(t.updatedAt)}</div>
         </div>
@@ -487,7 +487,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       {t && onglet === 'apercu' && !editing && (
         <>
           {t.slaDueAt && <p className="small" style={{ margin: '2px 0', color: slaDepasse(t) ? 'var(--red)' : 'inherit' }}>{tr('adminSupport.slaLine', { due: fmtDateTime(t.slaDueAt), first: t.firstResponseAt ? tr('adminSupport.firstReplySuffix', { date: fmtDateTime(t.firstResponseAt) }) : '' })}</p>}
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminSupport.requesterLine', { name: t.requesterName || '—', email: t.requesterEmail ? ` · ${t.requesterEmail}` : '', phone: t.requesterPhone ? ` · ${t.requesterPhone}` : '' })}</p>
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminSupport.requesterLine', { name: t.requesterName || '-', email: t.requesterEmail ? ` · ${t.requesterEmail}` : '', phone: t.requesterPhone ? ` · ${t.requesterPhone}` : '' })}</p>
           <LiensTicket t={t} tr={tr} />
           {t.tags.length > 0 && <div style={{ marginTop: 4 }}><Tags tags={t.tags} onPick={onPickTag} /></div>}
           {t.escalated && <p className="small" style={{ margin: '4px 0', color: 'var(--red)' }}>{tr('adminSupport.escalatedReason', { reason: t.escalatedReason })}</p>}

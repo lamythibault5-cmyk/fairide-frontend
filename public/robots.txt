@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
 
+# Les espaces privés n'ont rien à faire dans un index : ils exigent un compte, répondent la même
+# coquille vide à un robot, et consomment le budget d'exploration que les pages publiques méritent.
+# À noter : ces règles ne protègent RIEN. Elles disent seulement « n'indexe pas » ; c'est le
+# backend (requireRole) et ProtectedRoute qui décident de l'accès, ici comme ailleurs.
+Disallow: /account
+Disallow: /checkout
+Disallow: /order-success
+Disallow: /order-cancelled
+Disallow: /orders
+Disallow: /invoices
+Disallow: /favorites
+Disallow: /dashboard
+Disallow: /driver
+Disallow: /admin
+Disallow: /reset-password
+
+# /login reste explorable : c'est la page d'inscription, et une partie des recherches de marque
+# (« fairide inscription commerce ») y mène légitimement.
+
 Sitemap: https://fairide.be/sitemap.xml

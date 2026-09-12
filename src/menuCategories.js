@@ -297,13 +297,13 @@ const TYPE_TEMPLATES = {
       { name: 'Cheese sticks (5 pcs)', price: 5.5, desc: 'Bâtonnets de mozzarella panés' }
     ],
     dessert: [
-      { name: 'Milkshake', price: 5.5, desc: 'Vanille, fraise, chocolat ou Oreo — au choix' },
+      { name: 'Milkshake', price: 5.5, desc: 'Vanille, fraise, chocolat ou Oreo, au choix' },
       { name: 'Brownie', price: 4.5, desc: '' },
       { name: 'Cookie', price: 3, desc: '' },
       { name: 'Apple pie', price: 4.5, desc: '' }
     ],
     boisson: [
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Limonade maison', price: 3.5, desc: '' },
       { name: 'Bière artisanale', price: 4.5, desc: '' },
       { name: 'Thé glacé pêche', price: 3, desc: '' },
@@ -367,12 +367,12 @@ const TYPE_TEMPLATES = {
     // Variantes au même prix regroupées en un seul item + choix via option (voir ensurePizzaDrinkGroups
     // dans routes/restaurants.js) plutôt qu'une ligne de menu par saveur.
     boisson: [
-      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite, Ice Tea, San Pellegrino Aranciata ou Limonata — au choix' },
+      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite, Ice Tea, San Pellegrino Aranciata ou Limonata, au choix' },
       { name: 'Eau 50cl', price: 2, desc: '' },
       { name: 'Bouteille 1,5L', price: 4, desc: '' },
-      { name: 'Bière 33cl', price: 3, desc: 'Peroni ou Jupiler — au choix' },
-      { name: 'Vin 25cl', price: 5.5, desc: 'Rouge ou blanc — au choix' },
-      { name: 'Café', price: 2, desc: 'Espresso ou café allongé — au choix' }
+      { name: 'Bière 33cl', price: 3, desc: 'Peroni ou Jupiler · au choix' },
+      { name: 'Vin 25cl', price: 5.5, desc: 'Rouge ou blanc, au choix' },
+      { name: 'Café', price: 2, desc: 'Espresso ou café allongé · au choix' }
     ]
   },
   // Carte type traiteur asiatique (wok/thaï-viet-chinois), prix réalistes 2026. Le "Bière 33cl" est
@@ -417,8 +417,8 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Thé jasmin', price: 2.5, desc: '' },
       { name: 'Bubble tea', price: 5.5, desc: '' },
-      { name: 'Bière 33cl', price: 4, desc: 'Singha ou Tsingtao — au choix' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Bière 33cl', price: 4, desc: 'Singha ou Tsingtao · au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   Sushi: {
@@ -462,7 +462,7 @@ const TYPE_TEMPLATES = {
       { name: 'Perles de coco', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Thé vert', price: 2.5, desc: '' },
       { name: 'Bière Asahi', price: 4, desc: '' },
       { name: 'Saké', price: 6, desc: '' }
@@ -506,10 +506,10 @@ const TYPE_TEMPLATES = {
       { name: 'Margarita', price: 9, desc: '' },
       { name: 'Margarita fruits', price: 9.5, desc: '' },
       { name: 'Mojito', price: 8.5, desc: '' },
-      { name: 'Bière 33cl', price: 4, desc: 'Corona ou Modelo — au choix' },
+      { name: 'Bière 33cl', price: 4, desc: 'Corona ou Modelo · au choix' },
       { name: 'Jarritos', price: 3.5, desc: '' },
       { name: 'Agua fresca', price: 4, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Tequila / mezcal (shot)', price: 5, desc: '' }
     ]
   },
@@ -552,7 +552,7 @@ const TYPE_TEMPLATES = {
       { name: 'Jus de grenade', price: 4, desc: '' },
       { name: 'Thé à la menthe', price: 2.5, desc: '' },
       { name: 'Café arabe', price: 2.5, desc: '' },
-      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   // Bowls : base (quinoa/riz complet/salade) au choix + suppléments (protéine/avocat/œuf) gérés via
@@ -642,7 +642,7 @@ const TYPE_TEMPLATES = {
       { name: 'Aperol Spritz', price: 8.5, desc: '' },
       { name: 'Limoncello', price: 4.5, desc: '' },
       { name: 'Espresso', price: 2.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   // Wings vendues avec un choix de sauce obligatoire (nature/BBQ/buffalo/hot honey) géré via le groupe
@@ -656,9 +656,9 @@ const TYPE_TEMPLATES = {
       { name: 'Tenders 4 pcs', price: 7, desc: '' },
       { name: 'Tenders 8 pcs', price: 12.5, desc: '' },
       { name: 'Tenders Bucket 16 pcs', price: 22, desc: '' },
-      { name: 'Wings 6 pcs', price: 7.5, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
-      { name: 'Wings 12 pcs', price: 13.5, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
-      { name: 'Wings 24 pcs', price: 24, desc: 'Nature, BBQ, buffalo ou hot honey — au choix' },
+      { name: 'Wings 6 pcs', price: 7.5, desc: 'Nature, BBQ, buffalo ou hot honey, au choix' },
+      { name: 'Wings 12 pcs', price: 13.5, desc: 'Nature, BBQ, buffalo ou hot honey, au choix' },
+      { name: 'Wings 24 pcs', price: 24, desc: 'Nature, BBQ, buffalo ou hot honey, au choix' },
       { name: 'Burger Chicken Crispy', price: 9.5, desc: '' },
       { name: 'Burger Spicy Chicken', price: 10, desc: '' },
       { name: 'Burger Double Crispy', price: 12.5, desc: '' },
@@ -683,7 +683,7 @@ const TYPE_TEMPLATES = {
       { name: 'Milkshake', price: 5.5, desc: '' }
     ],
     boisson: [
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Eau', price: 2, desc: '' }
     ]
   },
@@ -724,7 +724,7 @@ const TYPE_TEMPLATES = {
       { name: 'Duvel', price: 4.8, desc: '' },
       { name: 'Chimay', price: 5, desc: '' },
       { name: 'Kriek', price: 4.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Café', price: 2.8, desc: '' },
       { name: 'Vin au verre', price: 5, desc: '' }
     ]
@@ -831,8 +831,8 @@ const TYPE_TEMPLATES = {
     // Variantes au même prix regroupées en un seul item + choix via option (voir ensureSnackDrinkGroups
     // dans routes/restaurants.js) plutôt qu'une ligne de menu par saveur.
     boisson: [
-      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
-      { name: 'Eau 50cl', price: 2, desc: 'Plate ou pétillante — au choix' },
+      { name: 'Softs 33cl', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
+      { name: 'Eau 50cl', price: 2, desc: 'Plate ou pétillante · au choix' },
       { name: 'Ayran', price: 2, desc: '' },
       { name: 'Uludağ', price: 2.5, desc: '' },
       { name: 'Red Bull', price: 3, desc: '' },
@@ -874,7 +874,7 @@ const TYPE_TEMPLATES = {
       { name: 'Chai Latte', price: 4.5, desc: '' },
       { name: 'Golden Latte', price: 4.8, desc: '' },
       { name: 'Chocolat chaud', price: 4.2, desc: '' },
-      { name: 'Thé en feuilles', price: 3.5, desc: 'Vert, noir ou infusion — au choix' },
+      { name: 'Thé en feuilles', price: 3.5, desc: 'Vert, noir ou infusion, au choix' },
       { name: 'Limonade maison', price: 4, desc: '' },
       { name: 'Jus pressé', price: 4.5, desc: '' },
       { name: 'Kombucha', price: 4.5, desc: '' },
@@ -921,7 +921,7 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Café à emporter', price: 2.2, desc: '' },
       { name: "Jus d'orange pressé", price: 3.5, desc: '' },
-      { name: 'Softs', price: 2.2, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.2, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   'Supermarché': {
@@ -1133,9 +1133,9 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Sangria 50cl', price: 12, desc: '' },
       { name: 'Tinto de verano', price: 5, desc: '' },
-      { name: 'Bière 33cl', price: 3.5, desc: 'Estrella ou Mahou — au choix' },
+      { name: 'Bière 33cl', price: 3.5, desc: 'Estrella ou Mahou, au choix' },
       { name: 'Vin Rioja (verre)', price: 5.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   'Poke Bowl': {
@@ -1166,7 +1166,7 @@ const TYPE_TEMPLATES = {
       { name: 'Thé glacé maison', price: 3.5, desc: '' },
       { name: 'Eau de coco', price: 4, desc: '' },
       { name: 'Limonade au yuzu', price: 4, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   Thaïlandais: {
@@ -1199,7 +1199,7 @@ const TYPE_TEMPLATES = {
       { name: 'Thé thaï glacé', price: 4, desc: '' },
       { name: 'Eau de coco', price: 4, desc: '' },
       { name: 'Bière Singha', price: 4.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   Indien: {
@@ -1235,7 +1235,7 @@ const TYPE_TEMPLATES = {
       { name: 'Lassi mangue', price: 4.5, desc: '' },
       { name: 'Lassi salé', price: 4, desc: '' },
       { name: 'Chai latte', price: 4, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   Vietnamien: {
@@ -1266,7 +1266,7 @@ const TYPE_TEMPLATES = {
       { name: 'Café vietnamien glacé (cà phê sữa đá)', price: 4, desc: '' },
       { name: 'Thé glacé', price: 3.5, desc: '' },
       { name: 'Eau de coco', price: 4, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   Chinois: {
@@ -1297,7 +1297,7 @@ const TYPE_TEMPLATES = {
       { name: 'Thé au jasmin', price: 3, desc: '' },
       { name: 'Thé oolong', price: 3, desc: '' },
       { name: 'Bière Tsingtao', price: 4.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' }
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' }
     ]
   },
   'Desserts & Glaces': {
@@ -1327,7 +1327,7 @@ const TYPE_TEMPLATES = {
       { name: 'Chocolat chaud', price: 4, desc: '' },
       { name: 'Chocolat chaud chantilly', price: 4.8, desc: '' },
       { name: 'Café', price: 2.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Eau plate 50cl', price: 2, desc: '' }
     ]
   },
@@ -1393,7 +1393,7 @@ const TYPE_TEMPLATES = {
       { name: 'Salade de fruits', price: 4, desc: '' }
     ],
     boisson: [
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Eau plate 50cl', price: 2, desc: '' },
       { name: 'Jus pressé', price: 4, desc: '' },
       { name: 'Café', price: 2.5, desc: '' }
@@ -1426,7 +1426,7 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Bissap (hibiscus)', price: 3.5, desc: '' },
       { name: 'Gingembre maison', price: 3.5, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Eau plate 50cl', price: 2, desc: '' }
     ]
   },
@@ -1458,7 +1458,7 @@ const TYPE_TEMPLATES = {
     boisson: [
       { name: 'Vin blanc (verre)', price: 5.5, desc: '' },
       { name: 'Bière blanche', price: 4, desc: '' },
-      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.8, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: 'Eau plate 50cl', price: 2, desc: '' }
     ]
   },
@@ -1611,7 +1611,7 @@ const TYPE_TEMPLATES = {
       { name: 'Café marocain', price: 2.8, desc: '' },
       { name: 'Lben (lait fermenté)', price: 3, desc: '' },
       { name: 'Eau plate', price: 1.8, desc: '' },
-      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea — au choix' },
+      { name: 'Softs', price: 2.5, desc: 'Coca-Cola, Coca-Cola Zero, Fanta, Sprite ou Ice Tea, au choix' },
       { name: "Jus d'orange pressé", price: 3.5, desc: '' }
     ]
   },

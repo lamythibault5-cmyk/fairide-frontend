@@ -53,7 +53,7 @@ export default function IncidentDrawer({ id, onClose, onChanged, onDeleted }) {
   return createPortal(
     <RecordDrawer
       title={detail ? `${typeLabel(tr, detail.type)} · #${detail.orderShort}` : tr('adminIncidents.drawerTitle')}
-      subtitle={detail ? `${detail.restaurantName || '—'} · ${detail.clientName || '—'} · ${fmtDateTime(detail.createdAt)}` : ''}
+      subtitle={detail ? `${detail.restaurantName || '-'} · ${detail.clientName || '-'} · ${fmtDateTime(detail.createdAt)}` : ''}
       badge={detail && (
         <>
           <IncPill kind="st" value={detail.status} label={statusLabel(tr, detail.status)} />
@@ -95,7 +95,7 @@ function OverviewTab({ detail, tr, onDeleted, onClose, token, toast }) {
         <DrawerRow label={tr('adminIncidents.responsibility')} value={<IncPill kind="resp" value={detail.responsibility} label={respLabel(tr, detail.responsibility)} />} />
         <DrawerRow label={tr('adminCommon.status')} value={<IncPill kind="st" value={detail.status} label={statusLabel(tr, detail.status)} />} />
         <DrawerRow label={tr('adminCommon.priority')} value={<IncPill kind="prio" value={detail.priority} label={priorityLabel(tr, detail.priority)} />} />
-        <DrawerRow label={tr('adminCommon.amount')} value={detail.amount !== null && detail.amount !== undefined ? money(detail.amount) : '—'} strong />
+        <DrawerRow label={tr('adminCommon.amount')} value={detail.amount !== null && detail.amount !== undefined ? money(detail.amount) : '-'} strong />
         <DrawerRow label={tr('adminIncidents.createdAt')} value={`${fmtDateTime(detail.createdAt)}${detail.createdBy ? ` · ${detail.createdBy}` : ''}`} />
         <DrawerRow label={tr('adminIncidents.dueAt')} value={<>{fmtDateTime(detail.dueAt)}{detail.overdue && <span className="inc-overdue">{tr('adminIncidents.overdue')}</span>}</>} />
         {detail.resolvedAt && <DrawerRow label={tr('adminIncidents.resolvedAt')} value={fmtDateTime(detail.resolvedAt)} />}
@@ -116,8 +116,8 @@ function OverviewTab({ detail, tr, onDeleted, onClose, token, toast }) {
             <DrawerRow label={tr('adminCommon.total')} value={money(o.total)} strong />
             <DrawerRow label={tr('adminCommon.date')} value={fmtDateTime(o.createdAt)} />
             <DrawerRow label={tr('adminIncidents.payment')} value={`${o.paid ? tr('adminCommon.paidBadge') : tr('adminCommon.unpaidBadge')}${o.paymentMode ? ` · ${o.paymentMode}` : ''}`} />
-            <DrawerRow label={tr('adminCommon.restaurant')} value={o.restaurantName || '—'} />
-            <DrawerRow label={tr('adminCommon.client')} value={o.clientName || '—'} />
+            <DrawerRow label={tr('adminCommon.restaurant')} value={o.restaurantName || '-'} />
+            <DrawerRow label={tr('adminCommon.client')} value={o.clientName || '-'} />
             <DrawerRow label={tr('adminCommon.driver')} value={o.driverName || tr('adminCommon.noDriver')} />
             <div className="admin-record-links">
               <RecordLink type="order" id={o.id} label={tr('adminIncidents.openOrder')} />
@@ -305,7 +305,7 @@ function RefundTab({ detail, tr, token, toast, onDone }) {
                 </div>
                 <p className="small" style={{ opacity: 0.7 }}>{tr(`adminIncidents.refundHint_${responsibility}`)}</p>
                 <div className="inc-form-actions">
-                  <button type="button" className="btn-gold" disabled={!valide || busy} onClick={() => setConfirm(true)}>{tr('adminIncidents.refundButton', { amount: valide ? money(montant) : '—' })}</button>
+                  <button type="button" className="btn-gold" disabled={!valide || busy} onClick={() => setConfirm(true)}>{tr('adminIncidents.refundButton', { amount: valide ? money(montant) : '-' })}</button>
                 </div>
               </>
             )}

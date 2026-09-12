@@ -10,6 +10,7 @@ import { ToastProvider } from './context/ToastContext';
 import { LanguageProvider } from './context/LanguageContext';
 import { PreviewModeProvider } from './context/PreviewModeContext';
 import { hasAcceptedConsent, onConsentChange } from './consent';
+import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
 import './styles.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 
@@ -34,11 +35,27 @@ window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechar
 // Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
 onConsentChange(startSentryIfAllowed);
 
+// LA LANGUE VIENT DE L'ADRESSE, et le routeur est monté avec le préfixe correspondant : /nl/… et
+// /en/… sont des adresses à part entière, le français est la racine (voir src/i18n/routing.js).
+// `basename` évite de préfixer à la main les 156 liens de l'application : React Router l'ajoute
+// devant chaque `to` et le retire de ce que lisent les composants.
+const { langue, basename } = langueDepuisChemin(window.location.pathname);
+
+// Visiteur qui revient par une adresse sans préfixe alors qu'il avait choisi une autre langue : on
+// l'emmène vers la même page dans SA langue, une seule fois (l'adresse d'arrivée porte un préfixe,
+// la condition ne peut donc pas se redéclencher). `replace` et non `assign` : ce détour n'a pas à
+// occuper une entrée dans l'historique, sans quoi le bouton Retour y reviendrait en boucle.
+const preferee = langue === 'fr' ? languePreferee() : null;
+if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
+  const { pathname, search, hash } = window.location;
+  window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
-      <BrowserRouter>
-        <LanguageProvider>
+      <BrowserRouter basename={basename}>
+        <LanguageProvider initial={langue}>
           <ToastProvider>
             <AuthProvider>
               <PreviewModeProvider>

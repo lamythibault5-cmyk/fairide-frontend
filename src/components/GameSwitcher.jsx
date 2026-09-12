@@ -58,7 +58,7 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
       )}
       <div className="game-switcher-picker" role="tablist" aria-label={t('games.choose')}>
         {JEUX.map((g, i) => (
-          <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label} — ${tJeu(t, g, 'sub', g.sub)}`}
+          <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label}, ${tJeu(t, g, 'sub', g.sub)}`}
             className={`game-switcher-tab${i === index ? ' active' : ''}`} onClick={() => choisir(i)}>
             <span className="game-switcher-tab-emoji" aria-hidden="true">{g.emoji}</span>
             {large && (
