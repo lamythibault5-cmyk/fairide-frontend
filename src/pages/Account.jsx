@@ -13,6 +13,7 @@ import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
+import MesCasquettes from '../components/MesCasquettes';
 import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
@@ -881,6 +882,11 @@ export default function Account() {
           <LigneCompte to="/driver/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
         </div>
       )}
+
+      {/* Les casquettes du compte : commander, tenir un commerce, livrer. Placé juste avant
+          l'assistance, donc après tout ce qui concerne le rôle en cours — on ne propose pas de
+          changer de vue à quelqu'un qui n'a pas fini de lire la sienne. */}
+      <MesCasquettes />
 
       {/* Assistance — commune à tous les rôles : un restaurateur ou un livreur a autant besoin de
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de

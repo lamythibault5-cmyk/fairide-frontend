@@ -9,6 +9,9 @@ const STORAGE_KEY = 'fairide_session';
 // à part. La session d'action vit dans sessionStorage (propre à l'onglet) et arrive par le fragment d'adresse
 // (#agir=…), jamais envoyé au serveur ; la session admin, dans localStorage, reste intacte dans les autres onglets.
 const ACT_KEY = 'fairide_session_agir';
+// Casquette active d'un compte qui en porte plusieurs (voir plus bas). Mémorisée pour que l'onglet
+// rouvre sur la même vue, jamais crue sur parole : elle est revalidée contre les rôles du compte.
+const ROLE_ACTIF_KEY = 'fairide_role_actif';
 function sessionDepuisFragment() {
   try {
     const m = window.location.hash.match(/[#&]agir=([^&]+)/);
@@ -36,6 +39,9 @@ export function AuthProvider({ children }) {
   });
   // Cet onglet est-il un onglet « Fairide agit comme… » ? Si oui, on n'écrit jamais dans localStorage.
   const actingRef = useRef(!!session?.actingAs);
+  const [roleMemorise, setRoleMemorise] = useState(() => {
+    try { return localStorage.getItem(ROLE_ACTIF_KEY) || null; } catch { return null; }
+  });
 
   // Garde-fou anti-répétition de la déconnexion pour expiration (voir l'effet plus bas).
   const expiredRef = useRef(false);
@@ -163,6 +169,11 @@ export function AuthProvider({ children }) {
 
   function logout() {
     setSession(null);
+    // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant
+    // ouvrirait sur la vue du précédent (ou sur une vue à laquelle il n'a pas droit, le temps que
+    // la revalidation le corrige).
+    setRoleMemorise(null);
+    try { localStorage.removeItem(ROLE_ACTIF_KEY); } catch { /* sans stockage */ }
   }
 
   // Quitter le mode « Fairide agit comme… » : l'onglet revient à la session admin (localStorage).
@@ -171,10 +182,48 @@ export function AuthProvider({ children }) {
     window.location.assign('/admin/restaurants');
   }
 
+  /* PLUSIEURS CASQUETTES, UNE SEULE ACTIVE.
+   *
+   * `roles` est ce que le compte porte (voir user_roles côté serveur) ; `role` reste ce que
+   * l'interface affiche — la casquette ACTIVE. C'est volontaire : une centaine d'endroits lisent
+   * déjà `role` pour décider d'un écran, d'un menu ou d'une redirection. En faisant de `role` la
+   * casquette active plutôt que « le rôle du compte », aucun d'eux ne change.
+   *
+   * La casquette active est mémorisée, mais toujours revalidée contre `roles` : un rôle retiré côté
+   * serveur, ou une session d'un autre compte, ne peut pas laisser l'interface sur un écran auquel
+   * le compte n'a plus droit. En cas de doute, on retombe sur le rôle d'origine du compte.
+   *
+   * Les onglets « Fairide agit comme… » n'y touchent pas : ils affichent le commerce, point. */
+  const roles = session?.user?.roles?.length
+    ? session.user.roles
+    : (session?.user?.role ? [session.user.role] : []);
+  const roleActif = !session?.actingAs && roleMemorise && roles.includes(roleMemorise)
+    ? roleMemorise
+    : (session?.user?.role || null);
+
+  // Ajoute une casquette au compte courant (POST /auth/roles) et met la session à jour sans
+  // reconnexion : le serveur lit les rôles en base à chaque requête, le jeton n'a pas à changer.
+  async function ajouterRole(nouveauRole) {
+    const data = await api('/auth/roles', { method: 'POST', token: session?.token, body: { role: nouveauRole } });
+    setSession((s) => (s ? { ...s, user: { ...s.user, roles: data.roles } } : s));
+    return data.roles;
+  }
+
+  // Changer de casquette ne touche ni au compte ni au jeton : c'est un changement de vue.
+  function changerRole(cible) {
+    if (!roles.includes(cible)) return false;
+    setRoleMemorise(cible);
+    try { localStorage.setItem(ROLE_ACTIF_KEY, cible); } catch { /* sans stockage */ }
+    return true;
+  }
+
   const value = {
     user: session?.user || null,
     token: session?.token || null,
-    role: session?.user?.role || null,
+    role: roleActif,
+    roles,
+    ajouterRole,
+    changerRole,
     actingAs: !!session?.actingAs,
     actingAdminEmail: session?.user?.actingAdminEmail || '',
     quitterAction,
