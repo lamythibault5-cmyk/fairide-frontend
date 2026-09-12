@@ -107,6 +107,10 @@ export default function Auth() {
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   const [cuisine, setCuisine] = useState('');
+  // Facultatif : la plateforme où la carte du commerce existe déjà, et son adresse. Voir l'étape
+  // « business » du formulaire — c'est ce qui permet de préparer la carte avant la première connexion.
+  const [menuPlatform, setMenuPlatform] = useState('');
+  const [menuUrl, setMenuUrl] = useState('');
   const [customCuisine, setCustomCuisine] = useState('');
   // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
   const [hours, setHours] = useState(null);
@@ -220,6 +224,17 @@ export default function Auth() {
     if (role !== 'restaurant') return;
     try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, services })); } catch { /* sans stockage */ }
   }, [services, role]);
+  // Plateforme où la carte existe déjà, posée dans le même indice local que le reste de la fiche :
+  // c'est DashboardLayout qui la relèvera pour ouvrir la demande « Fairide s'en occupe » une fois le
+  // commerce créé. Elle ne part pas d'ici, parce qu'à ce stade le commerce n'existe pas encore et
+  // que la demande a besoin de son identifiant.
+  useEffect(() => {
+    if (role !== 'restaurant') return;
+    try {
+      const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
+      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, menuPlatform, menuUrl: menuUrl.trim() }));
+    } catch { /* sans stockage */ }
+  }, [menuPlatform, menuUrl, role]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
@@ -880,6 +895,35 @@ export default function Auth() {
                   )}
                   <OpeningHoursEditor value={hours || {}} onChange={(h) => { setHours(h); setHoursDepuisWeb(false); }} />
                   {fieldError('hours')}
+                </div>
+                {/* LA CARTE COMMENCE ICI, PAS DANS LE TABLEAU DE BORD.
+                    Un commerçant déjà présent sur Uber Eats, Deliveroo ou Takeaway a sa carte
+                    entière, structurée, en ligne quelque part. Jusqu'ici on ne le lui demandait
+                    jamais : il découvrait une carte vide à sa première connexion et devait aller
+                    chercher lui-même la page, le lien et la bonne méthode d'import.
+                    Une question facultative ici, et la demande « Fairide s'en occupe » part toute
+                    seule dès que le commerce est créé (voir DashboardLayout.jsx) : sa carte est en
+                    préparation avant même qu'il se connecte.
+                    Facultatif pour de bon : aucun contrôle n'est ajouté à la validation de l'étape.
+                    Un commerçant qui n'est sur aucune plateforme passe sans rien remarquer. */}
+                <div className="field">
+                  <label htmlFor="auth-f-plateforme">{t('auth.menuPlatformTitle')}</label>
+                  <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.menuPlatformHelp')}</p>
+                  <select id="auth-f-plateforme" value={menuPlatform} onChange={(e) => setMenuPlatform(e.target.value)}>
+                    <option value="">{t('auth.menuPlatformNone')}</option>
+                    <option value="uber_eats">Uber Eats</option>
+                    <option value="deliveroo">Deliveroo</option>
+                    <option value="takeaway">Takeaway.com</option>
+                    <option value="website">{t('auth.menuPlatformWebsite')}</option>
+                    <option value="other">{t('auth.menuPlatformOther')}</option>
+                  </select>
+                  {menuPlatform && (
+                    <>
+                      <input style={{ marginTop: 6 }} type="url" inputMode="url" value={menuUrl} onChange={(e) => setMenuUrl(e.target.value)}
+                        placeholder={t('auth.menuPlatformUrlPlaceholder')} aria-label={t('auth.menuPlatformUrlLabel')} />
+                      <p className="small" style={{ margin: '4px 0 0', opacity: 0.85 }}>{t('auth.menuPlatformPromise')}</p>
+                    </>
+                  )}
                 </div>
                 <div className="field contacts-commerce">
                   <label>{t('auth.contactsTitle')}</label>

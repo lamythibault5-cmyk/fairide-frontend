@@ -2847,6 +2847,10 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .methode-tete h4 { margin: 0; font-size: 15px; }
 .methode-num { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 50%; background: var(--iris); color: #fff; font-weight: 800; font-size: 13px; flex: 0 0 auto; }
 .methode-sous { margin: 0 0 10px; }
+/* La bascule « Je préfère faire ma carte moi-même ». Elle n'est pas une septième méthode : pas de
+   pastille numérotée, pas de trait en pointillés au-dessus qui la ferait lire comme un bloc de plus
+   dans la liste. Juste la porte vers le reste. */
+.methode-bascule { border-top: none; padding-top: 4px; }
 .menu-concierge-etat { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--cream-dim); }
 
 /* Mon compte livreur : contrat, conditions, paiement, comparatif des statuts (DriverContractTerms.jsx). */

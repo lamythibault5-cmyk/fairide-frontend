@@ -82,6 +82,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [methodesOuvertes, setMethodesOuvertes] = useState(false);
   const carteVide = restaurant.menu.length === 0;
   const methodesVisibles = carteVide || methodesOuvertes;
+  // Les cinq méthodes « je m'en occupe moi-même » sont repliées par défaut : seule la demande à
+  // Fairide occupe le premier écran (voir le commentaire au-dessus du bloc). En console admin il n'y
+  // a pas de demande à Fairide — l'équipe EST Fairide — donc rien à replier.
+  const [autresMethodes, setAutresMethodes] = useState(false);
+  const autresVisibles = modeAdmin || autresMethodes;
   const [importingText, setImportingText] = useState(false);
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
@@ -606,6 +611,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       <div className="card" id="menu-methodes">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t(modeAdmin ? 'menuPage.methodsTitleAdmin' : 'menuPage.methodsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 14px' }}>{t(modeAdmin ? 'menuPage.methodsIntroAdmin' : 'menuPage.methodsIntro')}</p>
+        {/* UNE SEULE PROPOSITION D'ABORD, LES AUTRES DERRIÈRE UN LIEN.
+            Les six méthodes s'affichaient ensemble. La plus simple était bien la première et portait
+            sa pastille « Recommandé », mais elle concourait avec cinq autres : au moment précis où
+            l'on veut qu'un restaurateur n'ait RIEN à faire, on lui demandait de comparer six façons
+            de travailler. Celle qui ne lui coûte rien occupe donc seule le premier écran, et les
+            autres attendent derrière « Je préfère faire ma carte moi-même ».
+            Rien n'est retiré : les cinq autres méthodes sont intactes, à un clic. */}
         {!importedItems && !modeAdmin && (
           <div className="methode" id="menu-concierge">
             <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommended')}</span></div>
@@ -614,7 +626,18 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </div>
         )}
 
-        {!importedItems && (
+        {/* En console admin il n'y a pas de méthode « Fairide s'en occupe » — l'équipe EST Fairide :
+            rien à replier, les méthodes d'import sont le sujet de la page. */}
+        {!importedItems && !modeAdmin && (
+          <div className="methode methode-bascule">
+            <button type="button" className="btn-outline" onClick={() => setAutresMethodes((o) => !o)} aria-expanded={autresMethodes}>
+              {autresMethodes ? t('menuPage.otherMethodsHide') : t('menuPage.otherMethodsShow')}
+            </button>
+            {!autresMethodes && <p className="small methode-sous" style={{ margin: '8px 0 0' }}>{t('menuPage.otherMethodsHint')}</p>}
+          </div>
+        )}
+
+        {autresVisibles && !importedItems && (
           <div className="methode">
             <div className="methode-tete"><span className="methode-num">{num(2)}</span><h4>{t('menuPage.method2Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method2Sub')}</p>
@@ -623,7 +646,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               onDone={(items, bilans) => { setImportReport(bilans); setImportedItems(items); }} />
           </div>
         )}
-        {!importedItems && (
+        {autresVisibles && !importedItems && (
           <div className="menu-import-web methode">
             <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.method3Title')}</h4></div>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
@@ -646,7 +669,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           </div>
         )}
-        {!importedItems && (
+        {autresVisibles && !importedItems && (
           <div className="methode">
             <div className="methode-tete"><span className="methode-num">{num(4)}</span><h4>{t('menuPage.method4Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method4Sub')}</p>
@@ -669,7 +692,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           </div>
         )}
-        {!importedItems && (
+        {autresVisibles && !importedItems && (
           <div className="methode">
             <div className="methode-tete"><span className="methode-num">{num(5)}</span><h4>{t('menuPage.method5Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
@@ -679,7 +702,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           </div>
         )}
-        {!importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
+        {autresVisibles && !importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
           <div className="methode methode-un-clic">
             <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
             <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
