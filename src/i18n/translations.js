@@ -5388,6 +5388,11 @@ export const translations = {
       verifiedShort: 'resto vérifié'
     },
     seo: {
+      /* Titre servi aux pages qui n'en posent pas un à elles (l'accueil, et tout ce qui appelle
+         usePageMeta sans `title`). Il vivait en double dans usePageMeta.js et dans index.html ;
+         il est ici pour que le pré-rendu, qui produit les trois langues, lise la même chaîne que
+         l'application. */
+      defaultTitle: "Fairide · Livraison de repas et commerces locaux à Bruxelles, commission réduite",
       homeDescription: "Commande chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 %, contre 22 à 32 % sur les grandes plateformes.",
       listDescription: "Tous les restaurants, supermarchés, boulangeries et night shops livrés par Fairide dans les 19 communes de Bruxelles.",
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
@@ -11553,6 +11558,7 @@ export const translations = {
       verifiedShort: 'verified'
     },
     seo: {
+      defaultTitle: "Fairide · Meal delivery and local businesses in Brussels, reduced commission",
       homeDescription: "Order from the restaurants and local shops in your Brussels neighbourhood. Commission capped at 10%, against 22 to 32% on the big platforms.",
       listDescription: "Every restaurant, supermarket, bakery and night shop delivered by Fairide across the 19 communes of Brussels.",
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
@@ -17715,6 +17721,7 @@ export const translations = {
       verifiedShort: 'geverifieerd'
     },
     seo: {
+      defaultTitle: "Fairide · Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie",
       homeDescription: "Bestel bij de restaurants en handelszaken in jouw Brusselse buurt. Commissie beperkt tot 10 %, tegenover 22 tot 32 % bij de grote platformen.",
       listDescription: "Alle restaurants, supermarkten, bakkerijen en nachtwinkels die Fairide levert in de 19 gemeenten van Brussel.",
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",

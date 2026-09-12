@@ -1,12 +1,14 @@
 import { useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { SITE_URL } from '../seo/jsonLd';
+import { cheminLocalise, HREFLANG, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/routing';
+import { translations } from '../i18n/translations';
 
-const DEFAULT_TITLES = {
-  fr: 'Fairide · Livraison de repas et commerces locaux à Bruxelles, commission réduite',
-  en: 'Fairide · Meal delivery and local businesses in Brussels, reduced commission',
-  nl: 'Fairide · Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie'
-};
+// Le titre par défaut vit dans les tables de traduction (seo.defaultTitle) et non plus ici : le
+// pré-rendu produit les trois langues et doit lire la même chaîne que l'application, sinon le
+// document servi et le document hydraté annoncent deux titres différents.
+const titreParDefaut = (langue) =>
+  translations[langue]?.seo?.defaultTitle || translations[DEFAULT_LANGUAGE].seo.defaultTitle;
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 const OG_LOCALE = { fr: 'fr_BE', nl: 'nl_BE', en: 'en_GB' };
 const MAX_DESCRIPTION = 160;
@@ -52,12 +54,48 @@ function setMeta(selector, value, createAttrs) {
   return () => { if (prev !== null) el.setAttribute('content', prev); };
 }
 
+// Les balises hreflang : elles disent à Google que /restaurants, /nl/restaurants et /en/restaurants
+// sont la même page en trois langues, et non trois pages qui se copient. Sans elles, les deux
+// versions ajoutées seraient traitées comme du contenu dupliqué et n'apparaîtraient jamais.
+//
+// x-default désigne la version servie à qui ne correspond à aucune langue déclarée : c'est le
+// français, à la racine. C'est aussi ce qui rend légitime l'absence de préfixe /fr/.
+//
+// Chaque version doit se désigner elle-même autant que les autres : les trois listes sont donc
+// identiques sur les trois pages. Une page qui s'omet de sa propre liste invalide le groupe entier.
+function posePlanDeLangues(cheminApplicatif) {
+  const anciennes = [...document.head.querySelectorAll('link[rel="alternate"][hreflang]')];
+  anciennes.forEach((el) => el.remove());
+  const poses = SUPPORTED_LANGUAGES.map((lang) => {
+    const el = document.createElement('link');
+    el.rel = 'alternate';
+    el.hreflang = HREFLANG[lang] || lang;
+    el.href = `${SITE_URL}${cheminLocalise(cheminApplicatif, lang)}`;
+    document.head.appendChild(el);
+    return el;
+  });
+  const defaut = document.createElement('link');
+  defaut.rel = 'alternate';
+  defaut.hreflang = 'x-default';
+  defaut.href = `${SITE_URL}${cheminLocalise(cheminApplicatif, DEFAULT_LANGUAGE)}`;
+  document.head.appendChild(defaut);
+  poses.push(defaut);
+  return () => {
+    poses.forEach((el) => el.remove());
+    anciennes.forEach((el) => document.head.appendChild(el));
+  };
+}
+
 export default function usePageMeta({ title, description, path, image, type = 'website' }) {
   const { language } = useLanguage();
   useEffect(() => {
     const restorers = [];
-    const url = `${SITE_URL}${path || '/'}`;
-    const finalTitle = title || DEFAULT_TITLES[language] || DEFAULT_TITLES.fr;
+    // `path` est le chemin APPLICATIF, celui que voient les composants : React Router leur cache le
+    // préfixe de langue (voir main.jsx). Le canonical, lui, doit porter l'adresse réelle, sans quoi
+    // les trois versions se déclareraient toutes canoniques sur l'adresse française et les deux
+    // autres disparaîtraient de l'index.
+    const url = `${SITE_URL}${cheminLocalise(path || '/', language)}`;
+    const finalTitle = title || titreParDefaut(language);
     const finalDescription = truncate(description);
     const finalImage = image || DEFAULT_IMAGE;
     const push = (r) => { if (r) restorers.push(r); };
@@ -91,6 +129,7 @@ export default function usePageMeta({ title, description, path, image, type = 'w
     push(setMeta('meta[name="twitter:image"]', finalImage, { name: 'twitter:image' }));
     push(setMeta('meta[property="og:type"]', type, { property: 'og:type' }));
     push(setMeta('meta[property="og:locale"]', OG_LOCALE[language] || 'fr_BE', { property: 'og:locale' }));
+    push(posePlanDeLangues(path || '/'));
 
     return () => restorers.forEach((r) => r());
   }, [title, description, path, image, type, language]);

@@ -33,7 +33,8 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { translations, DEFAULT_LANGUAGE } from '../src/i18n/translations.js';
+import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../src/i18n/translations.js';
+import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
 import {
   SITE_URL, organizationJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
 } from '../src/seo/jsonLd.js';
@@ -41,9 +42,8 @@ import {
 const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DIST = path.join(RACINE, 'dist');
 const API = process.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
-const LANG = DEFAULT_LANGUAGE;
-const T = translations[LANG];
 const MAX_DESCRIPTION = 160;
+const OG_LOCALE = { fr: 'fr_BE', nl: 'nl_BE', en: 'en_GB' };
 
 // Même troncature que usePageMeta : au-delà de 160 caractères Google coupe l'extrait, autant couper
 // nous-mêmes sur un mot entier. Les deux doivent donner le même résultat, sinon le document servi et
@@ -56,8 +56,11 @@ function tronquer(texte) {
   return `${coupe.slice(0, coupe.lastIndexOf(' ')).trimEnd()}…`;
 }
 
-function cle(chemin) {
-  return chemin.split('.').reduce((o, k) => (o == null ? undefined : o[k]), T);
+// Même repli que t() côté application : la langue demandée, puis le français, puis la clé. Une
+// traduction manquante ne doit pas produire une page vide, ni surtout un titre vide.
+function cle(chemin, langue = DEFAULT_LANGUAGE) {
+  const lire = (dico) => chemin.split('.').reduce((o, k) => (o == null ? undefined : o[k]), dico);
+  return lire(translations[langue]) ?? lire(translations[DEFAULT_LANGUAGE]) ?? chemin;
 }
 
 function remplir(gabarit, valeurs) {
@@ -85,18 +88,30 @@ const PAGES = [
     chemin: '/restaurants',
     titre: 'restoListUi.pageTitle',
     description: 'seo.listDescription',
-    jsonLd: (ctx) => [
-      { id: 'ld-list', donnees: restaurantListJsonLd(ctx.commerces, { url: `${SITE_URL}/restaurants` }) },
-      { id: 'ld-breadcrumb', donnees: breadcrumbJsonLd([{ name: 'Fairide', path: '/' }, { name: cle('restoListUi.heading'), path: '/restaurants' }]) }
+    jsonLd: ({ commerces, langue }) => [
+      { id: 'ld-list', donnees: restaurantListJsonLd(commerces, { url: `${SITE_URL}${cheminLocalise('/restaurants', langue)}` }) },
+      {
+        id: 'ld-breadcrumb',
+        donnees: breadcrumbJsonLd([
+          { name: 'Fairide', path: cheminLocalise('/', langue) },
+          { name: cle('restoListUi.heading', langue), path: cheminLocalise('/restaurants', langue) }
+        ])
+      }
     ]
   },
   {
     chemin: '/notre-histoire',
     titre: 'story.pageTitle',
     description: 'story.metaDescription',
-    jsonLd: () => [
-      { id: 'ld-faq', donnees: faqJsonLd([1, 2, 3, 4].map((n) => ({ question: cle(`story.faqQ${n}`), answer: cle(`story.faqA${n}`) }))) },
-      { id: 'ld-breadcrumb', donnees: breadcrumbJsonLd([{ name: 'Fairide', path: '/' }, { name: cle('story.h1'), path: '/notre-histoire' }]) }
+    jsonLd: ({ langue }) => [
+      { id: 'ld-faq', donnees: faqJsonLd([1, 2, 3, 4].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
+      {
+        id: 'ld-breadcrumb',
+        donnees: breadcrumbJsonLd([
+          { name: 'Fairide', path: cheminLocalise('/', langue) },
+          { name: cle('story.h1', langue), path: cheminLocalise('/notre-histoire', langue) }
+        ])
+      }
     ]
   },
   { chemin: '/aide', titre: 'help.pageTitle', description: 'seo.homeDescription' },
@@ -113,9 +128,25 @@ function poser(html, motif, balise) {
   return motif.test(html) ? html.replace(motif, balise) : html.replace('</head>', `    ${balise}\n  </head>`);
 }
 
-function documentPour(gabarit, { titre, description, url, image, type = 'website', blocs = [] }) {
+/* Le plan des langues, servi dans le document. Les trois versions se déclarent mutuellement, et
+   chacune se déclare elle-même : une page qui s'omet de sa propre liste invalide le groupe entier
+   pour Google. x-default désigne le français, à la racine — c'est ce qui rend légitime le fait
+   qu'il n'ait pas de préfixe /fr/. */
+function liensDeLangue(cheminApplicatif) {
+  const liens = SUPPORTED_LANGUAGES.map((lang) =>
+    `<link rel="alternate" hreflang="${HREFLANG[lang] || lang}" href="${SITE_URL}${cheminLocalise(cheminApplicatif, lang)}" />`);
+  liens.push(`<link rel="alternate" hreflang="x-default" href="${SITE_URL}${cheminLocalise(cheminApplicatif, DEFAULT_LANGUAGE)}" />`);
+  return liens.join('\n    ');
+}
+
+function documentPour(gabarit, { titre, description, url, image, type = 'website', blocs = [], langue = DEFAULT_LANGUAGE, cheminApplicatif = '/' }) {
   let html = gabarit;
+  // index.html porte lang="fr" en dur : la version néerlandaise s'annoncerait comme française, ce
+  // que les lecteurs d'écran comme les moteurs prennent au mot.
+  html = html.replace(/<html lang="[^"]*"/, `<html lang="${langue}"`);
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${attr(titre)}</title>`);
+  html = poser(html, /<meta property="og:locale"[^>]*>/, `<meta property="og:locale" content="${OG_LOCALE[langue] || 'fr_BE'}" />`);
+  html = html.replace('</head>', `    ${liensDeLangue(cheminApplicatif)}\n  </head>`);
   html = poser(html, /<link rel="canonical"[^>]*>/, `<link rel="canonical" href="${attr(url)}" />`);
   if (description) {
     html = poser(html, /<meta name="description"[^>]*>/, `<meta name="description" content="${attr(description)}" />`);
@@ -167,18 +198,26 @@ async function commercesPublics() {
 
 function sitemap(entrees) {
   const jour = new Date().toISOString().slice(0, 10);
-  const urls = entrees.map(({ chemin, priorite, frequence, date }) => [
-    '  <url>',
-    `    <loc>${SITE_URL}${chemin}</loc>`,
-    `    <lastmod>${date || jour}</lastmod>`,
-    `    <changefreq>${frequence}</changefreq>`,
-    `    <priority>${priorite}</priority>`,
-    '  </url>'
-  ].join('\n')).join('\n');
+  const urls = entrees.map(({ chemin, cheminApplicatif, priorite, frequence, date }) => {
+    // Les alternates dans le plan du site disent la même chose que les balises hreflang du
+    // document. Les deux ensemble, c'est ce que Google demande pour un site multilingue : le plan
+    // fait découvrir les trois adresses, les balises disent qu'elles n'en font qu'une.
+    const alternates = SUPPORTED_LANGUAGES.map((lang) =>
+      `    <xhtml:link rel="alternate" hreflang="${HREFLANG[lang] || lang}" href="${SITE_URL}${cheminLocalise(cheminApplicatif, lang)}" />`).join('\n');
+    return [
+      '  <url>',
+      `    <loc>${SITE_URL}${chemin}</loc>`,
+      alternates,
+      `    <lastmod>${date || jour}</lastmod>`,
+      `    <changefreq>${frequence}</changefreq>`,
+      `    <priority>${priorite}</priority>`,
+      '  </url>'
+    ].join('\n');
+  }).join('\n');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!-- Produit par scripts/prerender.mjs à chaque construction. Ne pas modifier à la main : les fiches
      de commerce sont tirées de l'API au moment du build, et toute retouche serait écrasée. -->
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${urls}
 </urlset>
 `;
@@ -195,63 +234,70 @@ async function principal() {
   const ctx = { commerces: commerces || [] };
   const entrees = [];
 
-  for (const page of PAGES) {
-    const titre = page.titre ? cle(page.titre) : cle('seo.defaultTitle') || (await defautTitre());
-    const description = page.description ? tronquer(cle(page.description)) : undefined;
-    const html = documentPour(gabarit, {
-      titre,
-      description,
-      url: `${SITE_URL}${page.chemin}`,
-      blocs: page.jsonLd ? page.jsonLd(ctx) : []
-    });
-    await ecrire(page.chemin, html);
-    entrees.push({
-      chemin: page.chemin,
-      priorite: page.chemin === '/' ? '1.0' : page.chemin === '/restaurants' ? '0.9' : page.chemin === '/notre-histoire' ? '0.8' : '0.4',
-      frequence: page.chemin === '/restaurants' ? 'daily' : page.chemin === '/' ? 'weekly' : 'monthly'
-    });
+  // Chaque page existe dans les trois langues, à trois adresses distinctes (voir
+  // src/i18n/routing.js). C'est tout l'objet de l'adressage par langue : sans cela, les versions
+  // néerlandaise et anglaise n'étaient explorables nulle part.
+  for (const langue of SUPPORTED_LANGUAGES) {
+    for (const page of PAGES) {
+      const chemin = cheminLocalise(page.chemin, langue);
+      const titre = cle(page.titre || 'seo.defaultTitle', langue);
+      const description = page.description ? tronquer(cle(page.description, langue)) : undefined;
+      const html = documentPour(gabarit, {
+        langue,
+        cheminApplicatif: page.chemin,
+        titre,
+        description,
+        url: `${SITE_URL}${chemin}`,
+        blocs: page.jsonLd ? page.jsonLd({ ...ctx, langue }) : []
+      });
+      await ecrire(chemin, html);
+      entrees.push({
+        chemin,
+        cheminApplicatif: page.chemin,
+        priorite: page.chemin === '/' ? '1.0' : page.chemin === '/restaurants' ? '0.9' : page.chemin === '/notre-histoire' ? '0.8' : '0.4',
+        frequence: page.chemin === '/restaurants' ? 'daily' : page.chemin === '/' ? 'weekly' : 'monthly'
+      });
+    }
   }
 
   let fiches = 0;
-  for (const r of commerces || []) {
-    const chemin = `/restaurants/${r.id}`;
-    const titre = remplir(cle('seo.restaurantTitle'), { name: r.name, cuisine: r.cuisine || '', commune: r.commune || r.city || 'Bruxelles' })
-      .replace(/\s*,\s*·/, ' ·').replace(/\s{2,}/g, ' ');
-    const description = tronquer(remplir(cle('seo.restaurantDescription'), {
-      name: r.name, commune: r.commune || r.city || 'Bruxelles'
-    }));
-    const html = documentPour(gabarit, {
-      titre,
-      description,
-      url: `${SITE_URL}${chemin}`,
-      image: r.imageUrl || r.image || undefined,
-      blocs: [
-        { id: 'ld-restaurant', donnees: restaurantJsonLd(r, { url: `${SITE_URL}${chemin}` }) },
-        {
-          id: 'ld-breadcrumb',
-          donnees: breadcrumbJsonLd([
-            { name: 'Fairide', path: '/' },
-            { name: cle('restoListUi.heading'), path: '/restaurants' },
-            { name: r.name, path: chemin }
-          ])
-        }
-      ]
-    });
-    await ecrire(chemin, html);
-    entrees.push({ chemin, priorite: '0.7', frequence: 'weekly' });
-    fiches += 1;
+  for (const langue of SUPPORTED_LANGUAGES) {
+    for (const r of commerces || []) {
+      const applicatif = `/restaurants/${r.id}`;
+      const chemin = cheminLocalise(applicatif, langue);
+      const commune = r.commune || r.city || 'Bruxelles';
+      // La virgule du gabarit reste orpheline quand la cuisine n'est pas renseignée
+      // (« Chez Pierre, à Ixelles · Fairide ») : on la referme plutôt que de publier la faute.
+      const titre = remplir(cle('seo.restaurantTitle', langue), { name: r.name, cuisine: r.cuisine || '', commune })
+        .replace(/,\s+(?=à |in |te )/, ' ').replace(/\s{2,}/g, ' ').trim();
+      const description = tronquer(remplir(cle('seo.restaurantDescription', langue), { name: r.name, commune }));
+      const html = documentPour(gabarit, {
+        langue,
+        cheminApplicatif: applicatif,
+        titre,
+        description,
+        url: `${SITE_URL}${chemin}`,
+        image: r.imageUrl || r.image || undefined,
+        blocs: [
+          { id: 'ld-restaurant', donnees: restaurantJsonLd(r, { url: `${SITE_URL}${chemin}` }) },
+          {
+            id: 'ld-breadcrumb',
+            donnees: breadcrumbJsonLd([
+              { name: 'Fairide', path: cheminLocalise('/', langue) },
+              { name: cle('restoListUi.heading', langue), path: cheminLocalise('/restaurants', langue) },
+              { name: r.name, path: chemin }
+            ])
+          }
+        ]
+      });
+      await ecrire(chemin, html);
+      entrees.push({ chemin, cheminApplicatif: applicatif, priorite: '0.7', frequence: 'weekly' });
+      fiches += 1;
+    }
   }
 
   await writeFile(path.join(DIST, 'sitemap.xml'), sitemap(entrees), 'utf8');
-  console.log(`[prerender] ${PAGES.length} pages publiques + ${fiches} fiches de commerce, sitemap de ${entrees.length} adresses.`);
-}
-
-// Titre par défaut de l'accueil : la même chaîne que DEFAULT_TITLES dans usePageMeta, lue depuis le
-// gabarit pour n'avoir qu'un seul endroit où la corriger.
-async function defautTitre() {
-  const html = await readFile(path.join(DIST, 'index.html'), 'utf8');
-  const m = html.match(/<title>([\s\S]*?)<\/title>/);
-  return m ? m[1] : 'Fairide';
+  console.log(`[prerender] ${PAGES.length} pages publiques × ${SUPPORTED_LANGUAGES.length} langues + ${fiches} fiches, sitemap de ${entrees.length} adresses.`);
 }
 
 principal().catch((e) => {

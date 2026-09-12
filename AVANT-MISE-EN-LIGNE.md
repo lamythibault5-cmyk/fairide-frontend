@@ -4,6 +4,7 @@ Ce qu'il reste à faire avant d'ouvrir Fairide à de vrais commerçants et de vr
 
 Établi le 30 août 2026, après une revue complète du frontend et une lecture du backend.
 Mis à jour le 3 septembre 2026 (refonte visuelle, inscription par étapes, traduction des cartes).
+Mis à jour le 12 septembre 2026 (référencement : pré-rendu, plan du site, adressage par langue — §11).
 Chaque point a été vérifié dans le code — rien ici n'est supposé.
 
 **Légende :** 🔴 bloquant · 🟠 obligation légale · 🟡 fiabilité · ⚪️ qualité
@@ -218,17 +219,43 @@ rend la lacune **plus visible qu'avant**, ce qui est une raison de plus de la tr
 
 ---
 
-## ⚪️ 11. Le référencement ne fonctionne pas encore
+## ⚪️ 11. Référencement : la plomberie est posée, deux branchements restent
 
-Les fiches de commerce sont volontairement publiques pour être indexables par Google. Mais le
-site est entièrement construit dans le navigateur, sans pré-rendu, et le plan du site ne liste
-que l'accueil et les pages légales — **pas les fiches de commerce**, précisément celles qui
-apporteraient du trafic.
+*Mis à jour le 12 septembre 2026.*
 
-L'intention est bonne, la plomberie manque.
+Ce qui manquait ici (« le site est entièrement construit dans le navigateur, sans pré-rendu, et
+le plan du site ne liste pas les fiches de commerce ») est fait :
 
-- [ ] Générer le plan du site depuis le serveur, avec une entrée par commerce
-- [ ] Ajouter un pré-rendu des deux pages publiques (liste et fiche)
+- **pré-rendu à la construction** — `scripts/prerender.mjs` écrit un fichier HTML réel par page
+  publique et par langue, avec titre, description, `og:*`, canonical, hreflang et données
+  structurées dès le premier octet ;
+- **plan du site produit depuis l'API** au moment du build, une entrée par commerce et par
+  langue, avec les alternates de langue ;
+- **adressage par langue** — `/…` en français, `/nl/…`, `/en/…`, reliés par hreflang ;
+- **`robots.txt`** ferme les espaces privés ;
+- **page « Notre histoire »** réécrite pour les recherches d'alternative, avec une FAQ balisée.
+
+Restent deux branchements, qui demandent des comptes et non du code :
+
+- [ ] **Search Console** : vérifier la propriété du domaine (balise `<meta>` ou enregistrement
+      DNS), puis soumettre `https://fairide.be/sitemap.xml`. Sans cela on ne saura pas ce qui est
+      indexé ni sur quelles requêtes le site sort. *Reporté volontairement le 12 septembre 2026 :
+      la balise de vérification est à récupérer côté Google.*
+- [ ] **Mesure d'audience** : choisir entre Plausible et Matomo. Recommandation : l'un des deux
+      plutôt que Google Analytics — ils n'ont pas besoin de cookie, ce qui évite d'ajouter une
+      catégorie à la bannière de consentement et de refaire la déclaration de sous-traitants du
+      §4.1 (voir aussi le traitement de Sentry dans `main.jsx`, démarré seulement après accord).
+      *Reporté volontairement le 12 septembre 2026.*
+
+Deux améliorations possibles, aucune bloquante :
+
+- [ ] **Pré-rendre aussi le corps des pages**, et pas seulement le `<head>`. Il faudrait un
+      navigateur sans écran à la construction : le contenu vient de l'API via des effets React
+      qu'un rendu de chaîne n'exécute pas. Gain réel mais modeste — Google exécute le JavaScript ;
+      ce qui se joue ici est la vitesse d'indexation et le LCP, pas l'indexation elle-même.
+- [ ] **Adresses lisibles pour les fiches** (`/restaurants/le-tavernier-ixelles` au lieu d'un
+      UUID). Demande une colonne `slug` en base, une migration, et que l'API accepte les deux
+      formes le temps que l'ancien identifiant sorte de l'index.
 
 ---
 
