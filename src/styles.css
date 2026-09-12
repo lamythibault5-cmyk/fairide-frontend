@@ -1132,6 +1132,72 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .landing-title em { font-style: normal; color: var(--lime); }
 .landing-sub { color: rgba(255,255,255,0.82); font-size: 16.5px; line-height: 1.5; margin: 0 0 24px; max-width: 54ch; }
 
+/* ---------------------------------------------------------------------------
+   LA BANNIÈRE SUR TÉLÉPHONE : UNE AFFICHE, PAS UNE PAGE.
+
+   Mesurée à 390×844 : la bannière faisait 1509px de haut, soit près de deux écrans avant même
+   d'arriver aux chiffres. S'y empilaient la signature, un titre de trois lignes, un paragraphe de
+   cinq lignes, trois boutons pleine largeur identiques, un avis d'ouverture de quatre lignes en
+   gras, trois gages de confiance, l'aperçu des commerces, puis les chiffres. Rien n'y était faux,
+   mais tout y avait le même poids, et le premier contact avec Fairide était un mur de texte.
+
+   Le premier écran ne garde donc que ce qui fait la promesse : la pastille, le titre, une phrase
+   courte, UN bouton, et la ligne qui envoie commerçants et livreurs vers l'inscription. Le reste
+   n'est pas supprimé — il commence juste sous la ligne de flottaison, ce qui est sa place.
+
+   RIEN DE TOUT CECI NE S'APPLIQUE AU-DESSUS DE 640px : la version large reste celle en ligne.
+   --------------------------------------------------------------------------- */
+
+/* Les variantes courtes n'existent que sur téléphone (voir Landing.jsx). */
+.landing-sub-court, .landing-ouverture-court, .landing-partner-line { display: none; }
+
+@media (max-width: 640px) {
+  /* L'affiche occupe le premier écran, et c'est ce qui repousse le reste dessous.
+     Les 190px retranchés : l'en-tête (98px mesurés ici, il ne descend jamais plus bas) plus le
+     rembourrage haut de la bannière (34px) et de quoi laisser respirer le bas. Trop court,
+     l'aperçu des commerces remonterait dans l'écran ; trop long, l'affiche déborderait et il
+     faudrait défiler pour atteindre le bouton. Si l'en-tête grandit — traduction plus longue,
+     écran plus étroit — l'affiche descend d'autant, sans jamais rien couper. */
+  .landing-hero-affiche {
+    min-height: calc(100svh - 190px);
+    display: flex; flex-direction: column; justify-content: center;
+  }
+  .landing-sub-long, .landing-ouverture-long, .landing-cta-partenaire { display: none; }
+  .landing-sub-court { display: block; }
+  .landing-ouverture-court { display: block; }
+  /* Le titre perd deux points de graisse optique : à 32px sur trois lignes il occupait le tiers
+     de l'écran. La casse et l'interlettrage ne bougent pas — c'est la même voix, moins fort. */
+  .landing-title { font-size: clamp(28px, 8.4vw, 34px); margin: 12px 0 14px; }
+  .landing-sub { font-size: 15.5px; margin-bottom: 22px; }
+  /* Le seul bouton de l'écran devient plein et blanc. En ghost, il ne se distinguait des deux
+     autres que par sa position ; seul sur un aplat iris, un contour à 45 % de blanc ne se lit
+     plus comme l'action de la page. Blanc sur iris et non lime : le lime de cette vue est déjà
+     pris par le second vers du titre, et la spec n'en tolère qu'un (voir .landing-title em).
+
+     La classe est doublée (.btn-hero-ghost.landing-cta-principal) et ce n'est pas un tic : à
+     spécificité égale, c'est l'ordre du fichier qui tranche, et .btn-hero-ghost est déclaré plus
+     bas — il reprenait donc son fond transparent.
+
+     La rangée passe en colonne étirée : `width: 100%` sur un bouton resté élément flex d'une
+     rangée en `flex-wrap` ne donnait que 225px sur 350 disponibles. */
+  .landing-hero-actions { flex-direction: column; align-items: stretch; }
+  .btn-hero-ghost.landing-cta-principal {
+    background: var(--cream); color: var(--iris); border-color: var(--cream);
+    width: 100%; font-size: 16px; padding: 14px 18px;
+  }
+  .btn-hero-ghost.landing-cta-principal:hover:not(:disabled) { background: #EDEBFF; border-color: #EDEBFF; filter: none; }
+  /* La ligne qui remplace les deux boutons partenaires. Discrète par construction : c'est une
+     phrase, pas une quatrième forme cliquable en pleine largeur. */
+  .landing-partner-line {
+    display: block; margin: 16px 0 0; font-size: 14px; color: rgba(255,255,255,0.75);
+  }
+  .landing-partner-line a { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+  .landing-ouverture-court { margin-top: 18px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
+  /* Le drapeau belge quitte le coin : sur un aplat qui va maintenant d'un bord à l'autre, il
+     flottait seul en haut à droite, à hauteur du titre, sans rien pour l'ancrer. */
+  .be-flag { display: none; }
+}
+
 /* Les trois chiffres vivent DANS la bannière, séparés par un filet blanc, au
    lieu de flotter en carte blanche à cheval dessous (l'ancienne .stats-bar en
    margin-top négatif). Un bloc de moins, et le lime peut enfin servir : sur

@@ -5424,6 +5424,14 @@ export const translations = {
       title1: 'Les commerces du quartier,',
       title2: 'livrés à domicile.',
       sub: 'Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés — sans la commission excessive des grandes plateformes. Paie ton repas, pas la plateforme.',
+      /* Les quatre clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
+         et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
+         ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
+         courte. Le texte long reste servi dès 641px, il n'est pas perdu. */
+      subCourt: 'Les commerces de ton quartier, livrés par des livreurs justement payés.',
+      ordersOpenCourt: '🗓️ Commandes en ligne dès le 10 octobre',
+      partnerQuestion: 'Commerce ou livreur ?',
+      partnerLink: 'Rejoindre Fairide',
       orderNow: '🛍️ Commander maintenant',
       becomePartner: '🏪 Devenir partenaire',
       statCommission: 'de commission (vs 22-32% ailleurs)',
@@ -11567,6 +11575,11 @@ export const translations = {
       title1: 'The neighbourhood\'s businesses,',
       title2: 'delivered to the door.',
       sub: 'Fairide connects restaurants, supermarkets and local businesses with fairly paid couriers — without the excessive commission of the big platforms. Pay your meal, not the platform.',
+      /* Short forms, phone only — see the fr block for the reasoning. */
+      subCourt: 'Your neighbourhood\'s businesses, delivered by fairly paid couriers.',
+      ordersOpenCourt: '🗓️ Online orders from 10 October',
+      partnerQuestion: 'A business or a courier?',
+      partnerLink: 'Join Fairide',
       orderNow: '🛍️ Order now',
       becomePartner: '🏪 Become a partner',
       statCommission: 'commission (vs 22-32% elsewhere)',
@@ -17710,6 +17723,11 @@ export const translations = {
       title1: 'De handelaars van de buurt,',
       title2: 'aan huis geleverd.',
       sub: 'Fairide verbindt restaurants, supermarkten en lokale handelaars met eerlijk betaalde koeriers — zonder de overdreven commissie van de grote platformen. Betaal je maaltijd, niet het platform.',
+      /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
+      subCourt: 'De handelaars van je buurt, geleverd door eerlijk betaalde koeriers.',
+      ordersOpenCourt: '🗓️ Online bestellen vanaf 10 oktober',
+      partnerQuestion: 'Handelaar of koerier?',
+      partnerLink: 'Sluit je aan bij Fairide',
       orderNow: '🛍️ Nu bestellen',
       becomePartner: '🏪 Word partner',
       statCommission: 'commissie (vs 22-32% elders)',
