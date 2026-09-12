@@ -4722,6 +4722,31 @@ export const translations = {
       toastAutoCreated: '{name} est prêt : ton commerce a été créé avec ce que tu as indiqué à l\'inscription. Tu peux tout ajuster dans Mon commerce.',
       toastLegalFirst: 'Renseigne d\'abord le numéro d\'entreprise et le numéro de TVA du commerce.'
     },
+    /* Les casquettes d'un même compte (voir MesCasquettes.jsx). Les sous-titres disent ce que
+       prendre une casquette ne donne PAS — validation d'équipe pour livrer, approbation et
+       vérification Stripe pour encaisser — plutôt que de laisser la déception venir après le clic. */
+    casquettes: {
+      titre: 'Mes casquettes',
+      intro: 'Un seul compte, un seul numéro. Tu peux commander chez tes voisins, tenir ton commerce et livrer, sans créer de second compte.',
+      nom_client: 'Client',
+      nom_restaurant: 'Commerce',
+      nom_driver: 'Livreur',
+      active: 'Vue actuelle',
+      basculerVers: 'Passer à cette vue',
+      basculer: 'Basculer',
+      activer: 'Activer',
+      basculee: 'Te voilà en vue {role}.',
+      ajoutee: 'Casquette {role} activée.',
+      prendre_client: 'Commander comme client',
+      prendreSous_client: 'Commande chez les autres commerces de Bruxelles, avec ce compte.',
+      prendre_restaurant: 'Inscrire mon commerce',
+      prendreSous_restaurant: 'Ouvre l\'espace commerce. La mise en ligne demande ensuite la validation de l\'équipe et la vérification des paiements.',
+      prendre_driver: 'Devenir livreur',
+      prendreSous_driver: 'Ouvre le dossier livreur. Les livraisons ne commencent qu\'après validation par l\'équipe.',
+      confirme_client: 'Tu pourras commander chez les autres commerces avec ce compte. Ton commerce et tes livraisons ne changent pas. Chez toi, en revanche, tu ne peux pas commander : ce serait un aller-retour d\'argent, pas une commande.',
+      confirme_restaurant: 'Tu pourras créer ton commerce et préparer ta carte. Il ne sera visible des clients, et ne pourra encaisser, qu\'une fois validé par l\'équipe et tes paiements vérifiés.',
+      confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
+    },
     accountUi: {
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
       subPastDue: 'Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n\'est plus visible aux clients tant que ce n\'est pas régularisé.',
@@ -10905,6 +10930,28 @@ export const translations = {
       toastAutoCreated: '{name} is ready: your business was created from what you gave at sign-up. You can adjust everything in My business.',
       toastLegalFirst: 'First enter the business\'s company number and VAT number.'
     },
+    casquettes: {
+      titre: 'My hats',
+      intro: 'One account, one number. You can order from your neighbours, run your business and deliver, without creating a second account.',
+      nom_client: 'Customer',
+      nom_restaurant: 'Business',
+      nom_driver: 'Courier',
+      active: 'Current view',
+      basculerVers: 'Switch to this view',
+      basculer: 'Switch',
+      activer: 'Activate',
+      basculee: 'You are now in the {role} view.',
+      ajoutee: '{role} hat activated.',
+      prendre_client: 'Order as a customer',
+      prendreSous_client: 'Order from the other businesses in Brussels, with this account.',
+      prendre_restaurant: 'List my business',
+      prendreSous_restaurant: 'Opens the business space. Going live then requires the team\'s approval and verified payments.',
+      prendre_driver: 'Become a courier',
+      prendreSous_driver: 'Opens the courier file. Deliveries only start once the team has approved you.',
+      confirme_client: 'You will be able to order from other businesses with this account. Your business and your deliveries do not change. Ordering from your own business stays blocked: that would be money going in a circle, not an order.',
+      confirme_restaurant: 'You will be able to create your business and prepare its menu. It becomes visible to customers, and able to take money, only once the team has approved it and your payments are verified.',
+      confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
+    },
     accountUi: {
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
       subPastDue: 'The last payment of your Fairide subscription (€20/month) failed. Your restaurant is hidden from customers until it is settled.',
@@ -17078,6 +17125,28 @@ export const translations = {
       actingQuit: 'Verlaten en terug naar admin',
       toastAutoCreated: '{name} is klaar: je zaak is aangemaakt met wat je bij de inschrijving opgaf. Je kunt alles aanpassen in Mijn zaak.',
       toastLegalFirst: 'Vul eerst het ondernemingsnummer en het btw-nummer van de zaak in.'
+    },
+    casquettes: {
+      titre: 'Mijn petten',
+      intro: 'Eén account, één nummer. Je kunt bestellen bij je buren, je zaak beheren en leveren, zonder een tweede account.',
+      nom_client: 'Klant',
+      nom_restaurant: 'Zaak',
+      nom_driver: 'Koerier',
+      active: 'Huidige weergave',
+      basculerVers: 'Naar deze weergave',
+      basculer: 'Wisselen',
+      activer: 'Activeren',
+      basculee: 'Je zit nu in de weergave {role}.',
+      ajoutee: 'Pet {role} geactiveerd.',
+      prendre_client: 'Bestellen als klant',
+      prendreSous_client: 'Bestel bij de andere zaken in Brussel, met dit account.',
+      prendre_restaurant: 'Mijn zaak inschrijven',
+      prendreSous_restaurant: 'Opent de zakenruimte. Online gaan vraagt daarna de goedkeuring van het team en geverifieerde betalingen.',
+      prendre_driver: 'Koerier worden',
+      prendreSous_driver: 'Opent het koeriersdossier. Leveringen starten pas na goedkeuring door het team.',
+      confirme_client: 'Je zult bij andere zaken kunnen bestellen met dit account. Je zaak en je leveringen veranderen niet. Bij jezelf bestellen blijft geblokkeerd: dat is geld dat rondjes draait, geen bestelling.',
+      confirme_restaurant: 'Je zult je zaak kunnen aanmaken en haar kaart voorbereiden. Ze wordt pas zichtbaar voor klanten, en kan pas geld ontvangen, na goedkeuring door het team en verificatie van je betalingen.',
+      confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
     },
     accountUi: {
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
