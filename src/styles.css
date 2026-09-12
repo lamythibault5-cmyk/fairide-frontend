@@ -994,17 +994,95 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    le texte blanc. Une colonne de grille ne peut structurellement pas empiéter
    sur sa voisine, donc le défaut ne peut pas revenir en changeant une valeur.
    Le drapeau belge reste en absolu (coin haut-droit), d'où le position: relative. */
+/* LE PREMIER ÉCRAN EST UN APLAT, LA VIDÉO COMMENCE APRÈS.
+
+   La bannière était une carte arrondie de 960px, translucide à 86 % (voir .wrap-fond
+   .landing-hero), posée sur la vidéo : le fond de cuisine passait à la fois DERRIÈRE le texte et
+   tout autour de la carte. On abordait donc le site sur deux fonds à la fois, et l'accroche se
+   lisait sur une image qui change de luminosité d'une seconde à l'autre.
+
+   L'aplat couvre maintenant tout le premier écran, bord à bord, et la vidéo n'apparaît qu'une
+   fois la bannière dépassée — voir le fondu sur ::before juste en dessous. Ce qui ne change pas :
+   la grille, la colonne de contenu à 960px, les rembourrages. Le champ bleu s'élargit, la mise en
+   page reste celle de la maquette en ligne.
+
+   `overflow: hidden` est retiré : c'est lui qui empêchait ::before de sortir de la colonne de
+   960px pour aller au bord de l'écran. Il ne protégeait plus rien — le cadre du vélo qu'il
+   rognait autrefois est aujourd'hui une petite signature de 66px posée dans le flux
+   (.landing-hero-signature), et le drapeau belge tient dans la boîte.
+
+   Rayon à 0 : une carte arrondie a des coins, un champ bord à bord n'en a pas. */
 .landing-hero {
-  position: relative; overflow: hidden;
-  background: var(--iris); color: var(--cream);
-  border-radius: var(--radius);
-  padding: 54px 34px 0;
-  margin: 0 0 20px;
+  --fondu: 200px;
+  position: relative;
+  background: transparent; color: var(--cream);
+  border-radius: 0;
+  padding: 54px 34px var(--fondu);
+  /* -24px : annule le paddingTop posé en ligne sur .wrap par Layout.jsx. Sans lui, une bande
+     blanche de 24px sépare l'aplat de la bannière de l'en-tête, qui est iris lui aussi — et c'est
+     précisément la couture qu'on cherche à faire disparaître. Valeur couplée à Layout.jsx. */
+  margin: -24px 0 20px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 38%);
   grid-template-areas: "text preview" "stats stats";
   align-items: center;
+  align-content: center;
   column-gap: 36px;
+  /* La bannière tient le premier écran entier, sinon la vidéo réapparaît dans sa dernière bande :
+     mesurée à 1440×900, elle ne faisait que 795px de haut.
+
+     100svh et non 100vh : sur téléphone, vh se cale sur la barre d'adresse rétractée, ce qui fait
+     dépasser la bannière d'une centaine de pixels au chargement. `svh` prend la petite hauteur,
+     celle où la barre est déployée — l'état réel à l'arrivée sur la page.
+
+     Les 130px en plus : la bannière commence SOUS l'en-tête (78px de haut ici), et sa zone de
+     fondu occupe ses 200 derniers pixels. Sans ce supplément, le fondu démarrerait au-dessus de
+     la ligne de flottaison et la vidéo pointerait dans le bas du premier écran. Il faut donc
+     130px + hauteur d'en-tête > --fondu ; l'en-tête grandit quand la place manque, jamais
+     l'inverse, donc la marge tient dans les deux sens sans rien mesurer en JS. */
+  min-height: calc(100svh + 130px);
+}
+
+/* LE FONDU VERS LA VIDÉO.
+
+   Le fond de cuisine est en position: fixed derrière toute la page (voir .cuisine-fond) et
+   l'aplat l'occulte : en bas de bannière, on passerait du bleu plein à la vidéo d'un coup, sur
+   une ligne nette.
+
+   L'aplat est donc porté par un pseudo-élément plutôt que par la boîte elle-même, ce qui permet
+   de lui appliquer un masque dégradé sans toucher au texte : on ne peut pas estomper le fond et
+   garder le contenu net tant que les deux sont sur la même boîte.
+
+   Le fond étant fixe et la bannière défilant par-dessus, la zone de fondu remonte à l'écran au fur
+   et à mesure du défilement : le bleu cède la place à la vidéo progressivement, sans la moindre
+   ligne de démarcation. Aucun écouteur de défilement, aucun calcul par image.
+
+   100vw + left: 50% + translateX(-50%) : le pseudo sort de la colonne de 960px et va d'un bord de
+   l'écran à l'autre. 100vw inclut la largeur de la barre de défilement, d'où le recentrage — le
+   dépassement devient symétrique de quelques pixels de chaque côté au lieu de partir entièrement
+   à droite. `overflow-x: clip` sur html (tout en haut de ce fichier) le rogne sans jamais créer
+   de barre horizontale.
+
+   z-index: -1 plutôt qu'un z-index: 1 sur chaque enfant : les enfants de la bannière ne sont pas
+   positionnés, un pseudo à z-index: 0 leur passerait donc PAR-DESSUS. À -1 il se glisse derrière
+   eux sans qu'aucun n'ait à se déclarer, et il ne s'échappe pas de la page : .wrap-fond porte
+   déjà un contexte d'empilement (position: relative; z-index: 1).
+
+   Quatre arrêts et non deux : avec deux, la moitié haute du fondu s'efface presque d'un coup et
+   on voit passer une frange plus claire. Les pourcentages suivent la courbe d'un fondu perceptuel
+   — l'œil lit la luminosité en racine, pas en droite — d'où le 55 % à mi-bande plutôt que 50 %. */
+.landing-hero::before {
+  content: ''; position: absolute; z-index: -1;
+  top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
+  background: var(--iris);
+  --masque: linear-gradient(to bottom,
+    #000 calc(100% - var(--fondu)),
+    rgba(0,0,0,.82) calc(100% - var(--fondu) * .72),
+    rgba(0,0,0,.55) calc(100% - var(--fondu) * .45),
+    rgba(0,0,0,.22) calc(100% - var(--fondu) * .2),
+    transparent 100%);
+  -webkit-mask-image: var(--masque);
+  mask-image: var(--masque);
 }
 .landing-hero .hero-preview { grid-area: preview; }
 /* Signature de marque : le cadre à l'échelle, en petit, posé sur la même ligne que l'accroche. */
@@ -1030,7 +1108,13 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "stats"; }
   .landing-hero .hero-preview { margin-top: 26px; }
 }
-@media (max-width: 640px) { .landing-hero { padding: 34px 20px 0; } }
+/* Le rembourrage du bas valait 0 : la bande de fondu n'existerait donc pas sur téléphone et
+   l'aplat se couperait net sur la vidéo — exactement le raccord qu'on cherche à supprimer. Il
+   garde sa bande, simplement plus courte : un écran de téléphone est deux fois moins haut, une
+   bande de 200px y mangerait un sixième de la page. */
+@media (max-width: 640px) {
+  .landing-hero { --fondu: 140px; padding: 34px 20px var(--fondu); }
+}
 
 /* Le drapeau belge : trois bandes nettes, plus d'ombre portée. */
 .be-flag {
@@ -1986,8 +2070,9 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
    fixe la limite. Valeurs mesurees contre le PIRE fond possible : une image de video entierement
    blanche, que le voile laisse passer a 255. Voir le detail sous chaque regle. */
 
-/* Banniere : son texte le plus pale est a 78 % d opacite. */
-.wrap-fond .landing-hero { background: rgba(59, 47, 181, .86); }
+/* La bannière ne fait plus partie des blocs translucides : son aplat est plein, porté par
+   .landing-hero::before, et c'est lui qui tient tout le premier écran. Le contraste de son texte
+   ne dépend donc plus de ce qui passe dans la vidéo. */
 
 /* Bloc « ou va ton euro » : ses legendes sont a 72 % d opacite, les plus fragiles de la page. */
 .wrap-fond .euro-block { background: rgba(59, 47, 181, .9); }
@@ -1999,8 +2084,9 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 .wrap-fond .join-card.join-card-iris { background: rgba(59, 47, 181, .88); border-color: transparent; }
 .wrap-fond .app-soon { background: rgba(59, 47, 181, .88); }
 
+/* La bannière n'y est plus : rien ne passe derrière un aplat plein, il n'y a donc rien à flouter. */
 .wrap-fond .euro-block, .wrap-fond .landing-cta,
-.wrap-fond .join-card.join-card-iris, .wrap-fond .app-soon, .wrap-fond .landing-hero {
+.wrap-fond .join-card.join-card-iris, .wrap-fond .app-soon {
   -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
 }
 
@@ -2029,10 +2115,15 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 @media (prefers-contrast: more) {
   .cuisine-fond { display: none; }
   .wrap-fond .card { background: #fff; }
-  .wrap-fond .landing-hero, .wrap-fond .euro-block, .wrap-fond .landing-cta,
+  .wrap-fond .euro-block, .wrap-fond .landing-cta,
   .wrap-fond .join-card.join-card-iris, .wrap-fond .app-soon {
     background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none;
   }
+  /* Sans vidéo derrière, le fondu du bas de bannière n'a plus rien à révéler : il dégraderait
+     l'aplat vers le blanc de la page, c'est-à-dire exactement le dégradé que ce mode supprime
+     partout ailleurs. L'aplat s'arrête donc net, et la bannière retrouve sa hauteur de contenu. */
+  .landing-hero { min-height: 0; padding-bottom: 0; }
+  .landing-hero::before { -webkit-mask-image: none; mask-image: none; }
 }
 
 /* Une rangée du menu Compte peut être un <button> (partager Fairide) et non un lien.
