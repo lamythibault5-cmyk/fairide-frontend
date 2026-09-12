@@ -3370,9 +3370,33 @@ export const translations = {
       liability: 'Fairide agit en tant qu\'intermédiaire technique entre clients, commerces partenaires et livreurs indépendants. Fairide ne prépare ni ne livre elle-même les commandes et ne saurait être tenue responsable de la qualité des produits ou du respect des délais par les commerces et livreurs partenaires.'
     },
     story: {
-      pageTitle: 'Notre histoire · Fairide',
+      /* Le titre de la page et sa description visent les recherches réelles : « alternative Uber
+         Eats », « alternative Deliveroo Bruxelles », « livraison commission réduite ». Un titre
+         qui ne dit que « Notre histoire » ne peut se placer sur aucune d'elles — personne ne
+         cherche l'histoire d'une entreprise qu'il ne connaît pas encore. */
+      pageTitle: 'Alternative à Uber Eats et Deliveroo à Bruxelles · Fairide',
+      /* Sous 160 caractères, sinon usePageMeta la tronque et l'extrait s'arrête sur « frais de… ». */
+      metaDescription: 'L\'alternative belge à Uber Eats et Deliveroo à Bruxelles : commission plafonnée à 10 % pour les commerces, 100 % des frais de livraison pour les livreurs.',
+      /* Le h1 de la page nomme ce qu'elle est ; `title` reste l'étiquette du lien (pied de page,
+         Mon compte, recherche interne), où « Notre histoire » se comprend mieux. */
+      h1: 'Fairide, l\'alternative belge à Uber Eats et Deliveroo',
       title: '🧭 Notre histoire',
       intro: 'Pourquoi Fairide existe, et ce vers quoi la plateforme avance.',
+      /* Nommer les plateformes concurrentes, plutôt que « les grandes plateformes ». La comparaison
+         publicitaire est licite en Belgique tant qu'elle est objective et vérifiable (directive
+         2006/114/CE), d'où les chiffres donnés comme des fourchettes publiquement annoncées et non
+         comme des taux que nous aurions relevés nous-mêmes. */
+      alternativeTitle: 'Fairide, l\'alternative belge',
+      alternative: 'Fairide est une alternative bruxelloise à Uber Eats, Deliveroo et Takeaway.com. La différence tient en une ligne : là où ces plateformes annoncent publiquement des commissions qui vont généralement de 22 à 32 % du montant de la commande selon la formule choisie, Fairide plafonne la sienne à 10 %, et laisse aux livreurs la totalité des frais de livraison. Le reste (la carte, la commande en ligne, le paiement sécurisé, le suivi de livraison) fonctionne comme le client en a l\'habitude.',
+      faqTitle: 'Questions fréquentes',
+      faqQ1: 'Quelle alternative à Uber Eats existe-t-il à Bruxelles ?',
+      faqA1: 'Fairide est une plateforme de livraison belge active dans 19 communes bruxelloises. Elle propose les mêmes services (commande en ligne, livraison, paiement sécurisé) avec une commission plafonnée à 10 % pour les commerces partenaires.',
+      faqQ2: 'Quelle commission Fairide prélève-t-elle ?',
+      faqA2: '10 % maximum du montant des produits, sans abonnement ni frais d\'inscription. Les frais de livraison réglés par le client reviennent intégralement au livreur.',
+      faqQ3: 'Dans quelles communes Fairide livre-t-il ?',
+      faqA3: 'Dans les 19 communes de la Région de Bruxelles-Capitale, avec des commerces partenaires quartier par quartier.',
+      faqQ4: 'Comment inscrire mon restaurant ou mon commerce sur Fairide ?',
+      faqA4: 'L\'inscription est gratuite et se fait en ligne. Aucun matériel n\'est imposé : un appareil avec un navigateur suffit pour recevoir et traiter les commandes.',
       constatTitle: 'Le constat',
       constat: 'Sur les grandes plateformes de livraison, les commerces locaux perdent souvent entre 22 et 32% du montant de chaque commande en commission, une part qui pèse lourd sur leurs marges et qui finit parfois par se répercuter sur les prix payés par les clients. Les livreurs, de leur côté, ne touchent pas toujours l\'intégralité des frais de livraison réglés par le client. Fairide est né de ce constat simple : il devait être possible de connecter commerces, clients et livreurs sans qu\'une plateforme capte une part disproportionnée de la valeur créée par chacun.',
       missionTitle: 'Notre mission',
@@ -9521,9 +9545,23 @@ export const translations = {
       liability: 'Fairide acts as a technical intermediary between customers, partner businesses and independent couriers. Fairide neither prepares nor delivers orders itself and cannot be held liable for the quality of products or compliance with deadlines by partner businesses and couriers.'
     },
     story: {
-      pageTitle: 'Our story · Fairide',
+      /* Same reasoning as the fr block: the title targets the searches people actually type. */
+      pageTitle: 'Alternative to Uber Eats and Deliveroo in Brussels · Fairide',
+      metaDescription: 'The Belgian alternative to Uber Eats and Deliveroo in Brussels: commission capped at 10 % for businesses, 100 % of the delivery fee for couriers.',
+      h1: 'Fairide, the Belgian alternative to Uber Eats and Deliveroo',
       title: '🧭 Our story',
       intro: 'Why Fairide exists, and where the platform is heading.',
+      alternativeTitle: 'Fairide, the Belgian alternative',
+      alternative: 'Fairide is a Brussels alternative to Uber Eats, Deliveroo and Takeaway.com. The difference fits in one line: where those platforms publicly advertise commissions generally ranging from 22 to 32 % of the order depending on the plan, Fairide caps its own at 10 %, and leaves couriers the whole delivery fee. Everything else (the menu, online ordering, secure payment, delivery tracking) works the way customers expect.',
+      faqTitle: 'Frequently asked questions',
+      faqQ1: 'What alternative to Uber Eats is there in Brussels?',
+      faqA1: 'Fairide is a Belgian delivery platform active in the 19 Brussels municipalities. It offers the same services (online ordering, delivery, secure payment) with a commission capped at 10 % for partner businesses.',
+      faqQ2: 'What commission does Fairide charge?',
+      faqA2: '10 % of the product total at most, with no subscription and no sign-up fee. The delivery fee paid by the customer goes entirely to the courier.',
+      faqQ3: 'Which municipalities does Fairide deliver to?',
+      faqA3: 'All 19 municipalities of the Brussels-Capital Region, with partner businesses neighbourhood by neighbourhood.',
+      faqQ4: 'How do I list my restaurant or shop on Fairide?',
+      faqA4: 'Signing up is free and done online. No hardware is imposed: any device with a browser is enough to receive and handle orders.',
       constatTitle: 'The observation',
       constat: 'On the big delivery platforms, local businesses often lose between 22 and 32% of each order in commission, a share that weighs heavily on their margins and sometimes ends up in the prices customers pay. Couriers, for their part, do not always receive the full delivery fee paid by the customer. Fairide was born from this simple observation: it had to be possible to connect businesses, customers and couriers without a platform capturing a disproportionate share of the value each one creates.',
       missionTitle: 'Our mission',
@@ -15669,7 +15707,21 @@ export const translations = {
       liability: 'Fairide treedt op als technische tussenpersoon tussen klanten, partnerzaken en onafhankelijke koeriers. Fairide bereidt of levert de bestellingen niet zelf en kan niet aansprakelijk gesteld worden voor de kwaliteit van de producten of het naleven van de termijnen door partnerzaken en -koeriers.'
     },
     story: {
-      pageTitle: 'Ons verhaal · Fairide',
+      /* Zelfde redenering als in het fr-blok: de titel mikt op wat mensen echt intypen. */
+      pageTitle: 'Alternatief voor Uber Eats en Deliveroo in Brussel · Fairide',
+      metaDescription: 'Het Belgische alternatief voor Uber Eats en Deliveroo in Brussel: commissie van maximaal 10 % voor handelaars, 100 % van de leveringskost voor koeriers.',
+      h1: 'Fairide, het Belgische alternatief voor Uber Eats en Deliveroo',
+      alternativeTitle: 'Fairide, het Belgische alternatief',
+      alternative: 'Fairide is een Brussels alternatief voor Uber Eats, Deliveroo en Takeaway.com. Het verschil past op één lijn: waar die platformen publiek commissies aankondigen die doorgaans tussen 22 en 32 % van de bestelling liggen naargelang de formule, plafonneert Fairide de zijne op 10 % en laat het de volledige leveringskost aan de koerier. De rest (de kaart, online bestellen, veilig betalen, levering volgen) werkt zoals de klant het gewoon is.',
+      faqTitle: 'Veelgestelde vragen',
+      faqQ1: 'Welk alternatief voor Uber Eats bestaat er in Brussel?',
+      faqA1: 'Fairide is een Belgisch leveringsplatform dat actief is in de 19 Brusselse gemeenten. Het biedt dezelfde diensten (online bestellen, levering, veilig betalen) met een commissie van maximaal 10 % voor partnerhandelaars.',
+      faqQ2: 'Welke commissie rekent Fairide aan?',
+      faqA2: 'Maximaal 10 % van het productbedrag, zonder abonnement of inschrijvingskosten. De leveringskost die de klant betaalt, gaat integraal naar de koerier.',
+      faqQ3: 'In welke gemeenten levert Fairide?',
+      faqA3: 'In de 19 gemeenten van het Brussels Hoofdstedelijk Gewest, met partnerhandelaars wijk per wijk.',
+      faqQ4: 'Hoe schrijf ik mijn restaurant of zaak in op Fairide?',
+      faqA4: 'Inschrijven is gratis en gebeurt online. Er wordt geen materiaal opgelegd: een toestel met een browser volstaat om bestellingen te ontvangen en te behandelen.',
       title: '🧭 Ons verhaal',
       intro: 'Waarom Fairide bestaat, en waar het platform naartoe gaat.',
       constatTitle: 'De vaststelling',

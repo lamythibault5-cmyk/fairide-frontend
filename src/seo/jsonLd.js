@@ -183,6 +183,27 @@ export function restaurantListJsonLd(restaurants, { url }) {
   });
 }
 
+/* FAQPage : c'est le seul type de données structurées qui peut faire apparaître les questions
+   elles-mêmes sous le résultat, et ce sont ces questions qui correspondent mot pour mot à ce que
+   les gens tapent (« quelle alternative à Uber Eats à Bruxelles »).
+
+   Google exige que chaque question et chaque réponse soient VISIBLES sur la page : une FAQ
+   présente dans le balisage mais absente de l'écran vaut une action manuelle. Les paires passées
+   ici sont donc exactement celles que rend OurStory.jsx, lues des mêmes clés de traduction. */
+export function faqJsonLd(pairs) {
+  const items = (pairs || []).filter((p) => p?.question && p?.answer);
+  if (!items.length) return null;
+  return clean({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((p) => ({
+      '@type': 'Question',
+      name: p.question,
+      acceptedAnswer: { '@type': 'Answer', text: p.answer }
+    }))
+  });
+}
+
 export function breadcrumbJsonLd(trail) {
   const items = (trail || []).filter((t) => t?.name && t?.path);
   if (items.length < 2) return null;

@@ -4,20 +4,39 @@
   (voir App.jsx) mais ne peuvent pas figurer ici : ce fichier est statique, la liste des commerces est
   dynamique. Il faut la générer côté backend et servir /sitemap.xml depuis l'API, ou produire ce fichier
   à la construction. Tant que ce n'est pas fait, la décision de rendre ces pages publiques ne rapporte
-  presque rien en référencement — c'est le principal reste à faire côté SEO, avec le pré-rendu.
+  presque rien en référencement, c'est le principal reste à faire côté SEO, avec le pré-rendu.
+
+  Les pages listées ici sont celles qui existent en tant que telles, atteignables par un lien
+  crawlable depuis le pied de page ou la navigation publique (voir Footer.jsx et Layout.jsx) :
+  déclarer dans un sitemap une page qu'aucun lien n'atteint est le meilleur moyen de la voir
+  classée « détectée, actuellement non indexée ».
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://fairide.be/</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://fairide.be/restaurants</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-09-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
+  </url>
+  <!-- La page qui porte la comparaison avec les plateformes concurrentes et la FAQ balisée : c'est
+       la page d'entrée visée pour les recherches du type « alternative Uber Eats Bruxelles ». -->
+  <url>
+    <loc>https://fairide.be/notre-histoire</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://fairide.be/aide</loc>
+    <lastmod>2026-09-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://fairide.be/mentions-legales</loc>
