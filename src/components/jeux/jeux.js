@@ -322,12 +322,12 @@ export const JEUX = [
     })
   },
   {
-    key: 'rider', label: 'FairRider', sub: 'Gaz, tremplins, backflips', emoji: '🚴',
+    key: 'rider', label: 'FairRider', sub: 'Gaz, tremplins, saltos, loopings', emoji: '🚴',
     stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '🤕 Chute !',
     regles: [
-      'But : une seule commande. Maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Pas de bouton de saut : ce sont les tremplins, les crêtes prises vite, les trous et les falaises qui te font décoller.',
-      'Score : +1 par backflip complet en l’air (un double vaut 2, un triple 3, sans limite), +1 quand tu retombes parfaitement dans l’axe après un flip, +1 par obstacle (🪨 🚧 🛢️) franchi en l’air, +1 par plat attrapé en vol, +1 par bout de piste parcouru. Tous les 8 points, la vitesse maxi monte et la piste se corse.',
-      'Fin de partie : retomber de travers. Si le vélo arrive à peu près dans l’axe de la pente (à 40° près), c’est propre ; plus incliné, c’est la chute. Tomber dans un trou ou toucher un obstacle au sol, c’est fini aussi. Ton meilleur score est gardé et compte pour le podium.'
+      'But : une seule commande. Maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Pas de bouton de saut : tremplins, crêtes prises vite, trous et falaises te font décoller — et les loopings se bouclent tout seuls, à condition d’y arriver assez vite.',
+      'Score : +1 par backflip complet (un double vaut 2, un triple 3, sans limite) et autant en prime dès deux tours dans le même vol, +1 quand tu retombes pile dans l’axe (avec un coup de fouet en prime), +3 par looping bouclé, +1 par obstacle (🪨 🚧 🛢️) franchi en l’air, +1 par sac de livraison attrapé, +1 par bout de piste parcouru. Tous les 8 points, la vitesse maxi monte et la piste se corse.',
+      'Fin de partie : retomber de travers. Si le vélo arrive à peu près dans l’axe de la pente (à 65° près), c’est propre ; plus incliné, c’est la chute. Tomber dans un trou ou toucher un obstacle au sol, c’est fini aussi. Ton meilleur score est gardé et compte pour le podium.'
     ],
     controles: 'Maintiens (doigt, souris ou Espace) : gaz au sol, backflip en l’air ; relâche pour rouler sur l’erre ou arrêter de tourner. Un tap vaut un appui court. Échap ou P pour la pause.',
     creer: (api) => creerRider(api)

@@ -1,4 +1,4 @@
-import { aleatoire, choix, suivre, emoji, fondDegrade, halo, LIME, INK } from './dessin';
+import { aleatoire, choix, suivre, emoji, fondDegrade, halo, IRIS, LIME, INK } from './dessin';
 
 // FairRider — le vélo sur la piste, façon « Rider » : UNE seule commande.
 //
@@ -35,7 +35,14 @@ const ROT_MAX = 9.5; // vitesse angulaire maxi, rad/s
 const ROT_AMORT = 12; // amortissement de la rotation quand on relâche (1/s)
 const ROT_GRACE = 0.12; // s d'envol avant que l'appui fasse tourner : les petits sauts de bosse sont immunisés
 const REDRESSE = 1.6; // rappel doux vers l'horizontale (multiple de 2π le plus proche) une fois relâché, 1/s
-const TOLERANCE = 0.68; // écart angle/pente admis à l'atterrissage (≈ 39°) ; au-delà = chute
+// Écart angle/pente admis à l'atterrissage. À 39° on chutait sur des réceptions qui « passaient » à l'œil,
+// et le jeu punissait le joueur qui osait un double. À 65°, c'est le geste raté qui coûte, pas l'à-peu-près.
+const TOLERANCE = 1.13;
+const BOUCLE_R = 0.155; // rayon d'un looping, en fraction de U
+const BOUCLE_ELAN = 3.2; // il faut v² ≥ BOUCLE_ELAN × g × r pour entrer dans l'anneau, sinon on passe dessous
+const BOUCLE_MINI = 1.8; // vitesse garantie dans l'anneau (v² = BOUCLE_MINI × g × r) : un looping engagé se termine
+const BOUCLE_POINTS = 3; // ce que rapporte un anneau bouclé
+const RELANCE_PARFAITE = 1.12; // coup de fouet quand la réception tombe pile dans l'axe
 const PARFAIT = 0.14; // écart en dessous duquel l'atterrissage est « parfait » (≈ 8°)
 const SUIVI_PENTE = 12; // vitesse à laquelle l'inclinaison suit la pente au sol (1/s)
 const DUREE_TAP = 0.1; // un simple tap vaut un appui de cette durée
@@ -54,6 +61,95 @@ const normaliser = (a) => { let r = a % DEUX_PI; if (r > Math.PI) r -= DEUX_PI; 
 const lisse = (t) => t * t * (3 - 2 * t);
 const borner = (v, a, b) => Math.max(a, Math.min(b, v));
 
+// Rectangle à coins arrondis, avec repli pour les navigateurs qui n'ont pas roundRect.
+function arrondi(ctx, x, y, l, ht, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, l, ht, r); return; }
+  ctx.moveTo(x + r, y); ctx.lineTo(x + l - r, y); ctx.quadraticCurveTo(x + l, y, x + l, y + r);
+  ctx.lineTo(x + l, y + ht - r); ctx.quadraticCurveTo(x + l, y + ht, x + l - r, y + ht);
+  ctx.lineTo(x + r, y + ht); ctx.quadraticCurveTo(x, y + ht, x, y + ht - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+
+// Le sac isotherme Fairide, avec le plat qu'il transporte. Remplace l'emoji nu des bonus : sur la piste,
+// c'est une livraison qu'on va chercher, pas une pizza qui flotte.
+function dessinerSacRepas(ctx, x, y, s, e, angle) {
+  const l = s * 0.94; const ht = s * 0.88; const r = Math.max(2, s * 0.16);
+  ctx.save();
+  ctx.translate(x, y); if (angle) ctx.rotate(angle);
+  ctx.strokeStyle = IRIS; ctx.lineWidth = Math.max(1.6, s * 0.09); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, -ht * 0.42, l * 0.3, Math.PI, 0); ctx.stroke(); // l'anse
+  arrondi(ctx, -l / 2, -ht * 0.42, l, ht, r);
+  ctx.fillStyle = IRIS; ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, s * 0.06); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.16)'; ctx.fillRect(-l / 2 + r * 0.4, ht * 0.1, l - r * 0.8, ht * 0.14);
+  emoji(ctx, e, 0, -ht * 0.05, s * 0.46);
+  ctx.restore();
+}
+
+// Bruxelles en ombres chinoises, trois couches de parallaxe. Chaque tuile est tirée d'un hasard
+// déterministe (fonction de son index) : le décor défile à l'infini sans jamais changer d'aspect
+// quand on repasse au même endroit, et rien n'est stocké.
+const hasard = (n) => { const v = Math.sin(n * 127.1 + 311.7) * 43758.5453; return v - Math.floor(v); };
+
+// Ajoute au tracé en cours les formes d'une tuile de ville. Ne peint rien : c'est l'appelant qui fait un
+// seul fill() (ou stroke()) pour toute la couche. « phase » choisit ce qu'on ajoute, parce que les corps,
+// les tubes de l'Atomium et les fenêtres allumées n'ont ni la même couleur ni la même façon d'être peints.
+function cercle(ctx, x, y, r) { ctx.moveTo(x + r, y); ctx.arc(x, y, r, 0, Math.PI * 2); }
+
+function tuileVille(ctx, index, couche, gauche, yBase, L, s, phase) {
+  const graine = index * 17.13 + couche * 101.7;
+  const genre = Math.floor(hasard(graine) * 12);
+  if (genre === 0) {
+    // L'Atomium : neuf sphères et leurs tubes.
+    const cx = gauche + L * 0.5; const e = s * 0.85; const r = s * 0.27;
+    const noeuds = [[-e, -e], [e, -e], [0, -e], [-e, 0], [e, 0], [0, 0], [-e * 0.5, -e * 1.5], [e * 0.5, -e * 0.5]];
+    if (phase === 'tubes') { for (const nd of noeuds) { ctx.moveTo(cx, yBase - 2 * e); ctx.lineTo(cx + nd[0], yBase + nd[1]); } return; }
+    if (phase !== 'corps') return;
+    cercle(ctx, cx, yBase - 2 * e, r);
+    for (const nd of noeuds) cercle(ctx, cx + nd[0], yBase + nd[1], r);
+    return;
+  }
+  if (phase === 'tubes') return;
+  if (genre === 1) {
+    // La flèche de l'hôtel de ville, sur la Grand-Place.
+    if (phase !== 'corps') return;
+    const cx = gauche + L * 0.34; const l = s * 0.9; const ht = s * 2.5;
+    ctx.rect(cx - l / 2, yBase - ht, l, ht);
+    ctx.moveTo(cx - l / 2, yBase - ht); ctx.lineTo(cx, yBase - ht - s * 1.6); ctx.lineTo(cx + l / 2, yBase - ht); ctx.closePath();
+    for (let i = 0; i < 3; i++) ctx.rect(cx + l * 0.9 + i * s * 0.75, yBase - s * (0.9 + hasard(graine + i) * 0.8), s * 0.58, s * 3);
+    return;
+  }
+  if (genre === 2) {
+    // Les deux tours carrées de la cathédrale et la nef entre elles.
+    if (phase !== 'corps') return;
+    const cx = gauche + L * 0.5; const l = s * 0.62; const ht = s * 2.1; const ec = s * 0.8;
+    ctx.rect(cx - ec - l / 2, yBase - ht, l, ht);
+    ctx.rect(cx + ec - l / 2, yBase - ht, l, ht);
+    ctx.rect(cx - ec, yBase - ht * 0.72, ec * 2, ht * 0.72);
+    return;
+  }
+  // Le tissu ordinaire : immeubles, toits plats, quelques antennes, quelques fenêtres allumées.
+  let px = gauche; let i = 0;
+  while (px < gauche + L) {
+    const l = s * (0.55 + hasard(graine + i * 3.7) * 1.1);
+    const ht = s * (0.7 + hasard(graine + i * 5.1) * 2.3);
+    if (phase === 'corps') {
+      ctx.rect(px, yBase - ht, l - s * 0.08, ht);
+      if (hasard(graine + i * 7.3) > 0.75) ctx.rect(px + l * 0.44, yBase - ht - s * 0.45, Math.max(1, s * 0.07), s * 0.45);
+    } else {
+      const rangs = Math.floor(ht / (s * 0.42));
+      for (let r = 1; r < rangs; r++) {
+        for (let c = 0; c < 3; c++) {
+          if (hasard(graine + i * 11.3 + r * 3.1 + c) < 0.72) continue;
+          ctx.rect(px + s * 0.12 + c * (l - s * 0.24) / 3, yBase - ht + r * s * 0.42, s * 0.13, s * 0.17);
+        }
+      }
+    }
+    px += l; i++;
+  }
+}
+
 export function creerRider(api) {
   let w = api.w; let h = api.h;
   // Vélo : position monde (x, y = point de contact au sol), vitesse, orientation
@@ -65,6 +161,9 @@ export function creerRider(api) {
   let H = []; let T = []; let x0 = 0; let xGen = 0; let yFin = 0; let yBase = 0; let sections = 0;
   // Objets du monde
   let obstacles = []; let bonus = []; let prochainJalon = 0;
+  // Loopings : un anneau ne peut pas vivre dans un relief en hauteurs (deux altitudes pour un même x).
+  // C'est donc un rail circulaire posé sur la piste, que le vélo emprunte le temps d'un tour.
+  let boucles = []; let boucle = null; let phi = 0; let vBoucle = 0;
   // Rendu
   let accumule = 0; // reliquat de temps non encore intégré (voir PAS_PHYSIQUE)
   let camX = 0; let camY = 0; let decal = 0; let ecrasement = 0; let vEcrasement = 0;
@@ -153,17 +252,32 @@ export function creerRider(api) {
     if (Math.random() < 0.5) poserBonus(xBord + u * 0.3, yFin - D - u * 0.2);
     recentrer(u * 0.25);
   };
+  const sectionLooping = (u, n) => {
+    // Descente d'élan, puis un plat sur lequel l'anneau est posé : il faut arriver vite, sinon on passe dessous.
+    courbe(u * 0.55, (t, y0) => y0 + u * 0.14 * lisse(t));
+    const r = u * (BOUCLE_R + n * 0.004 + Math.random() * 0.02); // l’anneau grandit avec le niveau : il faut plus d’élan
+    courbe(u * 0.25, (t, y0) => y0);
+    const xE = xGen; const yE = yFin;
+    boucles.push({ x: xE, y: yE, r, fait: false });
+    courbe(r + u * 0.5, () => yE);
+    poserBonus(xE + r, yE - r * 2 - u * 0.09); // le plat au sommet de l'anneau : la récompense du geste
+    recentrer(u * 0.45);
+  };
   const genererSection = (n) => {
     const u = U();
     sections += 1;
     if (sections <= 2) { sectionVallons(u, 0); return; }
     const r = Math.random();
-    // Le mélange se corse avec le niveau : plus de trous et de falaises, moins de plat.
-    const pTrou = 0.08 + n * 0.025; const pChute = 0.06 + n * 0.02; const pTremplin = 0.32;
-    if (r < pTremplin) sectionTremplin(u, n);
-    else if (r < pTremplin + pTrou) sectionTrou(u, n);
-    else if (r < pTremplin + pTrou + pChute) sectionChute(u, n);
-    else if (r < 0.85) sectionVallons(u, n);
+    // Le mélange se corse avec le niveau : plus de trous et de falaises, moins de plat. Les loopings
+    // n'arrivent jamais d'entrée de jeu : on laisse le temps de comprendre la commande unique.
+    const pTrou = 0.08 + n * 0.025; const pChute = 0.06 + n * 0.02; const pTremplin = 0.3;
+    const pBoucle = sections > 4 ? 0.11 : 0;
+    let seuil = pTremplin;
+    if (r < seuil) sectionTremplin(u, n);
+    else if (r < (seuil += pTrou)) sectionTrou(u, n);
+    else if (r < (seuil += pChute)) sectionChute(u, n);
+    else if (r < (seuil += pBoucle)) sectionLooping(u, n);
+    else if (r < 0.93) sectionVallons(u, n);
     else sectionPlat(u);
   };
   const assurer = (jusqua, n) => { while (xGen < jusqua) genererSection(n); };
@@ -174,6 +288,7 @@ export function creerRider(api) {
     H.splice(0, k); T.splice(0, k); x0 += k * PAS;
     obstacles = obstacles.filter((o) => o.x > x - u);
     bonus = bonus.filter((b) => b.x > x - u);
+    boucles = boucles.filter((b) => b.x + b.r > x - u);
   };
 
   const poussierer = (px, py, n, force) => { for (let k = 0; k < n; k++) poussiere.push({ x: px + (Math.random() - 0.5) * 24, y: py, vx: (Math.random() - 0.5) * force - force * 0.3, vy: -Math.random() * force * 0.5, reste: 0.45 }); };
@@ -183,7 +298,7 @@ export function creerRider(api) {
     reset() {
       const u = U();
       H = []; T = []; x0 = 0; xGen = 0; sections = 0; yBase = h * 0.62; yFin = yBase; ajouter(yBase); ajouter(yBase);
-      obstacles = []; bonus = []; prochainJalon = u * JALON;
+      obstacles = []; bonus = []; boucles = []; boucle = null; phi = 0; vBoucle = 0; prochainJalon = u * JALON;
       x = u * 0.5; assurer(x + w * 3, 0);
       y = sol(x); vx = croisiere(0); vy = 0; auSol = true; tempsVol = 0;
       angle = Math.atan(pente(x)); omega = 0; angleDepart = angle; flips = 0; serie = 0; serieObstacles = 0; obstaclesVol = 0;
@@ -194,7 +309,7 @@ export function creerRider(api) {
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
-    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, derniereChute }; },
+    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, derniereChute }; },
     // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
     // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
     // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
@@ -223,18 +338,39 @@ export function creerRider(api) {
       // --- Relief disponible loin devant, et nettoyé loin derrière.
       assurer(x + w * 3, n); elaguer();
 
-      // --- Au sol : gaz / erre, gravité le long de la pente, plancher (le moteur ne cale pas).
-      if (auSol) {
+      // --- Dans un looping : le vélo est tenu par le rail, la gravité freine dans la montée et relance dans
+      // la descente. On garantit juste assez de vitesse pour ressortir : un anneau où l'on est entré se termine,
+      // sinon la punition tomberait bien après la décision, et le joueur ne comprendrait pas ce qu'il a raté.
+      const enBoucle = boucle !== null;
+      if (enBoucle) {
+        const b = boucle;
+        vBoucle += -Math.sin(phi) * g * dt;
+        if (appui) vBoucle += POUSSEE * u * 0.8 * dt;
+        vBoucle = borner(vBoucle, Math.sqrt(BOUCLE_MINI * g * b.r), plafond * 1.35);
+        phi += (vBoucle / b.r) * dt;
+        x = b.x + Math.sin(phi) * b.r;
+        y = b.y - b.r + Math.cos(phi) * b.r;
+        angle = -phi; omega = 0;
+        vRoue = vBoucle / (t * 0.28); roue += vRoue * dt;
+        if (phi >= DEUX_PI) {
+          boucle = null; phi = 0;
+          x = b.x + PAS; y = sol(x); vy = 0; vx = Math.max(vBoucle, base);
+          angle = Math.atan(pente(x)); auSol = true; flips = 0; tempsVol = 0; angleDepart = angle;
+          api.marquer(BOUCLE_POINTS);
+          flash = { texte: `🔄 LOOPING +${BOUCLE_POINTS}`, reste: 1.2 };
+          api.eclat?.(x - camX, y - camY - t, '#FFD166', 14);
+        }
+      } else if (auSol) {
         const p = pente(x); const sinus = p / Math.sqrt(1 + p * p);
         if (appui) vx = vx < plafond ? Math.min(plafond, vx + POUSSEE * u * dt) : suivre(vx, plafond, 2, dt); // au-dessus du plafond (descente), l'excès s'use doucement
         else vx = suivre(vx, base, FREIN_MOTEUR, dt);
         vx += -sinus * g * PENTE_EFFET * dt;
         vx = borner(vx, base * VITESSE_PLANCHER, plafond * 1.25);
       }
-      x += vx * dt;
+      if (!enBoucle) x += vx * dt;
       const ySol = sol(x); const p = pente(x);
 
-      if (auSol) {
+      if (auSol && !enBoucle) {
         // Le sol se dérobe plus vite que la chute libre (crête, lèvre, falaise) : on décolle avec l'élan de la pente.
         const yLibre = y + vy * dt + 0.5 * g * dt * dt;
         if (yLibre < ySol - 1.5) {
@@ -248,7 +384,16 @@ export function creerRider(api) {
           if (trou(x)) return chuter(x, y, 'trou');
         }
       }
-      if (!auSol) {
+      // --- Entrée dans un looping : il faut de l'élan. Trop lent, on passe simplement dessous, sans rien perdre.
+      if (auSol && !enBoucle && !boucle) {
+        for (const b of boucles) {
+          if (b.fait || x < b.x || x > b.x + PAS * 6) continue;
+          b.fait = true;
+          if (vx * vx >= BOUCLE_ELAN * g * b.r) { boucle = b; phi = 0; vBoucle = vx; y = b.y; angle = 0; omega = 0; }
+          else api.effet?.(x - camX, y - camY - t * 1.4, 'TROP LENT', '#FFD166');
+        }
+      }
+      if (!auSol && !enBoucle) {
         tempsVol += dt;
         vy += g * dt; y += vy * dt;
         // Rotation : accélération angulaire tant qu'on maintient (après une petite grâce), sinon amortissement
@@ -281,8 +426,15 @@ export function creerRider(api) {
           if (flips > 0) {
             serie += 1;
             const parfait = Math.abs(ecart) < PARFAIT;
+            // Combo : deux tours ou plus dans le même vol rapportent autant de points en prime. C'est ce qui
+            // fait qu'on tente le double au lieu d'assurer le simple.
+            const combo = flips >= 2 ? flips : 0;
             if (parfait) api.marquer(1);
-            flash = { texte: parfait ? (serie >= 2 ? `✨ PARFAIT +1 · ×${serie}` : '✨ PARFAIT +1') : (serie >= 2 ? `👌 NICE · ×${serie}` : '👌 NICE'), reste: 1.1 };
+            if (combo) api.marquer(combo);
+            // Réception pile dans l'axe : petit coup de fouet. La récompense est dans la relance, pas dans un chiffre.
+            if (parfait) vx = Math.min(vx * RELANCE_PARFAITE, plafond * 1.3);
+            const prime = `${parfait ? ' +1' : ''}${combo ? ` COMBO +${combo}` : ''}${serie >= 2 ? ` · ×${serie}` : ''}`;
+            flash = { texte: `${parfait ? '✨ PARFAIT' : '👌 NICE'}${prime}`, reste: 1.1 };
             api.eclat?.(x - camX, ySol - camY - t * 0.6, parfait ? '#FFD166' : LIME, parfait ? 14 : 8);
           } else serie = 0;
           if (!obstaclesVol) serieObstacles = 0; // la série d'obstacles tient tant que chaque vol en franchit au moins un
@@ -325,6 +477,10 @@ export function creerRider(api) {
       // sans laisser la moto dériver — à la vitesse maximale, le retard reste sous 8 % de l'écran.
       camX = suivre(camX, x - decal, CAM_SUIVI_X, dt);
       camY = suivre(camY, y - h * 0.55 + Math.min(Math.max(0, ySol - y), h * 0.5) * CAM_HAUTEUR, CAM_SUIVI, dt);
+      // Filet de sécurité : le suivi souple, volontairement partiel en hauteur, laissait sortir le vélo par le
+      // haut sur les très gros sauts de fin de partie — on ne savait plus quand relâcher. Quoi qu’il arrive,
+      // il reste dans le cadre.
+      camY = borner(camY, y - h * 0.88, y - h * 0.14);
       secousse = Math.max(0, secousse - dt * 18);
       if (vx > plafond * 0.8 && Math.random() < dt * 45) traits.push({ x: x - t * aleatoire(0.6, 1.4), y: y - t * aleatoire(0.1, 1.2), l: t * aleatoire(0.5, 1.3), reste: 0.22 });
       for (const tr of traits) tr.reste -= dt;
@@ -344,14 +500,32 @@ export function creerRider(api) {
         const cx = ((i * w * 0.37 - camX * 0.1) % (w * 1.4) + w * 1.4) % (w * 1.4) - w * 0.2;
         ctx.beginPath(); ctx.ellipse(cx, h * (0.1 + (i % 2) * 0.09) - camY * 0.05, w * 0.12, h * 0.035, 0, 0, Math.PI * 2); ctx.fill();
       }
-      // Collines lointaines puis proches (parallaxe moyenne) : deux couches, la plus proche plus sombre.
-      const couches = [[0.25, 0.12, 'rgba(20,18,31,.18)', 0.48, 0.07], [0.5, 0.25, 'rgba(20,18,31,.3)', 0.58, 0.05]];
-      for (const [kx, ky, couleur, base, amp] of couches) {
-        ctx.fillStyle = couleur;
-        ctx.beginPath(); ctx.moveTo(0, h + 10);
-        for (let px = 0; px <= w; px += 6) { const xx = px + camX * kx; ctx.lineTo(px, h * base - camY * ky + Math.sin(xx / (u * 0.3)) * h * amp + Math.sin(xx / (u * 0.13) + 2) * h * amp * 0.4); }
-        ctx.lineTo(w, h + 10); ctx.closePath(); ctx.fill();
+      // Bruxelles derrière la piste : trois couches de parallaxe, de la brume au premier plan sombre.
+      // Atomium, flèche de l'hôtel de ville, tours de la cathédrale et tissu ordinaire, tirés au sort une
+      // fois pour toutes par index de tuile (voir tuileVille) — on livre à Bruxelles, autant que ça se voie.
+      const villes = [[0.16, 0.62, 1.25, 'rgba(255,255,255,.12)', false], [0.3, 0.7, 0.95, 'rgba(20,18,31,.24)', false], [0.52, 0.78, 0.7, 'rgba(20,18,31,.42)', true]];
+      for (let k = 0; k < villes.length; k++) {
+        const [par, hb, ech, couleur, fen] = villes[k];
+        const L = u * 2.4 * ech; const s = u * 0.13 * ech;
+        const dec = camX * par; const yb = h * hb - camY * par * 0.3;
+        const premier = Math.floor(dec / L) - 1; const dernier = premier + Math.ceil(w / L) + 2;
+        ctx.beginPath();
+        for (let i = premier; i <= dernier; i++) tuileVille(ctx, i, k, i * L - dec, yb, L, s, 'corps');
+        ctx.fillStyle = couleur; ctx.fill();
+        ctx.beginPath();
+        for (let i = premier; i <= dernier; i++) tuileVille(ctx, i, k, i * L - dec, yb, L, s, 'tubes');
+        ctx.strokeStyle = couleur; ctx.lineWidth = Math.max(1.4, s * 0.08); ctx.stroke();
+        if (!fen) continue;
+        ctx.beginPath();
+        for (let i = premier; i <= dernier; i++) tuileVille(ctx, i, k, i * L - dec, yb, L, s, 'fenetres');
+        ctx.fillStyle = 'rgba(200,240,60,.3)'; ctx.fill();
       }
+      // Un aplat sombre sous les silhouettes : la piste se détache et les immeubles ne « flottent » pas.
+      // Il monte en fondu sur une trentaine de pixels, sinon la ligne d'horizon coupe le ciel au couteau.
+      const yh = h * 0.78 - camY * 0.52 * 0.3;
+      const gh = ctx.createLinearGradient(0, yh - h * 0.06, 0, yh + h * 0.02);
+      gh.addColorStop(0, 'rgba(20,18,31,0)'); gh.addColorStop(1, 'rgba(20,18,31,.42)');
+      ctx.fillStyle = gh; ctx.fillRect(0, yh - h * 0.06, w, h);
 
       ctx.save();
       ctx.translate(-camX + sx, -camY + sy);
@@ -363,8 +537,15 @@ export function creerRider(api) {
       for (let px = xDeb; px <= xFin; px += PAS) ctx.lineTo(px, sol(px));
       ctx.lineTo(xFin, bas); ctx.closePath();
       ctx.fillStyle = '#241F38'; ctx.fill();
+      // Le liseré lime s'interrompt au-dessus des trous : leur fond était souligné comme le reste de la piste,
+      // et on croyait pouvoir s'y poser. Sans liseré, le vide se lit comme du vide.
       ctx.beginPath();
-      for (let px = xDeb; px <= xFin; px += PAS) { const yy = sol(px); if (px === xDeb) ctx.moveTo(px, yy); else ctx.lineTo(px, yy); }
+      let coupe = true;
+      for (let px = xDeb; px <= xFin; px += PAS) {
+        if (trou(px)) { coupe = true; continue; }
+        const yy = sol(px);
+        if (coupe) { ctx.moveTo(px, yy); coupe = false; } else ctx.lineTo(px, yy);
+      }
       ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.lineJoin = 'round'; ctx.stroke();
       // Marques au sol qui défilent : c'est elles qui donnent la vitesse à l'œil.
       ctx.strokeStyle = 'rgba(200,240,60,.4)'; ctx.lineWidth = 2;
@@ -373,6 +554,20 @@ export function creerRider(api) {
         if (trou(px)) continue;
         const yy = sol(px) + 10; const pp = pente(px);
         ctx.beginPath(); ctx.moveTo(px - 6, yy - pp * 6); ctx.lineTo(px + 6, yy + pp * 6); ctx.stroke();
+      }
+      // Loopings : un rail circulaire posé sur la piste, pas du relief. Le vélo passe derrière quand il est
+      // trop lent pour s'y engager, d'où le remplissage très léger : on doit voir la piste au travers.
+      for (const b of boucles) {
+        if (b.x + b.r < camX - t || b.x - b.r > xFin + t) continue;
+        const cy = b.y - b.r;
+        ctx.save();
+        ctx.globalAlpha = 0.1; ctx.fillStyle = LIME;
+        ctx.beginPath(); ctx.arc(b.x, cy, b.r - 4, 0, DEUX_PI); ctx.fill();
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(b.x, cy, b.r, 0, DEUX_PI);
+        ctx.strokeStyle = 'rgba(20,18,31,.6)'; ctx.lineWidth = 9; ctx.stroke();
+        ctx.beginPath(); ctx.arc(b.x, cy, b.r, 0, DEUX_PI);
+        ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.stroke();
       }
       // Obstacles et bonus
       for (const o of obstacles) {
@@ -385,8 +580,8 @@ export function creerRider(api) {
       for (const b of bonus) {
         if (b.pris || b.x < camX - t || b.x > xFin + t) continue;
         const by = b.y + Math.sin(b.phase) * 3;
-        halo(ctx, b.x, by, t * 0.52, '255,209,102', 0.55);
-        emoji(ctx, b.emoji, b.x, by, t * 0.62, Math.sin(b.phase * 0.7) * 0.15);
+        halo(ctx, b.x, by, t * 0.6, '255,209,102', 0.5);
+        dessinerSacRepas(ctx, b.x, by, t * 0.66, b.emoji, Math.sin(b.phase * 0.7) * 0.12);
       }
       // Ombre du vélo (plus petite et plus pâle quand il est haut)
       const ySolIci = sol(x); const haut = Math.max(0, ySolIci - y);
@@ -475,6 +670,19 @@ function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air
     const genou = { x: (bassin.x + pied.x) / 2 + r * 0.55, y: (bassin.y + pied.y) / 2 - r * 0.15 };
     ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(genou.x, genou.y); ctx.lineTo(pied.x, pied.y); ctx.stroke();
   }
+  // Le sac isotherme sur le dos : posé le long du buste, du côté opposé au guidon. Dessiné avant le buste
+  // pour qu'il passe derrière l'épaule, comme une vraie sangle.
+  const dosX = -Math.cos(inclinaison); const dosY = -Math.sin(inclinaison);
+  ctx.save();
+  ctx.translate((bassin.x + epaule.x) / 2 + dosX * r * 0.62, (bassin.y + epaule.y) / 2 + dosY * r * 0.62);
+  ctx.rotate(inclinaison);
+  arrondi(ctx, -r * 0.52, -r * 0.66, r * 1.04, r * 1.32, r * 0.22);
+  ctx.fillStyle = IRIS; ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.11); ctx.stroke();
+  ctx.fillStyle = LIME; ctx.font = `800 ${Math.max(6, r * 0.95).toFixed(1)}px system-ui, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('f', 0, 0);
+  ctx.restore();
   // Buste
   ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = Math.max(3, r * 0.38);
   ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(epaule.x, epaule.y); ctx.stroke();
