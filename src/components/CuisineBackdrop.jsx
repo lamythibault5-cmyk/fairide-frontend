@@ -118,6 +118,47 @@ export default function CuisineBackdrop() {
     return () => { arreter(); v.removeEventListener('playing', arreter); };
   }, [source]);
 
+  // Révélation au défilement (demande du fondateur, 2026-09-13) : en haut de page on ne voit que l'aplat
+  // Fairide ; le montage apparaît dès les premiers pixels de défilement et s'installe en 260 px. On ne charge
+  // la vidéo qu'à ce moment-là (ou après quelques secondes d'inactivité) : personne ne paie pour un fond
+  // qu'il n'a pas encore vu.
+  const [revelation, setRevelation] = useState(0);
+  const [chargerMedia, setChargerMedia] = useState(false);
+  useEffect(() => {
+    let img = 0;
+    const calculer = () => {
+      img = 0;
+      const y = window.scrollY || document.documentElement.scrollTop || 0;
+      const o = Math.max(0, Math.min(1, (y - 30) / 260));
+      setRevelation((prec) => (Math.abs(prec - o) < 0.015 && o !== 0 && o !== 1 ? prec : o));
+      if (o > 0) setChargerMedia(true);
+    };
+    // Onglet en arrière-plan : requestAnimationFrame ne tourne pas, on calcule directement — sinon le fond
+    // resterait figé au retour sur l'onglet tant que rien ne bouge.
+    const auDefilement = () => {
+      if (document.hidden) { calculer(); return; }
+      if (!img) img = requestAnimationFrame(calculer);
+    };
+    calculer();
+    window.addEventListener('scroll', auDefilement, { passive: true });
+    window.addEventListener('resize', auDefilement);
+    document.addEventListener('visibilitychange', calculer);
+    // Filet : sur une page trop courte pour défiler, le fond doit quand même exister.
+    const court = setTimeout(() => { if (document.documentElement.scrollHeight <= window.innerHeight + 40) { setChargerMedia(true); setRevelation(1); } }, 1200);
+    const prechauffe = setTimeout(() => setChargerMedia(true), 3000);
+    return () => {
+      window.removeEventListener('scroll', auDefilement); window.removeEventListener('resize', auDefilement);
+      document.removeEventListener('visibilitychange', calculer);
+      cancelAnimationFrame(img); clearTimeout(court); clearTimeout(prechauffe);
+    };
+  }, []);
+  // Rien à l'écran : on met la vidéo en pause plutôt que de la décoder pour personne (batterie des téléphones).
+  useEffect(() => {
+    const v = video.current; if (!v) return;
+    if (revelation <= 0.02) v.pause();
+    else if (v.paused) v.play().catch(() => {});
+  }, [revelation, source, chargerMedia]);
+
   useEffect(() => {
     const large = window.matchMedia('(min-width: 900px)');
     const tresLarge = window.matchMedia('(min-width: 1400px)');
@@ -148,7 +189,9 @@ export default function CuisineBackdrop() {
 
   return (
     <div className="cuisine-fond" aria-hidden="true">
-      {source ? (
+      {/* Le montage et son voile fondent ensemble : à 0, il ne reste que l'aplat Fairide du conteneur. */}
+      <div className="cuisine-fond-calque" style={{ opacity: revelation }}>
+      {!chargerMedia ? null : source ? (
         <video
           ref={video}
           className="cuisine-fond-media"
@@ -169,6 +212,7 @@ export default function CuisineBackdrop() {
           fond ne descend jamais sous le blanc à 55 %, ce qui garantit le contraste du texte quoi
           qu'il se passe à l'écran. */}
       <div className="cuisine-fond-voile" />
+      </div>
     </div>
   );
 }

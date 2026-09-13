@@ -3616,7 +3616,10 @@ export const translations = {
       ready: 'Prêt ?',
       go: 'Go !',
       levelReached: 'Niveau {n} atteint',
-      spaceHint: 'Espace ou Entrée pour rejouer'
+      spaceHint: 'Espace ou Entrée pour rejouer',
+      fullscreen: 'Plein écran',
+      exitFullscreen: 'Quitter le plein écran',
+      rotateHint: 'Tourne ton téléphone : le terrain sera bien plus grand.'
     },
     games: {
       title: '🎮 Mini-jeux',
@@ -9826,7 +9829,10 @@ export const translations = {
       ready: 'Ready?',
       go: 'Go!',
       levelReached: 'Level {n} reached',
-      spaceHint: 'Space or Enter to play again'
+      spaceHint: 'Space or Enter to play again',
+      fullscreen: 'Full screen',
+      exitFullscreen: 'Exit full screen',
+      rotateHint: 'Turn your phone: the playing field gets much bigger.'
     },
     games: {
       title: '🎮 Mini-games',
@@ -16022,7 +16028,10 @@ export const translations = {
       ready: 'Klaar?',
       go: 'Go!',
       levelReached: 'Niveau {n} bereikt',
-      spaceHint: 'Spatie of Enter om opnieuw te spelen'
+      spaceHint: 'Spatie of Enter om opnieuw te spelen',
+      fullscreen: 'Volledig scherm',
+      exitFullscreen: 'Volledig scherm verlaten',
+      rotateHint: 'Draai je telefoon: het speelveld wordt veel groter.'
     },
     games: {
       title: '🎮 Minispelletjes',

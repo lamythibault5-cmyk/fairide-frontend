@@ -104,6 +104,22 @@ function creerEffets() {
   };
 }
 
+// Plein écran : l'API standard sur Android, PC, Mac et iPad ; sur iPhone, aucun navigateur ne l'autorise pour
+// autre chose qu'une vidéo — on retombe alors sur un calque fixe qui couvre l'écran, même résultat pour le joueur.
+function elementPlein() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+async function demanderPlein(el) {
+  const f = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen;
+  if (!f) return false;
+  try { await f.call(el, { navigationUI: 'hide' }); return true; } catch { return false; }
+}
+async function quitterPlein() {
+  const f = document.exitFullscreen || document.webkitExitFullscreen;
+  if (elementPlein() && f) { try { await f.call(document); } catch { /* déjà sorti */ } }
+}
+const surTelephone = () => { try { return window.matchMedia('(max-width: 820px)').matches; } catch { return false; } };
+
 const dansChampTexte = (e) => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '') || e.target?.isContentEditable;
 // Souris + survol : un clavier est probablement là, on peut suggérer « Espace pour rejouer ».
 const clavierProbable = () => { try { return window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch { return false; } };
@@ -127,6 +143,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const [musiqueActive, setMusiqueActive] = useState(() => musique.estActive());
   const [pisteMusique, setPisteMusique] = useState(() => musique.piste());
   const [menuMusique, setMenuMusique] = useState(false);
+  // Plein écran : vrai plein écran quand le navigateur le permet, sinon calque fixe (iPhone). Dans les deux cas
+  // le terrain occupe tout l'écran et le canvas se remesure tout seul (voir la variable remplir, plus bas).
+  const [plein, setPlein] = useState(false);
+  const [astuceRotation, setAstuceRotation] = useState(false);
+  const racine = useRef(null);
   useEffect(() => musique.abonner((a, piste) => { setMusiqueActive(a); setPisteMusique(piste); }), []);
   // Le menu se ferme d'un clic ailleurs ou avec Échap.
   useEffect(() => {
@@ -151,6 +172,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   const conteneur = useRef(null);
   const canvas = useRef(null);
+  const pleinRef = useRef(false);
+  pleinRef.current = plein;
   const instance = useRef(null);
   const effets = useRef(null);
   if (!effets.current) effets.current = creerEffets();
@@ -159,6 +182,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const statusRef = useRef(status);
   const tailleRef = useRef(taille);
   const input = useRef({ x: null, y: null, enfonce: false, tapes: [], gauche: false, droite: false });
+  const fauxPlein = useRef(false); // true quand on couvre l'écran nous-mêmes (iPhone), sans l'API du navigateur
   const raf = useRef(0);
   const derniereImage = useRef(0);
   const finRaf = useRef(0);
@@ -169,9 +193,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   const niveau = () => Math.min(jeu.maxNiveau, Math.floor(scoreRef.current / jeu.pointsParNiveau));
 
-  // Taille : imposée par les props, ou celle du conteneur quand `fill` (plein écran, rotation).
+  // Taille : imposée par les props, ou celle du conteneur quand on remplit l'espace — `fill` demandé par le
+  // parent, ou plein écran, où le terrain doit prendre tout l'écran quelles que soient les props reçues.
   useEffect(() => {
-    if (!fill) { setTaille({ w: width, h: height }); return undefined; }
+    if (!fill && !plein) { setTaille({ w: width, h: height }); return undefined; }
     const el = conteneur.current; if (!el) return undefined;
     const mesurer = () => {
       const r = el.getBoundingClientRect();
@@ -182,7 +207,30 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const ro = new ResizeObserver(mesurer); ro.observe(el);
     window.addEventListener('resize', mesurer); // rotation d écran : ceinture et bretelles
     return () => { ro.disconnect(); window.removeEventListener('resize', mesurer); };
-  }, [fill, width, height]);
+  }, [fill, plein, width, height]);
+
+  // Le joueur peut sortir du plein écran sans passer par notre bouton (Échap, geste système) : on suit l'état réel.
+  useEffect(() => {
+    const suivre = () => { if (!elementPlein() && pleinRef.current && !fauxPlein.current) setPlein(false); };
+    document.addEventListener('fullscreenchange', suivre);
+    document.addEventListener('webkitfullscreenchange', suivre);
+    return () => { document.removeEventListener('fullscreenchange', suivre); document.removeEventListener('webkitfullscreenchange', suivre); };
+  }, []);
+  // Calque fixe (iPhone) : la page derrière ne doit pas défiler sous le doigt pendant la partie.
+  useEffect(() => {
+    if (!plein) return undefined;
+    document.documentElement.classList.add('jeu-plein-actif');
+    return () => document.documentElement.classList.remove('jeu-plein-actif');
+  }, [plein]);
+  // Téléphone tenu à la verticale : on le signale une fois, sans rien imposer — le terrain marche dans les deux sens.
+  useEffect(() => {
+    if (!plein || !surTelephone()) { setAstuceRotation(false); return undefined; }
+    const verifier = () => setAstuceRotation(window.innerHeight > window.innerWidth * 1.2);
+    verifier();
+    window.addEventListener('resize', verifier);
+    window.addEventListener('orientationchange', verifier);
+    return () => { window.removeEventListener('resize', verifier); window.removeEventListener('orientationchange', verifier); };
+  }, [plein]);
 
   // Le canvas suit la densité de l'écran : sans ça, un emoji dessiné en pixels CSS est flou sur Retina.
   function preparerContexte() {
@@ -334,6 +382,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         if (st === 'playing' || st === 'countdown') e.preventDefault();
         input.current[e.code === 'ArrowLeft' ? 'gauche' : 'droite'] = true;
       }
+      // Calque de secours (iPhone) : Échap le referme au lieu de mettre en pause.
+      if (e.code === 'Escape' && pleinRef.current && fauxPlein.current) { e.preventDefault(); basculerPlein(); return; }
       if ((e.code === 'Escape' || e.code === 'KeyP') && !reglesOuvertes) {
         if (st === 'playing') setStatus('paused');
         else if (st === 'paused') setStatus('playing');
@@ -370,15 +420,32 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     setStatus('countdown');
   }
   function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
+  async function basculerPlein() {
+    // pleinRef (et non `plein`) : ce bouton est aussi appelé depuis l'écouteur clavier, monté une fois, dont la
+    // fermeture garderait sinon l'état du premier rendu.
+    if (pleinRef.current) {
+      fauxPlein.current = false;
+      await quitterPlein();
+      try { window.screen?.orientation?.unlock?.(); } catch { /* pas supporté */ }
+      setPlein(false);
+      return;
+    }
+    const ok = racine.current ? await demanderPlein(racine.current) : false;
+    fauxPlein.current = !ok; // refusé (iPhone) : on couvre l'écran nous-mêmes
+    setPlein(true);
+    // Sur téléphone, on propose le paysage au système ; s'il refuse (iOS, tablette bridée), rien ne casse.
+    if (ok && surTelephone()) { try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* refusé */ } }
+  }
   commencerRef.current = commencer;
   function ouvrirRegles() { if (statusRef.current === 'playing' || statusRef.current === 'countdown') setStatus('paused'); setReglesOuvertes(true); }
 
   const { w, h } = taille;
+  const remplir = fill || plein; // en plein écran, le terrain prend toute la place disponible
   const niv = niveau();
   const progression = niv >= jeu.maxNiveau ? 1 : (score % jeu.pointsParNiveau) / jeu.pointsParNiveau;
   const lignesRegles = [...jeu.regles.map((r, i) => tJeu(t, jeu, `regles_${i}`, r)), tJeu(t, jeu, 'regles_3', jeu.controles)];
   return (
-    <div className={`jeu${large ? ' jeu--large' : ''}${fill ? ' jeu--fill' : ''}`}>
+    <div ref={racine} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best" title={t('gameFrame.bestTitle')}>🥇 {meilleur}</span>
         <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>🏆 {score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
@@ -390,6 +457,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
             {menuMusique && menuPistes}
           </span>
           <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
+          <button type="button" className={`jeu-regles-btn${plein ? ' active' : ''}`} onClick={basculerPlein}
+            aria-label={t(plein ? 'gameFrame.exitFullscreen' : 'gameFrame.fullscreen')} title={t(plein ? 'gameFrame.exitFullscreen' : 'gameFrame.fullscreen')}>
+            {plein ? '🗗' : '⛶'}
+          </button>
         </span>
       </div>
       {/* Progression vers le prochain palier : une barre fine, lisible d'un coup d'œil pendant la partie. */}
@@ -400,7 +471,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
       {/* En `fill`, c'est le cadre (et non tout le bloc, qui contient aussi le tableau de bord et les
           boutons) qui est mesuré : le canvas doit remplir exactement la place laissée au terrain. */}
-      <div className="jeu-cadre" ref={conteneur} style={fill ? undefined : { width: w, height: h }}>
+      <div className="jeu-cadre" ref={conteneur} style={remplir ? undefined : { width: w, height: h }}>
         <canvas
           ref={canvas}
           className="jeu-canvas"
@@ -422,6 +493,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
               <div className="jeu-ligne-boutons">
                 <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
+                {!plein && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={basculerPlein}>⛶ {t('gameFrame.fullscreen')}</button>}
                 <span style={{ position: 'relative', flex: 1, display: 'flex' }}>
                   <button type="button" className={`jeu-btn jeu-btn-ghost jeu-btn-musique${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique}>{musiqueActive ? '🎵' : '🔇'} {musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</button>
                   {menuMusique && menuPistes}
@@ -476,8 +548,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         )}
       </div>
 
+      {astuceRotation && (
+        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}>📱↔️ {t('gameFrame.rotateHint')}</button>
+      )}
       <div className="jeu-actions">
         {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label={t('gameFrame.pauseAria')}>{t('gameFrame.pause')}</button>}
+        {plein && <button type="button" onClick={basculerPlein}>🗗 {t('gameFrame.exitFullscreen')}</button>}
       </div>
     </div>
   );

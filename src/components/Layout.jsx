@@ -119,7 +119,12 @@ export default function Layout() {
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
   // …et sur la page de connexion / inscription, qui est la porte d entrée du même visiteur. Jamais
   // pour quelqu un de connecté : `!user` prime, quelle que soit l adresse.
-  const fondCuisine = !user && (location.pathname === '/' || location.pathname === '/login');
+  // Fond de cuisine : la vitrine publique (accueil, connexion) et les pages où l'on flâne — l'aide et la liste
+  // des commerces, avec ou sans compte. Sur ces dernières, les cartes restent opaques (« doux ») : une centaine
+  // de cartes floutées coûterait cher sur téléphone pour un fond qu'on ne verrait que dans les marges.
+  const fondVitrine = !user && (location.pathname === '/' || location.pathname === '/login');
+  const fondDoux = location.pathname === '/aide' || location.pathname === '/restaurants' || RESTAURANT_DETAIL_PATH.test(location.pathname);
+  const fondCuisine = fondVitrine || fondDoux;
 
   // Sous 900px la barre latérale devient la barre du BAS, et sa règle CSS y masque son propre logo :
   // un utilisateur connecté n abordait donc plus aucune marque à l écran. On la remonte en haut à
@@ -252,7 +257,7 @@ export default function Layout() {
           )}
         </div>
       </div>
-      <div className={`wrap${fondCuisine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
+      <div className={`wrap${fondVitrine ? ' wrap-fond' : ''}${fondDoux ? ' wrap-fond-doux' : ''}`} style={{ paddingTop: 24 }}>
         {/* <main> manquait sur toute la branche publique, celle qui sert les pages
             indexables. La branche tableau de bord en a une depuis toujours. */}
         <main className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
