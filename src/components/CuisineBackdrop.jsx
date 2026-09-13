@@ -119,18 +119,26 @@ export default function CuisineBackdrop() {
   }, [source]);
 
   // Révélation au défilement (demande du fondateur, 2026-09-13) : en haut de page on ne voit que l'aplat
-  // Fairide ; le montage apparaît dès les premiers pixels de défilement et s'installe en 260 px. On ne charge
-  // la vidéo qu'à ce moment-là (ou après quelques secondes d'inactivité) : personne ne paie pour un fond
-  // qu'il n'a pas encore vu.
-  const [revelation, setRevelation] = useState(0);
+  // Fairide ; le montage apparaît dès les premiers pixels de défilement et s'installe en 140 px, soit moins
+  // d'un coup de molette. Une première version prenait 260 px et n'allait chercher la vidéo qu'au premier
+  // pixel de défilement : le temps qu'elle arrive et se décode, on avait déjà fini de défiler et le fond
+  // apparaissait après coup. Ici elle est montée dès que le visiteur montre l'intention de défiler
+  // (molette, doigt posé, flèche du clavier), donc avant qu'il en ait besoin, et invisible jusque-là.
+  // L'opacité est écrite DIRECTEMENT sur le nœud, pas via un état React. Passée par useState, elle
+  // dépendait de l'ordonnanceur : une mise à jour née d'un défilement est de priorité « continue » et
+  // pouvait attendre plusieurs images avant d'être peinte — le fond arrivait après le geste. Écrite à la
+  // main, elle est là à l'image suivante, et le composant ne se redessine plus à chaque pixel défilé.
+  const calque = useRef(null);
+  const [visible, setVisible] = useState(false); // sert seulement à lancer ou arrêter la vidéo
   const [chargerMedia, setChargerMedia] = useState(false);
   useEffect(() => {
     let img = 0;
     const calculer = () => {
       img = 0;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const o = Math.max(0, Math.min(1, (y - 30) / 260));
-      setRevelation((prec) => (Math.abs(prec - o) < 0.015 && o !== 0 && o !== 1 ? prec : o));
+      const o = Math.max(0, Math.min(1, (y - 12) / 140));
+      if (calque.current) calque.current.style.opacity = String(o);
+      setVisible(o > 0.02);
       if (o > 0) setChargerMedia(true);
     };
     // Onglet en arrière-plan : requestAnimationFrame ne tourne pas, on calcule directement — sinon le fond
@@ -145,19 +153,24 @@ export default function CuisineBackdrop() {
     document.addEventListener('visibilitychange', calculer);
     // Filet : sur une page trop courte pour défiler, le fond doit quand même exister.
     const court = setTimeout(() => { if (document.documentElement.scrollHeight <= window.innerHeight + 40) { setChargerMedia(true); setRevelation(1); } }, 1200);
-    const prechauffe = setTimeout(() => setChargerMedia(true), 3000);
+    // Intention de défiler : la molette tourne, un doigt se pose, une flèche est enfoncée. On monte la vidéo
+    // à cet instant — elle a le temps d'arriver pendant le geste, et le fond est là au premier pixel.
+    const intention = () => setChargerMedia(true);
+    for (const e of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.addEventListener(e, intention, { passive: true, once: true });
+    const prechauffe = setTimeout(intention, 900);
     return () => {
       window.removeEventListener('scroll', auDefilement); window.removeEventListener('resize', auDefilement);
       document.removeEventListener('visibilitychange', calculer);
+      for (const e of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.removeEventListener(e, intention);
       cancelAnimationFrame(img); clearTimeout(court); clearTimeout(prechauffe);
     };
   }, []);
   // Rien à l'écran : on met la vidéo en pause plutôt que de la décoder pour personne (batterie des téléphones).
   useEffect(() => {
     const v = video.current; if (!v) return;
-    if (revelation <= 0.02) v.pause();
+    if (!visible) v.pause();
     else if (v.paused) v.play().catch(() => {});
-  }, [revelation, source, chargerMedia]);
+  }, [visible, source, chargerMedia]);
 
   useEffect(() => {
     const large = window.matchMedia('(min-width: 900px)');
@@ -190,7 +203,7 @@ export default function CuisineBackdrop() {
   return (
     <div className="cuisine-fond" aria-hidden="true">
       {/* Le montage et son voile fondent ensemble : à 0, il ne reste que l'aplat Fairide du conteneur. */}
-      <div className="cuisine-fond-calque" style={{ opacity: revelation }}>
+      <div className="cuisine-fond-calque" ref={calque}>
       {!chargerMedia ? null : source ? (
         <video
           ref={video}
