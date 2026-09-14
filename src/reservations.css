@@ -144,3 +144,6 @@
 .agenda-sync-details, .agenda-sync-details .small { font-weight: 400; }
 .agenda-sync-details b { font-weight: 700; }
 .agenda-sync-confirmer { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--cream-dim, #F4F2EC); }
+
+/* Réglages : modifications en cours, pas encore enregistrées. */
+.resa-non-enregistre { margin-right: 10px; color: var(--gold-deep, #9A7A12); font-weight: 700; }

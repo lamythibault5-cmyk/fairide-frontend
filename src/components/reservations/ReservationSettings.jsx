@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api';
 import ConfirmDialog from '../ConfirmDialog';
 import { useLanguage } from '../../context/LanguageContext';
@@ -38,9 +38,20 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
   const [notifTel, setNotifTel] = useState('');
   const [smsDispo, setSmsDispo] = useState(null);
   const [enregistre, setEnregistre] = useState(false);
+  // Le tableau de bord se recharge toutes les 15 s (nouvel objet restaurant à chaque fois) : sans garde, les
+  // réglages en cours de modification étaient remplacés par ceux du serveur au rechargement suivant. Tant que
+  // le restaurateur a des modifications non enregistrées, on ne touche plus au formulaire ; il se resynchronise
+  // après l'enregistrement, ou si l'on change de restaurant.
+  const [modifie, setModifie] = useState(false);
+  const modifieRef = useRef(false);
+  const restoInitialise = useRef(null);
+  const marquerModifie = () => { if (!modifieRef.current) { modifieRef.current = true; setModifie(true); } };
 
   useEffect(() => {
     if (!restaurant) return;
+    if (restoInitialise.current === restaurant.id && modifieRef.current) return;
+    if (restoInitialise.current !== restaurant.id) { modifieRef.current = false; setModifie(false); }
+    restoInitialise.current = restaurant.id;
     setHeuresPropres(!!restaurant.reservationHours);
     setHeures(restaurant.reservationHours || restaurant.hours || {});
     setPas(restaurant.reservationSlotMinutes || 30);
@@ -94,6 +105,8 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
           notifySms: notifSms, notifyPhone: notifTel
         }
       });
+      // Enregistré : le formulaire peut de nouveau suivre le serveur (qui renvoie désormais ces valeurs).
+      modifieRef.current = false; setModifie(false);
       loadDashboard?.(restoId);
       toast(t('resa.toastSettingsSaved'));
     } catch (err) { toast(err.message); } finally { setEnregistre(false); }
@@ -104,7 +117,12 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
   if (!restaurant) return <p className="small">{t('resa.loading')}</p>;
 
   return (
-    <>
+    <div
+      className="resa-reglages"
+      onChangeCapture={marquerModifie}
+      onInputCapture={marquerModifie}
+      onClickCapture={(e) => { if (e.target.closest?.('button') && !e.target.closest('[data-enregistrer]')) marquerModifie(); }}
+    >
       <div className="card">
         <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('resa.whenTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{t('resa.whenIntro')}</p>
@@ -292,9 +310,10 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
       </div>
 
       <div className="resa-enregistrer">
-        <button className="btn-teal" disabled={enregistre} onClick={enregistrer}>{enregistre ? '…' : t('resa.saveSettings')}</button>
+        {modifie && !enregistre && <span className="small resa-non-enregistre">✏️ {t('resa.unsavedChanges')}</span>}
+        <button className="btn-teal" data-enregistrer disabled={enregistre} onClick={enregistrer}>{enregistre ? '…' : t('resa.saveSettings')}</button>
       </div>
-    </>
+    </div>
   );
 }
 
