@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 
 // Section "l'appli arrive bientôt" sur la page d'accueil — inspirée des bannières de téléchargement des
 // grandes plateformes (badges de store + mockup téléphone), mais honnête sur ce qui existe vraiment :
-// Fairide n'a pas encore d'appli mobile (lancement prévu le 15 octobre), donc les badges ne sont pas
+// Fairide n'a pas encore d'appli mobile (lancement prévu le 1er octobre), donc les badges ne sont pas
 // cliquables — aucune fausse redirection vers un store qui n'a rien à proposer. Les badges eux-mêmes
 // restent génériques (texte + icône maison, pas de logo Apple/Google reproduit) plutôt qu'une copie du
 // design des vraies plateformes.

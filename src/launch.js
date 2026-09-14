@@ -13,6 +13,13 @@ export function dateOuvertureReservations(locale = 'fr-BE') {
   return OUVERTURE_RESERVATIONS.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
 }
 
+// Abonnement des commerces (livraison et à emporter) : activable dès le 1er octobre 2026, avec l'application,
+// pour être prêt à l'ouverture des commandes le 10. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
+export const OUVERTURE_ABONNEMENT = new Date('2026-10-01T00:00:00+02:00');
+export function abonnementOuvert() {
+  return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
+}
+
 export function commandesOuvertes(user) {
   return Date.now() >= OUVERTURE_COMMANDES.getTime() || !!user?.isAdmin;
 }

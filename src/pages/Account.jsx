@@ -18,6 +18,7 @@ import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
+import { abonnementOuvert } from '../launch';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -767,16 +768,17 @@ export default function Account() {
               </p>
             )}
 
-            {/* Aucun abonnement à activer avant la sortie de l'application (mi-octobre 2026) : le bouton
+            {/* Aucun abonnement à activer avant la sortie de l'application (1er octobre 2026) : le bouton
                 d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
                 la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && (
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && !abonnementOuvert() && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subNotYetTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
               </div>
             )}
-            {['past_due'].includes(restaurant.subscriptionStatus) && restaurant.adminStatus === 'approved' && (
+            {/* Bouton d'abonnement : impayé à régulariser, ou — dès le 1er octobre — formule complète pas encore abonnée. */}
+            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert())) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
                   <label>{t('auth.promoCode')}</label>
