@@ -225,8 +225,10 @@ export default function Account() {
   useEffect(() => {
     if (!restaurant || servicesInitRef.current) return;
     servicesInitRef.current = true;
-    setOffersDelivery(restaurant.offersDelivery);
-    setOffersPickup(restaurant.offersPickup);
+    // Le choix enregistré (wants*), pas ce qui est ouvert aux clients : sans abonnement actif, livraison et
+    // emporter restent cochés ici mais fermés côté client (voir formules.js côté serveur).
+    setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
+    setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
     setOffersDineIn(restaurant.offersDineIn);
   }, [restaurant]);
 
@@ -245,6 +247,12 @@ export default function Account() {
     } finally {
       setSavingServices(false);
     }
+  }
+
+  // Depuis « Services proposés » : déplie l'abonnement et l'amène à l'écran.
+  function voirAbonnement() {
+    setOuvertes((prev) => new Set(prev).add('abonnement'));
+    setTimeout(() => document.getElementById('section-abonnement')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
   }
 
   async function subscribeNow() {
@@ -709,12 +717,14 @@ export default function Account() {
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} />}
           </LigneCompte>
           <div id="section-paiement">
-            <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' && !restaurant.reservationDepositEnabled ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
-          <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+          {/* Formule Réservation : l'abonnement n'est pas nécessaire tant que ni livraison ni emporter ne sont choisis. */}
+          <div id="section-abonnement">
+          <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) ? t('accountUi.subNotNeeded') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -730,20 +740,27 @@ export default function Account() {
                 {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subNextCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : ''}
               </p>
             )}
+            {/* Sans abonnement actif, la réservation de table reste en ligne : seuls livraison et emporter s'arrêtent. */}
             {restaurant.subscriptionStatus === 'past_due' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subPastDue')}
+                {t(restaurant.offersDineIn ? 'accountUi.subPastDueResa' : 'accountUi.subPastDue')}
               </p>
             )}
             {restaurant.subscriptionStatus === 'paused' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subPaused')}
+                {t(restaurant.offersDineIn ? 'accountUi.subPausedResa' : 'accountUi.subPaused')}
               </p>
             )}
-            {restaurant.subscriptionStatus === 'canceled' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>{t('accountUi.subCanceled')}</p>
+            {restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && (
+              <div className="paiement-encart" style={{ marginBottom: 12 }}>
+                <b>{t('accountUi.planReservationTitle')}</b>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotNeededText')}</p>
+              </div>
             )}
-            {restaurant.subscriptionStatus === 'inactive' && (
+            {restaurant.subscriptionStatus === 'canceled' && restaurant.plan !== 'reservation' && (
+              <p className="small" style={{ margin: '0 0 12px' }}>{t(restaurant.offersDineIn ? 'accountUi.subCanceledResa' : 'accountUi.subCanceled')}</p>
+            )}
+            {restaurant.subscriptionStatus === 'inactive' && restaurant.plan !== 'reservation' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subInactiveIntro')}
                 {' '}{t('accountUi.subPendingValidation')}
@@ -753,7 +770,7 @@ export default function Account() {
             {/* Aucun abonnement à activer avant la sortie de l'application (mi-octobre 2026) : le bouton
                 d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
                 la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && (
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subNotYetTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
@@ -800,6 +817,7 @@ export default function Account() {
               </div>
             )}
           </LigneCompte>
+          </div>
 
           <LigneCompte
             icone="🛎️" titre={t('accountUi.servicesOffered')}
@@ -809,6 +827,25 @@ export default function Account() {
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
+            {/* La formule suit les cases, avant même d'enregistrer : réservation seule = gratuit ; livraison ou
+                emporter = abonnement. Sans abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
+            {(() => {
+              const complete = offersDelivery || offersPickup;
+              const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
+              return (
+                <div className="paiement-encart" style={{ marginBottom: 12 }}>
+                  <b>{t(complete ? 'accountUi.planCompleteTitle' : 'accountUi.planReservationTitle')}</b>
+                  <p className="small" style={{ margin: '4px 0 0' }}>{t(complete ? 'accountUi.planCompleteText' : 'accountUi.planReservationText')}</p>
+                  {complete && !abonne && (
+                    <p className="small" style={{ margin: '10px 0 0' }}>
+                      <b>{t('accountUi.planNeedsSubTitle')}</b><br />
+                      {t('accountUi.planNeedsSubText')}{' '}
+                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={voirAbonnement}>{t('accountUi.planSeeSubscription')}</button>
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
             <div className="service-table-wrap">
               <table className="service-table">
                 <thead>

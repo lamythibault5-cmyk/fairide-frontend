@@ -984,6 +984,7 @@ export default function Auth() {
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
                   <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
+                  <p className="small" style={{ margin: '8px 0 0', opacity: 0.85 }}>{t('auth.servicesPlanHint')}</p>
                   {fieldError('services')}
                 </div>
               </>
