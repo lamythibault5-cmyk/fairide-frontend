@@ -5,6 +5,7 @@ import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import TrackingWithGames from '../../components/TrackingWithGames';
+import DriverBadge from '../../components/DriverBadge';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
@@ -102,9 +103,9 @@ export default function MapPage() {
       ) : (
         inDelivery.map((o) => (
           <div className="card" key={o.id} style={{ marginBottom: 16 }}>
-            <div className="row" style={{ justifyContent: 'space-between' }}>
+            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <b>{o.restaurantName}</b>
-              {o.driverName && <span className="small">🛵 {o.driverName}{o.driverPhone ? ` · ${o.driverPhone}` : ''}</span>}
+              {o.driverName && <DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} />}
             </div>
             <div className="small" style={{ margin: '4px 0' }}>📍 {o.address}</div>
             <TrackingWithGames

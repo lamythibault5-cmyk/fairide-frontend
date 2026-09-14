@@ -9,6 +9,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
+import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
@@ -229,7 +230,7 @@ export default function Orders() {
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
           )}
           {o.driverName && (
-            <div className="small">{t('orders.driver', { name: o.driverName, phone: o.driverPhone ? ` · ${o.driverPhone}` : '' })}</div>
+            <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
           )}
           {o.status === 'livraison' && o.restaurantLat && o.deliveryLat && (
             <div style={{ margin: '10px 0' }}>

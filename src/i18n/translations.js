@@ -3777,6 +3777,8 @@ export const translations = {
       livePosition: '🛵 Position de {name} en direct',
       waitingPosition: 'En attente de la position du livreur',
       courierOnWay: '🛵 Livreur en route',
+      courierPhotoAlt: 'Photo de {name}, ton livreur',
+      yourCourierLabel: 'Ton livreur',
       courierAwaited: '⏳ Livreur attendu'
     },
     invoicesClient: {
@@ -10077,6 +10079,8 @@ export const translations = {
       livePosition: '🛵 {name}\'s live position',
       waitingPosition: 'Waiting for the courier\'s position',
       courierOnWay: '🛵 Courier on the way',
+      courierPhotoAlt: 'Photo of {name}, your courier',
+      yourCourierLabel: 'Your courier',
       courierAwaited: '⏳ Waiting for a courier'
     },
     invoicesClient: {
@@ -16363,6 +16367,8 @@ export const translations = {
       livePosition: '🛵 Live positie van {name}',
       waitingPosition: 'Wacht op de positie van de koerier',
       courierOnWay: '🛵 Koerier onderweg',
+      courierPhotoAlt: 'Foto van {name}, je koerier',
+      yourCourierLabel: 'Je koerier',
       courierAwaited: '⏳ Wachten op een koerier'
     },
     invoicesClient: {
