@@ -311,8 +311,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         inp.x = Math.max(0, Math.min(w, (inp.x ?? w / 2) + (inp.droite ? 1 : -1) * w * VITESSE_CLAVIER * dt));
         if (inp.y == null) inp.y = h / 2;
       }
-      instance.current.update(dt, { x: inp.x, y: inp.y, enfonce: inp.enfonce, tapes: inp.tapes, niveau: niveau() });
-      inp.tapes = [];
+      instance.current.update(dt, { x: inp.x, y: inp.y, enfonce: inp.enfonce, tapes: inp.tapes, sauts: inp.sauts || 0, niveau: niveau() });
+      inp.tapes = []; inp.sauts = 0;
       effets.current.update(dt);
       dessiner();
       if (statusRef.current === 'playing') raf.current = requestAnimationFrame(pas);
@@ -333,7 +333,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       const ecoule = (m - debut) / 1000;
       if (!go && ecoule >= COMPTE_PRET) { go = true; effets.current.annoncer(tDef(t, 'gameFrame.go', 'Go !'), COMPTE_TOTAL - COMPTE_PRET + 0.25, 0.42, true); }
       effets.current.update(dt); dessiner();
-      if (ecoule >= COMPTE_TOTAL) { input.current.tapes = []; setStatus('playing'); return; }
+      if (ecoule >= COMPTE_TOTAL) { input.current.tapes = []; input.current.sauts = 0; setStatus('playing'); return; }
       finRaf.current = requestAnimationFrame(boucle);
     };
     finRaf.current = requestAnimationFrame(boucle);
@@ -378,6 +378,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         else if ((st === 'idle' || st === 'lost') && !reglesOuvertes && !e.repeat) { e.preventDefault(); commencerRef.current?.(); }
         else if (st === 'paused' && !reglesOuvertes && !e.repeat) { e.preventDefault(); setStatus('playing'); }
       }
+      // ↑ ou W : saut direct (FairRider), l'équivalent clavier du double tap. Les autres jeux l'ignorent.
+      if ((e.code === 'ArrowUp' || e.code === 'KeyW') && st === 'playing') {
+        e.preventDefault();
+        if (!e.repeat) input.current.sauts = (input.current.sauts || 0) + 1;
+      }
       if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
         if (st === 'playing' || st === 'countdown') e.preventDefault();
         input.current[e.code === 'ArrowLeft' ? 'gauche' : 'droite'] = true;
@@ -414,7 +419,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   function demarrer() {
     scoreRef.current = 0; setScore(0); setNouveauRecord(false);
-    input.current = { x: null, y: null, enfonce: false, tapes: [], gauche: false, droite: false };
+    input.current = { x: null, y: null, enfonce: false, tapes: [], sauts: 0, gauche: false, droite: false };
     instance.current?.reset();
     effets.current.vider();
     setStatus('countdown');

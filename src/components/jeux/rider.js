@@ -54,7 +54,19 @@ const SECOUSSE = 0.02; // amplitude de la secousse d'écran par U/s de vitesse v
 const PAS = 6; // pas d'échantillonnage du relief, px monde
 const JALON = 3; // +1 tous les JALON × U parcourus
 
-const OBSTACLES = ['🪨', '🚧', '🛢️'];
+// Saut (double tap, double clic, double Espace, ou ↑ / W au clavier). Hauteur en fraction de U : assez pour
+// franchir un obstacle posé sur la route et cueillir une lettre en l'air, pas assez pour remplacer un tremplin.
+const SAUT_HAUTEUR = 0.26;
+const DOUBLE_TAP = 0.3; // deux appuis à moins de 0,3 s = un saut
+const SAUT_TAMPON = 0.15; // un saut demandé juste avant de toucher le sol part à l'atterrissage, pas perdu
+const COYOTE = 0.1; // on peut encore sauter un dixième de seconde après avoir quitté une crête
+// Lettres : chaque niveau cache un mot lié à Fairide (7 lettres au plus). Toutes attrapées = les points
+// gagnés pendant ce mot sont doublés. La liste vient des traductions (jeux.rider_mots), sinon celle-ci.
+const MOTS_DEFAUT = 'VÉLO,MENU,RESTO,REPAS,LOCAL,PANIER,CUISINE,LIVREUR,FAIRIDE';
+const LETTRES_EN_JEU = 2; // lettres posées devant soi au plus en même temps : le mot se gagne, il ne se ramasse pas
+const FETE_MOT = 1.8; // s pendant lesquelles le mot complet reste affiché avant le suivant
+
+const OBSTACLES = ['🪨', '🚧', '🛢️', '📦', '🛴'];
 const BONUS = ['🍕', '🍔', '🌮', '🍩'];
 const DEUX_PI = Math.PI * 2;
 const normaliser = (a) => { let r = a % DEUX_PI; if (r > Math.PI) r -= DEUX_PI; if (r < -Math.PI) r += DEUX_PI; return r; };
@@ -157,6 +169,13 @@ export function creerRider(api) {
   let angle = 0; let omega = 0; let angleDepart = 0; let flips = 0; let serie = 0; let serieObstacles = 0; let obstaclesVol = 0;
   // Saisie
   let pulse = 0;
+  // Saut : horloge de la partie (pour mesurer l'écart entre deux appuis), dernier appui, demande en attente.
+  let horloge = 0; let dernierAppui = -9; let enfoncePrec = false; let sautDemande = 0; let sautEnCours = false;
+  let sautsFaits = 0; let astuces = 0;
+  // Lettres : le mot du moment, ce qui est déjà attrapé, les indices déjà posés sur la piste, les points
+  // marqués depuis le début du mot (c'est eux qu'on double), la fête du mot complet.
+  let mot = []; let attrapees = []; let enJeu = new Set(); let lettres = [];
+  let pointsMot = 0; let motFini = 0; let motsFinis = 0;
   // Relief : échantillons tous les PAS px à partir de x0 ; T = 1 dans un trou (y retomber = chute)
   let H = []; let T = []; let x0 = 0; let xGen = 0; let yFin = 0; let yBase = 0; let sections = 0;
   // Objets du monde
@@ -171,6 +190,30 @@ export function creerRider(api) {
   let poussiere = []; let traits = []; let flash = null; let derniereChute = null;
 
   const U = () => Math.min(w, h * 1.1);
+  // Textes du terrain dans la langue du joueur ; hors application (bancs d'essai), le français par défaut.
+  const tr = (cle, defaut, vars) => {
+    const v = api.t?.(cle, vars);
+    return typeof v === 'string' && v !== cle ? v : defaut;
+  };
+  const listeMots = () => {
+    const brut = tr('jeux.rider_mots', MOTS_DEFAUT);
+    const l = brut.split(',').map((m) => m.trim().toUpperCase()).filter((m) => m.length >= 3 && m.length <= 7);
+    return l.length ? l : MOTS_DEFAUT.split(',');
+  };
+  // Un mot par palier, du plus court au plus long : chaque mot complété révèle le suivant. Suivre le niveau
+  // du moteur ne marchait pas — il plafonne à 8 dès 64 points, et on passait de VÉLO à FAIRIDE sans transition.
+  // Au-delà de la liste, un mot au hasard, jamais le même deux fois de suite.
+  const nouveauMot = () => {
+    const l = listeMots(); const avant = mot.join('');
+    const i = Math.min(l.length - 1, motsFinis);
+    if (motsFinis >= l.length || l[i] === avant) {
+      const autres = l.filter((m) => m !== avant);
+      mot = [...(autres.length ? choix(autres) : l[0])];
+    } else mot = [...l[i]];
+    attrapees = mot.map(() => false); enJeu = new Set(); motFini = 0;
+  };
+  // Tous les points du jeu passent par ici : ce qu'on marque pendant un mot est ce que le mot complet doublera.
+  const marquer = (k) => { pointsMot += k; api.marquer(k); };
   const taille = () => Math.max(26, Math.min(48, U() * 0.12));
   const croisiere = (n) => U() * (CROISIERE + n * CROISIERE_NIVEAU);
   const maxi = (n) => U() * (VITESSE_MAX + n * VITESSE_MAX_NIVEAU);
@@ -197,7 +240,7 @@ export function creerRider(api) {
   const courbe = (longueur, fn, t = 0) => { const n = Math.max(1, Math.round(longueur / PAS)); const y0 = yFin; for (let i = 1; i <= n; i++) ajouter(fn(i / n, y0), t); };
   // Retour en douceur vers l'altitude de référence (la piste descend un peu à chaque tremplin ou falaise).
   const recentrer = (longueur) => { const dy = (yBase - yFin) * 0.5; courbe(longueur, (t, y0) => y0 + dy * lisse(t)); };
-  const poserObstacle = (px) => obstacles.push({ x: px, emoji: choix(OBSTACLES), passe: false });
+  const poserObstacle = (px, route = false) => obstacles.push({ x: px, emoji: choix(OBSTACLES), passe: false, route });
   const poserBonus = (px, py) => bonus.push({ x: px, y: py, emoji: choix(BONUS), pris: false, phase: Math.random() * 6 });
 
   // Les sections de piste. Chacune part de (xGen, yFin) et allonge le relief.
@@ -263,22 +306,54 @@ export function creerRider(api) {
     poserBonus(xE + r, yE - r * 2 - u * 0.09); // le plat au sommet de l'anneau : la récompense du geste
     recentrer(u * 0.45);
   };
+  const sectionObstacles = (u, n) => {
+    // Une ligne droite encombrée : colis, trottinette, cône… posés sur la route. On ne passe qu'en sautant.
+    // À partir du niveau 3, parfois deux obstacles rapprochés, qu'un seul saut bien placé franchit ensemble.
+    recentrer(u * 0.35);
+    const xD = xGen; const yP = yFin;
+    courbe(u * 1.75, (t, y0) => y0);
+    poserObstacle(xD + u * 0.8, true);
+    if (n >= 2 && Math.random() < 0.5) poserObstacle(xD + u * 1.07, true);
+    if (Math.random() < 0.45) poserBonus(xD + u * 0.95, yP - u * 0.3); // la récompense au sommet du saut
+    recentrer(u * 0.3);
+  };
+  // Pose sur la section qu'on vient de générer la prochaine lettre qui manque, sur la route ou en l'air
+  // (il faut alors sauter ou passer par un tremplin). Dans l'ordre du mot : on l'épelle en roulant.
+  const semerLettre = (u, xDeb) => {
+    if (!mot.length || motFini > 0 || enJeu.size >= LETTRES_EN_JEU || Math.random() > 0.7) return;
+    const i = attrapees.findIndex((ok, k) => !ok && !enJeu.has(k));
+    if (i < 0) return;
+    for (let essai = 0; essai < 8; essai++) {
+      const px = xDeb + (xGen - xDeb) * aleatoire(0.15, 0.9);
+      if (trou(px) || trou(px - PAS * 4) || trou(px + PAS * 4)) continue;
+      if (boucles.some((b) => Math.abs(px - b.x) < b.r + u * 0.15)) continue;
+      if (obstacles.some((o) => Math.abs(px - o.x) < u * 0.12)) continue;
+      const aerienne = Math.random() < 0.45;
+      const py = sol(px) - (aerienne ? u * aleatoire(0.2, 0.3) : taille() * 0.6);
+      lettres.push({ x: px, y: py, i, pris: false, phase: Math.random() * 6 });
+      enJeu.add(i);
+      return;
+    }
+  };
   const genererSection = (n) => {
     const u = U();
     sections += 1;
-    if (sections <= 2) { sectionVallons(u, 0); return; }
-    const r = Math.random();
-    // Le mélange se corse avec le niveau : plus de trous et de falaises, moins de plat. Les loopings
-    // n'arrivent jamais d'entrée de jeu : on laisse le temps de comprendre la commande unique.
-    const pTrou = 0.08 + n * 0.025; const pChute = 0.06 + n * 0.02; const pTremplin = 0.3;
-    const pBoucle = sections > 4 ? 0.11 : 0;
-    let seuil = pTremplin;
-    if (r < seuil) sectionTremplin(u, n);
-    else if (r < (seuil += pTrou)) sectionTrou(u, n);
-    else if (r < (seuil += pChute)) sectionChute(u, n);
-    else if (r < (seuil += pBoucle)) sectionLooping(u, n);
-    else if (r < 0.93) sectionVallons(u, n);
-    else sectionPlat(u);
+    const xDeb = xGen;
+    if (sections <= 2) { sectionVallons(u, 0); semerLettre(u, xDeb); return; }
+    // Le mélange se corse avec le niveau : plus de trous, de falaises et d'obstacles, moins de plat. Les loopings
+    // et la route encombrée n'arrivent jamais d'entrée de jeu : on laisse le temps de comprendre les commandes.
+    const poids = [
+      [() => sectionTremplin(u, n), 0.3],
+      [() => sectionTrou(u, n), 0.08 + n * 0.025],
+      [() => sectionChute(u, n), 0.06 + n * 0.02],
+      [() => sectionLooping(u, n), sections > 4 ? 0.11 : 0],
+      [() => sectionObstacles(u, n), sections > 3 ? 0.15 + n * 0.015 : 0],
+      [() => sectionVallons(u, n), 0.3],
+      [() => sectionPlat(u), 0.08]
+    ];
+    let r = Math.random() * poids.reduce((a, [, q]) => a + q, 0);
+    for (const [faire, q] of poids) { if (r < q) { faire(); break; } r -= q; }
+    semerLettre(u, xDeb);
   };
   const assurer = (jusqua, n) => { while (xGen < jusqua) genererSection(n); };
   const elaguer = () => {
@@ -288,6 +363,9 @@ export function creerRider(api) {
     H.splice(0, k); T.splice(0, k); x0 += k * PAS;
     obstacles = obstacles.filter((o) => o.x > x - u);
     bonus = bonus.filter((b) => b.x > x - u);
+    // Une lettre ratée repart dans le semis : elle reviendra plus loin.
+    for (const l of lettres) if (!l.pris && l.x <= x - u) enJeu.delete(l.i);
+    lettres = lettres.filter((l) => l.x > x - u);
     boucles = boucles.filter((b) => b.x + b.r > x - u);
   };
 
@@ -299,6 +377,8 @@ export function creerRider(api) {
       const u = U();
       H = []; T = []; x0 = 0; xGen = 0; sections = 0; yBase = h * 0.62; yFin = yBase; ajouter(yBase); ajouter(yBase);
       obstacles = []; bonus = []; boucles = []; boucle = null; phi = 0; vBoucle = 0; prochainJalon = u * JALON;
+      lettres = []; mot = []; motsFinis = 0; pointsMot = 0; nouveauMot();
+      horloge = 0; dernierAppui = -9; enfoncePrec = false; sautDemande = 0; sautEnCours = false; sautsFaits = 0; astuces = 0;
       x = u * 0.5; assurer(x + w * 3, 0);
       y = sol(x); vx = croisiere(0); vy = 0; auSol = true; tempsVol = 0;
       angle = Math.atan(pente(x)); omega = 0; angleDepart = angle; flips = 0; serie = 0; serieObstacles = 0; obstaclesVol = 0;
@@ -309,7 +389,7 @@ export function creerRider(api) {
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
-    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, derniereChute }; },
+    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
     // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
     // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
     // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
@@ -317,6 +397,18 @@ export function creerRider(api) {
     // aux réceptions, en petites saccades. Ici chaque tranche est identique ; seul le nombre de
     // tranches par image change. Le reliquat est reporté à l'image suivante, jamais perdu.
     update(dt, input) {
+      // Appuis de l'image, comptés UNE fois (pasPhysique tourne plusieurs fois par image avec la même saisie).
+      // Un pointeur ajoute une « tape » ; au clavier, seul le passage de relâché à enfoncé compte.
+      horloge += dt;
+      let appuis = input.tapes.length;
+      if (!appuis && input.enfonce && !enfoncePrec) appuis = 1;
+      enfoncePrec = input.enfonce;
+      for (let k = 0; k < appuis; k++) {
+        if (horloge - dernierAppui < DOUBLE_TAP) { sautDemande = SAUT_TAMPON; dernierAppui = -9; } // un triple tap ne fait pas deux sauts
+        else dernierAppui = horloge;
+      }
+      if (input.sauts) sautDemande = SAUT_TAMPON; // ↑ ou W : saut direct au clavier
+      if (motFini > 0) { motFini -= dt; if (motFini <= 0) nouveauMot(); }
       accumule = Math.min(accumule + dt, ACCUM_MAX);
       let fin;
       while (accumule >= PAS_PHYSIQUE) {
@@ -338,6 +430,19 @@ export function creerRider(api) {
       // --- Relief disponible loin devant, et nettoyé loin derrière.
       assurer(x + w * 3, n); elaguer();
 
+      // --- Saut : au sol, ou juste après avoir quitté une crête (coyote). L'élan vertical de la pente est gardé
+      // quand il aide (on saute plus haut en montée), jamais quand il freine le saut.
+      sautDemande = Math.max(0, sautDemande - dt);
+      if (sautDemande > 0 && boucle === null && (auSol || (tempsVol < COYOTE && !sautEnCours))) {
+        const v0 = Math.sqrt(2 * g * SAUT_HAUTEUR * u);
+        vy = Math.min(auSol ? pente(x) * vx : vy, 0) - v0;
+        y -= 1;
+        auSol = false; tempsVol = 0; angleDepart = angle; flips = 0; omega = 0; obstaclesVol = 0;
+        sautDemande = 0; sautEnCours = true; sautsFaits += 1;
+        poussierer(x, y, 6, 120);
+        vEcrasement -= 3;
+      }
+
       // --- Dans un looping : le vélo est tenu par le rail, la gravité freine dans la montée et relance dans
       // la descente. On garantit juste assez de vitesse pour ressortir : un anneau où l'on est entré se termine,
       // sinon la punition tomberait bien après la décision, et le joueur ne comprendrait pas ce qu'il a raté.
@@ -356,7 +461,7 @@ export function creerRider(api) {
           boucle = null; phi = 0;
           x = b.x + PAS; y = sol(x); vy = 0; vx = Math.max(vBoucle, base);
           angle = Math.atan(pente(x)); auSol = true; flips = 0; tempsVol = 0; angleDepart = angle;
-          api.marquer(BOUCLE_POINTS);
+          marquer(BOUCLE_POINTS);
           flash = { texte: `🔄 LOOPING +${BOUCLE_POINTS}`, reste: 1.2 };
           api.eclat?.(x - camX, y - camY - t, '#FFD166', 14);
         }
@@ -409,7 +514,7 @@ export function creerRider(api) {
         // Un tour complet (un peu avant la fin, pour que l'annonce tombe quand on « revient ») = +1, sans plafond.
         const tours = (angleDepart - angle) / DEUX_PI;
         if (tours >= flips + 1 - 0.06) {
-          flips += 1; api.marquer(1);
+          flips += 1; marquer(1);
           const ex = x - camX; const ey = y - camY - t * 1.6;
           api.effet?.(ex, ey, flips === 1 ? 'BACKFLIP +1' : `×${flips} +1`, flips >= 2 ? '#FFD166' : LIME);
           api.eclat?.(ex, ey + t * 0.6, flips >= 2 ? '#FFD166' : LIME, 6 + flips * 3);
@@ -429,8 +534,8 @@ export function creerRider(api) {
             // Combo : deux tours ou plus dans le même vol rapportent autant de points en prime. C'est ce qui
             // fait qu'on tente le double au lieu d'assurer le simple.
             const combo = flips >= 2 ? flips : 0;
-            if (parfait) api.marquer(1);
-            if (combo) api.marquer(combo);
+            if (parfait) marquer(1);
+            if (combo) marquer(combo);
             // Réception pile dans l'axe : petit coup de fouet. La récompense est dans la relance, pas dans un chiffre.
             if (parfait) vx = Math.min(vx * RELANCE_PARFAITE, plafond * 1.3);
             const prime = `${parfait ? ' +1' : ''}${combo ? ` COMBO +${combo}` : ''}${serie >= 2 ? ` · ×${serie}` : ''}`;
@@ -438,7 +543,7 @@ export function creerRider(api) {
             api.eclat?.(x - camX, ySol - camY - t * 0.6, parfait ? '#FFD166' : LIME, parfait ? 14 : 8);
           } else serie = 0;
           if (!obstaclesVol) serieObstacles = 0; // la série d'obstacles tient tant que chaque vol en franchit au moins un
-          y = ySol; vy = p * vx; angle = attendu + ecart; auSol = true; omega = 0; flips = 0; tempsVol = 0;
+          y = ySol; vy = p * vx; angle = attendu + ecart; auSol = true; omega = 0; flips = 0; tempsVol = 0; sautEnCours = false;
         }
       }
 
@@ -453,19 +558,44 @@ export function creerRider(api) {
       roue += vRoue * dt;
 
       // --- Jalons, obstacles, bonus
-      if (x >= prochainJalon) { prochainJalon += u * JALON; api.marquer(1); api.effet?.(x - camX, y - camY - t * 1.3, '+1'); }
+      if (x >= prochainJalon) { prochainJalon += u * JALON; marquer(1); api.effet?.(x - camX, y - camY - t * 1.3, '+1'); }
+      // Tant que le joueur n'a jamais sauté, les deux premiers obstacles sur la route annoncent la commande.
+      if (!sautsFaits && astuces < 2 && auSol) {
+        const devant = obstacles.find((o) => o.route && !o.passe && !o.astuce && o.x > x && o.x - x < u * 1.2);
+        if (devant) { devant.astuce = true; astuces += 1; flash = { texte: tr('jeux.rider_astuce_saut', '👆👆 Double tap (ou ↑) = saut !'), reste: 2 }; }
+      }
       for (const o of obstacles) {
         if (o.passe || x < o.x) continue;
         o.passe = true;
         if (y > sol(o.x) - t * 0.4) return chuter(x, y, 'obstacle');
         serieObstacles += 1; obstaclesVol += 1;
-        api.marquer(1); api.effet?.(x - camX, y - camY - t * 1.2, serieObstacles >= 3 ? `+1 ×${serieObstacles}` : '+1');
+        marquer(1); api.effet?.(x - camX, y - camY - t * 1.2, serieObstacles >= 3 ? `+1 ×${serieObstacles}` : '+1');
+      }
+      for (const l of lettres) {
+        l.phase += dt * 3;
+        if (l.pris) continue;
+        if (Math.hypot(x - l.x, (y - t * 0.55) - l.y) < t * 0.72) {
+          l.pris = true; attrapees[l.i] = true; enJeu.delete(l.i);
+          marquer(1);
+          api.effet?.(l.x - camX, l.y - camY - t * 0.5, `${mot[l.i]} +1`, LIME);
+          api.eclat?.(l.x - camX, l.y - camY, LIME, 10);
+          if (attrapees.every(Boolean)) {
+            // Mot complet : tout ce qui a été marqué pendant ce mot est marqué une seconde fois.
+            const prime = pointsMot; pointsMot = 0;
+            if (prime > 0) api.marquer(prime);
+            const texte = mot.join('');
+            flash = { texte: tr('jeux.rider_mot_complet', `🎉 ${texte} ! Points ×2 (+${prime})`, { mot: texte, n: prime }), reste: 2.4 };
+            api.eclat?.(x - camX, y - camY - t, '#FFD166', 24);
+            api.eclat?.(w / 2, 24, LIME, 16);
+            motFini = FETE_MOT; motsFinis += 1;
+          }
+        }
       }
       for (const b of bonus) {
         b.phase += dt * 3;
         if (b.pris) continue;
         if (Math.hypot(x - b.x, (y - t * 0.55) - b.y) < t * 0.66) {
-          b.pris = true; api.marquer(1);
+          b.pris = true; marquer(1);
           api.effet?.(b.x - camX, b.y - camY - t * 0.4, '+1', '#FFD166'); api.eclat?.(b.x - camX, b.y - camY, '#FFD166', 8);
         }
       }
@@ -577,6 +707,18 @@ export function creerRider(api) {
         halo(ctx, o.x, yy - t * 0.32, t * 0.5, '255,255,255', 0.4);
         emoji(ctx, o.emoji, o.x, yy - t * 0.32, t * 0.78);
       }
+      // Lettres : une tuile lime qui flotte, bien distincte des sacs (violets) et des obstacles (emoji).
+      for (const l of lettres) {
+        if (l.pris || l.x < camX - t || l.x > xFin + t) continue;
+        const ly = l.y + Math.sin(l.phase) * 4; const c = t * 0.64;
+        halo(ctx, l.x, ly, t * 0.8, '200,240,60', 0.5);
+        arrondi(ctx, l.x - c / 2, ly - c / 2, c, c, c * 0.24);
+        ctx.fillStyle = LIME; ctx.fill();
+        ctx.lineWidth = Math.max(1.5, c * 0.08); ctx.strokeStyle = INK; ctx.stroke();
+        ctx.fillStyle = INK; ctx.font = `900 ${(c * 0.66).toFixed(1)}px system-ui, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(mot[l.i], l.x, ly + c * 0.05);
+      }
       for (const b of bonus) {
         if (b.pris || b.x < camX - t || b.x > xFin + t) continue;
         const by = b.y + Math.sin(b.phase) * 3;
@@ -601,13 +743,36 @@ export function creerRider(api) {
       dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air);
       ctx.restore();
 
+      // Le mot à compléter : une case par lettre, allumée quand elle est attrapée, dorée pendant la fête.
+      const c = Math.max(15, Math.min(26, w * 0.055));
+      if (mot.length) {
+        const ecart = c * 0.18; const total = mot.length * c + (mot.length - 1) * ecart;
+        let cx = (w - total) / 2; const haut = 8; const fete = motFini > 0;
+        ctx.save();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = `800 ${(c * 0.62).toFixed(1)}px system-ui, sans-serif`;
+        for (let i = 0; i < mot.length; i++) {
+          const ok = attrapees[i];
+          arrondi(ctx, cx, haut, c, c, c * 0.22);
+          ctx.fillStyle = ok ? (fete ? '#FFD166' : LIME) : 'rgba(20,18,31,.35)'; ctx.fill();
+          ctx.lineWidth = 1.5; ctx.strokeStyle = ok ? INK : 'rgba(255,255,255,.4)'; ctx.stroke();
+          ctx.fillStyle = ok ? INK : 'rgba(255,255,255,.5)';
+          ctx.fillText(mot[i], cx + c / 2, haut + c / 2 + 1);
+          cx += c + ecart;
+        }
+        ctx.textAlign = 'left'; ctx.font = `800 ${(c * 0.5).toFixed(1)}px system-ui, sans-serif`;
+        ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.strokeText('×2', cx + ecart * 0.4, haut + c / 2 + 1);
+        ctx.fillStyle = '#FFD166'; ctx.fillText('×2', cx + ecart * 0.4, haut + c / 2 + 1);
+        ctx.restore();
+      }
       if (flash) {
+        const yFlash = mot.length ? 8 + c + 8 : 10;
         ctx.save();
         ctx.globalAlpha = Math.min(1, flash.reste * 2);
         ctx.font = `800 ${Math.max(14, Math.min(24, w * 0.07))}px system-ui, sans-serif`;
         ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-        ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.strokeText(flash.texte, w / 2, 10);
-        ctx.fillStyle = LIME; ctx.fillText(flash.texte, w / 2, 10);
+        ctx.lineWidth = 4; ctx.strokeStyle = INK; ctx.strokeText(flash.texte, w / 2, yFlash);
+        ctx.fillStyle = LIME; ctx.fillText(flash.texte, w / 2, yFlash);
         ctx.restore();
       }
     }

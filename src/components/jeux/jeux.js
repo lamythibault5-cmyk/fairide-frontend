@@ -322,14 +322,14 @@ export const JEUX = [
     })
   },
   {
-    key: 'rider', label: 'FairRider', sub: 'Gaz, tremplins, saltos, loopings', emoji: '🚴',
+    key: 'rider', label: 'FairRider', sub: 'Saltos, sauts, loopings, lettres', emoji: '🚴',
     stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '🤕 Chute !',
     regles: [
-      'But : une seule commande. Maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Pas de bouton de saut : tremplins, crêtes prises vite, trous et falaises te font décoller — et les loopings se bouclent tout seuls, à condition d’y arriver assez vite.',
-      'Score : +1 par backflip complet (un double vaut 2, un triple 3, sans limite) et autant en prime dès deux tours dans le même vol, +1 quand tu retombes pile dans l’axe (avec un coup de fouet en prime), +3 par looping bouclé, +1 par obstacle (🪨 🚧 🛢️) franchi en l’air, +1 par sac de livraison attrapé, +1 par bout de piste parcouru. Tous les 8 points, la vitesse maxi monte et la piste se corse.',
-      'Fin de partie : retomber de travers. Si le vélo arrive à peu près dans l’axe de la pente (à 65° près), c’est propre ; plus incliné, c’est la chute. Tomber dans un trou ou toucher un obstacle au sol, c’est fini aussi. Ton meilleur score est gardé et compte pour le podium.'
+      'But : maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Double tap (ou double clic) pour sauter par-dessus les obstacles de la route. Tremplins, crêtes, trous et falaises te font décoller, et les loopings se bouclent tout seuls si tu arrives assez vite.',
+      'Lettres : un mot lié à Fairide (7 lettres au plus) est affiché en haut, et chaque mot complété en révèle un plus long. Ses lettres sont sur la route ou en l’air — il faut parfois sauter pour les cueillir. Attrape-les toutes : tous les points gagnés pendant ce mot sont doublés, puis le mot suivant apparaît. Une lettre ratée revient plus loin.',
+      'Score : +1 par backflip (un double vaut 2, un triple 3) et autant en prime dès deux tours dans le même vol, +1 si tu retombes pile dans l’axe, +3 par looping, +1 par obstacle franchi en l’air, +1 par lettre, +1 par sac de livraison, +1 par bout de piste. Fin de partie : retomber de travers (au-delà de 65°), tomber dans un trou ou percuter un obstacle au sol.'
     ],
-    controles: 'Maintiens (doigt, souris ou Espace) : gaz au sol, backflip en l’air ; relâche pour rouler sur l’erre ou arrêter de tourner. Un tap vaut un appui court. Échap ou P pour la pause.',
+    controles: 'Maintiens (doigt, souris ou Espace) : gaz au sol, backflip en l’air. Double tap, double clic ou double Espace : saut — au clavier, ↑ ou W saute directement. Échap ou P pour la pause.',
     creer: (api) => creerRider(api)
   },
   {
