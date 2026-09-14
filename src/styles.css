@@ -3053,3 +3053,40 @@ html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-b
 .wrap-fond-doux { position: relative; z-index: 1; }
 .wrap-fond-doux .card { background: rgba(255, 255, 255, .93); }
 @media (prefers-contrast: more) { .wrap-fond-doux .card { background: #fff; } }
+
+/* Pendant une partie, et dans la vue agrandie carte + jeux : pas de panier flottant par-dessus (demande du
+   fondateur, 2026-09-14). Il revient dès la partie terminée ou la vue refermée. */
+html.jeu-en-cours .floating-cart, html.jeu-en-cours .floating-cart-bubble,
+html.tracking-plein-actif .floating-cart, html.tracking-plein-actif .floating-cart-bubble,
+html.jeux-sur-page .floating-cart, html.jeux-sur-page .floating-cart-bubble { display: none !important; }
+
+/* Boutons nommés du plein écran et de l'écran scindé : assez gros pour le pouce, lisibles sur fond sombre. */
+.jeu-plein-btn {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: 999px;
+  background: var(--lime, #C8F03C); color: #14121F; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
+}
+.jeu-plein-btn--ghost { background: rgba(255, 255, 255, .16); color: #fff; }
+.jeu-plein-btn:hover { filter: brightness(1.06); }
+@media (max-width: 420px) { .jeu-plein-btn--ghost span { display: none; } }
+/* Téléphone en plein écran : les boutons passent sous le score au lieu de le recouvrir. */
+/* Plein écran : fond sombre, donc score et niveau en clair (l'encre sombre du mode normal y disparaissait). */
+.jeu--plein .jeu-score { color: #fff; }
+.jeu--plein .jeu-niveau { color: rgba(255,255,255,.7); }
+.jeu--plein .jeu-best { color: #FFD166; }
+/* Téléphone en plein écran : record et score sur une ligne, les boutons dessous, alignés à droite. */
+@media (max-width: 560px) {
+  .jeu--plein .jeu-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .jeu--plein .jeu-score { text-align: left; }
+  .jeu--plein .jeu-hud-boutons { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
+}
+
+/* Écran scindé sur téléphone : la carte garde sa hauteur fixe en haut, le jeu remplit le reste. */
+.tracking-fullscreen-split.scinde .tracking-fullscreen-map { flex: 0 0 auto; }
+.tracking-fullscreen-split.scinde .tracking-fullscreen-game { flex: 1 1 auto; min-height: 0; }
+
+/* Écran scindé sur téléphone : le sélecteur de jeux tient sur une ligne qui défile, le terrain garde la hauteur. */
+.game-switcher--compact .game-switcher-picker { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 4px; scrollbar-width: none; }
+.game-switcher--compact .game-switcher-picker::-webkit-scrollbar { display: none; }
+.game-switcher--compact .game-switcher-tab { flex: 0 0 auto; min-width: 44px; padding: 4px 8px; }
+.tracking-fullscreen-split.scinde { gap: 8px; }
+.tracking-fullscreen-split.scinde .tracking-fullscreen-game { padding: 6px 8px; }

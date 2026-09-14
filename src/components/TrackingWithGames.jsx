@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import GameSwitcher from './GameSwitcher';
 import { useLanguage } from '../context/LanguageContext';
@@ -46,14 +46,25 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
     setJeuxMasques((m) => { try { localStorage.setItem(CLE_JEUX_MASQUES, m ? '0' : '1'); } catch { /* sans stockage */ } return !m; });
   }
   const hauteurCarte = jeuxMasques ? Math.max(hauteur, 460) : hauteur;
+  // Page avec mini-jeux (suivi d'une commande déjà passée) : le panier flottant n'y sert à rien et venait se poser
+  // sur les boutons du jeu. Il revient en quittant la page.
+  useEffect(() => {
+    if (!jeux) return undefined;
+    document.documentElement.classList.add('jeux-sur-page');
+    return () => document.documentElement.classList.remove('jeux-sur-page');
+  }, [jeux]);
+  // Ici la carte et le jeu sont déjà côte à côte (ou empilés) : « écran scindé » depuis le plein écran du jeu
+  // revient simplement sur ce bloc, sans relancer la partie dans une autre vue.
+  const bloc = useRef(null);
+  const revenirAuBloc = () => setTimeout(() => bloc.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
   return (
     <>
-      <div className={`tracking-with-game${jeuxMasques ? ' jeux-masques' : ''}${jeux ? '' : ' carte-seule'}`} style={{ margin: '10px 0' }}>
+      <div ref={bloc} className={`tracking-with-game${jeuxMasques ? ' jeux-masques' : ''}${jeux ? '' : ' carte-seule'}`} style={{ margin: '10px 0' }}>
         <div className="tracking-map-col">
           {rendreCarte({ height: hauteurCarte })}
           {legende && <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>{legende}</div>}
         </div>
-        {!jeuxMasques && <GameSwitcher pourquoi={t(`tracking.${POURQUOI[role]}`)} width={empile ? 240 : 140} height={empile ? 300 : 280} />}
+        {!jeuxMasques && <GameSwitcher pourquoi={t(`tracking.${POURQUOI[role]}`)} width={empile ? 240 : 140} height={empile ? 300 : 280} onEcranScinde={revenirAuBloc} ecranScindeActif />}
       </div>
       <div className="tracking-actions">
         {jeux && <button type="button" className="tracking-expand-btn" onClick={basculerJeux} aria-pressed={jeuxMasques}>{jeuxMasques ? t('tracking.showGames') : t('tracking.hideGames')}</button>}
@@ -100,24 +111,30 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, jeu
   // servait ni l'un ni l'autre) ; la carte reste montée, juste cachée, pour continuer à recevoir les
   // positions et le temps d'arrivée, affiché en permanence dans la barre.
   const [carteMasquee, setCarteMasquee] = useState(false);
-  const [onglet, setOnglet] = useState('jeux'); // téléphone : 'carte' | 'jeux'
+  // Téléphone : 'deux' (écran scindé, carte en haut et jeu dessous — par défaut), 'carte' ou 'jeux' seuls.
+  const [onglet, setOnglet] = useState('deux');
   const [eta, setEta] = useState(null);
 
   useEffect(() => {
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Vue agrandie ouverte : pas de panier flottant par-dessus la carte et le jeu (styles.css).
+    document.documentElement.classList.add('tracking-plein-actif');
     function onKeyDown(e) { if (e.key === 'Escape') onClose(); }
     window.addEventListener('keydown', onKeyDown);
     return () => {
       document.body.style.overflow = prevOverflow;
+      document.documentElement.classList.remove('tracking-plein-actif');
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [onClose]);
 
   // Jeux masqués : la carte seule, en grand, quelle que soit la taille d'écran.
-  const carteVisible = jeuxMasques ? true : (narrow ? onglet === 'carte' : !carteMasquee);
-  const jeuxVisibles = !jeuxMasques && (narrow ? onglet === 'jeux' : true);
-  const hauteurCarteFs = jeuxMasques ? Math.max(320, hauteurEcran - 170) : (narrow ? Math.max(mapHeight, 360) : mapHeight);
+  const carteVisible = jeuxMasques ? true : (narrow ? onglet !== 'jeux' : !carteMasquee);
+  const jeuxVisibles = !jeuxMasques && (narrow ? onglet !== 'carte' : true);
+  const hauteurCarteFs = jeuxMasques ? Math.max(320, hauteurEcran - 170) : (narrow ? (onglet === 'deux' ? Math.round(Math.max(140, Math.min(230, hauteurEcran * 0.26))) : Math.max(360, hauteurEcran - 170)) : mapHeight);
+  const scindeActif = narrow ? onglet === 'deux' : !carteMasquee;
+  const passerEnScinde = () => { setOnglet('deux'); setCarteMasquee(false); };
   const texteEta = eta
     ? (role === 'driver' ? t('tracking.etaDriver', { min: eta.minutes }) : t('tracking.etaClient', { min: eta.minutes }))
     : (etaSansEstimation || t('tracking.courierOnWay'));
@@ -128,6 +145,7 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, jeu
         {jeuxMasques ? null : narrow ? (
           <div className="tracking-fullscreen-tabs" role="tablist">
             <button type="button" role="tab" aria-selected={onglet === 'carte'} className={onglet === 'carte' ? 'active' : ''} onClick={() => setOnglet('carte')}>🗺️ {t('tracking.tabMap')}</button>
+            <button type="button" role="tab" aria-selected={onglet === 'deux'} className={onglet === 'deux' ? 'active' : ''} onClick={() => setOnglet('deux')}>◧ {t('tracking.tabBoth')}</button>
             <button type="button" role="tab" aria-selected={onglet === 'jeux'} className={onglet === 'jeux' ? 'active' : ''} onClick={() => setOnglet('jeux')}>🎮 {t('tracking.tabGames')}</button>
           </div>
         ) : (
@@ -141,13 +159,13 @@ function TrackingFullscreen({ role, rendreCarte, legende, etaSansEstimation, jeu
         <span className="tracking-fullscreen-eta" aria-live="polite">{texteEta}</span>
         <button type="button" className="tracking-fullscreen-close" onClick={onClose}>✕ <span>{t('tracking.close')}</span></button>
       </div>
-      <div className={`tracking-fullscreen-split${carteVisible ? '' : ' carte-masquee'}${jeuxMasques ? ' jeux-masques' : ''}`}>
+      <div className={`tracking-fullscreen-split${carteVisible ? '' : ' carte-masquee'}${jeuxMasques ? ' jeux-masques' : ''}${narrow && onglet === 'deux' ? ' scinde' : ''}`}>
         <div className="tracking-fullscreen-map" hidden={!carteVisible}>
           {rendreCarte({ height: hauteurCarteFs, onEta: setEta })}
           {legende && <div className="small tracking-fullscreen-map-caption">{legende}</div>}
         </div>
         <div className="tracking-fullscreen-game" hidden={!jeuxVisibles}>
-          <GameSwitcher fill large pourquoi={t(`tracking.${POURQUOI[role]}`)} />
+          <GameSwitcher fill large={!(narrow && onglet === 'deux')} compact={narrow && onglet === 'deux'} pourquoi={t(`tracking.${POURQUOI[role]}`)} onEcranScinde={passerEnScinde} ecranScindeActif={scindeActif} />
         </div>
       </div>
       <p className="tracking-fullscreen-aide small">{jeuxMasques ? t('tracking.fullscreenHelpMap') : t('tracking.fullscreenHelp')}</p>

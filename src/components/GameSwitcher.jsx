@@ -18,7 +18,8 @@ import { useLanguage } from '../context/LanguageContext';
 // taille est fixe, pensée pour la colonne à côté de la carte.
 const CLE_INDEX = 'fairide_game_switcher_index';
 
-export default function GameSwitcher({ width = 140, height = 280, fill = false, large = false, pourquoi }) {
+// compact : écran scindé sur téléphone — sélecteur sur une ligne, sans bulle ni podium, pour laisser la hauteur au terrain.
+export default function GameSwitcher({ width = 140, height = 280, fill = false, large = false, compact = false, pourquoi, onEcranScinde, ecranScindeActif = false }) {
   const { t } = useLanguage();
   const [index, setIndex] = useState(() => {
     const sauve = Number(localStorage.getItem(CLE_INDEX));
@@ -43,8 +44,8 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
   return (
     // Compact : le bloc a la largeur du terrain, sinon la bulle 💡 l'élargirait à la longueur de sa phrase
     // et écraserait la carte à côté.
-    <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}`} style={fill || large ? undefined : { width }}>
-      {pourquoi && (
+    <div className={`game-switcher${large ? ' game-switcher--large' : ''}${fill ? ' game-switcher--fill' : ''}${compact ? ' game-switcher--compact' : ''}`} style={fill || large ? undefined : { width }}>
+      {pourquoi && !compact && (
         <div className="game-switcher-entete">
           <span className="game-switcher-entete-titre">{t('games.title')}</span>
           <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label={t('games.why')} title={t('games.why')}>💡</button>
@@ -71,8 +72,9 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
         ))}
       </div>
       <GameFrame key={jeu.key} jeu={jeu} width={width} height={height} fill={fill} large={large}
+        onEcranScinde={onEcranScinde} ecranScindeActif={ecranScindeActif}
         onStartRequest={social.demanderDepart} onScore={(score) => social.envoyerScore(jeu.key, score)} />
-      <Podium jeu={jeu} entrees={social.podium[jeu.key] || []} profil={social.profil} connecte={social.connecte} moiId={social.moiId} onEditer={social.ouvrirProfil} large={large || fill} />
+      {!compact && <Podium jeu={jeu} entrees={social.podium[jeu.key] || []} profil={social.profil} connecte={social.connecte} moiId={social.moiId} onEditer={social.ouvrirProfil} large={large || fill} />}
       {social.modal && (
         <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />
       )}

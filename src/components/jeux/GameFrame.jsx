@@ -118,6 +118,14 @@ async function quitterPlein() {
   const f = document.exitFullscreen || document.webkitExitFullscreen;
   if (elementPlein() && f) { try { await f.call(document); } catch { /* déjà sorti */ } }
 }
+// Partie en cours (ou plein écran) : le panier flottant n'a rien à faire par-dessus le terrain. Un compteur,
+// parce que la page Carte et sa vue agrandie peuvent monter deux cadres de jeu à la fois.
+let partiesEnCours = 0;
+function signalerPartie(active) {
+  partiesEnCours = Math.max(0, partiesEnCours + (active ? 1 : -1));
+  document.documentElement.classList.toggle('jeu-en-cours', partiesEnCours > 0);
+}
+
 const surTelephone = () => { try { return window.matchMedia('(max-width: 820px)').matches; } catch { return false; } };
 
 const dansChampTexte = (e) => /^(INPUT|TEXTAREA|SELECT)$/.test(e.target?.tagName || '') || e.target?.isContentEditable;
@@ -126,7 +134,9 @@ const clavierProbable = () => { try { return window.matchMedia('(hover: hover) a
 
 // onStartRequest(demarrer) : le parent décide quand la partie commence (il peut d'abord demander un
 // pseudo, voir GameSocial.jsx) et appelle demarrer() lui-même. onScore(score) : fin de partie.
-export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false, onStartRequest, onScore }) {
+// onEcranScinde : affiche le jeu ET la carte en même temps (fourni par TrackingWithGames). ecranScindeActif :
+// on y est déjà — le bouton ne sert alors qu'à sortir du plein écran pour retrouver la carte à côté.
+export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false, onStartRequest, onScore, onEcranScinde, ecranScindeActif = false }) {
   const { t } = useLanguage();
   const onScoreRef = useRef(onScore);
   onScoreRef.current = onScore;
@@ -208,6 +218,13 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     window.addEventListener('resize', mesurer); // rotation d écran : ceinture et bretelles
     return () => { ro.disconnect(); window.removeEventListener('resize', mesurer); };
   }, [fill, plein, width, height]);
+
+  const partieActive = plein || status === 'countdown' || status === 'playing' || status === 'paused';
+  useEffect(() => {
+    if (!partieActive) return undefined;
+    signalerPartie(true);
+    return () => signalerPartie(false);
+  }, [partieActive]);
 
   // Le joueur peut sortir du plein écran sans passer par notre bouton (Échap, geste système) : on suit l'état réel.
   useEffect(() => {
@@ -425,6 +442,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     setStatus('countdown');
   }
   function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
+  // Écran scindé : on quitte d'abord le plein écran (sinon la carte resterait cachée derrière), puis la page
+  // affiche le jeu et la carte ensemble.
+  async function ecranScinde() {
+    if (pleinRef.current) await basculerPlein();
+    onEcranScinde?.();
+  }
   async function basculerPlein() {
     // pleinRef (et non `plein`) : ce bouton est aussi appelé depuis l'écouteur clavier, monté une fois, dont la
     // fermeture garderait sinon l'état du premier rendu.
@@ -462,10 +485,20 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
             {menuMusique && menuPistes}
           </span>
           <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
-          <button type="button" className={`jeu-regles-btn${plein ? ' active' : ''}`} onClick={basculerPlein}
-            aria-label={t(plein ? 'gameFrame.exitFullscreen' : 'gameFrame.fullscreen')} title={t(plein ? 'gameFrame.exitFullscreen' : 'gameFrame.fullscreen')}>
-            {plein ? '🗗' : '⛶'}
-          </button>
+          {onEcranScinde && (plein || !ecranScindeActif) && (
+            <button type="button" className={`jeu-regles-btn${large || plein ? ' jeu-plein-btn jeu-plein-btn--ghost' : ''}`} onClick={ecranScinde}
+              aria-label={t('gameFrame.splitScreen')} title={t('gameFrame.splitScreen')}>
+              ◧{(large || plein) && <span> {t('gameFrame.splitScreen')}</span>}
+            </button>
+          )}
+          {/* En plein écran, la sortie est un vrai bouton nommé, en évidence : une icône seule ne se trouvait pas. */}
+          {plein ? (
+            <button type="button" className="jeu-plein-btn" onClick={basculerPlein} aria-label={t('gameFrame.exitFullscreen')}>
+              ✕ <span>{t('gameFrame.exitFullscreenShort')}</span>
+            </button>
+          ) : (
+            <button type="button" className="jeu-regles-btn" onClick={basculerPlein} aria-label={t('gameFrame.fullscreen')} title={t('gameFrame.fullscreen')}>⛶</button>
+          )}
         </span>
       </div>
       {/* Progression vers le prochain palier : une barre fine, lisible d'un coup d'œil pendant la partie. */}

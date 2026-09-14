@@ -3625,6 +3625,8 @@ export const translations = {
       spaceHint: 'Espace ou Entrée pour rejouer',
       fullscreen: 'Plein écran',
       exitFullscreen: 'Quitter le plein écran',
+      splitScreen: 'Écran scindé',
+      exitFullscreenShort: 'Quitter',
       rotateHint: 'Tourne ton téléphone : le terrain sera bien plus grand.'
     },
     games: {
@@ -3648,6 +3650,7 @@ export const translations = {
       fullscreenTitle: 'Carte et mini-jeux en plein écran',
       tabMap: 'Carte',
       tabGames: 'Jeux',
+      tabBoth: 'Les deux',
       fullscreenHelp: 'Échap ou ✕ pour revenir · 📖 pour les règles du jeu · 🔇 pour la musique de fond',
       hideGames: '🙈 Masquer les jeux',
       showGames: '🎮 Afficher les jeux',
@@ -9863,6 +9866,8 @@ export const translations = {
       spaceHint: 'Space or Enter to play again',
       fullscreen: 'Full screen',
       exitFullscreen: 'Exit full screen',
+      splitScreen: 'Split screen',
+      exitFullscreenShort: 'Exit',
       rotateHint: 'Turn your phone: the playing field gets much bigger.'
     },
     games: {
@@ -9886,6 +9891,7 @@ export const translations = {
       fullscreenTitle: 'Map and mini-games in full screen',
       tabMap: 'Map',
       tabGames: 'Games',
+      tabBoth: 'Both',
       fullscreenHelp: 'Esc or ✕ to go back · 📖 for the game rules · 🔇 for background music',
       hideGames: '🙈 Hide the games',
       showGames: '🎮 Show the games',
@@ -16087,6 +16093,8 @@ export const translations = {
       spaceHint: 'Spatie of Enter om opnieuw te spelen',
       fullscreen: 'Volledig scherm',
       exitFullscreen: 'Volledig scherm verlaten',
+      splitScreen: 'Gesplitst scherm',
+      exitFullscreenShort: 'Sluiten',
       rotateHint: 'Draai je telefoon: het speelveld wordt veel groter.'
     },
     games: {
@@ -16110,6 +16118,7 @@ export const translations = {
       fullscreenTitle: 'Kaart en minigames op volledig scherm',
       tabMap: 'Kaart',
       tabGames: 'Games',
+      tabBoth: 'Allebei',
       fullscreenHelp: 'Esc of ✕ om terug te gaan · 📖 voor de spelregels · 🔇 voor achtergrondmuziek',
       hideGames: '🙈 Games verbergen',
       showGames: '🎮 Games tonen',
