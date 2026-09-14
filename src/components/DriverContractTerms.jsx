@@ -10,6 +10,8 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 // chaque lundi, retenues selon le statut), et un comparatif des trois statuts. Tout vient de /couriers/me.
 const pct = (x) => `${(Number(x || 0) * 100).toFixed(2).replace(/\.?0+$/, '')} %`;
 const euro = (n) => `${Math.round(Number(n || 0)).toLocaleString(getLocale())} €`;
+// Montants légaux au centime près (cotisations, dispenses) : arrondir à l'euro les rendrait faux.
+const euroCentimes = (n) => `${Number(n || 0).toLocaleString(getLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
 async function ouvrirPdf(url, token, messageErreur) {
   try {
@@ -43,19 +45,25 @@ export default function DriverContractTerms() {
       t('driverTerms.stu2', { taux: pct(L.studentOrdinaryRate) }),
       t('driverTerms.stu3', { age: L.studentMinAge }),
       t('driverTerms.stu4'),
-      t('driverTerms.stu5', { plafond: euro(L.studentParentsCeiling) })
+      t('driverTerms.stu5', { plafond: euro(L.studentParentsCeiling) }),
+      t('driverTerms.stu6', { h: L.studentMaxHours })
     ],
     p2p: [
       t('driverTerms.p2p1', { plafond: euro(L.p2pMaxGross), annee: L.year }),
       t('driverTerms.p2p2', { taux: pct(L.p2pWithholdingRate) }),
       t('driverTerms.p2p3'),
-      t('driverTerms.p2p4')
+      t('driverTerms.p2p4'),
+      t('driverTerms.p2p5', { forfait: pct(L.p2pForfaitRate ?? 0.5) }),
+      t('driverTerms.p2p6')
     ],
     independent: [
       t('driverTerms.ind1'),
       t('driverTerms.ind2', { plafond: euro(L.franchiseMaxTurnover) }),
       t('driverTerms.ind3'),
-      t('driverTerms.ind4')
+      t('driverTerms.ind4'),
+      t('driverTerms.ind5', { taux: pct(L.independentSocialRate ?? 0.205), exoCompl: euroCentimes(L.independentComplementaryExemption ?? 1922.16), minTrim: euroCentimes(L.independentMinQuarterly ?? 890.42), starter: euroCentimes(L.independentStarterQuarterly ?? 459.82) }),
+      t('driverTerms.ind6', { taux: pct(L.independentSocialRate ?? 0.205), exoEtu: euroCentimes(L.studentIndependentExemption ?? 8687), plafondEtu: euroCentimes(L.studentIndependentCeiling ?? 17374.08) }),
+      t('driverTerms.ind7')
     ]
   };
   const retenue = statut === 'p2p' ? t('driverTerms.payWithholdingP2p', { taux: pct(L.p2pWithholdingRate) })

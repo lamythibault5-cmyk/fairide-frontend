@@ -5,7 +5,8 @@ import { useLanguage } from '../context/LanguageContext';
 // carte d'identité OU permis de conduire, recto et verso obligatoires, attestation étudiant en option. Les
 // fichiers restent dans le navigateur tant que le compte n'est pas créé ; ils partent ensuite vers
 // /couriers/me/documents (voir televerserDocumentsLivreur dans Auth.jsx) et se retrouvent dans « Mon compte ».
-export const KINDS = ['identity_card', 'driving_licence'];
+// Titre de séjour accepté à condition qu'il autorise à travailler en Belgique (vérifié par l'équipe Fairide).
+export const KINDS = ['identity_card', 'driving_licence', 'residence_permit'];
 
 function Apercu({ file }) {
   const [url, setUrl] = useState(null);
@@ -44,7 +45,7 @@ export default function IdentityDocsPicker({ kind, setKind, recto, setRecto, ver
       <div className="role-pick" style={{ marginBottom: 10 }}>
         {KINDS.map((k) => (
           <div key={k} role="radio" aria-checked={kind === k} tabIndex={0} className={`chip${kind === k ? ' active' : ''}`} onClick={() => setKind(k)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setKind(k); }}>
-            {k === 'identity_card' ? '🪪 ' : '🚗 '}{t(`courierOnboarding.doc_${k}`)}
+            {k === 'identity_card' ? '🪪 ' : k === 'residence_permit' ? '🛂 ' : '🚗 '}{t(`courierOnboarding.doc_${k}`)}
           </div>
         ))}
       </div>

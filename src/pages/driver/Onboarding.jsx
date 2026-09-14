@@ -14,9 +14,11 @@ import { SkeletonCards } from '../../components/Skeleton';
 const ETAPES = ['statut', 'identite', 'infos', 'contrat', 'paiement', 'envoi'];
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
-  infos: ['date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'student_at_work_heures', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_student_at_work', 'document_social_insurance_fund', 'document_liability_insurance'],
+  infos: ['date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'student_at_work_heures', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_student_at_work', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
   contrat: ['contrat'], paiement: [], envoi: []
 };
+// Attestations d'assurance : date d'échéance demandée, Fairide rappelle le renouvellement.
+const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance'];
 const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 // Un PDF protégé par le jeton ne peut pas être un simple lien : on le télécharge puis on l'ouvre.
 async function ouvrirPdf(url, token, messageErreur) {
@@ -174,7 +176,7 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
     for (const f of files) { const ok = await action(() => apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType: 'identity_card' } }), null); if (!ok) break; }
     toast(files.length > 1 ? t('courierOnboarding.toastDocsUploaded', { n: files.length }) : t('courierOnboarding.toastDocUploaded'));
   }
-  const carte = d.documents.filter((x) => x.docType === 'identity_card' || x.docType === 'driving_licence');
+  const carte = d.documents.filter((x) => ['identity_card', 'driving_licence', 'residence_permit'].includes(x.docType));
   const [autreMoyen, setAutreMoyen] = useState(false);
   const recue = id.status !== 'verified' && carte.length > 0 && !autreMoyen;
   return (
@@ -252,12 +254,13 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   async function deposer(docType, e) {
     const files = [...(e.target.files || [])].slice(0, 6); e.target.value = ''; if (!files.length) return;
     for (const file of files) {
-      const ok = await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: docType === 'liability_insurance' ? expiry : undefined } }), files.length === 1 ? t('courierOnboarding.toastDocUploaded') : null);
+      const ok = await action(() => apiUpload('/couriers/me/documents', { file, token, fieldName: 'file', fields: { docType, expiresAt: AVEC_ECHEANCE.includes(docType) ? expiry : undefined } }), files.length === 1 ? t('courierOnboarding.toastDocUploaded') : null);
       if (!ok) break;
     }
     if (files.length > 1) toast(t('courierOnboarding.toastDocsUploaded', { n: files.length }));
   }
-  const docsRequis = [...(d.requiredDocuments[c.statusType] || []), ...(motorise ? ['driving_licence', 'vehicle_registration'] : [])];
+  // Photo de profil pour tous, pièces du statut, puis permis / immatriculation / assurance pour un véhicule motorisé.
+  const docsRequis = [...new Set([...(d.commonDocuments || ['profile_photo']), ...(d.requiredDocuments[c.statusType] || []), ...(motorise ? (d.motorizedDocuments || ['driving_licence', 'vehicle_registration', 'vehicle_insurance']) : [])])];
   const docsDe = (type) => d.documents.filter((x) => x.docType === type);
 
   return (
@@ -344,8 +347,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
               ))}
             </div>
             <div className="courier-doc-actions">
-              {type === 'liability_insurance' && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
-              <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+              {AVEC_ECHEANCE.includes(type) && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
+              <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={type !== 'profile_photo'} accept={type === 'profile_photo' ? 'image/*' : 'application/pdf,image/*'} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
               <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
             </div>
           </div>

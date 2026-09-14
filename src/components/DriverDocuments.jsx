@@ -9,7 +9,7 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
 // état de vérification. Chaque face se remplace tant qu'elle n'est pas vérifiée. Le dossier complet
 // (statut, contrat, paiements) reste sur /driver/onboarding.
-const IDENTITE = ['identity_card', 'driving_licence'];
+const IDENTITE = ['identity_card', 'driving_licence', 'residence_permit'];
 const estImage = (url) => /\.(jpe?g|png|webp|heic)(\?|$)/i.test(url || '') || /\/image\/upload\//.test(url || '');
 
 export default function DriverDocuments() {
