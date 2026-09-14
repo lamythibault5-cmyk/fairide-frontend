@@ -68,7 +68,8 @@ export default function HeroPreview({ restaurants }) {
       <div className="hero-preview-head">
         <span className="hero-preview-dot" aria-hidden="true" />
         <span>{t('landing.heroPreviewTitle2')}</span>
-        {restaurants.length > 0 && <span className="hero-preview-count">{t('landing.heroPreviewCount', { n: restaurants.length })}</span>}
+        {/* Chiffre fixe des pré-inscriptions, pas la taille de la liste (qui compte aussi les commerces de démonstration). */}
+        <span className="hero-preview-count">{t('landing.heroPreviewCount')}</span>
       </div>
       {choix.length === 0 ? (
         <div className="hero-preview-list">

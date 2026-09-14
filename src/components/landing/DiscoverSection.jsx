@@ -63,9 +63,9 @@ export default function DiscoverSection({ restaurants }) {
         ))}
         <Reveal className="discover-info" delay={(cartes.length % 4) * 70}>
           <span className="discover-info-eyebrow">{t('landing.discoverInfoEyebrow')}</span>
-          <b className="discover-info-title">{t('landing.discoverInfoTitle', { n: restaurants.length })}</b>
+          <b className="discover-info-title">{t('landing.discoverInfoTitle')}</b>
           <div className="discover-info-stats">
-            <span><b>{restaurants.length}</b> {t('landing.discoverInfoBusinesses')}</span>
+            <span><b>30</b> {t('landing.discoverInfoBusinesses')}</span>
             <span><b>{nbCommunes}</b> {t('landing.discoverInfoCommunes')}</span>
             <span><b>{nbCuisines}</b> {t('landing.discoverInfoCuisines')}</span>
             <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>

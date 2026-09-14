@@ -2937,6 +2937,8 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .landing-quartier { padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-weight: 600; letter-spacing: 0.01em; }
 .landing-trust { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 0; padding: 0; font-size: 12.5px; color: rgba(255,255,255,0.8); }
 .hero-preview-count { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--iris); }
+/* Téléphone : la phrase des pré-inscriptions passe sous le titre au lieu de s'écraser sur trois lignes à côté. */
+@media (max-width: 520px) { .hero-preview-head { flex-wrap: wrap; row-gap: 2px; } .hero-preview-count { margin-left: 0; flex-basis: 100%; } }
 .join-points { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 5px; font-size: 13.5px; color: var(--ink-soft); }
 .join-points li::before { content: '· '; }
 .join-card.join-card-iris .join-points { color: rgba(255,255,255,0.8); }
