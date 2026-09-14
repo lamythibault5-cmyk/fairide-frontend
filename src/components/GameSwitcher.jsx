@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import GameFrame, { tJeu } from './jeux/GameFrame';
 import { JEUX } from './jeux/jeux';
 import { Podium, PseudoModal, useGameSocial } from './jeux/GameSocial';
@@ -75,8 +76,11 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
         onEcranScinde={onEcranScinde} ecranScindeActif={ecranScindeActif}
         onStartRequest={social.demanderDepart} onScore={(score) => social.envoyerScore(jeu.key, score)} />
       {!compact && <Podium jeu={jeu} entrees={social.podium[jeu.key] || []} profil={social.profil} connecte={social.connecte} moiId={social.moiId} onEditer={social.ouvrirProfil} large={large || fill} />}
-      {social.modal && (
-        <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />
+      {/* Rendue dans l'élément en plein écran s'il y en a un, sinon dans la page : ailleurs, elle restait cachée
+          derrière la vue agrandie (z-index 200) ou le vrai plein écran du navigateur. */}
+      {social.modal && createPortal(
+        <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />,
+        document.fullscreenElement || document.webkitFullscreenElement || document.body
       )}
     </div>
   );

@@ -219,6 +219,37 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     return () => { ro.disconnect(); window.removeEventListener('resize', mesurer); };
   }, [fill, plein, width, height]);
 
+  // Tactile pendant le jeu : pas de loupe iOS, pas de sélection de texte, pas de menu contextuel au doigt
+  // appuyé, pas de zoom au double tap ni au pincement. Sur le canvas, toujours ; en plein écran, sur toute la
+  // surface — sauf les boutons et la fenêtre des règles (qui défile), qui gardent leur comportement normal.
+  useEffect(() => {
+    const cible = plein ? racine.current : canvas.current;
+    if (!cible) return undefined;
+    const interactif = (t) => !!t?.closest?.('button, a, input, textarea, select, label, [role="dialog"]');
+    const tactile = (e) => { if (e.cancelable && !interactif(e.target)) e.preventDefault(); };
+    const bloquer = (e) => { if (!interactif(e.target)) e.preventDefault(); };
+    const pincement = (e) => e.preventDefault();
+    cible.addEventListener('touchstart', tactile, { passive: false });
+    cible.addEventListener('touchmove', tactile, { passive: false });
+    cible.addEventListener('contextmenu', bloquer);
+    cible.addEventListener('selectstart', bloquer);
+    cible.addEventListener('dblclick', bloquer);
+    if (plein) {
+      document.addEventListener('gesturestart', pincement, { passive: false }); // Safari iOS : pincement
+      libererFocus();
+      try { window.getSelection?.()?.removeAllRanges?.(); } catch { /* rien de sélectionné */ }
+    }
+    return () => {
+      cible.removeEventListener('touchstart', tactile);
+      cible.removeEventListener('touchmove', tactile);
+      cible.removeEventListener('contextmenu', bloquer);
+      cible.removeEventListener('selectstart', bloquer);
+      cible.removeEventListener('dblclick', bloquer);
+      document.removeEventListener('gesturestart', pincement);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [plein]);
+
   const partieActive = plein || status === 'countdown' || status === 'playing' || status === 'paused';
   useEffect(() => {
     if (!partieActive) return undefined;
@@ -426,10 +457,27 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const r = canvas.current.getBoundingClientRect();
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   }
+  function libererFocus() {
+    const a = document.activeElement;
+    if (a && a !== document.body && /^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(a.tagName)) a.blur();
+  }
   function surPointeurBas(e) {
+    libererFocus();
     const p = coord(e); input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
     input.current.tapes.push(p);
     try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché : sans capture, le glissé marche quand même */ }
+  }
+  function surPointeurBasRacine(e) {
+    if (!pleinRef.current || statusRef.current !== 'playing') return;
+    if (e.target.closest?.('button, a, input, textarea, select, label, [role="dialog"], .jeu-canvas')) return;
+    const r = canvas.current?.getBoundingClientRect();
+    if (!r) return;
+    libererFocus();
+    const p = { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) };
+    input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
+    input.current.tapes.push(p);
+    // La capture renvoie le relâchement au canvas, qui remet « enfoncé » à faux, où que le doigt se lève.
+    try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché */ }
   }
   function surPointeurMouv(e) { const p = coord(e); input.current.x = p.x; input.current.y = p.y; }
   function surPointeurHaut() { input.current.enfonce = false; }
@@ -441,7 +489,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     effets.current.vider();
     setStatus('countdown');
   }
-  function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
+  function commencer() { if (onStartRequest && !pleinRef.current) onStartRequest(demarrer); else demarrer(); }
   // Écran scindé : on quitte d'abord le plein écran (sinon la carte resterait cachée derrière), puis la page
   // affiche le jeu et la carte ensemble.
   async function ecranScinde() {
@@ -473,7 +521,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const progression = niv >= jeu.maxNiveau ? 1 : (score % jeu.pointsParNiveau) / jeu.pointsParNiveau;
   const lignesRegles = [...jeu.regles.map((r, i) => tJeu(t, jeu, `regles_${i}`, r)), tJeu(t, jeu, 'regles_3', jeu.controles)];
   return (
-    <div ref={racine} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
+    <div ref={racine} onPointerDown={surPointeurBasRacine} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best" title={t('gameFrame.bestTitle')}>🥇 {meilleur}</span>
         <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>🏆 {score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>

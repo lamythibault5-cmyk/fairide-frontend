@@ -3092,3 +3092,14 @@ html.jeux-sur-page .floating-cart, html.jeux-sur-page .floating-cart-bubble { di
 .game-switcher--compact .game-switcher-tab { flex: 0 0 auto; min-width: 44px; padding: 4px 8px; }
 .tracking-fullscreen-split.scinde { gap: 8px; }
 .tracking-fullscreen-split.scinde .tracking-fullscreen-game { padding: 6px 8px; }
+
+/* Mini-jeux au doigt : rien ne se sélectionne ni ne s'agrandit (loupe iOS, menu d'appui long), et en plein
+   écran toute la surface appartient au jeu — seuls les boutons gardent le tap normal (pause, quitter…). */
+.jeu, .jeu * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+.jeu input, .jeu textarea { -webkit-user-select: text; user-select: text; }
+.jeu--plein { touch-action: none; overscroll-behavior: contain; }
+.jeu--plein button, .jeu--plein .jeu-regles-corps { touch-action: manipulation; }
+.jeu--plein .jeu-regles-corps { touch-action: pan-y; }
+html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (200) et du plein écran de secours (300). */
+.modal-overlay.pseudo-modal-overlay { z-index: 400; }

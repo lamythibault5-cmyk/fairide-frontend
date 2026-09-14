@@ -79,7 +79,7 @@ export function PseudoModal({ profil, onSave, onClose, apres }) {
   }
 
   return (
-    <div className="modal-overlay" role="dialog" aria-modal="true" aria-label={t('gameSocial.modalTitle')} onClick={obligatoire ? undefined : onClose}>
+    <div className="modal-overlay pseudo-modal-overlay" role="dialog" aria-modal="true" aria-label={t('gameSocial.modalTitle')} onClick={obligatoire ? undefined : onClose}>
       <form className="modal-box pseudo-modal" onClick={(e) => e.stopPropagation()} onSubmit={valider}>
         <h3 style={{ marginTop: 0 }}>🎮 {t('gameSocial.modalTitle')}</h3>
         <p className="small">{t('gameSocial.modalIntro')}</p>
