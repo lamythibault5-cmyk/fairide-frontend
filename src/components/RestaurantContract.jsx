@@ -61,6 +61,15 @@ export default function RestaurantContract({ restoId }) {
         <div className="paiement-encart" style={{ marginBottom: 12, borderLeft: '4px solid var(--gold, #d9a441)' }}>
           <b>🆕 {t('restoContract.newVersion', { version: d.version })}</b>
           <p className="small" style={{ margin: '4px 0 0' }}>{t('restoContract.newVersionHelp', { old: d.acceptedVersion, date: new Date(d.acceptedAt).toLocaleDateString(getLocale()) })}</p>
+          {/* Ce qui change, en clair (texte français du contrat, celui qui fait foi) : exigé par la clause « Modification du contrat ». */}
+          {Array.isArray(d.changes) && d.changes.length > 0 && (
+            <>
+              <p className="small" style={{ margin: '8px 0 2px' }}><b>{t('restoContract.whatChanges')}</b></p>
+              <ul className="small" style={{ margin: 0, paddingLeft: 18 }}>
+                {d.changes.map((c) => <li key={c} style={{ margin: '2px 0' }}>{c}</li>)}
+              </ul>
+            </>
+          )}
         </div>
       )}
       {d.acceptedAt && (!d.acceptedVersion || d.acceptedVersion === d.version) ? (

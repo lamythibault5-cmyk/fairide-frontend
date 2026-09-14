@@ -947,7 +947,7 @@ export const translations = {
       rowSub: 'Engagements de Fairide, tes obligations, commission, abonnement, versements',
       intro: 'Le contrat de partenariat entre ton commerce et Fairide, version {version}. Il reprend exactement ce que la plateforme applique : ce que Fairide s\'engage à faire, ce que tu t\'engages à faire, et l\'argent. Le texte français fait foi.',
       kCommission: 'Commission max. HTVA',
-      kSubscription: 'Abonnement / mois, 1er mois offert',
+      kSubscription: 'Abonnement / mois (livraison, à emporter), 1er mois offert',
       kMonday: 'Lundi',
       kPayout: 'Versement bancaire hebdo',
       kDelivery: 'Commission sur livraison et pourboires',
@@ -973,7 +973,8 @@ export const translations = {
       accepted: 'Contrat accepté. Merci, et bienvenue !',
       foot: 'Toute modification de la commission, de l\'abonnement ou du contrat t\'est annoncée au moins 30 jours à l\'avance, par e-mail et ici même.',
       newVersion: 'Nouvelle version du contrat ({version}) à accepter',
-      newVersionHelp: 'Tu avais accepté la version {old} le {date}. Les tarifs de livraison (part du livreur selon son véhicule) sont maintenant écrits noir sur blanc : relis et accepte à nouveau, ton acceptation précédente reste archivée.'
+      newVersionHelp: 'Tu avais accepté la version {old} le {date}. Le contrat a été mis à jour : relis-le et accepte la nouvelle version ci-dessous.',
+      whatChanges: 'Ce qui change :'
     },
     driverTerms: {
       rowTitle: 'Mon contrat et mes conditions',
@@ -7198,7 +7199,7 @@ export const translations = {
       rowSub: 'Fairide\'s commitments, your obligations, commission, subscription, payouts',
       intro: 'The partnership contract between your business and Fairide, version {version}. It states exactly what the platform applies: what Fairide commits to, what you commit to, and the money. The French text prevails.',
       kCommission: 'Max. commission excl. VAT',
-      kSubscription: 'Subscription / month, 1st month free',
+      kSubscription: 'Subscription / month (delivery, takeaway), 1st month free',
       kMonday: 'Monday',
       kPayout: 'Weekly bank payout',
       kDelivery: 'Commission on delivery and tips',
@@ -7224,7 +7225,8 @@ export const translations = {
       accepted: 'Contract accepted. Thank you, and welcome!',
       foot: 'Any change to the commission, the subscription or the contract is announced to you at least 30 days in advance, by e-mail and right here.',
       newVersion: 'New contract version ({version}) to accept',
-      newVersionHelp: 'You accepted version {old} on {date}. Delivery rates (courier share by vehicle) are now written in black and white: read it again and accept, your previous acceptance stays archived.'
+      newVersionHelp: 'You accepted version {old} on {date}. The contract has been updated: read it again and accept the new version below.',
+      whatChanges: 'What changes:'
     },
     driverTerms: {
       rowTitle: 'My contract and my terms',
@@ -13425,7 +13427,7 @@ export const translations = {
       rowSub: 'Verbintenissen van Fairide, jouw verplichtingen, commissie, abonnement, uitbetalingen',
       intro: 'Het partnerschapscontract tussen je zaak en Fairide, versie {version}. Het beschrijft precies wat het platform toepast: waartoe Fairide zich verbindt, waartoe jij je verbindt, en het geld. De Franse tekst is bindend.',
       kCommission: 'Max. commissie excl. btw',
-      kSubscription: 'Abonnement / maand, 1e maand gratis',
+      kSubscription: 'Abonnement / maand (levering, afhaal), 1e maand gratis',
       kMonday: 'Maandag',
       kPayout: 'Wekelijkse uitbetaling',
       kDelivery: 'Commissie op levering en fooien',
@@ -13451,7 +13453,8 @@ export const translations = {
       accepted: 'Contract aanvaard. Bedankt, en welkom!',
       foot: 'Elke wijziging van de commissie, het abonnement of het contract wordt je minstens 30 dagen vooraf aangekondigd, per e-mail en hier.',
       newVersion: 'Nieuwe versie van het contract ({version}) te aanvaarden',
-      newVersionHelp: 'Je aanvaardde versie {old} op {date}. De leveringstarieven (aandeel van de koerier volgens voertuig) staan nu zwart op wit: lees opnieuw en aanvaard, je vorige aanvaarding blijft gearchiveerd.'
+      newVersionHelp: 'Je aanvaardde versie {old} op {date}. Het contract is bijgewerkt: lees het opnieuw en aanvaard de nieuwe versie hieronder.',
+      whatChanges: 'Wat er verandert:'
     },
     driverTerms: {
       rowTitle: 'Mijn contract en mijn voorwaarden',
