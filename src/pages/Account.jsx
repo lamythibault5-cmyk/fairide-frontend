@@ -897,6 +897,7 @@ export default function Account() {
           <LigneCompte to="/dashboard/reservations" icone="📅" titre={t('accountUi.reservations')} sous={t('accountUi.reservationsSub')} />
           <LigneCompte to="/dashboard/reservations?onglet=salle" icone="🪑" titre={t('accountUi.floorPlan')} sous={t('accountUi.floorPlanSub')} />
           <LigneCompte to="/dashboard/reservations?onglet=reglages" icone="⚙️" titre={t('accountUi.reservationRules')} sous={t('accountUi.reservationRulesSub')} />
+          <LigneCompte to="/dashboard/reservations?onglet=integration" icone="📆" titre={t('resa.calTitle')} sous={t('resa.calAccountSub')} />
           <LigneCompte to="/dashboard/promotions" icone="🏷️" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
           <LigneCompte to="/dashboard/invoices" icone="📄" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
           <LigneCompte to="/dashboard/guide" icone="📘" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />

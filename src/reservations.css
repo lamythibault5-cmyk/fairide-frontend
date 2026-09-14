@@ -129,3 +129,18 @@
   .resa-services { grid-template-columns: 1fr; }
   .resa-rapides button { flex: 1 1 45%; }
 }
+
+/* Synchroniser avec son agenda (AgendaSync.jsx) */
+.agenda-sync-boutons { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.agenda-sync-btn {
+  display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 12px; text-decoration: none;
+  border: 1.5px solid var(--line, #E4E2EE); background: var(--card, #fff); color: var(--ink, #14121F);
+}
+.agenda-sync-btn:hover { border-color: var(--iris, #3B2FB5); }
+.agenda-sync-btn b { font-size: 14px; }
+.agenda-sync-btn span { font-size: 12px; opacity: .75; }
+.agenda-sync-details { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 10px 12px; border-radius: 12px; background: var(--cream-dim, #F4F2EC); cursor: pointer; }
+.agenda-sync-details input { margin-top: 3px; width: auto; flex: 0 0 auto; }
+.agenda-sync-details, .agenda-sync-details .small { font-weight: 400; }
+.agenda-sync-details b { font-weight: 700; }
+.agenda-sync-confirmer { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--cream-dim, #F4F2EC); }

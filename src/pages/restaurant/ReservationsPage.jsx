@@ -6,6 +6,7 @@ import FloorPlan, { AREA_ICONS, areaLabel } from '../../components/FloorPlan';
 import ReservationsAgenda from '../../components/reservations/ReservationsAgenda';
 import ReservationSettings from '../../components/reservations/ReservationSettings';
 import ReservationIntegration from '../../components/reservations/ReservationIntegration';
+import AgendaSync from '../../components/reservations/AgendaSync';
 import GiftVouchers from '../../components/reservations/GiftVouchers';
 import ReservationStats from '../../components/reservations/ReservationStats';
 import { useAuth } from '../../context/AuthContext';
@@ -80,6 +81,7 @@ export default function ReservationsPage() {
       {onglet === 'agenda' && <ReservationsAgenda {...commun} />}
       {onglet === 'reglages' && <ReservationSettings {...commun} />}
       {onglet === 'salle' && <PlanDeSalle {...commun} />}
+      {onglet === 'integration' && <AgendaSync restoId={restoId} token={token} toast={toast} />}
       {onglet === 'integration' && <ReservationIntegration restoId={restoId} restaurant={restaurant} toast={toast} />}
       {onglet === 'bons' && <GiftVouchers restoId={restoId} token={token} toast={toast} restaurant={restaurant} />}
       {onglet === 'stats' && <ReservationStats token={token} restoId={restoId} />}

@@ -27,7 +27,11 @@ function filtreOk(filtre, r) {
 
 export default function ReservationsAgenda({ token, toast, restoId, tables, setTables, restaurant }) {
   const { t, locale } = useLanguage();
-  const [date, setDate] = useState(() => isoDuJour(new Date()));
+  // ?date=YYYY-MM-DD : on arrive depuis un événement de l'agenda externe (Google, Apple, Outlook) sur le bon jour.
+  const [date, setDate] = useState(() => {
+    const demandee = new URLSearchParams(window.location.search).get('date');
+    return /^\d{4}-\d{2}-\d{2}$/.test(demandee || '') ? demandee : isoDuJour(new Date());
+  });
   const [vue, setVue] = useState('jour');
   const [donnees, setDonnees] = useState(null);
   const [semaine, setSemaine] = useState(null);
