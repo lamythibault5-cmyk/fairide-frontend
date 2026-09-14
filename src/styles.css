@@ -3103,3 +3103,10 @@ html.jeux-sur-page .floating-cart, html.jeux-sur-page .floating-cart-bubble { di
 html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 /* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (200) et du plein écran de secours (300). */
 .modal-overlay.pseudo-modal-overlay { z-index: 400; }
+
+/* Inscription : relecture obligatoire de ce qui a été pré-rempli (site, horaires, type trouvés sur le web). */
+.verif-prefill { background: var(--cream-dim, #F4F2EC); border-left: 3px solid var(--iris, #3B2FB5); border-radius: 10px; padding: 10px 12px; }
+.verif-prefill--erreur { border-left-color: var(--red, #D64545); }
+.verif-prefill a { overflow-wrap: anywhere; }
+.verif-prefill-case { display: flex; gap: 8px; align-items: flex-start; font-weight: 700; cursor: pointer; }
+.verif-prefill-case input { width: auto; flex: 0 0 auto; margin-top: 3px; }

@@ -15,7 +15,9 @@ const normaliser = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '
 const adresse = (r) => [[r.street, r.number].filter(Boolean).join(' '), [r.postalCode, r.city].filter(Boolean).join(' ')].filter(Boolean).join(', ');
 const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: '', city: '', phone: '', email: '', website: '', openingHours: '' };
 
-export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '' }) {
+// siteTrouve : site officiel trouvé par la recherche web de l'inscription quand la fiche n'en avait pas — ajouté à la
+// fiche (et donc proposé à la relecture), jamais par-dessus un site déjà renseigné.
+export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '' }) {
   const { t } = useLanguage();
   const [cp, setCp] = useState(initialPostalCode);
   const [zone, setZone] = useState(null); // { results, unavailable, pending }
@@ -85,6 +87,11 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
     setOrigine('web');
     publier(f, 'web');
   }
+
+  useEffect(() => {
+    if (siteTrouve && fiche && !String(fiche.website || '').trim()) publier({ ...fiche, website: siteTrouve });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [siteTrouve]);
 
   function saisirALaMain() { setOrigine('manuel'); publier({ ...FICHE_VIDE, postalCode: cp.trim() }, 'manuel'); }
   function revoirListe() { setFiche(null); setOrigine(null); onSelect?.(null); }

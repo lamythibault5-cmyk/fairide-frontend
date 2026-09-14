@@ -107,10 +107,6 @@ export default function Auth() {
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   const [cuisine, setCuisine] = useState('');
-  // Facultatif : la plateforme où la carte du commerce existe déjà, et son adresse. Voir l'étape
-  // « business » du formulaire — c'est ce qui permet de préparer la carte avant la première connexion.
-  const [menuPlatform, setMenuPlatform] = useState('');
-  const [menuUrl, setMenuUrl] = useState('');
   const [customCuisine, setCustomCuisine] = useState('');
   // Horaires structurés (une ligne par jour), prérempli depuis la fiche web quand elle en donne, adaptés ici.
   const [hours, setHours] = useState(null);
@@ -121,38 +117,60 @@ export default function Auth() {
   const [phoneSecondaryOuvert, setPhoneSecondaryOuvert] = useState(false);
   const [emailSecondary, setEmailSecondary] = useState('');
   const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
-  const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'trouve' | 'rien'
+  const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'recherche' | 'trouve' | 'trouveWeb' | 'rien'
+  // Site web trouvé par la recherche web (la fiche n'en avait pas) : repoussé dans la fiche du commerce.
+  const [siteTrouve, setSiteTrouve] = useState('');
+  // Ce qui a été pré-rempli automatiquement doit être relu : case « j'ai vérifié » obligatoire pour continuer.
+  const [infosVerifiees, setInfosVerifiees] = useState(false);
+  const cleEnrichie = useRef('');
+  // Horaires touchés à la main pendant qu'une recherche tourne (elle peut prendre 15 à 30 s) : la réponse ne les écrase pas.
+  const horairesTouches = useRef(false);
+  const relectureFaite = useRef(0);
   const [horairesSiteSource, setHorairesSiteSource] = useState('');
   const [typeDepuisSite, setTypeDepuisSite] = useState(false); // le type affiché vient du site, pas d'un choix
   const [relireSite, setRelireSite] = useState(0);
   const emailDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
-  // La fiche n'a pas d'horaires mais un site web : on lit les horaires publiés sur le site (schema.org ou texte)
-  // et on les propose, à relire jour par jour. Jamais par-dessus des horaires déjà réglés à la main.
+  // Dès que le commerce est trouvé dans la recherche : horaires publiés sur son site (schema.org ou texte), et s'il
+  // n'a pas de site ou que le site ne les donne pas, recherche web par nom + adresse (site officiel et horaires).
+  // Tout est proposé, jamais imposé : pas par-dessus des horaires déjà réglés à la main, et relu avant de continuer.
   useEffect(() => {
-    const site = String(commerceTrouve?.website || '').trim();
-    // Horaires déjà réglés à la main, ou fiche OpenStreetMap qui les publie déjà : on n'y touche pas.
-    if (role !== 'restaurant' || site.length < 6 || (hours && !hoursDepuisWeb)) return undefined;
-    if (commerceTrouve.openingHours && horairesDepuisOsm(commerceTrouve.openingHours)) return undefined;
+    if (role !== 'restaurant' || !commerceTrouve || String(commerceTrouve.name || '').trim().length < 2) return undefined;
+    if (hours && !hoursDepuisWeb) return undefined;
+    const site = String(commerceTrouve.website || '').trim();
+    // La fiche OpenStreetMap publie déjà des horaires lisibles : on les garde. S'il lui manque le site, on le
+    // cherche quand même (sans toucher aux horaires) ; si elle a les deux, il n'y a rien à chercher.
+    const horairesOsm = !!(commerceTrouve.openingHours && horairesDepuisOsm(commerceTrouve.openingHours));
+    if (horairesOsm && site.length >= 6) return undefined;
+    const cle = site.length >= 6 ? site : [commerceTrouve.name, commerceTrouve.street, commerceTrouve.number, commerceTrouve.postalCode].join('|');
+    // Déjà cherché pour ce commerce (ou site que la recherche vient elle-même de trouver) : sauf « Réessayer ».
+    if (cle === cleEnrichie.current && relireSite === relectureFaite.current) return undefined;
     let annule = false;
-    // Anti-rebond : le champ « site web » de la fiche remonte à chaque frappe, on attend la fin de la saisie.
+    // Anti-rebond : la fiche remonte à chaque frappe quand on la corrige ; la recherche web attend un peu plus.
     const minuteur = setTimeout(() => {
-      setHorairesSiteEtat('lecture');
-      const nom = commerceTrouve?.name || '';
-      api(`/restaurants/lookup/enrich?website=${encodeURIComponent(site)}&name=${encodeURIComponent(nom)}`).then((e) => {
+      cleEnrichie.current = cle; relectureFaite.current = relireSite;
+      if (!horairesOsm) setHorairesSiteEtat(site.length >= 6 ? 'lecture' : 'recherche');
+      const q = new URLSearchParams({ web: '1', name: commerceTrouve.name || '', street: commerceTrouve.street || '', number: commerceTrouve.number || '', postalCode: commerceTrouve.postalCode || '', city: commerceTrouve.city || '' });
+      if (site.length >= 6) q.set('website', site);
+      // Horaires déjà connus : la recherche ne sert qu'au site (le serveur ne relit pas les horaires du site).
+      if (horairesOsm) q.set('hours', '0');
+      api(`/restaurants/lookup/enrich?${q.toString()}`).then((e) => {
         if (annule) return;
-        if (e.hours && horairesNonVides(e.hours)) { setHours(e.hours); setHoursDepuisWeb(true); setHorairesSiteEtat('trouve'); setHorairesSiteSource(e.hoursSource || site); }
-        else { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); }
+        if (e.websiteFound && !site) { cleEnrichie.current = e.websiteFound; setSiteTrouve(e.websiteFound); }
+        if (horairesOsm) { /* horaires de la fiche conservés */ } else if (e.hours && horairesNonVides(e.hours) && !horairesTouches.current) {
+          setHours(e.hours); setHoursDepuisWeb(true); setInfosVerifiees(false);
+          setHorairesSiteEtat(e.hoursFromSearch ? 'trouveWeb' : 'trouve'); setHorairesSiteSource(e.hoursSource || site);
+        } else { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); }
         // Type de commerce : proposé seulement si le restaurateur n'a rien choisi lui-même.
         if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) {
           setCuisine((v) => (!v || typeDepuisSite ? e.cuisine : v));
-          setTypeDepuisSite(true);
+          setTypeDepuisSite(true); setInfosVerifiees(false);
         }
       }).catch(() => { if (!annule) { setHorairesSiteEtat('rien'); setHorairesSiteSource(''); } });
-    }, 700);
+    }, site.length >= 6 ? 700 : 1500);
     return () => { annule = true; clearTimeout(minuteur); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commerceTrouve?.website, commerceTrouve?.openingHours, role, relireSite]);
+  }, [commerceTrouve?.name, commerceTrouve?.street, commerceTrouve?.number, commerceTrouve?.postalCode, commerceTrouve?.website, commerceTrouve?.openingHours, role, relireSite]);
 
   // Tout ce que l'inscription sait du commerce : le serveur le crée dès que le compte est ouvert
   // (POST /auth/register → creerRestaurant), sans second formulaire dans le tableau de bord.
@@ -224,17 +242,6 @@ export default function Auth() {
     if (role !== 'restaurant') return;
     try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, services })); } catch { /* sans stockage */ }
   }, [services, role]);
-  // Plateforme où la carte existe déjà, posée dans le même indice local que le reste de la fiche :
-  // c'est DashboardLayout qui la relèvera pour ouvrir la demande « Fairide s'en occupe » une fois le
-  // commerce créé. Elle ne part pas d'ici, parce qu'à ce stade le commerce n'existe pas encore et
-  // que la demande a besoin de son identifiant.
-  useEffect(() => {
-    if (role !== 'restaurant') return;
-    try {
-      const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, menuPlatform, menuUrl: menuUrl.trim() }));
-    } catch { /* sans stockage */ }
-  }, [menuPlatform, menuUrl, role]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
@@ -367,6 +374,7 @@ export default function Auth() {
       if (!responsibleName.trim()) e.responsibleName = required;
       if (!cuisine) e.cuisine = t('auth.errCuisine');
       if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
+      if ((hoursDepuisWeb || typeDepuisSite || siteTrouve) && !infosVerifiees) e.infosVerifiees = t('auth.errVerifyPrefill');
       if (phoneSecondaryOuvert && phoneSecondary.trim() && phoneSecondary.trim().replace(/\D/g, '').length < 8) e.phoneSecondary = t('auth.errPhoneInvalid');
       if (emailSecondaryOuvert && emailSecondary.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailSecondary.trim())) e.emailSecondary = t('auth.errEmailSecondary');
       if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
@@ -865,7 +873,7 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
-                <BusinessSearch onSelect={appliquerCommerce} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} />
+                <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} />
                 {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
                 <div className="field">
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
@@ -882,49 +890,38 @@ export default function Auth() {
                 <div className="field">
                   <label>{t('auth.hoursTitle')}</label>
                   <p className="small" style={{ margin: '0 0 6px' }}>
-                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : t('auth.hoursHelp')}
-                    {horairesSiteEtat === 'trouve' && horairesSiteSource && (
+                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
+                    {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
                       <>{' '}<a href={horairesSiteSource} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
                     )}
                   </p>
                   {horairesSiteEtat === 'rien' && !hoursDepuisWeb && (
                     <p className="small" style={{ margin: '-2px 0 8px', opacity: 0.85 }}>
                       {t('auth.hoursSiteNone')}{' '}
-                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => setRelireSite((n) => n + 1)}>{t('auth.hoursSiteRetry')}</button>
+                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => { horairesTouches.current = false; setRelireSite((n) => n + 1); }}>{t('auth.hoursSiteRetry')}</button>
                     </p>
                   )}
-                  <OpeningHoursEditor value={hours || {}} onChange={(h) => { setHours(h); setHoursDepuisWeb(false); }} />
+                  <OpeningHoursEditor value={hours || {}} onChange={(h) => { horairesTouches.current = true; setHours(h); setHoursDepuisWeb(false); }} />
                   {fieldError('hours')}
                 </div>
-                {/* LA CARTE COMMENCE ICI, PAS DANS LE TABLEAU DE BORD.
-                    Un commerçant déjà présent sur Uber Eats, Deliveroo ou Takeaway a sa carte
-                    entière, structurée, en ligne quelque part. Jusqu'ici on ne le lui demandait
-                    jamais : il découvrait une carte vide à sa première connexion et devait aller
-                    chercher lui-même la page, le lien et la bonne méthode d'import.
-                    Une question facultative ici, et la demande « Fairide s'en occupe » part toute
-                    seule dès que le commerce est créé (voir DashboardLayout.jsx) : sa carte est en
-                    préparation avant même qu'il se connecte.
-                    Facultatif pour de bon : aucun contrôle n'est ajouté à la validation de l'étape.
-                    Un commerçant qui n'est sur aucune plateforme passe sans rien remarquer. */}
-                <div className="field">
-                  <label htmlFor="auth-f-plateforme">{t('auth.menuPlatformTitle')}</label>
-                  <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.menuPlatformHelp')}</p>
-                  <select id="auth-f-plateforme" value={menuPlatform} onChange={(e) => setMenuPlatform(e.target.value)}>
-                    <option value="">{t('auth.menuPlatformNone')}</option>
-                    <option value="uber_eats">Uber Eats</option>
-                    <option value="deliveroo">Deliveroo</option>
-                    <option value="takeaway">Takeaway.com</option>
-                    <option value="website">{t('auth.menuPlatformWebsite')}</option>
-                    <option value="other">{t('auth.menuPlatformOther')}</option>
-                  </select>
-                  {menuPlatform && (
-                    <>
-                      <input style={{ marginTop: 6 }} type="url" inputMode="url" value={menuUrl} onChange={(e) => setMenuUrl(e.target.value)}
-                        placeholder={t('auth.menuPlatformUrlPlaceholder')} aria-label={t('auth.menuPlatformUrlLabel')} />
-                      <p className="small" style={{ margin: '4px 0 0', opacity: 0.85 }}>{t('auth.menuPlatformPromise')}</p>
-                    </>
-                  )}
-                </div>
+                {(hoursDepuisWeb || typeDepuisSite || siteTrouve) && (
+                  <div className={`field verif-prefill${errors.infosVerifiees ? ' verif-prefill--erreur' : ''}`}>
+                    <b>🔎 {t('auth.verifyPrefillTitle')}</b>
+                    <p className="small" style={{ margin: '4px 0 6px' }}>{t('auth.verifyPrefillIntro')}</p>
+                    <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
+                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={siteTrouve} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
+                      {hoursDepuisWeb && <li>🕒 {t('auth.verifyPrefillHours')}</li>}
+                      {typeDepuisSite && cuisine && <li>🍽️ {t('auth.verifyPrefillType', { type: cuisine })}</li>}
+                    </ul>
+                    <label className="verif-prefill-case">
+                      <input type="checkbox" checked={infosVerifiees} onChange={(e) => setInfosVerifiees(e.target.checked)} />
+                      <span>{t('auth.verifyPrefillCheck')}</span>
+                    </label>
+                    {fieldError('infosVerifiees')}
+                  </div>
+                )}
+                {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
+                    (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
                 <div className="field contacts-commerce">
                   <label>{t('auth.contactsTitle')}</label>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
