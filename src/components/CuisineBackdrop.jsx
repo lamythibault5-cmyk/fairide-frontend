@@ -79,7 +79,7 @@ import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.jpg';
 // quatre fois moins qu'une seule image de mouvement ordinaire (3,02). Compresser plus fort ne se
 // voit pas ici, parce que le voile détruit de toute façon le détail fin que la compression abîme.
 
-export default function CuisineBackdrop() {
+export default function CuisineBackdrop({ desLeDebut = false }) {
   // La source n'est PAS choisie d'emblée, et la vidéo n'est pas seulement masquée en CSS : un
   // <video> masqué se télécharge quand même. `source` reste donc nulle tant que les conditions ne
   // sont pas réunies (mouvement réduit, économiseur de données), et c'est ici que se décide quel
@@ -130,16 +130,17 @@ export default function CuisineBackdrop() {
   // main, elle est là à l'image suivante, et le composant ne se redessine plus à chaque pixel défilé.
   const calque = useRef(null);
   const [visible, setVisible] = useState(false); // sert seulement à lancer ou arrêter la vidéo
-  const [chargerMedia, setChargerMedia] = useState(false);
+  const [chargerMedia, setChargerMedia] = useState(desLeDebut);
   useEffect(() => {
     let img = 0;
+    // desLeDebut : fixé au montage (Layout remonte le composant par une clé quand on arrive sur l'accueil ou le quitte).
     let pageCourte = false; // page trop courte pour défiler : fond affiché d'emblée (voir le filet plus bas)
     const calculer = () => {
       img = 0;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
       // Dès un mini défilement (demande du fondateur, 2026-09-15) : le fond commence à paraître au 2e pixel et
       // s'installe en 100 px. --fond-revele sert aussi à la bannière d'accueil, qui s'éclaircit en même temps.
-      const o = pageCourte ? 1 : Math.max(0, Math.min(1, (y - 2) / 100));
+      const o = pageCourte || desLeDebut ? 1 : Math.max(0, Math.min(1, (y - 2) / 100));
       if (calque.current) calque.current.style.opacity = String(o);
       document.documentElement.style.setProperty('--fond-revele', String(o));
       setVisible(o > 0.02);

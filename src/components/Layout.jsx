@@ -173,7 +173,9 @@ export default function Layout() {
 
   return (
     <>
-      {fondCuisine && <CuisineBackdrop />}
+      {/* Accueil : les visuels transparaissent dès l'arrivée, sous un en-tête iris plein qui fait cadre (fondateur,
+          2026-09-15 : un premier écran tout iris était « trop uniforme »). Ailleurs, révélés au défilement. */}
+      {fondCuisine && <CuisineBackdrop key={fondVitrine && location.pathname === '/' ? 'accueil' : 'autre'} desLeDebut={fondVitrine && location.pathname === '/'} />}
       {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
         <div className="hero-inner">
