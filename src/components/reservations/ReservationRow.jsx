@@ -4,6 +4,7 @@ import ConfirmDialog from '../ConfirmDialog';
 import { AREA_ICONS, areaLabel } from '../FloorPlan';
 import { useLanguage } from '../../context/LanguageContext';
 import ReservationMessageDialog from './ReservationMessageDialog';
+import GuestReliability, { Etoiles } from './GuestReliability';
 import { ACOMPTE_LABEL, SOURCES, dateCourte, estClose, etatResa, euros, heureInput, heureLocale, isoDuJour, nomTable } from './resaUtils';
 
 // Une ligne du cahier de réservation : l'essentiel replié (heure, nom, couverts, table, état), et
@@ -89,6 +90,11 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
         <div className="resa-ligne-corps">
           <b>
             {r.reservationName}
+            {r.guestRating && (
+              <span className={`resa-fiabilite-badge${r.guestRating.average < 3 ? ' faible' : ''}`} title={t('resa.relBadgeTitle', { n: r.guestRating.count })}>
+                ★ {String(r.guestRating.average).replace('.', ',')} <small>({r.guestRating.count})</small>
+              </span>
+            )}
             {(r.guestTags || []).length > 0 && (
               <span className="resa-tags">{(r.guestTags || []).slice(0, 3).map((x) => <span key={x} className={`resa-tag${TAGS_ALERTE.includes(x) ? ' alerte' : ''}`}>{ETIQUETTES.includes(x) ? t(`resa.tag_${x}`) : x}</span>)}</span>
             )}
@@ -113,6 +119,7 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
             {r.code && r.paid && <span className="pill">{t('resa.codeLabel', { code: r.code })}</span>}
             {r.zonePreference && <span className="pill">{t('resa.wantedZone', { zone: areaLabel(t, r.zonePreference) })}</span>}
             {r.reviewed && <span className="pill teal">{t('resa.reviewLeft')}</span>}
+            {r.guestReviewRating != null && <span className="pill">{t('resa.rateDone')} <Etoiles note={r.guestReviewRating} taille={11} /></span>}
             {historique && (historique.visits > 0 || historique.noShows > 0 || historique.cancellations > 0) && (
               <span className="pill" title={t('resa.historyTitle')}>
                 {t('resa.historyVisits', { n: historique.visits })}{historique.noShows > 0 ? ` · ${t('resa.historyNoShows', { n: historique.noShows })}` : ''}{historique.cancellations > 0 ? ` · ${t('resa.historyCancels', { n: historique.cancellations })}` : ''}
@@ -229,6 +236,12 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
                 onClick={() => action('note', () => champ({ internalNote: noteInterne }))}>{enCours === 'note' ? '…' : t('resa.saveNote')}</button>
             )}
           </div>
+
+          {/* Fiabilité du client (avis des restaurants) et note à laisser une fois la réservation terminée. */}
+          {historique && (
+            <GuestReliability restoId={restoId} reservationId={r.id} token={token} toast={toast} avis={historique}
+              onMaj={(maj) => { setHistorique((h) => ({ ...h, ...maj })); onRecharger(); }} />
+          )}
 
           {/* Fiche client : rattachée au téléphone ou à l'e-mail, elle revient sur chaque réservation. */}
           <div className="resa-fiche">

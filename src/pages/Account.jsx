@@ -20,6 +20,7 @@ import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
 import { abonnementOuvert, datePremierPrelevement } from '../launch';
 import OffreFormules from '../components/OffreFormules';
+import MyGuestReviews from '../components/MyGuestReviews';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -705,6 +706,9 @@ export default function Account() {
       {role === 'client' && (
         <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
           <LigneCompte to="/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.invoicesSub')} />
+          <LigneCompte icone="🛡️" titre={t('accountUi.guestReviewsTitle')} sous={t('accountUi.guestReviewsSub')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
+            {ouvertes.has('avisRestos') && <MyGuestReviews />}
+          </LigneCompte>
           <LigneCompte icone="📍" titre={t('accountUi.deliveryAddress')} sous={adresseResume || t('accountUi.addressSub')} onClick={ouvrirAdresse} />
           <LigneCompte to="/aide?sujet=paiement" icone="💳" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />

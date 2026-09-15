@@ -147,3 +147,20 @@
 
 /* Réglages : modifications en cours, pas encore enregistrées. */
 .resa-non-enregistre { margin-right: 10px; color: var(--gold-deep, #9A7A12); font-weight: 700; }
+
+/* Fiabilité du client (components/reservations/GuestReliability.jsx) */
+.etoiles { letter-spacing: 1px; color: #D8D2C4; white-space: nowrap; }
+.etoiles .pleine { color: #E0A21F; }
+.resa-fiabilite-badge { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: #FBF1DA; color: #7A5A00; font-size: 12px; font-weight: 700; vertical-align: middle; }
+.resa-fiabilite-badge.faible { background: #FBE3E5; color: #A11D2B; }
+.resa-fiabilite-badge small { font-weight: 500; }
+.resa-fiabilite { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.resa-fiabilite h4 { margin: 0 0 6px; font-size: 13px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.resa-fiabilite-alerte { color: #A11D2B; }
+.resa-avis-liste { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.resa-avis-liste li { padding: 6px 8px; background: var(--cream-dim); border-radius: 8px; }
+.resa-noter { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line); }
+.resa-noter textarea { width: 100%; margin-top: 4px; }
+.resa-noter-etoiles { display: flex; gap: 2px; margin: 4px 0; }
+.resa-noter-etoiles button { border: none; background: none; font-size: 28px; line-height: 1; color: #D8D2C4; cursor: pointer; padding: 2px 3px; min-width: 40px; min-height: 40px; }
+.resa-noter-etoiles button.pleine { color: #E0A21F; }
