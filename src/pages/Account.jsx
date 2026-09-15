@@ -678,7 +678,11 @@ export default function Account() {
           </LigneCompte>
         )}
 
-        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+        {/* Sans code de parrainage (comptes créés avant que les codes existent, comptes de
+            démonstration), le résumé s'affichait « Ton code : · 0.00€ gagnés » — un deux-points
+            suivi d'un point médian, sans rien entre les deux. On retombe alors sur la phrase
+            d'invitation, qui reste vraie quoi qu'il arrive. */}
+        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
           <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
           {referralStats && (
             <>
