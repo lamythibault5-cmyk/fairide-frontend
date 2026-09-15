@@ -347,6 +347,71 @@ connecter sous quatre comptes différents.
 
 ---
 
+## 🔴 16. L'import de carte par copier-coller rend une carte incomplète sans le dire
+
+Constaté par le fondateur : un Ctrl+A / Ctrl+C sur une page Uber Eats d'environ 100 plats n'en a
+fait remonter que **6**, sans message, sans avertissement. Six plats présentés comme le résultat
+normal.
+
+Le lecteur n'est pas en cause. `max_tokens` vaut 8192 et une réponse coupée lève une erreur
+explicite plutôt que de rendre une liste tronquée
+([menuImport.js:111](../fairide-backend/menuImport.js#L111)). Le texte est donc **déjà incomplet,
+ou déjà privé de ses prix, avant d'atteindre le modèle**. Deux causes possibles, pas encore
+départagées faute d'avoir le texte collé :
+
+- **La page ne rend pas toute sa carte d'un coup.** Uber Eats charge ses plats au défilement. Un
+  Ctrl+A juste après l'ouverture ne copie que ce qui existait à cet instant — souvent la première
+  section seulement, ce qui correspond bien à six plats.
+- **Les prix ne survivent pas à la copie.** `nettoyerItems` écarte silencieusement tout plat dont
+  le prix n'est pas un nombre fini ([menuImport.js:88](../fairide-backend/menuImport.js#L88)). Si
+  la copie sépare les noms des prix, les plats disparaissent un à un sans trace.
+
+**La faute qui nous appartient dans les deux cas** : rien ne dit au restaurateur que la lecture est
+partielle. Il ajoute six plats, croit sa carte importée, et découvre le trou plus tard — ou pas.
+
+- [ ] Obtenir le texte réellement collé et trancher entre les deux causes
+- [ ] Annoncer le compte lu avant l'ajout (« 6 plats lus ») et, quand le texte mentionne des
+      sections restées vides, le dire explicitement
+- [ ] Si la cause est le rendu progressif : écrire noir sur blanc, à côté du champ, qu'il faut
+      faire défiler la page entière avant de copier
+
+## 🟠 17. Le serveur refuse une grande carte avant même de la lire
+
+`express.json()` est monté sans limite déclarée ([server.js:108](../fairide-backend/server.js#L108)),
+donc plafonné à la valeur par défaut d'Express : **100 ko**. La route d'import par texte, elle,
+accepte jusqu'à **200 000 caractères**
+([restaurants.js:1913](../fairide-backend/routes/restaurants.js#L1913)).
+
+Les deux chiffres se contredisent. Une carte copiée dépassant 100 ko est rejetée par l'analyseur de
+corps avant d'arriver à la route, avec une erreur générique qui ne parle ni de carte ni de taille.
+Le restaurateur voit un échec sans cause.
+
+- [ ] Accorder les deux limites — soit `express.json({ limit: '1mb' })`, soit ramener la route à ce
+      que le serveur accepte réellement
+- [ ] Renvoyer un message qui nomme la cause quand le corps est trop gros
+
+## 🟠 18. La vérification d'entreprise est faite, puis jetée
+
+À l'inscription d'un commerce, le numéro BCE saisi part vers la BCE/VIES à chaque frappe (avec
+temporisation) et la réponse remplit `verifSociete` ([Auth.jsx:206](src/pages/Auth.jsx#L206)). Cette
+variable n'est **jamais relue** — oxlint la signale d'ailleurs comme inutilisée. On interroge le
+registre, on se sert du résultat pour préremplir le nom légal, et on ne dit rien au restaurateur, on
+ne bloque rien.
+
+Conséquence directe sur la fraude : n'importe qui peut inscrire un commerce imaginaire avec un
+numéro d'entreprise faux ou inexistant, et rien à l'écran ne le contredit. Le contrôle existe déjà,
+il est payé, il tourne — il ne sert simplement à rien.
+
+C'est le seul garde-fou réaliste à cet endroit : une liste fermée de commerces à la Uber Eats
+(alimentée chez eux par Google) écarterait tous les commerces trop récents pour figurer dans
+OpenStreetMap, c'est-à-dire précisément ceux qu'on cherche à convaincre.
+
+- [ ] Afficher le verdict sous le champ : nom légal trouvé, ou numéro inconnu du registre
+- [ ] Décider si un numéro invalide **bloque** l'inscription ou se contente de lever un drapeau
+      pour la validation par l'équipe
+
+---
+
 ## Résumé : l'ordre à suivre
 
 1. Environnement de test (§8) — sans lui, rien ne peut être vérifié sans risque
@@ -361,4 +426,7 @@ connecter sous quatre comptes différents.
 10. Corriger les quatre quartiers (§15) — cinq minutes, et c'est visible par les clients
 11. **Trancher la promesse du 15 octobre (§14)** — à faire tant qu'il reste six semaines,
     pas la veille
-12. Puis : Web Push (§6), traduction des tableaux de bord (§10), référencement (§11)
+12. **Trancher la cause de l'import partiel (§16)** — un restaurateur qui croit sa carte importée
+    alors qu'il en a six plats est perdu avant d'avoir commencé
+13. Accorder les limites de taille (§17) et faire parler la vérification BCE (§18)
+14. Puis : Web Push (§6), traduction des tableaux de bord (§10), référencement (§11)
