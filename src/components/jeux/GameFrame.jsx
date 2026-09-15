@@ -348,10 +348,23 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   useEffect(() => {
     if (status !== 'playing') return undefined;
     derniereImage.current = performance.now();
+    // Lissage du pas : les horodatages d'images tremblent de quelques millisecondes, et ce tremblement passait
+    // tel quel dans les positions (micro-saccades visibles sur un défilement régulier). On estime la période de
+    // l'écran et, tant que l'image arrive à l'heure (±30 %), on avance d'exactement cette période ; l'écart est
+    // mis de côté et rendu par petites touches, pour que le temps du jeu ne dérive jamais de l'horloge réelle.
+    let periode = 1 / 60; let dette = 0;
     const pas = (maintenant) => {
       if (statusRef.current !== 'playing' || !instance.current) return;
-      const dt = Math.min(DT_MAX, (maintenant - derniereImage.current) / 1000);
+      const brut = Math.min(DT_MAX, (maintenant - derniereImage.current) / 1000);
       derniereImage.current = maintenant;
+      let dt = brut;
+      if (brut > 0 && Math.abs(brut - periode) < periode * 0.3) {
+        periode += (brut - periode) * 0.05;
+        dette += brut - periode;
+        const rendu = Math.max(-periode * 0.1, Math.min(periode * 0.1, dette * 0.1));
+        dette -= rendu;
+        dt = periode + rendu;
+      } else dette = 0;
       const inp = input.current;
       // Flèches ← → : un pointeur virtuel qui glisse à vitesse constante (les jeux ne voient qu'un x).
       if (inp.gauche !== inp.droite) {

@@ -51,7 +51,7 @@ const tx = (api, cle, defaut) => { const v = api.t?.(cle); return v && v !== cle
 function creerChute(api, cfg) {
   let w = api.w; let h = api.h;
   let objets = []; let depuisSpawn = 0; let joueurX = w / 2; let cibleX = w / 2; let rebond = 0; let vRebond = 0;
-  let horloge = 0; let derniereArrivee = 0; let alerte = 0;
+  let horloge = 0; let derniereArrivee = 0; let alerte = 0; let vJoueur = 0; let defile = 0; let vitesseDecor = 0.2;
   const SORTIE = 0.14; // durée de l'effacement d'un objet arrivé au sol
   const tailleObjet = () => Math.max(20, Math.min(36, w * 0.16));
   const largeurJoueur = () => tailleObjet() * 1.7;
@@ -59,12 +59,12 @@ function creerChute(api, cfg) {
   const ySol = () => h - tailleObjet() * 0.3; // là où un objet « touche le sol » (le bandeau au bas du terrain)
 
   return {
-    reset() { objets = []; depuisSpawn = 0; joueurX = w / 2; cibleX = w / 2; rebond = 0; vRebond = 0; horloge = 0; derniereArrivee = 0; alerte = 0; },
+    reset() { objets = []; depuisSpawn = 0; joueurX = w / 2; cibleX = w / 2; rebond = 0; vRebond = 0; horloge = 0; derniereArrivee = 0; alerte = 0; vJoueur = 0; defile = 0; },
     redimensionner(nw, nh) {
       const kx = nw / w; const ky = nh / h; w = nw; h = nh;
-      joueurX *= kx; cibleX *= kx;
+      joueurX *= kx; cibleX *= kx; vJoueur *= kx;
       const t = tailleObjet();
-      for (const o of objets) { o.x *= kx; o.y *= ky; o.v *= ky; o.taille = t; }
+      for (const o of objets) { o.x *= kx; o.y *= ky; o.depart *= ky; o.trajet *= ky; o.taille = t; }
     },
     etat() { return { objets: objets.length, joueurX, alerte, yJoueur: yJoueur(), taille: tailleObjet(), liste: objets.filter((o) => !o.sortie).map((o) => ({ x: o.x, y: o.y, mauvais: !!o.mauvais, or: !!o.or })) }; },
     update(dt, input) {
@@ -76,7 +76,19 @@ function creerChute(api, cfg) {
       // Le joueur suit le pointeur avec un léger lissage : direct, ça vibre au pixel près ; trop lent,
       // on rate. 18 par seconde = un rattrapage en ~60 ms, imperceptible mais qui gomme le tremblement.
       if (input.x != null) cibleX = borner(input.x, lj / 2, w - lj / 2);
-      joueurX += (cibleX - joueurX) * Math.min(1, dt * 18);
+      // Ressort presque critique plutôt qu'un rattrapage exponentiel : le panier accélère, file et se pose sans
+      // à-coup quand le doigt s'arrête — un vrai objet avec une masse, toujours aussi réactif (≈ 0,06 s de retard).
+      {
+        const raideur = 1400; const amorti = 2 * Math.sqrt(raideur) * 0.95;
+        const sous = Math.max(1, Math.ceil(dt / (1 / 120)));
+        for (let i = 0; i < sous; i++) {
+          const d = dt / sous;
+          vJoueur += ((cibleX - joueurX) * raideur - vJoueur * amorti) * d;
+          joueurX += vJoueur * d;
+        }
+        if (joueurX < lj / 2) { joueurX = lj / 2; vJoueur = Math.max(0, vJoueur); }
+        if (joueurX > w - lj / 2) { joueurX = w - lj / 2; vJoueur = Math.min(0, vJoueur); }
+      }
       // Ressort du panier : un petit rebond à chaque prise, qui retombe de lui-même.
       vRebond += (-rebond * 120 - vRebond * 11) * dt; rebond += vRebond * dt;
 
@@ -94,14 +106,24 @@ function creerChute(api, cfg) {
         const arrivee = Math.max(horloge + trajet / v, derniereArrivee + ecart);
         v = trajet / (arrivee - horloge);
         derniereArrivee = arrivee;
-        objets.push({ ...o, x: aleatoire(t / 2, w - t / 2), y: -t, v, taille: t, phase: Math.random() * Math.PI * 2, balance: aleatoire(0.12, 0.28), passe: false, sortie: 0 });
+        vitesseDecor += (v / h - vitesseDecor) * 0.3;
+        // Chute accélérée (la gravité, freinée par l'air) plutôt qu'à vitesse constante : l'objet part doucement et
+        // arrive vite. L'heure d'arrivée au sol reste exactement celle calculée ci-dessus : l'équité est intacte.
+        objets.push({ ...o, x: aleatoire(t / 2, w - t / 2), y: -t, depart: -t, trajet, t0: horloge, duree: arrivee - horloge, taille: t, phase: Math.random() * Math.PI * 2, balance: aleatoire(0.12, 0.28), rot: 0, spin: aleatoire(-0.9, 0.9) * (o.mauvais || cfg.tournoie ? 1.6 : 0.5), passe: false, sortie: 0 });
       }
       const yJ = yJoueur(); const sol = ySol();
       const restants = [];
       for (const o of objets) {
         // Objet arrivé au sol : il s'efface (SORTIE s) sans plus interagir.
         if (o.sortie > 0) { o.sortie -= dt; if (o.sortie > 0) restants.push(o); continue; }
-        o.y += o.v * dt; o.phase += dt * 3;
+        {
+          const p = (horloge - o.t0) / o.duree;
+          // Sur la route (FairDodge), les obstacles viennent à la vitesse du scooter : vitesse constante, c'est le réalisme.
+          const lin = cfg.route ? 1 : CHUTE_LIN;
+          const f = p <= 1 ? lin * p + (1 - lin) * p * p : 1 + (2 - lin) * (p - 1);
+          o.y = o.depart + o.trajet * f;
+        }
+        o.phase += dt * 3; o.rot += o.spin * dt;
         const dx = Math.abs(o.x - joueurX); const dy = o.y - yJ;
         if (Math.abs(dy) < t * 0.6 && dx < demiContact) {
           const effet = cfg.toucher(o);
@@ -132,11 +154,28 @@ function creerChute(api, cfg) {
         restants.push(o);
       }
       objets = restants;
+      defile += vitesseDecor * h * dt;
       return undefined;
     },
     draw(ctx) {
       fondDegrade(ctx, w, h, cfg.ciel[0], cfg.ciel[1]);
       const t = tailleObjet(); const sol = ySol();
+      // Route qui défile (FairDodge) : des tirets de voie qui descendent à la vitesse des obstacles — on sent
+      // qu'on roule. Ailleurs, une fine pluie de points lumineux en parallaxe donne la même sensation de mouvement.
+      if (cfg.route) {
+        ctx.fillStyle = 'rgba(255,255,255,.16)';
+        const pasTiret = h * 0.16; const lTiret = h * 0.07;
+        for (const xv of [w / 3, (2 * w) / 3]) {
+          for (let yv = (defile % pasTiret) - pasTiret; yv < h; yv += pasTiret) ctx.fillRect(xv - 2, yv, 4, lTiret);
+        }
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,.10)';
+        for (let i = 0; i < 14; i++) {
+          const px = ((i * 97.3) % 1) * w + ((i * 53) % w);
+          const py = (((i * 71) % h) + defile * (0.25 + (i % 3) * 0.12)) % h;
+          ctx.beginPath(); ctx.arc(px % w, py, 1 + (i % 3) * 0.6, 0, Math.PI * 2); ctx.fill();
+        }
+      }
       // Sol : une bande CLAIRE, pas une ombre. En sombre sur un ciel sombre, la ligne d'arrivée des
       // objets disparaissait — c'est pourtant là que tout se joue. Le liseré lime la souligne franchement.
       ctx.fillStyle = 'rgba(255,255,255,.13)';
@@ -161,7 +200,7 @@ function creerChute(api, cfg) {
         }
         // Le halo passe sous l'emoji : c'est lui qui rend l'objet lisible sur un fond sombre.
         halo(ctx, o.x, o.y, t * 0.82, '255,255,255', 0.45);
-        emoji(ctx, o.emoji, o.x, o.y, o.taille * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance);
+        emoji(ctx, o.emoji, o.x, o.y, o.taille * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance + o.rot);
         ctx.globalAlpha = 1;
       }
       // Frôlement d'un déchet (FairSort) : le cadre clignote orange, bref.
@@ -175,12 +214,14 @@ function creerChute(api, cfg) {
       const sq = borner(rebond, -0.3, 0.3);
       ctx.scale(1 + sq * 0.5, 1 - sq * 0.6);
       halo(ctx, 0, -t * 0.65, t * 1.0, '255,255,255', 0.4);
-      emoji(ctx, cfg.joueur, 0, -t * 0.65, t * 1.45, borner((cibleX - joueurX) / (w * 0.6), -0.25, 0.25));
+      emoji(ctx, cfg.joueur, 0, -t * 0.65, t * 1.45, borner(vJoueur / (w * 2.2), -0.3, 0.3)); // penche selon sa vitesse réelle
       ctx.restore();
     }
   };
 }
 
+// Part linéaire de la courbe de chute (le reste est accéléré) : 0,7 = départ à 70 % de la vitesse moyenne, arrivée à 130 %.
+const CHUTE_LIN = 0.7;
 const PLATS = ['🍕', '🍔', '🍟', '🍩', '🍣', '🌮', '🥐', '🍦'];
 const OBSTACLES = ['🚧', '🪨', '🕳️', '🔥', '💥'];
 const MAUVAIS = ['🗑️', '🦠', '💀', '🧪'];
@@ -214,7 +255,7 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🛵', ciel: ['#2E2752', '#7A6FB0'], eclat: ORANGE,
+      joueur: '🛵', ciel: ['#2E2752', '#7A6FB0'], eclat: ORANGE, route: true, tournoie: true,
       // Contact « juste » (1 taille d'objet) : on ne perd pas sur un obstacle qui n'a fait qu'effleurer le dessin.
       demiContact: 1.02,
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
@@ -343,12 +384,13 @@ export const JEUX = [
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, la flèche suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0; let traine = []; let dernierCentre = null; let impact = null;
+      let vAx = 0; let defile = 0; let vDecor = 0;
       const yFleche = () => h * 0.8;
       const longueur = () => Math.max(34, h * 0.09);
       const espacement = () => h * 0.42;
       const TRAINE = 0.3; // durée de vie d'un point de traînée
       return {
-        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = espacement(); inclinaison = 0; traine = []; dernierCentre = null; impact = null; },
+        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = espacement(); inclinaison = 0; traine = []; dernierCentre = null; impact = null; vAx = 0; defile = 0; },
         redimensionner(nw, nh) {
           const kx = nw / w; const ky = nh / h; w = nw; h = nh;
           ax *= kx; cibleX *= kx; depuis *= ky;
@@ -368,10 +410,15 @@ export const JEUX = [
           const ouverture = Math.max(w * 0.2, w * (0.36 - n * 0.02));
           const ep = Math.max(10, h * 0.03);
           if (input.x != null) cibleX = borner(input.x, 10, w - 10);
-          const avant = ax;
-          ax += (cibleX - ax) * Math.min(1, dt * 16);
-          inclinaison += (((ax - avant) / Math.max(dt, 0.001)) / (w * 3) - inclinaison) * Math.min(1, dt * 10);
-          depuis += v * dt;
+          // Ressort presque critique (voir creerChute) : la flèche prend son virage et se stabilise sans vibrer.
+          {
+            const raideur = 1200; const amorti = 2 * Math.sqrt(raideur) * 0.95;
+            const sous = Math.max(1, Math.ceil(dt / (1 / 120)));
+            for (let i = 0; i < sous; i++) { const d = dt / sous; vAx += ((cibleX - ax) * raideur - vAx * amorti) * d; ax += vAx * d; }
+            ax = borner(ax, 10, w - 10);
+          }
+          inclinaison += ((vAx / (w * 3)) - inclinaison) * Math.min(1, dt * 12);
+          depuis += v * dt; defile += v * dt; vDecor = v;
           if (depuis >= espacement()) {
             depuis = 0;
             // L'ouverture suivante reste atteignable : au plus 70 % de la largeur (54 % au dernier palier) de
@@ -407,6 +454,14 @@ export const JEUX = [
         },
         draw(ctx) {
           fondDegrade(ctx, w, h, '#2B2550', '#5548C8');
+          // Étoiles en trois plans qui descendent moins vite que les murs : la profondeur donne la vitesse.
+          for (let i = 0; i < 22; i++) {
+            const plan = 0.2 + (i % 3) * 0.18;
+            const px = ((i * 137.5) % w);
+            const py = (((i * 89) % h) + defile * plan) % h;
+            ctx.fillStyle = `rgba(255,255,255,${(0.08 + plan * 0.25).toFixed(2)})`;
+            ctx.fillRect(px, py, 1.5 + plan * 2, (1.5 + plan * 2) * (1 + vDecor / h * 1.2));
+          }
           const yf = yFleche(); const L = longueur();
           // Le prochain mur à franchir : son ouverture est éclairée, pour lire d'un coup d'œil où viser.
           let prochain = null;

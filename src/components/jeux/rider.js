@@ -30,11 +30,15 @@ const POUSSEE = 0.45; // accélération du gaz au sol, U/s² (croisière → pla
 const FREIN_MOTEUR = 1.0; // rappel vers la croisière quand on relâche (1/s)
 const PENTE_EFFET = 0.55; // part de g qui joue le long de la pente : descente = ça file, montée = ça freine
 const VITESSE_PLANCHER = 0.6; // fraction de la croisière sous laquelle on ne descend jamais (le vélo ne cale pas)
-const ROT_ACCEL = 16; // accélération angulaire en l'air quand on maintient, rad/s²
-const ROT_MAX = 9.5; // vitesse angulaire maxi, rad/s
-const ROT_AMORT = 12; // amortissement de la rotation quand on relâche (1/s)
-const ROT_GRACE = 0.12; // s d'envol avant que l'appui fasse tourner : les petits sauts de bosse sont immunisés
-const REDRESSE = 1.6; // rappel doux vers l'horizontale (multiple de 2π le plus proche) une fois relâché, 1/s
+// Saltos (2026-09-15, « plus réalistes ») : un vrai backflip de BMX prend ~0,8 s par tour. La rotation monte donc
+// progressivement et garde un peu d'élan quand on relâche, au lieu de s'arrêter net ; en contrepartie le vélo
+// s'aligne de lui-même sur la pente d'arrivée à l'approche du sol, comme un pilote qui prépare sa réception.
+const ROT_ACCEL = 12; // accélération angulaire en l'air quand on maintient, rad/s²
+const ROT_MAX = 8.2; // vitesse angulaire maxi, rad/s (≈ 0,77 s par tour)
+const ROT_AMORT = 11; // amortissement de la rotation quand on relâche (1/s) : un reste d'élan, pas un arrêt sec
+const ROT_GRACE = 0.08; // s d'envol avant que l'appui fasse tourner : les petits sauts de bosse sont immunisés
+const REDRESSE = 3; // rappel vers l'assiette visée une fois relâché, 1/s (trajectoire en l'air, pente d'arrivée près du sol)
+const REDRESSE_SOL = 3; // hauteur (en tailles de vélo) sous laquelle on vise la pente d'arrivée plutôt que la trajectoire
 // Écart angle/pente admis à l'atterrissage. À 39° on chutait sur des réceptions qui « passaient » à l'œil,
 // et le jeu punissait le joueur qui osait un double. À 65°, c'est le geste raté qui coûte, pas l'à-peu-près.
 const TOLERANCE = 1.13;
@@ -56,10 +60,15 @@ const JALON = 3; // +1 tous les JALON × U parcourus
 
 // Saut (double tap, double clic, double Espace, ou ↑ / W au clavier). Hauteur en fraction de U : assez pour
 // franchir un obstacle posé sur la route et cueillir une lettre en l'air, pas assez pour remplacer un tremplin.
-const SAUT_HAUTEUR = 0.26;
-const DOUBLE_TAP = 0.3; // deux appuis à moins de 0,3 s = un saut
-const SAUT_TAMPON = 0.15; // un saut demandé juste avant de toucher le sol part à l'atterrissage, pas perdu
-const COYOTE = 0.1; // on peut encore sauter un dixième de seconde après avoir quitté une crête
+// Obstacles plus faciles à esquiver (2026-09-15) : saut plus haut, double tap plus tolérant, saut mémorisé plus
+// longtemps, et un obstacle ne fait tomber que si les roues passent vraiment dedans.
+const SAUT_HAUTEUR = 0.32;
+const DOUBLE_TAP = 0.4; // deux appuis à moins de 0,4 s = un saut
+const SAUT_TAMPON = 0.24; // un saut demandé juste avant de toucher le sol part à l'atterrissage, pas perdu
+const COYOTE = 0.16; // on peut encore sauter un instant après avoir quitté une crête
+const SAUT_POP = 1.6; // le nez se lève au départ du saut (rad/s), comme un bunny hop
+const OBSTACLE_HAUT = 0.26; // hauteur de contact d'un obstacle, en tailles de vélo (on le franchit dès que les roues sont au-dessus)
+const ALERTE_OBSTACLE = 1.8; // distance (en U) à partir de laquelle un obstacle devant soi est signalé
 // Lettres : chaque niveau cache un mot lié à Fairide (7 lettres au plus). Toutes attrapées = les points
 // gagnés pendant ce mot sont doublés. La liste vient des traductions (jeux.rider_mots), sinon celle-ci.
 const MOTS_DEFAUT = 'VÉLO,MENU,RESTO,REPAS,LOCAL,PANIER,CUISINE,LIVREUR,FAIRIDE';
@@ -437,7 +446,7 @@ export function creerRider(api) {
         const v0 = Math.sqrt(2 * g * SAUT_HAUTEUR * u);
         vy = Math.min(auSol ? pente(x) * vx : vy, 0) - v0;
         y -= 1;
-        auSol = false; tempsVol = 0; angleDepart = angle; flips = 0; omega = 0; obstaclesVol = 0;
+        auSol = false; tempsVol = 0; angleDepart = angle; flips = 0; omega = -SAUT_POP; obstaclesVol = 0;
         sautDemande = 0; sautEnCours = true; sautsFaits += 1;
         poussierer(x, y, 6, 120);
         vEcrasement -= 3;
@@ -507,8 +516,14 @@ export function creerRider(api) {
           omega = Math.max(-ROT_MAX, omega - ROT_ACCEL * dt);
         } else {
           omega *= Math.max(0, 1 - dt * ROT_AMORT);
-          const droit = Math.round(angle / DEUX_PI) * DEUX_PI;
-          angle = suivre(angle, droit, REDRESSE, dt);
+          // Assiette visée : le nez suit un peu la trajectoire (il plonge en redescendant), puis, près du sol,
+          // la pente sur laquelle on va retomber. Le vélo s'y aligne au multiple de tour le plus proche.
+          const cibleVol = Math.atan2(vy, Math.max(vx, 1)) * 0.4;
+          const cibleArrivee = Math.atan(pente(x + vx * 0.18));
+          const proche = borner(1 - (ySol - y) / (t * REDRESSE_SOL), 0, 1);
+          const cible = cibleVol + (cibleArrivee - cibleVol) * proche;
+          const droit = Math.round((angle - cible) / DEUX_PI) * DEUX_PI + cible;
+          angle = suivre(angle, droit, REDRESSE * (0.6 + proche * 0.8), dt);
         }
         angle += omega * dt;
         // Un tour complet (un peu avant la fin, pour que l'annonce tombe quand on « revient ») = +1, sans plafond.
@@ -548,7 +563,7 @@ export function creerRider(api) {
       }
 
       // --- Suspension (ressort amorti), posture, roues
-      const vise = auSol ? (appui ? 1 : 0.15) : (vy < 0 ? -0.7 : -0.3);
+      const vise = auSol ? (appui ? 1 : 0.15) : Math.abs(omega) > 2.5 ? 1.2 : (vy < 0 ? -0.7 : -0.3); // groupé sur le guidon pendant un salto
       penche = suivre(penche, vise, 6, dt);
       air = suivre(air, auSol ? 0 : 1, 8, dt);
       vEcrasement += (-ecrasement * 90 - vEcrasement * 12) * dt;
@@ -567,7 +582,7 @@ export function creerRider(api) {
       for (const o of obstacles) {
         if (o.passe || x < o.x) continue;
         o.passe = true;
-        if (y > sol(o.x) - t * 0.4) return chuter(x, y, 'obstacle');
+        if (y > sol(o.x) - t * OBSTACLE_HAUT) return chuter(x, y, 'obstacle');
         serieObstacles += 1; obstaclesVol += 1;
         marquer(1); api.effet?.(x - camX, y - camY - t * 1.2, serieObstacles >= 3 ? `+1 ×${serieObstacles}` : '+1');
       }
@@ -700,12 +715,35 @@ export function creerRider(api) {
         ctx.strokeStyle = LIME; ctx.lineWidth = 3; ctx.stroke();
       }
       // Obstacles et bonus
+      // Obstacles : on les voyait mal (emoji seul sur le décor). Chacun est posé sur une pastille blanche cerclée de
+      // rouge, avec une bande de chantier au sol ; à l'approche, un panneau ⚠ rebondit au-dessus pour dire « saute ».
+      const uu = U();
       for (const o of obstacles) {
-        if (o.x < camX - t || o.x > xFin + t) continue;
-        const yy = sol(o.x);
-        ctx.fillStyle = 'rgba(20,18,31,.14)'; ctx.beginPath(); ctx.ellipse(o.x, yy + 2, t * 0.34, t * 0.09, 0, 0, Math.PI * 2); ctx.fill();
-        halo(ctx, o.x, yy - t * 0.32, t * 0.5, '255,255,255', 0.4);
-        emoji(ctx, o.emoji, o.x, yy - t * 0.32, t * 0.78);
+        if (o.x < camX - t * 2 || o.x > xFin + t * 2) continue;
+        const yy = sol(o.x); const cy = yy - t * 0.52; const rr = t * 0.57;
+        ctx.fillStyle = 'rgba(20,18,31,.22)'; ctx.beginPath(); ctx.ellipse(o.x, yy + 2, t * 0.5, t * 0.11, 0, 0, Math.PI * 2); ctx.fill();
+        // Bande de chantier rouge et blanche au sol, sous l'obstacle.
+        const bl = t * 1.1; const bh = Math.max(3, t * 0.09);
+        ctx.save(); ctx.beginPath(); ctx.rect(o.x - bl / 2, yy - bh, bl, bh); ctx.clip();
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(o.x - bl / 2, yy - bh, bl, bh);
+        ctx.fillStyle = '#E63946';
+        for (let k = -bl; k < bl; k += bh * 2) { ctx.beginPath(); ctx.moveTo(o.x + k, yy); ctx.lineTo(o.x + k + bh, yy - bh); ctx.lineTo(o.x + k + bh * 2, yy - bh); ctx.lineTo(o.x + k + bh, yy); ctx.fill(); }
+        ctx.restore();
+        ctx.beginPath(); ctx.arc(o.x, cy, rr, 0, DEUX_PI); ctx.fillStyle = '#FFFFFF'; ctx.fill();
+        ctx.lineWidth = Math.max(2.5, t * 0.085); ctx.strokeStyle = '#E63946'; ctx.stroke();
+        emoji(ctx, o.emoji, o.x, cy, t * 0.84);
+        const devant = o.x - x;
+        if (!o.passe && devant > 0 && devant < uu * ALERTE_OBSTACLE) {
+          const k = 1 - devant / (uu * ALERTE_OBSTACLE);
+          const by = cy - rr - t * (0.55 + Math.abs(Math.sin(horloge * 9)) * 0.22);
+          const ts = t * (0.42 + k * 0.18);
+          ctx.globalAlpha = 0.55 + k * 0.45;
+          ctx.beginPath(); ctx.moveTo(o.x, by - ts * 0.62); ctx.lineTo(o.x + ts * 0.58, by + ts * 0.4); ctx.lineTo(o.x - ts * 0.58, by + ts * 0.4); ctx.closePath();
+          ctx.fillStyle = '#FFD166'; ctx.fill(); ctx.lineWidth = Math.max(2, ts * 0.1); ctx.strokeStyle = '#E63946'; ctx.lineJoin = 'round'; ctx.stroke();
+          ctx.fillStyle = INK; ctx.font = `900 ${(ts * 0.52).toFixed(1)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('!', o.x, by + ts * 0.08);
+          ctx.globalAlpha = 1;
+        }
       }
       // Lettres : une tuile lime qui flotte, bien distincte des sacs (violets) et des obstacles (emoji).
       for (const l of lettres) {
