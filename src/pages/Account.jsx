@@ -146,11 +146,24 @@ export default function Account() {
   const { unread: nonLus } = useInbox();
   const retour = /^\/[a-z0-9/_-]*$/i.test(searchParams.get('retour') || '') ? searchParams.get('retour') : '';
   const [ouvertes, setOuvertes] = useState(() => new Set(sectionDemandee ? [sectionDemandee] : []));
+  // Le défilement doit ATTENDRE que la cible existe. Les trois ancres du restaurateur
+  // (section-contrat, section-paiement, section-abonnement) ne sont rendues qu'une fois la fiche
+  // du commerce chargée — deux appels enchaînés, /restaurants/mine/dashboard puis /restaurants/:id.
+  // L'ancienne version cherchait l'ancre 150 ms après le montage, donc toujours avant la réponse du
+  // serveur : getElementById renvoyait null, le défilement n'avait jamais lieu et la rangée dépliée
+  // apparaissait tout en bas d'une page laissée en haut. Le restaurateur arrivait sur « Mes infos »
+  // et croyait que le lien de la check-list ne menait nulle part (« Voir la formule → »).
+  // On réessaie donc à chaque rendu tant que l'ancre est absente, et le repère évite de faire
+  // redéfiler la page quand la fiche est rechargée après un enregistrement.
+  const dejaDeroule = useRef(false);
   useEffect(() => {
-    if (!sectionDemandee) return;
-    const id = setTimeout(() => document.getElementById(`section-${sectionDemandee}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    if (!sectionDemandee || dejaDeroule.current) return;
+    const cible = document.getElementById(`section-${sectionDemandee}`);
+    if (!cible) return; // fiche pas encore chargée : le rendu suivant repassera ici
+    dejaDeroule.current = true;
+    const id = setTimeout(() => cible.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
     return () => clearTimeout(id);
-  }, [sectionDemandee]);
+  }, [sectionDemandee, restaurant, role]);
   function basculer(cle) {
     setOuvertes((prev) => { const n = new Set(prev); if (n.has(cle)) n.delete(cle); else n.add(cle); return n; });
   }
@@ -793,7 +806,15 @@ export default function Account() {
                 <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
               </div>
             )}
-            {/* Bouton d'abonnement : impayé à régulariser, ou — dès le 1er octobre — formule complète pas encore abonnée (contrat accepté). */}
+            {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et
+                sans ce mot la rangée se terminait sur du vide, sans jamais dire ce qui manquait. */}
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && restaurant.adminStatus !== 'approved' && (
+              <div className="paiement-encart" style={{ marginBottom: 12 }}>
+                <b>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedTitle' : 'accountUi.subPendingApprovalTitle')}</b>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedText' : 'accountUi.subPendingApprovalText')}</p>
+              </div>
+            )}
+            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 1er octobre, formule complète pas encore abonnée (contrat accepté). */}
             {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
