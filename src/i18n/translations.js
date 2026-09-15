@@ -4719,11 +4719,11 @@ export const translations = {
       appSteps_desktop_2: 'Clique « Connecter mon imprimante », choisis-la dans la liste, puis imprime un ticket de test. Coche « Impression automatique » pour que chaque nouvelle commande sorte toute seule.',
       appSteps_desktop_3: 'Imprimante USB ou réseau (Epson, Star…) déjà installée sur le PC : « Imprimer le bon de livraison » l\'utilise via la boîte d\'impression habituelle. Garde l\'application ouverte sur Commandes pendant le service.',
       appNativeSoon: '📲 La vraie application Fairide (App Store et Google Play) arrive le 1er octobre 2026 : elle imprimera en Bluetooth sur tous les appareils, iPhone et iPad compris. D\'ici là, tu utilises l\'application web installée depuis le navigateur, et les étapes ci-dessous s\'appliquent.',
-      payOnSiteBadge: '💶 À encaisser sur place : {amount}',
+      payOnSiteBadge: '💶 Le client paiera sur place : {amount} à encaisser',
       noShowBadge: '🚫 Client pas venu — commande non récupérée',
       customerNoShow: 'Client pas venu',
       confirmNoShowTitle: 'Le client n\'est pas venu ?',
-      confirmNoShowText: 'La commande de {name} sera close comme non récupérée, sans commission. Pour un paiement sur place, Fairide n\'intervient pas : ni remboursement, ni indemnisation.',
+      confirmNoShowText: 'La commande de {name} sera close comme non récupérée. Pour un paiement sur place, Fairide n\'intervient pas : ni remboursement, ni indemnisation.',
       toastNoShow: 'Commande close : client pas venu.',
       toCollectOnSite: 'À encaisser sur place'
     },
@@ -5068,8 +5068,8 @@ export const translations = {
       phoneVerifyLater: 'Plus tard',
       confirm: 'Confirmer',
       backToDashboard: 'Retour au tableau de bord',
-      payOnSiteTitle: 'Accepter aussi le paiement sur place pour l\'à emporter',
-      payOnSiteText: 'Le client choisit entre payer en ligne et payer au retrait ; tu encaisses toi-même. Attention : si le client ne vient pas chercher sa commande (et ne la paie donc pas), Fairide ne prend pas ce cas en charge — ni remboursement, ni indemnisation. Signale-la « Client pas venu » : aucune commission. La commission des commandes retirées figure sur ta facture mensuelle, à régler par virement.'
+      payOnSiteTitle: 'Laisser aussi le choix de payer sur place pour l\'à emporter',
+      payOnSiteText: 'Le client choisit entre payer en ligne (via Fairide) et payer au retrait. Tu es averti de chaque commande à payer sur place et tu encaisses toi-même : aucune commission Fairide sur ces commandes, seules celles payées en ligne sont commissionnées. Attention : si le client ne vient pas chercher sa commande (et ne la paie donc pas), Fairide ne prend pas ce cas en charge — ni remboursement, ni indemnisation. Tu peux la signaler « Client pas venu ».'
     },
     resa: {
       title: '📅 Réservations',
@@ -11146,11 +11146,11 @@ export const translations = {
       appSteps_desktop_2: 'Click “Connect my printer”, pick it in the list, then print a test ticket. Tick “Automatic printing” so every new order prints by itself.',
       appSteps_desktop_3: 'USB or network printer (Epson, Star…) already installed on the PC: “Print the delivery note” uses it through the usual print dialog. Keep the app open on Orders during service.',
       appNativeSoon: '📲 The real Fairide app (App Store and Google Play) arrives on 1 October 2026: it will print over Bluetooth on every device, iPhone and iPad included. Until then you use the web app installed from the browser, and the steps below apply.',
-      payOnSiteBadge: '💶 To collect on site: {amount}',
+      payOnSiteBadge: '💶 Customer pays on site: {amount} to collect',
       noShowBadge: '🚫 Customer didn’t show — order not collected',
       customerNoShow: 'Customer didn’t show',
       confirmNoShowTitle: 'The customer didn’t come?',
-      confirmNoShowText: 'The order from {name} will be closed as not collected, with no commission. For an on-site payment, Fairide does not step in: no refund and no compensation.',
+      confirmNoShowText: 'The order from {name} will be closed as not collected. For an on-site payment, Fairide does not step in: no refund and no compensation.',
       toastNoShow: 'Order closed: customer didn’t show.',
       toCollectOnSite: 'To collect on site'
     },
@@ -11492,8 +11492,8 @@ export const translations = {
       phoneVerifyLater: 'Later',
       confirm: 'Confirm',
       backToDashboard: 'Back to the dashboard',
-      payOnSiteTitle: 'Also accept payment on site for takeaway',
-      payOnSiteText: 'Customers choose between paying online and paying at collection; you take the payment yourself. Note: if a customer does not come to collect their order (and so does not pay), Fairide does not cover it — no refund, no compensation. Mark it “Customer didn’t show”: no commission. The commission on collected orders appears on your monthly invoice, payable by bank transfer.'
+      payOnSiteTitle: 'Also let customers pay on site for takeaway',
+      payOnSiteText: 'Customers choose between paying online (via Fairide) and paying at collection. You are notified of every order to be paid on site and take the payment yourself: no Fairide commission on those orders, only online payments are subject to commission. Note: if a customer does not come to collect their order (and so does not pay), Fairide does not cover it — no refund, no compensation. You can mark it “Customer didn’t show”.'
     },
     resa: {
       title: '📅 Reservations',
@@ -17561,11 +17561,11 @@ export const translations = {
       appSteps_desktop_2: 'Klik op “Mijn printer koppelen”, kies ze in de lijst en druk een testticket af. Vink “Automatisch afdrukken” aan zodat elke nieuwe bestelling vanzelf afdrukt.',
       appSteps_desktop_3: 'USB- of netwerkprinter (Epson, Star…) al geïnstalleerd op de pc: “Leveringsbon afdrukken” gebruikt ze via het gewone afdrukvenster. Hou de app open op Bestellingen tijdens de dienst.',
       appNativeSoon: '📲 De echte Fairide-app (App Store en Google Play) komt op 1 oktober 2026: ze drukt via Bluetooth af op elk toestel, ook iPhone en iPad. Tot dan gebruik je de web-app die je vanuit de browser installeert; de stappen hieronder gelden.',
-      payOnSiteBadge: '💶 Ter plaatse te innen: {amount}',
+      payOnSiteBadge: '💶 Klant betaalt ter plaatse: {amount} te innen',
       noShowBadge: '🚫 Klant niet gekomen — bestelling niet opgehaald',
       customerNoShow: 'Klant niet gekomen',
       confirmNoShowTitle: 'Is de klant niet gekomen?',
-      confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald, zonder commissie. Bij een betaling ter plaatse komt Fairide niet tussen: geen terugbetaling en geen vergoeding.',
+      confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald. Bij een betaling ter plaatse komt Fairide niet tussen: geen terugbetaling en geen vergoeding.',
       toastNoShow: 'Bestelling afgesloten: klant niet gekomen.',
       toCollectOnSite: 'Ter plaatse te innen'
     },
@@ -17907,8 +17907,8 @@ export const translations = {
       phoneVerifyLater: 'Later',
       confirm: 'Bevestigen',
       backToDashboard: 'Terug naar het dashboard',
-      payOnSiteTitle: 'Ook betaling ter plaatse aanvaarden voor afhalen',
-      payOnSiteText: 'De klant kiest tussen online betalen en betalen bij het ophalen; jij rekent zelf af. Let op: komt de klant zijn bestelling niet ophalen (en betaalt hij dus niet), dan komt Fairide niet tussen — geen terugbetaling, geen vergoeding. Markeer ze als “Klant niet gekomen”: geen commissie. De commissie op opgehaalde bestellingen staat op je maandfactuur en wordt per overschrijving betaald.'
+      payOnSiteTitle: 'Klanten ook ter plaatse laten betalen voor afhalen',
+      payOnSiteText: 'De klant kiest tussen online betalen (via Fairide) en betalen bij het ophalen. Je wordt verwittigd van elke bestelling die ter plaatse betaald wordt en je rekent zelf af: geen Fairide-commissie op die bestellingen, alleen online betalingen worden gecommissioneerd. Let op: komt de klant zijn bestelling niet ophalen (en betaalt hij dus niet), dan komt Fairide niet tussen — geen terugbetaling, geen vergoeding. Je kunt ze markeren als “Klant niet gekomen”.'
     },
     resa: {
       title: '📅 Reservaties',
