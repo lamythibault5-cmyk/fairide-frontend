@@ -27,12 +27,25 @@
   --iris-deep: #2A2185;
   --lime: #C8F03C;
 
-  /* Neutres */
-  --ink: #14121F;        /* titres et texte principal sur fond clair */
-  --ink-soft: #6B655D;   /* texte courant secondaire */
-  --ink-faint: #8A8377;  /* légendes, métadonnées */
-  --line: #DCD8D0;       /* filets 1px */
+  /* Neutres — échelle neutre, plus les gris chauds d'avant (DESIGN.md § Colors).
+     Le beige de --ink-soft / --ink-faint / --line donnait une page légèrement jaune ; sur un
+     fond blanc franc, un gris neutre se lit comme du calme plutôt que comme du papier vieilli. */
+  --ink: #000000;        /* titres et texte principal sur fond clair */
+  --ink-soft: #5E5E5E;   /* texte courant secondaire */
+  --ink-faint: #767676;  /* légendes, métadonnées */
+  /* Uber descend jusqu'à #AFAFAF pour ce rôle. On ne l'a pas suivi sur --ink-faint : ce jeton
+     porte chez nous de vraies légendes lues par les clients, et #AFAFAF sur blanc vaut 2,3:1,
+     donc sous le minimum d'accessibilité. #767676 tient 4,5:1. Le gris très clair existe, mais
+     réservé à ce qui n'a pas à être lu : --ink-mute, pour les textes d'exemple des champs. */
+  --ink-mute: #AFAFAF;   /* placeholders uniquement, jamais du texte à lire */
+  --line: #E2E2E2;       /* filets 1px */
   --chip: #1E1A17;       /* petits badges sombres à texte blanc */
+
+  /* Surfaces grises — ce qui remplace les filets pour délimiter un champ ou une sous-zone.
+     C'est le geste le plus visible emprunté à Uber : un champ n'est plus un rectangle blanc
+     cerné d'un trait, c'est un aplat gris posé sur le blanc. */
+  --surface-soft: #EFEFEF;   /* champs de saisie, puces, sous-zones */
+  --surface-softer: #F3F3F3; /* champ imbriqué dans une carte déjà grise */
 
   /* Alias historiques (voir l'en-tête ci-dessus) */
   --gold: #C8F03C;       /* = lime — uniquement en APLAT sur iris, ou en fond de badge */
@@ -40,7 +53,7 @@
   --teal: #3B2FB5;       /* = iris */
   --teal-deep: #2A2185;  /* = iris pressé */
   --cream: #FFFFFF;
-  --cream-dim: #F4F2ED;  /* teinte de surface (champs, séparateurs), pas une 3e couleur de marque */
+  --cream-dim: #EFEFEF;  /* = --surface-soft : teinte de surface, pas une 3e couleur de marque */
 
   /* Statuts */
   --red: #D92D3C;
@@ -49,10 +62,29 @@
   --purple: #B0459B;
   --heart: #FF3B5C;
 
-  /* Formes — aplats stricts : --shadow vaut none, il ne reste que des filets */
-  --radius: 20px;
-  --radius-chip: 6px;
+  /* Formes — LA PILULE EST LA FORME SIGNATURE (DESIGN.md § Shapes).
+     Tout ce qui se clique s'arrondit à 999px : boutons, puces, badges, pastilles. Les cartes
+     gardent un rayon franc de 16px, les champs de saisie 8px. Ce contraste-là — cliquable
+     complètement rond, contenant franchement carré — remplace l'ancien couple 20px/6px : il dit
+     au premier coup d'œil ce qui répond au doigt et ce qui ne répond pas. */
+  --radius: 16px;         /* cartes et conteneurs */
+  --radius-field: 8px;    /* champs de saisie */
+  --radius-pill: 999px;   /* tout ce qui se clique */
+  --radius-chip: 999px;   /* alias historique (~40 appels) : les puces deviennent des pilules */
+
+  /* --shadow reste `none` : l'ombre ne s'hérite jamais, elle se demande. Les call sites
+     historiques qui écrivent var(--shadow) continuent donc de ne rien dessiner, et les trois
+     niveaux ci-dessous ne s'appliquent que là où on les pose explicitement. */
   --shadow: none;
+  --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
+  --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
+  --shadow-3: rgba(0, 0, 0, 0.16) 0 2px 8px 0;   /* pilule flottant sur une photo */
+
+  /* Échelle typographique (DESIGN.md § Typography). Posée ici en jetons pour que les surfaces
+     reprises une à une s'y accrochent au lieu de réinventer une taille à chaque fois. */
+  --t-display-xxl: 52px; --t-display-xl: 36px; --t-display-lg: 32px;
+  --t-display-md: 24px;  --t-display-sm: 20px;
+  --t-body-lg: 18px; --t-body-md: 16px; --t-body-sm: 14px; --t-caption: 12px;
 }
 
 * { box-sizing: border-box; }
@@ -109,7 +141,13 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
    le geste qui permettrait d'y accéder. Les rangées défilantes gardent leur propre touch-action,
    qui est le bon niveau pour cette contrainte. */
 
-h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0; text-wrap: balance; }
+/* PLUS DE RESSERREMENT NÉGATIF SUR LES TITRES. L'ancienne direction tirait sa personnalité d'un
+   -0,02em très marqué ; la nouvelle interdit explicitement toute variation d'approche sur les
+   titres (DESIGN.md : « the display face is never letter-spaced, positive or negative »). Un titre
+   resserré se lit comme une affiche, un titre à approche neutre se lit comme une phrase — et c'est
+   une phrase qu'on veut, posée calmement. L'interligne passe de 1,1 à 1,22 pour la même raison :
+   1,1 empile les lignes, 1,22 les laisse respirer. */
+h1, h2, h3 { font-weight: 700; letter-spacing: 0; line-height: 1.22; margin: 0; text-wrap: balance; }
 
 a { color: inherit; }
 
@@ -231,12 +269,21 @@ a { color: inherit; }
    et la spec n'autorise qu'un accent appuyé par vue. */
 .lang-switcher button.active { background: rgba(255,255,255,0.22); color: #fff; opacity: 1; }
 
-.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
+/* Carte : 16px de rayon, 24px de marge intérieure, 16px entre deux cartes (DESIGN.md § Cards).
+   Uber pose ses cartes sans filet ni ombre, séparées par du seul blanc. On garde le filet 1px :
+   leurs pages de marketing ont trois blocs par écran, nos tableaux de bord en ont quinze, et sans
+   frontière ils fondent les uns dans les autres. Le filet reste donc notre langage d'élévation —
+   l'ombre existe (--shadow-1) mais ne se pose que sur une carte qu'on veut vraiment détacher. */
+.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-/* Pastilles carrées à 6px, pas des gélules : la spec impose 20px pour les cartes
-   et 6px pour les puces, ce contraste franc entre deux rayons est une partie de
-   l'identité. Un arrondi intermédiaire partout aplatirait la différence. */
-.pill { font-size: 12px; padding: 4px 10px; border-radius: var(--radius-chip); background: var(--cream-dim); color: var(--ink-soft); font-weight: 500; }
+/* LES PASTILLES SONT DEVENUES DES PILULES. Le commentaire précédent défendait ici l'inverse —
+   6px carrés contre 20px de carte — parce que l'ancienne direction faisait du contraste entre
+   deux rayons une part de son identité. La nouvelle en fait l'inverse : une seule forme ronde
+   pour tout ce qui se clique, et le contraste passe entre le rond (cliquable) et le carré
+   (contenant). Garder des pastilles à angles ici casserait la règle partout ailleurs.
+   Le fond passe au gris neutre, et le texte remonte à 13px : 12px était sous le seuil de
+   confort de lecture pour des étiquettes que les clients lisent vraiment. */
+.pill { font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink-soft); font-weight: 500; }
 .pill.teal { background: rgba(59,47,181,0.10); color: var(--iris); }
 /* Le lime en aplat avec du texte --ink dessus : c'est exactement son rôle de
    « projecteur » (badge d'offre). En texte lime sur blanc il serait illisible. */
@@ -257,18 +304,34 @@ a { color: inherit; }
 .promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-chip); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
+/* CHAMP GRIS, PAS RECTANGLE CERNÉ (DESIGN.md § Inputs). Un champ est maintenant un aplat gris
+   sur le blanc : la zone où l'on écrit se voit à la couleur, pas à un trait. C'est ce qui donne
+   aux formulaires d'Uber leur air posé — quinze champs cernés font quinze cadres, quinze aplats
+   gris font une seule zone de saisie.
+   La hauteur monte (14px de padding contre 10) et le texte à 15px : sous 16px, Safari iOS zoome
+   automatiquement à la mise au point du champ, ce qui décale la page. 15px reste sous ce seuil
+   mais reste confortable ; les champs qu'on veut vraiment gros passeront à 16px un par un. */
 input, select, textarea {
-  font-family: inherit; font-size: 14px; padding: 10px 12px;
-  border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; color: var(--ink); width: 100%;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  font-family: inherit; font-size: 15px; padding: 14px 16px;
+  border: 1px solid transparent; border-radius: var(--radius-field); background: var(--surface-soft); color: var(--ink); width: 100%;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
+/* À la mise au point, le champ devient blanc et prend une arête iris : le gris dit « ici on peut
+   écrire », le blanc dit « ici on écrit maintenant ». L'anneau est conservé, contrairement à Uber
+   qui n'en met pas : c'est le seul repère d'un visiteur qui navigue au clavier. */
 input:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(59,47,181,0.15);
+  outline: none; background: #fff; border-color: var(--iris); box-shadow: 0 0 0 3px rgba(59,47,181,0.15);
 }
-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: block; margin-bottom: 5px; }
+input::placeholder, textarea::placeholder { color: var(--ink-mute); }
+label { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
 .field { margin-bottom: 12px; }
 
-button { font-family: inherit; font-weight: 500; font-size: 14px; cursor: pointer; border: none; border-radius: var(--radius-chip); padding: 11px 18px; transition: transform .1s, filter .1s; }
+/* TOUS LES BOUTONS SONT DES PILULES (DESIGN.md § Buttons). 15px plutôt que les 16px d'Uber :
+   leurs pages portent trois boutons, nos tableaux de bord en portent trente par écran, et un saut
+   de 14 à 16 déplaçait les colonnes des tableaux admin. 15px donne le gain de lisibilité sans
+   casser les mises en page denses ; .btn-lg ci-dessous porte la vraie taille d'Uber là où l'action
+   est décisive. Le poids reste 500 : Uber interdit explicitement de monter les libellés à 700. */
+button { font-family: inherit; font-weight: 500; font-size: 15px; cursor: pointer; border: none; border-radius: var(--radius-pill); padding: 12px 20px; transition: transform .1s, filter .1s; }
 button:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -356,6 +419,18 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
 .btn-block { width: 100%; }
+
+/* Deux ajouts repris de DESIGN.md, à poser surface par surface au fil de la reprise.
+
+   .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »).
+   Elle remplace avantageusement un .btn-outline dans une carte : un aplat gris pèse moins qu'un
+   trait, et une carte qui porte quatre boutons cernés ressemble à un formulaire administratif.
+
+   .btn-lg — la vraie échelle d'Uber (18px), réservée à l'action décisive d'un écran : payer,
+   confirmer, s'inscrire. C'est le bouton qu'on veut voir de loin sur un téléphone. */
+.btn-subtle { background: var(--surface-soft); color: var(--ink); }
+.btn-subtle:hover:not(:disabled) { background: #E2E2E2; }
+.btn-lg { font-size: 18px; padding: 16px 24px; }
 
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 /* Rangées "Autour de vous"/"Offres"/"À découvrir"/"Supermarchés" : on peut faire défiler horizontalement
@@ -904,15 +979,17 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; margin: 40px 0 16px; }
 
 .auth-box { max-width: 380px; margin: 40px auto; }
-/* La carte de connexion / inscription est le seul objet de sa page : elle mérite un contour
-   franc plutôt que le filet gris de 1px des cartes de contenu. Deux pixels d'iris suffisent —
-   c'est le seul cadre appuyé du site, et le garder unique est ce qui lui donne son poids.
-   Règle volontairement portée par .auth-box et non par .card : le filet 1px reste la valeur
-   par défaut partout ailleurs, où des dizaines de cartes cohabitent sur un même écran. */
-.auth-box .card { border: 2px solid var(--iris); }
-.auth-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-.auth-tabs .chip { flex: 1; text-align: center; padding: 8px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #fff; }
-.auth-tabs .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+/* La carte de connexion est le seul objet de sa page. Elle portait pour ça un cadre de 2px
+   d'iris — le seul contour appuyé du site. Ce cadre disparaît : une carte qui porte un
+   formulaire ne s'entoure pas, elle FLOTTE (DESIGN.md, request-form-card, ombre de niveau 2).
+   Le cadre enfermait le formulaire ; l'ombre le pose sur la page. Même intention, exactement,
+   mais sans dessiner une boîte autour de quelqu'un qui tape son mot de passe. */
+.auth-box .card { border: 1px solid var(--line); box-shadow: var(--shadow-2); }
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.auth-tabs .chip { flex: 1; text-align: center; padding: 11px 8px; border-radius: var(--radius-pill); border: 1px solid var(--line); cursor: pointer; font-size: 15px; font-weight: 500; color: var(--ink); background: #fff; }
+/* Iris et non noir : c'est la décision de cette refonte — là où Uber pose son noir de
+   conversion, Fairide pose son iris. Le noir reste au texte, jamais à l'action. */
+.auth-tabs .chip.active { background: var(--iris); color: var(--cream); border-color: var(--iris); }
 .role-pick { display: flex; gap: 6px; margin-bottom: 12px; }
 .role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
@@ -2125,10 +2202,13 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 /* Fixe et posé HORS du conteneur de contenu (voir Layout.jsx) : c'est ce qui lui fait couvrir tout
    l'écran. Une version précédente le rendait à l'intérieur de .wrap, large de 960px au plus — il ne
    s'affichait donc que derrière la colonne de contenu, jamais dans les marges. */
-/* Aplat Fairide visible en haut de page : c'est lui qu'on voit avant le premier défilement, et il reste
-   derrière le montage pendant tout le fondu. Teinte iris claire, pour que l'encre garde son contraste. */
+/* Aplat visible avant que la vidéo soit là, et derrière elle pendant tout le fondu. C'était un
+   dégradé en trois teintes de lilas ; c'est devenu un gris quasi blanc. Deux raisons : un dégradé
+   atmosphérique est exactement ce que la nouvelle direction exclut (DESIGN.md : « no gradients, no
+   atmospheric backdrops »), et surtout cette teinte donnait un fond violet à la page de connexion,
+   où le contenu est un simple formulaire. Une page de saisie se pose sur du blanc. */
 .cuisine-fond { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-  background: linear-gradient(180deg, #F2F0FC 0%, #E6E2F8 45%, #D8D3F2 100%); }
+  background: var(--surface-softer); }
 /* Le fondu suit le défilement : à 350 ms il traînait derrière le doigt, l'image arrivait après le geste. */
 .cuisine-fond-calque { position: absolute; inset: 0; opacity: 0; transition: opacity .18s linear; will-change: opacity; }
 .cuisine-fond-media { width: 100%; height: 100%; object-fit: cover; display: block; }
