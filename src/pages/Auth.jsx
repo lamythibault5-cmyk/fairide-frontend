@@ -1,3 +1,4 @@
+import OffreFormules from '../components/OffreFormules';
 import { useEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
@@ -981,7 +982,8 @@ export default function Auth() {
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
                   <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
-                  <p className="small" style={{ margin: '8px 0 0', opacity: 0.85 }}>{t('auth.servicesPlanHint')}</p>
+                  {/* Gratuit → payant dit en clair dès l'inscription, avec la date du premier prélèvement (voir OffreFormules). */}
+                  <OffreFormules payant={services.delivery || services.pickup} inscription />
                   {fieldError('services')}
                 </div>
               </>

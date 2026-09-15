@@ -18,7 +18,8 @@ import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
-import { abonnementOuvert } from '../launch';
+import { abonnementOuvert, datePremierPrelevement } from '../launch';
+import OffreFormules from '../components/OffreFormules';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -767,7 +768,7 @@ export default function Account() {
             {restaurant.subscriptionStatus === 'inactive' && restaurant.plan !== 'reservation' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subInactiveIntro')}
-                {' '}{t('accountUi.subPendingValidation')}
+                {' '}{t('accountUi.subPendingValidation', { date: datePremierPrelevement().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}
               </p>
             )}
 
@@ -848,14 +849,13 @@ export default function Account() {
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>
                   <b>{t(complete ? 'accountUi.planCompleteTitle' : 'accountUi.planReservationTitle')}</b>
-                  <p className="small" style={{ margin: '4px 0 0' }}>{t(complete ? 'accountUi.planCompleteText' : 'accountUi.planReservationText')}</p>
                   {complete && !abonne && (
-                    <p className="small" style={{ margin: '10px 0 0' }}>
+                    <p className="small" style={{ margin: '4px 0 8px' }}>
                       <b>{t('accountUi.planNeedsSubTitle')}</b><br />
-                      {t('accountUi.planNeedsSubText')}{' '}
-                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={voirAbonnement}>{t('accountUi.planSeeSubscription')}</button>
+                      {t('accountUi.planNeedsSubText')}
                     </p>
                   )}
+                  <OffreFormules payant={complete} statut={restaurant.isDemo ? null : restaurant.subscriptionStatus} finEssai={restaurant.subscriptionCurrentPeriodEnd} onActiver={complete && !abonne ? voirAbonnement : null} />
                 </div>
               );
             })()}

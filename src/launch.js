@@ -38,3 +38,11 @@ export const OUVERTURE_ABONNEMENT = new Date('2026-10-01T00:00:00+02:00');
 export function abonnementOuvert() {
   return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
 }
+
+// Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
+// court à partir de l'ouverture des commandes (5 octobre 2026), ou de l'activation si elle est postérieure. Miroir
+// exact de routes/restaurants.js (subscription_data.trial_end) : la date annoncée est celle que Stripe appliquera.
+export const MOIS_OFFERT_JOURS = 30;
+export function datePremierPrelevement(activation = new Date()) {
+  return new Date(Math.max(activation.getTime(), OUVERTURE_COMMANDES.getTime()) + MOIS_OFFERT_JOURS * 86400000);
+}

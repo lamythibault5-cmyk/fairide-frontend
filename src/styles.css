@@ -3124,3 +3124,18 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .driver-badge-role { font-size: 11.5px; opacity: .7; }
 .driver-badge-texte b { font-size: 14px; }
 .driver-badge-tel { font-size: 12.5px; }
+
+/* Offre gratuit → payant (components/OffreFormules.jsx) : deux colonnes, la formule choisie soulignée, puis
+   « Quand est-ce que je commence à payer ? » en trois étapes. Aplats et filets, sans ombre (règles de la marque). */
+.offre-formules { margin-top: 8px; }
+.offre-colonnes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 520px) { .offre-colonnes { grid-template-columns: 1fr; } }
+.offre-col { display: flex; flex-direction: column; gap: 3px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; color: var(--ink); }
+.offre-col.offre-col-choisie { border: 2px solid var(--iris); padding: 9px 11px; }
+.offre-col b { font-size: 13.5px; }
+.offre-prix { font-weight: 800; color: var(--iris); font-size: 14px; }
+.offre-quand { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; color: var(--ink); }
+.offre-quand b { font-size: 13px; }
+.offre-quand ol { margin: 6px 0 0; padding-left: 18px; }
+.offre-quand li { margin: 3px 0; }
+.offre-note { margin: 8px 0 0; color: var(--ink); }
