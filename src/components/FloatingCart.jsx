@@ -4,7 +4,7 @@ import { api } from '../api';
 import { useCart } from '../context/CartContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
-import { commandesOuvertes, dateOuvertureCommandes } from '../launch';
+import { commandesOuvertes, dateOuvertureCommandes, dateOuvertureLivraison } from '../launch';
 
 // Panier persistant sur toutes les pages (monté une seule fois dans Layout.jsx), toujours en bas à
 // gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
@@ -129,7 +129,7 @@ export default function FloatingCart() {
             {t('floatingCart.order')}
           </button>
         ) : (
-          <p className="small" style={{ margin: '6px 0' }}>🗓️ {t('floatingCart.ordersOpenSoon', { date: dateOuvertureCommandes(getLocale()) })}</p>
+          <p className="small" style={{ margin: '6px 0' }}>🗓️ {t('floatingCart.ordersOpenSoon', { date: dateOuvertureCommandes(getLocale()), dateLivraison: dateOuvertureLivraison(getLocale()) })}</p>
         )}
         <button type="button" className="floating-cart-clear-link" onClick={() => cart.clearLines()}>🗑️ {t('floatingCart.clear')}</button>
       </div>

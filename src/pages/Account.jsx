@@ -106,6 +106,7 @@ export default function Account() {
   const [converting, setConverting] = useState(false);
   const [offersDelivery, setOffersDelivery] = useState(true);
   const [offersPickup, setOffersPickup] = useState(true);
+  const [pickupPayOnSite, setPickupPayOnSite] = useState(false);
   const [offersDineIn, setOffersDineIn] = useState(true);
   const [savingServices, setSavingServices] = useState(false);
   const servicesInitRef = useRef(false);
@@ -230,6 +231,7 @@ export default function Account() {
     // emporter restent cochés ici mais fermés côté client (voir formules.js côté serveur).
     setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
     setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
+    setPickupPayOnSite(!!restaurant.pickupPayOnSite);
     setOffersDineIn(restaurant.offersDineIn);
   }, [restaurant]);
 
@@ -240,7 +242,7 @@ export default function Account() {
     }
     setSavingServices(true);
     try {
-      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn } });
+      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn, pickupPayOnSite: offersPickup && pickupPayOnSite } });
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {
@@ -878,6 +880,15 @@ export default function Account() {
                 </tbody>
               </table>
             </div>
+            {offersPickup && (
+              <label className="paiement-encart" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '12px 0', cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={pickupPayOnSite} disabled={savingServices} onChange={(e) => setPickupPayOnSite(e.target.checked)} />
+                <span>
+                  <b>💶 {t('accountUi.payOnSiteTitle')}</b><br />
+                  <span className="small">{t('accountUi.payOnSiteText')}</span>
+                </span>
+              </label>
+            )}
             {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
                 d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
             <p className="small service-summary">
@@ -892,12 +903,8 @@ export default function Account() {
             <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
           </LigneCompte>
 
-          {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas : neuf onglets n'y
-              tenaient pas, et sous 520px ils deviennent des icônes muettes. Ici elles gardent leur nom. */}
-          <LigneCompte to="/dashboard/reservations" icone="📅" titre={t('accountUi.reservations')} sous={t('accountUi.reservationsSub')} />
-          <LigneCompte to="/dashboard/reservations?onglet=salle" icone="🪑" titre={t('accountUi.floorPlan')} sous={t('accountUi.floorPlanSub')} />
-          <LigneCompte to="/dashboard/reservations?onglet=reglages" icone="⚙️" titre={t('accountUi.reservationRules')} sous={t('accountUi.reservationRulesSub')} />
-          <LigneCompte to="/dashboard/reservations?onglet=integration" icone="📆" titre={t('resa.calTitle')} sous={t('resa.calAccountSub')} />
+          {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom.
+              Les réservations (agenda, plan de salle, règles, agenda externe) ont leur propre rubrique principale. */}
           <LigneCompte to="/dashboard/promotions" icone="🏷️" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
           <LigneCompte to="/dashboard/invoices" icone="📄" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
           <LigneCompte to="/dashboard/guide" icone="📘" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { commandesOuvertes, dateOuvertureCommandes, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
+import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsDisplay } from '../../components/Stars';
@@ -279,11 +279,12 @@ export default function RestaurantMenu() {
             </Suspense>
           </div>
         )}
-        {!commandesOuvertes(user) && (
+        {/* Avant le 5 octobre : réservations et à emporter à venir ; du 5 au 15 : seule la livraison attend. */}
+        {(!commandesOuvertes(user) || (restaurant.offersDelivery && !livraisonOuverte(user))) && (
           <div className="ouverture-bandeau" role="status">
-            🗓️ {reservationsOuvertes(user)
-              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureCommandes(getLocale()) })
-              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureCommandes(getLocale()), dateResa: dateOuvertureReservations(getLocale()) })}
+            🗓️ {commandesOuvertes(user)
+              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
+              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureReservations(getLocale()) })}
           </div>
         )}
         {restaurant.fairideAdvantage && (

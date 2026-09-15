@@ -80,7 +80,7 @@ function CoordonneesLegales({ restaurant, onSaved }) {
 export default function PaiementRestaurant({ restaurant, orders, onRestaurantChange }) {
   const { t } = useLanguage();
   const locale = getLocale();
-  const payees = (orders || []).filter((o) => o.paid).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  const payees = (orders || []).filter((o) => o.paid && o.paymentMode !== 'on_site').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const net = (o) => Number(o.subtotal || 0) - Number(o.commission || 0);
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
   const ouvert = Date.now() >= OUVERTURE_PAIEMENTS.getTime();

@@ -162,7 +162,7 @@ export function buildTicketBytes(order, restaurant, { columns = COLUMNS_58MM } =
   // largeur-là, sinon il déborde et repart à la ligne au milieu du montant.
   t.line(pair('TOTAL', money(order.total), Math.floor(columns / 2)));
   t.size(false).bold(false);
-  t.align(1).line(order.paid ? 'Paye via Fairide' : 'NON PAYE').align(0);
+  t.align(1).line(order.paymentMode === 'on_site' ? 'A ENCAISSER SUR PLACE' : order.paid ? 'Paye via Fairide' : 'NON PAYE').align(0);
 
   // --- Pied ------------------------------------------------------------------------------------------
   t.rule();

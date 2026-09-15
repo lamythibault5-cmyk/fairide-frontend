@@ -5,6 +5,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { buildTicketBytes, COLUMNS_58MM, COLUMNS_80MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
 import PrinterSettings, { AUTO_PRINT_KEY } from '../../components/PrinterSettings';
@@ -22,6 +23,9 @@ export default function OrdersPage() {
   const { orders, restaurant, restoId, loadDashboard } = useOutletContext();
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+  // Commande à emporter payée sur place que le client n'est pas venu chercher (confirmation avant de la clore).
+  const [pasVenu, setPasVenu] = useState(null);
+  const [clotureEnCours, setClotureEnCours] = useState(false);
   const [pickupCodeInputs, setPickupCodeInputs] = useState({});
   const [confirmingPickup, setConfirmingPickup] = useState(null);
   const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
@@ -135,6 +139,22 @@ export default function OrdersPage() {
     }
   }
 
+  async function signalerPasVenu() {
+    if (!pasVenu) return;
+    setClotureEnCours(true);
+    try {
+      await api(`/orders/${pasVenu.id}/pickup-no-show`, { method: 'PATCH', token });
+      toast(t('ordersResto.toastNoShow'));
+      setPasVenu(null);
+      setSelectedOrder(null);
+      loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message);
+    } finally {
+      setClotureEnCours(false);
+    }
+  }
+
   async function confirmPickup(orderId) {
     const code = (pickupCodeInputs[orderId] || '').trim();
     if (!code) { toast(t('ordersResto.toastAskDriverCode')); return; }
@@ -238,6 +258,11 @@ export default function OrdersPage() {
             <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
           </div>
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
+          {o.paymentMode === 'on_site' && (
+            <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
+              {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
+            </div>
+          )}
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : '🍽️ Réservation sans commande, le client commandera sur place'}</div>
@@ -256,6 +281,9 @@ export default function OrdersPage() {
             )}
             {o.status === 'preparation' && (
               <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+            )}
+            {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+              <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
             )}
           </div>
           {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
@@ -338,7 +366,7 @@ export default function OrdersPage() {
               {selectedOrder.orderType === 'delivery' && <div className="line"><span>{t('ordersResto.delivery')}</span><span>{selectedOrder.deliveryFee.toFixed(2)}€</span></div>}
               {selectedOrder.serviceFee > 0 && <div className="line"><span>{t('ordersResto.serviceFee')}</span><span>{selectedOrder.serviceFee.toFixed(2)}€</span></div>}
               {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
-              <div className="line total"><span>{t('ordersResto.totalPaid')}</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
+              <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `💶 ${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
             </div>
               </>
             )}
@@ -424,6 +452,13 @@ export default function OrdersPage() {
           visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
           et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
       {(recuEdite || selectedOrder) && createPortal(<OrderReceipt order={recuEdite || selectedOrder} restaurant={restaurant} />, document.body)}
+      <ConfirmDialog open={!!pasVenu} danger
+        title={t('ordersResto.confirmNoShowTitle')}
+        message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
+        confirmLabel={t('ordersResto.customerNoShow')}
+        loading={clotureEnCours}
+        onCancel={() => setPasVenu(null)}
+        onConfirm={signalerPasVenu} />
       {editeur && (
         <TicketEditor initial={editeur.order} btName={btName} printing={printing}
           onPrintBluetooth={(ticket, copies) => printBluetooth(ticket, { copies })}

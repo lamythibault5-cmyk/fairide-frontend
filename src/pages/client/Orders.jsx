@@ -264,7 +264,7 @@ export default function Orders() {
               </span>
             ) : (
               <>
-                <span className="small">{o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : `💶 ${t('orders.payOnSite')}`) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
                 <b>{o.total.toFixed(2)}€</b>
               </>
             )}

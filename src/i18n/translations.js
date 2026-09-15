@@ -1694,7 +1694,7 @@ export const translations = {
       selfBillingText: 'Tu livres en indépendant, avec ton numéro d\'entreprise. Chaque mois, Fairide établit à ta place la facture de tes courses (autofacturation, avec la mention légale) : tu n\'as rien à rédiger, juste à indiquer ton régime TVA (franchise ou assujetti) et à accepter l\'accord préalable, une seule fois.',
       selfBillingLink: 'Régler mon régime TVA et voir mes factures →',
       noBankText: 'Ni IBAN, ni carte, ni pièce d\'identité ne transitent par Fairide : tout se passe directement chez Stripe, qui nous indique seulement si ton compte est prêt à recevoir tes gains.',
-      activationClosedText: 'Le bouton sera disponible ici fin septembre et tu recevras un e-mail à ce moment-là. D\'ici là, aucune information bancaire n\'est nécessaire : ton compte, une fois validé par Fairide, est prêt pour l\'ouverture des livraisons, le 10 octobre 2026.',
+      activationClosedText: 'Le bouton sera disponible ici fin septembre et tu recevras un e-mail à ce moment-là. D\'ici là, aucune information bancaire n\'est nécessaire : ton compte, une fois validé par Fairide, est prêt pour l\'ouverture des livraisons, le 15 octobre 2026.',
       activationOpenText: 'Active tes paiements chez Stripe depuis ton tableau de bord (rangée « Paiements à configurer »).',
       activationDoneText: 'Ton compte Stripe est prêt : frais de livraison et pourboires de chaque course te sont versés automatiquement.',
       receiptsTitle: 'Reçus de tes courses',
@@ -1711,7 +1711,7 @@ export const translations = {
       step2: 'Sur chaque commande, le prix de tes plats te revient, moins la commission Fairide plafonnée à 10 % HTVA. Les frais de livraison vont intégralement au livreur, les pourboires aussi.',
       step3: 'Ta part est transférée automatiquement sur ton compte Stripe à chaque commande payée, puis versée sur ton compte bancaire chaque lundi (tout ce qui a été encaissé la semaine précédente). Une facture de commission mensuelle t\'est envoyée par e-mail et reste disponible dans Factures.',
       subscriptionTitle: 'Aucun abonnement à activer maintenant',
-      subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. La réservation de table seule est gratuite (ouverte aux clients dès le 1er octobre 2026). Pour la livraison ou l\'à emporter (dès le 10 octobre), l\'abonnement Fairide (20 €/mois) s\'active à partir du 1er octobre, et le premier mois offert ne commence à compter qu\'à l\'ouverture des commandes.',
+      subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. La réservation de table seule est gratuite (ouverte aux clients dès le 5 octobre 2026). Pour l\'à emporter (dès le 5 octobre) ou la livraison (dès le 15 octobre), l\'abonnement Fairide (20 €/mois) s\'active à partir du 1er octobre, et le premier mois offert ne commence à compter qu\'à l\'ouverture des commandes, le 5 octobre.',
       stripeTitle: 'Stripe, c\'est quoi ?',
       stripeWhat: 'Stripe est un prestataire de paiement international, agréé comme établissement de paiement en Europe et certifié au plus haut niveau de sécurité bancaire (PCI-DSS). Des milliers de commerces et de plateformes (Deliveroo, Shopify, Zalando…) l\'utilisent pour encaisser et reverser l\'argent. C\'est chez Stripe, dans un formulaire sécurisé, que tu renseigneras ton identité et ton IBAN.',
       noBankTitle: 'Fairide ne prend aucune information bancaire.',
@@ -3867,7 +3867,9 @@ export const translations = {
       instruction: 'Consigne : {label}',
       note: 'Note : {note}',
       promo: 'Promo {label}',
-      giftVoucher: 'Bon cadeau {code}'
+      giftVoucher: 'Bon cadeau {code}',
+      toPayOnSite: 'À payer sur place',
+      payOnSiteNote: 'Paiement sur place, au retrait — non payé via Fairide'
     },
     mapClient: {
       loading: 'Chargement...',
@@ -4716,7 +4718,14 @@ export const translations = {
       appSteps_desktop_1: 'Allume l\'imprimante thermique Bluetooth (BLE) et vérifie que le Bluetooth de l\'ordinateur est activé (Chrome ou Edge requis).',
       appSteps_desktop_2: 'Clique « Connecter mon imprimante », choisis-la dans la liste, puis imprime un ticket de test. Coche « Impression automatique » pour que chaque nouvelle commande sorte toute seule.',
       appSteps_desktop_3: 'Imprimante USB ou réseau (Epson, Star…) déjà installée sur le PC : « Imprimer le bon de livraison » l\'utilise via la boîte d\'impression habituelle. Garde l\'application ouverte sur Commandes pendant le service.',
-      appNativeSoon: '📲 La vraie application Fairide (App Store et Google Play) arrive le 1er octobre 2026 : elle imprimera en Bluetooth sur tous les appareils, iPhone et iPad compris. D\'ici là, tu utilises l\'application web installée depuis le navigateur, et les étapes ci-dessous s\'appliquent.'
+      appNativeSoon: '📲 La vraie application Fairide (App Store et Google Play) arrive le 1er octobre 2026 : elle imprimera en Bluetooth sur tous les appareils, iPhone et iPad compris. D\'ici là, tu utilises l\'application web installée depuis le navigateur, et les étapes ci-dessous s\'appliquent.',
+      payOnSiteBadge: '💶 À encaisser sur place : {amount}',
+      noShowBadge: '🚫 Client pas venu — commande non récupérée',
+      customerNoShow: 'Client pas venu',
+      confirmNoShowTitle: 'Le client n\'est pas venu ?',
+      confirmNoShowText: 'La commande de {name} sera close comme non récupérée, sans commission. Pour un paiement sur place, Fairide n\'intervient pas : ni remboursement, ni indemnisation.',
+      toastNoShow: 'Commande close : client pas venu.',
+      toCollectOnSite: 'À encaisser sur place'
     },
     dashDriver: {
       today: 'Aujourd\'hui',
@@ -4799,7 +4808,7 @@ export const translations = {
       chooseRestaurant: '· Choisir un restaurant · ',
       createMine: '+ Créer mon restaurant',
       createIntro: 'Une fois créé, Fairide te propose de générer ton menu et ta photo de couverture automatiquement, tu n\'as que le strict nécessaire à remplir ici.',
-      createNote: 'Aucun abonnement ni aucune information bancaire à fournir pour créer ton compte et ton restaurant. La réservation de table seule est gratuite, dès le 1er octobre 2026 ; pour la livraison ou l\'à emporter (dès le 10 octobre), l\'abonnement Fairide (20 €/mois) s\'active à partir du 1er octobre, premier mois offert à compter de l\'ouverture des commandes.',
+      createNote: 'Aucun abonnement ni aucune information bancaire à fournir pour créer ton compte et ton restaurant. La réservation de table seule est gratuite, dès le 5 octobre 2026 ; pour l\'à emporter (dès le 5 octobre) ou la livraison (dès le 15 octobre), l\'abonnement Fairide (20 €/mois) s\'active à partir du 1er octobre, premier mois offert à compter du 5 octobre.',
       identity: 'Identité',
       businessName: 'Nom du commerce',
       businessType: 'Type de commerce',
@@ -4822,7 +4831,7 @@ export const translations = {
       ownDriversHelp: 'Tu pourras lier l\'email de ton livreur juste après la création (il doit avoir un compte livreur Fairide). Ton livreur suit exactement le même processus que les autres, retrait/livraison par code, position en direct.',
       createMyRestaurant: 'Créer mon restaurant',
       blockedText: 'Ton restaurant a été bloqué par l\'équipe Fairide et n\'est pas visible aux clients, quel que soit ton statut d\'abonnement. Contacte le support pour plus d\'informations.',
-      pendingText: 'Ton restaurant doit être validé par l\'équipe Fairide avant d\'apparaître aux clients, tu recevras un e-mail à sa validation, puis un autre à sa mise en ligne. Pas besoin d\'attendre pour continuer : tu peux dès maintenant compléter ton menu. Les réservations de table ouvrent le 1er octobre 2026 (gratuites), la livraison et l\'à emporter le 10 octobre (avec l\'abonnement, activable dès le 1er octobre, premier mois offert).',
+      pendingText: 'Ton restaurant doit être validé par l\'équipe Fairide avant d\'apparaître aux clients, tu recevras un e-mail à sa validation, puis un autre à sa mise en ligne. Pas besoin d\'attendre pour continuer : tu peux dès maintenant compléter ton menu. Les réservations de table (gratuites) et l\'à emporter ouvrent le 5 octobre 2026, la livraison le 15 octobre (à emporter et livraison avec l\'abonnement, activable dès le 1er octobre, premier mois offert).',
       phName: 'Ex: Chez Momo',
       phType: 'Ex: Grec, Mexicain...',
       phStreet: 'Rue du Midi',
@@ -5039,14 +5048,14 @@ export const translations = {
       subPendingValidation: 'Tu ne seras débité qu\'à la fin de ta période gratuite, et seulement une fois ton compte validé et ton restaurant en ligne.',
       firstMonthFree: '1er mois offert',
       subTrialIntro: 'Ton restaurant est visible aux clients. Le premier mois est offert pour tout restaurant, dans tous les cas',
-      subInactiveIntro: 'Ton abonnement Fairide (20 €/mois, premier mois offert pour tous les restaurants) ouvre la livraison et l\'à emporter, qui démarrent le 10 octobre 2026. Il s\'active à partir du 1er octobre, et le premier mois offert ne commence à compter qu\'à l\'ouverture des commandes.',
+      subInactiveIntro: 'Ton abonnement Fairide (20 €/mois, premier mois offert pour tous les restaurants) ouvre l\'à emporter, qui démarre le 5 octobre 2026, et la livraison, le 15 octobre. Il s\'active à partir du 1er octobre, et le premier mois offert ne commence à compter qu\'à l\'ouverture des commandes, le 5 octobre.',
       subscribeBtn: 'S\'abonner · 20€/mois ({months})',
       delivery: 'Livraison',
       paymentRow: 'Paiement',
       paymentRowSub: 'Comment tu es payé, Stripe, reçus clients, activation fin septembre',
       paymentRowSubActive: 'Paiements actifs · reçus clients et détail de ce qui te revient',
       subNotYetTitle: 'Rien à activer pour l\'instant',
-      subNotYetText: 'Tu peux créer ton compte, ton restaurant et ta carte sans abonnement. L\'abonnement Fairide (livraison et à emporter, ouverts le 10 octobre 2026) s\'active ici à partir du 1er octobre, avec la sortie de l\'application ; le premier mois offert ne compte qu\'à partir de l\'ouverture des commandes.',
+      subNotYetText: 'Tu peux créer ton compte, ton restaurant et ta carte sans abonnement. L\'abonnement Fairide (à emporter dès le 5 octobre 2026, livraison dès le 15 octobre) s\'active ici à partir du 1er octobre, avec la sortie de l\'application ; le premier mois offert ne compte qu\'à partir du 5 octobre.',
       driverPaymentRowSub: 'Comment tu es payé, Stripe, autofacturation, reçus de tes courses, activation fin septembre',
       driverPaymentRowSubActive: 'Paiements actifs · reçus de tes courses et pourboires',
       phoneVerified: 'Numéro de téléphone vérifié',
@@ -5058,7 +5067,9 @@ export const translations = {
       phoneVerifiedToast: 'Numéro de téléphone vérifié, merci !',
       phoneVerifyLater: 'Plus tard',
       confirm: 'Confirmer',
-      backToDashboard: 'Retour au tableau de bord'
+      backToDashboard: 'Retour au tableau de bord',
+      payOnSiteTitle: 'Accepter aussi le paiement sur place pour l\'à emporter',
+      payOnSiteText: 'Le client choisit entre payer en ligne et payer au retrait ; tu encaisses toi-même. Attention : si le client ne vient pas chercher sa commande (et ne la paie donc pas), Fairide ne prend pas ce cas en charge — ni remboursement, ni indemnisation. Signale-la « Client pas venu » : aucune commission. La commission des commandes retirées figure sur ta facture mensuelle, à régler par virement.'
     },
     resa: {
       title: '📅 Réservations',
@@ -5239,7 +5250,7 @@ export const translations = {
       saturday: 'Samedi',
       sunday: 'Dimanche',
       tabAgenda: '📅 Agenda',
-      tabSettings: '⚙️ Réglages',
+      tabSettings: '⚙️ Règles de réservation',
       tabFloor: '🪑 Plan de salle',
       tabStats: '📊 Statistiques',
       wdSun: 'Dim',
@@ -5637,6 +5648,7 @@ export const translations = {
       previewModeBanner: '👁️ Mode aperçu client',
       leave: 'Quitter',
       myMenu: 'Mon menu',
+      reservations: 'Réservations',
       courierFile: 'Mon dossier livreur'
     },
     footer: {
@@ -5675,7 +5687,7 @@ export const translations = {
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
          courte. Le texte long reste servi dès 641px, il n'est pas perdu. */
       subCourt: 'Les commerces de ton quartier, livrés par des livreurs justement payés.',
-      ordersOpenCourt: '🗓️ Commandes en ligne dès le 10 octobre',
+      ordersOpenCourt: '🗓️ Réservations et à emporter dès le 5 octobre',
       partnerQuestion: 'Commerce ou livreur ?',
       partnerLink: 'Rejoindre Fairide',
       orderNow: '🛍️ Commander maintenant',
@@ -5707,7 +5719,7 @@ export const translations = {
       trustTitle: 'Ils nous font confiance',
       appSoonBadge: 'Bientôt disponible',
       appSoonTitle: 'Fairide arrive sur mobile',
-      appSoonSub: 'L\'appli Fairide arrive le 1er octobre sur iOS, Android et AppGallery : réserve ta table dès le 1er octobre, commande en livraison ou à emporter dès le 10.',
+      appSoonSub: 'L\'appli Fairide arrive le 1er octobre sur iOS, Android et AppGallery : réserve ta table ou commande à emporter dès le 5 octobre, en livraison dès le 15.',
       appSoonNotYet: 'Pas encore disponible',
       appSoonNote: 'Toujours la même commission plafonnée à 10 % pour soutenir les commerces et livreurs du quartier.',
       ctaTitle: 'Envie de soutenir le quartier ?',
@@ -5739,7 +5751,7 @@ export const translations = {
       discoverAll: 'Tous les commerces ({n})',
       discoverAllTypes: 'Tout',
       heroPreviewTitle2: 'Déjà sur Fairide',
-      heroPreviewCount: 'Déjà 30 restaurants pré-inscrits · ouverture le 1er octobre',
+      heroPreviewCount: 'Déjà 30 restaurants pré-inscrits · ouverture le 5 octobre',
       trustLineAria: 'Ce que Fairide garantit',
       trust1: 'Les commerces se parcourent sans créer de compte',
       trust2: 'Paiement sécurisé par Stripe',
@@ -5761,9 +5773,9 @@ export const translations = {
       euroExDiffText: 'chaque mois, pour les mêmes commandes.',
       discoverReviews: 'avis',
       quartiersLabel: 'Déjà livrés :',
-      ordersOpenNote: 'Réservations de table dès le 1er octobre · commandes en ligne (livraison, à emporter) dès le 10 octobre. Dès aujourd\'hui : découvrir les commerces, créer son compte, inscrire son commerce ou devenir livreur.',
+      ordersOpenNote: 'Réservations de table et commandes à emporter dès le 5 octobre · livraison dès le 15 octobre. Dès aujourd\'hui : découvrir les commerces, créer son compte, inscrire son commerce ou devenir livreur.',
       discoverInfoEyebrow: 'Et ce n\'est qu\'un aperçu',
-      discoverInfoTitle: 'Déjà 30 restaurants pré-inscrits pour l\'ouverture, le 1er octobre',
+      discoverInfoTitle: 'Déjà 30 restaurants pré-inscrits pour l\'ouverture, le 5 octobre',
       discoverInfoBusinesses: 'restaurants pré-inscrits',
       discoverInfoCommunes: 'communes',
       discoverInfoCuisines: 'types de cuisine',
@@ -5834,8 +5846,8 @@ export const translations = {
       discoverTitle: 'Découvrir aussi',
       fairideAdvantageAmount: 'Avantage Fairide : {name} offre −{v} sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
       fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
-      ordersOpenBanner: 'Réservations de table dès le {dateResa} · commandes en ligne (livraison et à emporter) dès le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.',
-      ordersOpenBannerResaOpen: 'Tu peux déjà réserver une table. Les commandes en ligne (livraison et à emporter) ouvrent le {date} : ton panier t\'attend.',
+      ordersOpenBanner: 'Réservations de table et à emporter dès le {dateResa} · livraison dès le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.',
+      ordersOpenBannerResaOpen: 'Tu peux déjà réserver une table ou commander à emporter. La livraison ouvre le {date}.',
       reserveSoon: 'Réservations dès le {date}'
     },
     floatingCart: {
@@ -5850,7 +5862,7 @@ export const translations = {
       conflictMessage: 'Ton panier contient déjà des articles de {restaurant}. Un panier ne peut contenir que des produits d\'un même commerce, le vider pour commander ici à la place ?',
       conflictConfirm: 'Vider et continuer',
       conflictCancel: 'Annuler',
-      ordersOpenSoon: 'Les commandes en ligne ouvrent le {date} : ton panier t\'attend.'
+      ordersOpenSoon: 'Les commandes à emporter ouvrent le {date} (livraison dès le {dateLivraison}) : ton panier t\'attend.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -5997,7 +6009,7 @@ export const translations = {
       toastNoOnlineOrder: 'Ce restaurant ne prend plus de commande en ligne, seule la réservation de table est possible.',
       dateToday: 'Aujourd\'hui',
       dateTomorrow: 'Demain',
-      ordersOpenSoon: 'Les commandes en ligne (livraison et à emporter) ouvrent le {date}. Ton panier est conservé jusque-là.',
+      ordersOpenSoon: 'Les commandes à emporter ouvrent le {date}. Ton panier est conservé jusque-là.',
       reservationsOpenSoon: 'Les réservations de table ouvrent le {date}.',
       zoneQuestion: 'Où préfères-tu être installé ?',
       zoneAny: 'Peu importe',
@@ -6021,7 +6033,15 @@ export const translations = {
       giftVoucherKo_used: 'Ce bon est entièrement utilisé.',
       giftVoucherKo_cancelled: 'Ce bon a été annulé.',
       giftVoucherKo_rien_a_deduire: 'Rien à déduire sur cette commande.',
-      noSlotsReason_complet: 'Complet à cette date, choisis un autre jour.'
+      noSlotsReason_complet: 'Complet à cette date, choisis un autre jour.',
+      deliveryOpenSoon: 'La livraison ouvre le {date}. D\'ici là, choisis « À emporter » si le commerce le propose.',
+      payWhen: 'Paiement',
+      payOnline: 'Payer en ligne maintenant',
+      payOnSite: 'Payer sur place, au retrait',
+      payOnSiteNote: 'Le commerce encaisse lui-même ta commande quand tu viens la chercher : viens bien la récupérer à l\'heure prévue, il la prépare pour toi. Ton solde Fairide ne s\'utilise pas pour un paiement sur place.',
+      toPayOnSite: 'À payer sur place',
+      confirmOnSite: 'Confirmer la commande (paiement sur place)',
+      toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
     },
     orders: {
       title: 'Mes commandes',
@@ -6061,7 +6081,9 @@ export const translations = {
       reminderTomorrow: 'demain',
       reminderCode: 'Code : {code}',
       cancelHint: 'Annulable tant que le restaurant n\'a pas accepté ta commande, remboursement automatique si elle est payée.',
-      cancelLocked: 'Le restaurant a accepté ta commande et la prépare : elle ne peut plus être annulée en ligne.'
+      cancelLocked: 'Le restaurant a accepté ta commande et la prépare : elle ne peut plus être annulée en ligne.',
+      payOnSite: 'À payer sur place, au retrait',
+      noShow: 'Commande non récupérée'
     },
     review: {
       foodRatingLabel: 'Note pour la nourriture',
@@ -6332,7 +6354,7 @@ export const translations = {
       serviceDeliveryOwn: 'avec mes propres livreurs',
       servicePickup: 'À emporter',
       serviceDineIn: 'Réservation de table (sur place)',
-      servicesPlanHint: '🎁 Réservation de table seule : gratuite, ni abonnement ni commission (réservations ouvertes le 1er octobre). Livraison ou à emporter : abonnement de 20 €/mois, activable dès le 1er octobre (premier mois offert, compté depuis l\'ouverture des commandes le 10 octobre), et 10 % de commission au plus. Rien à payer pour t\'inscrire.',
+      servicesPlanHint: '🎁 Réservation de table seule : gratuite, ni abonnement ni commission (réservations ouvertes le 5 octobre). À emporter (dès le 5 octobre) ou livraison (dès le 15 octobre) : abonnement de 20 €/mois, activable dès le 1er octobre (premier mois offert, compté depuis le 5 octobre), et 10 % de commission au plus. Rien à payer pour t\'inscrire.',
       errServices: 'Choisis au moins un service.',
       cuisineLabel: 'Type de cuisine / de commerce',
       cuisinePlaceholder: 'Choisis dans la liste…',
@@ -8111,7 +8133,7 @@ export const translations = {
       selfBillingText: 'You deliver as a self-employed person, with your company number. Each month, Fairide issues the invoice for your rides on your behalf (self-billing, with the legal mention): nothing to write, just indicate your VAT regime (exemption or registered) and accept the prior agreement, once.',
       selfBillingLink: 'Set my VAT regime and see my invoices →',
       noBankText: 'No IBAN, card or ID document goes through Fairide: everything happens directly at Stripe, which only tells us whether your account is ready to receive your earnings.',
-      activationClosedText: 'The button will be available here at the end of September and you will receive an e-mail at that moment. Until then no banking information is needed: your account, once validated by Fairide, is ready for the opening of deliveries on 10 October 2026.',
+      activationClosedText: 'The button will be available here at the end of September and you will receive an e-mail at that time. Until then, no bank details are needed: once validated by Fairide, your account is ready for the start of deliveries on 15 October 2026.',
       activationOpenText: 'Activate your payments at Stripe from your dashboard (“Payments to set up” row).',
       activationDoneText: 'Your Stripe account is ready: delivery fees and tips of each ride are paid out to you automatically.',
       receiptsTitle: 'Receipts of your rides',
@@ -8128,7 +8150,7 @@ export const translations = {
       step2: 'On each order, the price of your dishes comes to you, minus the Fairide commission capped at 10% excl. VAT. Delivery fees go entirely to the courier, tips too.',
       step3: 'Your share is transferred automatically to your Stripe account for every paid order, then paid out to your bank account every Monday (everything collected the previous week). A monthly commission invoice is e-mailed to you and stays available under Invoices.',
       subscriptionTitle: 'No subscription to activate now',
-      subscriptionText: 'You can create your account and your restaurant without paying or activating anything. Table reservations alone are free (open to customers from 1 October 2026). For delivery or takeaway (from 10 October), the Fairide subscription (€20/month) can be activated from 1 October, and the free first month only starts counting when orders open.',
+      subscriptionText: 'You can create your account and your restaurant without paying or activating anything. Table reservations alone are free (open to customers from 5 October 2026). For takeaway (from 5 October) or delivery (from 15 October), the Fairide subscription (€20/month) can be activated from 1 October, and the free first month only starts counting when orders open, on 5 October.',
       stripeTitle: 'What is Stripe?',
       stripeWhat: 'Stripe is an international payment provider, licensed as a payment institution in Europe and certified at the highest level of banking security (PCI-DSS). Thousands of businesses and platforms (Deliveroo, Shopify, Zalando…) use it to collect and pay out money. It is at Stripe, in a secure form, that you will enter your identity and your IBAN.',
       noBankTitle: 'Fairide takes no banking information.',
@@ -10274,7 +10296,9 @@ export const translations = {
       instruction: 'Instruction: {label}',
       note: 'Note: {note}',
       promo: 'Promo {label}',
-      giftVoucher: 'Gift voucher {code}'
+      giftVoucher: 'Gift voucher {code}',
+      toPayOnSite: 'To pay on site',
+      payOnSiteNote: 'Payment on site, at collection — not paid via Fairide'
     },
     mapClient: {
       loading: 'Loading...',
@@ -11121,7 +11145,14 @@ export const translations = {
       appSteps_desktop_1: 'Turn on the Bluetooth (BLE) thermal printer and check the computer\'s Bluetooth is on (Chrome or Edge required).',
       appSteps_desktop_2: 'Click “Connect my printer”, pick it in the list, then print a test ticket. Tick “Automatic printing” so every new order prints by itself.',
       appSteps_desktop_3: 'USB or network printer (Epson, Star…) already installed on the PC: “Print the delivery note” uses it through the usual print dialog. Keep the app open on Orders during service.',
-      appNativeSoon: '📲 The real Fairide app (App Store and Google Play) arrives on 1 October 2026: it will print over Bluetooth on every device, iPhone and iPad included. Until then you use the web app installed from the browser, and the steps below apply.'
+      appNativeSoon: '📲 The real Fairide app (App Store and Google Play) arrives on 1 October 2026: it will print over Bluetooth on every device, iPhone and iPad included. Until then you use the web app installed from the browser, and the steps below apply.',
+      payOnSiteBadge: '💶 To collect on site: {amount}',
+      noShowBadge: '🚫 Customer didn’t show — order not collected',
+      customerNoShow: 'Customer didn’t show',
+      confirmNoShowTitle: 'The customer didn’t come?',
+      confirmNoShowText: 'The order from {name} will be closed as not collected, with no commission. For an on-site payment, Fairide does not step in: no refund and no compensation.',
+      toastNoShow: 'Order closed: customer didn’t show.',
+      toCollectOnSite: 'To collect on site'
     },
     dashDriver: {
       today: 'Today',
@@ -11204,7 +11235,7 @@ export const translations = {
       chooseRestaurant: '· Choose a restaurant · ',
       createMine: '+ Create my restaurant',
       createIntro: 'Once created, Fairide offers to generate your menu and cover photo automatically, you only fill in the bare minimum here.',
-      createNote: 'No subscription and no banking details are needed to create your account and your restaurant. Table reservations alone are free, from 1 October 2026; for delivery or takeaway (from 10 October), the Fairide subscription (€20/month) can be activated from 1 October, with the free first month counted from the opening of orders.',
+      createNote: 'No subscription and no bank details needed to create your account and your restaurant. Table reservations alone are free, from 5 October 2026; for takeaway (from 5 October) or delivery (from 15 October), the Fairide subscription (€20/month) can be activated from 1 October, first month free counted from 5 October.',
       identity: 'Identity',
       businessName: 'Business name',
       businessType: 'Business type',
@@ -11227,7 +11258,7 @@ export const translations = {
       ownDriversHelp: 'You can link your courier\'s e-mail right after creation (they need a Fairide courier account). Your courier follows exactly the same process as the others, pickup/delivery by code, live position.',
       createMyRestaurant: 'Create my restaurant',
       blockedText: 'Your restaurant has been blocked by the Fairide team and is not visible to customers, whatever your subscription status. Contact support for more information.',
-      pendingText: 'Your restaurant must be validated by the Fairide team before appearing to customers, but no need to wait to continue: you can complete your menu right now. Table reservations open on 1 October 2026 (free), delivery and takeaway on 10 October (with the subscription, which can be activated from 1 October, first month free).',
+      pendingText: 'Your restaurant must be validated by the Fairide team before it appears to customers; you will receive an e-mail when it is validated, then another when it goes live. No need to wait to continue: you can complete your menu right now. Table reservations (free) and takeaway open on 5 October 2026, delivery on 15 October (takeaway and delivery with the subscription, available from 1 October, first month free).',
       phName: 'E.g.: Momo\'s',
       phType: 'E.g.: Greek, Mexican...',
       phStreet: 'High Street',
@@ -11441,14 +11472,14 @@ export const translations = {
       subPendingValidation: 'You will only be charged at the end of your free period, and only once your account is validated and your restaurant is online.',
       firstMonthFree: '1st month free',
       subTrialIntro: 'Your restaurant is visible to customers. The first month is free for every restaurant, in all cases',
-      subInactiveIntro: 'Your Fairide subscription (€20/month, first month free for every restaurant) opens delivery and takeaway, which start on 10 October 2026. It can be activated from 1 October, and the free first month only starts counting when orders open.',
+      subInactiveIntro: 'Your Fairide subscription (€20/month, first month free for all restaurants) opens takeaway, which starts on 5 October 2026, and delivery, on 15 October. It can be activated from 1 October, and the free first month only starts counting when orders open, on 5 October.',
       subscribeBtn: 'Subscribe · €20/month ({months})',
       delivery: 'Delivery',
       paymentRow: 'Payment',
       paymentRowSub: 'How you get paid, Stripe, customer receipts, activation end of September',
       paymentRowSubActive: 'Payments active · customer receipts and what comes to you',
       subNotYetTitle: 'Nothing to activate for now',
-      subNotYetText: 'You can create your account, your restaurant and your menu without a subscription. The Fairide subscription (delivery and takeaway, open on 10 October 2026) can be activated here from 1 October, when the app is released; the free first month only counts from the opening of orders.',
+      subNotYetText: 'You can create your account, your restaurant and your menu without a subscription. The Fairide subscription (takeaway from 5 October 2026, delivery from 15 October) can be activated here from 1 October, with the app launch; the free first month only counts from 5 October.',
       driverPaymentRowSub: 'How you get paid, Stripe, self-billing, ride receipts, activation end of September',
       driverPaymentRowSubActive: 'Payments active · receipts of your rides and tips',
       phoneVerified: 'Phone number verified',
@@ -11460,7 +11491,9 @@ export const translations = {
       phoneVerifiedToast: 'Phone number verified, thank you!',
       phoneVerifyLater: 'Later',
       confirm: 'Confirm',
-      backToDashboard: 'Back to the dashboard'
+      backToDashboard: 'Back to the dashboard',
+      payOnSiteTitle: 'Also accept payment on site for takeaway',
+      payOnSiteText: 'Customers choose between paying online and paying at collection; you take the payment yourself. Note: if a customer does not come to collect their order (and so does not pay), Fairide does not cover it — no refund, no compensation. Mark it “Customer didn’t show”: no commission. The commission on collected orders appears on your monthly invoice, payable by bank transfer.'
     },
     resa: {
       title: '📅 Reservations',
@@ -11641,7 +11674,7 @@ export const translations = {
       saturday: 'Saturday',
       sunday: 'Sunday',
       tabAgenda: '📅 Agenda',
-      tabSettings: '⚙️ Settings',
+      tabSettings: '⚙️ Booking rules',
       tabFloor: '🪑 Floor plan',
       tabStats: '📊 Statistics',
       wdSun: 'Sun',
@@ -12035,6 +12068,7 @@ export const translations = {
       previewModeBanner: '👁️ Customer preview mode',
       leave: 'Leave',
       myMenu: 'My menu',
+      reservations: 'Reservations',
       courierFile: 'My courier file'
     },
     footer: {
@@ -12070,7 +12104,7 @@ export const translations = {
       sub: 'Fairide connects restaurants, supermarkets and local businesses with fairly paid couriers, without the excessive commission of the big platforms. Pay your meal, not the platform.',
       /* Short forms, phone only — see the fr block for the reasoning. */
       subCourt: 'Your neighbourhood\'s businesses, delivered by fairly paid couriers.',
-      ordersOpenCourt: '🗓️ Online orders from 10 October',
+      ordersOpenCourt: '🗓️ Reservations and takeaway from 5 October',
       partnerQuestion: 'A business or a courier?',
       partnerLink: 'Join Fairide',
       orderNow: '🛍️ Order now',
@@ -12102,7 +12136,7 @@ export const translations = {
       trustTitle: 'They trust us',
       appSoonBadge: 'Coming soon',
       appSoonTitle: 'Fairide is coming to mobile',
-      appSoonSub: 'The Fairide app arrives on 1 October on iOS, Android and AppGallery: book a table from 1 October, order delivery or takeaway from the 10th.',
+      appSoonSub: 'The Fairide app arrives on 1 October on iOS, Android and AppGallery: book a table or order takeaway from 5 October, and delivery from the 15th.',
       appSoonNotYet: 'Not available yet',
       appSoonNote: 'Always the same commission capped at 10% to support the neighbourhood\'s businesses and couriers.',
       ctaTitle: 'Want to support the neighbourhood?',
@@ -12134,7 +12168,7 @@ export const translations = {
       discoverAll: 'All businesses ({n})',
       discoverAllTypes: 'All',
       heroPreviewTitle2: 'Already on Fairide',
-      heroPreviewCount: 'Already 30 restaurants pre-registered · opening on 1 October',
+      heroPreviewCount: 'Already 30 restaurants pre-registered · opening on 5 October',
       trustLineAria: 'What Fairide guarantees',
       trust1: 'Businesses can be browsed without an account',
       trust2: 'Secure payment by Stripe',
@@ -12156,9 +12190,9 @@ export const translations = {
       euroExDiffText: 'every month, for the same orders.',
       discoverReviews: 'reviews',
       quartiersLabel: 'Already delivered:',
-      ordersOpenNote: 'Table reservations from 1 October · online orders (delivery, takeaway) from 10 October. From today: discover the businesses, create an account, list a business or become a courier.',
+      ordersOpenNote: 'Table reservations and takeaway orders from 5 October · delivery from 15 October. Starting today: discover businesses, create an account, register your business or become a courier.',
       discoverInfoEyebrow: 'And that is just a glimpse',
-      discoverInfoTitle: 'Already 30 restaurants pre-registered for the opening on 1 October',
+      discoverInfoTitle: 'Already 30 restaurants pre-registered for the opening on 5 October',
       discoverInfoBusinesses: 'pre-registered restaurants',
       discoverInfoCommunes: 'communes',
       discoverInfoCuisines: 'cuisine types',
@@ -12229,8 +12263,8 @@ export const translations = {
       discoverTitle: 'Discover more',
       fairideAdvantageAmount: 'Fairide advantage: {name} gives −{v} on every product, because here the platform only takes 10%.',
       fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.',
-      ordersOpenBanner: 'Table reservations from {dateResa} · online orders (delivery and takeaway) from {date}. Until then, browse the menu, build your cart and save your favourite businesses.',
-      ordersOpenBannerResaOpen: 'You can already book a table. Online orders (delivery and takeaway) open on {date}: your cart is waiting.',
+      ordersOpenBanner: 'Table reservations and takeaway from {dateResa} · delivery from {date}. Until then, browse the menu, build your cart and save your favourite businesses.',
+      ordersOpenBannerResaOpen: 'You can already book a table or order takeaway. Delivery opens on {date}.',
       reserveSoon: 'Reservations from {date}'
     },
     floatingCart: {
@@ -12245,7 +12279,7 @@ export const translations = {
       conflictMessage: 'Your cart already has items from {restaurant}. A cart can only hold products from one shop at a time, clear it to order here instead?',
       conflictConfirm: 'Clear and continue',
       conflictCancel: 'Cancel',
-      ordersOpenSoon: 'Online orders open on {date}: your cart is waiting for you.'
+      ordersOpenSoon: 'Takeaway orders open on {date} (delivery from {dateLivraison}): your cart is waiting for you.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -12392,7 +12426,7 @@ export const translations = {
       toastNoOnlineOrder: 'This restaurant no longer takes online orders, only table reservation is possible.',
       dateToday: 'Today',
       dateTomorrow: 'Tomorrow',
-      ordersOpenSoon: 'Online orders (delivery and takeaway) open on {date}. Your cart is kept until then.',
+      ordersOpenSoon: 'Takeaway orders open on {date}. Your cart is kept until then.',
       reservationsOpenSoon: 'Table reservations open on {date}.',
       zoneQuestion: 'Where would you rather sit?',
       zoneAny: 'No preference',
@@ -12416,7 +12450,15 @@ export const translations = {
       giftVoucherKo_used: 'This voucher is fully used.',
       giftVoucherKo_cancelled: 'This voucher has been cancelled.',
       giftVoucherKo_rien_a_deduire: 'Nothing to deduct on this order.',
-      noSlotsReason_complet: 'Full on that date, choose another day.'
+      noSlotsReason_complet: 'Full on that date, choose another day.',
+      deliveryOpenSoon: 'Delivery opens on {date}. Until then, choose “Takeaway” if the business offers it.',
+      payWhen: 'Payment',
+      payOnline: 'Pay online now',
+      payOnSite: 'Pay on site, when collecting',
+      payOnSiteNote: 'The business takes your payment itself when you come to collect: make sure you pick it up at the planned time, it is being prepared for you. Your Fairide balance cannot be used for an on-site payment.',
+      toPayOnSite: 'To pay on site',
+      confirmOnSite: 'Confirm the order (pay on site)',
+      toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
     },
     orders: {
       title: 'My orders',
@@ -12456,7 +12498,9 @@ export const translations = {
       reminderTomorrow: 'tomorrow',
       reminderCode: 'Code: {code}',
       cancelHint: 'Can be cancelled until the restaurant accepts your order, automatic refund if already paid.',
-      cancelLocked: 'The restaurant has accepted your order and is preparing it: it can no longer be cancelled online.'
+      cancelLocked: 'The restaurant has accepted your order and is preparing it: it can no longer be cancelled online.',
+      payOnSite: 'To pay on site, at collection',
+      noShow: 'Order not collected'
     },
     review: {
       foodRatingLabel: 'Food rating',
@@ -12727,7 +12771,7 @@ export const translations = {
       serviceDeliveryOwn: 'with my own couriers',
       servicePickup: 'Takeaway',
       serviceDineIn: 'Table reservation (dine-in)',
-      servicesPlanHint: '🎁 Table reservations only: free, no subscription and no commission (reservations open on 1 October). Delivery or takeaway: €20/month subscription, available from 1 October (first month free, counted from the opening of orders on 10 October), and at most 10% commission. Nothing to pay to sign up.',
+      servicesPlanHint: '🎁 Table reservations only: free, no subscription and no commission (reservations open on 5 October). Takeaway (from 5 October) or delivery (from 15 October): €20/month subscription, available from 1 October (first month free, counted from 5 October), and at most 10% commission. Nothing to pay to sign up.',
       errServices: 'Choose at least one service.',
       cuisineLabel: 'Type of cuisine / business',
       cuisinePlaceholder: 'Choose from the list…',
@@ -14504,7 +14548,7 @@ export const translations = {
       selfBillingText: 'Je levert als zelfstandige, met je ondernemingsnummer. Elke maand stelt Fairide in jouw plaats de factuur van je ritten op (selfbilling, met de wettelijke vermelding): niets te schrijven, enkel je btw-regime aangeven (vrijstelling of btw-plichtig) en één keer het voorafgaand akkoord aanvaarden.',
       selfBillingLink: 'Mijn btw-regime instellen en mijn facturen bekijken →',
       noBankText: 'Geen IBAN, kaart of identiteitsbewijs passeert via Fairide: alles gebeurt rechtstreeks bij Stripe, dat ons alleen meldt of je account klaar is om je verdiensten te ontvangen.',
-      activationClosedText: 'De knop komt hier eind september beschikbaar en je krijgt dan een e-mail. Tot dan zijn geen bankgegevens nodig: je account is, eens gevalideerd door Fairide, klaar voor de opening van de leveringen op 10 oktober 2026.',
+      activationClosedText: 'De knop is hier eind september beschikbaar en je krijgt dan een e-mail. Tot dan zijn geen bankgegevens nodig: zodra Fairide je account heeft gevalideerd, ben je klaar voor de start van de leveringen op 15 oktober 2026.',
       activationOpenText: 'Activeer je betalingen bij Stripe vanuit je dashboard (rij “Betalingen in te stellen”).',
       activationDoneText: 'Je Stripe-account is klaar: leveringskosten en fooien van elke rit worden automatisch aan jou uitbetaald.',
       receiptsTitle: 'Bonnen van je ritten',
@@ -14521,7 +14565,7 @@ export const translations = {
       step2: 'Bij elke bestelling komt de prijs van je gerechten jou toe, min de Fairide-commissie van maximaal 10% excl. btw. De leveringskosten gaan volledig naar de koerier, de fooien ook.',
       step3: 'Jouw aandeel wordt bij elke betaalde bestelling automatisch naar je Stripe-account overgemaakt en elke maandag op je bankrekening gestort (alles wat de week ervoor werd ontvangen). Een maandelijkse commissiefactuur wordt je per e-mail gestuurd en blijft beschikbaar onder Facturen.',
       subscriptionTitle: 'Nu geen abonnement te activeren',
-      subscriptionText: 'Je kunt je account en je restaurant aanmaken zonder iets te betalen of te activeren. Enkel tafelreservaties aanbieden is gratis (open voor klanten vanaf 1 oktober 2026). Voor levering of afhaal (vanaf 10 oktober) kun je het Fairide-abonnement (€20/maand) activeren vanaf 1 oktober, en de gratis eerste maand begint pas te lopen wanneer de bestellingen openen.',
+      subscriptionText: 'Je kunt je account en je restaurant aanmaken zonder iets te betalen of te activeren. Alleen tafelreservaties zijn gratis (open voor klanten vanaf 5 oktober 2026). Voor afhalen (vanaf 5 oktober) of levering (vanaf 15 oktober) kan het Fairide-abonnement (€20/maand) vanaf 1 oktober worden geactiveerd, en de gratis eerste maand telt pas vanaf de opening van de bestellingen, op 5 oktober.',
       stripeTitle: 'Wat is Stripe?',
       stripeWhat: 'Stripe is een internationale betaaldienstverlener, erkend als betalingsinstelling in Europa en gecertificeerd op het hoogste niveau van bankbeveiliging (PCI-DSS). Duizenden zaken en platformen (Deliveroo, Shopify, Zalando…) gebruiken het om geld te innen en uit te betalen. Bij Stripe, in een beveiligd formulier, geef je je identiteit en je IBAN op.',
       noBankTitle: 'Fairide neemt geen bankgegevens.',
@@ -16667,7 +16711,9 @@ export const translations = {
       instruction: 'Instructie: {label}',
       note: 'Opmerking: {note}',
       promo: 'Promo {label}',
-      giftVoucher: 'Cadeaubon {code}'
+      giftVoucher: 'Cadeaubon {code}',
+      toPayOnSite: 'Ter plaatse te betalen',
+      payOnSiteNote: 'Betaling ter plaatse, bij het ophalen — niet via Fairide betaald'
     },
     mapClient: {
       loading: 'Laden...',
@@ -17514,7 +17560,14 @@ export const translations = {
       appSteps_desktop_1: 'Zet de Bluetooth-thermische printer (BLE) aan en controleer of Bluetooth op de computer aanstaat (Chrome of Edge vereist).',
       appSteps_desktop_2: 'Klik op “Mijn printer koppelen”, kies ze in de lijst en druk een testticket af. Vink “Automatisch afdrukken” aan zodat elke nieuwe bestelling vanzelf afdrukt.',
       appSteps_desktop_3: 'USB- of netwerkprinter (Epson, Star…) al geïnstalleerd op de pc: “Leveringsbon afdrukken” gebruikt ze via het gewone afdrukvenster. Hou de app open op Bestellingen tijdens de dienst.',
-      appNativeSoon: '📲 De echte Fairide-app (App Store en Google Play) komt op 1 oktober 2026: ze drukt via Bluetooth af op elk toestel, ook iPhone en iPad. Tot dan gebruik je de web-app die je vanuit de browser installeert; de stappen hieronder gelden.'
+      appNativeSoon: '📲 De echte Fairide-app (App Store en Google Play) komt op 1 oktober 2026: ze drukt via Bluetooth af op elk toestel, ook iPhone en iPad. Tot dan gebruik je de web-app die je vanuit de browser installeert; de stappen hieronder gelden.',
+      payOnSiteBadge: '💶 Ter plaatse te innen: {amount}',
+      noShowBadge: '🚫 Klant niet gekomen — bestelling niet opgehaald',
+      customerNoShow: 'Klant niet gekomen',
+      confirmNoShowTitle: 'Is de klant niet gekomen?',
+      confirmNoShowText: 'De bestelling van {name} wordt afgesloten als niet opgehaald, zonder commissie. Bij een betaling ter plaatse komt Fairide niet tussen: geen terugbetaling en geen vergoeding.',
+      toastNoShow: 'Bestelling afgesloten: klant niet gekomen.',
+      toCollectOnSite: 'Ter plaatse te innen'
     },
     dashDriver: {
       today: 'Vandaag',
@@ -17597,7 +17650,7 @@ export const translations = {
       chooseRestaurant: '· Kies een restaurant · ',
       createMine: '+ Mijn restaurant aanmaken',
       createIntro: 'Eens aangemaakt, biedt Fairide aan om je menu en je omslagfoto automatisch te genereren, je vult hier enkel het strikt noodzakelijke in.',
-      createNote: 'Geen abonnement en geen bankgegevens nodig om je account en je restaurant aan te maken. Enkel tafelreservaties aanbieden is gratis, vanaf 1 oktober 2026; voor levering of afhaal (vanaf 10 oktober) activeer je het Fairide-abonnement (€20/maand) vanaf 1 oktober, met de gratis eerste maand gerekend vanaf de opening van de bestellingen.',
+      createNote: 'Geen abonnement en geen bankgegevens nodig om je account en je restaurant aan te maken. Alleen tafelreservaties zijn gratis, vanaf 5 oktober 2026; voor afhalen (vanaf 5 oktober) of levering (vanaf 15 oktober) kan het Fairide-abonnement (€20/maand) vanaf 1 oktober worden geactiveerd, eerste maand gratis gerekend vanaf 5 oktober.',
       identity: 'Identiteit',
       businessName: 'Naam van de zaak',
       businessType: 'Type zaak',
@@ -17620,7 +17673,7 @@ export const translations = {
       ownDriversHelp: 'Je kunt het e-mailadres van je koerier meteen na het aanmaken koppelen (hij moet een Fairide-koeriersaccount hebben). Je koerier volgt precies hetzelfde proces als de anderen, afhaling/levering met code, live positie.',
       createMyRestaurant: 'Mijn restaurant aanmaken',
       blockedText: 'Je restaurant werd geblokkeerd door het Fairide-team en is niet zichtbaar voor klanten, ongeacht je abonnementsstatus. Contacteer de ondersteuning voor meer informatie.',
-      pendingText: 'Je restaurant moet door het Fairide-team gevalideerd worden voor het zichtbaar is voor klanten, maar je hoeft niet te wachten om verder te gaan: je kunt nu al je menu aanvullen. Tafelreservaties openen op 1 oktober 2026 (gratis), levering en afhaal op 10 oktober (met het abonnement, te activeren vanaf 1 oktober, eerste maand gratis).',
+      pendingText: 'Je restaurant moet door het Fairide-team worden gevalideerd voor het zichtbaar is voor klanten; je krijgt een e-mail bij de validatie en nog een bij de publicatie. Je hoeft niet te wachten: je kunt nu al je menu aanvullen. Tafelreservaties (gratis) en afhalen openen op 5 oktober 2026, levering op 15 oktober (afhalen en levering met het abonnement, te activeren vanaf 1 oktober, eerste maand gratis).',
       phName: 'Bv.: Bij Momo',
       phType: 'Bv.: Grieks, Mexicaans...',
       phStreet: 'Zuidstraat',
@@ -17834,14 +17887,14 @@ export const translations = {
       subPendingValidation: 'Je wordt pas aangerekend op het einde van je gratis periode, en pas zodra je account gevalideerd is en je restaurant online staat.',
       firstMonthFree: '1e maand gratis',
       subTrialIntro: 'Je restaurant is zichtbaar voor klanten. De eerste maand is gratis voor elk restaurant, in alle gevallen',
-      subInactiveIntro: 'Je Fairide-abonnement (€20/maand, eerste maand gratis voor elk restaurant) opent levering en afhaal, die starten op 10 oktober 2026. Je activeert het vanaf 1 oktober, en de gratis eerste maand begint pas te lopen wanneer de bestellingen openen.',
+      subInactiveIntro: 'Je Fairide-abonnement (€20/maand, eerste maand gratis voor alle restaurants) opent afhalen, dat start op 5 oktober 2026, en levering, op 15 oktober. Het kan vanaf 1 oktober worden geactiveerd, en de gratis eerste maand telt pas vanaf de opening van de bestellingen, op 5 oktober.',
       subscribeBtn: 'Abonneren · €20/maand ({months})',
       delivery: 'Levering',
       paymentRow: 'Betaling',
       paymentRowSub: 'Hoe je betaald wordt, Stripe, klantbonnen, activering eind september',
       paymentRowSubActive: 'Betalingen actief · klantbonnen en wat jou toekomt',
       subNotYetTitle: 'Voorlopig niets te activeren',
-      subNotYetText: 'Je kunt je account, je restaurant en je kaart aanmaken zonder abonnement. Het Fairide-abonnement (levering en afhaal, open op 10 oktober 2026) activeer je hier vanaf 1 oktober, bij de lancering van de app; de gratis eerste maand telt pas vanaf de opening van de bestellingen.',
+      subNotYetText: 'Je kunt je account, je restaurant en je kaart aanmaken zonder abonnement. Het Fairide-abonnement (afhalen vanaf 5 oktober 2026, levering vanaf 15 oktober) kan hier vanaf 1 oktober worden geactiveerd, met de lancering van de app; de gratis eerste maand telt pas vanaf 5 oktober.',
       driverPaymentRowSub: 'Hoe je betaald wordt, Stripe, selfbilling, ritbonnen, activering eind september',
       driverPaymentRowSubActive: 'Betalingen actief · bonnen van je ritten en fooien',
       phoneVerified: 'Telefoonnummer geverifieerd',
@@ -17853,7 +17906,9 @@ export const translations = {
       phoneVerifiedToast: 'Telefoonnummer geverifieerd, bedankt!',
       phoneVerifyLater: 'Later',
       confirm: 'Bevestigen',
-      backToDashboard: 'Terug naar het dashboard'
+      backToDashboard: 'Terug naar het dashboard',
+      payOnSiteTitle: 'Ook betaling ter plaatse aanvaarden voor afhalen',
+      payOnSiteText: 'De klant kiest tussen online betalen en betalen bij het ophalen; jij rekent zelf af. Let op: komt de klant zijn bestelling niet ophalen (en betaalt hij dus niet), dan komt Fairide niet tussen — geen terugbetaling, geen vergoeding. Markeer ze als “Klant niet gekomen”: geen commissie. De commissie op opgehaalde bestellingen staat op je maandfactuur en wordt per overschrijving betaald.'
     },
     resa: {
       title: '📅 Reservaties',
@@ -18034,7 +18089,7 @@ export const translations = {
       saturday: 'Zaterdag',
       sunday: 'Zondag',
       tabAgenda: '📅 Agenda',
-      tabSettings: '⚙️ Instellingen',
+      tabSettings: '⚙️ Reservatieregels',
       tabFloor: '🪑 Zaalplan',
       tabStats: '📊 Statistieken',
       wdSun: 'Zo',
@@ -18428,6 +18483,7 @@ export const translations = {
       previewModeBanner: '👁️ Klantvoorbeeldmodus',
       leave: 'Verlaten',
       myMenu: 'Mijn menu',
+      reservations: 'Reservaties',
       courierFile: 'Mijn koeriersdossier'
     },
     footer: {
@@ -18463,7 +18519,7 @@ export const translations = {
       sub: 'Fairide verbindt restaurants, supermarkten en lokale handelaars met eerlijk betaalde koeriers, zonder de overdreven commissie van de grote platformen. Betaal je maaltijd, niet het platform.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
       subCourt: 'De handelaars van je buurt, geleverd door eerlijk betaalde koeriers.',
-      ordersOpenCourt: '🗓️ Online bestellen vanaf 10 oktober',
+      ordersOpenCourt: '🗓️ Reservaties en afhalen vanaf 5 oktober',
       partnerQuestion: 'Handelaar of koerier?',
       partnerLink: 'Sluit je aan bij Fairide',
       orderNow: '🛍️ Nu bestellen',
@@ -18495,7 +18551,7 @@ export const translations = {
       trustTitle: 'Zij vertrouwen op ons',
       appSoonBadge: 'Binnenkort beschikbaar',
       appSoonTitle: 'Fairide komt naar mobiel',
-      appSoonSub: 'De Fairide-app komt op 1 oktober naar iOS, Android en AppGallery: reserveer een tafel vanaf 1 oktober, bestel levering of afhaal vanaf de 10e.',
+      appSoonSub: 'De Fairide-app komt op 1 oktober naar iOS, Android en AppGallery: reserveer een tafel of bestel om af te halen vanaf 5 oktober, met levering vanaf de 15e.',
       appSoonNotYet: 'Nog niet beschikbaar',
       appSoonNote: 'Altijd dezelfde commissie, geplafonneerd op 10%, om de handelaars en koeriers van de buurt te steunen.',
       ctaTitle: 'Zin om de buurt te steunen?',
@@ -18527,7 +18583,7 @@ export const translations = {
       discoverAll: 'Alle zaken ({n})',
       discoverAllTypes: 'Alles',
       heroPreviewTitle2: 'Al op Fairide',
-      heroPreviewCount: 'Al 30 restaurants vooraf ingeschreven · opening op 1 oktober',
+      heroPreviewCount: 'Al 30 restaurants vooringeschreven · opening op 5 oktober',
       trustLineAria: 'Wat Fairide garandeert',
       trust1: 'Handelaars bekijken kan zonder account',
       trust2: 'Veilige betaling via Stripe',
@@ -18549,9 +18605,9 @@ export const translations = {
       euroExDiffText: 'elke maand, voor dezelfde bestellingen.',
       discoverReviews: 'beoordelingen',
       quartiersLabel: 'Al geleverd:',
-      ordersOpenNote: 'Tafelreservaties vanaf 1 oktober · online bestellen (levering, afhalen) vanaf 10 oktober. Vanaf vandaag: zaken ontdekken, een account aanmaken, je zaak inschrijven of koerier worden.',
+      ordersOpenNote: 'Tafelreservaties en afhaalbestellingen vanaf 5 oktober · levering vanaf 15 oktober. Vanaf vandaag: zaken ontdekken, een account aanmaken, je zaak inschrijven of koerier worden.',
       discoverInfoEyebrow: 'En dit is maar een voorproefje',
-      discoverInfoTitle: 'Al 30 restaurants vooraf ingeschreven voor de opening op 1 oktober',
+      discoverInfoTitle: 'Al 30 restaurants vooringeschreven voor de opening op 5 oktober',
       discoverInfoBusinesses: 'restaurants vooraf ingeschreven',
       discoverInfoCommunes: 'gemeenten',
       discoverInfoCuisines: 'soorten keuken',
@@ -18622,8 +18678,8 @@ export const translations = {
       discoverTitle: 'Ontdek ook',
       fairideAdvantageAmount: 'Fairide-voordeel: {name} geeft −{v} op elk product, omdat het platform hier maar 10% neemt.',
       fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.',
-      ordersOpenBanner: 'Tafelreservaties vanaf {dateResa} · online bestellen (levering en afhalen) vanaf {date}. Tot dan: bekijk de kaart, stel je winkelmandje samen en bewaar je favoriete zaken.',
-      ordersOpenBannerResaOpen: 'Je kunt al een tafel reserveren. Online bestellen (levering en afhalen) kan vanaf {date}: je winkelmandje wacht op je.',
+      ordersOpenBanner: 'Tafelreservaties en afhalen vanaf {dateResa} · levering vanaf {date}. Tot dan: bekijk de kaart, stel je winkelmandje samen en bewaar je favoriete zaken.',
+      ordersOpenBannerResaOpen: 'Je kunt al een tafel reserveren of afhalen bestellen. Levering start op {date}.',
       reserveSoon: 'Reservaties vanaf {date}'
     },
     floatingCart: {
@@ -18638,7 +18694,7 @@ export const translations = {
       conflictMessage: 'Je winkelmandje bevat al artikelen van {restaurant}. Een winkelmandje kan maar producten van één zaak tegelijk bevatten, leegmaken om hier te bestellen?',
       conflictConfirm: 'Leegmaken en verdergaan',
       conflictCancel: 'Annuleren',
-      ordersOpenSoon: 'Online bestellen kan vanaf {date}: je winkelmandje wacht op je.'
+      ordersOpenSoon: 'Afhaalbestellingen kunnen vanaf {date} (levering vanaf {dateLivraison}): je winkelmandje wacht op je.'
     },
     orderStatus: {
       deliveryInstruction: {
@@ -18785,7 +18841,7 @@ export const translations = {
       toastNoOnlineOrder: 'Dit restaurant neemt geen online bestellingen meer, enkel tafelreservatie is mogelijk.',
       dateToday: 'Vandaag',
       dateTomorrow: 'Morgen',
-      ordersOpenSoon: 'Online bestellen (levering en afhalen) kan vanaf {date}. Je winkelmandje blijft tot dan bewaard.',
+      ordersOpenSoon: 'Afhaalbestellingen kunnen vanaf {date}. Je winkelmandje blijft tot dan bewaard.',
       reservationsOpenSoon: 'Tafelreservaties kunnen vanaf {date}.',
       zoneQuestion: 'Waar zit je het liefst?',
       zoneAny: 'Maakt niet uit',
@@ -18809,7 +18865,15 @@ export const translations = {
       giftVoucherKo_used: 'Deze bon is volledig gebruikt.',
       giftVoucherKo_cancelled: 'Deze bon is geannuleerd.',
       giftVoucherKo_rien_a_deduire: 'Niets af te trekken op deze bestelling.',
-      noSlotsReason_complet: 'Volzet op die datum, kies een andere dag.'
+      noSlotsReason_complet: 'Volzet op die datum, kies een andere dag.',
+      deliveryOpenSoon: 'Levering start op {date}. Kies tot dan “Afhalen” als de zaak dat aanbiedt.',
+      payWhen: 'Betaling',
+      payOnline: 'Nu online betalen',
+      payOnSite: 'Ter plaatse betalen, bij het ophalen',
+      payOnSiteNote: 'De zaak rekent je bestelling zelf af wanneer je ze komt ophalen: haal ze zeker op het voorziene uur op, ze wordt voor jou klaargemaakt. Je Fairide-saldo kan niet gebruikt worden voor een betaling ter plaatse.',
+      toPayOnSite: 'Ter plaatse te betalen',
+      confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
+      toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
     },
     orders: {
       title: 'Mijn bestellingen',
@@ -18849,7 +18913,9 @@ export const translations = {
       reminderTomorrow: 'morgen',
       reminderCode: 'Code: {code}',
       cancelHint: 'Annuleerbaar tot het restaurant je bestelling aanvaardt, automatische terugbetaling als ze al betaald is.',
-      cancelLocked: 'Het restaurant heeft je bestelling aanvaard en bereidt ze: ze kan niet meer online geannuleerd worden.'
+      cancelLocked: 'Het restaurant heeft je bestelling aanvaard en bereidt ze: ze kan niet meer online geannuleerd worden.',
+      payOnSite: 'Ter plaatse te betalen, bij het ophalen',
+      noShow: 'Bestelling niet opgehaald'
     },
     review: {
       foodRatingLabel: 'Beoordeling voor het eten',
@@ -19120,7 +19186,7 @@ export const translations = {
       serviceDeliveryOwn: 'met mijn eigen koeriers',
       servicePickup: 'Afhalen',
       serviceDineIn: 'Tafelreservatie (ter plaatse)',
-      servicesPlanHint: '🎁 Alleen tafelreservaties: gratis, geen abonnement en geen commissie (reservaties open op 1 oktober). Levering of afhaal: abonnement van €20/maand, te activeren vanaf 1 oktober (eerste maand gratis, gerekend vanaf de opening van de bestellingen op 10 oktober), en hoogstens 10% commissie. Niets te betalen om je in te schrijven.',
+      servicesPlanHint: '🎁 Alleen tafelreservaties: gratis, geen abonnement en geen commissie (reservaties open op 5 oktober). Afhalen (vanaf 5 oktober) of levering (vanaf 15 oktober): abonnement van €20/maand, te activeren vanaf 1 oktober (eerste maand gratis, gerekend vanaf 5 oktober), en hoogstens 10% commissie. Niets te betalen om je in te schrijven.',
       errServices: 'Kies minstens één dienst.',
       cuisineLabel: 'Soort keuken / zaak',
       cuisinePlaceholder: 'Kies uit de lijst…',

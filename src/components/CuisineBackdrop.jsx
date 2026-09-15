@@ -133,10 +133,11 @@ export default function CuisineBackdrop() {
   const [chargerMedia, setChargerMedia] = useState(false);
   useEffect(() => {
     let img = 0;
+    let pageCourte = false; // page trop courte pour défiler : fond affiché d'emblée (voir le filet plus bas)
     const calculer = () => {
       img = 0;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const o = Math.max(0, Math.min(1, (y - 12) / 140));
+      const o = pageCourte ? 1 : Math.max(0, Math.min(1, (y - 12) / 140));
       if (calque.current) calque.current.style.opacity = String(o);
       setVisible(o > 0.02);
       if (o > 0) setChargerMedia(true);
@@ -152,7 +153,7 @@ export default function CuisineBackdrop() {
     window.addEventListener('resize', auDefilement);
     document.addEventListener('visibilitychange', calculer);
     // Filet : sur une page trop courte pour défiler, le fond doit quand même exister.
-    const court = setTimeout(() => { if (document.documentElement.scrollHeight <= window.innerHeight + 40) { setChargerMedia(true); setRevelation(1); } }, 1200);
+    const court = setTimeout(() => { if (document.documentElement.scrollHeight <= window.innerHeight + 40) { pageCourte = true; calculer(); } }, 1200);
     // Intention de défiler : la molette tourne, un doigt se pose, une flèche est enfoncée. On monte la vidéo
     // à cet instant — elle a le temps d'arriver pendant le geste, et le fond est là au premier pixel.
     const intention = () => setChargerMedia(true);

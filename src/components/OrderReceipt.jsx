@@ -65,8 +65,8 @@ export default function OrderReceipt({ order, restaurant }) {
       {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{order.giftVoucherDiscount.toFixed(2)}€</span></div>}
       {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{order.balanceUsed.toFixed(2)}€</span></div>}
       <div className="receipt-divider" />
-      <div className="receipt-line receipt-total"><span>{t('receipt.totalPaid')}</span><span>{order.total.toFixed(2)}€</span></div>
-      <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paid ? t('receipt.paidVia') : t('receipt.unpaid')}</p>
+      <div className="receipt-line receipt-total"><span>{order.paymentMode === 'on_site' ? t('receipt.toPayOnSite') : t('receipt.totalPaid')}</span><span>{order.total.toFixed(2)}€</span></div>
+      <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paymentMode === 'on_site' ? t('receipt.payOnSiteNote') : order.paid ? t('receipt.paidVia') : t('receipt.unpaid')}</p>
       </>}
       <div className="receipt-divider" />
       <p className="receipt-note">
