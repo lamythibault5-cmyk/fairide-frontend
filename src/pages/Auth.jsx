@@ -248,9 +248,9 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
      protège mieux. Retaper un mot de passe à l'aveugle produit surtout la même faute deux fois,
-     et c'est une question de plus à l'écran. Le voir suffit à le vérifier. */
-  const [showPassword, setShowPassword] = useState(false); // eslint-disable-line no-unused-vars
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+     et c'est une question de plus à l'écran. Le voir suffit à le vérifier.
+     Ce commentaire était écrit depuis longtemps, mais le champ, lui, était resté : il a vraiment
+     disparu maintenant, ainsi que son contrôle de concordance et ses traductions. */
   /* Le code de parrainage n'apparaît que si la personne en a un : soit il arrive dans l'URL
      (?ref=...) depuis un lien de parrainage, soit elle clique sur "J'ai un code". Sinon, c'est
      un champ vide de plus qui allonge le formulaire sans jamais servir. */
@@ -408,8 +408,7 @@ export default function Auth() {
       else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
-      if (!passwordConfirm) e.passwordConfirm = required;
-      else if (passwordConfirm !== password) e.passwordConfirm = t('auth.errPasswordMismatch');
+      // Plus de vérification de concordance : il n'y a plus de second champ à confronter.
     }
     return e;
   }
@@ -745,12 +744,14 @@ export default function Auth() {
 
   return (
     <div className={`decor-page auth-decor ${decorClass}`}>
-      {(audience || mode === 'register') && (
+      {/* Le bandeau « Espace client » + accroche au-dessus de la carte a disparu de l'inscription.
+          Il redisait ce que le sélecteur de rôle affiche déjà trois centimètres plus bas, et il
+          poussait le premier champ hors de l'écran sur un téléphone : on arrivait sur une page
+          d'inscription sans voir où s'inscrire. Il ne reste que pour qui arrive par un lien
+          d'audience (?pour=commerce), où il sert d'accueil et pas de répétition. */}
+      {audience && mode !== 'register' && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <span className={`pill ${role === 'client' ? 'gold' : 'teal'}`}>
-            {role === 'client' ? t('auth.clientSpace') : t('auth.partnerSpace')}
-          </span>
-          <h2 style={{ margin: '10px 0 0', fontSize: 22 }}>
+          <h2 style={{ margin: 0, fontSize: 22 }}>
             {role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
           </h2>
         </div>
@@ -1099,17 +1100,18 @@ export default function Auth() {
                   <EmailDomainChips value={email} onChange={setEmail} inputId="auth-f-17" />
                   {fieldError('email')}
                 </div>
+                {/* La règle du mot de passe sort du texte d'exemple. « 5 caractères min., 1 majuscule,
+                    1 minuscule, 1 chiffre » ne tenait pas dans la largeur du champ : la phrase était
+                    coupée en plein milieu, donc la règle était affichée sans être lisible. Sous le
+                    champ, elle tient, et elle reste visible pendant la frappe — un texte d'exemple
+                    disparaît au premier caractère, exactement quand on en a besoin. */}
                 <div className="field">
                   <label htmlFor="auth-f-18">{t('auth.password')}</label>
                   <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('auth.passwordPlaceholderRegister')} invalid={!!errors.password} />
-                  {fieldError('password')}
-                </div>
-                <div className="field">
-                  <label htmlFor="auth-f-18b">{t('auth.passwordConfirm')}</label>
-                  <PasswordInput id="auth-f-18b" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
-                    placeholder={t('auth.phPasswordConfirm')} invalid={!!errors.passwordConfirm} />
-                  {fieldError('passwordConfirm')}
+                    invalid={!!errors.password} />
+                  {errors.password ? fieldError('password') : <p className="champ-aide">{t('auth.passwordRule')}</p>}
+                  {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste
+                      au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>
               </>
             )}
