@@ -51,16 +51,13 @@ export default function FloatingCart() {
     }
   }
 
-  if (cart.count === 0) {
-    return (
-      <div className="floating-cart-bubble floating-cart-bubble-empty">
-        <span className="floating-cart-bubble-icon">🛒</span>
-        <span className="floating-cart-bubble-text">
-          <span className="floating-cart-bubble-count">{t('floatingCart.emptyLabel')}</span>
-        </span>
-      </div>
-    );
-  }
+  // PANIER VIDE : PLUS RIEN. La bulle affichait « 🛒 Panier vide » en permanence, sur toutes les
+  // pages où un client est connecté (Layout.jsx la monte à deux endroits). Elle ne menait nulle
+  // part, ne se fermait pas, et recouvrait le contenu : dans « Mon compte », elle se posait sur la
+  // rangée « Moyens de paiement », qui devenait illisible et incliquable. Un panier vide n'a rien
+  // à annoncer ; la bulle réapparaît au premier plat ajouté, ce qui est le seul moment où elle dit
+  // quelque chose.
+  if (cart.count === 0) return null;
 
   if (!expanded) {
     return (

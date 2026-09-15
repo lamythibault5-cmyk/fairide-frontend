@@ -167,18 +167,9 @@ export default function Account() {
   function basculer(cle) {
     setOuvertes((prev) => { const n = new Set(prev); if (n.has(cle)) n.delete(cle); else n.add(cle); return n; });
   }
-  // « Adresse de livraison » ne mène pas à une page : Fairide retient UNE adresse, celle du profil. La
-  // ligne déplie « Mes infos » et met le curseur dans la rue, une fois le formulaire rendu.
-  function ouvrirAdresse() {
-    setOuvertes((prev) => new Set(prev).add('infos'));
-    setTimeout(() => {
-      const champ = document.getElementById('champ-adresse');
-      if (!champ) return;
-      const anime = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      champ.scrollIntoView({ block: 'center', behavior: anime ? 'smooth' : 'auto' });
-      champ.focus({ preventScroll: true });
-    }, 60);
-  }
+  // ouvrirAdresse() est partie avec la rangée « Adresse de livraison » qu'elle servait : elle
+  // dépliait « Mes infos » et posait le curseur dans la rue. L'adresse se modifie maintenant là
+  // où elle est écrite, sans détour.
 
   useEffect(() => {
     if (role !== 'driver') return;
@@ -580,7 +571,11 @@ export default function Account() {
           </div>
         </LigneCompte>
 
-        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone ? `${user.email} · ${user.phone}${user.phoneVerified ? '' : ` · ${t('accountUi.phoneNotVerifiedShort')}`}` : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        {/* Le sous-titre tenait e-mail + téléphone + « téléphone à vérifier » sur une seule ligne :
+            tronqué à l'ellipse sur un téléphone, il finissait par cacher l'avertissement même qu'il
+            portait. L'e-mail suffit à identifier la rangée, et l'alerte de vérification passe seule
+            quand elle a lieu d'être — c'est la seule des trois informations qui appelle une action. */}
+        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
           <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
             {t('accountUi.contactCodeInfo')}
           </p>
@@ -722,7 +717,10 @@ export default function Account() {
           <LigneCompte icone="🛡️" titre={t('accountUi.guestReviewsTitle')} sous={t('accountUi.guestReviewsSub')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
             {ouvertes.has('avisRestos') && <MyGuestReviews />}
           </LigneCompte>
-          <LigneCompte icone="📍" titre={t('accountUi.deliveryAddress')} sous={adresseResume || t('accountUi.addressSub')} onClick={ouvrirAdresse} />
+          {/* La rangée « Adresse de livraison » a disparu : elle affichait mot pour mot l'adresse déjà
+              écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
+              donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
+              adresse ; elle vit donc à un seul endroit, sous « Mes infos », où elle se modifie. */}
           <LigneCompte to="/aide?sujet=paiement" icone="💳" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
           <LigneCompte to="/notre-histoire" icone="🧭" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />
