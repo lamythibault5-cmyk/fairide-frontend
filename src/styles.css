@@ -554,16 +554,22 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 .category-quicknav-sections::-webkit-scrollbar { display: none; }
+/* Navigation entre les sections de la carte : des pilules, et la section courante en IRIS.
+   Elle était en lime, ce qui faisait deux accents lime sur la même page — la barre de sections
+   et le bouton de commande — alors que la règle n'en autorise qu'un par vue. Le lime revient à
+   ce qui se commande ; se déplacer dans une carte n'est pas l'action décisive d'un écran, c'est
+   de la navigation, et la navigation porte l'iris comme partout ailleurs.
+   Le poids descend de 700 à 500 : DESIGN.md interdit de monter les libellés de contrôle à 700. */
 .category-quicknav button {
-  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink-soft);
-  font-size: 12.5px; font-weight: 700; padding: 7px 13px; border-radius: 6px;
+  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink);
+  font-size: 14px; font-weight: 500; padding: 9px 16px; border-radius: var(--radius-pill);
   white-space: nowrap; box-shadow: none; backdrop-filter: blur(3px);
   transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
-  min-height: 34px; display: flex; align-items: center;
+  min-height: 38px; display: flex; align-items: center;
 }
 .category-quicknav button:hover { border-color: var(--iris); color: var(--ink); }
 .category-quicknav button.active {
-  background: var(--gold); color: var(--ink); border-color: var(--gold);
+  background: var(--iris); color: #fff; border-color: var(--iris);
   box-shadow: none;
 }
 
@@ -1035,8 +1041,13 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .cuisine-scroll { padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .auto-scroll-row.cuisine-track { padding-bottom: 0; }
 .auto-scroll-row.cuisine-track .auto-scroll-track { gap: 8px; }
-.cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
-.cuisine-chip .emoji { font-size: 20px; line-height: 1; }
+/* Filtre de cuisine : l'emoji passe À CÔTÉ du libellé, plus au-dessus. Empilés, la puce était
+   aussi haute que large, et l'arrondi de 999px la transformait en cercle qui rognait le mot au
+   lieu de l'entourer (« healthy » devenait « althy »). C'est exactement le category-button de
+   DESIGN.md : icône, puis libellé, sur une ligne, dans une pilule couchée. Le libellé remonte
+   de 11 à 13px — à 11px il fallait s'approcher de l'écran pour lire un filtre. */
+.cuisine-chip { flex: 0 0 auto; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
+.cuisine-chip .emoji { font-size: 17px; line-height: 1; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 .cuisine-chip:hover { border-color: var(--teal); }
 

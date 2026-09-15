@@ -266,9 +266,19 @@ export default function RestaurantMenu() {
                   {t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
                 </p>
               )}
-              <div className="closed-banner-schedule">
-                {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
-              </div>
+              {/* Les sept jours ne s'affichent plus d'office. Fermé, cette fiche ouvrait sur un
+                  pavé de sept lignes d'horaires qui occupait la moitié de l'écran d'un téléphone
+                  avant le premier plat. Le visiteur a besoin d'une seule information — quand ça
+                  rouvre, dite juste au-dessus ; la semaine entière est une question de second
+                  rang, et elle se déplie comme elle le fait déjà quand le commerce est ouvert. */}
+              <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => setHoursExpanded((v) => !v)}>
+                {hoursExpanded ? t('restoMenuUi.hideHours') : t('restoMenuUi.showHours')}
+              </button>
+              {hoursExpanded && (
+                <div className="closed-banner-schedule">
+                  {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
+                </div>
+              )}
             </div>
           )
         )}
