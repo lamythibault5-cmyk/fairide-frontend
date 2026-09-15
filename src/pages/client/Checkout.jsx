@@ -408,7 +408,7 @@ export default function Checkout() {
                   <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
-              {!surPlaceChoisi && <div className="line"><span>{t('checkout.commissionLine')}</span><span>{totals.commission.toFixed(2)}€</span></div>}
+              {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (
                 <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
               )}
