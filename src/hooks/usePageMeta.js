@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
+import { useLanguage, getLanguage } from '../context/LanguageContext';
 import { SITE_URL } from '../seo/jsonLd';
 import { cheminLocalise, HREFLANG, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/routing';
 import { translations } from '../i18n/translations';
@@ -102,7 +102,8 @@ export default function usePageMeta({ title, description, path, image, type = 'w
 
     const prevTitle = document.title;
     document.title = finalTitle;
-    restorers.push(() => { document.title = prevTitle; });
+    // Titre par défaut lu avant un changement de langue sur place : on le rend dans la langue courante.
+    restorers.push(() => { document.title = SUPPORTED_LANGUAGES.some((l) => titreParDefaut(l) === prevTitle) ? titreParDefaut(getLanguage()) : prevTitle; });
 
     const canonical = document.head.querySelector('link[rel="canonical"]');
     if (canonical) {
@@ -112,10 +113,10 @@ export default function usePageMeta({ title, description, path, image, type = 'w
     }
 
     // <html lang> était figé sur "fr" dans index.html : une page en néerlandais s'annonçait comme
-    // française, ce que les lecteurs d'écran comme les moteurs prennent au mot.
-    const prevLang = document.documentElement.lang;
+    // française, ce que les lecteurs d'écran comme les moteurs prennent au mot. Pas de restauration au
+    // démontage : la langue change désormais sur place, et restaurer une valeur lue avant le changement
+    // réannonçait l'ancienne langue. LanguageContext tient cet attribut à jour de toute façon.
     document.documentElement.lang = language;
-    restorers.push(() => { document.documentElement.lang = prevLang; });
 
     if (finalDescription) {
       push(setMeta('meta[name="description"]', finalDescription, { name: 'description' }));

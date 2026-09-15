@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { prechargerPage } from '../routePrefetch';
+import { cheminSansPrefixe } from '../i18n/routing';
 
 // Retour visuel pendant un changement de page. Les pages sont chargées à la demande (lazy, voir App.jsx)
 // et React garde l'ancienne page affichée tant que la nouvelle n'est pas prête : sans ce composant, un
@@ -68,9 +69,15 @@ export default function NavigationFeedback() {
     }
     function onIntention(e) {
       const url = lienInterne(e);
-      if (url) prechargerPage(url.pathname);
+      if (url) prechargerPage(cheminSansPrefixe(url.pathname));
     }
     document.addEventListener('click', onClick, true);
+    const onNavigation = () => {
+      clearTimeout(abandon.current); clearTimeout(finTimer.current);
+      setEtat('encours');
+      abandon.current = setTimeout(() => setEtat('repos'), DELAI_ABANDON);
+    };
+    window.addEventListener('fairide:navigation', onNavigation);
     const veille = setInterval(verifierVersion, VEILLE_MS);
     const onVisible = () => { if (document.visibilityState === 'visible') verifierVersion(); };
     document.addEventListener('visibilitychange', onVisible);
@@ -81,6 +88,7 @@ export default function NavigationFeedback() {
       clearInterval(veille);
       document.removeEventListener('visibilitychange', onVisible);
       document.removeEventListener('click', onClick, true);
+      window.removeEventListener('fairide:navigation', onNavigation);
       document.removeEventListener('pointerover', onIntention);
       document.removeEventListener('touchstart', onIntention);
       document.removeEventListener('focusin', onIntention);

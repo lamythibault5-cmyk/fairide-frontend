@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/translations';
-import { cheminLocalise, cheminSansPrefixe, memoriserLangue } from '../i18n/routing';
+import { changerLangue, ecouterLangue } from '../i18n/historiqueLangue';
 
 const LanguageContext = createContext(null);
 export const LOCALES = { fr: 'fr-BE', en: 'en-GB', nl: 'nl-BE' };
@@ -29,21 +29,20 @@ export function LanguageProvider({ children, initial = DEFAULT_LANGUAGE }) {
   // prononciation française à du texte néerlandais, et les moteurs de recherche classent mal la page.
   useEffect(() => {
     document.documentElement.lang = language;
+    // Page sans titre propre (connexion…) : le titre par défaut suit la langue changée sur place.
+    const defaut = translations[language]?.seo?.defaultTitle;
+    if (defaut && SUPPORTED_LANGUAGES.some((l) => translations[l]?.seo?.defaultTitle === document.title)) document.title = defaut;
   }, [language]);
 
-  // CHANGER DE LANGUE EST DÉSORMAIS UNE NAVIGATION, pas un échange de textes sur place : la page
-  // néerlandaise est à une autre adresse, il faut donc s'y rendre. On garde la page courante et on
-  // ne change que le préfixe, pour que le visiteur reste là où il était.
-  //
-  // Rechargement complet et non navigation interne : `basename` est figé à la construction du
-  // routeur (voir main.jsx), le remonter en place reviendrait à reconstruire tout l'arbre avec ses
-  // contextes — session, panier, mode aperçu — pour un geste qui change de document de toute façon.
+  // CHANGER DE LANGUE TRADUIT SUR PLACE : l'adresse prend le préfixe de la nouvelle langue (la page
+  // néerlandaise garde son adresse à elle, pour l'indexation), mais sans rechargement ni navigation.
+  // Un visiteur au milieu d'une inscription ou d'une commande garde ce qu'il a saisi, sa position dans
+  // la page et son panier (voir src/i18n/historiqueLangue.js).
+  useEffect(() => ecouterLangue(setLanguageState), []);
   const setLanguage = useCallback((lang) => {
     if (!SUPPORTED_LANGUAGES.includes(lang) || lang === language) return;
-    memoriserLangue(lang);
-    const applicatif = cheminSansPrefixe(window.location.pathname);
-    const cible = `${cheminLocalise(applicatif, lang)}${window.location.search}${window.location.hash}`;
-    window.location.assign(cible);
+    changerLangue(lang);
+    setLanguageState(lang);
   }, [language]);
 
   // t('landing.title1') → chaîne traduite. Si absente de la langue active, retombe sur le français

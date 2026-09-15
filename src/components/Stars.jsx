@@ -7,13 +7,14 @@ export function StarsDisplay({ value, size = 14 }) {
   );
 }
 
+// Vrais boutons, zone de toucher d'au moins 40 px : de simples caractères de 24 px se ratent au doigt.
 export function StarsInput({ value, onChange }) {
   return (
-    <span style={{ fontSize: 24, letterSpacing: 2, cursor: 'pointer' }}>
+    <span className="stars-input" role="radiogroup">
       {[1, 2, 3, 4, 5].map((i) => (
-        <span key={i} onClick={() => onChange(i)} style={{ color: i <= value ? 'var(--gold)' : 'var(--line)' }}>
+        <button key={i} type="button" role="radio" aria-checked={value === i} aria-label={`${i}/5`} onClick={() => onChange(i)} style={{ color: i <= value ? 'var(--gold)' : 'var(--line)' }}>
           ★
-        </span>
+        </button>
       ))}
     </span>
   );

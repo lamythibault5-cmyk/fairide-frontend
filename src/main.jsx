@@ -1,6 +1,6 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
@@ -11,6 +11,7 @@ import { LanguageProvider } from './context/LanguageContext';
 import { PreviewModeProvider } from './context/PreviewModeContext';
 import { hasAcceptedConsent, onConsentChange } from './consent';
 import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
+import { historiqueLangue } from './i18n/historiqueLangue';
 import './styles.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 
@@ -35,11 +36,11 @@ window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechar
 // Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
 onConsentChange(startSentryIfAllowed);
 
-// LA LANGUE VIENT DE L'ADRESSE, et le routeur est monté avec le préfixe correspondant : /nl/… et
-// /en/… sont des adresses à part entière, le français est la racine (voir src/i18n/routing.js).
-// `basename` évite de préfixer à la main les 156 liens de l'application : React Router l'ajoute
-// devant chaque `to` et le retire de ce que lisent les composants.
-const { langue, basename } = langueDepuisChemin(window.location.pathname);
+// LA LANGUE VIENT DE L'ADRESSE : /nl/… et /en/… sont des adresses à part entière, le français est la
+// racine (voir src/i18n/routing.js). L'historique du routeur ajoute le préfixe devant chaque lien et le
+// retire de ce que lisent les composants, comme le ferait `basename` — mais il peut en changer sans
+// recharger la page quand le visiteur change de langue (voir src/i18n/historiqueLangue.js).
+const { langue } = langueDepuisChemin(window.location.pathname);
 
 // Visiteur qui revient par une adresse sans préfixe alors qu'il avait choisi une autre langue : on
 // l'emmène vers la même page dans SA langue, une seule fois (l'adresse d'arrivée porte un préfixe,
@@ -54,7 +55,7 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
-      <BrowserRouter basename={basename}>
+      <HistoryRouter history={historiqueLangue}>
         <LanguageProvider initial={langue}>
           <ToastProvider>
             <AuthProvider>
@@ -66,7 +67,7 @@ createRoot(document.getElementById('root')).render(
             </AuthProvider>
           </ToastProvider>
         </LanguageProvider>
-      </BrowserRouter>
+      </HistoryRouter>
     </AppErrorBoundary>
   </StrictMode>
 );

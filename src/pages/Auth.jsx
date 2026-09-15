@@ -17,6 +17,7 @@ import { RESTAURANT_TYPES } from '../menuCategories';
 import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
+import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 
 function roles(t) {
   return [
@@ -311,6 +312,17 @@ export default function Auth() {
   // renvoyer systématiquement à l'accueil (voir RestaurantMenu.jsx / RestaurantList.jsx).
   const from = location.state?.from || '/';
 
+  // Arrivée après connexion : on attend (brièvement) que le code de la page suivante soit chargé avant de
+  // naviguer, et le bouton reste en « Chargement… » jusque-là. Sans cela, le bouton redevenait actif pendant
+  // que la page d'arrivée se téléchargeait en coulisse — sur mobile, on croyait que le toucher n'avait pas pris.
+  async function allerApresConnexion(user) {
+    await attendrePage(from === '/' ? espaceApresConnexion(user) : from);
+    navigate(from);
+  }
+  // Intention forte de se connecter (champ touché, formulaire effleuré) : on précharge dès maintenant les
+  // espaces commerce et livreur, pour que l'arrivée soit instantanée après la réponse du serveur.
+  const prechargerEspaces = () => { prechargerPage('/dashboard'); prechargerPage('/driver'); };
+
   useEffect(() => {
     if (responsibleTouched) return;
     const full = `${firstName} ${lastName}`.trim();
@@ -457,10 +469,12 @@ export default function Auth() {
       return;
     }
     setLoading(true);
+    let reussi = false;
     try {
       const data = await loginWithGoogle(response.credential, role, {});
+      reussi = true;
       toast(t('auth.welcome', { name: data.user.name }));
-      navigate(from);
+      await allerApresConnexion(data.user);
     } catch (err) {
       if (err.message === 'INCOMPLETE_PROFILE') {
         // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
@@ -471,7 +485,8 @@ export default function Auth() {
         toast(err.message);
       }
     } finally {
-      setLoading(false);
+      // Connexion réussie : le bouton reste en « Chargement… » jusqu'au changement de page.
+      if (!reussi) setLoading(false);
     }
   }
 
@@ -490,7 +505,8 @@ export default function Auth() {
     });
     await televerserDocumentsLivreur(data.token);
     toast(t('auth.welcome', { name: data.user.name }));
-    navigate(from);
+    await allerApresConnexion(data.user);
+    return true;
   }
 
   useEffect(() => {
@@ -517,6 +533,7 @@ export default function Auth() {
     e.preventDefault();
     if (!(mode === 'register' && googleCredential) && (!email || !password)) { toast(t('auth.errEmailPassword')); return; }
     setLoading(true);
+    let reussi = false;
     try {
       if (mode === 'register') {
         /* Filet de sécurité : chaque étape a déjà validé ses propres champs avant de laisser
@@ -540,7 +557,7 @@ export default function Auth() {
         }
         if (googleCredential) {
           try {
-            await inscrireViaGoogle();
+            reussi = await inscrireViaGoogle();
           } catch (err) {
             // Jeton Google expiré (il vit une heure) ou refusé : on repart de la première étape.
             if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { oublierGoogle(); setStep(0); toast(t('auth.googleExpired')); }
@@ -570,8 +587,9 @@ export default function Auth() {
         }
       } else {
         const data = await login(email.trim(), password);
+        reussi = true;
         toast(t('auth.welcome', { name: data.user.name }));
-        navigate(from);
+        await allerApresConnexion(data.user);
       }
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
@@ -591,7 +609,7 @@ export default function Auth() {
         toast(err.message);
       }
     } finally {
-      setLoading(false);
+      if (!reussi) setLoading(false);
     }
   }
 
@@ -599,15 +617,18 @@ export default function Auth() {
     e.preventDefault();
     if (!code.trim()) { toast(t('auth.errCodeRequired')); return; }
     setLoading(true);
+    let reussi = false;
     try {
       const data = await verifyEmail(pendingEmail, code.trim());
+      reussi = true;
       await televerserDocumentsLivreur(data.token);
       toast(t('auth.welcome', { name: data.user.name }));
-      navigate(from);
+      await allerApresConnexion(data.user);
     } catch (err) {
       toast(err.message);
+      reussi = false;
     } finally {
-      setLoading(false);
+      if (!reussi) setLoading(false);
     }
   }
 
@@ -740,9 +761,9 @@ export default function Auth() {
           <BrandMark size={26} />
           <span>fairide</span>
         </div>
-        <div className="auth-tabs">
-          <div className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</div>
-          <div className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</div>
+        <div className="auth-tabs" role="tablist">
+          <button type="button" role="tab" aria-selected={mode === 'login'} className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</button>
+          <button type="button" role="tab" aria-selected={mode === 'register'} className={`chip${mode === 'register' ? ' active' : ''}`} onClick={() => setMode('register')}>{t('auth.register')}</button>
         </div>
 
         {mode === 'register' ? (
@@ -753,9 +774,9 @@ export default function Auth() {
             {visibleRoles.length > 1 && step === 0 && (
               <div className="role-pick">
                 {visibleRoles.map((r) => (
-                  <div key={r.value} className={`chip${role === r.value ? ' active' : ''}`} onClick={() => setRole(r.value)}>
+                  <button type="button" key={r.value} aria-pressed={role === r.value} className={`chip${role === r.value ? ' active' : ''}`} onClick={() => setRole(r.value)}>
                     {r.label}
-                  </div>
+                  </button>
                 ))}
               </div>
             )}
@@ -1126,10 +1147,10 @@ export default function Auth() {
                 </div>
               </>
             )}
-            <form onSubmit={submit}>
+            <form onSubmit={submit} onPointerDown={prechargerEspaces} onFocus={prechargerEspaces}>
               <div className="field">
                 <label htmlFor="auth-f-17">{t('auth.email')}</label>
-                <input id="auth-f-17" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
+                <input id="auth-f-17" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
               </div>
               <div className="field">
                 <label htmlFor="auth-f-18">{t('auth.password')}</label>

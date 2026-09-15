@@ -271,6 +271,33 @@ label { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: bloc
 button { font-family: inherit; font-weight: 500; font-size: 14px; cursor: pointer; border: none; border-radius: var(--radius-chip); padding: 11px 18px; transition: transform .1s, filter .1s; }
 button:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* RÉACTIVITÉ AU TOUCHER, tous appareils.
+   - touch-action: manipulation retire l'attente « double-tape pour zoomer » : le navigateur n'a plus à
+     patienter pour savoir si un second toucher suit, le clic part tout de suite. Le pincement pour
+     zoomer reste possible.
+   - Les éléments cliquables qui ne sont pas des boutons (pastilles .chip, cartes cliquables) reçoivent le
+     même traitement et un retour visuel à l'appui. */
+a, button, input, select, textarea, label, summary, [role="button"], [role="tab"], [role="radio"], [role="checkbox"],
+.chip, .order-card-clickable, .rest-card, .cuisine-chip {
+  touch-action: manipulation;
+}
+.chip, .order-card-clickable, [role="button"], [role="tab"], [role="radio"] { -webkit-tap-highlight-color: transparent; }
+.chip { -webkit-user-select: none; user-select: none; }
+.chip:active { filter: brightness(.94); }
+@media (pointer: coarse) {
+  /* Sur un écran tactile, un bouton qui rétrécit sous le doigt peut « glisser » hors du point touché
+     quand on appuie près du bord : le relâchement tombe à côté et le clic est perdu. On garde un retour
+     visuel franc, mais sans changer la taille. */
+  button:active, a.btn-primary:active, a.btn-gold:active, a.btn-teal:active, a.btn-outline:active { transform: none; filter: brightness(.9); }
+  /* iPhone : un champ en dessous de 16 px déclenche un zoom automatique au focus. La page reste ensuite
+     agrandie, le bouton « Se connecter » sort de l'écran ou se décale — d'où des touchers qui semblent
+     ne rien faire. 16 px sur écran tactile supprime ce zoom. */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea { font-size: max(16px, 1em) !important; }
+}
+
+.stars-input { display: inline-flex; gap: 2px; }
+.stars-input button { background: transparent; padding: 4px 6px; min-width: 40px; min-height: 40px; font-size: 26px; line-height: 1; }
 a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   display: inline-block; font-family: inherit; font-weight: 500; font-size: 14px; cursor: pointer;
   border-radius: var(--radius-chip); padding: 11px 18px; text-decoration: none; transition: transform .1s, filter .1s;

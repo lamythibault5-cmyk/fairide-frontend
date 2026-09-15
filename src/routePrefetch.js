@@ -53,16 +53,38 @@ const CHARGEURS = {
   '/notre-histoire': () => import('./pages/OurStory'),
 };
 
-const dejaLances = new Set();
+const enCours = new Map();
 
+// Renvoie la promesse du chargement (partagée entre appels), ou null si la page est déjà dans le bundle
+// principal. Un échec (hors-ligne, déploiement en cours) n'est pas une erreur ici : l'appel suivant réessaiera.
 export function prechargerPage(pathname) {
   const chemin = String(pathname || '').replace(/\/$/, '') || '/';
   let cle = null;
   if (/^\/restaurants\/[^/]+\/reserver$/.test(chemin)) cle = 'reserver';
   else cle = Object.keys(CHARGEURS).filter((k) => chemin === k || chemin.startsWith(`${k}/`)).sort((a, b) => b.length - a.length)[0];
-  if (!cle || dejaLances.has(cle)) return;
-  dejaLances.add(cle);
+  if (!cle) return null;
+  if (enCours.has(cle)) return enCours.get(cle);
   const charge = cle === 'reserver' ? () => import('./pages/client/ReservationWizard') : CHARGEURS[cle];
-  // Un échec (hors-ligne, déploiement en cours) n'est pas une erreur ici : le clic réessaiera.
-  Promise.resolve().then(charge).catch(() => dejaLances.delete(cle));
+  const promesse = Promise.resolve().then(charge).catch(() => { enCours.delete(cle); });
+  enCours.set(cle, promesse);
+  return promesse;
+}
+
+// Espace où arrive un compte juste après connexion (voir pages/Home.jsx) : clients sur la liste des commerces
+// (déjà dans le bundle principal), commerces sur /dashboard, livreurs sur /driver, admin sur /admin.
+export function espaceApresConnexion(user) {
+  if (!user) return '/';
+  if (user.isAdmin) return '/admin';
+  if (user.role === 'restaurant') return '/dashboard';
+  if (user.role === 'driver') return '/driver';
+  return '/restaurants';
+}
+
+// Attend que le code de la page d'arrivée soit là, sans jamais bloquer plus de `maxMs` : le bouton reste en
+// « Chargement… » jusqu'à ce que la page suivante puisse s'afficher d'un coup, au lieu de redevenir cliquable
+// pendant qu'un écran blanc se prépare derrière — ce qui donnait l'impression que le toucher n'avait rien fait.
+export function attendrePage(pathname, maxMs = 2500) {
+  const p = prechargerPage(pathname);
+  if (!p) return Promise.resolve();
+  return Promise.race([p, new Promise((r) => setTimeout(r, maxMs))]);
 }

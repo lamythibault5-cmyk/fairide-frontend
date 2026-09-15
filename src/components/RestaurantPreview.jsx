@@ -89,8 +89,8 @@ export default function RestaurantPreview({ restaurant }) {
         <div className="card">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('restoPreview.cartPreview')}</h3>
           <div className="role-pick" style={{ marginBottom: 12 }}>
-            <div className={`chip${fulfillmentType === 'delivery' ? ' active' : ''}`} onClick={() => setFulfillmentType('delivery')}>{t('restoPreview.delivery')}</div>
-            <div className={`chip${fulfillmentType === 'pickup' ? ' active' : ''}`} onClick={() => setFulfillmentType('pickup')}>{t('restoPreview.takeaway')}</div>
+            <button type="button" aria-pressed={fulfillmentType === 'delivery'} className={`chip${fulfillmentType === 'delivery' ? ' active' : ''}`} onClick={() => setFulfillmentType('delivery')}>{t('restoPreview.delivery')}</button>
+            <button type="button" aria-pressed={fulfillmentType === 'pickup'} className={`chip${fulfillmentType === 'pickup' ? ' active' : ''}`} onClick={() => setFulfillmentType('pickup')}>{t('restoPreview.takeaway')}</button>
           </div>
           {Object.entries(lines).map(([lineKey, line]) => {
             const item = restaurant.menu.find((m) => m.id === line.itemId);

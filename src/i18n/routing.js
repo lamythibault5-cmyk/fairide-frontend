@@ -13,9 +13,9 @@
  * racine est un schéma que Google documente et traite exactement comme les autres, à condition
  * qu'elle soit déclarée en x-default. C'est ce que fait usePageMeta.
  *
- * COMMENT, SANS TOUCHER AUX 156 LIENS DE L'APPLICATION. Le préfixe est passé en `basename` à
- * BrowserRouter (voir main.jsx). React Router le retire de ce que lisent les composants et le
- * remet devant chaque `to` : `<Link to="/restaurants">` mène à /restaurants en français et à
+ * COMMENT, SANS TOUCHER AUX 156 LIENS DE L'APPLICATION. Le préfixe est géré par l'historique du
+ * routeur (voir historiqueLangue.js), qui le retire de ce que lisent les composants et le remet devant
+ * chaque `to` — et peut en changer sans recharger la page quand le visiteur change de langue : `<Link to="/restaurants">` mène à /restaurants en français et à
  * /nl/restaurants en néerlandais, sans qu'aucun appel ne change. C'est aussi pour cela que les
  * comparaisons de chemin déjà en place (`location.pathname === '/'` dans Layout.jsx, la liste
  * DASHBOARD_PATHS, ProtectedRoute) continuent de fonctionner mot pour mot : elles voient toujours

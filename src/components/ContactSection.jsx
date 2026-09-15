@@ -60,9 +60,9 @@ export default function ContactSection({ messageInitial = '' }) {
               <label>{t('contact.roleLabel')}</label>
               <div className="role-pick" style={{ marginBottom: 0 }}>
                 {ROLES.map((r) => (
-                  <div key={r.value} className={`chip${senderRole === r.value ? ' active' : ''}`} onClick={() => setSenderRole(r.value)}>
+                  <button type="button" key={r.value} aria-pressed={senderRole === r.value} className={`chip${senderRole === r.value ? ' active' : ''}`} onClick={() => setSenderRole(r.value)}>
                     {r.label}
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
