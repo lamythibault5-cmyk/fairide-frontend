@@ -20,13 +20,17 @@ async function ouvrirPdf(url, token, messageErreur) {
 // générales (données, confidentialité, durée, responsabilité, droit applicable).
 const GROUPES = ['fairide', 'commerce', 'argent', 'cadre', 'general'];
 
-export default function RestaurantContract({ restoId }) {
+// onAccepte : prévenir la page (Mon compte) pour qu'elle recharge le commerce — visibilité et abonnement en dépendent.
+export default function RestaurantContract({ restoId, onAccepte }) {
   const { t } = useLanguage();
   const { token, user } = useAuth();
   const toast = useToast();
   const [d, setD] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [ouverts, setOuverts] = useState(() => new Set(['fairide', 'commerce']));
+  // Parties déjà ouvertes au moins une fois : l'acceptation n'est possible qu'après avoir tout parcouru.
+  const [vus, setVus] = useState(() => new Set(['fairide', 'commerce']));
+  const toutLu = GROUPES.every((g) => vus.has(g));
   const [nom, setNom] = useState('');
   const [lu, setLu] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -34,12 +38,17 @@ export default function RestaurantContract({ restoId }) {
   useEffect(() => { api(`/restaurants/${restoId}/contract`, { token }).then((r) => { setD(r); setNom(r.responsibleName || user?.name || ''); }).catch((e) => setErreur(e.message)); }, [restoId, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function accepter() {
+    if (!toutLu) { toast(t('restoContract.openAllHint', { n: GROUPES.filter((g) => !vus.has(g)).length })); return; }
     if (!lu) { toast(t('restoContract.errRead')); return; }
     if (!nom.trim()) { toast(t('restoContract.errName')); return; }
     setBusy(true);
-    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim() } }); setD(r); toast(t('restoContract.accepted')); } catch (e) { toast(e.message); } finally { setBusy(false); }
+    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted')); onAccepte?.(); } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
-  const basculer = (g) => setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
+  const basculer = (g) => {
+    setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
+    setVus((s) => new Set(s).add(g));
+  };
+  const toutOuvrir = () => { setOuverts(new Set(GROUPES)); setVus(new Set(GROUPES)); };
 
   if (erreur) return <p className="small">{erreur}</p>;
   if (!d) return <p className="small">{t('accountUi.loading')}</p>;
@@ -104,8 +113,14 @@ export default function RestaurantContract({ restoId }) {
 
       {(!d.acceptedAt || (d.acceptedVersion && d.acceptedVersion !== d.version)) && (
         <div className="paiement-encart" style={{ marginTop: 12 }}>
+          {!toutLu && (
+            <p className="small" style={{ margin: '0 0 8px' }}>
+              📖 {t('restoContract.openAllHint', { n: GROUPES.filter((g) => !vus.has(g)).length })}{' '}
+              <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={toutOuvrir}>{t('restoContract.openAll')}</button>
+            </p>
+          )}
           <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
-            <input type="checkbox" checked={lu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
+            <input type="checkbox" checked={lu} disabled={!toutLu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
             <span className="small">{t('restoContract.readCheck')}</span>
           </label>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
@@ -113,7 +128,7 @@ export default function RestaurantContract({ restoId }) {
               <label htmlFor="resto-contract-nom">{t('restoContract.typedName')}</label>
               <input id="resto-contract-nom" value={nom} onChange={(e) => setNom(e.target.value)} placeholder={t('restoContract.typedNamePh')} />
             </div>
-            <button type="button" className="btn-gold" disabled={busy} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
+            <button type="button" className="btn-gold" disabled={busy || !toutLu || !lu} style={{ alignSelf: 'flex-end' }} onClick={accepter}>{busy ? '…' : t('restoContract.acceptBtn')}</button>
           </div>
         </div>
       )}

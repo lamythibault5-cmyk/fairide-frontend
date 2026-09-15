@@ -716,8 +716,9 @@ export default function Account() {
           <LigneCompte icone="🖨️" titre={t('ticketHelp.rowTitle')} sous={t('ticketHelp.rowSub')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
             {ouvertes.has('tickets') && <TicketHelp />}
           </LigneCompte>
+          <div id="section-contrat" />
           <LigneCompte icone="📜" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
-            {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} />}
+            {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <div id="section-paiement">
             <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' && !restaurant.reservationDepositEnabled ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
@@ -779,8 +780,16 @@ export default function Account() {
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
               </div>
             )}
-            {/* Bouton d'abonnement : impayé à régulariser, ou — dès le 1er octobre — formule complète pas encore abonnée. */}
-            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert())) && restaurant.adminStatus === 'approved' && (
+            {/* Contrat d'abord : l'abonnement ne s'active qu'une fois la version en vigueur lue et acceptée (serveur : 409 CONTRACT_REQUIRED). */}
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && !restaurant.isDemo && restaurant.onboarding && !restaurant.onboarding.contractAccepted && (
+              <div className="paiement-encart" style={{ marginBottom: 12 }}>
+                <b>📜 {t('accountUi.subContractTitle')}</b>
+                <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
+                <button type="button" className="btn-gold" onClick={() => { setOuvertes((prev) => new Set(prev).add('contrat')); setTimeout(() => document.getElementById('section-contrat')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120); }}>{t('accountUi.subContractBtn')}</button>
+              </div>
+            )}
+            {/* Bouton d'abonnement : impayé à régulariser, ou — dès le 1er octobre — formule complète pas encore abonnée (contrat accepté). */}
+            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
                   <label>{t('auth.promoCode')}</label>
