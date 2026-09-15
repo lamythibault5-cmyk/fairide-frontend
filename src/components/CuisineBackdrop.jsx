@@ -137,8 +137,11 @@ export default function CuisineBackdrop() {
     const calculer = () => {
       img = 0;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
-      const o = pageCourte ? 1 : Math.max(0, Math.min(1, (y - 12) / 140));
+      // Dès un mini défilement (demande du fondateur, 2026-09-15) : le fond commence à paraître au 2e pixel et
+      // s'installe en 100 px. --fond-revele sert aussi à la bannière d'accueil, qui s'éclaircit en même temps.
+      const o = pageCourte ? 1 : Math.max(0, Math.min(1, (y - 2) / 100));
       if (calque.current) calque.current.style.opacity = String(o);
+      document.documentElement.style.setProperty('--fond-revele', String(o));
       setVisible(o > 0.02);
       if (o > 0) setChargerMedia(true);
     };
@@ -164,6 +167,7 @@ export default function CuisineBackdrop() {
       document.removeEventListener('visibilitychange', calculer);
       for (const e of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.removeEventListener(e, intention);
       cancelAnimationFrame(img); clearTimeout(court); clearTimeout(prechauffe);
+      document.documentElement.style.removeProperty('--fond-revele');
     };
   }, []);
   // Rien à l'écran : on met la vidéo en pause plutôt que de la décoder pour personne (batterie des téléphones).

@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
 // il s'écarte ; on remonte — le geste de quelqu'un qui cherche à naviguer — il est déjà là.
 //
 // Trois précautions apprises des en-têtes qui clignotent :
-//   - au-dessus de `seuil`, il reste toujours visible : en haut de page, il n'y a rien à gagner à le
+//   - au-dessus de `seuil` (et de sa propre hauteur), il reste toujours visible : en haut de page, il n'y a rien à gagner à le
 //     cacher, et le moindre soubresaut le ferait sauter ;
 //   - il faut dépasser `marge` pixels dans un sens pour changer d'état, sinon le tremblement d'un
 //     doigt sur l'écran suffit à le faire osciller ;
@@ -26,10 +26,12 @@ export function useEnteteDefilement({ seuil = 90, marge = 8 } = {}) {
     const evaluer = () => {
       const y = Math.max(0, window.scrollY); // le rebond élastique d'iOS donne des valeurs négatives
       const ecart = y - dernier;
-      if (y <= seuil) setCache(false);
+      // Jamais caché tant que sa place dans la page est encore visible : sinon il laisse un trou à sa place.
+      const plancher = Math.max(seuil, document.querySelector('.hero')?.offsetHeight || 0);
+      if (y <= plancher) setCache(false);
       else if (ecart > marge) setCache(true);
       else if (ecart < -marge) setCache(false);
-      if (Math.abs(ecart) > marge || y <= seuil) dernier = y;
+      if (Math.abs(ecart) > marge || y <= plancher) dernier = y;
       enAttente = false;
     };
 
