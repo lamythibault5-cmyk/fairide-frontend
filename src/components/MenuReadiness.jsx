@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { abonnementOuvert, dateOuvertureAbonnement } from '../launch';
 
 // Remise de carte et mise en ligne.
 //
@@ -22,7 +23,7 @@ function Etape({ fait, children }) {
 }
 
 export default function MenuReadiness({ restaurant, restoId, token, onConfirmed, modeAdmin = false }) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const toast = useToast();
   const [confirmation, setConfirmation] = useState(false);
   const o = restaurant?.onboarding;
@@ -89,9 +90,18 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
                 {t('menuPage.readyStepPayments')} {!o.paymentsReady && <Link to="/account?ouvrir=paiement">{t('menuPage.readyGoPayments')}</Link>}
               </Etape>
             )}
+            {/* Avant le 1er octobre, l'abonnement ne s'active NULLE PART : ni ici, ni dans Mon compte
+                (le bouton n'y est rendu qu'une fois la date passée), ni côté serveur, qui le refuse.
+                Annoncer « Activer la formule complète » avec un lien envoyait donc le restaurateur
+                vers un écran où il n'y avait rien à faire. Tant que la date n'est pas là, l'étape dit
+                à partir de quand elle s'ouvre et ne prétend plus être une action à faire tout de suite. */}
             {o.plan === 'complete' && (
               <Etape fait={o.subscriptionActive}>
-                {t('menuPage.readyStepSubscription')} {!o.subscriptionActive && <Link to="/account?ouvrir=abonnement">{t('menuPage.readyGoSubscription')}</Link>}
+                {o.subscriptionActive || abonnementOuvert()
+                  ? t('menuPage.readyStepSubscription')
+                  : t('menuPage.readyStepSubscriptionSoon', { date: dateOuvertureAbonnement(locale) })}
+                {' '}
+                {!o.subscriptionActive && <Link to="/account?ouvrir=abonnement">{t(abonnementOuvert() ? 'menuPage.readyGoSubscription' : 'menuPage.readySeeSubscription')}</Link>}
               </Etape>
             )}
             <Etape fait={o.contractAccepted}>

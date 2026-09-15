@@ -38,6 +38,11 @@ export const OUVERTURE_ABONNEMENT = new Date('2026-10-01T00:00:00+02:00');
 export function abonnementOuvert() {
   return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
 }
+// Date annoncée au restaurateur dans la check-list de mise en ligne : elle vient d'ici, pas d'une
+// phrase traduite, pour qu'un report du calendrier ne laisse pas trois textes périmés derrière lui.
+export function dateOuvertureAbonnement(locale = 'fr-BE') {
+  return formater(OUVERTURE_ABONNEMENT, locale);
+}
 
 // Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
 // court à partir de l'ouverture des commandes (5 octobre 2026), ou de l'activation si elle est postérieure. Miroir
