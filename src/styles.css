@@ -2096,17 +2096,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-overlay--fin .jeu-carte { animation: jeu-monte .3s ease-out .5s both; }
 @keyframes jeu-monte { from { transform: translateY(10px); } to { transform: none; } }
 .jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; margin: auto; color: #fff; text-align: center; }
-/* Terrain court (téléphone couché, plein écran) : la carte de démarrage se compacte, et si elle ne tient
+/* Terrain court (téléphone couché) : la carte de démarrage se compacte, et si elle ne tient
    toujours pas, elle défile DANS le terrain au lieu de déborder par-dessus le bandeau et ses boutons. */
 .jeu-overlay { overflow-y: auto; overscroll-behavior: contain; }
-@media (max-height: 470px) {
-  .jeu--plein .jeu-emoji { font-size: 26px; }
-  .jeu--plein .jeu-carte { gap: 5px; }
-  .jeu--plein .jeu-titre { font-size: 15px; }
-  .jeu--plein .jeu-sous { font-size: 12px; }
-  .jeu--plein .jeu-btn { padding: 7px 14px; font-size: 13px; }
-  .jeu--plein .jeu-indice { font-size: 11px; margin: 0 0 3px; }
-}
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
 .jeu-btn {
@@ -3087,7 +3079,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .jeu-indice { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }
 /* 2,85 pour 1 mesure a l'ecran : le gris --ink-soft du mode clair, pose sur #14121F. Le rappel
    des commandes etait a peine lisible, exactement comme les boutons juste au-dessus. */
-.tracking-fullscreen-overlay .jeu-indice, .jeu--plein .jeu-indice { color: rgba(255,255,255,0.8); }
+.tracking-fullscreen-overlay .jeu-indice { color: rgba(255,255,255,0.8); }
 .tracking-fullscreen-bar { padding: 4px 2px; }
 .tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: var(--radius-pill); }
 .tracking-fullscreen-eta { font-size: 14px; padding: 9px 14px; }
@@ -3488,27 +3480,6 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .discover-tile-static:hover { transform: none; box-shadow: var(--shadow-3); border-color: var(--line); }
 .discover-tile-static:hover .discover-tile-img img { transform: none; }
 
-/* Mini-jeux en plein écran (bouton ⛶ du tableau de bord du jeu). Deux cas, même rendu : le vrai plein écran du
-   navigateur (Android, PC, Mac, iPad) et, quand il est refusé (iPhone), un calque fixe qui couvre l'écran.
-   Les encoches sont respectées, et la page derrière ne défile plus. */
-.jeu--plein {
-  position: fixed; inset: 0; z-index: 300; margin: 0; max-width: none; width: 100vw; height: 100dvh;
-  display: flex; flex-direction: column; background: #14121F;
-  padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
-}
-/* align-self: stretch est indispensable — `.jeu` centre ses enfants (align-items: center), donc le cadre
-   prenait la largeur de son canvas au lieu de celle de l'écran : en plein écran sur un téléphone couché, le
-   terrain restait un timbre-poste au milieu, et la carte de démarrage débordait par-dessus les boutons. */
-.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; align-self: stretch; border-radius: 14px; }
-.jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
-.jeu--plein .jeu-indice { margin: 2px 0 6px; }
-html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
-/* Astuce discrète quand le téléphone est tenu à la verticale : on n'impose rien, on suggère. */
-.jeu-rotation {
-  align-self: center; margin-top: 6px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, .14); color: var(--cream, #FBF8F2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
-}
-.jeu-rotation:hover { background: rgba(255, 255, 255, .24); }
 
 /* Aide, liste des commerces, fiche d'un commerce : même fond, mais les cartes restent opaques (pas de flou :
    une longue liste en paierait le prix sur téléphone). Le montage se voit dans les marges et sous la page. */
@@ -3527,22 +3498,19 @@ html.jeu-en-cours .panier-pilule,
 html.tracking-plein-actif .panier-pilule,
 html.jeux-sur-page .panier-pilule { display: none !important; }
 
-/* Boutons nommés du plein écran et de l'écran scindé : assez gros pour le pouce, lisibles sur fond sombre. */
-.jeu-plein-btn {
+/* Bouton nommé de l'écran scindé : assez gros pour le pouce, lisible sur fond sombre. */
+.jeu-action-nommee {
   display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
   background: var(--lime); color: #14121F; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
 }
-.jeu-plein-btn--ghost { background: rgba(255, 255, 255, .16); color: #fff; }
-.jeu-plein-btn:hover { filter: brightness(1.06); }
-@media (max-width: 420px) { .jeu-plein-btn--ghost span { display: none; } }
+.jeu-action-nommee { background: rgba(255, 255, 255, .16); color: #fff; }
+.jeu-action-nommee:hover { filter: brightness(1.06); }
+@media (max-width: 420px) { .jeu-action-nommee span { display: none; } }
 /* Téléphone en plein écran : les boutons passent sous le score au lieu de le recouvrir. */
-/* Plein écran : fond sombre, donc score et niveau en clair (l'encre sombre du mode normal y disparaissait). */
-.jeu--plein .jeu-score { color: #fff; }
-.jeu--plein .jeu-niveau { color: rgba(255,255,255,.7); }
 /* #FFD166 était un jaune hors palette, oublié lors du nettoyage des teintes. Le lime le remplace :
    sur ce fond presque noir il tranche autant, et il appartient à la marque. L'interdiction du
    CLAUDE.md vise le lime en TEXTE SUR PAGE BLANCHE, où il disparaît — ici le fond est #14121F. */
-.jeu--plein .jeu-best, .tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
+.tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
 .tracking-fullscreen-overlay .jeu-score { color: #fff; }
 .tracking-fullscreen-overlay .jeu-niveau { color: rgba(255,255,255,.7); }
 
@@ -3553,23 +3521,14 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
    en faut 4,5. Le libellé était simplement invisible.
    Les trois autres réglages de couleur du plein écran (score, niveau, record) avaient été faits
    juste au-dessus ; ceux des boutons avaient été oubliés. */
-.jeu--plein .jeu-regles-btn,
 .tracking-fullscreen-overlay .jeu-regles-btn {
   background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.28); color: #fff;
 }
-.jeu--plein .jeu-regles-btn:hover,
 .tracking-fullscreen-overlay .jeu-regles-btn:hover { border-color: rgba(255, 255, 255, 0.55); }
 /* Le réglage actif en aplat lime avec du texte encre : c'est l'emploi que le CLAUDE.md autorise
    pour le lime, et sur ce fond sombre rien ne se voit mieux. */
-.jeu--plein .jeu-regles-btn.active,
 .tracking-fullscreen-overlay .jeu-regles-btn.active {
   background: var(--lime); border-color: var(--lime); color: var(--ink);
-}
-/* Téléphone en plein écran : record et score sur une ligne, les boutons dessous, alignés à droite. */
-@media (max-width: 560px) {
-  .jeu--plein .jeu-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
-  .jeu--plein .jeu-score { text-align: left; }
-  .jeu--plein .jeu-hud-boutons { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 }
 
 /* Écran scindé sur téléphone : la carte garde sa hauteur fixe en haut, le jeu remplit le reste. */
@@ -3583,15 +3542,10 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 .tracking-fullscreen-split.scinde { gap: 8px; }
 .tracking-fullscreen-split.scinde .tracking-fullscreen-game { padding: 6px 8px; }
 
-/* Mini-jeux au doigt : rien ne se sélectionne ni ne s'agrandit (loupe iOS, menu d'appui long), et en plein
-   écran toute la surface appartient au jeu — seuls les boutons gardent le tap normal (pause, quitter…). */
+/* Mini-jeux au doigt : rien ne se sélectionne ni ne s'agrandit (loupe iOS, menu d'appui long). */
 .jeu, .jeu * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .jeu input, .jeu textarea { -webkit-user-select: text; user-select: text; }
-.jeu--plein { touch-action: none; overscroll-behavior: contain; }
-.jeu--plein button, .jeu--plein .jeu-regles-corps { touch-action: manipulation; }
-.jeu--plein .jeu-regles-corps { touch-action: pan-y; }
-html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
-/* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (200) et du plein écran de secours (300). */
+/* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (z-index 200). */
 .modal-overlay.pseudo-modal-overlay { z-index: 400; }
 
 /* Inscription : relecture obligatoire de ce qui a été pré-rempli (site, horaires, type trouvés sur le web). */
