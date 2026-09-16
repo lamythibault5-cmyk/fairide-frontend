@@ -2789,7 +2789,11 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* Champ mot de passe avec œil (PasswordInput.jsx). */
 .password-input { position: relative; }
 .password-input input { width: 100%; padding-right: 44px; }
-.password-eye { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: 0; padding: 4px 6px; cursor: pointer; font-size: 18px; line-height: 1; border-radius: 8px; }
+/* Centré SANS transform : la règle générale button:active (scale, ou transform: none sur tactile) remplaçait le
+   translateY(-50%). À l'appui, l'œil sautait d'une demi-hauteur, le doigt ou la souris se relâchait à côté, et le
+   clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
+.password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; font-size: 18px; line-height: 1; border-radius: 8px; touch-action: manipulation; }
+.password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
 
 /* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
