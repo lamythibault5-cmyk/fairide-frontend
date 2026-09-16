@@ -1805,6 +1805,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-main .page-fade > * > .page-title,
   .dashboard-main .page-fade > .page-title,
   .dashboard-main .page-fade > * > h2.section-title:first-child { padding-right: 108px; }
+  /* L'en-tête de Mon compte pose son avatar tout à droite : c'est LUI qui se retrouvait sous la
+     pastille, pas le titre. La réserve se porte donc sur la rangée entière, et le titre qu'elle
+     contient n'a plus besoin de la sienne. */
+  .dashboard-main .page-fade > * > .account-entete { padding-right: 108px; }
+  .dashboard-main .page-fade > * > .account-entete > .page-title { padding-right: 0; }
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
   /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
@@ -2497,6 +2502,26 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-identite-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-identite-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-identite .pill { flex-shrink: 0; }
+
+/* En-tête de Mon compte : le nom EST le titre de la page, l'avatar lui fait face. Il n'y a plus de
+   carte d'identité en dessous — nom, e-mail et rôle répétés sous un titre « Mon compte », ça
+   faisait deux en-têtes pour une page. Le rôle se lit à ce que la page contient, et l'e-mail vit
+   dans « Coordonnées de connexion », où on va justement pour le changer. */
+.account-entete { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.account-entete-nom { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.account-avatar-grand { width: 58px; height: 58px; font-size: 20px; }
+
+/* Trois raccourcis vers ce qu'on vient chercher : des tuiles carrées, icône au-dessus du mot.
+   Elles se partagent la largeur à parts égales pour que la rangée se lise comme un tout et non
+   comme trois boutons de tailles différentes. */
+.account-raccourcis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.account-raccourci {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 18px 8px; text-decoration: none; text-align: center;
+  background: var(--surface-soft); border-radius: var(--radius); color: var(--ink);
+  font-size: 14px; font-weight: 500; line-height: 1.2; transition: background .15s;
+}
+.account-raccourci:hover { background: #E2E2E2; }
 
 /* Mentions légales et identifiant de build, en pied de page. Discrets par construction : on les
    cherche quand on en a besoin, on ne doit pas les voir le reste du temps. */

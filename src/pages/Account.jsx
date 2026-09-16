@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import Icone from '../components/Icone';
 import PasswordInput from '../components/PasswordInput';
 import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
@@ -85,7 +86,6 @@ export default function Account() {
     }
   }
   const { t, language, locale } = useLanguage();
-  const ROLE_LABEL = { client: t('account.roleClient'), restaurant: t('account.roleRestaurant'), driver: t('account.roleDriver') };
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
@@ -440,22 +440,44 @@ export default function Account() {
 
   const nomComplet = [user.firstName, user.lastName].filter(Boolean).join(' ');
   const initiales = (nomComplet || user.email || '?').split(/[\s@]+/).slice(0, 2).map((m) => m[0]).join('').toUpperCase();
+
+  // Les trois raccourcis de l'en-tête, par rôle. Ils ne créent aucune destination : ce sont des
+  // pages qui existent déjà et qu'on atteignait par une rangée plus bas ou par la barre du bas.
+  const raccourcis = role === 'client'
+    ? [{ to: '/favorites', icone: 'favoris', libelle: t('nav.favorites') },
+       { to: '/orders', icone: 'commandes', libelle: t('nav.orders') },
+       { to: '/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
+    : role === 'driver'
+      ? [{ to: '/driver', icone: 'commandes', libelle: t('nav.orders') },
+         { to: '/driver/reviews', icone: 'etoile', libelle: t('accountUi.myReviews') },
+         { to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
+      : [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') },
+         { to: '/dashboard/preview', icone: 'apercu', libelle: t('nav.customerPreview') },
+         { to: '/dashboard/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }];
   const adresseResume = user.addressStreet && user.addressCity ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',') : null;
   const solde = Number(user.balance || 0).toFixed(2);
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('account.title')}</h2>
+      {/* LE NOM EST LE TITRE DE LA PAGE. « Mon compte » au-dessus d'une carte qui répétait le nom,
+          l'e-mail et le rôle faisait deux en-têtes pour une seule page — et « Mon compte » ne dit
+          rien que l'onglet allumé en bas ne dise déjà. Le nom, lui, confirme d'un coup d'œil sous
+          quel compte on est, ce qui est la vraie question quand on ouvre cet écran. */}
+      <div className="account-entete">
+        <h1 className="page-title account-entete-nom">{nomComplet || user.email}</h1>
+        <span className="account-avatar account-avatar-grand" aria-hidden="true">{initiales}</span>
+      </div>
 
-      {/* Qui est connecté : nom, e-mail, rôle. Une carte d'identité, pas un formulaire — les
-          modifications se font dans les rangées en dessous. */}
-      <div className="card account-identite">
-        <span className="account-avatar" aria-hidden="true">{initiales}</span>
-        <div className="account-identite-texte">
-          <b>{nomComplet || user.email}</b>
-          {nomComplet && <span className="small">{user.email}</span>}
-        </div>
-        <span className="pill teal">{ROLE_LABEL[role] || role}</span>
+      {/* Trois raccourcis vers ce qu'on vient chercher le plus souvent : le reste de la page est
+          une liste de réglages, qu'on ouvre rarement. Ils dépendent du rôle — un livreur n'a pas
+          de favoris, un restaurateur n'a pas de commandes à lui. */}
+      <div className="account-raccourcis">
+        {raccourcis.map((r) => (
+          <Link key={r.to} to={r.to} className="account-raccourci">
+            <Icone nom={r.icone} taille={24} />
+            <span>{r.libelle}</span>
+          </Link>
+        ))}
       </div>
 
       {/* ——— Messages : en tête, juste sous l'identité — c'est par là que Fairide parle aux comptes
@@ -725,8 +747,6 @@ export default function Account() {
           {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
               fasse 56px (voir DashboardSidebar.jsx). On les ouvre moins souvent que la liste, la
               recherche ou ses commandes — c'est le sixième par l'usage, donc celui qui part. */}
-          <LigneCompte to="/favorites" icone="favoris" titre={t('nav.favorites')} />
-          <LigneCompte to="/invoices" icone="document" titre={t('accountUi.myInvoices')} />
           <LigneCompte icone="bouclier" titre={t('accountUi.guestReviewsTitle')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
             {ouvertes.has('avisRestos') && <MyGuestReviews />}
           </LigneCompte>
@@ -746,7 +766,6 @@ export default function Account() {
               que chaque cible fasse 56px (voir DashboardSidebar.jsx). Ce sont des pages qu'on ouvre
               de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
               d'emploi, partis avant elles pour la même raison. */}
-          <LigneCompte to="/dashboard/preview" icone="apercu" titre={t('nav.customerPreview')} />
           <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
           <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
             {ouvertes.has('tickets') && <TicketHelp />}
@@ -957,7 +976,6 @@ export default function Account() {
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom.
               Les réservations (agenda, plan de salle, règles, agenda externe) ont leur propre rubrique principale. */}
           <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
-          <LigneCompte to="/dashboard/invoices" icone="document" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
           <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
         </div>
@@ -976,8 +994,6 @@ export default function Account() {
           <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>
-          <LigneCompte to="/driver/reviews" icone="etoile" titre={t('accountUi.myReviews')} />
-          <LigneCompte to="/driver/invoices" icone="document" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
         </div>
       )}
 
