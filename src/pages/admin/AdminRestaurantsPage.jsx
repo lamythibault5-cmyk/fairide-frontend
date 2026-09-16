@@ -377,7 +377,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
 
   function startEdit() {
     setForm({
-      name: detail.name, commune: detail.commune, responsibleName: detail.responsibleName,
+      name: detail.name, commune: detail.commune, neighborhood: detail.neighborhood || '', responsibleName: detail.responsibleName,
       companyNumber: detail.companyNumber, vatNumber: detail.vatNumber, legalName: detail.legalName,
       phone: detail.restaurantPhone || '', addressStreet: detail.addressStreet || '', addressNumber: detail.addressNumber || '',
       addressPostalCode: detail.addressPostalCode || '', addressCity: detail.addressCity || ''
@@ -471,7 +471,13 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       {detail && onglet === 'apercu' && editing && form && (
         <div>
           <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
-          <div className="field"><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+          {/* Le quartier se corrigeait jusqu'ici en se connectant sous le compte du commerçant :
+              l'API l'acceptait déjà (PATCH /admin/restaurants/:id), seul le formulaire ne l'offrait
+              pas. Il est posé à côté de la commune, qui le contient. */}
+          <div className="row" style={{ gap: 8 }}>
+            <div className="field" style={{ flex: 1 }}><label htmlFor="resto-commune">{tr('adminCommon.municipality')}</label><input id="resto-commune" value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor="resto-quartier">{tr('adminCommon.neighborhood')}</label><input id="resto-quartier" value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} /></div>
+          </div>
           <div className="field"><label>{tr('adminRestos.restoPhone')}</label><input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+32 2 000 00 00" /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 3 }}><label>{tr('adminRestos.street')}</label><input value={form.addressStreet} onChange={(e) => setForm({ ...form, addressStreet: e.target.value })} /></div>
