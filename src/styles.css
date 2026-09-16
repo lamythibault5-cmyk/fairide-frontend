@@ -1698,8 +1698,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    carte qu'on ne voit plus qu'en vignette sur un téléphone.
    Les marges négatives annulent celles de .dashboard-main : c'est le seul moyen d'aller bord à
    bord depuis l'intérieur d'une colonne qui a sa propre marge intérieure. */
-.carte-page { margin: -24px -28px -40px; height: calc(100svh - 0px); }
-.carte-plein { position: relative; height: 100%; }
+/* La carte occupe la premiere hauteur d'ecran, la liste commence juste dessous : on voit la carte
+   en arrivant, on obtient la liste en descendant. La page defile donc normalement, elle n'est plus
+   figee a la hauteur de l'ecran. */
+.carte-page { margin: -24px -28px -40px; }
+.carte-plein { position: relative; height: 72svh; min-height: 340px; }
 .carte-attente { height: 100%; background: var(--surface-soft); }
 /* Les contrôles ne prennent pas les clics de la carte : seuls les boutons en prennent. */
 .carte-controles { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
@@ -1710,12 +1713,37 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* Le choix de cuisine : un panneau de pastilles sous le bouton, et non le menu du système, qui
    s'ouvrait au milieu de l'écran dans le style du navigateur — une liste grise sans rapport avec
    la page, posée par-dessus la carte. Il se ferme au choix, et défile s'il y a beaucoup de types. */
-.carte-cuisines {
+.carte-panneau {
   display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; max-height: 42vh; overflow-y: auto;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
   padding: 10px; box-shadow: var(--shadow-2);
 }
-.carte-cuisines .cuisine-chip { box-shadow: none; }
+.carte-panneau .cuisine-chip { box-shadow: none; }
+.carte-panneau .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.carte-ligne-etat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.carte-reinit {
+  background: rgba(255,255,255,0.92); color: var(--iris); border: 1px solid var(--line);
+  font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+
+/* La liste sous la carte. Le coin arrondi en haut et le leger recouvrement disent qu'elle glisse
+   par-dessus la carte : c'est ce qui fait comprendre qu'on peut descendre, sans fleche ni consigne. */
+.carte-feuille {
+  position: relative; z-index: 1; margin-top: -18px; background: #fff;
+  border-radius: 18px 18px 0 0; padding: 20px 20px 40px; box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+}
+.carte-feuille-titre { font-size: 21px; margin: 0 0 14px; }
+.carte-feuille-ligne {
+  display: flex; align-items: center; gap: 12px; padding: 10px 0; text-decoration: none; color: inherit;
+  border-bottom: 1px solid var(--line);
+}
+.carte-feuille-ligne:last-child { border-bottom: none; }
+.carte-feuille-image { flex-shrink: 0; width: 64px; height: 64px; border-radius: var(--radius-chip); object-fit: cover; background: var(--surface-soft); }
+.carte-feuille-image-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.carte-feuille-texte { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+.carte-feuille-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.carte-feuille-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); }
+.carte-feuille-promo { flex-shrink: 0; }
 .carte-bandeau-livraison {
   display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
   background: var(--iris); color: var(--cream); font-size: 14px; font-weight: 500;
