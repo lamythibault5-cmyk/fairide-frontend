@@ -2389,6 +2389,15 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-link-row--statique { cursor: default; }
 .account-link-row--statique:hover { background: none; }
 .account-link-action { flex-shrink: 0; display: inline-flex; align-items: center; }
+/* Une rangée qui porte un bouton à libellé long l'imposait à la ligne : le bouton ne se comprime
+   pas (flex-shrink: 0), donc c'est la colonne de texte qui encaissait, réduite à huit caractères.
+   Sur le tableau de bord, « Ouverture 30 septembre, via Stripe… » s'affichait en colonne, un mot
+   tronqué par ligne. Le bouton passe donc sous le texte quand l'écran est étroit, aligné sur lui
+   plutôt que sur l'icône, et la rangée redevient lisible. */
+@media (max-width: 600px) {
+  .account-link-row { flex-wrap: wrap; }
+  .account-link-action { flex-basis: 100%; margin-left: 46px; margin-top: 10px; }
+}
 .account-link-icon--ok { background: rgba(200, 240, 60, 0.45); }
 .account-link-icon--warn { background: rgba(240, 200, 60, 0.28); }
 .account-link-icon--danger { background: rgba(220, 60, 60, 0.14); }
