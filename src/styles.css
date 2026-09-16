@@ -1116,7 +1116,10 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 
 /* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
    carte, pas un terrain de jeu imposé à côté d'elle. */
-.suivi-jouer { display: inline-flex; align-items: center; gap: 8px; margin: 10px auto 0; text-decoration: none; }
+/* Le bouton du jeu vit maintenant dans la barre de « Mes commandes » (voir .commandes-barre)
+   et non plus centre sous la carte de suivi : sa marge automatique des deux cotes le centrait,
+   ce qui annulait le margin-left: auto cense le pousser a droite. */
+.suivi-jouer { display: inline-flex; align-items: center; margin: 0; text-decoration: none; }
 
 .status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
 .status-nouveau { background: rgba(217,45,60,0.12); color: var(--red); }
@@ -3676,16 +3679,15 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 @keyframes jeu-deroule { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
 /* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
-.suivi-jouer.est-ouvert { background: var(--iris); color: #fff; }
 
-/* L'entete d'une carte de commande : le nom a gauche, le statut et le declencheur du jeu a droite.
-   Ils se replient l'un sous l'autre quand la largeur manque, plutot que d'ecraser le nom. */
+/* L'entete d'une carte de commande : le nom a gauche, le statut a droite. */
 .commande-entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
-.commande-entete-droite { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-/* Le declencheur est plus petit que les boutons d'action pleine taille : c'est une proposition
-   posee a cote d'un badge de statut, pas l'action principale de la page. */
+
+/* La barre de « Mes commandes » : les deux filtres a gauche, le bouton du jeu POUSSE tout a
+   droite par une marge automatique. Sur telephone la rangee se replie, et le bouton garde sa
+   place de dernier element. */
+.commandes-barre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
+.commandes-barre .suivi-jouer { margin-left: auto; }
+/* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
+   de filtres, pas l'action principale de la page. */
 .suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
-/* Ouvert, il ferme : l'iris dit que le geste a change de sens. */
-.suivi-jouer.est-ouvert { background: var(--iris); border-color: var(--iris); color: #fff; }
-/* Le meme declencheur sous l'ecran vide, ou il n'a aucun badge a cote de lui. */
-.jeu-sans-commande { display: flex; justify-content: center; margin: -8px 0 16px; }

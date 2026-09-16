@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -102,15 +102,9 @@ function ReviewForm({ order, token, toast, onDone, t }) {
   );
 }
 
-// Les etats ou une commande est encore en cours : c'est pendant ceux-la, et seulement ceux-la,
-// qu'on peut avoir envie de patienter en jouant. Une commande livree ou annulee ne propose rien.
-const EN_COURS = ['nouveau', 'preparation', 'pret', 'livraison'];
-
 export default function Orders() {
   const [orders, setOrders] = useState([]);
-  // La commande dont le jeu est deroule, ou null. UNE seule a la fois : chaque jeu monte un canvas
-  // et sa boucle d'animation, donc en ouvrir trois ferait tourner trois boucles pour un seul joueur.
-  const [jeuOuvert, setJeuOuvert] = useState(null);
+  // Le jeu est pose une fois pour toutes en bas de page ; ce repere sert au bouton qui y amene.
   const jeuRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -169,15 +163,12 @@ export default function Orders() {
     }
   }
 
-  // Ouvre le jeu sous une commande, et y amene l'ecran. Le defilement attend la peinture suivante :
-  // au moment du clic la section n'est pas encore dans le document, il n'y a rien vers quoi aller.
-  function basculerJeu(id) {
-    setJeuOuvert((actuel) => (actuel === id ? null : id));
+  // UN BOUTON QUI NE FAIT QU'AMENER AU JEU. Il ouvrait et refermait, et changeait donc de libelle
+  // selon son etat — deux gestes pour une seule intention. Le jeu est desormais toujours la, en bas
+  // de page : le bouton n'a plus qu'a y descendre, et il dit la meme chose en permanence.
+  function allerAuJeu() {
+    jeuRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
-  useEffect(() => {
-    if (!jeuOuvert || !jeuRef.current) return;
-    jeuRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, [jeuOuvert]);
 
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
@@ -197,9 +188,15 @@ export default function Orders() {
         <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+      <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
+        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
+            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
+            intention ; il dit maintenant la meme chose en permanence. */}
+        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
+        </button>
       </div>
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
@@ -215,22 +212,9 @@ export default function Orders() {
             seule porte d'entrée qui en dépendait, puisqu'elle vivait sur une commande en cours.
             Ici, sous l'écran vide, elle est ouverte à tout le monde. Le bouton reste discret :
             on ne vient pas sur Fairide pour jouer, on y tombe en attendant. */}
-        <div className="jeu-sans-commande">
-          <button
-            type="button"
-            className={`btn-gold suivi-jouer${jeuOuvert === 'vide' ? ' est-ouvert' : ''}`}
-            aria-expanded={jeuOuvert === 'vide'}
-            onClick={() => basculerJeu('vide')}
-          >
-            <Icone nom="manette" taille={17} />
-            {jeuOuvert === 'vide' ? t('games.closeGame') : t('games.playWhileWaiting')}
-          </button>
-        </div>
-        {jeuOuvert === 'vide' && (
-          <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
-            <GameSwitcher fill large />
-          </section>
-        )}
+        <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+          <GameSwitcher fill large />
+        </section>
       </div>
     );
   }
@@ -240,9 +224,15 @@ export default function Orders() {
       <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+      <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
+        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
+            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
+            intention ; il dit maintenant la meme chose en permanence. */}
+        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
+        </button>
       </div>
       {rappels.map((o) => {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
@@ -258,24 +248,7 @@ export default function Orders() {
         <div className={`card order-type-${orderTypeColor(o)}`}>
           <div className="commande-entete">
             <b>{o.restaurantName}</b>
-            <span className="commande-entete-droite">
-              <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
-              {/* EN HAUT A DROITE, ET EN LIME. Il vivait en pied de carte, en gris discret : il
-                  fallait lire toute la commande pour le trouver, et rien n'y invitait. Le lime est
-                  la seule couleur de la marque faite pour appeler un doigt, et c'est le seul accent
-                  lime de cette page. */}
-              {EN_COURS.includes(o.status) && (
-                <button
-                  type="button"
-                  className={`btn-gold suivi-jouer${jeuOuvert === o.id ? ' est-ouvert' : ''}`}
-                  aria-expanded={jeuOuvert === o.id}
-                  onClick={() => basculerJeu(o.id)}
-                >
-                  <Icone nom="manette" taille={17} />
-                  {jeuOuvert === o.id ? t('games.closeGame') : t('games.playWhileWaiting')}
-                </button>
-              )}
-            </span>
+            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
           </div>
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
@@ -409,13 +382,14 @@ export default function Orders() {
             />
           )}
         </div>
-        {jeuOuvert === o.id && (
-          <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
-            <GameSwitcher fill large />
-          </section>
-        )}
         </Fragment>
       ))}
+      {/* Le jeu, une fois, en pied de page : le bouton de la barre y amene. Il etait deroule sous
+          chaque commande, ce qui obligeait a choisir SOUS LAQUELLE jouer — une question que
+          personne ne se pose. */}
+      <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+        <GameSwitcher fill large />
+      </section>
     </div>
   );
 }
