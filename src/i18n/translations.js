@@ -5677,7 +5677,8 @@ export const translations = {
       slogan: 'Paie ton repas, pas la plateforme.',
       subtotal: 'Sous-total',
       verifiedByFairide: 'Restaurant vérifié par Fairide',
-      verifiedShort: 'resto vérifié'
+      verifiedShort: 'resto vérifié',
+      close: 'Fermer'
     },
     seo: {
       /* Titre servi aux pages qui n'en posent pas un à elles (l'accueil, et tout ce qui appelle
@@ -5911,7 +5912,24 @@ export const translations = {
       fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
       ordersOpenBanner: 'Réservations de table et à emporter dès le {dateResa} · livraison dès le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.',
       ordersOpenBannerResaOpen: 'Tu peux déjà réserver une table ou commander à emporter. La livraison ouvre le {date}.',
-      reserveSoon: 'Réservations dès le {date}'
+      reserveSoon: 'Réservations dès le {date}',
+      infoButton: 'Infos',
+      infoTitle: 'Infos pratiques',
+      hoursLabel: 'Horaires',
+      addressLabel: 'Adresse',
+      phoneLabel: 'Téléphone',
+      websiteLabel: 'Site web',
+      modeLabel: 'Comment récupérer ta commande',
+      modeDelivery: 'Livraison',
+      modePickup: 'À emporter',
+      feeLabel: 'Frais de livraison',
+      feeFrom: 'dès {amount} €',
+      feeFree: 'Offerte',
+      feePickup: 'Gratuit',
+      feePickupLabel: 'Retrait sur place',
+      searchDish: 'Rechercher un plat',
+      noDishMatch: 'Aucun plat ne correspond à « {q} ».',
+      clearSearch: 'Effacer la recherche'
     },
     floatingCart: {
       title: 'Ton panier',
@@ -12177,7 +12195,8 @@ export const translations = {
       slogan: 'Pay your meal, not the platform.',
       subtotal: 'Subtotal',
       verifiedByFairide: 'Restaurant verified by Fairide',
-      verifiedShort: 'verified'
+      verifiedShort: 'verified',
+      close: 'Close'
     },
     seo: {
       defaultTitle: "Fairide · Meal delivery and local businesses in Brussels, reduced commission",
@@ -12404,7 +12423,24 @@ export const translations = {
       fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.',
       ordersOpenBanner: 'Table reservations and takeaway from {dateResa} · delivery from {date}. Until then, browse the menu, build your cart and save your favourite businesses.',
       ordersOpenBannerResaOpen: 'You can already book a table or order takeaway. Delivery opens on {date}.',
-      reserveSoon: 'Reservations from {date}'
+      reserveSoon: 'Reservations from {date}',
+      infoButton: 'Info',
+      infoTitle: 'Useful info',
+      hoursLabel: 'Opening hours',
+      addressLabel: 'Address',
+      phoneLabel: 'Phone',
+      websiteLabel: 'Website',
+      modeLabel: 'How to get your order',
+      modeDelivery: 'Delivery',
+      modePickup: 'Pickup',
+      feeLabel: 'Delivery fee',
+      feeFrom: 'from {amount} €',
+      feeFree: 'Free',
+      feePickup: 'Free',
+      feePickupLabel: 'Pickup in store',
+      searchDish: 'Search a dish',
+      noDishMatch: 'No dish matches "{q}".',
+      clearSearch: 'Clear search'
     },
     floatingCart: {
       title: 'Your cart',
@@ -18668,7 +18704,8 @@ export const translations = {
       slogan: 'Betaal je maaltijd, niet het platform.',
       subtotal: 'Subtotaal',
       verifiedByFairide: 'Restaurant geverifieerd door Fairide',
-      verifiedShort: 'geverifieerd'
+      verifiedShort: 'geverifieerd',
+      close: 'Sluiten'
     },
     seo: {
       defaultTitle: "Fairide · Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie",
@@ -18895,7 +18932,24 @@ export const translations = {
       fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.',
       ordersOpenBanner: 'Tafelreservaties en afhalen vanaf {dateResa} · levering vanaf {date}. Tot dan: bekijk de kaart, stel je winkelmandje samen en bewaar je favoriete zaken.',
       ordersOpenBannerResaOpen: 'Je kunt al een tafel reserveren of afhalen bestellen. Levering start op {date}.',
-      reserveSoon: 'Reservaties vanaf {date}'
+      reserveSoon: 'Reservaties vanaf {date}',
+      infoButton: 'Info',
+      infoTitle: 'Praktische info',
+      hoursLabel: 'Openingsuren',
+      addressLabel: 'Adres',
+      phoneLabel: 'Telefoon',
+      websiteLabel: 'Website',
+      modeLabel: 'Hoe je je bestelling ophaalt',
+      modeDelivery: 'Levering',
+      modePickup: 'Afhalen',
+      feeLabel: 'Leveringskosten',
+      feeFrom: 'vanaf {amount} €',
+      feeFree: 'Gratis',
+      feePickup: 'Gratis',
+      feePickupLabel: 'Afhalen in de zaak',
+      searchDish: 'Zoek een gerecht',
+      noDishMatch: 'Geen gerecht komt overeen met "{q}".',
+      clearSearch: 'Zoekopdracht wissen'
     },
     floatingCart: {
       title: 'Jouw winkelmandje',

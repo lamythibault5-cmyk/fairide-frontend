@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
 const CartContext = createContext(null);
-const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
+// Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
+// deux écrans qui affichent le même chiffre doivent le lire au même endroit, sinon l'un des deux
+// finit par mentir le jour où le tarif bouge.
+export const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const SYSTEM_FEE_RATE = 0.10;
 const COMMISSION_RATE = 0.10;
 // Part Fairide (SYSTEM_FEE_RATE) HT, TVA ajoutée en plus au panier comme sur toute plateforme

@@ -702,9 +702,26 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
-.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
-.menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
+/* La carte d'un plat passe de 8px à 16px de rayon : c'est une CARTE, pas une puce, et le rayon
+   des cartes est celui-là partout ailleurs. Sa photo garde 8px, comme toutes les vignettes. */
+.menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
 .menu-item-card:hover { border-color: var(--iris); box-shadow: none; }
+/* Rendue en <button> quand elle est cliquable (voir ItemCard) : il faut donc défaire ce que la
+   règle globale des boutons lui impose — sa pilule, son padding, son texte centré. */
+.menu-item-card-cliquable { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.menu-item-card-cliquable:active { transform: none; }
+.menu-item-card-indisponible { opacity: 0.5; }
+.menu-item-visuel { position: relative; }
+/* Le « + » posé sur la photo. Purement visuel — c'est la carte entière qui porte l'action. */
+.menu-item-ajout {
+  position: absolute; right: 8px; bottom: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--ink); font-size: 20px; font-weight: 500; line-height: 1;
+  box-shadow: var(--shadow-3);
+}
+.menu-item-card-cliquable:hover .menu-item-ajout { background: var(--iris); color: #fff; }
 .menu-item-card .name { font-weight: 600; font-size: 14px; margin: 0 0 2px; }
 /* Emoji "healthy" accolé au nom du plat (menu_items.healthy, coché par le restaurateur). white-space:
    nowrap sur le seul emoji : le nom peut passer à la ligne, mais jamais entre le nom et son emoji, qui
@@ -890,6 +907,98 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    à gauche de la carte, au lieu de rester en position absolue avec rien en dessous. */
 .restaurant-header-media.no-cover { position: static; margin: 0 0 12px; width: auto; }
 .restaurant-header-media.no-cover .restaurant-logo-badge { position: static; width: 60px; height: 60px; box-shadow: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   L'EN-TÊTE D'UNE FICHE DE COMMERCE (.fiche-*).
+
+   Il vivait dans un .card : un rectangle blanc cerné d'un filet de 1px, avec 24px de marge
+   intérieure — et sa photo devait déborder par des marges négatives de -22px pour paraître
+   pleine largeur. Le filet n'encadrait pas un élément parmi d'autres, il encadrait le SUJET de
+   la page ; et le débordement n'était qu'un contournement de ce filet. Les deux partent
+   ensemble, la photo est simplement pleine largeur.
+
+   Ce que ces règles reprennent de la fiche d'Uber : la photo en bandeau, le logo rond qui la
+   chevauche en bas à gauche, le titre posé dessous, et UNE ligne de métadonnées grise là où il
+   y en avait six empilées.
+   ───────────────────────────────────────────────────────────────────────────── */
+.fiche-entete { margin-bottom: 20px; }
+.fiche-media { position: relative; margin-bottom: 30px; }
+.fiche-couverture {
+  display: block; width: 100%; height: 220px; object-fit: cover;
+  border-radius: var(--radius); background: var(--surface-soft);
+}
+.fiche-logo {
+  position: absolute; left: 16px; bottom: -26px;
+  width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
+  border: 3px solid #fff; background: #fff; box-shadow: var(--shadow-3);
+}
+/* Sans photo de couverture, le logo n'a rien à chevaucher : il reprend le fil normal. */
+.fiche-media.sans-photo { position: static; margin-bottom: 12px; }
+.fiche-media.sans-photo .fiche-logo { position: static; width: 60px; height: 60px; box-shadow: none; border: none; }
+
+.fiche-titre-ligne { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fiche-nom { display: flex; align-items: center; gap: 8px; font-size: var(--t-display-lg); margin: 0 0 6px; }
+
+/* La ligne de méta : grise, sur une seule ligne, les séparateurs en points médians. Elle se
+   replie proprement sur deux lignes quand le nom de la commune est long. */
+.fiche-meta {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin: 0 0 4px; font-size: var(--t-body-sm); color: var(--ink-soft);
+}
+.fiche-meta-note { display: inline-flex; align-items: center; }
+/* « Infos » est un bouton, mais il doit se lire comme un lien : c'est une porte vers un
+   complément, pas une action. D'où le soulignement plutôt que la pilule. */
+.fiche-infos-lien {
+  background: none; border: 0; padding: 0; min-height: 0;
+  font: inherit; font-weight: 600; color: var(--ink); text-decoration: underline; cursor: pointer;
+}
+.fiche-desc { margin: 0 0 14px; font-size: var(--t-body-sm); color: var(--ink-soft); }
+
+/* Bascule Livraison / À emporter : une pilule segmentée posée sur le gris de surface, le mode
+   retenu en blanc. C'est le motif « Delivery | Pickup » de la capture. */
+.fiche-modes {
+  display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 12px;
+  background: var(--surface-soft); border-radius: var(--radius-pill);
+}
+.fiche-modes button {
+  min-height: 40px; padding: 8px 20px; border-radius: var(--radius-pill);
+  background: transparent; color: var(--ink-soft); font-size: var(--t-body-sm); font-weight: 600;
+}
+.fiche-modes button.est-actif { background: #fff; color: var(--ink); box-shadow: var(--shadow-3); }
+
+/* Panneau des frais : le pendant du « €1.79 Delivery Fee / 17 min Earliest arrival » d'Uber,
+   moins le délai — aucun champ de temps de préparation n'existe, ni ici ni au serveur, et on
+   n'annonce pas une heure d'arrivée qu'on ne sait pas calculer. */
+.fiche-panneau {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 16px; margin-bottom: 12px;
+  background: var(--surface-soft); border-radius: var(--radius);
+}
+.fiche-panneau b { font-size: var(--t-body-md); }
+.fiche-panneau-cle { font-size: var(--t-body-sm); color: var(--ink-soft); }
+
+/* L'encart d'offres, façon « Savings and more » : UN bloc, là où il y avait deux bandeaux de
+   deux couleurs différentes écrits en style inline (un rouge, un iris). */
+.fiche-offres {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 16px; margin-bottom: 12px;
+  background: var(--iris); color: #fff; border-radius: var(--radius);
+}
+.fiche-offres-icone { flex-shrink: 0; display: inline-flex; color: var(--lime); }
+.fiche-offres-texte { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-body-sm); font-weight: 500; }
+
+.fiche-recherche { margin-bottom: 14px; }
+
+/* Les blocs de la feuille « Infos ». */
+.fiche-infos-bloc { margin-bottom: 18px; }
+.fiche-infos-bloc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: var(--t-body-sm); font-weight: 700; }
+.fiche-infos-bloc p { margin: 0 0 8px; }
+
+@media (max-width: 640px) {
+  .fiche-couverture { height: 170px; border-radius: 0; margin: 0 -20px; width: calc(100% + 40px); }
+  .fiche-logo { left: 0; width: 64px; height: 64px; bottom: -22px; }
+  .fiche-media { margin-bottom: 26px; }
+}
 .menu-item:last-child { border-bottom: none; }
 .price { font-weight: 700; color: var(--teal-deep); white-space: nowrap; margin-left: 12px; }
 
