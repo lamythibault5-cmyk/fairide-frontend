@@ -1,139 +1,33 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { api } from '../api';
+import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
-import { useLanguage, getLocale } from '../context/LanguageContext';
-import { useAuth } from '../context/AuthContext';
-import { commandesOuvertes, dateOuvertureCommandes, dateOuvertureLivraison } from '../launch';
+import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
-// Panier persistant sur toutes les pages (monté une seule fois dans Layout.jsx), toujours en bas à
-// gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
-// toujours déployé — moins intrusif pendant qu'on parcourt le site, mais jamais perdu en changeant de
-// page grâce à CartContext (sessionStorage). Seul et unique accès panier de l'appli (pas de doublon
-// dans la barre de sections du menu, voir CategoryQuickNav). Il ne s'affiche QUE s'il contient
-// quelque chose : l'indicateur « panier vide » permanent qu'on décrivait ici recouvrait le contenu
-// des autres pages sans rien apprendre à personne (voir le commentaire du return null plus bas).
+// La pilule du panier : « Voir le panier · 2 », posee au-dessus de la barre d'onglets.
+//
+// C'etait une bulle qui se DEPLIAIT par-dessus la page : on lisait ses articles dans une fenetre
+// de la taille d'une carte de visite, posee sur le menu qu'elle cachait a moitie, avec ses propres
+// steppers, son propre calcul de totaux et son propre bouton de commande - une demi-page de
+// paiement flottante. Tout cela vit maintenant sur /panier, une vraie page.
+//
+// Ce qui reste ici est ce qu'une barre de panier doit faire : dire qu'il y a quelque chose dedans,
+// combien, et y mener. Rien quand le panier est vide : un panier vide n'a rien a annoncer, et la
+// bulle « Panier vide » d'avant recouvrait le contenu des autres pages sans rien apprendre.
 export default function FloatingCart() {
   const cart = useCart();
-  const navigate = useNavigate();
   const { t } = useLanguage();
-  const { user } = useAuth();
-  const ouvert = commandesOuvertes(user);
-  const [expanded, setExpanded] = useState(false);
-  // Chargé à la demande (à l'ouverture) : ce composant n'a pas forcément le menu du restaurant sous la
-  // main puisqu'il peut être affiché depuis n'importe quelle page, pas seulement celle du restaurant.
-  const [preciseData, setPreciseData] = useState(null);
-  const [loadingPrecise, setLoadingPrecise] = useState(false);
-
-  // preciseData vient du menu/promo du restaurant en cours au moment où le panier a été ouvert — sans
-  // ce reset, changer de restaurant (nouvelle commande après une première terminée, ou panier vidé puis
-  // rempli ailleurs) réutiliserait le menu de l'ANCIEN restaurant pour calculer les totaux du nouveau
-  // panier, avec des prix/promos qui n'ont rien à voir.
-  useEffect(() => {
-    setPreciseData(null);
-  }, [cart.restaurantId]);
-
-  // Repasse la bulle à l'état replié une fois le panier vide (qu'il ait été vidé au restaurant en cours
-  // via le stepper, ou en changeant de restaurant) — sinon, une fois rempli à nouveau, elle rouvrirait
-  // directement en grand au lieu de repartir pliée comme au premier ajout.
-  useEffect(() => {
-    if (cart.count === 0) setExpanded(false);
-  }, [cart.count]);
-
-  function handleExpand() {
-    setExpanded(true);
-    if (!preciseData && cart.restaurantId) {
-      setLoadingPrecise(true);
-      api(`/restaurants/${cart.restaurantId}`)
-        .then((r) => setPreciseData({ menu: r.menu, cartPromo: r.activeCartPromo }))
-        .catch(() => {})
-        .finally(() => setLoadingPrecise(false));
-    }
-  }
-
-  // PANIER VIDE : PLUS RIEN. La bulle affichait « 🛒 Panier vide » en permanence, sur toutes les
-  // pages où un client est connecté (Layout.jsx la monte à deux endroits). Elle ne menait nulle
-  // part, ne se fermait pas, et recouvrait le contenu : dans « Mon compte », elle se posait sur la
-  // rangée « Moyens de paiement », qui devenait illisible et incliquable. Un panier vide n'a rien
-  // à annoncer ; la bulle réapparaît au premier plat ajouté, ce qui est le seul moment où elle dit
-  // quelque chose.
   if (cart.count === 0) return null;
 
-  // « 1 article(s) » : la parenthese disait au lecteur de choisir lui-meme la bonne forme. Les trois
-  // langues ont maintenant leur singulier et leur pluriel, choisis ici.
-  const compteArticles = t(cart.count > 1 ? 'floatingCart.itemCountPlural' : 'floatingCart.itemCount', { count: cart.count });
-
-  if (!expanded) {
-    return (
-      <button type="button" className="floating-cart-bubble" onClick={handleExpand}>
-        <span className="floating-cart-bubble-icon">🛒</span>
-        <span className="floating-cart-bubble-text">
-          <span className="floating-cart-bubble-count">{compteArticles}</span>
-          <span className="floating-cart-bubble-total">{cart.rawTotal.toFixed(2)}€</span>
-        </span>
-      </button>
-    );
-  }
-
-  const totals = preciseData ? cart.totals(preciseData.menu, preciseData.cartPromo) : null;
-  const displayedSubtotal = loadingPrecise ? null : (totals ? totals.subtotal : cart.rawTotal);
-
   return (
-    <div className="floating-cart">
-      <div className="floating-cart-header">
-        <span className="floating-cart-header-icon">🛒</span>
-        <div className="floating-cart-header-text">
-          <b>{t('floatingCart.title')}</b>
-          <div className="small floating-cart-header-sub">
-            {cart.restaurantName ? `${cart.restaurantName} · ` : ''}{compteArticles}
-          </div>
-        </div>
-        <button type="button" className="floating-cart-collapse" onClick={() => setExpanded(false)} aria-label={t('floatingCart.collapse')}>✕</button>
-      </div>
-      <div className="floating-cart-lines">
-        {Object.entries(cart.lines).map(([lineKey, line]) => (
-          <div key={lineKey} className="floating-cart-line">
-            <div className="floating-cart-line-info">
-              <span className="floating-cart-line-name">{line.name}</span>
-              {line.optionsSnapshot?.length > 0 && (
-                <span className="small floating-cart-line-options">{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-              )}
-              <span className="floating-cart-line-price">{(line.unitPrice * line.qty).toFixed(2)}€</span>
-            </div>
-            <div className="floating-cart-line-actions">
-              <div className="floating-cart-stepper">
-                <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label="−">−</button>
-                <span>{line.qty}</span>
-                <button type="button" onClick={() => cart.changeLineQty(lineKey, 1)} aria-label="+">+</button>
-              </div>
-              <button type="button" className="floating-cart-remove" title={t('floatingCart.removeItem')} onClick={() => cart.removeLine(lineKey)}>🗑️</button>
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="floating-cart-footer">
-        {totals && totals.discountedItems.map((d, i) => (
-          <div className="row" style={{ justifyContent: 'space-between' }} key={i}>
-            <span className="small">🏷️ {d.name || d.label}</span><span className="small">-{d.discount.toFixed(2)}€</span>
-          </div>
-        ))}
-        <div className="floating-cart-subtotal-row">
-          <span>{t('common.subtotal')}</span>
-          <span className="floating-cart-subtotal-amount">{loadingPrecise ? '···' : `${displayedSubtotal.toFixed(2)}€`}</span>
-        </div>
-        {/* Replier avant de naviguer : ce composant est monté une seule fois dans Layout.jsx et
-            survit donc au changement de page. Sans ce setExpanded(false), le récap complet restait
-            déployé par-dessus la page de commande, qu'il recouvre en partie — alors même qu'on
-            venait de la demander. On repart de la bulle, comme au premier ajout. */}
-        {ouvert ? (
-          <button type="button" className="floating-cart-order-btn" onClick={() => { setExpanded(false); navigate('/checkout'); }}>
-            {t('floatingCart.order')}
-          </button>
-        ) : (
-          <p className="small" style={{ margin: '6px 0' }}>🗓️ {t('floatingCart.ordersOpenSoon', { date: dateOuvertureCommandes(getLocale()), dateLivraison: dateOuvertureLivraison(getLocale()) })}</p>
-        )}
-        <button type="button" className="floating-cart-clear-link" onClick={() => cart.clearLines()}>🗑️ {t('floatingCart.clear')}</button>
-      </div>
-    </div>
+    <Link to="/panier" className="panier-pilule">
+      <span className="panier-pilule-icone" aria-hidden="true">
+        <Icone nom="sac" taille={20} />
+        {/* Le compteur sur l'icone, comme sur une application de courses : on voit d'un coup d'oeil
+            combien d'articles attendent, sans avoir a lire. */}
+        <span className="panier-pilule-compte">{cart.count}</span>
+      </span>
+      <span>{t('panier.viewCart')}</span>
+      <b>{cart.rawTotal.toFixed(2)}€</b>
+    </Link>
   );
 }

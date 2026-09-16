@@ -231,6 +231,7 @@ export default function MapPage() {
           <span className="carte-poignee-barre" aria-hidden="true" />
         </button>
         <h2 className="carte-feuille-titre">{t('mapClient.nearbyTitle')}</h2>
+        <div className="carte-feuille-liste">
         {chargement && <p className="small">{t('mapClient.loading')}</p>}
         {!chargement && liste.length === 0 && <p className="small">{t('mapClient.noneMatch')}</p>}
         {liste.map((r) => (
@@ -249,6 +250,7 @@ export default function MapPage() {
             {r.hasPromo && <span className="pill gold carte-feuille-promo">{t('restoMap.promo')}</span>}
           </Link>
         ))}
+        </div>
       </div>
     </div>
   );

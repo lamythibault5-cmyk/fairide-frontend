@@ -5,78 +5,17 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
-import { categoryKind, resolveItemImage } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
 // service à table qui demande "un dessert avec ça ?", pas une case à cocher qu'on pourrait manquer.
-function computeUpsellSuggestions(restaurant, cart) {
-  const cartItemIds = new Set(Object.values(cart.lines).map((l) => l.itemId));
-  const kindOf = (item) => categoryKind(item.category);
-  const hasKindInCart = (kind) => Object.values(cart.lines).some((l) => {
-    const item = restaurant.menu.find((m) => m.id === l.itemId);
-    return item && kindOf(item) === kind;
-  });
-  // Le restaurateur peut marquer explicitement certains plats à mettre en avant ici (suggestAtCheckout) —
-  // s'il en a marqué au moins un dans cette catégorie, on ne montre QUE ceux-là (choix éditorial assumé du
-  // restaurateur) ; sinon, repli sur le comportement automatique d'avant (n'importe quel plat de la catégorie).
-  const suggestionsFor = (kind) => {
-    if (hasKindInCart(kind)) return [];
-    const candidates = restaurant.menu.filter((m) => kindOf(m) === kind && m.available !== false && !cartItemIds.has(m.id));
-    const featured = candidates.filter((m) => m.suggestAtCheckout);
-    return (featured.length > 0 ? featured : candidates).slice(0, 4);
-  };
-  return { desserts: suggestionsFor('dessert'), drinks: suggestionsFor('boisson') };
-}
-
-function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
-  if (desserts.length === 0 && drinks.length === 0) return null;
-
-  return (
-    <div className="card upsell-card">
-      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('checkout.upsellTitle')}</h3>
-      {desserts.length > 0 && <UpsellRow items={desserts} cart={cart} restaurant={restaurant} />}
-      {drinks.length > 0 && <UpsellRow items={drinks} cart={cart} restaurant={restaurant} />}
-    </div>
-  );
-}
-
-function UpsellRow({ items, cart, restaurant }) {
-  const [pickerItem, setPickerItem] = useState(null);
-  function handleAdd(item) {
-    if (item.optionGroups?.length > 0) { setPickerItem(item); return; }
-    cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
-  }
-  return (
-    <div className="upsell-row">
-      {items.map((item) => {
-        const image = resolveItemImage(item, restaurant.sections);
-        return (
-          <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
-            {image ? <img loading="lazy" src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
-            <span className="upsell-item-name">{item.name}</span>
-            <span className="upsell-item-price">+{item.price.toFixed(2)}€</span>
-          </button>
-        );
-      })}
-      {pickerItem && (
-        <OptionsPickerModal
-          item={pickerItem}
-          onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
-            setPickerItem(null);
-          }}
-        />
-      )}
-    </div>
-  );
-}
+// Les suggestions de fin de panier (« un dessert avec ça ? ») ont demenage dans la page Panier,
+// ou elles sont proposees AVANT d'entrer dans le paiement : voir components/UpsellPanier.jsx.
+// Le paiement ne montre plus que ce qu'on paie.
 
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
@@ -127,10 +66,8 @@ export default function Checkout() {
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [step, setStep] = useState('details');
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
-  const stepInitRef = useRef(false);
 
   // Réservation seule (bouton "Réserver une table") : le panier n'a jamais reçu d'article pour ce
   // restaurant, donc cart.restaurantId peut être vide — on retombe alors sur l'id transmis explicitement
@@ -179,15 +116,8 @@ export default function Checkout() {
     }
   }, [pendingOrder]);
 
-  // Étape "dessert/boisson" affichée seulement à l'arrivée sur la page (une fois), et seulement s'il y a
-  // vraiment quelque chose à proposer — sinon on saute directement à la confirmation des infos de commande.
-  useEffect(() => {
-    if (!restaurant || stepInitRef.current) return;
-    stepInitRef.current = true;
-    const { desserts, drinks } = computeUpsellSuggestions(restaurant, cart);
-    if (!reservationOnly && cart.count > 0 && (desserts.length > 0 || drinks.length > 0)) setStep('upsell');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurant]);
+  // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
+  // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
   // Créneaux libres pour la date et le groupe : rechargés à chaque changement de l'un ou l'autre. Le
   // créneau déjà choisi est conservé s'il reste disponible, effacé sinon (on ne laisse pas partir
@@ -212,7 +142,6 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
-  const { desserts: upsellDesserts, drinks: upsellDrinks } = computeUpsellSuggestions(restaurant, cart);
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
@@ -359,17 +288,8 @@ export default function Checkout() {
     <div>
       <Link to={`/restaurants/${restaurantId}`} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; {restaurant.name}</Link>
 
-      {!pendingOrder && step === 'upsell' && (
-        <>
-          <LastChanceUpsell desserts={upsellDesserts} drinks={upsellDrinks} restaurant={restaurant} cart={cart} t={t} />
-          <div className="cart-bar">
-            <span>{t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) })}</span>
-            <button className="btn-gold" onClick={() => setStep('details')}>{t('checkout.continueToDetails')}</button>
-          </div>
-        </>
-      )}
 
-      {!pendingOrder && step === 'details' && (
+      {!pendingOrder && (
         <>
           {cart.count > 0 && (
           <div className="card">

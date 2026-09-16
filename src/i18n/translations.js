@@ -6108,6 +6108,14 @@ export const translations = {
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
     },
+    panier: {
+      title: 'Ton panier',
+      viewCart: 'Voir le panier',
+      toCheckout: 'Aller au paiement',
+      backToMenu: 'Retour à la carte',
+      emptyTitle: 'Ton panier est vide',
+      emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici."
+    },
     orders: {
       title: 'Mes commandes',
       empty: 'Pas encore de commande',
@@ -12593,6 +12601,14 @@ export const translations = {
       confirmOnSite: 'Confirm the order (pay on site)',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
     },
+    panier: {
+      title: 'Your cart',
+      viewCart: 'View cart',
+      toCheckout: 'Go to checkout',
+      backToMenu: 'Back to the menu',
+      emptyTitle: 'Your cart is empty',
+      emptyText: 'Add dishes from a shop menu and they will show up here.'
+    },
     orders: {
       title: 'My orders',
       empty: "No orders yet",
@@ -19075,6 +19091,14 @@ export const translations = {
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
+    },
+    panier: {
+      title: 'Je winkelmandje',
+      viewCart: 'Mandje bekijken',
+      toCheckout: 'Naar de betaling',
+      backToMenu: 'Terug naar de kaart',
+      emptyTitle: 'Je mandje is leeg',
+      emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.'
     },
     orders: {
       title: 'Mijn bestellingen',

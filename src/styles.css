@@ -1700,8 +1700,8 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* La carte occupe la premiere hauteur d'ecran, la liste commence juste dessous : on voit la carte
    en arrivant, on obtient la liste en descendant. La page defile donc normalement, elle n'est plus
    figee a la hauteur de l'ecran. */
-.carte-page { margin: -24px -28px -40px; }
-.carte-plein { position: relative; height: 72svh; min-height: 340px; }
+.carte-page { margin: -24px -28px -40px; height: 100svh; overflow: hidden; }
+.carte-plein { position: relative; height: 100%; }
 .carte-attente { height: 100%; background: var(--surface-soft); }
 /* Les contrôles ne prennent pas les clics de la carte : seuls les boutons en prennent. */
 .carte-controles { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
@@ -1729,15 +1729,26 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    « basse » l'amorce sous la carte, « moyenne » le monte a mi-ecran, « haute » lui fait couvrir la
    carte entierement. Le coin arrondi et le recouvrement disent qu'il glisse par-dessus, sans fleche
    ni consigne ; la barre grise en haut dit qu'on peut l'attraper. */
+/* UN VRAI TIROIR : fixe, et deplace par transform.
+   La premiere version animait `margin-top`. Une marge fait partie de la mise en page : la changer
+   force le navigateur a recalculer la position de TOUT ce qui suit, soixante fois par seconde -
+   d'ou un glissement saccade, et une liste qui sautait au lieu de glisser. `transform` ne touche
+   a rien : le compositeur deplace la couche deja dessinee. C'est la difference entre une animation
+   qui rame et une qui ne coute rien.
+   Le tiroir est donc fixe, haut comme l'ecran, et c'est SON contenu qui defile - pas la page. */
 .carte-feuille {
-  position: relative; z-index: 1; background: #fff;
-  border-radius: 18px 18px 0 0; padding: 0 20px 40px; box-shadow: 0 -8px 24px rgba(0,0,0,.08);
-  transition: margin-top .28s cubic-bezier(.22,.61,.36,1);
+  position: fixed; left: 0; right: 0; top: 0; z-index: 30;
+  height: 100svh; display: flex; flex-direction: column;
+  background: #fff; border-radius: 18px 18px 0 0; padding: 0 20px;
+  box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+  transition: transform .3s cubic-bezier(.22,.61,.36,1);
+  will-change: transform;
 }
-.carte-feuille-basse { margin-top: -18px; }
-.carte-feuille-moyenne { margin-top: -36svh; }
-/* -72svh annule exactement la hauteur de .carte-plein : la liste part du haut de l'ecran. */
-.carte-feuille-haute { margin-top: -72svh; min-height: 72svh; }
+/* Trois crans, en pourcentage de la hauteur du tiroir : il depasse en bas, on ne voit que ce qui
+   remonte au-dessus du bord de l'ecran. */
+.carte-feuille-basse { transform: translateY(71svh); }
+.carte-feuille-moyenne { transform: translateY(40svh); }
+.carte-feuille-haute { transform: translateY(0); }
 /* Tiroir plein ecran : les filtres appartiennent a la carte, qui n'est plus visible. Les laisser
    flotter les posait sur le titre de la liste, ou ils filtraient quelque chose qu'on ne voyait
    plus. Ils reviennent des que le tiroir redescend. */
@@ -1757,7 +1768,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .liste-filtres { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 12px; scrollbar-width: none; }
 .liste-filtres::-webkit-scrollbar { display: none; }
 .liste-panneau { margin-bottom: 14px; }
-.carte-feuille-titre { font-size: 21px; margin: 0 0 14px; }
+.carte-feuille-titre { font-size: 21px; margin: 0 0 14px; flex-shrink: 0; }
+/* La liste prend la hauteur restante et defile seule : le tiroir, lui, ne bouge qu'a la poignee. */
+.carte-feuille-liste { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
 .carte-feuille-ligne {
   display: flex; align-items: center; gap: 12px; padding: 10px 0; text-decoration: none; color: inherit;
   border-bottom: 1px solid var(--line);
@@ -3430,3 +3443,49 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .offre-quand ol { margin: 6px 0 0; padding-left: 18px; }
 .offre-quand li { margin: 3px 0; }
 .offre-note { margin: 8px 0 0; color: var(--ink); }
+
+/* LA PILULE DU PANIER, posee au-dessus de la barre d'onglets et centree comme elle.
+   L'ancienne bulle etait un rectangle colle en bas a gauche, qui se depliait en une demi-page de
+   paiement par-dessus le menu. Ici : une pilule, un compteur sur l'icone, un total, et un lien. */
+.panier-pilule {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 45;
+  display: inline-flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 20px; border-radius: var(--radius-pill);
+  background: var(--iris); color: var(--cream); text-decoration: none;
+  font-size: 15px; font-weight: 500; box-shadow: var(--shadow-2);
+  white-space: nowrap;
+}
+.panier-pilule b { font-weight: 700; }
+.panier-pilule-icone { position: relative; display: flex; align-items: center; }
+/* Le compteur mord sur l'icone : c'est ce qui le fait lire comme « ce panier contient 2 » plutot
+   que comme un nombre pose a cote. */
+.panier-pilule-compte {
+  position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lime); color: var(--ink); border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 700; line-height: 1;
+}
+/* Au-dessus de 900px la barre laterale remplace les onglets du bas : la pilule redescend. */
+@media (min-width: 901px) {
+  .panier-pilule { bottom: 24px; left: auto; right: 24px; transform: none; }
+}
+
+/* La page Panier. */
+.panier-retour { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 10px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
+.panier-retour:hover { text-decoration: underline; }
+.panier-lignes { padding: 6px 16px; }
+.panier-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.panier-ligne:last-of-type { border-bottom: none; }
+.panier-ligne-image { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-chip); object-fit: cover; background: var(--surface-soft); }
+.panier-ligne-image-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.panier-ligne-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.panier-ligne-prix { font-size: 14px; color: var(--ink-soft); }
+.panier-stepper { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; background: var(--surface-soft); border-radius: var(--radius-pill); padding: 2px; }
+.panier-stepper button { width: 34px; height: 34px; padding: 0; border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 17px; }
+.panier-stepper span { min-width: 26px; text-align: center; font-weight: 500; }
+.panier-vider { padding: 10px 0 4px; font-size: 13px; }
+.panier-remise { justify-content: space-between; padding: 2px 4px; }
+/* La barre d'action ne doit pas finir sous les onglets flottants. */
+.panier-page .cart-bar { margin-bottom: calc(24px + 68px); }

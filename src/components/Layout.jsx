@@ -17,7 +17,7 @@ import { SkeletonCards } from './Skeleton';
 
 // Pages "connectées" qui utilisent la coquille sidebar (client/livreur/restaurateur/admin) au lieu de
 // la nav du haut classique.
-const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', '/map', '/jeux', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
+const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', '/map', '/jeux', '/panier', '/invoices', '/checkout', '/order-success', '/order-cancelled', '/account', '/dashboard', '/driver', '/admin'];
 // Sous-sections de « Mon compte » : les pages qu on atteint depuis ses rangées. On y propose le chemin
 // du retour, parce qu y arriver par le compte puis repartir par la barre du bas oblige à retraverser
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
@@ -113,7 +113,11 @@ export default function Layout() {
   // Le restaurateur en mode aperçu voit le panier flottant comme un vrai client (voir RestaurantMenu.jsx
   // "addToCart" réel, pas le panier isolé de RestaurantPreview) — pousser jusqu'au paiement échoue
   // volontairement côté serveur (requireRole('client')), ce qui bloque naturellement au bon endroit.
-  const seesClientCart = !user?.isAdmin && (role === 'client' || (previewMode && role === 'restaurant'));
+  // La pilule du panier ne s'affiche pas sur les pages QUI SONT le panier : sur /panier elle
+  // doublerait le contenu de la page, sur /checkout elle proposerait de revenir en arriere au
+  // moment de payer. Ailleurs, elle est le seul acces au panier.
+  const pageDuPanier = location.pathname === '/panier' || location.pathname.startsWith('/checkout');
+  const seesClientCart = !user?.isAdmin && !pageDuPanier && (role === 'client' || (previewMode && role === 'restaurant'));
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
