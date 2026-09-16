@@ -5,12 +5,95 @@ export const lerp = (a, b, k) => a + (b - a) * k;
 // Rattrapage exponentiel indépendant de la cadence : k = vitesse (par seconde), dt en secondes.
 export const suivre = (courant, cible, k, dt) => courant + (cible - courant) * Math.min(1, dt * k);
 
+// LES EMOJIS NE SE DESSINENT PAS PARTOUT. Sur certains iPhone, fillText() d'un emoji couleur ne
+// peint rien du tout : il ne reste que le halo blanc pose dessous, donc des bulles blanches vides a
+// la place des obstacles. Le jeu devient litteralement injouable — on ne voit pas ce qu'on doit
+// eviter. On ne peut pas corriger la police du systeme ; on peut arreter d'en dependre.
+//
+// Ce test dessine un emoji hors ecran et relit les pixels. S'il ne peint rien, tous les objets
+// passent en formes vectorielles : un disque a la couleur du sujet, avec un detail simple. Moins
+// joli que l'emoji, mais VISIBLE — et c'est tout ce qui compte pour jouer. Le resultat est mis en
+// cache : ce n'est pas une mesure a refaire soixante fois par seconde.
+let _emojiPeint = null;
+export function emojiPeint() {
+  if (_emojiPeint !== null) return _emojiPeint;
+  try {
+    const c = document.createElement('canvas');
+    c.width = 16; c.height = 16;
+    const g = c.getContext('2d', { willReadFrequently: true });
+    g.font = '14px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText('\u{1F680}', 8, 8);
+    const d = g.getImageData(0, 0, 16, 16).data;
+    _emojiPeint = false;
+    for (let i = 3; i < d.length; i += 4) if (d[i] > 12) { _emojiPeint = true; break; }
+  } catch {
+    // Lecture de pixels refusee : on suppose que oui, c'est le cas courant, plutot que de degrader
+    // le rendu de tout le monde pour une mesure impossible.
+    _emojiPeint = true;
+  }
+  return _emojiPeint;
+}
+
+// Force le repli, pour le verifier a l'ecran sans attendre d'avoir un iPhone sous la main.
+export function forcerRepliEmoji(valeur) { _emojiPeint = !valeur; }
+
+// Couleur de repli, par emoji reellement utilise dans les jeux. Ce qu'on doit eviter doit se
+// distinguer de ce qu'on doit attraper : sans emoji, c'est la couleur qui porte cette information.
+const REPLI = {
+  '\u{1F6A7}': ['#F2A33C', 'barre'], '\u{1FAA8}': ['#8A8377', 'rond'], '\u{1F573}\u{FE0F}': ['#141220', 'trou'],
+  '\u{1F525}': ['#F2653C', 'rond'], '\u{1F4A5}': ['#F2C53C', 'rond'],
+  '\u{1F6F5}': ['#C8F03C', 'vehicule'], '\u{1F9FA}': ['#C8F03C', 'vehicule'], '\u{1F3AF}': ['#D92D3B', 'cible'],
+  '\u{1F355}': ['#F2A33C', 'rond'], '\u{1F354}': ['#E08A3C', 'rond'], '\u{1F35F}': ['#F2C53C', 'barre'],
+  '\u{1F369}': ['#E87FB0', 'rond'], '\u{1F363}': ['#F0EDE6', 'rond'], '\u{1F32E}': ['#E0B23C', 'rond'],
+  '\u{1F950}': ['#D9A05B', 'rond'], '\u{1F366}': ['#F0D9C0', 'rond']
+};
+
+function forme(ctx, e, taille) {
+  const [couleur, genre] = REPLI[e] || ['#B9B3A8', 'rond'];
+  const r = taille * 0.42;
+  ctx.fillStyle = couleur;
+  if (genre === 'barre') {
+    ctx.fillRect(-r, -r * 0.55, r * 2, r * 1.1);
+    ctx.fillStyle = 'rgba(20,18,31,0.55)';
+    for (let i = -1; i <= 1; i++) ctx.fillRect(i * r * 0.6 - r * 0.12, -r * 0.55, r * 0.24, r * 1.1);
+    return;
+  }
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+  if (genre === 'trou') {
+    // Un trou noir sur un ciel sombre ne se voit pas — c'est precisement le defaut qu'on corrige.
+    // Un cerne clair le detache sans le transformer en autre chose qu'un trou.
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = Math.max(2, r * 0.18);
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.92, 0, Math.PI * 2); ctx.stroke();
+    return;
+  }
+  if (genre === 'vehicule') {
+    ctx.fillStyle = 'rgba(20,18,31,0.65)';
+    ctx.beginPath(); ctx.arc(0, r * 0.12, r * 0.42, 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+  if (genre === 'cible') {
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.58, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = couleur;
+    ctx.beginPath(); ctx.arc(0, 0, r * 0.26, 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+  ctx.fillStyle = 'rgba(255,255,255,0.28)';
+  ctx.beginPath(); ctx.arc(-r * 0.3, -r * 0.32, r * 0.3, 0, Math.PI * 2); ctx.fill();
+}
+
 export function emoji(ctx, e, x, y, taille, angle = 0, miroir = false) {
   ctx.save();
   ctx.translate(x, y);
   if (angle) ctx.rotate(angle);
   // Les emojis « véhicule » regardent à gauche dans la plupart des polices : miroir pour aller vers la droite.
   if (miroir) ctx.scale(-1, 1);
+  if (!emojiPeint()) {
+    forme(ctx, e, taille);
+    ctx.restore();
+    return;
+  }
   ctx.font = `${taille}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

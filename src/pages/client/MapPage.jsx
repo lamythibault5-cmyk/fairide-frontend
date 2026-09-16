@@ -59,6 +59,7 @@ export default function MapPage() {
   const [prix, setPrix] = useState(0); // 0 = tous, sinon 1 / 2 / 3
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'prix' | 'tri' | null
+  const [recherche, setRecherche] = useState('');
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
@@ -73,11 +74,13 @@ export default function MapPage() {
 
   const liste = useMemo(() => {
     const maintenant = new Date();
+    const nom = recherche.trim().toLowerCase();
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
       if (cuisine && r.cuisine !== cuisine) return false;
       if (prix && bandePrix(r) !== prix) return false;
       if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
+      if (nom && !(r.name || '').toLowerCase().includes(nom)) return false;
       return true;
     });
     const avecDistance = filtres.map((r) => ({
@@ -90,7 +93,7 @@ export default function MapPage() {
     if (tri === 'note') return [...avecDistance].sort((a, b) => (b.rating || 0) - (a.rating || 0));
     if (tri === 'distance') return [...avecDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     return avecDistance;
-  }, [restaurants, promosSeules, ouvertsSeuls, cuisine, prix, tri, position]);
+  }, [restaurants, promosSeules, ouvertsSeuls, cuisine, prix, tri, position, recherche]);
 
   // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
   // donne un filtre qui ne renvoie jamais rien.
@@ -99,15 +102,15 @@ export default function MapPage() {
     return RESTAURANT_TYPES.filter((c) => vus.has(c.value));
   }, [restaurants]);
 
-  const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || !!prix || tri !== 'recommande';
+  const filtreActif = promosSeules || ouvertsSeuls || !!cuisine || !!prix || tri !== 'recommande' || !!recherche.trim();
   function toutReinitialiser() {
-    setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setPrix(0); setTri('recommande'); setPanneau(null);
+    setPromosSeules(false); setOuvertsSeuls(false); setCuisine(''); setPrix(0); setTri('recommande'); setPanneau(null); setRecherche('');
   }
   const basculer = (nom) => setPanneau((p) => (p === nom ? null : nom));
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
 
   return (
-    <div className="carte-page">
+    <div className="carte-page carte-plein-ecran">
       <div className="carte-plein">
         <Suspense fallback={<div className="carte-attente" />}>
           <RestaurantsMap
@@ -118,6 +121,22 @@ export default function MapPage() {
         </Suspense>
 
         <div className="carte-controles">
+          {/* LA RECHERCHE EN PREMIER, comme sur la carte d'Uber : on cherche un nom bien plus souvent
+              qu'on ne filtre par prix. Elle porte sur les commerces deja charges, donc elle repond
+              sans aller au serveur et sans recadrer la carte sous les doigts. */}
+          <div className="carte-recherche">
+            <Icone nom="recherche" taille={17} />
+            <input
+              type="search"
+              value={recherche}
+              onChange={(ev) => setRecherche(ev.target.value)}
+              placeholder={t('mapClient.searchPlaceholder')}
+              aria-label={t('mapClient.searchPlaceholder')}
+            />
+            {recherche && (
+              <button type="button" className="carte-recherche-vider" onClick={() => setRecherche('')} aria-label={t('mapClient.reset')}>×</button>
+            )}
+          </div>
           <div className="carte-pastilles">
             <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
               <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
