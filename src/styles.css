@@ -1007,12 +1007,72 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    page de commande, qui est le moment le plus engageant du parcours, est la seule qui ne porte plus
    la couleur de la marque. */
 .cart-bar { position: sticky; bottom: 0; background: var(--iris); color: var(--cream); border-radius: var(--radius); padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; box-shadow: none; }
+/* La bande est en aplat iris, mais .btn-ghost et .small portent des gris prévus pour du texte sur
+   fond clair (--ink-soft, --ink-faint) : sur le violet, « Ajouter un plat » et l'avertissement de
+   date se lisaient à peine. Les deux passent au blanc, qui est la couleur du texte sur cet aplat.
+   Se voyait peu tant que la bande vivait en bas de page ; le récapitulatif collant l'a mis en
+   évidence. */
+.cart-bar .btn-ghost, .cart-bar .small { color: var(--cream); }
+.cart-bar .btn-ghost { text-decoration: underline; }
 /* Sur un téléphone, les trois blocs de cette bande — revenir à la carte, le total, l'avertissement
    de date — se partageaient la largeur en trois colonnes d'à peine cent pixels : chaque phrase se
    cassait sur quatre lignes et « Ajouter un plat » se lisait sur trois. Ils s'empilent. */
 @media (max-width: 600px) {
   .cart-bar { flex-direction: column; align-items: stretch; text-align: left; gap: 10px; }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LE PAIEMENT EN DEUX COLONNES (.checkout-*).
+
+   Tout était dans UNE colonne et, pour l'essentiel, dans UNE seule carte : l'adresse, le mode de
+   livraison, la consigne, la note au livreur, la réservation, la programmation. Le récapitulatif
+   de la commande était tout en haut, le bouton tout en bas, et entre les deux un formulaire qu'il
+   fallait parcourir en entier pour retrouver ce qu'on paie.
+
+   La capture 3 montre l'autre disposition : le formulaire à gauche, et à droite une colonne qui
+   ne bouge pas — le commerce, le bouton principal EN HAUT, le détail des totaux dessous. On voit
+   en permanence ce qu'on commande et combien ça coûte pendant qu'on remplit ses informations.
+
+   Sous 900px la grille redevient une colonne et l'ordre du DOM reprend la main : formulaire, puis
+   barre d'action collante en bas, puis récapitulatif — c'est déjà ce que faisait la page, et sur
+   un téléphone un bouton collé en bas vaut mieux qu'un bouton perché en haut d'un panneau.
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 901px) {
+  .checkout-grille { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  /* Collant dans sa colonne : le récapitulatif reste sous les yeux tant que le formulaire défile. */
+  .checkout-recap { position: sticky; top: 20px; display: flex; flex-direction: column; }
+  /* L'action passe en tête du panneau, comme le « Next » de la capture. Elle perd son ancrage
+     collant : dans une colonne déjà collante, il n'aurait plus rien à faire. */
+  .checkout-recap .cart-bar { order: -1; position: static; margin-top: 0; margin-bottom: 14px; flex-direction: column; align-items: stretch; }
+  .checkout-recap .cart-bar .btn-gold { width: 100%; }
+  .checkout-recap .card { margin-bottom: 0; }
+}
+
+/* Intitulé d'un groupe de boutons. Ce n'est pas un <label> : un label doit désigner un champ, et
+   un groupe de pastilles n'en est pas un — le lien se fait par aria-label sur le groupe. */
+.field-intitule { display: block; font-size: var(--t-body-sm); font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+
+/* Les pastilles de choix (voir components/ChoixPastilles.jsx), qui remplacent les listes
+   déroulantes natives du paiement. */
+.choix-pastilles { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Au-delà d'une dizaine d'options — des créneaux horaires, des dates — la rangée défile au lieu
+   de s'empiler sur dix lignes et de repousser le bouton hors de l'écran. */
+.choix-pastilles-defile { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.choix-pastilles .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.choix-pastille-note { font-size: var(--t-caption); font-weight: 500; opacity: .75; }
+
+/* Les cartes d'un choix unique (mode de récupération au paiement) : icône, libellé, et l'option
+   retenue cernée d'une arête iris de 2px — le même signal que le champ au focus. */
+.choix-cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.choix-carte {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  min-height: 60px; padding: 12px 14px; border-radius: var(--radius-card-sm);
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  font-size: var(--t-body-sm); font-weight: 600;
+}
+.choix-carte:active { transform: none; }
+.choix-carte:hover { border-color: var(--iris); }
+.choix-carte.est-actif { border: 2px solid var(--iris); padding: 11px 13px; }
 .divider { height: 1px; background: var(--line); margin: 16px 0; }
 .breakdown { font-size: 13px; color: var(--ink-soft); }
 .breakdown .line { display: flex; justify-content: space-between; padding: 3px 0; }

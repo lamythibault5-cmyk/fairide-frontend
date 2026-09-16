@@ -1,10 +1,15 @@
 import { useLanguage, getLocale } from './context/LanguageContext';
 
+// `icon` porte maintenant un NOM DE TRACÉ (voir components/Icone.jsx) et non plus un emoji : les
+// consignes s'affichent côte à côte dans une rangée de pastilles au paiement, et quatre emoji
+// rendus par la police du système n'y avaient ni la même épaisseur ni la même taille optique.
+// Les libellés ont perdu leur emoji de tête pour la même raison — ils sont traduits, donc c'est
+// dans les trois tables de translations.js que le caractère a été retiré.
 export const DELIVERY_INSTRUCTION_OPTIONS = [
-  { value: 'sonner', label: '🔔 Sonner et attendre', icon: '🔔' },
-  { value: 'deposer', label: '🚪 Déposer devant la porte', icon: '🚪' },
-  { value: 'concierge', label: '🏢 Laisser au/à la concierge', icon: '🏢' },
-  { value: 'appeler', label: "📞 M'appeler à l'arrivée", icon: '📞' }
+  { value: 'sonner', label: 'Sonner et attendre', icon: 'sonnette' },
+  { value: 'deposer', label: 'Déposer devant la porte', icon: 'porte' },
+  { value: 'concierge', label: 'Laisser au/à la concierge', icon: 'immeuble' },
+  { value: 'appeler', label: "M'appeler à l'arrivée", icon: 'telephone' }
 ];
 
 export function deliveryInstructionLabel(value, t) {

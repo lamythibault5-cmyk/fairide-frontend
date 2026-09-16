@@ -73,7 +73,23 @@ const TRACES = {
   horloge: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5.5l3.5 2" /></>,
   interdit: <><circle cx="12" cy="12" r="9" /><path d="m5.6 5.6 12.8 12.8" /></>,
   position: <><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" /></>,
-  cloche: <><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 19a2 2 0 0 0 4 0" /></>
+  cloche: <><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 19a2 2 0 0 0 4 0" /></>,
+  // « Intérieur » au paiement : une maison, distincte de `commerce` par son toit en pointe.
+  maison: <><path d="m3 10 9-7 9 7" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /><path d="M10 21v-6h4v6" /></>,
+  // « Terrasse » : le soleil, en face de la maison.
+  soleil: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="M4.9 4.9 6.3 6.3" /><path d="m17.7 17.7 1.4 1.4" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m4.9 19.1 1.4-1.4" /><path d="m17.7 6.3 1.4-1.4" /></>,
+  // « Sonner », pour les consignes de livraison — la cloche est déjà prise par les notifications.
+  sonnette: <><rect x="6" y="3" width="12" height="18" rx="4" /><circle cx="12" cy="9" r="2" /><path d="M10 15h4" /></>,
+  // « Déposer devant la porte ».
+  porte: <><path d="M5 21V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v17" /><path d="M3 21h18" /><circle cx="15" cy="12" r="1" /></>,
+  // « Laisser au concierge » : un immeuble.
+  immeuble: <><rect x="4" y="3" width="16" height="18" rx="1" /><path d="M9 7h2" /><path d="M13 7h2" /><path d="M9 11h2" /><path d="M13 11h2" /><path d="M10 21v-5h4v5" /></>,
+  // « M'appeler à l'arrivée ».
+  telephone: <path d="M6.5 3h3l1.5 4.5-2 1.5a12 12 0 0 0 6 6l1.5-2L21 14.5v3a2 2 0 0 1-2.2 2A17 17 0 0 1 4 5.2 2 2 0 0 1 6 3Z" />,
+  // Paiement en ligne / sur place : la carte bancaire existe déjà (carteBancaire), voici l'espèce.
+  billet: <><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01" /><path d="M18 12h.01" /></>,
+  // Un message du commerce, au paiement.
+  bulle: <path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12Z" />
 };
 
 export default function Icone({ nom, taille = 20, className }) {

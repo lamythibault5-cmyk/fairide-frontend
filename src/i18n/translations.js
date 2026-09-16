@@ -5948,10 +5948,10 @@ export const translations = {
     },
     orderStatus: {
       deliveryInstruction: {
-        sonner: '🔔 Sonner et attendre',
-        deposer: '🚪 Déposer devant la porte',
-        concierge: '🏢 Laisser au/à la concierge',
-        appeler: "📞 M'appeler à l'arrivée"
+        sonner: 'Sonner et attendre',
+        deposer: 'Déposer devant la porte',
+        concierge: 'Laisser au/à la concierge',
+        appeler: "M'appeler à l'arrivée"
       },
       status: {
         nouveau: 'Nouvelle',
@@ -5968,9 +5968,9 @@ export const translations = {
         pretDineIn: 'Table prête'
       },
       orderType: {
-        delivery: '🛵 Livraison',
-        pickup: '🏠 À emporter',
-        dineIn: '🍽️ Manger sur place'
+        delivery: 'Livraison',
+        pickup: 'À emporter',
+        dineIn: 'Manger sur place'
       },
       progress: {
         sent: 'Envoyée',
@@ -6016,8 +6016,8 @@ export const translations = {
       atDelivery: 'À la livraison',
       driverNote: 'Note pour le livreur (optionnel)',
       driverNotePlaceholder: "Ex: Code d'entrée 1234, 3ème étage...",
-      pickupSelf: '🏠 Tu viendras chercher ta commande toi-même chez {name}{address}.',
-      dineInHere: '🍽️ Tu mangeras sur place chez {name}{address}.',
+      pickupSelf: 'Tu viendras chercher ta commande toi-même chez {name}{address}.',
+      dineInHere: 'Tu mangeras sur place chez {name}{address}.',
       reservationDateTime: 'Date et heure de la réservation',
       timePlaceholder: 'Heure...',
       noSlotsToday: 'Plus aucun créneau disponible pour ce jour.',
@@ -6042,7 +6042,7 @@ export const translations = {
       payDepositAndReserve: 'Payer l\'acompte ({amount}) et réserver',
       depositLine: 'Acompte à régler maintenant',
       noteColon: 'Ta demande :',
-      scheduleLater: '🕐 Programmer pour plus tard',
+      scheduleLater: 'Programmer pour plus tard',
       scheduledPreview: '🕐 Commande programmée pour : {preview}',
       addDish: '← Ajouter un plat',
       reservationNoOrder: 'Réservation sans commande',
@@ -12459,10 +12459,10 @@ export const translations = {
     },
     orderStatus: {
       deliveryInstruction: {
-        sonner: '🔔 Ring and wait',
-        deposer: '🚪 Leave at the door',
-        concierge: '🏢 Leave with the concierge',
-        appeler: '📞 Call me on arrival'
+        sonner: 'Ring and wait',
+        deposer: 'Leave at the door',
+        concierge: 'Leave with the concierge',
+        appeler: 'Call me on arrival'
       },
       status: {
         nouveau: 'New',
@@ -12479,9 +12479,9 @@ export const translations = {
         pretDineIn: 'Table ready'
       },
       orderType: {
-        delivery: '🛵 Delivery',
-        pickup: '🏠 Pickup',
-        dineIn: '🍽️ Dine in'
+        delivery: 'Delivery',
+        pickup: 'Pickup',
+        dineIn: 'Dine in'
       },
       progress: {
         sent: 'Sent',
@@ -12527,8 +12527,8 @@ export const translations = {
       atDelivery: 'On delivery',
       driverNote: 'Note for the courier (optional)',
       driverNotePlaceholder: 'E.g.: Entry code 1234, 3rd floor...',
-      pickupSelf: "🏠 You'll come pick up your order yourself at {name}{address}.",
-      dineInHere: "🍽️ You'll eat at {name}{address}.",
+      pickupSelf: "You'll come pick up your order yourself at {name}{address}.",
+      dineInHere: "You'll eat at {name}{address}.",
       reservationDateTime: 'Reservation date and time',
       timePlaceholder: 'Time...',
       noSlotsToday: 'No more slots available for this day.',
@@ -12553,7 +12553,7 @@ export const translations = {
       payDepositAndReserve: 'Pay the deposit ({amount}) and reserve',
       depositLine: 'Deposit due now',
       noteColon: 'Your request:',
-      scheduleLater: '🕐 Schedule for later',
+      scheduleLater: 'Schedule for later',
       scheduledPreview: '🕐 Order scheduled for: {preview}',
       addDish: '← Add a dish',
       reservationNoOrder: 'Reservation without order',
@@ -18968,10 +18968,10 @@ export const translations = {
     },
     orderStatus: {
       deliveryInstruction: {
-        sonner: '🔔 Aanbellen en wachten',
-        deposer: '🚪 Voor de deur achterlaten',
-        concierge: '🏢 Bij de conciërge achterlaten',
-        appeler: '📞 Bel me bij aankomst'
+        sonner: 'Aanbellen en wachten',
+        deposer: 'Voor de deur achterlaten',
+        concierge: 'Bij de conciërge achterlaten',
+        appeler: 'Bel me bij aankomst'
       },
       status: {
         nouveau: 'Nieuw',
@@ -18988,9 +18988,9 @@ export const translations = {
         pretDineIn: 'Tafel klaar'
       },
       orderType: {
-        delivery: '🛵 Levering',
-        pickup: '🏠 Afhalen',
-        dineIn: '🍽️ Hier eten'
+        delivery: 'Levering',
+        pickup: 'Afhalen',
+        dineIn: 'Hier eten'
       },
       progress: {
         sent: 'Verzonden',
@@ -19036,8 +19036,8 @@ export const translations = {
       atDelivery: 'Bij levering',
       driverNote: 'Notitie voor de koerier (optioneel)',
       driverNotePlaceholder: 'Bv.: Toegangscode 1234, 3de verdieping...',
-      pickupSelf: '🏠 Je komt je bestelling zelf ophalen bij {name}{address}.',
-      dineInHere: '🍽️ Je eet ter plaatse bij {name}{address}.',
+      pickupSelf: 'Je komt je bestelling zelf ophalen bij {name}{address}.',
+      dineInHere: 'Je eet ter plaatse bij {name}{address}.',
       reservationDateTime: 'Datum en uur van de reservering',
       timePlaceholder: 'Uur...',
       noSlotsToday: 'Geen tijdslots meer beschikbaar voor deze dag.',
@@ -19062,7 +19062,7 @@ export const translations = {
       payDepositAndReserve: 'Voorschot betalen ({amount}) en reserveren',
       depositLine: 'Voorschot nu te betalen',
       noteColon: 'Je wens:',
-      scheduleLater: '🕐 Voor later plannen',
+      scheduleLater: 'Voor later plannen',
       scheduledPreview: '🕐 Bestelling gepland voor: {preview}',
       addDish: '← Een gerecht toevoegen',
       reservationNoOrder: 'Reservering zonder bestelling',
