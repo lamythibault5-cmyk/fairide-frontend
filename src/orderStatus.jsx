@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from './context/LanguageContext';
 
 export const DELIVERY_INSTRUCTION_OPTIONS = [
@@ -137,6 +138,29 @@ function formatTime(ms) {
   return new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
+// Heure limite d'acceptation d'une commande (côté commerce) : sans réponse avant, elle est annulée et le client
+// remboursé automatiquement (voir backend acceptation.js). Le compte à rebours se met à jour toutes les 20 s et
+// passe en rouge sous 5 minutes.
+export function EcheanceAcceptation({ order }) {
+  const { t } = useLanguage();
+  const [maintenant, setMaintenant] = useState(Date.now());
+  useEffect(() => {
+    if (!order.acceptDeadline) return undefined;
+    const id = setInterval(() => setMaintenant(Date.now()), 20000);
+    return () => clearInterval(id);
+  }, [order.acceptDeadline]);
+  if (!order.acceptDeadline || order.status !== 'nouveau') return null;
+  const minutes = Math.max(0, Math.ceil((order.acceptDeadline - maintenant) / 60000));
+  const urgent = minutes <= 5;
+  return (
+    <div className={`small echeance-acceptation${urgent ? ' urgente' : ''}`} role={urgent ? 'alert' : undefined}>
+      ⏳ {minutes > 0
+        ? t('orderStatus.acceptBefore', { time: formatTime(order.acceptDeadline), min: minutes })
+        : t('orderStatus.acceptNow')}
+    </div>
+  );
+}
+
 function formatDateTime(ms) {
   const isToday = new Date(ms).toDateString() === new Date().toDateString();
   return isToday
@@ -191,6 +215,12 @@ export function ProchaineEtape({ order }) {
   if (orderType === 'dine_in') return null;
   const livraison = orderType === 'delivery';
   let cle = null;
+  if (status === 'nouveau' && order.acceptDeadline) {
+    return <div className="small order-next">{t('orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+  }
+  if (status === 'annule' && order.expiredUnaccepted) {
+    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
+  }
   if (status === 'nouveau') cle = 'next_nouveau';
   else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
   else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';

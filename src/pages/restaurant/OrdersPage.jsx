@@ -11,7 +11,7 @@ import * as btPrinter from '../../bluetoothPrinter';
 import PrinterSettings, { AUTO_PRINT_KEY } from '../../components/PrinterSettings';
 import TicketEditor from '../../components/TicketEditor';
 import {
-  DeliveryTiming, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
+  DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
 } from '../../orderStatus';
 import { useLanguage } from '../../context/LanguageContext';
@@ -265,7 +265,8 @@ export default function OrdersPage() {
           )}
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : '🍽️ Réservation sans commande, le client commandera sur place'}</div>
+          <EcheanceAcceptation order={o} />
+          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('ordersResto.reservationNoOrder')}</div>
           {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
           {o.orderType === 'dine_in' && <div className="small">{t('ordersResto.dineInLine', { n: o.partySize, name: o.reservationName })}</div>}
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}

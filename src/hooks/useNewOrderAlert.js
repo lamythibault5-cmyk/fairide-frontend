@@ -32,7 +32,7 @@ function loadSoundPref() {
 
 // Carillon synthétisé plutôt qu'un fichier audio : rien à télécharger, rien à héberger, et le son
 // fonctionne même hors ligne. Trois notes montantes, assez distinctes du reste des sons d'un comptoir.
-function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
+export function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
   const now = ctx.currentTime;
   notes.forEach((freq, i) => {
     const osc = ctx.createOscillator();
