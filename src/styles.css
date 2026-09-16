@@ -3188,3 +3188,12 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 /* « Et maintenant ? » sous le statut d'une commande client (voir orderStatus.jsx) : une phrase qui dit ce
    qui se passe et ce qu'il y a à faire, plutôt qu'un badge à interpréter. */
 .order-next { margin: 4px 0 2px; color: var(--ink-soft); line-height: 1.45; }
+
+/* Inscription et horaires sur écran tactile : les petits boutons-liens (« ← Revoir la liste », « Relire mon site »,
+   « ＋ Ajouter un 2e numéro », « Appliquer à tous les jours ») et la case « Fermé » faisaient 19 à 22 px de haut —
+   moins de la moitié d'un doigt. Même texte et même apparence que sur ordinateur, seule la zone de toucher grandit. */
+@media (pointer: coarse) {
+  .auth-box .btn-ghost, .auth-box .btn-link-plus, .opening-hours-apply-all { min-height: 40px; display: inline-flex; align-items: center; }
+  .opening-hours-apply-all { font-size: 12.5px; }
+  .opening-hours-closed-toggle { min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+}
