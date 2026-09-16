@@ -85,7 +85,7 @@ function ReviewForm({ order, token, toast, onDone, t }) {
                 {amount === 0 ? t('review.tipNone') : `${amount}€`}
               </button>
             ))}
-            <input
+            <input aria-label={t('review.tipOtherPlaceholder')}
               type="number"
               min="0"
               step="0.5"

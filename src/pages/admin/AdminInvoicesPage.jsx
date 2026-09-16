@@ -148,7 +148,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
       <PeppolStatusCard token={token} toast={toast} tr={tr} />
       <PeriodPicker period={period} onChange={setPeriod} allowAll compact />
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <input aria-label={tr('adminInvoices.phSearch')} type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
         <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={minAmount} onChange={(e) => setMinAmount(e.target.value)} style={{ width: 80 }} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} style={{ width: 80 }} /></label>
         {(minAmount || maxAmount) && <button type="button" className="btn-ghost" onClick={() => { setMinAmount(''); setMaxAmount(''); }}>✕ {tr('adminOrders.clearFilters')}</button>}
@@ -489,7 +489,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                 <button className="btn-danger-ghost" onClick={() => setShowCreditNoteForm(true)}>{tr('adminInvoices.cancelCreditNote')}</button>
               ) : (
                 <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                  <input placeholder={tr('adminInvoices.phCancelReason')} value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+                  <input aria-label={tr('adminInvoices.phCancelReason')} placeholder={tr('adminInvoices.phCancelReason')} value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
                   <button className="btn-danger-ghost" onClick={() => setConfirmAction(true)}>{tr('adminCommon.confirm')}</button>
                   <button className="btn-ghost" onClick={() => { setShowCreditNoteForm(false); setCreditNoteReason(''); }}>{tr('adminCommon.cancel')}</button>
                 </div>
@@ -787,7 +787,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
               </label>
             </div>
             {vatStatus === 'assujetti' && (
-              <input placeholder={tr('adminInvoices.phVat')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
+              <input aria-label={tr('adminInvoices.phVat')} placeholder={tr('adminInvoices.phVat')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
             )}
             {agreementAlreadyConfirmed ? (
               <p className="small" style={{ color: 'var(--teal-deep)', margin: 0 }}>{tr('adminInvoices.agreementConfirmed', { date: fmtDate(driver.selfBillingAgreedAt) })}</p>

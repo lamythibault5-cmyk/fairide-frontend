@@ -105,7 +105,7 @@ function PaymentsListTab({ token, toast }) {
   return (
     <>
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminPayments.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <input aria-label={tr('adminPayments.phSearch')} type="search" placeholder={tr('adminPayments.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
         <select value={paymentMode} onChange={(e) => setPaymentMode(e.target.value)} aria-label={tr('adminPayments.colMode')}>
           <option value="">{tr('adminPayments.allModes')}</option>
           <option value="stripe">{tr('adminPayments.stripe')}</option>

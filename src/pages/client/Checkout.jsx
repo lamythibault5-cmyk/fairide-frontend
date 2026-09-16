@@ -595,7 +595,7 @@ export default function Checkout() {
             <details style={{ marginTop: 10 }} open={!!giftCode}>
               <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
               <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
+                <input aria-label={t('checkout.giftVoucherPh')} value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
                   onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} aria-label={t('checkout.giftVoucherSummary')} />
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
                   onClick={async () => {

@@ -254,7 +254,7 @@ export default function AdminRestaurantsPage() {
       )}
       {restaurants && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: restaurants.length, total })}</p>}
       <div className="admin-control-panel">
-        <input placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminRestos.phSearch')} placeholder={tr('adminRestos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allM')], ['pending', tr('adminRestos.filterPending')], ['carte', tr('adminRestos.filterMenuRequest')], ['approved', tr('adminRestos.filterApproved')], ['blocked', tr('adminRestos.filterBlocked')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{compteurStatut(k)}</div>

@@ -271,9 +271,9 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
       <div className="courier-grid">
         <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
         <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-          <input inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
+          <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
         </Champ>
-        <Champ label={t('courierOnboarding.fIban')}><input value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
+        <Champ label={t('courierOnboarding.fIban')}><input aria-label="BE68 5390 0754 7034" value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
         <Champ label={t('courierOnboarding.fZone')}>
           <select value={f.zone} onChange={set('zone')}><option value="">-</option>{d.zones.map((z) => <option key={z} value={z}>{z}</option>)}</select>
         </Champ>
@@ -282,7 +282,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         </Champ>
         {motorise && (<>
           <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-          <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+          <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
         </>)}
         <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
           <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
@@ -297,7 +297,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         <h4 style={{ margin: '14px 0 6px' }}>🎓 {t('courierOnboarding.studentSection')}</h4>
         <div className="courier-grid">
           <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
-          <Champ label={t('courierOnboarding.fAcademicYear')}><input value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
+          <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
           <Champ label={t('courierOnboarding.fStudentHours')} help={t('courierOnboarding.fStudentHoursHelp', { h: legal.studentMaxHours })}><input type="number" min="0" max="1000" value={f.studentHoursRemaining} onChange={set('studentHoursRemaining')} /></Champ>
           <Champ label={t('courierOnboarding.fHoursExternal')} help={t('courierOnboarding.fHoursExternalHelp')}><input type="number" min="0" max="2000" value={f.hoursExternalDeclared} onChange={set('hoursExternalDeclared')} /></Champ>
         </div>
@@ -316,11 +316,11 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
       {c.statusType === 'independent' && (<>
         <h4 style={{ margin: '14px 0 6px' }}>🧑‍💼 {t('courierOnboarding.indepSection')}</h4>
         <div className="courier-grid">
-          <Champ label={t('courierOnboarding.fBce')} help={c.independent.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
+          <Champ label={t('courierOnboarding.fBce')} help={c.independent.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
           <Champ label={t('courierOnboarding.fVatStatus')}>
             <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euro(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
           </Champ>
-          {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
+          {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input aria-label="BE0123456789" value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
           <Champ label={t('courierOnboarding.fLegalName')}><input value={f.legalName} onChange={set('legalName')} /></Champ>
           <Champ label={t('courierOnboarding.fSeat')}><input value={f.seatAddress} onChange={set('seatAddress')} /></Champ>
         </div>

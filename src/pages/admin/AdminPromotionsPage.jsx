@@ -166,7 +166,7 @@ export default function AdminPromotionsPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminPromos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminPromos.phSearch')} placeholder={tr('adminPromos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allF')], ['active', tr('adminPromos.filterActive')], ['inactive', tr('adminPromos.filterInactive')], ['exhausted', tr('adminPromos.filterExhausted')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>

@@ -121,7 +121,7 @@ export default function PlanPhotoAssistant({ restoId, token, toast, salles, tabl
               <div key={p.id} className="fp-photo">
                 <img src={p.url} alt="" />
                 <button type="button" className="fp-photo-retirer" onClick={() => retirer(p.id)} aria-label={t('floorPlan.aiRemovePhoto')}>✕</button>
-                {!cible && <input value={p.nom} maxLength={40} placeholder={t('floorPlan.aiRoomNamePh')} onChange={(e) => setPhotos((l) => l.map((x) => (x.id === p.id ? { ...x, nom: e.target.value } : x)))} />}
+                {!cible && <input aria-label={t('floorPlan.aiRoomNamePh')} value={p.nom} maxLength={40} placeholder={t('floorPlan.aiRoomNamePh')} onChange={(e) => setPhotos((l) => l.map((x) => (x.id === p.id ? { ...x, nom: e.target.value } : x)))} />}
               </div>
             ))}
             {photos.length < max && (

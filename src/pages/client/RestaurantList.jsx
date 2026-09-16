@@ -329,7 +329,7 @@ export default function RestaurantList() {
         />
       </div>
       <div className="restaurant-search-row">
-        <input placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input aria-label={t('restaurantList.searchPlaceholder')} placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
         <select value={commune} onChange={(e) => setCommune(e.target.value)}>
           <option value="">{t('restaurantList.allCommunes')}</option>
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}

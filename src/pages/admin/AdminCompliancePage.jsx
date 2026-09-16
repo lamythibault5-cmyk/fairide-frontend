@@ -107,7 +107,7 @@ function RequestsTab({ refreshKey }) {
       )}
 
       <div className="compliance-filters">
-        <input type="search" placeholder={tr('adminCompliance.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <input aria-label={tr('adminCompliance.phSearch')} type="search" placeholder={tr('adminCompliance.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label={tr('adminCommon.status')}>
           <option value="">{tr('adminCommon.allStatuses')}</option>
           <option value="open">{tr('adminCompliance.filterOpen')}</option>

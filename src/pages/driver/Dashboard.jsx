@@ -379,7 +379,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
-            <input
+            <input aria-label={t('dashDriver.phCustomerCode')}
               placeholder={t('dashDriver.phCustomerCode')}
               style={{ maxWidth: 140 }}
               value={codeInputs[o.id] || ''}

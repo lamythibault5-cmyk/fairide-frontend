@@ -52,7 +52,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
         </div>
         {creation && <CreationBon restoId={restoId} token={token} toast={toast} restaurant={restaurant} onDone={(v) => { setCreation(false); rafraichir(); setOuvert(v); }} />}
         <div className="resa-outils">
-          <div className="resa-recherche"><input value={q} placeholder={t('resa.gvSearchPh')} onChange={(e) => setQ(e.target.value)} aria-label={t('resa.gvSearchPh')} /></div>
+          <div className="resa-recherche"><input aria-label={t('resa.gvSearchPh')} value={q} placeholder={t('resa.gvSearchPh')} onChange={(e) => setQ(e.target.value)} aria-label={t('resa.gvSearchPh')} /></div>
           <div className="resa-filtres" role="group" aria-label={t('resa.filtersAria')}>
             {STATUTS.map((s) => <button key={s} type="button" className={statut === s ? 'actif' : ''} onClick={() => setStatut(s)}>{t(`resa.gvFilter_${s}`)}</button>)}
           </div>
@@ -212,7 +212,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
 
       <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
         <button type="button" className="btn-outline" onClick={imprimer}>{t('resa.gvPrint')}</button>
-        <input type="email" value={email} placeholder={t('resa.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} aria-label={t('resa.gvBuyerEmail')} />
+        <input aria-label={t('resa.gvBuyerEmail')} type="email" value={email} placeholder={t('resa.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} aria-label={t('resa.gvBuyerEmail')} />
         <button type="button" className="btn-outline" disabled={!email || enCours === 'email'} onClick={envoyer}>{enCours === 'email' ? '…' : t('resa.gvSendByEmail')}</button>
       </div>
 

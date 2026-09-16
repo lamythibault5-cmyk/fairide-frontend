@@ -267,10 +267,10 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
               {fiche.tags.filter((x) => !ETIQUETTES.includes(x)).map((tag) => <button key={tag} type="button" className="actif" onClick={() => basculerTag(tag)}>{tag} ✕</button>)}
             </div>
             <div className="row" style={{ gap: 6 }}>
-              <input value={tagLibre} maxLength={30} placeholder={t('resa.tagCustomPh')} onChange={(e) => setTagLibre(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); ajouterTagLibre(); } }} style={{ flex: 1 }} />
+              <input aria-label={t('resa.tagCustomPh')} value={tagLibre} maxLength={30} placeholder={t('resa.tagCustomPh')} onChange={(e) => setTagLibre(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); ajouterTagLibre(); } }} style={{ flex: 1 }} />
               <button type="button" className="btn-ghost" onClick={ajouterTagLibre} disabled={!tagLibre.trim()}>{t('resa.tagAdd')}</button>
             </div>
-            <textarea rows={2} value={fiche.note} maxLength={1000} placeholder={t('resa.guestNotePh')} onChange={(e) => setFiche((f) => ({ ...f, note: e.target.value }))} style={{ marginTop: 6 }} />
+            <textarea aria-label={t('resa.guestNotePh')} rows={2} value={fiche.note} maxLength={1000} placeholder={t('resa.guestNotePh')} onChange={(e) => setFiche((f) => ({ ...f, note: e.target.value }))} style={{ marginTop: 6 }} />
             {ficheModifiee && (
               <button type="button" className="btn-outline" style={{ marginTop: 6, padding: '6px 12px' }} disabled={!!enCours} onClick={enregistrerFiche}>{enCours === 'fiche' ? '…' : t('resa.guestSave')}</button>
             )}
@@ -289,7 +289,7 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
           {aVenir && etat !== 'a_confirmer' && (
             <details className="resa-annuler" style={{ marginTop: 10 }}>
               <summary className="small">{t('resa.cancelThis')}</summary>
-              <input value={message} placeholder={t('resa.phCancelMessage')} onChange={(e) => setMessage(e.target.value)} style={{ marginTop: 6 }} />
+              <input aria-label={t('resa.phCancelMessage')} value={message} placeholder={t('resa.phCancelMessage')} onChange={(e) => setMessage(e.target.value)} style={{ marginTop: 6 }} />
               {acompteDetenu && (
                 <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 6 }}>
                   <input type="checkbox" style={{ width: 'auto' }} checked={garderAcompte} onChange={(e) => setGarderAcompte(e.target.checked)} />

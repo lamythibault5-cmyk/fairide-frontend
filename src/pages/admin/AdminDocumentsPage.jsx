@@ -127,7 +127,7 @@ export default function AdminDocumentsPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input aria-label={tr('adminCommon.phSearchTitle')} placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <ResultCount n={data?.rows?.length || 0} total={data?.total} />
       </div>
       <div className="admin-control-panel">

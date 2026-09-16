@@ -167,7 +167,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
         </div>
         <div className="resa-outils">
           <div className="resa-recherche">
-            <input value={recherche} placeholder={t('resa.searchPh')} onChange={(e) => setRecherche(e.target.value)} aria-label={t('resa.searchAria')} />
+            <input aria-label={t('resa.searchPh')} value={recherche} placeholder={t('resa.searchPh')} onChange={(e) => setRecherche(e.target.value)} aria-label={t('resa.searchAria')} />
           </div>
           <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => window.print()} disabled={vue !== 'jour' || !duJour.length}>{t('resa.print')}</button>
           <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={exporterCsv} disabled={vue !== 'jour'}>{t('resa.exportCsv')}</button>

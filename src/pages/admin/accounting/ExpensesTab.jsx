@@ -90,7 +90,7 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
   return (
     <>
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminAccounting.phSearchExpense')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input aria-label={tr('adminAccounting.phSearchExpense')} type="search" placeholder={tr('adminAccounting.phSearchExpense')} value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="role-pick">
           {[{ key: '', label: tr('adminCommon.allF') }, ...EXPENSE_STATUSES.map((s) => ({ key: s, label: statusLabels[s] }))].map((f) => (
             <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>

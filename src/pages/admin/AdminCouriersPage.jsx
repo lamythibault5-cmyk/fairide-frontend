@@ -93,7 +93,7 @@ export default function AdminCouriersPage() {
             </div>
           )}
           <div className="admin-control-panel">
-            <input placeholder={tr('adminCouriers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+            <input aria-label={tr('adminCouriers.phSearch')} placeholder={tr('adminCouriers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
             <div className="role-pick" style={{ margin: 0 }}>
               {['all', 'pending_review', 'approved', 'suspended', 'blocked_threshold', 'rejected', 'draft'].map((s) => <div key={s} className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{s === 'all' ? tr('adminCommon.allM') : lifecycle(s)}</div>)}
             </div>

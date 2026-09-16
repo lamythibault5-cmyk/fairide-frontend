@@ -203,7 +203,7 @@ export default function AdminOrdersPage() {
         </>
       } />
       <div className="admin-control-panel">
-        <input placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input aria-label={tr('adminOrders.phSearch')} placeholder={tr('adminOrders.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <ResultCount n={total} />
       </div>
       <div className="role-pick" style={{ marginBottom: 10, flexWrap: 'wrap' }}>
@@ -501,13 +501,13 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminOrders.refund')}</h4>
           <div className="row" style={{ gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-            <input type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
+            <input aria-label={tr('adminOrders.refundedAmount')} type="number" step="0.01" placeholder={tr('adminOrders.refundedAmount')} value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} style={{ maxWidth: 140 }} />
             <select value={refundResponsibility} onChange={(e) => setRefundResponsibility(e.target.value)} style={{ maxWidth: 140 }}>
               <option value="restaurant">{tr('adminCommon.resto')}</option>
               <option value="driver">{tr('adminCommon.driver')}</option>
               <option value="fairide">{tr('adminCommon.fairide')}</option>
             </select>
-            <input placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
+            <input aria-label={tr('adminOrders.phReason')} placeholder={tr('adminOrders.phReason')} value={refundReason} onChange={(e) => setRefundReason(e.target.value)} style={{ flex: 1, minWidth: 140 }} />
             <button className="btn-danger-ghost" onClick={askRefund}>{tr('adminOrders.refund')}</button>
           </div>
         </>

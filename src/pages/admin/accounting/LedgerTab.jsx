@@ -128,7 +128,7 @@ function PartnerLedger({ token, toast, periodKey, type }) {
   return (
     <>
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminAccounting.phSearchPartner')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input aria-label={tr('adminAccounting.phSearchPartner')} type="search" placeholder={tr('adminAccounting.phSearchPartner')} value={q} onChange={(e) => setQ(e.target.value)} />
         <span className="spacer" />
         <button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
       </div>

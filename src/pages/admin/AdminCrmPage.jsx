@@ -155,7 +155,7 @@ export default function AdminCrmPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminCrm.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminCrm.phSearch')} placeholder={tr('adminCrm.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <select value={stage} onChange={(e) => setStage(e.target.value)} style={{ maxWidth: 160 }}>
           <option value="">{tr('adminCrm.allStages')}</option>
           {CRM_STAGES.map((s) => <option key={s} value={s}>{CRM_STAGE_LABELS[s]}</option>)}

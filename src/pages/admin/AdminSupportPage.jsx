@@ -192,7 +192,7 @@ export default function AdminSupportPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminSupport.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input aria-label={tr('adminSupport.phSearch')} placeholder={tr('adminSupport.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <ResultCount n={lignes.length} total={data?.total} />
       </div>
       <div className="admin-control-panel">
