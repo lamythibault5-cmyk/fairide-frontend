@@ -5737,7 +5737,7 @@ export const translations = {
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
          courte. Le texte long reste servi dès 641px, il n'est pas perdu. */
-      subCourt: 'Les commerces de ton quartier, livrés par des livreurs justement payés.',
+      subCourt: 'Commission plafonnée à 10 %, contre 22 à 32 % ailleurs.',
       ordersOpenCourt: '🗓️ Réservations et à emporter dès le 5 octobre',
       partnerQuestion: 'Commerce ou livreur ?',
       partnerLink: 'Rejoindre Fairide',
@@ -12208,7 +12208,7 @@ export const translations = {
       title2: 'delivered to the door.',
       sub: 'Fairide connects restaurants, supermarkets and local businesses with fairly paid couriers, without the excessive commission of the big platforms. Pay your meal, not the platform.',
       /* Short forms, phone only — see the fr block for the reasoning. */
-      subCourt: 'Your neighbourhood\'s businesses, delivered by fairly paid couriers.',
+      subCourt: 'Commission capped at 10%, against 22 to 32% elsewhere.',
       ordersOpenCourt: '🗓️ Reservations and takeaway from 5 October',
       partnerQuestion: 'A business or a courier?',
       partnerLink: 'Join Fairide',
@@ -18677,7 +18677,7 @@ export const translations = {
       title2: 'aan huis geleverd.',
       sub: 'Fairide verbindt restaurants, supermarkten en lokale handelaars met eerlijk betaalde koeriers, zonder de overdreven commissie van de grote platformen. Betaal je maaltijd, niet het platform.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
-      subCourt: 'De handelaars van je buurt, geleverd door eerlijk betaalde koeriers.',
+      subCourt: 'Commissie geplafonneerd op 10%, tegenover 22 tot 32% elders.',
       ordersOpenCourt: '🗓️ Reservaties en afhalen vanaf 5 oktober',
       partnerQuestion: 'Handelaar of koerier?',
       partnerLink: 'Sluit je aan bij Fairide',
