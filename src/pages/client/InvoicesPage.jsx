@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import EtatVide from '../../components/EtatVide';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 // Liste les commandes payées avec un lien vers leur facture Stripe (générée automatiquement au
@@ -90,7 +91,7 @@ export default function InvoicesPage() {
   return (
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('invoicesClient.title')}</h2>
-      <p className="small" style={{ margin: '-6px 0 12px', opacity: 0.85 }}>🧾 {t('invoicesClient.peppolNote')}</p>
+      <p className="small" style={{ margin: '-6px 0 12px', opacity: 0.85 }}>{t('invoicesClient.peppolNote')}</p>
 
       {downloadable.length > 0 && (
         <div className="card" style={{ marginBottom: 14 }}>
@@ -107,27 +108,37 @@ export default function InvoicesPage() {
         </div>
       )}
 
-      {orders.length === 0 && <div className="empty">{t('invoicesClient.none')}</div>}
-      {orders.map((o) => (
-        <div key={o.id} className="card" style={{ marginBottom: 10 }}>
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
-            <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+      {orders.length === 0 && (
+        <EtatVide
+          icone="document" titre={t('invoicesClient.emptyTitle')} texte={t('invoicesClient.none')}
+          actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
+        />
+      )}
+      {/* UNE LISTE DE RANGÉES, plus une pile de cartes.
+          Chaque facture était une carte blanche bordée de 24px de marge : dix factures faisaient
+          dix rectangles séparés par du vide, pour deux lignes de texte chacun. Une facture n'est
+          pas un objet à mettre en avant, c'est une ligne dans un relevé — la liste des reçus de la
+          capture 7 est exactement cela : une rangée, un filet, la suivante. */}
+      {orders.length > 0 && (
+        <div className="card facture-liste">
+          {orders.map((o) => (
+            <div key={o.id} className="facture-ligne">
               {o.invoiceUrl && (
-                <input type="checkbox" style={{ width: 'auto' }} checked={selected.has(o.id)} onChange={() => toggle(o.id)} />
+                <input type="checkbox" style={{ width: 'auto' }} checked={selected.has(o.id)} onChange={() => toggle(o.id)} aria-label={o.restaurantName} />
               )}
-              <div>
-                <div style={{ fontWeight: 700 }}>{o.restaurantName}</div>
-                <div className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</div>
+              <div className="facture-ligne-texte">
+                <b>{o.restaurantName}</b>
+                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</span>
               </div>
+              {o.invoiceUrl ? (
+                <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
+              ) : (
+                <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
+              )}
             </div>
-            {o.invoiceUrl ? (
-              <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
-            ) : (
-              <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
-            )}
-          </div>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

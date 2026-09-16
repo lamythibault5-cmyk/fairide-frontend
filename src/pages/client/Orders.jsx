@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
+import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
@@ -171,11 +171,11 @@ export default function Orders() {
   const maintenant = Date.now();
   const rappels = orders.filter((o) => o.orderType === 'dine_in' && o.status === 'preparation' && o.scheduledFor && o.scheduledFor > maintenant && o.scheduledFor - maintenant <= 24 * 3600000);
 
-  if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2><SkeletonCards count={3} /></div>;
+  if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
     return (
       <div>
-        <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+        <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
@@ -198,7 +198,7 @@ export default function Orders() {
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+      <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
@@ -209,7 +209,7 @@ export default function Orders() {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
         return (
           <div key={`rappel-${o.id}`} className="card orders-reminder" role="status">
-            <b>📅 {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
+            <b><Icone nom="reservations" taille={15} /> {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
             {o.deliveryCode && <span className="small"> · {t('orders.reminderCode', { code: o.deliveryCode })}</span>}
           </div>
         );
@@ -223,7 +223,28 @@ export default function Orders() {
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('orders.reservationNoOrder')}</div>
+          {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
+              Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
+              (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur
+              une commande de trois plats à options, cela donnait un paragraphe gris de cinq lignes
+              où il fallait chercher les virgules pour savoir ce qu'on avait commandé. La capture
+              « Past Orders » met une ligne par article, la quantité dans une case à gauche, et les
+              options en gris dessous. C'est la même information, lisible d'un coup d'oeil. */}
+          {o.items.length > 0 ? (
+            <ul className="commande-articles">
+              {o.items.map((i, n) => (
+                <li key={n}>
+                  <span className="commande-article-qte">{i.qty}</span>
+                  <span className="commande-article-texte">
+                    <b>{i.name}</b>
+                    {i.options?.length > 0 && <span className="small">{i.options.map((op) => op.name).join(' · ')}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="small" style={{ margin: '6px 0' }}>{t('orders.reservationNoOrder')}</div>
+          )}
           {o.orderType === 'pickup' && (
             <div className="small">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
           )}
@@ -231,7 +252,7 @@ export default function Orders() {
             <div className="small">{t('orders.dineInAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '', count: o.partySize, reservationName: o.reservationName })}</div>
           )}
           {o.orderType === 'delivery' && (
-            <div className="small">📍 {o.address}</div>
+            <div className="small"><Icone nom="position" taille={14} /> {o.address}</div>
           )}
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
@@ -277,7 +298,7 @@ export default function Orders() {
               </span>
             ) : (
               <>
-                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : `💶 ${t('orders.payOnSite')}`) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
                 <b>{o.total.toFixed(2)}€</b>
               </>
             )}

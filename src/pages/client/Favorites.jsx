@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import EtatVide from '../../components/EtatVide';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
 
@@ -28,8 +29,13 @@ export default function Favorites() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('favorites.title')}</h2>
       {loading && <SkeletonCards count={4} />}
+      {/* Un écran vide, pas une phrase dans un cadre en pointillés : quand le vide occupe toute la
+          page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
       {!loading && restaurants.length === 0 && (
-        <div className="empty">{t('favorites.empty')}</div>
+        <EtatVide
+          icone="favoris" titre={t('favorites.emptyTitle')} texte={t('favorites.empty')}
+          actionVers="/restaurants" actionTexte={t('orders.emptyAction')}
+        />
       )}
       <div className="rest-grid">
         {!loading && restaurants.map((r) => (

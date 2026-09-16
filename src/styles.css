@@ -1073,6 +1073,26 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .choix-carte:active { transform: none; }
 .choix-carte:hover { border-color: var(--iris); }
 .choix-carte.est-actif { border: 2px solid var(--iris); padding: 11px 13px; }
+
+/* Les articles d'une commande passée, une ligne chacun, la quantité dans une case — la forme de
+   la capture « Past Orders ». Ils étaient aplatis en une seule chaîne par .join(', '). */
+.commande-articles { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.commande-articles li { display: flex; align-items: flex-start; gap: 10px; }
+.commande-article-qte {
+  flex-shrink: 0; min-width: 26px; height: 26px; padding: 0 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: var(--radius-field);
+  font-size: var(--t-body-sm); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.commande-article-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.commande-article-texte b { font-size: var(--t-body-sm); font-weight: 600; }
+
+/* La liste des factures : des rangées séparées par un filet, dans une seule carte. */
+.facture-liste { padding: 6px 16px; }
+.facture-ligne { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.facture-ligne:last-child { border-bottom: none; }
+.facture-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.facture-ligne-texte b { font-size: var(--t-body-sm); }
 .divider { height: 1px; background: var(--line); margin: 16px 0; }
 .breakdown { font-size: 13px; color: var(--ink-soft); }
 .breakdown .line { display: flex; justify-content: space-between; padding: 3px 0; }
@@ -3620,3 +3640,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .panier-remise { justify-content: space-between; padding: 2px 4px; }
 /* La barre d'action ne doit pas finir sous les onglets flottants. */
 .panier-page .cart-bar { margin-bottom: calc(24px + 68px); }
+
+/* Titre de section portant une icone : elle s'aligne sur la ligne de base du texte plutot que de
+   flotter au-dessus, ce que fait un SVG pose nu a cote d'un mot. */
+.section-titre-icone { display: flex; align-items: center; gap: 8px; }

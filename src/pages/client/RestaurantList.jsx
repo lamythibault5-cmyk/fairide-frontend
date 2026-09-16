@@ -112,7 +112,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
   if (loop && list.length > 1) {
     return (
       <div style={{ marginBottom: 24 }}>
-        <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
+        <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
         <AutoScrollRow
           items={list}
           keyFor={(r) => r.id}
@@ -127,7 +127,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
   }
   return (
     <div style={{ marginBottom: 24 }}>
-      <h3 className="section-title" style={{ fontSize: 17, margin: '0 0 12px' }}>{icon} {title}</h3>
+      <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
       <div className="rest-grid rest-grid-scroll">
         {list.map((r) => (
           <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
@@ -385,13 +385,13 @@ export default function RestaurantList() {
       )}
       {!loading && !hasActiveFilter && (
         <>
-          <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionHealthy')} icon="🥗" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionBio')} icon="🌿" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionVegan')} icon="🌱" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionGrocery')} icon="🛒" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDiscover')} icon="✨" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
+          <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}
