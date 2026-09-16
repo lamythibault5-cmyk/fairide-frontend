@@ -156,14 +156,20 @@ export default function Layout() {
                 <Outlet context={{ setRightSlot }} />
               </Suspense>
             </div>
-            <div className="dashboard-footer-links">
-              <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
-              <Link to="/cgv">{t('footer.terms')}</Link>
-              <Link to="/confidentialite">{t('footer.privacy')}</Link>
-              <Link to="/cookies">{t('footer.cookies')}</Link>
-            </div>
           </main>
           {rightSlot && <aside className="dashboard-right">{rightSlot}</aside>}
+          {/* Les liens légaux sont sortis de la colonne principale. Sous 900px, les trois zones
+              s'empilent dans l'ordre « main » puis « right » : le pied de page, qui vivait à la fin
+              de main, se retrouvait AU-DESSUS de la colonne de droite. Sur le tableau de bord d'un
+              livreur, on lisait donc « Mentions légales · CGV · Confidentialité » puis, en dessous,
+              la carte « Aujourd'hui » avec ses compteurs — du contenu après le pied de page.
+              Il est maintenant une zone de la grille à lui, toujours la dernière. */}
+          <div className="dashboard-footer-links">
+            <Link to="/mentions-legales">{t('footer.legalNotice')}</Link>
+            <Link to="/cgv">{t('footer.terms')}</Link>
+            <Link to="/confidentialite">{t('footer.privacy')}</Link>
+            <Link to="/cookies">{t('footer.cookies')}</Link>
+          </div>
         </div>
         <CookieBanner />
         {seesClientCart && <FloatingCart />}

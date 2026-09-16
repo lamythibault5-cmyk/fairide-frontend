@@ -1611,11 +1611,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* Coquille "app connectée" (client/livreur/restaurateur) : barre latérale + colonne centrale +
    colonne de droite optionnelle. Remplace la nav du haut (.hero/.role-nav) sur les pages
    authentifiées seulement — les pages publiques gardent .hero tel quel (voir Layout.jsx). */
-.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main"; min-height: 100vh; align-items: start; }
-.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right"; }
+.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main" "sidebar footer"; min-height: 100vh; align-items: start; }
+.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right" "sidebar footer footer"; }
 .dashboard-shell .dashboard-sidebar { grid-area: sidebar; }
 .dashboard-shell .dashboard-main { grid-area: main; }
 .dashboard-shell .dashboard-right { grid-area: right; }
+/* Zone à part, toujours la dernière : le pied de page vivait à la fin de la colonne principale et
+   passait donc avant la colonne de droite dès que les zones s'empilaient (voir Layout.jsx). */
+.dashboard-shell .dashboard-footer-links { grid-area: footer; }
 
 .dashboard-sidebar {
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
@@ -1673,7 +1676,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 
 .dashboard-main { padding: 24px 28px 40px; min-width: 0; }
 .dashboard-right { padding: 24px 20px 40px 0; }
-.dashboard-footer-links { display: flex; gap: 14px; margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--line); }
+/* Le retrait horizontal est porté ici depuis que ce bloc est une zone de la grille et non plus un
+   enfant de .dashboard-main, dont il héritait la marge intérieure. */
+.dashboard-footer-links { display: flex; flex-wrap: wrap; gap: 14px; margin: 30px 20px 0; padding: 14px 0 40px; border-top: 1px solid var(--line); }
 .dashboard-footer-links a { font-size: 12px; color: var(--ink-soft); text-decoration: none; }
 .dashboard-footer-links a:hover { text-decoration: underline; }
 
@@ -1687,7 +1692,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @media (max-width: 900px) {
   .dashboard-shell, .dashboard-shell.has-right {
     grid-template-columns: 1fr;
-    grid-template-areas: "main" "right";
+    grid-template-areas: "main" "right" "footer";
   }
   .dashboard-sidebar {
     position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: auto; width: 100%;
@@ -1726,8 +1731,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   }
   .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
   .dashboard-nav-icon { font-size: 20px; width: auto; }
-  .dashboard-main { padding: 18px 16px calc(30px + 66px); }
-  .dashboard-right { padding: 0 16px calc(24px + 66px); }
+  /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
+     hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
+  .dashboard-main { padding: 18px 16px 30px; }
+  .dashboard-right { padding: 0 16px 24px; }
+  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 66px); }
 }
 
 /* Sous 520px : icônes seules dans la barre du bas.

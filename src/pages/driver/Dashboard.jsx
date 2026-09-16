@@ -237,13 +237,11 @@ export default function DriverDashboard() {
           </LigneCompte>
         )}
         <LigneCompte to="/driver/onboarding" icone="🪪" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
-        {user?.adminStatus !== 'approved' && user?.adminStatus !== 'blocked' && (
-          <LigneCompte accent="warn" icone="🕐" titre={t('dashDriver.pendingTitle')} sous={t('dashDriver.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
-            <p className="small" style={{ margin: 0 }}>
-              {t('dashDriver.pendingText')}
-            </p>
-          </LigneCompte>
-        )}
+        {/* Plus de rangée « En attente de validation » ici : dès que le compte n'est pas validé,
+            le corps de la page est REMPLACÉ par une carte qui dit la même chose, avec la même
+            horloge et davantage de détail (voir plus bas, dashDriver.waitingTitle). Le livreur
+            lisait donc deux fois le même message, l'un sous l'autre, sur le même écran. C'est la
+            carte qui reste : elle explique ce qui est vérifié et quand il sera prévenu. */}
         {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
           <LigneCompte
             accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
