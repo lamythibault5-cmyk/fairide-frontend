@@ -3,12 +3,16 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 
 // Sous-section « Paiement » de Mon compte (restaurateur) : comment l'argent circule, ce qu'est Stripe,
-// l'activation des paiements (fermée jusqu'à fin septembre 2026) et les reçus de toutes les commandes
-// payées avec, pour chacune, ce qui revient au restaurant. Fairide ne collecte aucune donnée bancaire :
-// c'est dit ici noir sur blanc, parce que c'est la question que tout restaurateur se pose.
-const OUVERTURE_PAIEMENTS = new Date('2026-09-30T00:00:00+02:00');
+// l'activation des paiements et les reçus de toutes les commandes payées avec, pour chacune, ce qui
+// revient au restaurant. Fairide ne collecte aucune donnée bancaire : c'est dit ici noir sur blanc,
+// parce que c'est la question que tout restaurateur se pose.
+//
+// La date d'ouverture vient de launch.js, comme toutes les autres. Elle était écrite en dur ici ET
+// dans PaiementLivreur.jsx : deux copies d'un même calendrier, qu'aucune des trente phrases annonçant
+// « fin septembre » ne pouvait suivre quand il bougeait.
 
 const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 
@@ -83,7 +87,7 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
   const payees = (orders || []).filter((o) => o.paid && o.paymentMode !== 'on_site').sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const net = (o) => Number(o.subtotal || 0) - Number(o.commission || 0);
   const totaux = payees.reduce((a, o) => ({ total: a.total + Number(o.total || 0), produits: a.produits + Number(o.subtotal || 0), livraison: a.livraison + Number(o.deliveryFee || 0), commission: a.commission + Number(o.commission || 0), net: a.net + net(o) }), { total: 0, produits: 0, livraison: 0, commission: 0, net: 0 });
-  const ouvert = Date.now() >= OUVERTURE_PAIEMENTS.getTime();
+  const ouvert = paiementsOuverts();
   const stripeActif = restaurant?.stripeConnectStatus === 'active';
 
   return (
@@ -107,11 +111,11 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
       {restaurant?.id && !stripeActif && <CoordonneesLegales restaurant={restaurant} onSaved={onRestaurantChange} />}
       <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
         <div>
-          <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText')}</p>
+          <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementResto.activationDoneText') : ouvert ? t('paiementResto.activationOpenText') : t('paiementResto.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
         </div>
         {!stripeActif && (
-          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle')}>
+          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
             {ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
           </button>
         )}

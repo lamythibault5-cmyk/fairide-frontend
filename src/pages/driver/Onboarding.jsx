@@ -4,6 +4,7 @@ import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 
 // Parcours d'inscription du livreur, en étapes : statut (étudiant / économie collaborative / indépendant),
@@ -408,7 +409,7 @@ function EtapePaiement({ d, t, busy, token, user, onNext }) {
         <>
           <button type="button" className="btn-teal" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
           {erreur && <p className="small" style={{ margin: '8px 0 0' }}>{erreur}</p>}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater')}</p>
+          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater', { date: dateOuverturePaiements(getLocale()) })}</p>
         </>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>

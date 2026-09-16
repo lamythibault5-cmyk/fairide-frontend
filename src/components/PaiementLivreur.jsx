@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 
 // Sous-section « Paiement » de Mon compte (livreur) : comment il est payé (frais de livraison à 100 % et
 // pourboires, sans commission), l'autofacturation mensuelle liée à son statut d'indépendant, ce qu'est
 // Stripe, l'activation des paiements (fermée jusqu'à fin septembre 2026) et le reçu de chaque course
 // livrée. Même promesse que côté restaurateur : Fairide ne collecte aucune donnée bancaire.
-const OUVERTURE_PAIEMENTS = new Date('2026-09-30T00:00:00+02:00');
 
 const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
 
@@ -15,7 +15,7 @@ export default function PaiementLivreur({ user, deliveries }) {
   const livrees = (deliveries || []).filter((o) => o.status === 'livre').sort((a, b) => b.createdAt - a.createdAt);
   const pourboire = (o) => (o.tipPaid && o.tipAmount > 0 ? Number(o.tipAmount) : 0);
   const totaux = livrees.reduce((a, o) => ({ courses: a.courses + Number(o.deliveryFee || 0), pourboires: a.pourboires + pourboire(o) }), { courses: 0, pourboires: 0 });
-  const ouvert = Date.now() >= OUVERTURE_PAIEMENTS.getTime();
+  const ouvert = paiementsOuverts();
   const stripeActif = user?.stripeConnectStatus === 'active';
 
   return (
@@ -38,11 +38,11 @@ export default function PaiementLivreur({ user, deliveries }) {
 
       <div className={`paiement-activation${ouvert ? '' : ' fermee'}`}>
         <div>
-          <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementLivreur.activationDoneText') : ouvert ? t('paiementLivreur.activationOpenText') : t('paiementLivreur.activationClosedText')}</p>
+          <b>{stripeActif ? t('paiementResto.activationDone') : ouvert ? t('paiementResto.activationOpen') : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{stripeActif ? t('paiementLivreur.activationDoneText') : ouvert ? t('paiementLivreur.activationOpenText') : t('paiementLivreur.activationClosedText', { date: dateOuverturePaiements(getLocale()) })}</p>
         </div>
         {!stripeActif && (
-          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle')}>
+          <button type="button" className="btn-gold" disabled title={ouvert ? undefined : t('paiementResto.activationClosedTitle', { date: dateOuverturePaiements(getLocale()) })}>
             {ouvert ? t('paiementResto.activateBtn') : t('paiementResto.activateSoonBtn')}
           </button>
         )}

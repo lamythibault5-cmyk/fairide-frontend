@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import ConfirmDialog from '../ConfirmDialog';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import { dateCourte, euros } from './resaUtils';
 
 // BONS CADEAUX — vendus et encaissés par le restaurant lui-même (comptoir, virement) : création avec
@@ -40,7 +41,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
   return (
     <>
       <div className="card" style={{ borderColor: 'var(--gold)' }}>
-        <p className="small" style={{ margin: 0 }}><b>{t('resa.gvOnlineSoonTitle')}</b> {t('resa.gvOnlineSoon')}</p>
+        <p className="small" style={{ margin: 0 }}><b>{t('resa.gvOnlineSoonTitle')}</b> {t('resa.gvOnlineSoon', { date: dateOuverturePaiements(getLocale()) })}</p>
       </div>
 
       <div className="card">

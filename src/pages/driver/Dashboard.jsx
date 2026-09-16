@@ -7,6 +7,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
@@ -249,14 +250,14 @@ export default function DriverDashboard() {
             titre={user?.stripeConnectStatus === 'restricted' ? t('dashDriver.paymentInfoTitle') : t('dashDriver.paymentsToConfigure')}
             sous={user?.stripeConnectStatus === 'restricted'
               ? t('dashDriver.stripeNeedsInfo')
-              : t('dashDriver.viaStripe')}
+              : t('dashDriver.viaStripe', { date: dateOuverturePaiements(getLocale()) })}
             action={user?.stripeConnectStatus === 'restricted' ? (
               <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
                 {connecting ? '...' : t('dashDriver.complete')}
               </button>
             ) : (
               // Activation fermée jusqu'à fin septembre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
-              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn')}</Link>
+              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
             )}
           />
         )}

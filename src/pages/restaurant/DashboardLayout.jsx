@@ -13,7 +13,8 @@ import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import AddressSearch from '../../components/AddressSearch';
 import BusinessSearch from '../../components/BusinessSearch';
 import { cuisineDepuisOsm } from '../../osmCuisine';
@@ -563,14 +564,14 @@ export default function DashboardLayout() {
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
               sous={restaurant.stripeConnectStatus === 'restricted'
                 ? t('dashResto.stripeNeedsInfoResto')
-                : t('dashResto.viaStripeResto')}
+                : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
               action={restaurant.stripeConnectStatus === 'restricted' ? (
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
                   {connecting ? '...' : t('dashResto.complete')}
                 </button>
               ) : (
                 // Activation fermée jusqu'à fin septembre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
-                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn')}</Link>
+                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
               )}
             />
           )}
