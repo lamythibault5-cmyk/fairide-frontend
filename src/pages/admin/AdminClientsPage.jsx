@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -27,6 +27,9 @@ const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'orders', 'revenue'
 const J30 = 30 * 86400000; const J7 = 7 * 86400000;
 
 export default function AdminClientsPage() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -192,7 +195,7 @@ export default function AdminClientsPage() {
       )}
       {clients && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: clients.length, total })}</p>}
       <div className="admin-control-panel">
-        <input placeholder={tr('adminClients.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminClients.phSearch')} placeholder={tr('adminClients.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allM')], ['active30', tr('adminClients.filterActive30')], ['new7', tr('adminClients.filterNew7')], ['refunds', tr('adminClients.filterRefunds')], ['blocked', tr('adminClients.filterBlocked')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>
@@ -336,8 +339,8 @@ export default function AdminClientsPage() {
         onCancel={() => setSolde(null)}
       >
         <div className="field">
-          <label>{tr('adminClients.balanceAmount')}</label>
-          <input type="number" min="0.01" max="1000" step="0.01" value={soldeMontant} onChange={(e) => setSoldeMontant(e.target.value)} placeholder="10.00" />
+          <label htmlFor={idsA11y + '-balanceamount'}>{tr('adminClients.balanceAmount')}</label>
+          <input id={idsA11y + '-balanceamount'} type="number" min="0.01" max="1000" step="0.01" value={soldeMontant} onChange={(e) => setSoldeMontant(e.target.value)} placeholder="10.00" />
         </div>
       </ReasonDialog>
     </div>

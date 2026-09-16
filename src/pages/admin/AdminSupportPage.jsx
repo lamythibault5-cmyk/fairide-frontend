@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiUpload } from '../../api';
@@ -193,7 +193,7 @@ export default function AdminSupportPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminSupport.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input aria-label={tr('adminSupport.phSearch')} placeholder={tr('adminSupport.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <ResultCount n={lignes.length} total={data?.total} />
       </div>
       <div className="admin-control-panel">
@@ -283,6 +283,9 @@ export default function AdminSupportPage() {
 }
 
 function CreateTicketModal({ onClose, onCreated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -306,27 +309,27 @@ function CreateTicketModal({ onClose, onCreated }) {
   return createPortal(
     <RecordDrawer title={tr('adminCommon.newTicket')} onClose={onClose} width={520}
       footer={<div className="row" style={{ gap: 8 }}><button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : tr('adminCommon.create')}</button><button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button></div>}>
-      <div className="field"><label>{tr('adminCommon.subject')}</label><input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} autoFocus /></div>
-      <div className="field"><label>{tr('adminCommon.message')}</label><textarea rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-subject'}>{tr('adminCommon.subject')}</label><input id={idsA11y + '-subject'} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} autoFocus /></div>
+      <div className="field"><label htmlFor={idsA11y + '-message'}>{tr('adminCommon.message')}</label><textarea id={idsA11y + '-message'} rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
       <div className="row" style={{ gap: 8 }}>
         <div className="field" style={{ flex: 1 }}>
-          <label>{tr('adminCommon.category')}</label>
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+          <label htmlFor={idsA11y + '-category'}>{tr('adminCommon.category')}</label>
+          <select id={idsA11y + '-category'} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
             {TICKET_CATEGORIES.map((c) => <option key={c} value={c}>{TICKET_CATEGORY_LABELS[c]}</option>)}
           </select>
         </div>
         <div className="field" style={{ flex: 1 }}>
-          <label>{tr('adminCommon.priority')}</label>
-          <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+          <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+          <select id={idsA11y + '-priority'} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
             {Object.entries(TICKET_PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
           </select>
         </div>
       </div>
-      <div className="field"><label>{tr('adminSupport.assignedTo')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
-      <div className="field"><label>{tr('adminSupport.requesterName')}</label><input value={form.requesterName} onChange={(e) => setForm({ ...form, requesterName: e.target.value })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-assignedto'}>{tr('adminSupport.assignedTo')}</label><AssigneeSelect id={idsA11y + '-assignedto'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-requestername'}>{tr('adminSupport.requesterName')}</label><input id={idsA11y + '-requestername'} value={form.requesterName} onChange={(e) => setForm({ ...form, requesterName: e.target.value })} /></div>
       <div className="row" style={{ gap: 8 }}>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.email')}</label><input value={form.requesterEmail} onChange={(e) => setForm({ ...form, requesterEmail: e.target.value })} /></div>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.phone')}</label><input value={form.requesterPhone} onChange={(e) => setForm({ ...form, requesterPhone: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-email'}>{tr('adminCommon.email')}</label><input id={idsA11y + '-email'} value={form.requesterEmail} onChange={(e) => setForm({ ...form, requesterEmail: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-phone'}>{tr('adminCommon.phone')}</label><input id={idsA11y + '-phone'} value={form.requesterPhone} onChange={(e) => setForm({ ...form, requesterPhone: e.target.value })} /></div>
       </div>
     </RecordDrawer>,
     document.body
@@ -337,6 +340,9 @@ function CreateTicketModal({ onClose, onCreated }) {
 // (statut, escalade, tâche), Suivi (notes, historique). Escalade et résolution demandent leur motif /
 // note via ReasonDialog.
 function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -514,23 +520,23 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       )}
       {t && onglet === 'apercu' && editing && form && (
         <div>
-          <div className="field"><label>{tr('adminCommon.subject')}</label><input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-subject-2'}>{tr('adminCommon.subject')}</label><input id={idsA11y + '-subject-2'} value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminCommon.category')}</label>
-              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              <label htmlFor={idsA11y + '-category-2'}>{tr('adminCommon.category')}</label>
+              <select id={idsA11y + '-category-2'} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
                 {TICKET_CATEGORIES.map((c) => <option key={c} value={c}>{TICKET_CATEGORY_LABELS[c]}</option>)}
               </select>
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminCommon.priority')}</label>
-              <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+              <label htmlFor={idsA11y + '-priority-2'}>{tr('adminCommon.priority')}</label>
+              <select id={idsA11y + '-priority-2'} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 {Object.entries(TICKET_PRIORITY_LABELS).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
             </div>
           </div>
-          <div className="field"><label>{tr('adminSupport.assignedTo')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
-          <div className="field"><label>{tr('adminSupport.tags')}</label><input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-assignedto-2'}>{tr('adminSupport.assignedTo')}</label><AssigneeSelect id={idsA11y + '-assignedto-2'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-tags'}>{tr('adminSupport.tags')}</label><input id={idsA11y + '-tags'} value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
             <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
@@ -596,6 +602,9 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
 }
 
 function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -645,8 +654,8 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
           </div>
         ))}
         <div className="divider" />
-        <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr('adminSupport.phCannedTitle')} /></div>
-        <div className="field"><label>{tr('adminSupport.text')}</label><textarea rows={3} value={body} onChange={(e) => setBody(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-title'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title'} value={title} onChange={(e) => setTitle(e.target.value)} placeholder={tr('adminSupport.phCannedTitle')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-text'}>{tr('adminSupport.text')}</label><textarea id={idsA11y + '-text'} rows={3} value={body} onChange={(e) => setBody(e.target.value)} /></div>
         <div className="row" style={{ gap: 8, marginTop: 6 }}>
           <button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : tr('adminCommon.addPlain')}</button>
           <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.close')}</button>

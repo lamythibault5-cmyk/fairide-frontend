@@ -196,8 +196,8 @@ export function ChartOfAccountsTab({ token, toast }) {
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{tr('adminAccounting.addAccount')}</h3>
         <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>{tr('adminAccounting.chartExtensible')}</p>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <input placeholder={tr('adminAccounting.phCode')} value={newCode} onChange={(e) => setNewCode(e.target.value)} style={{ maxWidth: 160 }} />
-          <input placeholder={tr('adminCommon.name')} value={newName} onChange={(e) => setNewName(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
+          <input aria-label={tr('adminAccounting.phCode')} placeholder={tr('adminAccounting.phCode')} value={newCode} onChange={(e) => setNewCode(e.target.value)} style={{ maxWidth: 160 }} />
+          <input aria-label={tr('adminCommon.name')} placeholder={tr('adminCommon.name')} value={newName} onChange={(e) => setNewName(e.target.value)} style={{ flex: 1, minWidth: 160 }} />
           <select value={newKind} onChange={(e) => setNewKind(e.target.value)} style={{ maxWidth: 140 }}>{ACCOUNT_KINDS.map((k) => <option key={k} value={k}>{kinds[k]}</option>)}</select>
           <button type="button" className="btn-teal" disabled={creating} onClick={createAccount}>{creating ? '...' : tr('adminCommon.create')}</button>
         </div>

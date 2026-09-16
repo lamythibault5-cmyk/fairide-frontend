@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import Icone from './Icone';
 
 // Une rangée de menu : icône, titre, sous-titre, et à droite un chevron ou une action. Le même dessin
 // partout dans l'espace connecté — la page Mon compte, les statuts en tête des tableaux de bord du
@@ -13,12 +14,18 @@ import { Link } from 'react-router-dom';
 //                 formulaire ou une explication en dessous.
 // - `action`    : une rangée d'état, statique, avec un bouton à droite (« Configurer », « Pause »).
 //
-// `accent` colore la pastille de l'icône pour les rangées d'état : 'ok', 'warn', 'danger'.
+// `accent` colore l'icône des rangées d'état : 'ok', 'warn', 'danger'.
+//
+// `icone` prend un NOM de tracé (voir Icone.jsx) — « cadenas », « cadeau », « document ». Une chaîne
+// est donc résolue en SVG ; tout autre nœud React est rendu tel quel, ce qui laisse passer le cas
+// où l'icône est du contenu et non de l'interface (un emoji de cuisine, par exemple).
 export default function LigneCompte({ to, onClick, icone, titre, sous, danger = false, ouverte = false, children, action, accent }) {
   const pliable = children !== undefined;
   const contenu = (
     <>
-      <span className={`account-link-icon${accent ? ` account-link-icon--${accent}` : ''}`} aria-hidden="true">{icone}</span>
+      <span className={`account-link-icon${accent ? ` account-link-icon--${accent}` : ''}`} aria-hidden="true">
+        {typeof icone === 'string' ? <Icone nom={icone} taille={22} /> : icone}
+      </span>
       <span className="account-link-text">
         <b>{titre}</b>
         {sous && <span className="small">{sous}</span>}

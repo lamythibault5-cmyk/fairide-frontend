@@ -36,6 +36,17 @@ window.addEventListener('vite:preloadError', (e) => { e.preventDefault(); rechar
 // Acceptation en cours de visite : on démarre sans attendre un rechargement de page.
 onConsentChange(startSentryIfAllowed);
 
+// Service worker : rend l'application installable, et surtout c'est le seul endroit qui peut
+// recevoir une notification push quand l'onglet est fermé (voir public/sw.js, qui ne met rien en
+// cache). Échec silencieux voulu : navigateur trop ancien, page servie en http hors localhost,
+// navigation privée — dans tous ces cas l'application doit continuer de fonctionner exactement
+// comme avant, sans notification et sans message d'erreur adressé à quelqu'un qui n'a rien demandé.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
 // LA LANGUE VIENT DE L'ADRESSE : /nl/… et /en/… sont des adresses à part entière, le français est la
 // racine (voir src/i18n/routing.js). L'historique du routeur ajoute le préfixe devant chaque lien et le
 // retire de ce que lisent les composants, comme le ferait `basename` — mais il peut en changer sans

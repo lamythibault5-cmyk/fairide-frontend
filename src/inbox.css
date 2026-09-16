@@ -6,7 +6,7 @@
 
 /* Pastille « n non lus » à côté de « Mon compte » dans la nav du haut (la barre latérale a déjà
    .dashboard-nav-link .nav-badge dans styles.css). */
-.role-nav a .nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: 9px; font-size: 11px; font-weight: 700; background: var(--iris); color: #fff; vertical-align: middle; }
+.role-nav a .nav-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 6px; border-radius: var(--radius-field); font-size: 11px; font-weight: 700; background: var(--iris); color: #fff; vertical-align: middle; }
 
 .inbox-list-wrap, .inbox-thread, .inbox-new { display: flex; flex-direction: column; gap: 12px; }
 .inbox-list-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -37,7 +37,7 @@
 .inbox-closed { margin: 0; padding: 8px 10px; border-radius: var(--radius-chip); background: var(--cream-dim); }
 
 .inbox-bubbles { list-style: none; margin: 0; padding: 4px 0; display: flex; flex-direction: column; gap: 8px; max-height: 420px; overflow-y: auto; }
-.inbox-bubble { display: flex; flex-direction: column; gap: 2px; max-width: 82%; padding: 9px 12px; border-radius: 14px; font-size: 14px; line-height: 1.45; }
+.inbox-bubble { display: flex; flex-direction: column; gap: 2px; max-width: 82%; padding: 9px 12px; border-radius: var(--radius); font-size: 14px; line-height: 1.45; }
 .inbox-bubble.from-admin { align-self: flex-start; background: var(--cream-dim); border-bottom-left-radius: 4px; }
 .inbox-bubble.from-me { align-self: flex-end; background: rgba(59, 47, 181, 0.10); border-bottom-right-radius: 4px; }
 .inbox-bubble.is-reaction { padding: 6px 10px; }
@@ -47,7 +47,7 @@
 .inbox-bubble-date { font-size: 11px; color: var(--ink-faint); align-self: flex-end; }
 
 .inbox-reactions { display: flex; gap: 6px; flex-wrap: wrap; }
-.inbox-reaction { width: 40px; height: 36px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font-size: 18px; cursor: pointer; transition: transform .12s, border-color .12s; }
+.inbox-reaction { width: 40px; height: 36px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; font-size: 18px; cursor: pointer; transition: transform .12s, border-color .12s; }
 .inbox-reaction:hover:not(:disabled), .inbox-reaction:focus-visible { transform: scale(1.12); border-color: var(--iris); outline: none; }
 .inbox-reaction:disabled { opacity: .5; cursor: default; }
 

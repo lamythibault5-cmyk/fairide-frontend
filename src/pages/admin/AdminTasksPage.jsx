@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -146,7 +146,7 @@ export default function AdminTasksPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
+        <input aria-label={tr('adminCommon.phSearchTitle')} placeholder={tr('adminCommon.phSearchTitle')} value={qInput} onChange={(e) => setQInput(e.target.value)} style={{ flex: 1, minWidth: 200 }} />
         <ResultCount n={data?.rows?.length || 0} total={data?.total} />
       </div>
       <div className="admin-control-panel">
@@ -232,6 +232,9 @@ export default function AdminTasksPage() {
 }
 
 function CreateTaskModal({ onClose, onCreated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -259,18 +262,18 @@ function CreateTaskModal({ onClose, onCreated }) {
   return createPortal(
     <RecordDrawer title={tr('adminCommon.newTask')} onClose={onClose} width={520}
       footer={<div className="row" style={{ gap: 8 }}><button className="btn-teal" disabled={saving} onClick={create}>{saving ? '...' : tr('adminCommon.create')}</button><button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button></div>}>
-      <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus /></div>
-      <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-title'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title'} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus /></div>
+      <div className="field"><label htmlFor={idsA11y + '-notes'}>{tr('adminCommon.notes')}</label><textarea id={idsA11y + '-notes'} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
       <div className="row" style={{ gap: 8 }}>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.dueDate')}</label><input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-duedate'}>{tr('adminCommon.dueDate')}</label><input id={idsA11y + '-duedate'} type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} /></div>
         <div className="field" style={{ flex: 1 }}>
-          <label>{tr('adminCommon.priority')}</label>
-          <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+          <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+          <select id={idsA11y + '-priority'} value={priority} onChange={(e) => setPriority(e.target.value)}>
             <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
           </select>
         </div>
       </div>
-      <div className="field"><label>{tr('adminCommon.ownerOptional')}</label><AssigneeSelect value={assignedToEmail} onChange={setAssignedToEmail} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-owneroptional'}>{tr('adminCommon.ownerOptional')}</label><AssigneeSelect id={idsA11y + '-owneroptional'} value={assignedToEmail} onChange={setAssignedToEmail} /></div>
     </RecordDrawer>,
     document.body
   );
@@ -279,6 +282,9 @@ function CreateTaskModal({ onClose, onCreated }) {
 // Fiche tâche dans le tiroir commun : détails et fiche liée, changement de statut, réassignation,
 // édition, suppression confirmée.
 function TaskDrawer({ id, onClose, onChanged }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -381,18 +387,18 @@ function TaskDrawer({ id, onClose, onChanged }) {
       )}
       {t && editing && form && (
         <div>
-          <div className="field"><label>{tr('adminCommon.title')}</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-          <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-title-2'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title-2'} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-notes-2'}>{tr('adminCommon.notes')}</label><textarea id={idsA11y + '-notes-2'} rows={3} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.dueDate')}</label><input type="datetime-local" value={form.dueAt} onChange={(e) => setForm({ ...form, dueAt: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-duedate-2'}>{tr('adminCommon.dueDate')}</label><input id={idsA11y + '-duedate-2'} type="datetime-local" value={form.dueAt} onChange={(e) => setForm({ ...form, dueAt: e.target.value })} /></div>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminCommon.priority')}</label>
-              <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+              <label htmlFor={idsA11y + '-priority-2'}>{tr('adminCommon.priority')}</label>
+              <select id={idsA11y + '-priority-2'} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
                 <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
               </select>
             </div>
           </div>
-          <div className="field"><label>{tr('adminCommon.owner')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-owner'}>{tr('adminCommon.owner')}</label><AssigneeSelect id={idsA11y + '-owner'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
             <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>

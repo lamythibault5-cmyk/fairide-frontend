@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { formatFullSchedule } from '../../openingHours';
 import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
+import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -13,7 +14,8 @@ import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import AddressSearch from '../../components/AddressSearch';
 import BusinessSearch from '../../components/BusinessSearch';
 import { cuisineDepuisOsm } from '../../osmCuisine';
@@ -25,6 +27,9 @@ import { cuisineDepuisOsm } from '../../osmCuisine';
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 
 export default function DashboardLayout() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const { token, user, actingAs, actingAdminEmail, quitterAction } = useAuth();
   const navigate = useNavigate();
@@ -133,6 +138,8 @@ export default function DashboardLayout() {
   const [erreurChargement, setErreurChargement] = useState(null);
   const tentatives = useRef(0);
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
+  // Notifications push : la seule alerte qui survive a l'onglet ferme (voir src/push.js).
+  const push = usePushNotifications(token);
 
   const [connecting, setConnecting] = useState(false);
   // La rangée d'état dépliée en tête du tableau de bord (validation), null si aucune.
@@ -437,35 +444,35 @@ export default function DashboardLayout() {
             if (f.openingHours) setOpeningHoursTexte(f.openingHours);
           }} />}
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
-          <div className="field"><label>{t('dashResto.businessName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-businessname'}>{t('dashResto.businessName')}</label><input id={idsA11y + '-businessname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field">
-            <label>{t('dashResto.businessType')}</label>
-            <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+            <label htmlFor={idsA11y + '-businesstype'}>{t('dashResto.businessType')}</label>
+            <select id={idsA11y + '-businesstype'} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
               {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
             </select>
           </div>
           {cuisine === 'Autre' && (
-            <div className="field"><label>{t('dashResto.specifyType')}</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
+            <div className="field"><label htmlFor={idsA11y + '-specifytype'}>{t('dashResto.specifyType')}</label><input id={idsA11y + '-specifytype'} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
           )}
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.addressForDrivers')}</h4>
           <div className="field">
-            <label>{t('dashResto.municipality')}</label>
-            <select value={commune} onChange={(e) => setCommune(e.target.value)}>
+            <label htmlFor={idsA11y + '-municipality'}>{t('dashResto.municipality')}</label>
+            <select id={idsA11y + '-municipality'} value={commune} onChange={(e) => setCommune(e.target.value)}>
               {COMMUNES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
           <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setCommune(a.city); }} />
-          <div className="field"><label>{t('dashResto.street')}</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-street'}>{t('dashResto.street')}</label><input id={idsA11y + '-street'} value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>{t('dashResto.number')}</label>
-              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+              <label htmlFor={idsA11y + '-number'}>{t('dashResto.number')}</label>
+              <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>{t('dashResto.postalCode')}</label>
-              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+              <label htmlFor={idsA11y + '-postalcode'}>{t('dashResto.postalCode')}</label>
+              <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
             </div>
           </div>
           <AddressRecognition
@@ -474,7 +481,7 @@ export default function DashboardLayout() {
             onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
           {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
-          <div className="field"><label>{t('dashResto.neighbourhoodOptional')}</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-neighbourhoodoptional'}>{t('dashResto.neighbourhoodOptional')}</label><input id={idsA11y + '-neighbourhoodoptional'} value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.openingHours')}</h4>
@@ -493,8 +500,8 @@ export default function DashboardLayout() {
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.presentationOptional')}</h4>
-          <div className="field"><label>{t('dashResto.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
-          <div className="field"><label>{t('dashResto.coverUrl')}</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+          <div className="field"><label htmlFor={idsA11y + '-description'}>{t('dashResto.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-coverurl'}>{t('dashResto.coverUrl')}</label><input id={idsA11y + '-coverurl'} value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="new-resto-site">{t('dashResto.website')}</label>
@@ -515,8 +522,8 @@ export default function DashboardLayout() {
             <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
             {offersDelivery && (
               <div className="service-suboptions">
-                <label>{t('dashResto.whoDelivers')}</label>
-                <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
+                <label htmlFor={idsA11y + '-whodelivers'}>{t('dashResto.whoDelivers')}</label>
+                <select id={idsA11y + '-whodelivers'} value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
                   <option value="fairide">{t('dashResto.fairidePool')}</option>
                   <option value="own">{t('dashResto.ownDrivers')}</option>
                 </select>
@@ -536,14 +543,14 @@ export default function DashboardLayout() {
       {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo)) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
-            <LigneCompte accent="danger" icone="🚫" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 {t('dashResto.blockedText')}
               </p>
             </LigneCompte>
           )}
           {restaurant.adminStatus !== 'approved' && restaurant.adminStatus !== 'blocked' && (
-            <LigneCompte accent="warn" icone="🕐" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="warn" icone="horloge" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 {t('dashResto.pendingText')}
               </p>
@@ -552,7 +559,7 @@ export default function DashboardLayout() {
           {/* Validé mais pas encore publié : le commerce n'apparaît pas aux clients, et le restaurateur doit le
               savoir sans avoir à le deviner en cherchant sa fiche sur le site. */}
           {restaurant.adminStatus === 'approved' && !restaurant.publicListed && !restaurant.isDemo && (
-            <LigneCompte accent="warn" icone="🙈" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
+            <LigneCompte accent="warn" icone="masque" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
               <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
@@ -560,18 +567,18 @@ export default function DashboardLayout() {
               n'a rien à demander (même règle que formules.paiementsRequis côté serveur). */}
           {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site') || restaurant.reservationDepositEnabled) && (
             <LigneCompte
-              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
+              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
               sous={restaurant.stripeConnectStatus === 'restricted'
                 ? t('dashResto.stripeNeedsInfoResto')
-                : t('dashResto.viaStripeResto')}
+                : t('dashResto.viaStripeResto', { date: dateOuverturePaiements(getLocale()) })}
               action={restaurant.stripeConnectStatus === 'restricted' ? (
                 <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
                   {connecting ? '...' : t('dashResto.complete')}
                 </button>
               ) : (
                 // Activation fermée jusqu'à fin septembre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
-                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn')}</Link>
+                <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
               )}
             />
           )}
@@ -580,7 +587,7 @@ export default function DashboardLayout() {
 
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
-      {restaurant && <NewOrderAlertBar {...orderAlert} />}
+      {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
 
       {!restaurant && myRestos.length > 0 && !surCarte && (
         erreurChargement && erreurChargement.n >= 2 ? (

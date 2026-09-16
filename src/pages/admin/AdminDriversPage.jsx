@@ -195,7 +195,7 @@ export default function AdminDriversPage() {
       )}
       {drivers && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: drivers.length, total })}</p>}
       <div className="admin-control-panel">
-        <input placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminDrivers.phSearch')} placeholder={tr('adminDrivers.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allM')], ['pending', tr('adminDrivers.filterPending')], ['approved', tr('adminDrivers.filterApproved')], ['blocked', tr('adminDrivers.filterBlocked')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}{k === 'pending' && kpi.pending > 0 ? ` (${kpi.pending})` : ''}</div>

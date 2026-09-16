@@ -93,7 +93,7 @@ function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refre
           <option value="open">{tr('adminMessages.status_open')}</option>
           <option value="closed">{tr('adminMessages.status_closed')}</option>
         </select>
-        <input type="search" value={qInput} placeholder={tr('adminMessages.phSearch')} onChange={(e) => setQInput(e.target.value)} aria-label={tr('adminMessages.phSearch')} />
+        <input aria-label={tr('adminMessages.phSearch')} type="search" value={qInput} placeholder={tr('adminMessages.phSearch')} onChange={(e) => setQInput(e.target.value)} aria-label={tr('adminMessages.phSearch')} />
         {broadcastFilter && (
           <span className="msg-filter-broadcast">
             {tr('adminMessages.broadcastFilter', { subject: broadcastFilter.subject })}
@@ -388,7 +388,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
           <div className="msg-audience-group">
             <h4>{tr('adminMessages.audienceSpecific')}</h4>
             <div className="msg-user-search">
-              <input type="search" value={userQuery} placeholder={tr('adminMessages.phUserSearch')} onChange={(e) => setUserQuery(e.target.value)} aria-label={tr('adminMessages.phUserSearch')} />
+              <input aria-label={tr('adminMessages.phUserSearch')} type="search" value={userQuery} placeholder={tr('adminMessages.phUserSearch')} onChange={(e) => setUserQuery(e.target.value)} aria-label={tr('adminMessages.phUserSearch')} />
               {userResults && (
                 <ul className="msg-user-results">
                   {userResults.length === 0 && <li><span className="small" style={{ padding: '8px 10px', display: 'block' }}>{tr('adminMessages.noUserFound')}</span></li>}

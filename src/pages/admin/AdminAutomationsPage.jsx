@@ -183,8 +183,8 @@ function RuleCard({ rule, onChanged, onShowLog }) {
         <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           {meta.params.map((pf) => (
             <div className="field" key={pf.key} style={{ maxWidth: 160, margin: 0 }}>
-              <label>{pf.label}</label>
-              <input type="number" step={pf.step || '1'} value={params[pf.key] ?? ''} onChange={(e) => setParams({ ...params, [pf.key]: Number(e.target.value) })} />
+              <label htmlFor={`auto-${pf.key}`}>{pf.label}</label>
+              <input id={`auto-${pf.key}`} type="number" step={pf.step || '1'} value={params[pf.key] ?? ''} onChange={(e) => setParams({ ...params, [pf.key]: Number(e.target.value) })} />
             </div>
           ))}
           <button className="btn-outline" style={{ padding: '6px 14px', fontSize: 13 }} disabled={!dirty || saving} onClick={saveParams}>{saving ? '...' : tr('adminCommon.save')}</button>

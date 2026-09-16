@@ -251,9 +251,9 @@ export default function Auth() {
   const [password, setPassword] = useState('');
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
      protège mieux. Retaper un mot de passe à l'aveugle produit surtout la même faute deux fois,
-     et c'est une question de plus à l'écran. Le voir suffit à le vérifier. */
-  const [showPassword, setShowPassword] = useState(false); // eslint-disable-line no-unused-vars
-  const [passwordConfirm, setPasswordConfirm] = useState('');
+     et c'est une question de plus à l'écran. Le voir suffit à le vérifier.
+     Ce commentaire était écrit depuis longtemps, mais le champ, lui, était resté : il a vraiment
+     disparu maintenant, ainsi que son contrôle de concordance et ses traductions. */
   /* Le code de parrainage n'apparaît que si la personne en a un : soit il arrive dans l'URL
      (?ref=...) depuis un lien de parrainage, soit elle clique sur "J'ai un code". Sinon, c'est
      un champ vide de plus qui allonge le formulaire sans jamais servir. */
@@ -477,8 +477,7 @@ export default function Auth() {
       else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
-      if (!passwordConfirm) e.passwordConfirm = required;
-      else if (passwordConfirm !== password) e.passwordConfirm = t('auth.errPasswordMismatch');
+      // Plus de vérification de concordance : il n'y a plus de second champ à confronter.
     }
     return e;
   }
@@ -814,12 +813,14 @@ export default function Auth() {
 
   return (
     <div className={`decor-page auth-decor ${decorClass}`}>
-      {(audience || mode === 'register') && (
+      {/* Le bandeau « Espace client » + accroche au-dessus de la carte a disparu de l'inscription.
+          Il redisait ce que le sélecteur de rôle affiche déjà trois centimètres plus bas, et il
+          poussait le premier champ hors de l'écran sur un téléphone : on arrivait sur une page
+          d'inscription sans voir où s'inscrire. Il ne reste que pour qui arrive par un lien
+          d'audience (?pour=commerce), où il sert d'accueil et pas de répétition. */}
+      {audience && mode !== 'register' && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
-          <span className={`pill ${role === 'client' ? 'gold' : 'teal'}`}>
-            {role === 'client' ? t('auth.clientSpace') : t('auth.partnerSpace')}
-          </span>
-          <h2 style={{ margin: '10px 0 0', fontSize: 22 }}>
+          <h2 style={{ margin: 0, fontSize: 22 }}>
             {role === 'client' ? t('auth.clientHeading') : t('auth.partnerHeading')}
           </h2>
         </div>
@@ -899,9 +900,9 @@ export default function Auth() {
                 {role === 'driver' && (
                   <>
                     <div className="field">
-                      <label>{t('auth.courierStatusTitle')}</label>
+                      <span className="titre-groupe" id="auth-statut-titre">{t('auth.courierStatusTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
-                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup">
+                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
                         {(courierOptions?.statuses || ['student', 'p2p', 'independent']).map((st) => {
                           const ferme = st === 'p2p' && courierOptions && !courierOptions.p2pEnabled;
                           return (
@@ -927,8 +928,8 @@ export default function Auth() {
                       </div>
                     )}
                     <div className="field">
-                      <label>{t('auth.vehicleTitle')}</label>
-                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup">
+                      <span className="titre-groupe" id="auth-vehicule-titre">{t('auth.vehicleTitle')}</span>
+                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-vehicule-titre">
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
@@ -944,9 +945,9 @@ export default function Auth() {
                       )}
                     </div>
                     <div className="field">
-                      <label>{t('auth.bagTitle')}</label>
+                      <span className="titre-groupe" id="auth-sacoche-titre">{t('auth.bagTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.bagHelp')}</p>
-                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup">
+                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-sacoche-titre">
                         {['own', 'fairide'].map((b) => (
                           <div key={b} role="radio" aria-checked={bagOption === b} tabIndex={0} className={`statut-carte${bagOption === b ? ' active' : ''}`}
                             onClick={() => setBagOption(b)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBagOption(b); }}>
@@ -978,8 +979,8 @@ export default function Auth() {
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
-                <div className="field">
-                  <label>{t('auth.hoursTitle')}</label>
+                <div className="field" role="group" aria-labelledby="auth-horaires-titre">
+                  <span className="titre-groupe" id="auth-horaires-titre">{t('auth.hoursTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>
                     {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
                     {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
@@ -1013,8 +1014,8 @@ export default function Auth() {
                 )}
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
                     (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
-                <div className="field contacts-commerce">
-                  <label>{t('auth.contactsTitle')}</label>
+                <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
+                  <span className="titre-groupe" id="auth-contacts-titre">{t('auth.contactsTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
                   <p className="small contact-ligne">📞 <b>{phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
                   {!phoneSecondaryOuvert ? (
@@ -1060,8 +1061,8 @@ export default function Auth() {
                   />
                   {fieldError('responsibleName')}
                 </div>
-                <div className="field services-choice">
-                  <label>{t('auth.servicesTitle')}</label>
+                <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
+                  <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
                   <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
                   {services.delivery && (
@@ -1168,17 +1169,18 @@ export default function Auth() {
                   <EmailDomainChips value={email} onChange={setEmail} inputId="auth-f-17" />
                   {fieldError('email')}
                 </div>
+                {/* La règle du mot de passe sort du texte d'exemple. « 5 caractères min., 1 majuscule,
+                    1 minuscule, 1 chiffre » ne tenait pas dans la largeur du champ : la phrase était
+                    coupée en plein milieu, donc la règle était affichée sans être lisible. Sous le
+                    champ, elle tient, et elle reste visible pendant la frappe — un texte d'exemple
+                    disparaît au premier caractère, exactement quand on en a besoin. */}
                 <div className="field">
                   <label htmlFor="auth-f-18">{t('auth.password')}</label>
                   <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)}
-                    placeholder={t('auth.passwordPlaceholderRegister')} invalid={!!errors.password} />
-                  {fieldError('password')}
-                </div>
-                <div className="field">
-                  <label htmlFor="auth-f-18b">{t('auth.passwordConfirm')}</label>
-                  <PasswordInput id="auth-f-18b" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
-                    placeholder={t('auth.phPasswordConfirm')} invalid={!!errors.passwordConfirm} />
-                  {fieldError('passwordConfirm')}
+                    invalid={!!errors.password} />
+                  {errors.password ? fieldError('password') : <p className="champ-aide">{t('auth.passwordRule')}</p>}
+                  {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste
+                      au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>
               </>
             )}

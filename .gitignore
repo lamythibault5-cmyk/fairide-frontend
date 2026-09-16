@@ -6,3 +6,4 @@ dist/
 
 # Bancs d essai jetables (sources video de plusieurs centaines de Mo)
 public/_probe/
+.playwright-cli/

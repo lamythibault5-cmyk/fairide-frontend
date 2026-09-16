@@ -289,7 +289,7 @@ export default function OrdersPage() {
           </div>
           {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
             <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-              <input
+              <input aria-label={t('ordersResto.phCustomerCode')}
                 placeholder={t('ordersResto.phCustomerCode')}
                 style={{ maxWidth: 140 }}
                 value={pickupCodeInputs[o.id] || ''}
@@ -302,7 +302,7 @@ export default function OrdersPage() {
           )}
           {o.status === 'pret' && o.orderType === 'delivery' && o.driverId && (
             <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-              <input
+              <input aria-label={t('ordersResto.phDriverCode')}
                 placeholder={t('ordersResto.phDriverCode')}
                 style={{ maxWidth: 140 }}
                 value={pickupCodeInputs[o.id] || ''}
@@ -384,7 +384,7 @@ export default function OrdersPage() {
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
             {selectedOrder.status === 'pret' && (selectedOrder.orderType === 'pickup' || selectedOrder.orderType === 'dine_in') && (
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                <input
+                <input aria-label={t('ordersResto.phCustomerCode')}
                   placeholder={t('ordersResto.phCustomerCode')}
                   style={{ maxWidth: 140 }}
                   value={pickupCodeInputs[selectedOrder.id] || ''}
@@ -397,7 +397,7 @@ export default function OrdersPage() {
             )}
             {selectedOrder.status === 'pret' && selectedOrder.orderType === 'delivery' && selectedOrder.driverId && (
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
-                <input
+                <input aria-label={t('ordersResto.phDriverCode')}
                   placeholder={t('ordersResto.phDriverCode')}
                   style={{ maxWidth: 140 }}
                   value={pickupCodeInputs[selectedOrder.id] || ''}

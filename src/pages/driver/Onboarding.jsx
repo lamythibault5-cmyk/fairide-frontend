@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 
 // Parcours d'inscription du livreur, en étapes : statut (étudiant / économie collaborative / indépendant),
@@ -225,7 +226,26 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
 }
 
 function Champ({ label, children, help }) {
-  return <div className="field"><label>{label}</label>{children}{help && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{help}</p>}</div>;
+  // L'ASSOCIATION SE FAIT ICI, UNE FOIS. Ce composant enveloppe les dix-huit champs de
+  // l'inscription livreur, et son étiquette était posée à côté du champ sans aucun lien : un
+  // lecteur d'écran annonçait « zone de texte » sans dire laquelle, sur un parcours d'inscription
+  // entier. Plutôt que de répéter un id à chaque appel — dix-huit occasions de se tromper —
+  // l'identifiant est fabriqué ici et injecté dans l'enfant.
+  //
+  // useId donne une valeur par instance, donc deux Champ sur la même page ne se marchent pas
+  // dessus. Un enfant qui porte déjà un id garde le sien, et un enfant qui n'est pas un élément
+  // unique (fragment, tableau) est laissé tel quel : mieux vaut ne rien faire que produire un
+  // htmlFor qui pointe dans le vide.
+  const id = useId();
+  const enfantUnique = isValidElement(children) && !children.props.id;
+  const champ = enfantUnique ? cloneElement(children, { id }) : children;
+  return (
+    <div className="field">
+      {enfantUnique ? <label htmlFor={id}>{label}</label> : <span className="titre-groupe">{label}</span>}
+      {champ}
+      {help && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{help}</p>}
+    </div>
+  );
 }
 
 function EtapeInfos({ d, t, busy, token, action, onNext }) {
@@ -270,9 +290,9 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
       <div className="courier-grid">
         <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
         <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-          <input inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
+          <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
         </Champ>
-        <Champ label={t('courierOnboarding.fIban')}><input value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
+        <Champ label={t('courierOnboarding.fIban')}><input aria-label="BE68 5390 0754 7034" value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
         <Champ label={t('courierOnboarding.fZone')}>
           <select value={f.zone} onChange={set('zone')}><option value="">-</option>{d.zones.map((z) => <option key={z} value={z}>{z}</option>)}</select>
         </Champ>
@@ -281,7 +301,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         </Champ>
         {motorise && (<>
           <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-          <Champ label={t('courierOnboarding.fPlate')}><input value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+          <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
         </>)}
         <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
           <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
@@ -296,7 +316,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
         <h4 style={{ margin: '14px 0 6px' }}>🎓 {t('courierOnboarding.studentSection')}</h4>
         <div className="courier-grid">
           <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
-          <Champ label={t('courierOnboarding.fAcademicYear')}><input value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
+          <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
           <Champ label={t('courierOnboarding.fStudentHours')} help={t('courierOnboarding.fStudentHoursHelp', { h: legal.studentMaxHours })}><input type="number" min="0" max="1000" value={f.studentHoursRemaining} onChange={set('studentHoursRemaining')} /></Champ>
           <Champ label={t('courierOnboarding.fHoursExternal')} help={t('courierOnboarding.fHoursExternalHelp')}><input type="number" min="0" max="2000" value={f.hoursExternalDeclared} onChange={set('hoursExternalDeclared')} /></Champ>
         </div>
@@ -315,11 +335,11 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
       {c.statusType === 'independent' && (<>
         <h4 style={{ margin: '14px 0 6px' }}>🧑‍💼 {t('courierOnboarding.indepSection')}</h4>
         <div className="courier-grid">
-          <Champ label={t('courierOnboarding.fBce')} help={c.independent.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
+          <Champ label={t('courierOnboarding.fBce')} help={c.independent.companyVerified ? `✅ ${t('courierOnboarding.bceVerified')}` : t('courierOnboarding.bceHelp')}><input aria-label="0123.456.789" value={f.companyNumber} onChange={set('companyNumber')} placeholder="0123.456.789" /></Champ>
           <Champ label={t('courierOnboarding.fVatStatus')}>
             <select value={f.vatStatus} onChange={set('vatStatus')}><option value="">-</option><option value="franchise">{t('courierOnboarding.vatFranchise', { max: euro(legal.franchiseMaxTurnover) })}</option><option value="assujetti">{t('courierOnboarding.vatNormal')}</option></select>
           </Champ>
-          {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
+          {f.vatStatus === 'assujetti' && <Champ label={t('courierOnboarding.fVatNumber')}><input aria-label="BE0123456789" value={f.vatNumber} onChange={set('vatNumber')} placeholder="BE0123456789" /></Champ>}
           <Champ label={t('courierOnboarding.fLegalName')}><input value={f.legalName} onChange={set('legalName')} /></Champ>
           <Champ label={t('courierOnboarding.fSeat')}><input value={f.seatAddress} onChange={set('seatAddress')} /></Champ>
         </div>
@@ -360,6 +380,9 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
 }
 
 function EtapeContrat({ d, t, busy, token, action, onNext }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier;
   const [nom, setNom] = useState(`${c.identity.firstName} ${c.identity.lastName}`.trim() || d.user?.name || '');
   const [accepte, setAccepte] = useState(false);
@@ -380,8 +403,8 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
           {ancien && <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>}
           <button type="button" className="btn-outline" onClick={apercu}>📄 {t('courierOnboarding.contractPreview')}</button>
           <div className="field" style={{ marginTop: 12 }}>
-            <label>{t('courierOnboarding.typedName')}</label>
-            <input value={nom} onChange={(e) => setNom(e.target.value)} />
+            <label htmlFor={idsA11y + '-typedname'}>{t('courierOnboarding.typedName')}</label>
+            <input id={idsA11y + '-typedname'} value={nom} onChange={(e) => setNom(e.target.value)} />
           </div>
           <label className="service-option"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /> <span>{t('courierOnboarding.acceptContract')}</span></label>
           <p className="small" style={{ margin: '6px 0 10px', opacity: 0.8 }}>{t('courierOnboarding.signatureHelp')}</p>
@@ -408,7 +431,7 @@ function EtapePaiement({ d, t, busy, token, user, onNext }) {
         <>
           <button type="button" className="btn-teal" disabled={connecting || busy} onClick={connecter}>{connecting ? '…' : t('courierOnboarding.paymentStart')}</button>
           {erreur && <p className="small" style={{ margin: '8px 0 0' }}>{erreur}</p>}
-          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater')}</p>
+          <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('courierOnboarding.paymentLater', { date: dateOuverturePaiements(getLocale()) })}</p>
         </>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
@@ -440,6 +463,9 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
 }
 
 function Compteurs({ d, t, token, action, busy }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier; const s = d.situation; const legal = d.legal; const th = d.thresholds;
   const [ext, setExt] = useState(c.statusType === 'student' ? th.hoursExternalDeclared : th.grossIncomeExternalDeclared);
   if (!s || s.type === 'none') {
@@ -456,8 +482,8 @@ function Compteurs({ d, t, token, action, busy }) {
       {c.statusType === 'p2p' && <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.withholdingSoFar', { amount: euro(th.withholdingTotal) })}</p>}
       <div className="row" style={{ gap: 8, alignItems: 'flex-end', marginTop: 10, flexWrap: 'wrap' }}>
         <div className="field" style={{ margin: 0, flex: '1 1 220px' }}>
-          <label>{s.type === 'hours' ? t('courierOnboarding.fHoursExternal') : t('courierOnboarding.fIncomeExternal')}</label>
-          <input type="number" min="0" value={ext} onChange={(e) => setExt(e.target.value)} />
+          <label htmlFor={idsA11y + '-fhoursexternal'}>{s.type === 'hours' ? t('courierOnboarding.fHoursExternal') : t('courierOnboarding.fIncomeExternal')}</label>
+          <input id={idsA11y + '-fhoursexternal'} type="number" min="0" value={ext} onChange={(e) => setExt(e.target.value)} />
         </div>
         <button type="button" className="btn-outline" disabled={busy} onClick={() => action(() => api('/couriers/me', { method: 'PATCH', token, body: s.type === 'hours' ? { hoursExternalDeclared: ext } : { incomeExternalDeclared: ext } }), t('courierOnboarding.toastSaved'))}>{t('courierOnboarding.save')}</button>
       </div>
@@ -467,6 +493,9 @@ function Compteurs({ d, t, token, action, busy }) {
 }
 
 function ChangementStatut({ d, t, token, action, busy }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier; const [cible, setCible] = useState(c.statusType === 'independent' ? 'student' : 'independent'); const [raison, setRaison] = useState('');
   const [ouvert, setOuvert] = useState(c.lifecycleStatus === 'blocked_threshold');
   return (
@@ -480,10 +509,10 @@ function ChangementStatut({ d, t, token, action, busy }) {
           <p className="small" style={{ margin: '0 0 8px' }}>{c.lifecycleStatus === 'blocked_threshold' ? t('courierOnboarding.changeStatusBlocked') : t('courierOnboarding.changeStatusHelp')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="field" style={{ margin: 0 }}>
-              <label>{t('courierOnboarding.newStatus')}</label>
-              <select value={cible} onChange={(e) => setCible(e.target.value)}>{['student', 'p2p', 'independent'].filter((x) => x !== c.statusType).map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
+              <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
+              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{['student', 'p2p', 'independent'].filter((x) => x !== c.statusType).map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
             </div>
-            <div className="field" style={{ margin: 0, flex: '1 1 220px' }}><label>{t('courierOnboarding.reason')}</label><input value={raison} onChange={(e) => setRaison(e.target.value)} /></div>
+            <div className="field" style={{ margin: 0, flex: '1 1 220px' }}><label htmlFor={idsA11y + '-reason'}>{t('courierOnboarding.reason')}</label><input id={idsA11y + '-reason'} value={raison} onChange={(e) => setRaison(e.target.value)} /></div>
             <button type="button" className="btn-outline" disabled={busy} onClick={() => action(() => api('/couriers/me/request-status-change', { method: 'POST', token, body: { statusType: cible, reason: raison } }), t('courierOnboarding.toastChangeRequested'))}>{t('courierOnboarding.requestChange')}</button>
           </div>
           {c.statusType === 'student' && c.lifecycleStatus === 'blocked_threshold' && <p className="small" style={{ margin: '8px 0 0' }}>{t('courierOnboarding.ordinaryOption')}</p>}

@@ -32,6 +32,14 @@ export function dateOuvertureCommandes(locale = 'fr-BE') { return dateOuverture(
 export function livraisonOuverte(user) { return serviceOuvert('delivery', user); }
 export function dateOuvertureLivraison(locale = 'fr-BE') { return dateOuverture('delivery', locale); }
 
+// Activation des paiements (Stripe Connect), commerces et livreurs. Cette date vivait en double, écrite
+// en dur dans PaiementRestaurant.jsx ET PaiementLivreur.jsx, hors de ce calendrier — d'où une
+// trentaine de phrases qui annonçaient « fin septembre » sans que rien ne les relie à la date
+// réellement appliquée. Une seule origine, ici, comme pour toutes les autres dates.
+export const OUVERTURE_PAIEMENTS = new Date('2026-09-30T00:00:00+02:00');
+export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.getTime(); }
+export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
+
 // Abonnement des commerces (à emporter et livraison) : activable dès le 1er octobre 2026, avec l'application,
 // pour être prêt à l'ouverture des commandes le 5. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
 export const OUVERTURE_ABONNEMENT = new Date('2026-10-01T00:00:00+02:00');

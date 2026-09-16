@@ -5,78 +5,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
-import OptionsPickerModal from '../../components/OptionsPickerModal';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
+import Icone from '../../components/Icone';
+import ChoixPastilles from '../../components/ChoixPastilles';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
-import { categoryKind, resolveItemImage } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
 // service à table qui demande "un dessert avec ça ?", pas une case à cocher qu'on pourrait manquer.
-function computeUpsellSuggestions(restaurant, cart) {
-  const cartItemIds = new Set(Object.values(cart.lines).map((l) => l.itemId));
-  const kindOf = (item) => categoryKind(item.category);
-  const hasKindInCart = (kind) => Object.values(cart.lines).some((l) => {
-    const item = restaurant.menu.find((m) => m.id === l.itemId);
-    return item && kindOf(item) === kind;
-  });
-  // Le restaurateur peut marquer explicitement certains plats à mettre en avant ici (suggestAtCheckout) —
-  // s'il en a marqué au moins un dans cette catégorie, on ne montre QUE ceux-là (choix éditorial assumé du
-  // restaurateur) ; sinon, repli sur le comportement automatique d'avant (n'importe quel plat de la catégorie).
-  const suggestionsFor = (kind) => {
-    if (hasKindInCart(kind)) return [];
-    const candidates = restaurant.menu.filter((m) => kindOf(m) === kind && m.available !== false && !cartItemIds.has(m.id));
-    const featured = candidates.filter((m) => m.suggestAtCheckout);
-    return (featured.length > 0 ? featured : candidates).slice(0, 4);
-  };
-  return { desserts: suggestionsFor('dessert'), drinks: suggestionsFor('boisson') };
-}
-
-function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
-  if (desserts.length === 0 && drinks.length === 0) return null;
-
-  return (
-    <div className="card upsell-card">
-      <h3 style={{ margin: '0 0 8px', fontSize: 15 }}>{t('checkout.upsellTitle')}</h3>
-      {desserts.length > 0 && <UpsellRow items={desserts} cart={cart} restaurant={restaurant} />}
-      {drinks.length > 0 && <UpsellRow items={drinks} cart={cart} restaurant={restaurant} />}
-    </div>
-  );
-}
-
-function UpsellRow({ items, cart, restaurant }) {
-  const [pickerItem, setPickerItem] = useState(null);
-  function handleAdd(item) {
-    if (item.optionGroups?.length > 0) { setPickerItem(item); return; }
-    cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
-  }
-  return (
-    <div className="upsell-row">
-      {items.map((item) => {
-        const image = resolveItemImage(item, restaurant.sections);
-        return (
-          <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
-            {image ? <img loading="lazy" src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
-            <span className="upsell-item-name">{item.name}</span>
-            <span className="upsell-item-price">+{item.price.toFixed(2)}€</span>
-          </button>
-        );
-      })}
-      {pickerItem && (
-        <OptionsPickerModal
-          item={pickerItem}
-          onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
-            setPickerItem(null);
-          }}
-        />
-      )}
-    </div>
-  );
-}
+// Les suggestions de fin de panier (« un dessert avec ça ? ») ont demenage dans la page Panier,
+// ou elles sont proposees AVANT d'entrer dans le paiement : voir components/UpsellPanier.jsx.
+// Le paiement ne montre plus que ce qu'on paie.
 
 // Page dédiée affichée après le clic sur "Commander" depuis le panier : le client y choisit
 // livraison/à emporter, vérifie ses informations, puis valide avant de passer au paiement.
@@ -127,10 +68,8 @@ export default function Checkout() {
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
-  const [step, setStep] = useState('details');
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
-  const stepInitRef = useRef(false);
 
   // Réservation seule (bouton "Réserver une table") : le panier n'a jamais reçu d'article pour ce
   // restaurant, donc cart.restaurantId peut être vide — on retombe alors sur l'id transmis explicitement
@@ -179,15 +118,8 @@ export default function Checkout() {
     }
   }, [pendingOrder]);
 
-  // Étape "dessert/boisson" affichée seulement à l'arrivée sur la page (une fois), et seulement s'il y a
-  // vraiment quelque chose à proposer — sinon on saute directement à la confirmation des infos de commande.
-  useEffect(() => {
-    if (!restaurant || stepInitRef.current) return;
-    stepInitRef.current = true;
-    const { desserts, drinks } = computeUpsellSuggestions(restaurant, cart);
-    if (!reservationOnly && cart.count > 0 && (desserts.length > 0 || drinks.length > 0)) setStep('upsell');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurant]);
+  // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
+  // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
 
   // Créneaux libres pour la date et le groupe : rechargés à chaque changement de l'un ou l'autre. Le
   // créneau déjà choisi est conservé s'il reste disponible, effacé sinon (on ne laisse pas partir
@@ -212,7 +144,6 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
-  const { desserts: upsellDesserts, drinks: upsellDrinks } = computeUpsellSuggestions(restaurant, cart);
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
@@ -361,107 +292,38 @@ export default function Checkout() {
     <div>
       <Link to={`/restaurants/${restaurantId}`} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; {restaurant.name}</Link>
 
-      {!pendingOrder && step === 'upsell' && (
-        <>
-          <LastChanceUpsell desserts={upsellDesserts} drinks={upsellDrinks} restaurant={restaurant} cart={cart} t={t} />
-          <div className="cart-bar">
-            <span>{t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) })}</span>
-            <button className="btn-gold" onClick={() => setStep('details')}>{t('checkout.continueToDetails')}</button>
-          </div>
-        </>
-      )}
 
-      {!pendingOrder && step === 'details' && (
+      {!pendingOrder && (
         <>
-          {cart.count > 0 && (
-          <div className="card">
-            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('checkout.yourOrder')}</h3>
-            {Object.entries(cart.lines).map(([lineKey, line]) => {
-              const item = restaurant.menu.find((m) => m.id === line.itemId);
-              if (!item) return null;
-              return (
-                <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                  <span>
-                    {line.qty}× {item.name}
-                    {line.optionsSnapshot?.length > 0 && (
-                      <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
-                    )}
-                  </span>
-                  <div className="row" style={{ gap: 8 }}>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-                    <span>{line.qty}</span>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="divider" />
-            <div className="breakdown">
-              <div className="line"><span>{t('common.subtotal')}</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
-              {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span>🏷️ {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{d.discount.toFixed(2)}€</span></div>
-              ))}
-              {fulfillmentType === 'delivery' && (
-                <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
-                  {totals.deliveryDiscount > 0 && (
-                    <div className="line"><span>🚴 {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
-                  )}
-                  {/* TVA comprise : la ligne affichait les frais hors TVA alors que le total, lui, la contenait —
-                      la somme des lignes ne tombait jamais sur le total affiché juste en dessous. */}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{(totals.serviceFee + totals.serviceFeeVat).toFixed(2)}€</span></div>
-                </>
-              )}
-              {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
-              {soldeUtilise && user.balance > 0 && (
-                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
-              )}
-              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{estimatedTotal.toFixed(2)}€</span></div>
-            </div>
-            {user.balance > 0 && (
-              <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
-                <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
-                <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
-              </label>
-            )}
-            <details style={{ marginTop: 10 }} open={!!giftCode}>
-              <summary className="small" style={{ cursor: 'pointer' }}>🎁 {t('checkout.giftVoucherSummary')}</summary>
-              <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
-                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} aria-label={t('checkout.giftVoucherSummary')} />
-                <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
-                  onClick={async () => {
-                    setGiftCheck('loading');
-                    try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
-                    catch (e) { setGiftCheck(null); toast(e.message); }
-                  }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
-              </div>
-              {giftCheck && giftCheck !== 'loading' && (
-                <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
-                  {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
-                </p>
-              )}
-            </details>
-          </div>
-          )}
-
+        <div className="checkout-grille">
+          <div className="checkout-form">
           <div className="card">
             <div className="field">
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
                   les options, au lieu de trois boutons sans contexte. */}
-              <label id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
-              <div className="row" style={{ gap: 8 }} role="group" aria-labelledby="checkout-fulfillment-label">
+              <span className="titre-groupe" id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</span>
+              {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
+                  « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
+                  l'option retenue cernée d'une arête iris. Trois pilules côte à côte se lisaient
+                  comme trois boutons d'égale importance, alors qu'il s'agit d'un choix unique. */}
+              <div className="choix-cartes" role="group" aria-labelledby="checkout-fulfillment-label">
                 {restaurant.offersDineIn && (
-                  <button type="button" className={fulfillmentType === 'dine_in' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('dine_in')}>{t('orderStatus.orderType.dineIn')}</button>
+                  <button type="button" className={`choix-carte${fulfillmentType === 'dine_in' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'dine_in'} onClick={() => selectFulfillment('dine_in')}>
+                    <Icone nom="restaurants" taille={20} /><span>{t('orderStatus.orderType.dineIn')}</span>
+                  </button>
                 )}
                 {cart.count > 0 && (
                   <>
                     {restaurant.offersDelivery && (
-                      <button type="button" className={fulfillmentType === 'delivery' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('delivery')}>{t('orderStatus.orderType.delivery')}</button>
+                      <button type="button" className={`choix-carte${fulfillmentType === 'delivery' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'delivery'} onClick={() => selectFulfillment('delivery')}>
+                        <Icone nom="scooter" taille={20} /><span>{t('orderStatus.orderType.delivery')}</span>
+                      </button>
                     )}
                     {restaurant.offersPickup && (
-                      <button type="button" className={fulfillmentType === 'pickup' ? 'btn-gold' : 'btn-outline'} style={{ flex: 1 }} onClick={() => selectFulfillment('pickup')}>{t('orderStatus.orderType.pickup')}</button>
+                      <button type="button" className={`choix-carte${fulfillmentType === 'pickup' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'pickup'} onClick={() => selectFulfillment('pickup')}>
+                        <Icone nom="sac" taille={20} /><span>{t('orderStatus.orderType.pickup')}</span>
+                      </button>
                     )}
                   </>
                 )}
@@ -488,10 +350,18 @@ export default function Checkout() {
                   <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
                 </div>
                 <div className="field">
-                  <label htmlFor="checkout-f-5">{t('checkout.atDelivery')}</label>
-                  <select id="checkout-f-5" value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)}>
-                    {DELIVERY_INSTRUCTION_OPTIONS.map((o) => <option key={o.value} value={o.value}>{deliveryInstructionLabel(o.value, t)}</option>)}
-                  </select>
+                  {/* Un groupe de boutons, pas un champ : l'intitulé n'a rien à désigner par htmlFor. */}
+                  <span className="field-intitule" id="checkout-consigne-label">{t('checkout.atDelivery')}</span>
+                  <ChoixPastilles
+                    libelle={t('checkout.atDelivery')}
+                    valeur={deliveryInstructions}
+                    onChange={setDeliveryInstructions}
+                    options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
+                      value: o.value,
+                      label: deliveryInstructionLabel(o.value, t),
+                      icone: <Icone nom={o.icon} taille={16} />
+                    }))}
+                  />
                 </div>
                 <div className="field">
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
@@ -502,23 +372,31 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
+            {/* LE COMMERCE CHOISIT LE MODE DE PAIEMENT A EMPORTER (modeEmporter, pose par main) :
+                en ligne seulement, sur place seulement, ou au choix du client. Quand il n'y a pas de
+                choix a faire, on l'annonce au lieu d'afficher une bascule a une seule option — c'est
+                une information, pas une question. */}
             {fulfillmentType === 'pickup' && modeEmporter === 'on_site' && (
               <div className="paiement-encart" style={{ marginBottom: 10 }}>
-                <p className="small" style={{ margin: 0 }}><b>💶 {t('checkout.payOnSiteOnly')}</b></p>
+                <p className="small" style={{ margin: 0 }}><b><Icone nom="billet" taille={16} /> {t('checkout.payOnSiteOnly')}</b></p>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('checkout.payOnSiteNote')}</p>
               </div>
             )}
+            {/* C'etaient deux boutons radio natifs, dont la cible utile etait la pastille de 13px
+                dessinee par le navigateur. Ils deviennent des pastilles, comme le reste du
+                formulaire. */}
             {fulfillmentType === 'pickup' && modeEmporter === 'both' && (
-              <div className="field" role="radiogroup" aria-labelledby="checkout-paiement-label">
-                <label id="checkout-paiement-label">{t('checkout.payWhen')}</label>
-                <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 4 }}>
-                  <input type="radio" name="checkout-paiement" style={{ width: 'auto' }} checked={!paiementSurPlace} onChange={() => setPaiementSurPlace(false)} />
-                  <span className="small">💳 {t('checkout.payOnline')}</span>
-                </label>
-                <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
-                  <input type="radio" name="checkout-paiement" style={{ width: 'auto' }} checked={paiementSurPlace} onChange={() => setPaiementSurPlace(true)} />
-                  <span className="small">💶 {t('checkout.payOnSite')}</span>
-                </label>
+              <div className="field">
+                <span className="field-intitule">{t('checkout.payWhen')}</span>
+                <ChoixPastilles
+                  libelle={t('checkout.payWhen')}
+                  valeur={paiementSurPlace ? 'sur_place' : 'en_ligne'}
+                  onChange={(v) => setPaiementSurPlace(v === 'sur_place')}
+                  options={[
+                    { value: 'en_ligne', label: t('checkout.payOnline'), icone: <Icone nom="carteBancaire" taille={16} /> },
+                    { value: 'sur_place', label: t('checkout.payOnSite'), icone: <Icone nom="billet" taille={16} /> }
+                  ]}
+                />
                 {paiementSurPlace && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>}
               </div>
             )}
@@ -528,34 +406,34 @@ export default function Checkout() {
                 <div className="field">
                   {/* Deux champs (jour + heure) sous un seul intitulé : groupe, et chaque select reçoit
                       en plus son propre aria-label pour être identifiable une fois le focus dessus. */}
-                  <label id="checkout-reservation-label">{t('checkout.reservationDateTime')}</label>
-                  <div className="row" style={{ gap: 8 }} role="group" aria-labelledby="checkout-reservation-label">
-                    <select
-                      value={scheduleDate}
-                      onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
-                      style={{ flex: 1 }}
-                      aria-label={t('checkout.reservationDateTime')}
-                    >
-                      {dateOptionsResa.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                    </select>
-                    <select
-                      value={scheduleTime}
-                      onChange={(e) => setScheduleTime(e.target.value)}
-                      style={{ flex: 1 }}
-                      aria-label={t('checkout.timePlaceholder')}
-                      disabled={dispoChargement}
-                    >
-                      <option value="">{dispoChargement ? t('checkout.loadingSlots') : t('checkout.timePlaceholder')}</option>
-                      {/* Les créneaux pleins restent visibles mais grisés : voir qu'il y avait 20h30 et que
-                          c'est complet aide à choisir 19h30, là où une liste amputée laisse croire que le
-                          restaurant ferme tôt. */}
-                      {(dispo?.creneaux || []).map((c) => (
-                        <option key={c.heure} value={c.heure} disabled={!c.disponible}>
-                          {c.heure}{!c.disponible ? ` · ${c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable')}` : (c.acompte > 0 ? ` · 💳 ${c.acompte.toFixed(2)}€` : '')}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <span className="field-intitule" id="checkout-reservation-label">{t('checkout.reservationDateTime')}</span>
+                  <ChoixPastilles
+                    libelle={t('checkout.reservationDateTime')}
+                    valeur={scheduleDate}
+                    onChange={(v) => { setScheduleDate(v); setScheduleTime(''); }}
+                    options={dateOptionsResa.map((d) => ({ value: d.value, label: d.label }))}
+                  />
+                  {/* Les créneaux pleins restent visibles mais désactivés : voir qu'il y avait 20h30 et que
+                      c'est complet aide à choisir 19h30, là où une liste amputée laisse croire que le
+                      restaurant ferme tôt. C'est justement ce qu'une liste déroulante ne montrait pas :
+                      il fallait l'ouvrir pour découvrir quels créneaux existaient. */}
+                  {dispoChargement ? (
+                    <p className="small" style={{ margin: '8px 0 0' }}>{t('checkout.loadingSlots')}</p>
+                  ) : (
+                    <ChoixPastilles
+                      libelle={t('checkout.timePlaceholder')}
+                      valeur={scheduleTime}
+                      onChange={setScheduleTime}
+                      options={(dispo?.creneaux || []).map((c) => ({
+                        value: c.heure,
+                        label: c.heure,
+                        disabled: !c.disponible,
+                        note: !c.disponible
+                          ? (c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable'))
+                          : (c.acompte > 0 ? `${c.acompte.toFixed(2)}€` : null)
+                      }))}
+                    />
+                  )}
                   {!dispoChargement && dispo && dispo.raison && (
                     <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
                       {t(`checkout.noSlotsReason_${dispo.raison}`, { max: dispo.maxCouverts })}
@@ -568,7 +446,7 @@ export default function Checkout() {
                     <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.reservationForPreview', { preview: scheduledPreview })}</p>
                   )}
                   {dispo?.regles?.messageAccueil && (
-                    <p className="small" style={{ margin: '8px 0 0', padding: '8px 10px', background: 'var(--cream-dim)', borderRadius: 9 }}>💬 {dispo.regles.messageAccueil}</p>
+                    <p className="small" style={{ margin: '8px 0 0', padding: '8px 10px', background: 'var(--cream-dim)', borderRadius: 9 }}><Icone nom="bulle" taille={14} /> {dispo.regles.messageAccueil}</p>
                   )}
                 </div>
                 <div className="row" style={{ gap: 8 }}>
@@ -592,7 +470,7 @@ export default function Checkout() {
                     {[['', 'zoneAny'], ['inside', 'zoneInside'], ...((restaurant.hasOutsideTables || dispo?.zones?.outside) ? [['outside', 'zoneOutside']] : [])].map(([valeur, cle]) => (
                       <button type="button" key={cle} className={zonePreference === valeur ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 12px', fontSize: 13 }}
                         aria-pressed={zonePreference === valeur} onClick={() => setZonePreference(valeur)}>
-                        {valeur === 'inside' ? '🏠 ' : valeur === 'outside' ? '🌤️ ' : ''}{t(`checkout.${cle}`)}
+                        {valeur === 'inside' ? <Icone nom="maison" taille={15} /> : valeur === 'outside' ? <Icone nom="soleil" taille={15} /> : null}{t(`checkout.${cle}`)}
                       </button>
                     ))}
                   </div>
@@ -634,22 +512,19 @@ export default function Checkout() {
                 </label>
                 {scheduleEnabled && (
                   <>
-                    <div className="row" style={{ gap: 8, marginTop: 8 }}>
-                      <select
-                        value={scheduleDate}
-                        onChange={(e) => { setScheduleDate(e.target.value); setScheduleTime(''); }}
-                        style={{ flex: 1 }}
-                      >
-                        {dateOptions.map((d) => <option key={d.value} value={d.value}>{d.label}</option>)}
-                      </select>
-                      <select
-                        value={scheduleTime}
-                        onChange={(e) => setScheduleTime(e.target.value)}
-                        style={{ flex: 1 }}
-                      >
-                        <option value="">{t('checkout.timePlaceholder')}</option>
-                        {scheduleTimeOptions.map((tm) => <option key={tm} value={tm}>{tm}</option>)}
-                      </select>
+                    <div style={{ marginTop: 8 }}>
+                      <ChoixPastilles
+                        libelle={t('checkout.scheduleLater')}
+                        valeur={scheduleDate}
+                        onChange={(v) => { setScheduleDate(v); setScheduleTime(''); }}
+                        options={dateOptions.map((d) => ({ value: d.value, label: d.label }))}
+                      />
+                      <ChoixPastilles
+                        libelle={t('checkout.timePlaceholder')}
+                        valeur={scheduleTime}
+                        onChange={setScheduleTime}
+                        options={scheduleTimeOptions.map((tm) => ({ value: tm, label: tm }))}
+                      />
                     </div>
                     {scheduleTimeOptions.length === 0 && (
                       <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
@@ -662,22 +537,97 @@ export default function Checkout() {
               </div>
             )}
           </div>
+          </div>
 
+          <aside className="checkout-recap">
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
-            <span>{cart.count > 0 ? t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
+            <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
             {serviceOuvert(fulfillmentType, user) ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
               </button>
             ) : (
-              <span className="small" style={{ fontWeight: 600 }}>🗓️ {fulfillmentType === 'dine_in'
+              <span className="small" style={{ fontWeight: 600 }}><Icone nom="reservations" taille={14} /> {fulfillmentType === 'dine_in'
                 ? t('checkout.reservationsOpenSoon', { date: dateOuverture('dine_in', getLocale()) })
                 : fulfillmentType === 'delivery'
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
                   : t('checkout.ordersOpenSoon', { date: dateOuverture('pickup', getLocale()) })}</span>
             )}
           </div>
+          {cart.count > 0 && (
+          <div className="card">
+            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('checkout.yourOrder')}</h3>
+            {Object.entries(cart.lines).map(([lineKey, line]) => {
+              const item = restaurant.menu.find((m) => m.id === line.itemId);
+              if (!item) return null;
+              return (
+                <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
+                  <span>
+                    {line.qty}× {item.name}
+                    {line.optionsSnapshot?.length > 0 && (
+                      <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
+                    )}
+                  </span>
+                  <div className="row" style={{ gap: 8 }}>
+                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
+                    <span>{line.qty}</span>
+                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
+                  </div>
+                </div>
+              );
+            })}
+            <div className="divider" />
+            <div className="breakdown">
+              <div className="line"><span>{t('common.subtotal')}</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
+              {totals.discountedItems.map((d, i) => (
+                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{d.discount.toFixed(2)}€</span></div>
+              ))}
+              {fulfillmentType === 'delivery' && (
+                <>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+                  {totals.deliveryDiscount > 0 && (
+                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
+                  )}
+                  {/* TVA comprise : la ligne affichait les frais hors TVA alors que le total, lui, la contenait —
+                      la somme des lignes ne tombait jamais sur le total affiché juste en dessous. */}
+                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{(totals.serviceFee + totals.serviceFeeVat).toFixed(2)}€</span></div>
+                </>
+              )}
+              {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
+              {soldeUtilise && user.balance > 0 && (
+                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
+              )}
+              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{estimatedTotal.toFixed(2)}€</span></div>
+            </div>
+            {user.balance > 0 && (
+              <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
+                <input type="checkbox" style={{ width: 'auto' }} checked={useBalance} onChange={(e) => setUseBalance(e.target.checked)} />
+                <span className="small">{t('checkout.useBalance', { amount: Number(user.balance).toFixed(2) })}</span>
+              </label>
+            )}
+            <details style={{ marginTop: 10 }} open={!!giftCode}>
+              <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
+              <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input aria-label={t('checkout.giftVoucherPh')} value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
+                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} aria-label={t('checkout.giftVoucherSummary')} />
+                <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
+                  onClick={async () => {
+                    setGiftCheck('loading');
+                    try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
+                    catch (e) { setGiftCheck(null); toast(e.message); }
+                  }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
+              </div>
+              {giftCheck && giftCheck !== 'loading' && (
+                <p className="small" style={{ margin: '6px 0 0', color: giftCheck.valid ? 'var(--teal-deep)' : 'var(--red)' }}>
+                  {giftCheck.valid ? t('checkout.giftVoucherOk', { amount: Number(giftCheck.remaining).toFixed(2) }) : t(`checkout.giftVoucherKo_${giftCheck.reason || 'introuvable'}`)}
+                </p>
+              )}
+            </details>
+          </div>
+          )}
+          </aside>
+        </div>
         </>
       )}
 
@@ -763,14 +713,14 @@ export default function Checkout() {
                 <>
                   <div className="line"><span>{t('checkout.deliveryFeeLine')}</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
-                    <div className="line"><span>🚴 {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
+                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
                   <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
-              {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span>🎁 {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}
+              {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
-              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? `💶 ${t('checkout.toPayOnSite')}` : t('checkout.totalToPay')}</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
             </div>
           )}
 

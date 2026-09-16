@@ -1,16 +1,19 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
+import EtatVide from '../../components/EtatVide';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
+import Icone from '../../components/Icone';
+import GameSwitcher from '../../components/GameSwitcher';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -82,7 +85,7 @@ function ReviewForm({ order, token, toast, onDone, t }) {
                 {amount === 0 ? t('review.tipNone') : `${amount}€`}
               </button>
             ))}
-            <input
+            <input aria-label={t('review.tipOtherPlaceholder')}
               type="number"
               min="0"
               step="0.5"
@@ -101,6 +104,8 @@ function ReviewForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  // Le jeu est pose une fois pour toutes en bas de page ; ce repere sert au bouton qui y amene.
+  const jeuRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
@@ -158,6 +163,13 @@ export default function Orders() {
     }
   }
 
+  // UN BOUTON QUI NE FAIT QU'AMENER AU JEU. Il ouvrait et refermait, et changeait donc de libelle
+  // selon son etat — deux gestes pour une seule intention. Le jeu est desormais toujours la, en bas
+  // de page : le bouton n'a plus qu'a y descendre, et il dit la meme chose en permanence.
+  function allerAuJeu() {
+    jeuRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
   // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
@@ -169,47 +181,72 @@ export default function Orders() {
   const maintenant = Date.now();
   const rappels = orders.filter((o) => o.orderType === 'dine_in' && o.status === 'preparation' && o.scheduledFor && o.scheduledFor > maintenant && o.scheduledFor - maintenant <= 24 * 3600000);
 
-  if (loading) return <div><h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2><SkeletonCards count={3} /></div>;
+  if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
     return (
       <div>
-        <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+        <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+      <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
+        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
+            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
+            intention ; il dit maintenant la meme chose en permanence. */}
+        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
+        </button>
       </div>
-        <div className="empty">
-          {typeFiltre === 'dine_in'
-            ? t('orders.noReservations')
-            : t('orders.empty')}
-        </div>
+        {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
+            ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
+            remplit — parcourir les commerces. */}
+        <EtatVide
+          icone={typeFiltre === 'dine_in' ? 'reservations' : 'sac'}
+          titre={typeFiltre === 'dine_in' ? t('orders.noReservations') : t('orders.empty')}
+          texte={t('orders.emptyHint')}
+          actionVers="/restaurants"
+          actionTexte={t('orders.emptyAction')}
+        />
+        {/* JOUER SANS RIEN AVOIR COMMANDÉ. Les jeux ne dépendent d'aucune commande — c'est leur
+            seule porte d'entrée qui en dépendait, puisqu'elle vivait sur une commande en cours.
+            Ici, sous l'écran vide, elle est ouverte à tout le monde. Le bouton reste discret :
+            on ne vient pas sur Fairide pour jouer, on y tombe en attendant. */}
+        <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+          <GameSwitcher fill large />
+        </section>
       </div>
     );
   }
 
   return (
     <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{titre}</h2>
+      <h1 className="page-title">{titre}</h1>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="row" style={{ gap: 8, margin: '-6px 0 14px' }}>
+      <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
+        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
+            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
+            intention ; il dit maintenant la meme chose en permanence. */}
+        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
+        </button>
       </div>
       {rappels.map((o) => {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
         return (
           <div key={`rappel-${o.id}`} className="card orders-reminder" role="status">
-            <b>📅 {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
+            <b><Icone nom="reservations" taille={15} /> {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
             {o.deliveryCode && <span className="small"> · {t('orders.reminderCode', { code: o.deliveryCode })}</span>}
           </div>
         );
       })}
       {listeAffichee.map((o) => (
-        <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
+        <Fragment key={o.id}>
+        <div className={`card order-type-${orderTypeColor(o)}`}>
+          <div className="commande-entete">
             <b>{o.restaurantName}</b>
             <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
           </div>
@@ -217,7 +254,28 @@ export default function Orders() {
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
           <ProchaineEtape order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('orders.reservationNoOrder')}</div>
+          {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
+              Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
+              (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur
+              une commande de trois plats à options, cela donnait un paragraphe gris de cinq lignes
+              où il fallait chercher les virgules pour savoir ce qu'on avait commandé. La capture
+              « Past Orders » met une ligne par article, la quantité dans une case à gauche, et les
+              options en gris dessous. C'est la même information, lisible d'un coup d'oeil. */}
+          {o.items.length > 0 ? (
+            <ul className="commande-articles">
+              {o.items.map((i, n) => (
+                <li key={n}>
+                  <span className="commande-article-qte">{i.qty}</span>
+                  <span className="commande-article-texte">
+                    <b>{i.name}</b>
+                    {i.options?.length > 0 && <span className="small">{i.options.map((op) => op.name).join(' · ')}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="small" style={{ margin: '6px 0' }}>{t('orders.reservationNoOrder')}</div>
+          )}
           {o.orderType === 'pickup' && (
             <div className="small">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
           )}
@@ -225,7 +283,7 @@ export default function Orders() {
             <div className="small">{t('orders.dineInAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '', count: o.partySize, reservationName: o.reservationName })}</div>
           )}
           {o.orderType === 'delivery' && (
-            <div className="small">📍 {o.address}</div>
+            <div className="small"><Icone nom="position" taille={14} /> {o.address}</div>
           )}
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
@@ -265,7 +323,7 @@ export default function Orders() {
               </span>
             ) : (
               <>
-                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : `💶 ${t('orders.payOnSite')}`) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
                 <b>{o.total.toFixed(2)}€</b>
               </>
             )}
@@ -325,7 +383,14 @@ export default function Orders() {
             />
           )}
         </div>
+        </Fragment>
       ))}
+      {/* Le jeu, une fois, en pied de page : le bouton de la barre y amene. Il etait deroule sous
+          chaque commande, ce qui obligeait a choisir SOUS LAQUELLE jouer — une question que
+          personne ne se pose. */}
+      <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+        <GameSwitcher fill large />
+      </section>
     </div>
   );
 }

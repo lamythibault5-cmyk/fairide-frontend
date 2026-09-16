@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
@@ -149,7 +149,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
       <PeppolStatusCard token={token} toast={toast} tr={tr} />
       <PeriodPicker period={period} onChange={setPeriod} allowAll compact />
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <input aria-label={tr('adminInvoices.phSearch')} type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
         <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={minAmount} onChange={(e) => setMinAmount(e.target.value)} style={{ width: 80 }} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} style={{ width: 80 }} /></label>
         {(minAmount || maxAmount) && <button type="button" className="btn-ghost" onClick={() => { setMinAmount(''); setMaxAmount(''); }}>✕ {tr('adminOrders.clearFilters')}</button>}
@@ -271,6 +271,9 @@ function AgedTab({ token, toast }) {
 }
 
 function GenerateInvoiceModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -301,15 +304,15 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateCommissionInvoice')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminInvoices.generateHelp')}</p>
         <div className="field">
-          <label>{tr('adminCommon.restaurant')}</label>
-          <select value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
+          <label htmlFor={idsA11y + '-restaurant'}>{tr('adminCommon.restaurant')}</label>
+          <select id={idsA11y + '-restaurant'} value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {restaurants && restaurants.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
@@ -487,7 +490,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                 <button className="btn-danger-ghost" onClick={() => setShowCreditNoteForm(true)}>{tr('adminInvoices.cancelCreditNote')}</button>
               ) : (
                 <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                  <input placeholder={tr('adminInvoices.phCancelReason')} value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+                  <input aria-label={tr('adminInvoices.phCancelReason')} placeholder={tr('adminInvoices.phCancelReason')} value={creditNoteReason} onChange={(e) => setCreditNoteReason(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
                   <button className="btn-danger-ghost" onClick={() => setConfirmAction(true)}>{tr('adminCommon.confirm')}</button>
                   <button className="btn-ghost" onClick={() => { setShowCreditNoteForm(false); setCreditNoteReason(''); }}>{tr('adminCommon.cancel')}</button>
                 </div>
@@ -569,6 +572,9 @@ function DriverStatementsTab({ token, toast }) {
 }
 
 function GenerateStatementModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -598,15 +604,15 @@ function GenerateStatementModal({ onClose, onGenerated }) {
       <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateDriverStatement')}</h3>
         <div className="field">
-          <label>{tr('adminCommon.driver')}</label>
-          <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+          <label htmlFor={idsA11y + '-driver'}>{tr('adminCommon.driver')}</label>
+          <select id={idsA11y + '-driver'} value={driverId} onChange={(e) => setDriverId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month-2'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month-2'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
@@ -700,6 +706,9 @@ function SelfBillingTab({ token, toast }) {
 }
 
 function GenerateSelfBillingModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -761,8 +770,8 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
       <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateSelfBilling')}</h3>
         <div className="field">
-          <label>{tr('adminCommon.driver')}</label>
-          <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+          <label htmlFor={idsA11y + '-driver-2'}>{tr('adminCommon.driver')}</label>
+          <select id={idsA11y + '-driver-2'} value={driverId} onChange={(e) => setDriverId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -779,7 +788,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
               </label>
             </div>
             {vatStatus === 'assujetti' && (
-              <input placeholder={tr('adminInvoices.phVat')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
+              <input aria-label={tr('adminInvoices.phVat')} placeholder={tr('adminInvoices.phVat')} value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} style={{ marginBottom: 8 }} />
             )}
             {agreementAlreadyConfirmed ? (
               <p className="small" style={{ color: 'var(--teal-deep)', margin: 0 }}>{tr('adminInvoices.agreementConfirmed', { date: fmtDate(driver.selfBillingAgreedAt) })}</p>
@@ -795,8 +804,8 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
           </div>
         )}
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month-3'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month-3'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating || !canGenerate} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>

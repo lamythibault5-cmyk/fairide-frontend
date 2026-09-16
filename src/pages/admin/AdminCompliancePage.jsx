@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -108,7 +108,7 @@ function RequestsTab({ refreshKey }) {
       )}
 
       <div className="compliance-filters">
-        <input type="search" placeholder={tr('adminCompliance.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
+        <input aria-label={tr('adminCompliance.phSearch')} type="search" placeholder={tr('adminCompliance.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
         <select value={status} onChange={(e) => setStatus(e.target.value)} aria-label={tr('adminCommon.status')}>
           <option value="">{tr('adminCommon.allStatuses')}</option>
           <option value="open">{tr('adminCompliance.filterOpen')}</option>
@@ -138,6 +138,9 @@ function RequestsTab({ refreshKey }) {
 // Fiche d'une demande : aperçu, puis traitement (statut, notes, responsable) et actions — accusé de
 // réception, export JSON des données, suppression définitive du compte, clôture ou rejet motivé.
 function RequestDrawer({ initial, onClose, onChanged }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -223,19 +226,19 @@ function RequestDrawer({ initial, onClose, onChanged }) {
         <div className="compliance-form">
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: 1, minWidth: 160 }}>
-              <label>{tr('adminCommon.status')}</label>
-              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+              <label htmlFor={idsA11y + '-status'}>{tr('adminCommon.status')}</label>
+              <select id={idsA11y + '-status'} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 {STATUSES.map((s) => <option key={s} value={s}>{tr(`adminCompliance.status_${s}`)}</option>)}
               </select>
             </div>
             <div className="field" style={{ flex: 1, minWidth: 160 }}>
-              <label>{tr('adminCompliance.colHandler')}</label>
-              <input value={form.handledBy} onChange={(e) => setForm({ ...form, handledBy: e.target.value })} placeholder={tr('adminCompliance.phHandler')} />
+              <label htmlFor={idsA11y + '-colhandler'}>{tr('adminCompliance.colHandler')}</label>
+              <input id={idsA11y + '-colhandler'} value={form.handledBy} onChange={(e) => setForm({ ...form, handledBy: e.target.value })} placeholder={tr('adminCompliance.phHandler')} />
             </div>
           </div>
           <div className="field">
-            <label>{tr('adminCommon.notes')}</label>
-            <textarea rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={tr('adminCompliance.phNotes')} />
+            <label htmlFor={idsA11y + '-notes'}>{tr('adminCommon.notes')}</label>
+            <textarea id={idsA11y + '-notes'} rows={4} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder={tr('adminCompliance.phNotes')} />
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={busy} onClick={() => patch({ status: form.status, notes: form.notes, handledBy: form.handledBy }, tr('adminCompliance.toastSaved'))}>{busy ? '...' : tr('adminCommon.save')}</button>
@@ -263,6 +266,9 @@ function RequestDrawer({ initial, onClose, onChanged }) {
 
 // Saisie manuelle d'une demande reçue par e-mail, téléphone ou courrier.
 function CreateRequestModal({ onClose, onCreated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -283,23 +289,23 @@ function CreateRequestModal({ onClose, onCreated }) {
     <div className="modal-overlay drawer-overlay" onClick={onClose}>
       <div className="modal-box drawer-box compliance-form" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 10px' }}>{tr('adminCompliance.newRequestTitle')}</h3>
-        <div className="field"><label>{tr('adminCommon.email')}</label><input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nom@exemple.be" /></div>
+        <div className="field"><label htmlFor={idsA11y + '-email'}>{tr('adminCommon.email')}</label><input id={idsA11y + '-email'} type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="nom@exemple.be" /></div>
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
           <div className="field" style={{ flex: 1, minWidth: 160 }}>
-            <label>{tr('adminCommon.type')}</label>
-            <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+            <label htmlFor={idsA11y + '-type'}>{tr('adminCommon.type')}</label>
+            <select id={idsA11y + '-type'} value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
               {TYPES.map((k) => <option key={k} value={k}>{tr(`adminCompliance.type_${k}`)}</option>)}
             </select>
           </div>
           <div className="field" style={{ flex: 1, minWidth: 160 }}>
-            <label>{tr('adminCompliance.colChannel')}</label>
-            <select value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value })}>
+            <label htmlFor={idsA11y + '-colchannel'}>{tr('adminCompliance.colChannel')}</label>
+            <select id={idsA11y + '-colchannel'} value={form.channel} onChange={(e) => setForm({ ...form, channel: e.target.value })}>
               {CHANNELS.map((k) => <option key={k} value={k}>{tr(`adminCompliance.channel_${k}`)}</option>)}
             </select>
           </div>
         </div>
-        <div className="field"><label>{tr('adminCompliance.requestText')}</label><textarea rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
-        <div className="field"><label>{tr('adminCompliance.internalNotes')}</label><textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-requesttext'}>{tr('adminCompliance.requestText')}</label><textarea id={idsA11y + '-requesttext'} rows={3} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-internalnotes'}>{tr('adminCompliance.internalNotes')}</label><textarea id={idsA11y + '-internalnotes'} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={saving} onClick={creer}>{saving ? '...' : tr('adminCommon.create')}</button>
           <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
@@ -394,6 +400,9 @@ function ContractsTab() {
 // Onglet « Exports légaux » : DAC7 et fiches 281.29 (routes CSV existantes), seuils légaux par année.
 // ---------------------------------------------------------------------------------------------------------
 function ExportsTab() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -428,10 +437,10 @@ function ExportsTab() {
       {data && (
         <>
           <div className="compliance-filters">
-            <label className="small">{tr('adminCommon.year')}</label>
-            <select value={year} onChange={(e) => setYear(Number(e.target.value))}>{annees.map((a) => <option key={a} value={a}>{a}</option>)}</select>
-            <label className="small">{tr('adminCompliance.quarter')}</label>
-            <select value={quarter} onChange={(e) => setQuarter(e.target.value)}>
+            <label className="small" htmlFor={idsA11y + '-year'}>{tr('adminCommon.year')}</label>
+            <select id={idsA11y + '-year'} value={year} onChange={(e) => setYear(Number(e.target.value))}>{annees.map((a) => <option key={a} value={a}>{a}</option>)}</select>
+            <label className="small" htmlFor={idsA11y + '-quarter'}>{tr('adminCompliance.quarter')}</label>
+            <select id={idsA11y + '-quarter'} value={quarter} onChange={(e) => setQuarter(e.target.value)}>
               <option value="">{tr('adminCompliance.wholeYear')}</option>
               {[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}
             </select>

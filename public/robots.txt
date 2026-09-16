@@ -5,17 +5,59 @@ Allow: /
 # coquille vide à un robot, et consomment le budget d'exploration que les pages publiques méritent.
 # À noter : ces règles ne protègent RIEN. Elles disent seulement « n'indexe pas » ; c'est le
 # backend (requireRole) et ProtectedRoute qui décident de l'accès, ici comme ailleurs.
+#
+# LES TROIS PRÉFIXES DE LANGUE SONT LISTÉS, ET C'EST INDISPENSABLE. src/i18n/routing.js fait de
+# /nl/… et /en/… des URL de plein droit, pas des redirections : /nl/account et /en/admin sont donc
+# des adresses distinctes de /account et /admin. Tant que seule la racine était interdite, deux
+# tiers de la surface privée restaient explorables. La syntaxe robots.txt n'offre aucun moyen de
+# rendre le segment de langue facultatif, d'où la répétition. En ajoutant une langue, ajouter son
+# bloc ici.
+#
+# La liste suit les routes portant ProtectedRoute dans src/App.jsx. /map et /panier y manquaient
+# depuis le début, à la racine comme ailleurs : la carte du client et son panier étaient
+# explorables dans les trois langues.
+
 Disallow: /account
 Disallow: /checkout
+Disallow: /panier
 Disallow: /order-success
 Disallow: /order-cancelled
 Disallow: /orders
 Disallow: /invoices
 Disallow: /favorites
+Disallow: /map
 Disallow: /dashboard
 Disallow: /driver
 Disallow: /admin
 Disallow: /reset-password
+
+Disallow: /nl/account
+Disallow: /nl/checkout
+Disallow: /nl/panier
+Disallow: /nl/order-success
+Disallow: /nl/order-cancelled
+Disallow: /nl/orders
+Disallow: /nl/invoices
+Disallow: /nl/favorites
+Disallow: /nl/map
+Disallow: /nl/dashboard
+Disallow: /nl/driver
+Disallow: /nl/admin
+Disallow: /nl/reset-password
+
+Disallow: /en/account
+Disallow: /en/checkout
+Disallow: /en/panier
+Disallow: /en/order-success
+Disallow: /en/order-cancelled
+Disallow: /en/orders
+Disallow: /en/invoices
+Disallow: /en/favorites
+Disallow: /en/map
+Disallow: /en/dashboard
+Disallow: /en/driver
+Disallow: /en/admin
+Disallow: /en/reset-password
 
 # /login reste explorable : c'est la page d'inscription, et une partie des recherches de marque
 # (« fairide inscription commerce ») y mène légitimement.

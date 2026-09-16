@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
@@ -142,6 +142,9 @@ function OverviewTab({ detail, tr, onDeleted, onClose, token, toast }) {
 
 // ---- Traitement --------------------------------------------------------------------------------------
 function HandlingTab({ detail, tr, token, toast, onSaved }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const [form, setForm] = useState(() => ({
     status: detail.status, responsibility: detail.responsibility, priority: detail.priority,
@@ -185,32 +188,32 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
     <>
       <div className="inc-form-grid">
         <div className="field">
-          <label>{tr('adminCommon.status')}</label>
-          <select value={form.status} onChange={set('status')}>{STATUSES.map((s) => <option key={s} value={s}>{statusLabel(tr, s)}</option>)}</select>
+          <label htmlFor={idsA11y + '-status'}>{tr('adminCommon.status')}</label>
+          <select id={idsA11y + '-status'} value={form.status} onChange={set('status')}>{STATUSES.map((s) => <option key={s} value={s}>{statusLabel(tr, s)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminIncidents.responsibility')}</label>
-          <select value={form.responsibility} onChange={set('responsibility')}>{RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
+          <label htmlFor={idsA11y + '-responsibility'}>{tr('adminIncidents.responsibility')}</label>
+          <select id={idsA11y + '-responsibility'} value={form.responsibility} onChange={set('responsibility')}>{RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminCommon.priority')}</label>
-          <select value={form.priority} onChange={set('priority')}>{PRIORITIES.map((p) => <option key={p} value={p}>{priorityLabel(tr, p)}</option>)}</select>
+          <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+          <select id={idsA11y + '-priority'} value={form.priority} onChange={set('priority')}>{PRIORITIES.map((p) => <option key={p} value={p}>{priorityLabel(tr, p)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminIncidents.amountEur')}</label>
-          <input type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} placeholder="0.00" />
+          <label htmlFor={idsA11y + '-amounteur'}>{tr('adminIncidents.amountEur')}</label>
+          <input id={idsA11y + '-amounteur'} type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} placeholder="0.00" />
         </div>
         <div className="field full">
-          <label>{tr('adminIncidents.assignedTo')}</label>
-          <AssigneeSelect value={form.assignedTo} onChange={(v) => setForm((f) => ({ ...f, assignedTo: v }))} />
+          <label htmlFor={idsA11y + '-assignedto'}>{tr('adminIncidents.assignedTo')}</label>
+          <AssigneeSelect id={idsA11y + '-assignedto'} value={form.assignedTo} onChange={(v) => setForm((f) => ({ ...f, assignedTo: v }))} />
         </div>
         <div className="field full">
-          <label>{tr('adminIncidents.description')}</label>
-          <textarea rows={3} value={form.description} onChange={set('description')} />
+          <label htmlFor={idsA11y + '-description'}>{tr('adminIncidents.description')}</label>
+          <textarea id={idsA11y + '-description'} rows={3} value={form.description} onChange={set('description')} />
         </div>
         <div className="field full">
-          <label>{tr('adminIncidents.resolution')}</label>
-          <textarea rows={4} value={form.resolution} onChange={set('resolution')} placeholder={tr('adminIncidents.resolutionPlaceholder')} />
+          <label htmlFor={idsA11y + '-resolution'}>{tr('adminIncidents.resolution')}</label>
+          <textarea id={idsA11y + '-resolution'} rows={4} value={form.resolution} onChange={set('resolution')} placeholder={tr('adminIncidents.resolutionPlaceholder')} />
         </div>
       </div>
       <div className="inc-form-actions">
@@ -246,6 +249,9 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
 
 // ---- Remboursement -----------------------------------------------------------------------------------
 function RefundTab({ detail, tr, token, toast, onDone }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const o = detail.order;
   const dejaRembourse = (detail.refunds || []).reduce((s, r) => s + Number(r.amount || 0), 0);
   const restant = o ? Math.max(0, Number(o.total || 0) - dejaRembourse) : 0;
@@ -291,16 +297,16 @@ function RefundTab({ detail, tr, token, toast, onDone }) {
               <>
                 <div className="inc-form-grid">
                   <div className="field">
-                    <label>{tr('adminIncidents.amountEur')}</label>
-                    <input type="number" min="0.01" step="0.01" max={o.total} value={amount} onChange={(e) => setAmount(e.target.value)} />
+                    <label htmlFor={idsA11y + '-amounteur-2'}>{tr('adminIncidents.amountEur')}</label>
+                    <input id={idsA11y + '-amounteur-2'} type="number" min="0.01" step="0.01" max={o.total} value={amount} onChange={(e) => setAmount(e.target.value)} />
                   </div>
                   <div className="field">
-                    <label>{tr('adminIncidents.responsibility')}</label>
-                    <select value={responsibility} onChange={(e) => setResponsibility(e.target.value)}>{REFUND_RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
+                    <label htmlFor={idsA11y + '-responsibility-2'}>{tr('adminIncidents.responsibility')}</label>
+                    <select id={idsA11y + '-responsibility-2'} value={responsibility} onChange={(e) => setResponsibility(e.target.value)}>{REFUND_RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
                   </div>
                   <div className="field full">
-                    <label>{tr('adminCommon.reasonLabel')}</label>
-                    <input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={tr('adminIncidents.refundReasonPlaceholder')} />
+                    <label htmlFor={idsA11y + '-reasonlabel'}>{tr('adminCommon.reasonLabel')}</label>
+                    <input id={idsA11y + '-reasonlabel'} value={reason} onChange={(e) => setReason(e.target.value)} placeholder={tr('adminIncidents.refundReasonPlaceholder')} />
                   </div>
                 </div>
                 <p className="small" style={{ opacity: 0.7 }}>{tr(`adminIncidents.refundHint_${responsibility}`)}</p>
@@ -325,6 +331,9 @@ function RefundTab({ detail, tr, token, toast, onDone }) {
 
 // ---- Ticket ------------------------------------------------------------------------------------------
 function TicketTab({ detail, tr, token, toast, onDone }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const [subject, setSubject] = useState(() => tr('adminIncidents.ticketDefaultSubject', { order: detail.orderShort, type: typeLabel(tr, detail.type) }));
   const [message, setMessage] = useState(detail.description || '');
   const [ticketId, setTicketId] = useState('');
@@ -356,8 +365,8 @@ function TicketTab({ detail, tr, token, toast, onDone }) {
     <>
       <Section title={tr('adminIncidents.createTicket')}>
         <p className="small" style={{ marginTop: 0 }}>{tr('adminIncidents.createTicketHelp')}</p>
-        <div className="field"><label>{tr('adminCommon.subject')}</label><input value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
-        <div className="field"><label>{tr('adminCommon.message')}</label><textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-subject'}>{tr('adminCommon.subject')}</label><input id={idsA11y + '-subject'} value={subject} onChange={(e) => setSubject(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-message'}>{tr('adminCommon.message')}</label><textarea id={idsA11y + '-message'} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} /></div>
         <div className="inc-form-actions">
           <button type="button" className="btn-gold" disabled={busy || !subject.trim() || !message.trim()} onClick={() => envoyer({ subject: subject.trim(), message: message.trim() })}>{busy ? '...' : tr('adminCommon.newTicket')}</button>
         </div>

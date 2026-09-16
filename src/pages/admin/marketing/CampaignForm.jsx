@@ -105,8 +105,8 @@ export default function CampaignForm({ initial, templates, onSaved, onCancel }) 
         <div className="card">
           <h3 className="mk-section-title">{tr('adminMarketing.audienceTitle')}</h3>
           <div className="field">
-            <label>{tr('adminMarketing.roles')}</label>
-            <div className="role-pick" style={{ margin: 0 }}>
+            <span className="titre-groupe" id="campagne-roles">{tr('adminMarketing.roles')}</span>
+            <div className="role-pick" style={{ margin: 0 }} role="group" aria-labelledby="campagne-roles">
               {ROLES.map((r) => (
                 <div key={r} role="button" tabIndex={0} className={`chip${form.audience.roles.includes(r) ? ' active' : ''}`} onClick={() => toggleRole(r)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleRole(r); } }}>
                   {tr(`adminMarketing.role_${r}`)}
@@ -116,7 +116,7 @@ export default function CampaignForm({ initial, templates, onSaved, onCancel }) 
           </div>
           <div className="field">
             <div className="field-label-row">
-              <label>{tr('adminMarketing.communes')} {form.audience.communes.length > 0 && <span className="pill">{form.audience.communes.length}</span>}</label>
+              <span className="titre-groupe">{tr('adminMarketing.communes')} {form.audience.communes.length > 0 && <span className="pill">{form.audience.communes.length}</span>}</span>
               <span className="row" style={{ gap: 6 }}>
                 <button type="button" className="field-toggle btn-ghost" onClick={() => setAud({ communes: [...COMMUNES] })}>{tr('adminMarketing.allCommunes')}</button>
                 <button type="button" className="field-toggle btn-ghost" onClick={() => setAud({ communes: [] })}>{tr('adminMarketing.clearCommunes')}</button>

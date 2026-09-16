@@ -328,7 +328,7 @@ function InviterDrawer({ token, tr, toast, isOwner, onClose, onDone }) {
           <input id="team-invite-name" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="field">
-          <label>{tr('adminTeam.role')}</label>
+          <span className="titre-groupe">{tr('adminTeam.role')}</span>
           <ChoixRole value={role} onChange={setRole} isOwner={isOwner} tr={tr} />
         </div>
         {erreur && <p className="field-error">{erreur}</p>}
@@ -364,7 +364,7 @@ function ModifierDrawer({ membre, tr, isOwner, onClose, onSubmit }) {
         <input id="team-edit-name" value={name} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="field">
-        <label>{tr('adminTeam.role')}</label>
+        <span className="titre-groupe">{tr('adminTeam.role')}</span>
         <ChoixRole value={role} onChange={setRole} isOwner={isOwner} tr={tr} />
       </div>
     </RecordDrawer>

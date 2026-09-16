@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
+import Icone from '../../components/Icone';
 
 // Page d'arrivée après le retour du prestataire de paiement.
 //
@@ -85,12 +86,17 @@ export default function OrderResult({ success }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orderId, success, token]);
 
+  // L'icône, et non plus un emoji de 40px. Un emoji est rendu par la police du système : le même
+  // 🎉 est bombé et multicolore sur Windows, plat et gris sur macOS — et c'était ici l'élément
+  // principal de la page, celui qui annonce au client si sa commande est passée ou non. Un tracé
+  // posé dans un rond gris, c'est la forme que l'application donne déjà à ses écrans vides
+  // (components/EtatVide.jsx), et celle des écrans de confirmation de l'application de référence.
   const view = {
-    checking: { emoji: '⏳', title: t('orderResult.checkingTitle'), text: t('orderResult.checkingText') },
-    paid: { emoji: '🎉', title: t('orderResult.successTitle'), text: t('orderResult.successText') },
-    pending: { emoji: '⏳', title: t('orderResult.pendingTitle'), text: t('orderResult.pendingText') },
+    checking: { icone: 'horloge', title: t('orderResult.checkingTitle'), text: t('orderResult.checkingText') },
+    paid: { icone: 'bouclier', title: t('orderResult.successTitle'), text: t('orderResult.successText') },
+    pending: { icone: 'horloge', title: t('orderResult.pendingTitle'), text: t('orderResult.pendingText') },
     failed: {
-      emoji: '😕',
+      icone: 'interdit',
       // /order-cancelled est une annulation volontaire du client, pas un échec technique : on garde le
       // texte d'origine, moins alarmant, et on réserve failedText au paiement qui n'a pas abouti.
       title: success ? t('orderResult.failedTitle') : t('orderResult.cancelTitle'),
@@ -100,8 +106,8 @@ export default function OrderResult({ success }) {
 
   return (
     <div className="center-page">
-      <div style={{ fontSize: 40 }}>{view.emoji}</div>
-      <h2>{view.title}</h2>
+      <span className="etat-vide-icone" aria-hidden="true"><Icone nom={view.icone} taille={34} /></span>
+      <h2 className="etat-vide-titre">{view.title}</h2>
       <p className="small">
         {view.text}
         {orderId && <><br />{t('orderResult.orderNumber', { id: String(orderId).slice(0, 8) })}</>}

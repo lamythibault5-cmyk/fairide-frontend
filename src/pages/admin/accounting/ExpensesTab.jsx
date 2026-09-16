@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../../api';
 import AdminDataTable, { useTableSort } from '../../../components/admin/AdminDataTable';
@@ -91,7 +91,7 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
   return (
     <>
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminAccounting.phSearchExpense')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input aria-label={tr('adminAccounting.phSearchExpense')} type="search" placeholder={tr('adminAccounting.phSearchExpense')} value={q} onChange={(e) => setQ(e.target.value)} />
         <div className="role-pick">
           {[{ key: '', label: tr('adminCommon.allF') }, ...EXPENSE_STATUSES.map((s) => ({ key: s, label: statusLabels[s] }))].map((f) => (
             <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>
@@ -134,6 +134,9 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
 // comptabilisée ne change plus de montants (l'écriture existe) : seuls notes et pièce jointe restent
 // modifiables.
 function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const isNew = !expense.id;
   const locked = !isNew && expense.status !== 'draft';
@@ -177,27 +180,27 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
       {accounts.error && !accounts.data && <ErrorState error={accounts.error} onRetry={accounts.reload} />}
       {locked && <p className="small" style={{ margin: '0 0 10px', color: 'var(--gold-deep)' }}>{tr('adminAccounting.expenseLocked')}</p>}
       <div className="fin-form-grid">
-        <div className="field"><label>{tr('adminCommon.date')}</label><input type="date" value={f.expenseDate} onChange={set('expenseDate')} disabled={locked} /></div>
-        <div className="field"><label>{tr('adminAccounting.supplier')}</label><input value={f.supplier} onChange={set('supplier')} placeholder={tr('adminAccounting.phSupplier')} disabled={locked} /></div>
-        <div className="field wide"><label>{tr('adminAccounting.description')}</label><input value={f.description} onChange={set('description')} placeholder={tr('adminAccounting.phDescription')} disabled={locked} /></div>
-        <div className="field"><label>{tr('adminCommon.category')}</label>
-          <select value={f.category} onChange={set('category')} disabled={locked}>{CATEGORIES.map((c) => <option key={c} value={c}>{cats[c]}</option>)}</select>
+        <div className="field"><label htmlFor={idsA11y + '-date'}>{tr('adminCommon.date')}</label><input id={idsA11y + '-date'} type="date" value={f.expenseDate} onChange={set('expenseDate')} disabled={locked} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-supplier'}>{tr('adminAccounting.supplier')}</label><input id={idsA11y + '-supplier'} value={f.supplier} onChange={set('supplier')} placeholder={tr('adminAccounting.phSupplier')} disabled={locked} /></div>
+        <div className="field wide"><label htmlFor={idsA11y + '-description'}>{tr('adminAccounting.description')}</label><input id={idsA11y + '-description'} value={f.description} onChange={set('description')} placeholder={tr('adminAccounting.phDescription')} disabled={locked} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-category'}>{tr('adminCommon.category')}</label>
+          <select id={idsA11y + '-category'} value={f.category} onChange={set('category')} disabled={locked}>{CATEGORIES.map((c) => <option key={c} value={c}>{cats[c]}</option>)}</select>
         </div>
-        <div className="field"><label>{tr('adminAccounting.account')}</label>
-          <select value={f.accountCode} onChange={set('accountCode')} disabled={locked}>
+        <div className="field"><label htmlFor={idsA11y + '-account'}>{tr('adminAccounting.account')}</label>
+          <select id={idsA11y + '-account'} value={f.accountCode} onChange={set('accountCode')} disabled={locked}>
             <option value="">{tr('adminCommon.choose')}</option>
             {(expenseAccounts.length ? expenseAccounts : sortAccounts(accounts.data)).map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
           </select>
         </div>
-        <div className="field"><label>{tr('adminAccounting.amountExcl')}</label><input type="number" min="0" step="0.01" inputMode="decimal" value={f.amountExclVat} onChange={set('amountExclVat')} disabled={locked} /></div>
-        <div className="field"><label>{tr('adminAccounting.vatRate')}</label>
-          <select value={f.vatRate} onChange={set('vatRate')} disabled={locked}>{VAT_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}</select>
+        <div className="field"><label htmlFor={idsA11y + '-amountexcl'}>{tr('adminAccounting.amountExcl')}</label><input id={idsA11y + '-amountexcl'} type="number" min="0" step="0.01" inputMode="decimal" value={f.amountExclVat} onChange={set('amountExclVat')} disabled={locked} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-vatrate'}>{tr('adminAccounting.vatRate')}</label>
+          <select id={idsA11y + '-vatrate'} value={f.vatRate} onChange={set('vatRate')} disabled={locked}>{VAT_RATES.map((r) => <option key={r} value={r}>{r}%</option>)}</select>
         </div>
-        <div className="field"><label>{tr('adminAccounting.paymentMethod')}</label>
-          <select value={f.paymentMethod} onChange={set('paymentMethod')} disabled={locked}>{PAYMENT_METHODS.map((p) => <option key={p} value={p}>{pays[p]}</option>)}</select>
+        <div className="field"><label htmlFor={idsA11y + '-paymentmethod'}>{tr('adminAccounting.paymentMethod')}</label>
+          <select id={idsA11y + '-paymentmethod'} value={f.paymentMethod} onChange={set('paymentMethod')} disabled={locked}>{PAYMENT_METHODS.map((p) => <option key={p} value={p}>{pays[p]}</option>)}</select>
         </div>
-        <div className="field"><label>{tr('adminAccounting.attachment')}</label><input value={f.attachmentUrl} onChange={set('attachmentUrl')} placeholder="https://" /></div>
-        <div className="field wide"><label>{tr('adminCommon.notes')}</label><textarea rows={2} value={f.notes} onChange={set('notes')} style={{ width: '100%' }} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-attachment'}>{tr('adminAccounting.attachment')}</label><input id={idsA11y + '-attachment'} value={f.attachmentUrl} onChange={set('attachmentUrl')} placeholder="https://" /></div>
+        <div className="field wide"><label htmlFor={idsA11y + '-notes'}>{tr('adminCommon.notes')}</label><textarea id={idsA11y + '-notes'} rows={2} value={f.notes} onChange={set('notes')} style={{ width: '100%' }} /></div>
       </div>
       <div className="fin-totals">
         <span>{tr('adminInvoices.colHt')} <b>{money(excl)}</b></span>

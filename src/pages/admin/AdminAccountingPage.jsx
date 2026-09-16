@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -278,7 +278,7 @@ function JournalTab({ token, toast, dateFrom, dateTo, searchParams, go }) {
   return (
     <>
       <div className="fin-toolbar">
-        <input type="search" placeholder={tr('adminAccounting.phSearchJournal')} value={q} onChange={(e) => setQ(e.target.value)} />
+        <input aria-label={tr('adminAccounting.phSearchJournal')} type="search" placeholder={tr('adminAccounting.phSearchJournal')} value={q} onChange={(e) => setQ(e.target.value)} />
         <select value={entryType} onChange={(e) => setEntryType(e.target.value)} aria-label={tr('adminCommon.type')}>
           <option value="">{tr('adminAccounting.allTypes')}</option>
           {Object.entries(ACCOUNTING_ENTRY_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
@@ -411,6 +411,9 @@ function emptyLine() { return { accountCode: '', debit: '', credit: '', vatAmoun
 // Saisie d'une écriture manuelle : date, libellé, lignes compte / débit / crédit / TVA, contrôle
 // d'équilibre en direct, envoi bloqué tant que débit ≠ crédit.
 function NewEntryDrawer({ token, toast, onClose, onCreated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const accounts = useApiData(() => api('/admin/accounting/accounts', { token }), []);
   const [entryDate, setEntryDate] = useState(todayIso());
@@ -453,9 +456,9 @@ function NewEntryDrawer({ token, toast, onClose, onCreated }) {
       }>
       {accounts.error && !accounts.data && <ErrorState error={accounts.error} onRetry={accounts.reload} />}
       <div className="fin-form-grid">
-        <div className="field"><label>{tr('adminCommon.date')}</label><input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} /></div>
-        <div className="field"><label>{tr('adminAccounting.reference')}</label><input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={tr('adminAccounting.phReference')} /></div>
-        <div className="field wide"><label>{tr('adminAccounting.memo')}</label><input value={memo} onChange={(e) => setMemo(e.target.value)} placeholder={tr('adminAccounting.phMemo')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-date'}>{tr('adminCommon.date')}</label><input id={idsA11y + '-date'} type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-reference'}>{tr('adminAccounting.reference')}</label><input id={idsA11y + '-reference'} value={reference} onChange={(e) => setReference(e.target.value)} placeholder={tr('adminAccounting.phReference')} /></div>
+        <div className="field wide"><label htmlFor={idsA11y + '-memo'}>{tr('adminAccounting.memo')}</label><input id={idsA11y + '-memo'} value={memo} onChange={(e) => setMemo(e.target.value)} placeholder={tr('adminAccounting.phMemo')} /></div>
       </div>
       <div className="fin-drawer-section">{tr('adminAccounting.lines')}</div>
       <div className="fin-lines">
@@ -466,9 +469,9 @@ function NewEntryDrawer({ token, toast, onClose, onCreated }) {
               <option value="">{tr('adminCommon.choose')}</option>
               {sorted.map((a) => <option key={a.code} value={a.code}>{a.code} · {a.name}</option>)}
             </select>
-            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.debit} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} aria-label={tr('adminAccounting.debit')} />
-            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} aria-label={tr('adminAccounting.credit')} />
-            <input type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.vatAmount} onChange={(e) => update(i, { vatAmount: e.target.value })} aria-label={tr('adminCommon.vat')} />
+            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.debit} onChange={(e) => update(i, { debit: e.target.value, credit: e.target.value ? '' : l.credit })} aria-label={tr('adminAccounting.debit')} />
+            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.credit} onChange={(e) => update(i, { credit: e.target.value, debit: e.target.value ? '' : l.debit })} aria-label={tr('adminAccounting.credit')} />
+            <input aria-label="0.00" type="number" min="0" step="0.01" inputMode="decimal" placeholder="0.00" value={l.vatAmount} onChange={(e) => update(i, { vatAmount: e.target.value })} aria-label={tr('adminCommon.vat')} />
             <button type="button" className="fin-line-remove" onClick={() => remove(i)} disabled={lines.length <= 2} aria-label={tr('adminAccounting.removeLine')} title={tr('adminAccounting.removeLine')}>✕</button>
           </div>
         ))}

@@ -27,12 +27,25 @@
   --iris-deep: #2A2185;
   --lime: #C8F03C;
 
-  /* Neutres */
-  --ink: #14121F;        /* titres et texte principal sur fond clair */
-  --ink-soft: #6B655D;   /* texte courant secondaire */
-  --ink-faint: #8A8377;  /* légendes, métadonnées */
-  --line: #DCD8D0;       /* filets 1px */
+  /* Neutres — échelle neutre, plus les gris chauds d'avant (DESIGN.md § Colors).
+     Le beige de --ink-soft / --ink-faint / --line donnait une page légèrement jaune ; sur un
+     fond blanc franc, un gris neutre se lit comme du calme plutôt que comme du papier vieilli. */
+  --ink: #000000;        /* titres et texte principal sur fond clair */
+  --ink-soft: #5E5E5E;   /* texte courant secondaire */
+  --ink-faint: #767676;  /* légendes, métadonnées */
+  /* Uber descend jusqu'à #AFAFAF pour ce rôle. On ne l'a pas suivi sur --ink-faint : ce jeton
+     porte chez nous de vraies légendes lues par les clients, et #AFAFAF sur blanc vaut 2,3:1,
+     donc sous le minimum d'accessibilité. #767676 tient 4,5:1. Le gris très clair existe, mais
+     réservé à ce qui n'a pas à être lu : --ink-mute, pour les textes d'exemple des champs. */
+  --ink-mute: #AFAFAF;   /* placeholders uniquement, jamais du texte à lire */
+  --line: #E2E2E2;       /* filets 1px */
   --chip: #1E1A17;       /* petits badges sombres à texte blanc */
+
+  /* Surfaces grises — ce qui remplace les filets pour délimiter un champ ou une sous-zone.
+     C'est le geste le plus visible emprunté à Uber : un champ n'est plus un rectangle blanc
+     cerné d'un trait, c'est un aplat gris posé sur le blanc. */
+  --surface-soft: #EFEFEF;   /* champs de saisie, puces, sous-zones */
+  --surface-softer: #F3F3F3; /* champ imbriqué dans une carte déjà grise */
 
   /* Alias historiques (voir l'en-tête ci-dessus) */
   --gold: #C8F03C;       /* = lime — uniquement en APLAT sur iris, ou en fond de badge */
@@ -40,7 +53,10 @@
   --teal: #3B2FB5;       /* = iris */
   --teal-deep: #2A2185;  /* = iris pressé */
   --cream: #FFFFFF;
-  --cream-dim: #F4F2ED;  /* teinte de surface (champs, séparateurs), pas une 3e couleur de marque */
+  /* Pointe vers --surface-soft au lieu de répéter son hexadécimal. Les deux valaient le même
+     #EFEFEF écrit deux fois, et se partageaient 77 appels (68 ici, 9 là) : le même gris atteint
+     par deux noms, donc deux endroits à corriger le jour où il bouge. Un seul maintenant. */
+  --cream-dim: var(--surface-soft);
 
   /* Statuts */
   --red: #D92D3C;
@@ -49,10 +65,49 @@
   --purple: #B0459B;
   --heart: #FF3B5C;
 
-  /* Formes — aplats stricts : --shadow vaut none, il ne reste que des filets */
-  --radius: 20px;
-  --radius-chip: 6px;
+  /* Formes — LA PILULE EST LA FORME SIGNATURE (DESIGN.md § Shapes).
+     Tout ce qui se clique s'arrondit à 999px : boutons, puces, badges, pastilles. Les cartes
+     gardent un rayon franc de 16px, les champs de saisie 8px. Ce contraste-là — cliquable
+     complètement rond, contenant franchement carré — remplace l'ancien couple 20px/6px : il dit
+     au premier coup d'œil ce qui répond au doigt et ce qui ne répond pas. */
+  --radius: 16px;         /* cartes et conteneurs */
+  --radius-field: 8px;    /* champs de saisie */
+  --radius-pill: 999px;   /* tout ce qui se clique */
+  /* --radius-chip a d'abord été basculé à 999px pour transformer d'un coup toutes les puces en
+     pilules. C'était faux : sur ses quarante appels, la moitié ne sont pas des puces mais des
+     CONTENANTS — cartes de plats, vignettes, tuiles de statistiques, lignes d'horaires. Les
+     cartes de plats sont devenues des ellipses, les photos des cercles. L'alias revient donc à
+     un petit rayon de contenant, et la pilule se demande explicitement, là où c'en est une. */
+  --radius-chip: var(--radius-field); /* alias historique : petits contenants, vignettes, tuiles */
+  /* Le rayon intermédiaire d'Uber (rounded.lg). Il manquait : onze règles l'écrivaient en dur à
+     12px, et une quinzaine d'autres tâtonnaient autour (9, 10, 11, 14) faute d'un cran entre le
+     petit contenant à 8 et la carte à 16. Ce cran existe maintenant. */
+  --radius-card-sm: 12px; /* petit contenant secondaire : panneau, tuile, encart dans une carte */
+
+  /* --shadow reste `none` : l'ombre ne s'hérite jamais, elle se demande. Les call sites
+     historiques qui écrivent var(--shadow) continuent donc de ne rien dessiner, et les trois
+     niveaux ci-dessous ne s'appliquent que là où on les pose explicitement. */
   --shadow: none;
+  --shadow-1: rgba(0, 0, 0, 0.12) 0 4px 16px 0;  /* carte détachée sur une bande claire */
+  --shadow-2: rgba(0, 0, 0, 0.16) 0 4px 16px 0;  /* carte qui porte un formulaire */
+  --shadow-3: rgba(0, 0, 0, 0.16) 0 2px 8px 0;   /* pilule flottant sur une photo */
+  /* Le seul cas que les trois niveaux ne couvrent pas : une feuille qui monte du bas de l'écran
+     porte son ombre AU-DESSUS d'elle, donc avec un décalage négatif. Même opacité que --shadow-1,
+     décalage inversé. */
+  --shadow-feuille: rgba(0, 0, 0, 0.12) 0 -4px 16px 0;
+
+  /* ANNEAU D'ÉTAT, à ne pas confondre avec une ombre. Techniquement c'est aussi un box-shadow,
+     mais il ne simule aucune élévation : il entoure un élément pour dire « celui-ci a le focus »
+     ou « celui-ci est sélectionné ». Il y en avait six variantes — 2px, 3px et 4px d'épaisseur,
+     à 0,12 et 0,15 d'opacité — pour un seul et même message. */
+  --ring: 0 0 0 3px rgba(59, 47, 181, 0.15);        /* focus clavier, sélection */
+  --ring-erreur: 0 0 0 3px rgba(217, 45, 60, 0.15); /* champ refusé */
+
+  /* Échelle typographique (DESIGN.md § Typography). Posée ici en jetons pour que les surfaces
+     reprises une à une s'y accrochent au lieu de réinventer une taille à chaque fois. */
+  --t-display-xxl: 52px; --t-display-xl: 36px; --t-display-lg: 32px;
+  --t-display-md: 24px;  --t-display-sm: 20px;
+  --t-body-lg: 18px; --t-body-md: 16px; --t-body-sm: 14px; --t-caption: 12px;
 }
 
 * { box-sizing: border-box; }
@@ -109,7 +164,13 @@ a, button, .cuisine-chip, .rest-card, .card, input, select, textarea {
    le geste qui permettrait d'y accéder. Les rangées défilantes gardent leur propre touch-action,
    qui est le bon niveau pour cette contrainte. */
 
-h1, h2, h3 { font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; margin: 0; text-wrap: balance; }
+/* PLUS DE RESSERREMENT NÉGATIF SUR LES TITRES. L'ancienne direction tirait sa personnalité d'un
+   -0,02em très marqué ; la nouvelle interdit explicitement toute variation d'approche sur les
+   titres (DESIGN.md : « the display face is never letter-spaced, positive or negative »). Un titre
+   resserré se lit comme une affiche, un titre à approche neutre se lit comme une phrase — et c'est
+   une phrase qu'on veut, posée calmement. L'interligne passe de 1,1 à 1,22 pour la même raison :
+   1,1 empile les lignes, 1,22 les laisse respirer. */
+h1, h2, h3 { font-weight: 700; letter-spacing: 0; line-height: 1.22; margin: 0; text-wrap: balance; }
 
 a { color: inherit; }
 
@@ -217,26 +278,35 @@ a { color: inherit; }
 .userbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 13px; color: var(--cream); opacity: .9; }
 .role-nav { display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap; }
 .role-nav a {
-  font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: var(--radius-chip);
+  font-size: 13px; font-weight: 600; padding: 7px 12px; border-radius: var(--radius-pill);
   text-decoration: none; color: var(--cream); opacity: .75; transition: opacity .15s, background .15s;
 }
 .role-nav a.active, .role-nav a:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
-.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-chip); padding: 2px; }
+.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); padding: 2px; }
 .lang-switcher button {
   background: transparent; border: none; color: var(--cream); opacity: .7;
-  font-size: 11px; font-weight: 700; padding: 5px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700; padding: 5px 8px; border-radius: var(--radius-field);
 }
 /* Blanc translucide et non lime : le lime de l'en-tête est déjà pris par le bouton « Inscription »,
    et la spec n'autorise qu'un accent appuyé par vue. */
 .lang-switcher button.active { background: rgba(255,255,255,0.22); color: #fff; opacity: 1; }
 
-.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; margin-bottom: 14px; }
+/* Carte : 16px de rayon, 24px de marge intérieure, 16px entre deux cartes (DESIGN.md § Cards).
+   Uber pose ses cartes sans filet ni ombre, séparées par du seul blanc. On garde le filet 1px :
+   leurs pages de marketing ont trois blocs par écran, nos tableaux de bord en ont quinze, et sans
+   frontière ils fondent les uns dans les autres. Le filet reste donc notre langage d'élévation —
+   l'ombre existe (--shadow-1) mais ne se pose que sur une carte qu'on veut vraiment détacher. */
+.card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-/* Pastilles carrées à 6px, pas des gélules : la spec impose 20px pour les cartes
-   et 6px pour les puces, ce contraste franc entre deux rayons est une partie de
-   l'identité. Un arrondi intermédiaire partout aplatirait la différence. */
-.pill { font-size: 12px; padding: 4px 10px; border-radius: var(--radius-chip); background: var(--cream-dim); color: var(--ink-soft); font-weight: 500; }
+/* LES PASTILLES SONT DEVENUES DES PILULES. Le commentaire précédent défendait ici l'inverse —
+   6px carrés contre 20px de carte — parce que l'ancienne direction faisait du contraste entre
+   deux rayons une part de son identité. La nouvelle en fait l'inverse : une seule forme ronde
+   pour tout ce qui se clique, et le contraste passe entre le rond (cliquable) et le carré
+   (contenant). Garder des pastilles à angles ici casserait la règle partout ailleurs.
+   Le fond passe au gris neutre, et le texte remonte à 13px : 12px était sous le seuil de
+   confort de lecture pour des étiquettes que les clients lisent vraiment. */
+.pill { font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink-soft); font-weight: 500; }
 .pill.teal { background: rgba(59,47,181,0.10); color: var(--iris); }
 /* Le lime en aplat avec du texte --ink dessus : c'est exactement son rôle de
    « projecteur » (badge d'offre). En texte lime sur blanc il serait illisible. */
@@ -254,21 +324,41 @@ a { color: inherit; }
   background: transparent; color: var(--lime); border: none; padding: 0;
   font-size: 11.5px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase;
 }
-.promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-chip); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.promo-badge { position: absolute; top: 10px; left: 10px; right: 10px; background: var(--lime); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-pill); z-index: 1; width: fit-content; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 
+/* CHAMP GRIS, PAS RECTANGLE CERNÉ (DESIGN.md § Inputs). Un champ est maintenant un aplat gris
+   sur le blanc : la zone où l'on écrit se voit à la couleur, pas à un trait. C'est ce qui donne
+   aux formulaires d'Uber leur air posé — quinze champs cernés font quinze cadres, quinze aplats
+   gris font une seule zone de saisie.
+   La hauteur monte (14px de padding contre 10) et le texte à 15px : sous 16px, Safari iOS zoome
+   automatiquement à la mise au point du champ, ce qui décale la page. 15px reste sous ce seuil
+   mais reste confortable ; les champs qu'on veut vraiment gros passeront à 16px un par un. */
 input, select, textarea {
-  font-family: inherit; font-size: 14px; padding: 10px 12px;
-  border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; color: var(--ink); width: 100%;
-  transition: border-color .15s ease, box-shadow .15s ease;
+  font-family: inherit; font-size: 15px; padding: 14px 16px;
+  border: 1px solid transparent; border-radius: var(--radius-field); background: var(--surface-soft); color: var(--ink); width: 100%;
+  transition: border-color .15s ease, background .15s ease, box-shadow .15s ease;
 }
+/* À la mise au point, le champ devient blanc et prend une arête iris : le gris dit « ici on peut
+   écrire », le blanc dit « ici on écrit maintenant ». L'anneau est conservé, contrairement à Uber
+   qui n'en met pas : c'est le seul repère d'un visiteur qui navigue au clavier. */
 input:focus, select:focus, textarea:focus {
-  outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(59,47,181,0.15);
+  outline: none; background: #fff; border-color: var(--iris); box-shadow: var(--ring);
 }
-label { font-size: 12px; font-weight: 600; color: var(--ink-soft); display: block; margin-bottom: 5px; }
+input::placeholder, textarea::placeholder { color: var(--ink-mute); }
+label { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
+/* Aide sous un champ : la règle qu'il faut respecter, lisible pendant la frappe. Elle prend la
+   place du texte d'exemple, qui disparaît au premier caractère — donc exactement au moment où
+   la règle devient utile. Elle s'efface quand une vraie erreur s'affiche à sa place. */
+.champ-aide { margin: 6px 0 0; font-size: 13px; color: var(--ink-faint); line-height: 1.4; }
 .field { margin-bottom: 12px; }
 
-button { font-family: inherit; font-weight: 500; font-size: 14px; cursor: pointer; border: none; border-radius: var(--radius-chip); padding: 11px 18px; transition: transform .1s, filter .1s; }
+/* TOUS LES BOUTONS SONT DES PILULES (DESIGN.md § Buttons). 15px plutôt que les 16px d'Uber :
+   leurs pages portent trois boutons, nos tableaux de bord en portent trente par écran, et un saut
+   de 14 à 16 déplaçait les colonnes des tableaux admin. 15px donne le gain de lisibilité sans
+   casser les mises en page denses ; .btn-lg ci-dessous porte la vraie taille d'Uber là où l'action
+   est décisive. Le poids reste 500 : Uber interdit explicitement de monter les libellés à 700. */
+button { font-family: inherit; font-weight: 500; font-size: 15px; cursor: pointer; border: none; border-radius: var(--radius-pill); padding: 12px 20px; transition: transform .1s, filter .1s; }
 button:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
 
@@ -294,13 +384,24 @@ a, button, input, select, textarea, label, summary, [role="button"], [role="tab"
      agrandie, le bouton « Se connecter » sort de l'écran ou se décale — d'où des touchers qui semblent
      ne rien faire. 16 px sur écran tactile supprime ce zoom. */
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]), select, textarea { font-size: max(16px, 1em) !important; }
+  /* LES PUCES GROSSISSENT AU DOIGT. Mesuré au navigateur piloté : les 81 puces de cuisine de
+     l'accueil faisaient 37px de haut, sous le seuil de 44 en dessous duquel une cible se rate.
+     Ce sont pourtant les contrôles les plus touchés de la page — le premier geste d'un client est
+     de filtrer par type de cuisine. DESIGN.md le dit pour la même raison : « Category chips
+     inflate to ≥ 44 px tall through extra padding on touch viewports. »
+     Posé sous (pointer: coarse) et pas dans la règle de base : à la souris, un filtre de 44px de
+     haut dans une rangée qui en compte vingt alourdit la page sans rien gagner. */
+  .cuisine-chip, .chip, .pill.recherche-pastille, .diet-chip, .discover-filtres .chip { min-height: 44px; }
 }
 
 .stars-input { display: inline-flex; gap: 2px; }
 .stars-input button { background: transparent; padding: 4px 6px; min-width: 40px; min-height: 40px; font-size: 26px; line-height: 1; }
+/* 15px et non plus 14 : la même classe .btn-gold rendait un libellé à 15px sur un <button> et à
+   14px sur un <a>, si bien que deux boutons voisins dans une même rangée n'avaient pas la même
+   taille de texte selon l'élément choisi pour les écrire. Une seule valeur, celle de `button`. */
 a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
-  display: inline-block; font-family: inherit; font-weight: 500; font-size: 14px; cursor: pointer;
-  border-radius: var(--radius-chip); padding: 11px 18px; text-decoration: none; transition: transform .1s, filter .1s;
+  display: inline-block; font-family: inherit; font-weight: 500; font-size: 15px; cursor: pointer;
+  border-radius: var(--radius-pill); padding: 12px 20px; text-decoration: none; transition: transform .1s, filter .1s;
 }
 a.btn-primary:active, a.btn-gold:active, a.btn-teal:active, a.btn-outline:active { transform: scale(.97); }
 a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { filter: brightness(1.06); }
@@ -347,6 +448,24 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    Le filet lime foncé sur .btn-gold n'est pas décoratif : un aplat lime posé
    sur une carte blanche a une frontière très faible (1,35:1 contre le blanc),
    le filet redonne au bouton une arête nette sans rien changer à sa couleur. */
+/* PLANCHER TACTILE DE 44px, sur les boutons d'action seulement.
+
+   Aucune règle de bouton n'imposait de hauteur minimale : la taille venait du padding, donc un
+   libellé court dans un contexte serré pouvait descendre sous le seuil de 44px en dessous duquel
+   une cible se rate au doigt. Uber tient ses pilules à ~44px et ses gros boutons à ~56px.
+
+   Posé sur les classes d'ACTION et pas sur l'élément `button` lui-même : une quinzaine de boutons
+   du dépôt sont des ronds d'icône de 22 à 34px avec width et height explicites (fermer une modale,
+   supprimer une photo, plier un panneau). min-height l'emporte sur height, donc la règle générale
+   les aurait tous déformés. Les liens en texte (.btn-ghost) n'en relèvent pas non plus : ce sont
+   des liens, pas des cibles — Uber ne les élargit pas davantage. */
+.btn-primary, .btn-gold, .btn-teal, .btn-danger, .btn-outline, .btn-subtle,
+a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
+  min-height: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-lg { min-height: 56px; }
+
 .btn-primary { background: var(--ink); color: var(--cream); }
 .btn-gold { background: var(--lime); color: var(--ink); border: 1px solid #A9CE2A; }
 .btn-teal { background: var(--iris); color: #fff; }
@@ -356,6 +475,18 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .btn-ghost { background: transparent; color: var(--ink-soft); padding: 6px 10px; font-size: 12px; }
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
 .btn-block { width: 100%; }
+
+/* Deux ajouts repris de DESIGN.md, à poser surface par surface au fil de la reprise.
+
+   .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »).
+   Elle remplace avantageusement un .btn-outline dans une carte : un aplat gris pèse moins qu'un
+   trait, et une carte qui porte quatre boutons cernés ressemble à un formulaire administratif.
+
+   .btn-lg — la vraie échelle d'Uber (18px), réservée à l'action décisive d'un écran : payer,
+   confirmer, s'inscrire. C'est le bouton qu'on veut voir de loin sur un téléphone. */
+.btn-subtle { background: var(--surface-soft); color: var(--ink); }
+.btn-subtle:hover:not(:disabled) { background: #E2E2E2; }
+.btn-lg { font-size: 18px; padding: 16px 24px; }
 
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 /* Rangées "Autour de vous"/"Offres"/"À découvrir"/"Supermarchés" : on peut faire défiler horizontalement
@@ -479,181 +610,75 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
 }
 .category-quicknav-sections::-webkit-scrollbar { display: none; }
+/* Navigation entre les sections de la carte : des pilules, et la section courante en IRIS.
+   Elle était en lime, ce qui faisait deux accents lime sur la même page — la barre de sections
+   et le bouton de commande — alors que la règle n'en autorise qu'un par vue. Le lime revient à
+   ce qui se commande ; se déplacer dans une carte n'est pas l'action décisive d'un écran, c'est
+   de la navigation, et la navigation porte l'iris comme partout ailleurs.
+   Le poids descend de 700 à 500 : DESIGN.md interdit de monter les libellés de contrôle à 700. */
 .category-quicknav button {
-  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink-soft);
-  font-size: 12.5px; font-weight: 700; padding: 7px 13px; border-radius: 6px;
+  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink);
+  font-size: 14px; font-weight: 500; padding: 9px 16px; border-radius: var(--radius-pill);
   white-space: nowrap; box-shadow: none; backdrop-filter: blur(3px);
   transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
-  min-height: 34px; display: flex; align-items: center;
+  min-height: 38px; display: flex; align-items: center;
 }
 .category-quicknav button:hover { border-color: var(--iris); color: var(--ink); }
 .category-quicknav button.active {
-  background: var(--gold); color: var(--ink); border-color: var(--gold);
+  background: var(--iris); color: #fff; border-color: var(--iris);
   box-shadow: none;
 }
 
-.floating-cart {
-  position: fixed; left: 16px; bottom: 16px; z-index: 46;
-  width: min(320px, calc(100vw - 28px));
-  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
-  box-shadow: none;
-  display: flex; flex-direction: column; overflow: hidden;
-  max-height: min(72vh, 480px);
-  animation: fadeInUp .22s cubic-bezier(.2,.8,.3,1) both;
-}
-.floating-cart-header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 14px 14px; flex-shrink: 0;
-  background: var(--iris); color: #fff;
-}
-.floating-cart-header-icon {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
-  background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
-}
-.floating-cart-header-text { min-width: 0; flex: 1; }
-.floating-cart-header-text b { font-size: 14px; }
-/* Sélecteur volontairement porté à deux classes : cet élément porte aussi .small (voir plus bas), qui
-   impose color: var(--ink-soft) — du gris foncé, illisible sur le dégradé vert de l'en-tête. À
-   spécificité égale (0,1,0) c'est .small qui gagnait, puisqu'il est déclaré plus bas dans le fichier.
-   Passer par le parent (0,2,0) rend le blanc prioritaire sans toucher à .small, utilisé partout ailleurs. */
-.floating-cart-header .floating-cart-header-sub { color: rgba(255,255,255,.85); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.floating-cart-lines { overflow-y: auto; padding: 6px 14px; flex: 1; }
-/* Un groupe par restaurant quand le panier en contient plusieurs (voir CartContext.jsx, un panier par
-   restaurant) — la ligne de séparation vit sur le groupe entier plutôt que sur chaque plat, pour que la
-   frontière entre deux restaurants reste visuellement plus marquée qu'entre deux plats du même. */
-.floating-cart-restaurant-group { border-bottom: 1px solid var(--line); padding-bottom: 4px; margin-bottom: 4px; }
-.floating-cart-restaurant-group:last-child { border-bottom: none; margin-bottom: 0; }
-.floating-cart-restaurant-group .floating-cart-line:last-child { border-bottom: none; }
-.floating-cart-restaurant-header {
-  display: flex; justify-content: space-between; align-items: center; padding: 8px 0 2px;
-  font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: .02em; color: var(--teal-deep);
-}
-.floating-cart-restaurant-clear {
-  background: transparent; border: none; font-size: 12px; opacity: .6; cursor: pointer; padding: 2px 4px;
-  transition: opacity .15s ease;
-}
-.floating-cart-restaurant-clear:hover { opacity: 1; }
-.floating-cart-multi-note { margin: 0 0 8px; opacity: .75; }
-.floating-cart-line { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--cream-dim); }
-.floating-cart-line:last-child { border-bottom: none; }
-.floating-cart-line-info { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
-.floating-cart-line-name { font-weight: 600; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
-.floating-cart-line-options { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 150px; }
-.floating-cart-line-price { font-size: 12px; color: var(--ink-soft); font-weight: 600; }
-.floating-cart-line-actions { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-/* Stepper en pilule segmentée (plutôt que deux boutons outline séparés) : plus compact, plus lisible,
-   et visuellement cohérent avec le reste des contrôles arrondis du panier. */
-.floating-cart-stepper {
-  display: flex; align-items: center; background: var(--cream-dim); border-radius: 6px; overflow: hidden;
-}
-.floating-cart-stepper button {
-  background: transparent; border: none; width: 26px; height: 26px; font-size: 15px; font-weight: 700;
-  color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center;
-  line-height: 1; transition: background .15s ease;
-}
-.floating-cart-stepper button:hover { background: rgba(200,240,60,.35); }
-.floating-cart-stepper span { min-width: 18px; text-align: center; font-weight: 700; font-size: 13px; }
-.floating-cart-remove {
-  background: transparent; border: none; color: var(--red); font-size: 13px; padding: 3px 4px; line-height: 1;
-  cursor: pointer; opacity: .75; transition: opacity .15s ease;
-}
-.floating-cart-remove:hover { opacity: 1; }
-.floating-cart-footer { padding: 12px 14px 14px; border-top: 1px solid var(--cream-dim); flex-shrink: 0; }
-.floating-cart-subtotal-row {
-  display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0 12px;
-  font-weight: 600; font-size: 13px; color: var(--ink-soft);
-}
-.floating-cart-subtotal-amount { font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
-.floating-cart-order-btn {
-  width: 100%; background: var(--gold); color: var(--ink); border: none; border-radius: 6px;
-  padding: 12px; font-weight: 800; font-size: 14px; cursor: pointer;
-  box-shadow: none; transition: background .15s ease;
-}
-.floating-cart-order-btn:hover { transform: translateY(-1px); box-shadow: none; }
-.floating-cart-clear-link {
-  display: block; width: 100%; text-align: center; background: transparent; border: none;
-  color: var(--ink-soft); font-size: 12.5px; padding: 9px 4px 0; cursor: pointer; opacity: .8;
-  transition: opacity .15s ease, color .15s ease;
-}
-.floating-cart-clear-link:hover { opacity: 1; color: var(--red); }
-/* padding: 0 + centrage flex indispensables : la règle globale sur button (voir plus haut) impose
-   padding: 11px 18px, et avec box-sizing: border-box ces 36px de padding horizontal débordaient le
-   width: 26px — le bouton devenait une ellipse de 36x26 et le ✕ se retrouvait décalé de ~5px à droite
-   et ~4px vers le bas au lieu d'être au centre du cercle. Même recette que .floating-cart-header-icon. */
-.floating-cart-collapse {
-  flex-shrink: 0; background: rgba(255,255,255,.15); border: none; border-radius: 50%;
-  width: 26px; height: 26px; padding: 0; font-size: 13px; line-height: 1; cursor: pointer; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s ease;
-}
-.floating-cart-collapse:hover { background: rgba(255,255,255,.3); }
-/* Sur mobile, la carte ne va pas jusqu'aux bords (le coin bas-droit reste dégagé) —
-   la carte flotte au-dessus plutôt qu'en pleine largeur jusqu'au bord pour ne pas le chevaucher. Le
-   décalage vertical (pour ne pas passer sous la barre d'onglets) est géré par la règle ≤900px ci-dessous,
-   commune au mobile et à la tablette. */
-@media (max-width: 480px) { .floating-cart { left: 8px; right: 8px; width: auto; max-height: min(55vh, 400px); } }
-/* Sous 900px, .dashboard-shell devient une barre d'onglets fixée en bas (voir règles .dashboard-shell
-   ci-dessus, z-index: 50) — le panier flottant (frère de .dashboard-shell
-   dans le DOM, montés dans Layout.jsx) se retrouvaient affichés PAR-DESSOUS cette barre à bottom:12/16px
-   (z-index 45/46 < 50) : invisibles en pratique dès qu'on repasse sous 900px de large, pas seulement en
-   dessous de 480px — la tablette (ex: 768px) était donc concernée alors qu'aucune règle ne la corrigeait.
-   Remontés pour se placer juste au-dessus de la barre au lieu de disparaître derrière elle, uniquement
-   quand la barre est présente (sélecteur ~ .dashboard-shell). */
-@media (max-width: 900px) {
-  .dashboard-shell ~ .floating-cart-bubble,
-  .dashboard-shell ~ .floating-cart { bottom: 78px; }
-}
-/* Au-dessus de 900px, la sidebar est une colonne fixe de 240px collée à gauche (voir .dashboard-shell
-   / .dashboard-sidebar plus bas) : le panier flottant, ancré à left: 16px, se posait pile par-dessus la
-   carte profil en bas de cette colonne (nom, rôle, « Se déconnecter »), rendue illisible. Décalé juste à
-   droite de la colonne (240px + la même marge de 16px) pour s'aligner sur le bord gauche du contenu,
-   uniquement quand la sidebar est là — les pages publiques gardent le coin bas-gauche de l'écran. */
-@media (min-width: 901px) {
-  .dashboard-shell ~ .floating-cart-bubble,
-  .dashboard-shell ~ .floating-cart { left: 256px; }
-}
+/* UNE MODALE CENTRÉE SUR ÉCRAN LARGE, UNE FEUILLE BASSE SUR TÉLÉPHONE.
 
-/* Bulle repliée : état par défaut du panier persistant (voir FloatingCart.jsx dans Layout.jsx), un clic
-   déploie le récap complet ci-dessus plutôt que de l'imposer en permanence sur toutes les pages. */
-.floating-cart-bubble {
-  position: fixed; left: 16px; bottom: 16px; z-index: 46;
-  display: flex; align-items: center; gap: 10px;
-  background: var(--iris); color: #fff; border: none; border-radius: 6px;
-  padding: 9px 18px 9px 9px; font-weight: 700; font-size: 13.5px; cursor: pointer;
-  box-shadow: none;
-  animation: fadeInUp .22s cubic-bezier(.2,.8,.3,1) both;
-  transition: background .15s ease;
-}
-.floating-cart-bubble:hover { background: var(--iris-deep); }
-/* Panier vide : reste affiché (au lieu de disparaître complètement) pour que le client sache toujours où
-   le retrouver, mais estompé et non cliquable puisqu'il n'y a rien à déplier. */
-.floating-cart-bubble-empty {
-  background: rgba(20,18,31,.4); box-shadow: none; cursor: default;
-}
-.floating-cart-bubble-empty:hover { transform: none; box-shadow: none; }
-.floating-cart-bubble-empty .floating-cart-bubble-text { flex-direction: row; }
-.floating-cart-bubble-empty .floating-cart-bubble-count { font-size: 13.5px; font-weight: 700; color: rgba(255,255,255,.9); }
-.floating-cart-bubble-icon {
-  width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2);
-  display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0;
-}
-.floating-cart-bubble-text { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.25; }
-.floating-cart-bubble-count { font-size: 11px; font-weight: 600; color: rgba(255,255,255,.85); }
-.floating-cart-bubble-total { font-size: 14.5px; font-weight: 800; font-variant-numeric: tabular-nums; }
-/* Le décalage vertical (ne pas passer sous la barre d'onglets) vit dans la règle ≤900px plus haut,
-   commune au mobile et à la tablette — ici seulement le resserrement horizontal propre au mobile. */
-@media (max-width: 480px) { .floating-cart-bubble { left: 8px; } }
+   Avant : la boîte était collée à 110px du haut de l'écran, quelle que soit sa taille. Une modale
+   de trois lignes se retrouvait donc perchée dans le tiers supérieur, avec un grand vide sombre
+   en dessous ; et sur un téléphone tenu à une main, ses boutons finissaient hors de portée du
+   pouce, tout en haut. Elle portait un filet de 1px et aucune ombre, exactement l'inverse de ce
+   que fait une surface qui flotte : le filet appartient au contenu posé à plat, l'ombre à ce qui
+   se soulève au-dessus.
 
+   Maintenant : centrée au-dessus de 640px, et remontée du bas de l'écran en dessous — là où se
+   trouve le pouce. C'est le geste des captures 5 et 6 (« Pay with », « Promotions ») : la feuille
+   occupe le bas, son bouton principal barre toute sa largeur en pied. */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(20, 18, 31, 0.5);
-  display: flex; align-items: flex-start; justify-content: center;
-  padding: 110px 20px 40px; z-index: 100; overflow-y: auto;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px 20px; z-index: 100; overflow-y: auto;
 }
 .modal-box {
-  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
-  max-width: 480px; width: 100%; padding: 20px;
+  background: #fff; border: none; border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  max-width: 480px; width: 100%; padding: 24px;
+  max-height: calc(100vh - 80px); overflow-y: auto;
+  animation: modal-apparait .18s cubic-bezier(.22,.61,.36,1) both;
 }
+@keyframes modal-apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* Le titre d'une modale est un titre de page, pas une ligne de texte gras : Uber les pose en
+   display-sm/md, assez gros pour qu'on sache d'un coup d'œil ce qu'on vient d'ouvrir. */
+.modal-titre { font-size: var(--t-display-sm); font-weight: 700; margin: 0 0 4px; }
+/* Le pied colle en bas de la boîte et son action principale barre toute la largeur. Les boutons
+   étaient auparavant alignés à droite, à la suite du contenu : dans une modale qui défile, ils
+   passaient sous la ligne de flottaison et il fallait faire défiler pour valider. */
+.modal-pied {
+  position: sticky; bottom: -24px; margin: 20px -24px -24px; padding: 16px 24px;
+  background: #fff; display: flex; flex-direction: column; gap: 8px;
+}
+.modal-pied > .btn-gold, .modal-pied > .btn-teal, .modal-pied > .btn-primary,
+.modal-pied > .btn-outline, .modal-pied > .btn-danger { width: 100%; }
+
+@media (max-width: 640px) {
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  .modal-box {
+    max-width: none; border-radius: var(--radius) var(--radius) 0 0;
+    max-height: 88vh; padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    animation-name: feuille-monte;
+  }
+  .modal-pied { bottom: calc(-20px - env(safe-area-inset-bottom)); margin: 16px -20px calc(-20px - env(safe-area-inset-bottom)); padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); }
+}
+@keyframes feuille-monte { from { transform: translateY(16px); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
 /* Repères d'étape du choix des options (voir OptionsPickerModal) : un point par groupe (boisson, sauce,
    crudités...), rempli une fois passé, en évidence sur l'étape en cours. */
 .options-picker-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 14px; }
@@ -672,14 +697,31 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .gallery-picker-image-btn:hover { border-color: var(--iris); }
 .gallery-picker-image-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .gallery-picker-delete {
-  position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: 6px;
+  position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; border-radius: var(--radius-field);
   background: rgba(20, 18, 31, 0.7); color: #fff; border: none; font-size: 12px; line-height: 1;
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 
-.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
-.menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
+.menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; margin-bottom: 18px; }
+/* La carte d'un plat passe de 8px à 16px de rayon : c'est une CARTE, pas une puce, et le rayon
+   des cartes est celui-là partout ailleurs. Sa photo garde 8px, comme toutes les vignettes. */
+.menu-item-card { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px; display: flex; flex-direction: column; transition: border-color .15s, box-shadow .15s; }
 .menu-item-card:hover { border-color: var(--iris); box-shadow: none; }
+/* Rendue en <button> quand elle est cliquable (voir ItemCard) : il faut donc défaire ce que la
+   règle globale des boutons lui impose — sa pilule, son padding, son texte centré. */
+.menu-item-card-cliquable { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.menu-item-card-cliquable:active { transform: none; }
+.menu-item-card-indisponible { opacity: 0.5; }
+.menu-item-visuel { position: relative; }
+/* Le « + » posé sur la photo. Purement visuel — c'est la carte entière qui porte l'action. */
+.menu-item-ajout {
+  position: absolute; right: 8px; bottom: 16px;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--ink); font-size: 20px; font-weight: 500; line-height: 1;
+  box-shadow: var(--shadow-3);
+}
+.menu-item-card-cliquable:hover .menu-item-ajout { background: var(--iris); color: #fff; }
 .menu-item-card .name { font-weight: 600; font-size: 14px; margin: 0 0 2px; }
 /* Emoji "healthy" accolé au nom du plat (menu_items.healthy, coché par le restaurateur). white-space:
    nowrap sur le seul emoji : le nom peut passer à la ligne, mais jamais entre le nom et son emoji, qui
@@ -720,7 +762,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 /* Mode sélection multiple des plats (voir MenuItemRow/MenuPage) */
 .menu-item-card-selected { border-color: var(--teal); box-shadow: 0 0 0 2px var(--teal) inset; }
 .menu-item-select-check {
-  position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; border-radius: 6px;
+  position: absolute; top: 6px; left: 6px; width: 22px; height: 22px; border-radius: var(--radius-field);
   background: #fff; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center;
   z-index: 2; font-size: 13px; font-weight: 700; color: #fff;
 }
@@ -806,7 +848,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   box-shadow: none; position: relative; z-index: 1;
 }
 .app-soon-phone-notch { width: 70px; height: 18px; background: var(--ink); border-radius: 0 0 12px 12px; margin: 0 auto 6px; position: relative; }
-.app-soon-phone-notch::after { content: ''; position: absolute; inset: 0; margin: auto; width: 34px; height: 5px; border-radius: 4px; background: #14121F; top: 6px; }
+.app-soon-phone-notch::after { content: ''; position: absolute; inset: 0; margin: auto; width: 34px; height: 5px; border-radius: var(--radius-pill); background: #14121F; top: 6px; }
 .app-soon-phone-screen { background: var(--cream); border-radius: 22px; height: calc(100% - 24px); padding: 14px 12px; overflow: hidden; }
 .app-soon-phone-brand { display: flex; align-items: center; gap: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 12px; }
 .app-soon-phone-search { background: var(--cream-dim); border-radius: var(--radius-chip); padding: 8px 10px; font-size: 10.5px; color: var(--ink-soft); margin-bottom: 10px; }
@@ -816,7 +858,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .app-soon-phone-card { display: flex; gap: 8px; align-items: center; background: #fff; border-radius: var(--radius-chip); padding: 6px; box-shadow: none; }
 .app-soon-phone-card-img { width: 34px; height: 34px; border-radius: var(--radius-chip); flex-shrink: 0; }
 .app-soon-phone-card-lines { display: flex; flex-direction: column; gap: 5px; flex: 1; }
-.app-soon-phone-card-lines span { display: block; height: 6px; border-radius: 4px; background: var(--cream-dim); width: 85%; }
+.app-soon-phone-card-lines span { display: block; height: 6px; border-radius: var(--radius-pill); background: var(--cream-dim); width: 85%; }
 
 @media (max-width: 720px) {
   .app-soon { flex-direction: column; padding: 30px 22px; text-align: center; }
@@ -851,7 +893,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .restaurant-header-name-row { font-size: 1.5em; }
 /* Le h1 d'une page de contenu. Distinct de .section-title, qui découpe l'intérieur d'une
    page : celui-ci en annonce le sujet, et il n'y en a qu'un. */
-.page-title { font-size: clamp(23px, 3.2vw, 30px); letter-spacing: -0.03em; margin: 0 0 16px; }
+.page-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg)); margin: 0 0 16px; }
 .rest-card-name-text { min-width: 0; }
 .certified-badge { color: var(--teal); flex-shrink: 0; }
 
@@ -865,10 +907,192 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    à gauche de la carte, au lieu de rester en position absolue avec rien en dessous. */
 .restaurant-header-media.no-cover { position: static; margin: 0 0 12px; width: auto; }
 .restaurant-header-media.no-cover .restaurant-logo-badge { position: static; width: 60px; height: 60px; box-shadow: none; }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   L'EN-TÊTE D'UNE FICHE DE COMMERCE (.fiche-*).
+
+   Il vivait dans un .card : un rectangle blanc cerné d'un filet de 1px, avec 24px de marge
+   intérieure — et sa photo devait déborder par des marges négatives de -22px pour paraître
+   pleine largeur. Le filet n'encadrait pas un élément parmi d'autres, il encadrait le SUJET de
+   la page ; et le débordement n'était qu'un contournement de ce filet. Les deux partent
+   ensemble, la photo est simplement pleine largeur.
+
+   Ce que ces règles reprennent de la fiche d'Uber : la photo en bandeau, le logo rond qui la
+   chevauche en bas à gauche, le titre posé dessous, et UNE ligne de métadonnées grise là où il
+   y en avait six empilées.
+   ───────────────────────────────────────────────────────────────────────────── */
+.fiche-entete { margin-bottom: 20px; }
+.fiche-media { position: relative; margin-bottom: 30px; }
+.fiche-couverture {
+  display: block; width: 100%; height: 220px; object-fit: cover;
+  border-radius: var(--radius); background: var(--surface-soft);
+}
+.fiche-logo {
+  position: absolute; left: 16px; bottom: -26px;
+  width: 76px; height: 76px; border-radius: 50%; object-fit: cover;
+  border: 3px solid #fff; background: #fff; box-shadow: var(--shadow-3);
+}
+/* Sans photo de couverture, le logo n'a rien à chevaucher : il reprend le fil normal. */
+.fiche-media.sans-photo { position: static; margin-bottom: 12px; }
+.fiche-media.sans-photo .fiche-logo { position: static; width: 60px; height: 60px; box-shadow: none; border: none; }
+
+.fiche-titre-ligne { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.fiche-nom { display: flex; align-items: center; gap: 8px; font-size: var(--t-display-lg); margin: 0 0 6px; }
+
+/* La ligne de méta : grise, sur une seule ligne, les séparateurs en points médians. Elle se
+   replie proprement sur deux lignes quand le nom de la commune est long. */
+.fiche-meta {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  margin: 0 0 4px; font-size: var(--t-body-sm); color: var(--ink-soft);
+}
+.fiche-meta-note { display: inline-flex; align-items: center; }
+/* « Infos » est un bouton, mais il doit se lire comme un lien : c'est une porte vers un
+   complément, pas une action. D'où le soulignement plutôt que la pilule. */
+.fiche-infos-lien {
+  background: none; border: 0; padding: 0; min-height: 0;
+  font: inherit; font-weight: 600; color: var(--ink); text-decoration: underline; cursor: pointer;
+}
+.fiche-desc { margin: 0 0 14px; font-size: var(--t-body-sm); color: var(--ink-soft); }
+
+/* Bascule Livraison / À emporter : une pilule segmentée posée sur le gris de surface, le mode
+   retenu en blanc. C'est le motif « Delivery | Pickup » de la capture. */
+.fiche-modes {
+  display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 12px;
+  background: var(--surface-soft); border-radius: var(--radius-pill);
+}
+.fiche-modes button {
+  min-height: 40px; padding: 8px 20px; border-radius: var(--radius-pill);
+  background: transparent; color: var(--ink-soft); font-size: var(--t-body-sm); font-weight: 600;
+}
+.fiche-modes button.est-actif { background: #fff; color: var(--ink); box-shadow: var(--shadow-3); }
+
+/* Panneau des frais : le pendant du « €1.79 Delivery Fee / 17 min Earliest arrival » d'Uber,
+   moins le délai — aucun champ de temps de préparation n'existe, ni ici ni au serveur, et on
+   n'annonce pas une heure d'arrivée qu'on ne sait pas calculer. */
+.fiche-panneau {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 16px; margin-bottom: 12px;
+  background: var(--surface-soft); border-radius: var(--radius);
+}
+.fiche-panneau b { font-size: var(--t-body-md); }
+.fiche-panneau-cle { font-size: var(--t-body-sm); color: var(--ink-soft); }
+
+/* L'encart d'offres, façon « Savings and more » : UN bloc, là où il y avait deux bandeaux de
+   deux couleurs différentes écrits en style inline (un rouge, un iris). */
+.fiche-offres {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 16px; margin-bottom: 12px;
+  background: var(--iris); color: #fff; border-radius: var(--radius);
+}
+.fiche-offres-icone { flex-shrink: 0; display: inline-flex; color: var(--lime); }
+.fiche-offres-texte { display: flex; flex-direction: column; gap: 6px; font-size: var(--t-body-sm); font-weight: 500; }
+
+.fiche-recherche { margin-bottom: 14px; }
+
+/* Les blocs de la feuille « Infos ». */
+.fiche-infos-bloc { margin-bottom: 18px; }
+.fiche-infos-bloc h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: var(--t-body-sm); font-weight: 700; }
+.fiche-infos-bloc p { margin: 0 0 8px; }
+
+@media (max-width: 640px) {
+  .fiche-couverture { height: 170px; border-radius: 0; margin: 0 -20px; width: calc(100% + 40px); }
+  .fiche-logo { left: 0; width: 64px; height: 64px; bottom: -22px; }
+  .fiche-media { margin-bottom: 26px; }
+}
 .menu-item:last-child { border-bottom: none; }
 .price { font-weight: 700; color: var(--teal-deep); white-space: nowrap; margin-left: 12px; }
 
-.cart-bar { position: sticky; bottom: 0; background: var(--ink); color: var(--cream); border-radius: var(--radius); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; box-shadow: none; }
+/* Bande d'action du paiement : IRIS et non noir. C'est la bande sombre de mi-page de la référence,
+   et la décision de cette refonte est que là où elle pose du noir, Fairide pose son iris — sinon la
+   page de commande, qui est le moment le plus engageant du parcours, est la seule qui ne porte plus
+   la couleur de la marque. */
+.cart-bar { position: sticky; bottom: 0; background: var(--iris); color: var(--cream); border-radius: var(--radius); padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; box-shadow: none; }
+/* La bande est en aplat iris, mais .btn-ghost et .small portent des gris prévus pour du texte sur
+   fond clair (--ink-soft, --ink-faint) : sur le violet, « Ajouter un plat » et l'avertissement de
+   date se lisaient à peine. Les deux passent au blanc, qui est la couleur du texte sur cet aplat.
+   Se voyait peu tant que la bande vivait en bas de page ; le récapitulatif collant l'a mis en
+   évidence. */
+.cart-bar .btn-ghost, .cart-bar .small { color: var(--cream); }
+.cart-bar .btn-ghost { text-decoration: underline; }
+/* Sur un téléphone, les trois blocs de cette bande — revenir à la carte, le total, l'avertissement
+   de date — se partageaient la largeur en trois colonnes d'à peine cent pixels : chaque phrase se
+   cassait sur quatre lignes et « Ajouter un plat » se lisait sur trois. Ils s'empilent. */
+@media (max-width: 600px) {
+  .cart-bar { flex-direction: column; align-items: stretch; text-align: left; gap: 10px; }
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   LE PAIEMENT EN DEUX COLONNES (.checkout-*).
+
+   Tout était dans UNE colonne et, pour l'essentiel, dans UNE seule carte : l'adresse, le mode de
+   livraison, la consigne, la note au livreur, la réservation, la programmation. Le récapitulatif
+   de la commande était tout en haut, le bouton tout en bas, et entre les deux un formulaire qu'il
+   fallait parcourir en entier pour retrouver ce qu'on paie.
+
+   La capture 3 montre l'autre disposition : le formulaire à gauche, et à droite une colonne qui
+   ne bouge pas — le commerce, le bouton principal EN HAUT, le détail des totaux dessous. On voit
+   en permanence ce qu'on commande et combien ça coûte pendant qu'on remplit ses informations.
+
+   Sous 900px la grille redevient une colonne et l'ordre du DOM reprend la main : formulaire, puis
+   barre d'action collante en bas, puis récapitulatif — c'est déjà ce que faisait la page, et sur
+   un téléphone un bouton collé en bas vaut mieux qu'un bouton perché en haut d'un panneau.
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (min-width: 901px) {
+  .checkout-grille { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; align-items: start; }
+  /* Collant dans sa colonne : le récapitulatif reste sous les yeux tant que le formulaire défile. */
+  .checkout-recap { position: sticky; top: 20px; display: flex; flex-direction: column; }
+  /* L'action passe en tête du panneau, comme le « Next » de la capture. Elle perd son ancrage
+     collant : dans une colonne déjà collante, il n'aurait plus rien à faire. */
+  .checkout-recap .cart-bar { order: -1; position: static; margin-top: 0; margin-bottom: 14px; flex-direction: column; align-items: stretch; }
+  .checkout-recap .cart-bar .btn-gold { width: 100%; }
+  .checkout-recap .card { margin-bottom: 0; }
+}
+
+/* Intitulé d'un groupe de boutons. Ce n'est pas un <label> : un label doit désigner un champ, et
+   un groupe de pastilles n'en est pas un — le lien se fait par aria-label sur le groupe. */
+.field-intitule { display: block; font-size: var(--t-body-sm); font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+
+/* Les pastilles de choix (voir components/ChoixPastilles.jsx), qui remplacent les listes
+   déroulantes natives du paiement. */
+.choix-pastilles { display: flex; flex-wrap: wrap; gap: 8px; }
+/* Au-delà d'une dizaine d'options — des créneaux horaires, des dates — la rangée défile au lieu
+   de s'empiler sur dix lignes et de repousser le bouton hors de l'écran. */
+.choix-pastilles-defile { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.choix-pastilles .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.choix-pastille-note { font-size: var(--t-caption); font-weight: 500; opacity: .75; }
+
+/* Les cartes d'un choix unique (mode de récupération au paiement) : icône, libellé, et l'option
+   retenue cernée d'une arête iris de 2px — le même signal que le champ au focus. */
+.choix-cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.choix-carte {
+  display: flex; align-items: center; gap: 10px; text-align: left;
+  min-height: 60px; padding: 12px 14px; border-radius: var(--radius-card-sm);
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  font-size: var(--t-body-sm); font-weight: 600;
+}
+.choix-carte:active { transform: none; }
+.choix-carte:hover { border-color: var(--iris); }
+.choix-carte.est-actif { border: 2px solid var(--iris); padding: 11px 13px; }
+
+/* Les articles d'une commande passée, une ligne chacun, la quantité dans une case — la forme de
+   la capture « Past Orders ». Ils étaient aplatis en une seule chaîne par .join(', '). */
+.commande-articles { list-style: none; margin: 10px 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.commande-articles li { display: flex; align-items: flex-start; gap: 10px; }
+.commande-article-qte {
+  flex-shrink: 0; min-width: 26px; height: 26px; padding: 0 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--line); border-radius: var(--radius-field);
+  font-size: var(--t-body-sm); font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.commande-article-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.commande-article-texte b { font-size: var(--t-body-sm); font-weight: 600; }
+
+/* La liste des factures : des rangées séparées par un filet, dans une seule carte. */
+.facture-liste { padding: 6px 16px; }
+.facture-ligne { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); }
+.facture-ligne:last-child { border-bottom: none; }
+.facture-ligne-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.facture-ligne-texte b { font-size: var(--t-body-sm); }
 .divider { height: 1px; background: var(--line); margin: 16px 0; }
 .breakdown { font-size: 13px; color: var(--ink-soft); }
 .breakdown .line { display: flex; justify-content: space-between; padding: 3px 0; }
@@ -876,12 +1100,33 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 
 .empty { text-align: center; padding: 36px 20px; color: var(--ink-soft); font-size: 14px; border: 1px dashed var(--line); border-radius: var(--radius); }
 
-.status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-chip); text-transform: uppercase; letter-spacing: .03em; }
+/* Écran vide de pleine page (components/EtatVide.jsx) — à ne pas confondre avec .empty, qui
+   signale en une ligne qu'une liste est vide au milieu d'une page qui contient autre chose. Ici le
+   vide EST la page : pas de cadre en pointillés, qui la ferait passer pour une panne, mais une
+   icône assez grande pour se voir et un bouton qui dit comment remplir ce qui manque. */
+.etat-vide { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 56px 24px; gap: 4px; }
+.etat-vide-icone {
+  display: flex; align-items: center; justify-content: center; width: 72px; height: 72px;
+  border-radius: var(--radius-pill); background: var(--surface-soft); color: var(--ink-soft); margin-bottom: 14px;
+}
+.etat-vide-titre { font-size: 19px; }
+.etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
+.etat-vide-action { margin-top: 18px; text-decoration: none; }
+
+
+/* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
+   carte, pas un terrain de jeu imposé à côté d'elle. */
+/* Le bouton du jeu vit maintenant dans la barre de « Mes commandes » (voir .commandes-barre)
+   et non plus centre sous la carte de suivi : sa marge automatique des deux cotes le centrait,
+   ce qui annulait le margin-left: auto cense le pousser a droite. */
+.suivi-jouer { display: inline-flex; align-items: center; margin: 0; text-decoration: none; }
+
+.status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
 .status-nouveau { background: rgba(217,45,60,0.12); color: var(--red); }
 .status-preparation { background: var(--lime); color: var(--ink); }
 .status-pret { background: rgba(59,47,181,0.12); color: var(--teal-deep); }
 .status-livraison { background: rgba(20,18,31,0.08); color: var(--ink); }
-.status-livre { background: #F4F2ED; color: var(--teal-deep); }
+.status-livre { background: var(--surface-soft); color: var(--iris); }
 .status-refuse { background: rgba(217,45,60,0.12); color: var(--red); }
 .status-annule { background: rgba(217,45,60,0.12); color: var(--red); }
 
@@ -891,7 +1136,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .order-type-blue { border-left: 4px solid var(--blue); }
 .order-type-purple { border-left: 4px solid var(--purple); }
 .order-type-orange { border-left: 4px solid var(--orange); }
-.order-type-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-chip); margin: 4px 0; }
+.order-type-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); margin: 4px 0; }
 .order-type-badge-yellow { background: rgba(59,47,181,0.10); color: var(--iris); }
 .order-type-badge-blue { background: rgba(43,127,184,0.14); color: var(--blue); }
 .order-type-badge-purple { background: rgba(176,69,155,0.14); color: var(--purple); }
@@ -901,20 +1146,22 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
 
 .small { font-size: 12px; color: var(--ink-soft); }
-h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; margin: 40px 0 16px; }
+h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg)); margin: 40px 0 16px; }
 
 .auth-box { max-width: 380px; margin: 40px auto; }
-/* La carte de connexion / inscription est le seul objet de sa page : elle mérite un contour
-   franc plutôt que le filet gris de 1px des cartes de contenu. Deux pixels d'iris suffisent —
-   c'est le seul cadre appuyé du site, et le garder unique est ce qui lui donne son poids.
-   Règle volontairement portée par .auth-box et non par .card : le filet 1px reste la valeur
-   par défaut partout ailleurs, où des dizaines de cartes cohabitent sur un même écran. */
-.auth-box .card { border: 2px solid var(--iris); }
-.auth-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
-.auth-tabs .chip { flex: 1; text-align: center; padding: 8px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink-soft); background: #fff; }
-.auth-tabs .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+/* La carte de connexion est le seul objet de sa page. Elle portait pour ça un cadre de 2px
+   d'iris — le seul contour appuyé du site. Ce cadre disparaît : une carte qui porte un
+   formulaire ne s'entoure pas, elle FLOTTE (DESIGN.md, request-form-card, ombre de niveau 2).
+   Le cadre enfermait le formulaire ; l'ombre le pose sur la page. Même intention, exactement,
+   mais sans dessiner une boîte autour de quelqu'un qui tape son mot de passe. */
+.auth-box .card { border: 1px solid var(--line); box-shadow: var(--shadow-2); }
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.auth-tabs .chip { flex: 1; text-align: center; padding: 11px 8px; border-radius: var(--radius-pill); border: 1px solid var(--line); cursor: pointer; font-size: 15px; font-weight: 500; color: var(--ink); background: #fff; }
+/* Iris et non noir : c'est la décision de cette refonte — là où Uber pose son noir de
+   conversion, Fairide pose son iris. Le noir reste au texte, jamais à l'action. */
+.auth-tabs .chip.active { background: var(--iris); color: var(--cream); border-color: var(--iris); }
 .role-pick { display: flex; gap: 6px; margin-bottom: 12px; }
-.role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-chip); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
+.role-pick .chip { flex: 1; text-align: center; padding: 10px 4px; border-radius: var(--radius-pill); border: 1px solid var(--line); cursor: pointer; font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #fff; }
 .role-pick .chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* En-tête d'étape de l'inscription (voir Auth.jsx). La barre de progression dit à elle seule que
@@ -924,7 +1171,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .auth-step-head { margin-bottom: 18px; }
 .auth-step-head h3 { font-size: 21px; margin: 0 0 4px; }
 .auth-step-head p.small { margin: 0; line-height: 1.45; }
-.auth-step-bar { height: 3px; border-radius: 2px; background: var(--cream-dim); margin-top: 14px; overflow: hidden; }
+.auth-step-bar { height: 3px; border-radius: var(--radius-pill); background: var(--cream-dim); margin-top: 14px; overflow: hidden; }
 .auth-step-bar span { display: block; height: 100%; background: var(--iris); transition: width .28s cubic-bezier(.22,.61,.36,1); }
 
 /* « Retour » et « Continuer » sur une seule rangée, le bouton d'avancement occupant toute la
@@ -935,7 +1182,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
    daltoniens — d'où le message écrit sous le champ, qui dit aussi lequel des quatre champs
    d'adresse est en cause, ce qu'un toast « adresse requise » ne disait pas. */
 .input-invalid { border-color: var(--red); }
-.input-invalid:focus { border-color: var(--red); box-shadow: 0 0 0 3px rgba(217,45,60,0.15); }
+.input-invalid:focus { border-color: var(--red); box-shadow: var(--ring-erreur); }
 .field-error { margin: 5px 0 0; font-size: 12px; color: var(--red); }
 
 /* Rangée « libellé + bouton Afficher » au-dessus du champ mot de passe. */
@@ -958,8 +1205,13 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .cuisine-scroll { padding: 2px 2px 12px; margin-bottom: 10px; -webkit-mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); mask-image: linear-gradient(90deg, transparent, #000 24px, #000 calc(100% - 24px), transparent); }
 .auto-scroll-row.cuisine-track { padding-bottom: 0; }
 .auto-scroll-row.cuisine-track .auto-scroll-track { gap: 8px; }
-.cuisine-chip { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 14px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; font-weight: 600; color: var(--ink-soft); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
-.cuisine-chip .emoji { font-size: 20px; line-height: 1; }
+/* Filtre de cuisine : l'emoji passe À CÔTÉ du libellé, plus au-dessus. Empilés, la puce était
+   aussi haute que large, et l'arrondi de 999px la transformait en cercle qui rognait le mot au
+   lieu de l'entourer (« healthy » devenait « althy »). C'est exactement le category-button de
+   DESIGN.md : icône, puis libellé, sur une ligne, dans une pilule couchée. Le libellé remonte
+   de 11 à 13px — à 11px il fallait s'approcher de l'écran pour lire un filtre. */
+.cuisine-chip { flex: 0 0 auto; display: inline-flex; flex-direction: row; align-items: center; gap: 7px; padding: 9px 16px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
+.cuisine-chip .emoji { font-size: 17px; line-height: 1; }
 .cuisine-chip.active { background: var(--teal); color: #fff; border-color: var(--teal); }
 .cuisine-chip:hover { border-color: var(--teal); }
 
@@ -980,7 +1232,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .stat-card.highlight { background: rgba(59,47,181,0.12); }
 .stat-card.highlight .num { color: var(--teal-deep); }
 
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--cream); padding: 13px 20px; border-radius: var(--radius-chip); font-size: 14px; font-weight: 600; box-shadow: none; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; max-width: 90%; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--cream); padding: 13px 20px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; box-shadow: none; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; max-width: 90%; text-align: center; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
@@ -1151,12 +1403,12 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 /* Le drapeau belge : trois bandes nettes, plus d'ombre portée. */
 .be-flag {
   position: absolute; top: 18px; right: 18px; z-index: 3; width: 40px; height: 27px;
-  border-radius: 3px; overflow: hidden; display: flex;
+  border-radius: var(--radius-pill); overflow: hidden; display: flex;
 }
 .be-flag-stripe { flex: 1; }
 
 .landing-title {
-  font-size: clamp(32px, 5.4vw, 54px); line-height: 1.04; letter-spacing: -0.035em;
+  font-size: clamp(var(--t-display-lg), 5.4vw, var(--t-display-xxl)); line-height: 1.04;
   margin: 16px 0 18px; color: var(--cream);
 }
 /* Le second vers de l'accroche passe en lime : c'est l'unique accent de la
@@ -1242,7 +1494,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 }
 .stats-bar-item { text-align: left; }
 .stats-bar-item b {
-  display: block; font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+  display: block; font-size: 32px; font-weight: 700;
   color: var(--lime); line-height: 1; font-variant-numeric: tabular-nums;
 }
 .stats-bar-item span { display: block; margin-top: 7px; font-size: 12.5px; color: rgba(255,255,255,0.78); font-weight: 400; line-height: 1.35; }
@@ -1267,10 +1519,10 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   background: var(--iris); color: var(--cream);
   border-radius: var(--radius); padding: 34px; margin-bottom: 36px;
 }
-.euro-block h2 { color: var(--cream); font-size: clamp(22px, 3.2vw, 32px); letter-spacing: -0.025em; margin: 10px 0 28px; }
+.euro-block h2 { color: var(--cream); font-size: clamp(var(--t-display-md), 4vw, var(--t-display-xl)); margin: 10px 0 28px; }
 .euro-rows { display: flex; flex-direction: column; gap: 26px; }
 .euro-row-top { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; margin-bottom: 10px; }
-.euro-name { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; }
+.euro-name { font-size: 17px; font-weight: 700; }
 .euro-cut { font-size: 13px; color: rgba(255,255,255,0.72); font-variant-numeric: tabular-nums; }
 .euro-track { height: 30px; border-radius: var(--radius-chip); background: rgba(255,255,255,0.14); overflow: hidden; }
 .euro-fill { height: 100%; border-radius: var(--radius-chip); transition: width 1s cubic-bezier(.22,.61,.36,1); }
@@ -1287,8 +1539,8 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .euro-example { margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.18); }
 .euro-ex-title { margin: 0 0 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.72); }
 .euro-ex-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-.euro-ex-card { background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
-.euro-ex-card b { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.03em; line-height: 1.1; font-weight: 800; color: var(--cream); }
+.euro-ex-card { background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.euro-ex-card b { font-size: clamp(22px, 3vw, 30px); line-height: 1.1; font-weight: 800; color: var(--cream); }
 .euro-ex-card.them b { color: rgba(255,255,255,0.85); text-decoration: line-through rgba(255,255,255,0.35) 2px; }
 .euro-ex-card.us { background: rgba(200,240,60,0.14); border-color: rgba(200,240,60,0.45); }
 .euro-ex-card.us b { color: var(--lime); }
@@ -1312,7 +1564,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   transition: border-color .15s ease, background .15s ease;
 }
 .join-card:hover { border-color: var(--iris); }
-.join-card h3 { font-size: 20px; margin: 0; line-height: 1.15; letter-spacing: -0.02em; }
+.join-card h3 { font-size: 20px; margin: 0; line-height: 1.15; }
 .join-card .join-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 12px; }
 .join-card .join-link { font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
 .join-card.join-card-iris { background: var(--iris); border-color: var(--iris); color: var(--cream); }
@@ -1334,7 +1586,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   background: var(--iris); color: var(--cream);
   border-radius: var(--radius); padding: 40px 34px; margin: 40px 0 20px;
 }
-.landing-cta h2 { color: var(--cream); font-size: clamp(24px, 3.4vw, 36px); letter-spacing: -0.03em; margin: 0 0 12px; }
+.landing-cta h2 { color: var(--cream); font-size: clamp(var(--t-display-md), 4vw, var(--t-display-xl)); margin: 0 0 12px; }
 .landing-cta p { color: rgba(255,255,255,0.82); font-size: 15.5px; margin: 0 0 22px; max-width: 52ch; }
 @media (max-width: 640px) { .landing-cta { padding: 28px 20px; } }
 
@@ -1364,7 +1616,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .steps-grid { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 34px; }
 .steps-grid::before {
   content: ""; position: absolute; left: 12%; right: 12%; top: 25px;
-  height: 5px; border-radius: 2.5px; background: var(--iris);
+  height: 5px; border-radius: var(--radius-pill); background: var(--iris);
 }
 .step-card { position: relative; text-align: center; padding: 0 6px; }
 .step-num {
@@ -1406,7 +1658,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
   .step-card:not(:last-child)::after {
     content: ""; position: absolute;
     left: 24.5px; top: 54px; bottom: -26px; width: 5px;
-    border-radius: 2.5px; background: var(--iris);
+    border-radius: var(--radius-pill); background: var(--iris);
   }
 }
 
@@ -1424,7 +1676,7 @@ h2.section-title { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.025em; 
 .page-fade { animation: fadeIn .22s cubic-bezier(.2,.8,.2,1) both; }
 /* Barre de progression de navigation (components/NavigationFeedback.jsx) : fine, en haut, avance vite
    puis ralentit tant que la page se charge, file jusqu'au bout et s'efface quand elle est affichée. */
-.nav-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 4000; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 3px 3px 0; pointer-events: none; box-shadow: 0 0 8px rgba(0,0,0,.15); }
+.nav-progress { position: fixed; top: 0; left: 0; height: 3px; z-index: 4000; background: linear-gradient(90deg, var(--teal), var(--gold)); border-radius: 0 3px 3px 0; pointer-events: none; box-shadow: var(--shadow-3); }
 .nav-progress.encours { animation: nav-progress-avance 6s cubic-bezier(.1,.7,.2,1) forwards; }
 .nav-progress.fin { width: 100%; animation: nav-progress-fin .3s ease forwards; }
 @keyframes nav-progress-avance { 0% { width: 0; } 20% { width: 45%; } 60% { width: 78%; } 100% { width: 92%; } }
@@ -1470,8 +1722,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .map-detail-cover { width: 100%; height: 130px; object-fit: cover; display: block; }
 .map-detail-body { padding: 14px; }
-/* padding: 0 et centrage flex indispensables — exactement le même piège que
-   .floating-cart-collapse plus haut dans ce fichier, et pour la même raison.
+/* padding: 0 et centrage flex indispensables.
 
    La règle globale sur `button` impose padding: 11px 18px. Avec box-sizing: border-box,
    ces 36px de padding horizontal ne tiennent pas dans un bouton de 28px de large : la boîte
@@ -1492,11 +1743,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* Coquille "app connectée" (client/livreur/restaurateur) : barre latérale + colonne centrale +
    colonne de droite optionnelle. Remplace la nav du haut (.hero/.role-nav) sur les pages
    authentifiées seulement — les pages publiques gardent .hero tel quel (voir Layout.jsx). */
-.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main"; min-height: 100vh; align-items: start; }
-.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right"; }
+.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main" "sidebar footer"; min-height: 100vh; align-items: start; }
+.dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right" "sidebar footer footer"; }
 .dashboard-shell .dashboard-sidebar { grid-area: sidebar; }
 .dashboard-shell .dashboard-main { grid-area: main; }
 .dashboard-shell .dashboard-right { grid-area: right; }
+/* Zone à part, toujours la dernière : le pied de page vivait à la fin de la colonne principale et
+   passait donc avant la colonne de droite dès que les zones s'empilaient (voir Layout.jsx). */
+.dashboard-shell .dashboard-footer-links { grid-area: footer; }
 
 .dashboard-sidebar {
   position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
@@ -1508,7 +1762,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .dashboard-sidebar > .dashboard-nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding-right: 2px; }
 .dashboard-sidebar > .dashboard-nav::-webkit-scrollbar { width: 6px; }
-.dashboard-sidebar > .dashboard-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
+.dashboard-sidebar > .dashboard-nav::-webkit-scrollbar-thumb { background: var(--line); border-radius: var(--radius-pill); }
 .dashboard-sidebar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; margin-bottom: 16px; padding: 0 6px; flex-shrink: 0; }
 .dashboard-sidebar-brand span { font-weight: 700; font-size: 19px; color: var(--ink); letter-spacing: -0.03em; }
 .preview-mode-sidebar-banner {
@@ -1526,7 +1780,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .dashboard-nav-link:hover { background: var(--cream-dim); color: var(--ink); }
 .dashboard-nav-link.active { background: rgba(59,47,181,0.12); color: var(--teal-deep); }
-.dashboard-nav-icon { font-size: 17px; line-height: 1; width: 20px; text-align: center; flex-shrink: 0; }
+/* Assez large pour un tracé de 22px : les icônes de la nav sont des SVG (voir Icone.jsx), plus des
+   emojis dimensionnés par font-size. La règle garde font-size pour la nav admin, restée en emojis. */
+.dashboard-nav-icon { font-size: 17px; line-height: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
 /* Variante fond clair du sélecteur de langue. Sa version d'origine est dessinée pour l'aplat
    iris de la bannière publique : piste en blanc translucide, texte en --cream. Posée telle
@@ -1553,8 +1809,71 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-profile-logout { background: none; border: none; color: var(--ink-soft); font-size: 12px; font-weight: 600; cursor: pointer; padding: 3px 0 0; text-decoration: underline; align-self: flex-start; }
 
 .dashboard-main { padding: 24px 28px 40px; min-width: 0; }
+
+/* CARTE PLEIN ÉCRAN (pages/client/MapPage.jsx).
+   On voit la carte AVANT tout le reste : elle prend toute la hauteur restante et va d'un bord à
+   l'autre, et les contrôles flottent par-dessus au lieu de la pousser vers le bas. Un titre, un
+   paragraphe d'explication et une rangée de filtres au-dessus d'une carte de 420px, c'est une
+   carte qu'on ne voit plus qu'en vignette sur un téléphone.
+   Les marges négatives annulent celles de .dashboard-main : c'est le seul moyen d'aller bord à
+   bord depuis l'intérieur d'une colonne qui a sa propre marge intérieure. */
+/* La carte occupe la premiere hauteur d'ecran, la liste commence juste dessous : on voit la carte
+   en arrivant, on obtient la liste en descendant. La page defile donc normalement, elle n'est plus
+   figee a la hauteur de l'ecran. */
+.carte-page { margin: -24px -28px -40px; height: 100svh; overflow: hidden; }
+.carte-plein { position: relative; height: 100%; }
+.carte-attente { height: 100%; background: var(--surface-soft); }
+/* Les contrôles ne prennent pas les clics de la carte : seuls les boutons en prennent. */
+.carte-controles { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
+.carte-controles > * { pointer-events: auto; }
+.carte-pastilles { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding-bottom: 2px; scrollbar-width: none; }
+.carte-pastilles::-webkit-scrollbar { display: none; }
+.carte-pastilles .cuisine-chip { box-shadow: var(--shadow-3); }
+/* Le choix de cuisine : un panneau de pastilles sous le bouton, et non le menu du système, qui
+   s'ouvrait au milieu de l'écran dans le style du navigateur — une liste grise sans rapport avec
+   la page, posée par-dessus la carte. Il se ferme au choix, et défile s'il y a beaucoup de types. */
+.carte-panneau {
+  display: flex; flex-wrap: wrap; gap: 6px; max-width: 100%; max-height: 42vh; overflow-y: auto;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 10px; box-shadow: var(--shadow-2);
+}
+.carte-panneau .cuisine-chip { box-shadow: none; }
+.carte-panneau .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.carte-ligne-etat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.carte-reinit {
+  background: rgba(255,255,255,0.92); color: var(--iris); border: 1px solid var(--line);
+  font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+
+.carte-bandeau-livraison {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: var(--iris); color: var(--cream); font-size: 14px; font-weight: 500;
+  padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+/* Le raccourci vers les jeux. Il était blanc, au motif que l'iris devait rester à la livraison :
+   sur une carte couverte de pastilles blanches, il se fondait dans le décor et personne ne le
+   voyait. Il passe au LIME, qui est exactement fait pour ça — le CLAUDE.md l'autorise « as a
+   filled block with --ink text on it », et c'est le seul accent lime de cet écran, donc la règle
+   du « un seul accent par vue » tient. C'est maintenant la chose la plus visible de la carte,
+   ce qui est le but. */
+.carte-bandeau-jeux {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: var(--lime); color: var(--ink); font-size: 14px; font-weight: 700;
+  padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+.carte-compte { margin: 0; align-self: flex-start; background: rgba(255,255,255,0.92); color: var(--ink-soft); font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); }
+/* Leaflet pose ses boutons de zoom en haut à gauche, exactement là où flottent les filtres : ils
+   se retrouvaient dessous, inatteignables. Ils passent en bas à droite, au-dessus de la barre
+   d'onglets, seul coin de cette page qui ne porte rien. */
+.carte-plein .leaflet-top.leaflet-left { top: auto; left: auto; bottom: 84px; right: 12px; }
+.carte-plein .leaflet-control-zoom { margin: 0; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; box-shadow: var(--shadow-3); }
+/* L'attribution OpenStreetMap remonte au-dessus des pastilles flottantes : c'est une mention
+   obligatoire, elle doit rester lisible et non passer sous un bouton. */
+.carte-plein .leaflet-bottom.leaflet-left { bottom: 78px; }
 .dashboard-right { padding: 24px 20px 40px 0; }
-.dashboard-footer-links { display: flex; gap: 14px; margin-top: 30px; padding-top: 14px; border-top: 1px solid var(--line); }
+/* Le retrait horizontal est porté ici depuis que ce bloc est une zone de la grille et non plus un
+   enfant de .dashboard-main, dont il héritait la marge intérieure. */
+.dashboard-footer-links { display: flex; flex-wrap: wrap; gap: 14px; margin: 30px 20px 0; padding: 14px 0 40px; border-top: 1px solid var(--line); }
 .dashboard-footer-links a { font-size: 12px; color: var(--ink-soft); text-decoration: none; }
 .dashboard-footer-links a:hover { text-decoration: underline; }
 
@@ -1568,15 +1887,24 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @media (max-width: 900px) {
   .dashboard-shell, .dashboard-shell.has-right {
     grid-template-columns: 1fr;
-    grid-template-areas: "main" "right";
+    grid-template-areas: "main" "right" "footer";
   }
+  /* PASTILLES FLOTTANTES, plus une barre pleine (DESIGN.md, et l'application Uber dont le
+     fondateur a fourni les captures). La barre collée en bas donnait, à six ou sept onglets, des
+     cibles d'environ 38px de haut — sous le minimum de 44px, et il fallait viser. Cinq ronds de
+     56px qui flottent au-dessus du contenu règlent la cible et séparent les boutons à l'œil.
+     Le conteneur n'a donc plus ni fond ni bordure : ce sont les pastilles qui portent le blanc. */
   .dashboard-sidebar {
-    position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: auto; width: 100%;
-    flex-direction: row; align-items: stretch; padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
-    border-right: none; border-top: 1px solid var(--line);
-    box-shadow: none; z-index: 50;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    position: fixed; left: 0; right: 0; top: auto; height: auto; width: 100%;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+    padding: 0 12px;
+    background: transparent; border-right: none; border-top: none;
+    box-shadow: none; z-index: 50; pointer-events: none;
+    overflow: visible;
   }
+  /* Le conteneur laisse passer les clics (il couvre toute la largeur), les pastilles les prennent. */
+  .dashboard-sidebar > * { pointer-events: auto; }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
   .dashboard-sidebar-brand, .dashboard-profile-card { display: none; }
   /* En mobile, c'est la NAV qui défile, et non plus la barre entière. Utile même maintenant que
@@ -1585,50 +1913,42 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
      pendant que les onglets glissent dessous plutôt que de partir hors écran avec eux. */
   .dashboard-sidebar { overflow-x: visible; }
   .dashboard-nav {
-    flex-direction: row; gap: 2px; width: auto; flex: 1 1 auto; min-width: 0;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    flex-direction: row; gap: 10px; width: auto; flex: 0 1 auto; min-width: 0;
+    justify-content: center; overflow: visible; pointer-events: auto;
   }
-  .dashboard-nav::-webkit-scrollbar { display: none; }
-  /* flex: 1 0 auto — les trois valeurs comptent, chacune corrige un défaut distinct.
-
-     grow: 1 — les onglets se partagent la place restante et la barre est occupée sur toute sa
-     largeur. Sans lui (grow: 0), ils se tassaient à gauche en laissant un grand vide à droite sur
-     tablette, où la barre est large et les six libellés courts.
-
-     shrink: 0 et basis: auto — un onglet ne descend jamais sous la largeur de son libellé. C'est
-     ce qui protège du défaut d'origine : les libellés sont en white-space: nowrap SANS
-     overflow: hidden, donc une boîte trop étroite ne les tronque pas, elle les laisse déborder
-     par-dessus l'onglet voisin. « Mes commandes » fait environ 72px à 10px de corps. Quand la
-     somme des libellés dépasse la barre, rien ne se comprime : la barre défile, ce qu'elle sait
-     déjà faire. */
+  /* Un rond de 56px : la cible confortable d'un pouce, et la dimension des pastilles d'Uber.
+     Le libellé sort de l'écran mais reste porté par title et aria-label (DashboardSidebar.jsx) :
+     il n'est retiré qu'à l'œil, jamais aux lecteurs d'écran. Cinq icônes se reconnaissent sans
+     légende ; c'est justement pour cela qu'on n'en met que cinq. */
   .dashboard-nav-link {
-    flex-direction: column; gap: 2px; justify-content: center; align-items: center;
-    padding: 6px 10px; flex: 1 0 auto; min-width: 54px; border-radius: var(--radius-chip);
+    flex: 0 0 auto; width: 56px; height: 56px; padding: 0;
+    justify-content: center; align-items: center; gap: 0;
+    border-radius: var(--radius-pill);
+    background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-3);
+    color: var(--ink);
   }
-  .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
-  .dashboard-nav-icon { font-size: 20px; width: auto; }
-  .dashboard-main { padding: 18px 16px calc(30px + 66px); }
-  .dashboard-right { padding: 0 16px calc(24px + 66px); }
-}
-
-/* Sous 520px : icônes seules dans la barre du bas.
-
-   Six libellés ne tiennent pas sur un téléphone. En néerlandais, « Restaurants », « Favorieten »,
-   « Mijn bestellingen », « Facturen », « Kaart » et « Mijn account » totalisent à eux seuls plus
-   de 320px de texte, auxquels s'ajoutent l'espacement de chaque onglet et le sélecteur de langue.
-   La barre défilait donc, et le dernier onglet — « Mon compte » — restait hors écran, caché
-   derrière le sélecteur épinglé à droite. Un onglet qu'on ne voit pas est un onglet qui n'existe
-   pas : c'est la carte du compte, déjà masquée en mobile, qui aurait dû prendre le relais.
-
-   En icônes seules, les six onglets se partagent la largeur et sont tous visibles d'un coup, sans
-   défilement. Le libellé reste porté par title et aria-label (voir DashboardSidebar.jsx) : il
-   n'est retiré qu'à l'œil, pas aux lecteurs d'écran. C'est la disposition habituelle d'une barre
-   d'onglets de téléphone, et la seule qui tienne dans les trois langues. */
-@media (max-width: 520px) {
-  .dashboard-nav-link { flex: 1 1 0; min-width: 0; padding: 8px 2px; }
   .dashboard-nav-link span:last-child { display: none; }
-  .dashboard-nav-icon { font-size: 22px; }
+  .dashboard-nav-link:hover { background: #fff; }
+  .dashboard-nav-link.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+  .dashboard-nav-icon { width: 24px; height: 24px; }
+  /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
+     hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
+  /* Les titres de page et l'en-tête de Mon compte réservaient ici la place de la pastille de
+     marque, fixée en haut à droite. Elle a été retirée (voir Layout.jsx) : ils reprennent toute la
+     largeur. */
+  .dashboard-main { padding: 18px 16px 30px; }
+  .dashboard-right { padding: 0 16px 24px; }
+  /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
+     diamètre). Le dernier bloc de la page doit donc dégager cette hauteur, plus une respiration,
+     sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
+     cette marge, le pied dépassait de 68px exactement. */
+  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 68px + env(safe-area-inset-bottom)); }
 }
+
+/* La regle qui vivait ici est partie avec le probleme qu'elle reglait. Sous 520px, elle cachait
+   les libelles des six onglets pour qu'ils tiennent tous a l'ecran sans defilement. Les onglets
+   sont maintenant cinq pastilles rondes de 56px, sans libelle a aucune largeur : il n'y a plus ni
+   libelle a cacher, ni barre a faire defiler. */
 
 .opening-hours-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .opening-hours-day-row { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; }
@@ -1664,8 +1984,8 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   /* En bas à gauche : en haut à droite vivent les boutons de la carte, et sur un téléphone les deux se
      chevauchaient. */
   position: absolute; bottom: 30px; left: 10px; z-index: 1100; pointer-events: none; /* au-dessus de la mention Leaflet / OSM */
-  padding: 6px 10px; background: var(--iris); color: #fff; border-radius: 999px; font-size: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25); white-space: nowrap;
+  padding: 6px 10px; background: var(--iris); color: #fff; border-radius: var(--radius-pill); font-size: 12px;
+  box-shadow: var(--shadow-3); white-space: nowrap;
 }
 .tracking-eta-km { opacity: 0.85; }
 .tracking-map-controls {
@@ -1673,7 +1993,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   display: flex; flex-direction: column; align-items: flex-end; gap: 6px;
 }
 .tracking-map-recenter, .tracking-map-follow-driver {
-  border-radius: 6px; padding: 5px 11px; font-size: 11px; font-weight: 700;
+  border-radius: var(--radius-field); padding: 5px 11px; font-size: 11px; font-weight: 700;
   box-shadow: none; cursor: pointer; white-space: nowrap;
 }
 .tracking-map-recenter {
@@ -1692,7 +2012,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .tracking-map-legend-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; font-size: 9px; flex-shrink: 0; }
 /* Trace du trajet déjà parcouru par le livreur (voir DeliveryTrackingMap.jsx) : une ligne, pas un point
    — repère visuel différent des icônes rondes ci-dessus pour ne pas laisser croire à un 4e lieu fixe. */
-.tracking-map-legend-line { display: inline-block; width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; }
+.tracking-map-legend-line { display: inline-block; width: 16px; height: 3px; border-radius: var(--radius-pill); flex-shrink: 0; }
 
 /* Fraîcheur de la position du livreur (DeliveryTrackingMap.jsx). Discrète tant que la position avance,
    franchement visible dès qu'elle est figée : le partage s'arrête quand le téléphone du livreur se
@@ -1727,7 +2047,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-niveau { color: var(--ink-soft); font-weight: 600; }
 .jeu-regles-btn {
   width: 26px; height: 26px; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 999px; font-size: 14px; line-height: 1; cursor: pointer;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: 14px; line-height: 1; cursor: pointer;
   transition: border-color .15s ease, transform .1s ease;
 }
 .jeu-regles-btn:hover { border-color: var(--iris); }
@@ -1763,7 +2083,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
 .jeu-btn {
-  width: 100%; padding: 8px 10px; border: none; border-radius: 6px; background: var(--lime); color: var(--ink);
+  width: 100%; padding: 8px 10px; border: none; border-radius: var(--radius-field); background: var(--lime); color: var(--ink);
   font-weight: 800; font-size: 12px; cursor: pointer; transition: filter .15s ease, transform .1s ease;
 }
 .jeu-btn:hover { filter: brightness(1.06); }
@@ -1784,7 +2104,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-controles { margin: 0; font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.85); }
 .jeu-actions { display: flex; gap: 8px; min-height: 26px; }
 /* Progression vers le prochain palier, score qui « saute » à chaque point, écran de fin plus lisible. */
-.jeu-progress { width: 100%; height: 4px; background: var(--cream-dim); border-radius: 999px; overflow: hidden; }
+.jeu-progress { width: 100%; height: 4px; background: var(--cream-dim); border-radius: var(--radius-pill); overflow: hidden; }
 .jeu-progress > div { height: 100%; background: linear-gradient(90deg, var(--iris), var(--lime)); transition: width .25s ease; }
 .jeu-score-val { display: inline-block; }
 .jeu-score-val.pop { animation: jeu-pop .28s ease-out; }
@@ -1798,10 +2118,10 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-btn-ghost.active { background: rgba(200,240,60,0.25); border-color: var(--lime); }
 .jeu-musique-btn { width: auto; min-width: 26px; padding: 0 6px; gap: 4px; }
 /* Menu des pistes (bouton 🎵) : une liste courte, ancrée sous le bouton, lisible sur le terrain sombre. */
-.jeu-musique-menu { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 210px; max-width: 260px; padding: 6px; border-radius: 12px; background: #fff; border: 1px solid var(--line); box-shadow: 0 14px 34px rgba(20,18,31,.22); display: flex; flex-direction: column; gap: 2px; text-align: left; }
+.jeu-musique-menu { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 210px; max-width: 260px; padding: 6px; border-radius: var(--radius-card-sm); background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-2); display: flex; flex-direction: column; gap: 2px; text-align: left; }
 .jeu-overlay .jeu-musique-menu { top: auto; bottom: calc(100% + 6px); left: 0; right: auto; }
 .jeu-musique-menu-titre { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); padding: 4px 8px 2px; }
-.jeu-musique-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; }
+.jeu-musique-item { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 7px 9px; border: 0; border-radius: var(--radius-field); background: transparent; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-align: left; }
 .jeu-musique-item:hover { background: var(--cream-dim); }
 .jeu-musique-item.active { background: rgba(59,47,181,.12); color: var(--teal-deep); }
 .jeu-musique-sous { font-size: 11px; font-weight: 500; color: var(--ink-soft); }
@@ -1811,7 +2131,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-score-final { font-size: 56px; }
 .jeu--large .jeu-progress { height: 6px; }
 @media (prefers-reduced-motion: reduce) { .jeu-score-val.pop, .jeu-score-final.record, .jeu-overlay, .jeu-overlay--fin .jeu-carte { animation: none; } }
-.jeu-actions button { padding: 4px 10px; font-size: 11px; background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
+.jeu-actions button { padding: 4px 10px; font-size: 11px; background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-field); cursor: pointer; }
 .jeu-actions button:hover { background: var(--line); }
 /* Plein écran : tout en plus grand… */
 .jeu--large .jeu-hud { font-size: 14px; grid-template-columns: auto 1fr auto; }
@@ -1831,7 +2151,17 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-actions button { font-size: 14px; padding: 8px 16px; }
 /* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
 .jeu--fill { flex: 1; min-height: 0; }
-.jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; }
+/* UN PLANCHER SUR LE TERRAIN LUI-MEME, pas seulement sur son conteneur.
+   Le conteneur prenait une hauteur calculee depuis la fenetre ; les onglets, le tableau de bord et
+   le rappel des commandes se servaient d'abord, et le terrain heritait du reste. Mesure sur une
+   fenetre de 600px de haut : 43 PIXELS de terrain. Le jeu etait injouable, ce que le fondateur a
+   constate avant moi. Un minimum ferme ici : si la place manque, c'est la page qui defile, pas le
+   terrain qui disparait. */
+.jeu--fill .jeu-cadre { flex: 1; min-height: 300px; width: 100%; align-self: stretch; }
+/* Le canvas sort du flux quand il remplit son cadre : ainsi il ne peut PLUS pousser la hauteur de
+   ce cadre, donc plus jamais reformer la boucle mesure -> agrandissement -> mesure qui faisait
+   descendre le terrain sans fin. La mesure de GameFrame est deja corrigee ; ceci ferme la porte. */
+.jeu--fill .jeu-canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
 
 /* Sélecteur de jeu : six onglets emoji au-dessus du jeu (GameSwitcher.jsx). */
 .game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
@@ -1839,7 +2169,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .game-switcher-picker { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; width: 100%; }
 .game-switcher-tab {
   display: flex; align-items: center; justify-content: center; gap: 6px; padding: 5px 4px;
-  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; transition: filter .15s ease, background .15s ease;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-field); cursor: pointer; transition: filter .15s ease, background .15s ease;
 }
 .game-switcher-tab:hover { filter: brightness(0.97); }
 .game-switcher-tab.active { background: var(--iris); border-color: var(--iris); }
@@ -1857,13 +2187,13 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .game-switcher--fill { flex: 1; min-height: 0; width: 100%; position: relative; }
 /* En plein écran la bulle 💡 se pose PAR-DESSUS les onglets au lieu de pousser le terrain : sur un
    téléphone, elle le réduirait à rien. */
-.game-switcher--fill .game-switcher-pourquoi-bulle { position: absolute; z-index: 5; left: 0; right: 0; top: 44px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.game-switcher--fill .game-switcher-pourquoi-bulle { position: absolute; z-index: 5; left: 0; right: 0; top: 44px; box-shadow: var(--shadow-2); }
 /* En-tête « 🎮 Mini-jeux » + 💡 : pourquoi des jeux sur une carte, en une phrase, pour qui se le demande. */
 .game-switcher-entete { display: flex; align-items: center; justify-content: space-between; gap: 6px; width: 100%; }
 .game-switcher-entete-titre { font-size: 11px; font-weight: 800; color: var(--ink); white-space: nowrap; }
 .game-switcher-pourquoi {
   width: 26px; height: 26px; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
-  background: var(--cream-dim); border: 1px solid var(--line); border-radius: 999px; font-size: 14px; line-height: 1; cursor: pointer;
+  background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: 14px; line-height: 1; cursor: pointer;
   transition: border-color .15s ease, transform .1s ease;
 }
 .game-switcher-pourquoi:hover { border-color: var(--iris); }
@@ -1874,7 +2204,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .game-switcher-pourquoi-ok {
   display: block; margin-top: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700;
-  background: var(--lime); color: var(--ink); border: none; border-radius: 6px; cursor: pointer;
+  background: var(--lime); color: var(--ink); border: none; border-radius: var(--radius-field); cursor: pointer;
 }
 .game-switcher--large .game-switcher-entete-titre { font-size: 14px; }
 .game-switcher--large .game-switcher-pourquoi { width: 34px; height: 34px; font-size: 18px; }
@@ -1889,7 +2219,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* Bouton "Agrandir" sous chaque carte de suivi (MapPage.jsx) qui ouvre la vue plein écran ci-dessous. */
 .tracking-expand-btn {
   margin-top: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; background: var(--cream-dim);
-  color: var(--ink); border: 1px solid var(--line); border-radius: 6px; cursor: pointer; transition: filter .15s ease;
+  color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius-field); cursor: pointer; transition: filter .15s ease;
 }
 .tracking-expand-btn:hover { filter: brightness(0.97); border-color: var(--iris); }
 
@@ -1904,15 +2234,15 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .tracking-fullscreen-bar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex-shrink: 0; margin-bottom: 10px; }
 .tracking-fullscreen-toggle {
   padding: 8px 14px; background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s ease;
+  border-radius: var(--radius-field); font-weight: 700; font-size: 13px; cursor: pointer; transition: background .15s ease;
 }
 .tracking-fullscreen-toggle:hover { background: rgba(255,255,255,0.26); }
 /* Carte masquée : le temps d'arrivée migre dans la barre, pour ne jamais le perdre de vue en jouant. */
-.tracking-fullscreen-eta { padding: 8px 12px; background: var(--iris); color: #fff; border-radius: 999px; font-weight: 700; font-size: 13px; }
+.tracking-fullscreen-eta { padding: 8px 12px; background: var(--iris); color: #fff; border-radius: var(--radius-pill); font-weight: 700; font-size: 13px; }
 .tracking-fullscreen-close {
   width: 38px; height: 38px; flex-shrink: 0; margin-left: auto;
   background: rgba(255,255,255,0.14); color: #fff; border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 6px; font-size: 18px; line-height: 1; cursor: pointer; transition: background .15s ease;
+  border-radius: var(--radius-field); font-size: 18px; line-height: 1; cursor: pointer; transition: background .15s ease;
   padding: 0; display: flex; align-items: center; justify-content: center;
 }
 .tracking-fullscreen-close:hover { background: rgba(255,255,255,0.26); }
@@ -2006,7 +2336,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .service-table tr.service-off b { font-weight: 600; }
 .service-toggle { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; margin: 0; }
 .service-toggle input { width: 18px; height: 18px; cursor: pointer; accent-color: var(--teal); }
-.service-summary { margin: 0 0 12px; padding: 9px 11px; background: var(--cream-dim); border-radius: 9px; line-height: 1.45; }
+.service-summary { margin: 0 0 12px; padding: 9px 11px; background: var(--cream-dim); border-radius: var(--radius-field); line-height: 1.45; }
 /* Visible des seuls lecteurs d'écran : nomme la case à cocher, qui sinon s'annoncerait sans son service. */
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
@@ -2025,9 +2355,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .account-link-row:last-child { border-bottom: none; }
 .account-link-row:hover { background: var(--cream-dim); }
 .account-link-row:active { background: var(--cream-dim); }
+/* L'icône est NUE : plus de tuile grise de 34px derrière elle. La tuile servait à donner du corps
+   à un emoji, dont la taille optique varie d'un caractère à l'autre — elle les recadrait tous dans
+   le même carré. Avec des tracés d'une seule épaisseur (Icone.jsx), elle n'a plus rien à recadrer,
+   et trente tuiles empilées dans Mon compte faisaient une colonne de damier. La largeur fixe reste,
+   elle : c'est elle qui aligne les titres. */
 .account-link-icon {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: var(--radius-chip, 8px);
-  background: var(--cream-dim); display: flex; align-items: center; justify-content: center; font-size: 17px;
+  flex-shrink: 0; width: 26px; height: 26px; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
 }
 /* min-width: 0 indispensable : sans lui un sous-titre long élargit la ligne au lieu d'être tronqué,
    et la rangée déborde de la carte sur les écrans étroits. */
@@ -2056,7 +2391,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .resa-grid-piste { grid-column: 2 / -1; position: relative; min-height: 46px; border-top: 1px solid var(--line);
   background: repeating-linear-gradient(to right, var(--line) 0 1px, transparent 1px 76px); }
 
-.resa-bloc { position: absolute; top: 4px; bottom: 4px; border-radius: 8px; padding: 3px 7px; overflow: hidden;
+.resa-bloc { position: absolute; top: 4px; bottom: 4px; border-radius: var(--radius-field); padding: 3px 7px; overflow: hidden;
   display: flex; flex-direction: column; justify-content: center; gap: 1px; font-size: 11px; line-height: 1.15;
   background: var(--iris); color: #fff; }
 .resa-bloc b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
@@ -2073,7 +2408,7 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
   .resa-ligne-tete { flex-wrap: wrap; }
   .resa-ligne-tete .status-badge { order: 3; margin-left: 56px; }
 }
-.resa-bloc-arrive { background: var(--teal-deep, #2A6F5F); }
+.resa-bloc-arrive { background: var(--teal-deep); }
 .resa-bloc-absent { background: var(--ink-faint); text-decoration: line-through; }
 .resa-bloc-choisi { outline: 2px solid var(--lime); outline-offset: 1px; }
 
@@ -2090,7 +2425,7 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 .resa-detail textarea, .resa-detail input, .resa-detail select { font-size: 13px; }
 .resa-detail-infos { display: flex; flex-wrap: wrap; gap: 6px; }
 .resa-detail-infos a.pill { text-decoration: none; }
-.resa-note-client { margin: 8px 0 0; padding: 8px 10px; background: var(--cream-dim); border-radius: 9px; }
+.resa-note-client { margin: 8px 0 0; padding: 8px 10px; background: var(--cream-dim); border-radius: var(--radius-field); }
 .resa-deplacer { margin-top: 10px; padding: 10px; border: 1px dashed var(--line); border-radius: var(--radius-chip); }
 .resa-deplacer label { font-size: 12px; }
 .resa-annuler summary { cursor: pointer; color: var(--red); }
@@ -2098,9 +2433,9 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 
 /* Onglets de la page Réservations. */
 .resa-onglets { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 14px; }
-.resa-onglet { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-chip); padding: 8px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.resa-onglet { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-pill); padding: 8px 13px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .resa-onglet.actif { background: var(--iris); border-color: var(--iris); color: #fff; }
-.resa-bascule { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; }
+.resa-bascule { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-pill); overflow: hidden; }
 .resa-bascule button { border: 0; background: #fff; color: var(--ink); padding: 7px 12px; font: inherit; font-size: 13px; cursor: pointer; }
 .resa-bascule button.actif { background: var(--ink); color: #fff; }
 .resa-regle { align-items: flex-start; flex-wrap: nowrap; }
@@ -2127,7 +2462,7 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 .resa-barres { display: flex; gap: 6px; align-items: flex-end; height: 150px; }
 .resa-barre-col { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 3px; }
 .resa-barre-col .small { font-size: 10px; line-height: 1; }
-.resa-barre { width: 100%; max-width: 46px; background: var(--iris); border-radius: 6px 6px 0 0; min-height: 2px; transition: height .3s ease; }
+.resa-barre { width: 100%; max-width: 46px; background: var(--iris); border-radius: var(--radius-field) var(--radius-field) 0 0; min-height: 2px; transition: height .3s ease; }
 
 /* ---------------------------------------------------------------------------
    Fond de cuisine plein écran de l'accueil public (CuisineBackdrop)
@@ -2136,10 +2471,13 @@ button.resa-bloc { border: 0; cursor: pointer; text-align: left; font-family: in
 /* Fixe et posé HORS du conteneur de contenu (voir Layout.jsx) : c'est ce qui lui fait couvrir tout
    l'écran. Une version précédente le rendait à l'intérieur de .wrap, large de 960px au plus — il ne
    s'affichait donc que derrière la colonne de contenu, jamais dans les marges. */
-/* Aplat Fairide visible en haut de page : c'est lui qu'on voit avant le premier défilement, et il reste
-   derrière le montage pendant tout le fondu. Teinte iris claire, pour que l'encre garde son contraste. */
+/* Aplat visible avant que la vidéo soit là, et derrière elle pendant tout le fondu. C'était un
+   dégradé en trois teintes de lilas ; c'est devenu un gris quasi blanc. Deux raisons : un dégradé
+   atmosphérique est exactement ce que la nouvelle direction exclut (DESIGN.md : « no gradients, no
+   atmospheric backdrops »), et surtout cette teinte donnait un fond violet à la page de connexion,
+   où le contenu est un simple formulaire. Une page de saisie se pose sur du blanc. */
 .cuisine-fond { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
-  background: linear-gradient(180deg, #F2F0FC 0%, #E6E2F8 45%, #D8D3F2 100%); }
+  background: var(--surface-softer); }
 /* Le fondu suit le défilement : à 350 ms il traînait derrière le doigt, l'image arrivait après le geste. */
 .cuisine-fond-calque { position: absolute; inset: 0; opacity: 0; transition: opacity .18s linear; will-change: opacity; }
 .cuisine-fond-media { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -2278,9 +2616,21 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-link-row--statique { cursor: default; }
 .account-link-row--statique:hover { background: none; }
 .account-link-action { flex-shrink: 0; display: inline-flex; align-items: center; }
-.account-link-icon--ok { background: rgba(200, 240, 60, 0.45); }
-.account-link-icon--warn { background: rgba(240, 200, 60, 0.28); }
-.account-link-icon--danger { background: rgba(220, 60, 60, 0.14); }
+/* Une rangée qui porte un bouton à libellé long l'imposait à la ligne : le bouton ne se comprime
+   pas (flex-shrink: 0), donc c'est la colonne de texte qui encaissait, réduite à huit caractères.
+   Sur le tableau de bord, « Ouverture 30 septembre, via Stripe… » s'affichait en colonne, un mot
+   tronqué par ligne. Le bouton passe donc sous le texte quand l'écran est étroit, aligné sur lui
+   plutôt que sur l'icône, et la rangée redevient lisible. */
+@media (max-width: 600px) {
+  .account-link-row { flex-wrap: wrap; }
+  .account-link-action { flex-basis: 100%; margin-left: 46px; margin-top: 10px; }
+}
+/* Les rangées d'état (« en attente de validation », « paiements à configurer », « suspendu »)
+   teintaient leur tuile. La tuile est partie ; c'est le TRACÉ qui prend la couleur, ce qu'un emoji
+   ne savait pas faire. Un avertissement se lit mieux en orange plein qu'en fond orange pâle. */
+.account-link-icon--ok { color: var(--iris); }
+.account-link-icon--warn { color: var(--orange); }
+.account-link-icon--danger { color: var(--red); }
 /* Le sous-titre d une rangée d état peut être long : on le laisse passer sur deux lignes. */
 .account-link-row--statique .account-link-text .small { white-space: normal; }
 
@@ -2299,6 +2649,26 @@ button.account-link-row:last-child { border-bottom: none; }
 .account-identite-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-identite-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .account-identite .pill { flex-shrink: 0; }
+
+/* En-tête de Mon compte : le nom EST le titre de la page, l'avatar lui fait face. Il n'y a plus de
+   carte d'identité en dessous — nom, e-mail et rôle répétés sous un titre « Mon compte », ça
+   faisait deux en-têtes pour une page. Le rôle se lit à ce que la page contient, et l'e-mail vit
+   dans « Coordonnées de connexion », où on va justement pour le changer. */
+.account-entete { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.account-entete-nom { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.account-avatar-grand { width: 58px; height: 58px; font-size: 20px; }
+
+/* Trois raccourcis vers ce qu'on vient chercher : des tuiles carrées, icône au-dessus du mot.
+   Elles se partagent la largeur à parts égales pour que la rangée se lise comme un tout et non
+   comme trois boutons de tailles différentes. */
+.account-raccourcis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px; }
+.account-raccourci {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  padding: 18px 8px; text-decoration: none; text-align: center;
+  background: var(--surface-soft); border-radius: var(--radius); color: var(--ink);
+  font-size: 14px; font-weight: 500; line-height: 1.2; transition: background .15s;
+}
+.account-raccourci:hover { background: #E2E2E2; }
 
 /* Mentions légales et identifiant de build, en pied de page. Discrets par construction : on les
    cherche quand on en a besoin, on ne doit pas les voir le reste du temps. */
@@ -2378,22 +2748,10 @@ button.account-link-row:last-child { border-bottom: none; }
    z-index 150 : au-dessus du contenu et des cartes Leaflet (dont les contrôles sont confinés par
    isolation: isolate, voir plus bas), mais SOUS la vue plein écran carte + jeux (z 200), qui doit
    recouvrir tout. */
-.dashboard-marque { display: none; }
 .dashboard-retour { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
 .dashboard-retour:hover { text-decoration: underline; }
 
 @media (max-width: 900px) {
-  .dashboard-marque {
-    position: fixed; top: 10px; right: 12px; z-index: 150;
-    display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px;
-    background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(220, 216, 208, 0.7); border-radius: 999px;
-    box-shadow: 0 2px 10px rgba(20, 18, 31, 0.06); text-decoration: none;
-  }
-  .dashboard-marque span {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
-    color: var(--ink); letter-spacing: -0.03em; line-height: 1;
-  }
 }
 
 /* Les cartes Leaflet et leurs pastilles forment chacune leur propre contexte d'empilement : leurs
@@ -2415,7 +2773,7 @@ button.account-link-row:last-child { border-bottom: none; }
   transition: border-color .15s ease;
 }
 .recherche-champ:focus-within { border-color: var(--iris); }
-.recherche-loupe { font-size: 18px; flex-shrink: 0; }
+.recherche-loupe { display: flex; align-items: center; flex-shrink: 0; color: var(--ink-soft); }
 .recherche-champ input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
   font: inherit; font-size: 17px; padding: 12px 0; color: var(--ink);
@@ -2462,22 +2820,22 @@ button.account-link-row:last-child { border-bottom: none; }
 .resa-stepper li button { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--line); background: var(--cream); font-size: 17px; padding: 0; color: var(--ink-faint); display: flex; align-items: center; justify-content: center; }
 .resa-stepper li button:disabled { cursor: default; opacity: 1; }
 .resa-stepper li.done button { border-color: var(--iris); background: rgba(59,47,181,0.08); color: var(--iris); cursor: pointer; }
-.resa-stepper li.active button { border-color: var(--iris); background: var(--iris); color: #fff; box-shadow: 0 0 0 4px rgba(59,47,181,0.15); }
+.resa-stepper li.active button { border-color: var(--iris); background: var(--iris); color: #fff; box-shadow: var(--ring); }
 .resa-stepper li i { display: block; width: 26px; height: 2px; background: var(--line); }
 .resa-stepper li.done i { background: var(--iris); }
 .resa-wizard-title { text-align: center; font-size: 20px; margin: 0 0 14px; }
 .resa-wizard-body { background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 18px; }
-.resa-wizard-welcome { background: var(--cream-dim); border-radius: 12px; padding: 10px 12px; margin: 0 0 12px; font-size: 14px; }
+.resa-wizard-welcome { background: var(--cream-dim); border-radius: var(--radius-card-sm); padding: 10px 12px; margin: 0 0 12px; font-size: 14px; }
 .resa-wizard-nav { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 18px; }
 .resa-wizard-nav .btn-outline { padding: 10px 14px; }
 .resa-guests { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 8px; }
-.resa-guests button { height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--cream); font-weight: 700; font-size: 16px; padding: 0; color: var(--ink); }
+.resa-guests button { height: 48px; border-radius: var(--radius-card-sm); border: 1px solid var(--line); background: var(--cream); font-weight: 700; font-size: 16px; padding: 0; color: var(--ink); }
 .resa-guests button:hover { border-color: var(--iris); color: var(--iris); }
 .resa-guests button.active { background: var(--iris); color: #fff; border-color: var(--iris); }
 .resa-choices { display: flex; flex-wrap: wrap; gap: 8px; }
-.resa-choices button { border: 1px solid var(--line); background: var(--cream); color: var(--ink); border-radius: 999px; padding: 8px 14px; font-weight: 600; }
+.resa-choices button { border: 1px solid var(--line); background: var(--cream); color: var(--ink); border-radius: var(--radius-pill); padding: 8px 14px; font-weight: 600; }
 .resa-choices button.active { background: var(--iris); border-color: var(--iris); color: #fff; }
-.resa-cal-head { display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: var(--cream); border-radius: 12px; padding: 8px 6px; margin-bottom: 8px; }
+.resa-cal-head { display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: var(--cream); border-radius: var(--radius-card-sm); padding: 8px 6px; margin-bottom: 8px; }
 .resa-cal-head b { text-transform: capitalize; font-size: 15px; }
 .resa-cal-head button { background: transparent; border: none; color: var(--lime); font-size: 22px; line-height: 1; width: 36px; height: 32px; padding: 0; }
 .resa-cal-head button:disabled { opacity: 0.35; }
@@ -2498,10 +2856,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .resa-cal-legend i.complet { background: var(--cream-dim); border: 1px solid var(--ink-faint); }
 .resa-cal-legend i.ferme { background: transparent; border: 1px solid var(--line); }
 .resa-slots-wrap { margin-top: 16px; }
-.resa-slots-date { background: var(--ink); color: var(--lime); text-align: center; border-radius: 10px; padding: 10px; font-weight: 700; text-transform: capitalize; margin-bottom: 12px; }
+.resa-slots-date { background: var(--ink); color: var(--lime); text-align: center; border-radius: var(--radius-card-sm); padding: 10px; font-weight: 700; text-transform: capitalize; margin-bottom: 12px; }
 .resa-slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .resa-wizard-resto .resa-slots { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
-.resa-slot { height: 40px; border-radius: 20px; border: 1px solid var(--iris); background: #fff; color: var(--iris); font-weight: 700; font-size: 14px; padding: 0; cursor: pointer; }
+.resa-slot { height: 40px; border-radius: var(--radius-pill); border: 1px solid var(--iris); background: #fff; color: var(--iris); font-weight: 700; font-size: 14px; padding: 0; cursor: pointer; }
 .resa-slot:hover:not(:disabled) { background: rgba(59,47,181,0.08); }
 .resa-slot:disabled { background: var(--cream-dim); border-color: transparent; color: var(--ink-faint); cursor: not-allowed; text-decoration: line-through; opacity: 1; }
 .resa-slot.force { border-style: dashed; border-color: var(--ink-faint); color: var(--ink-soft); }
@@ -2511,7 +2869,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .resa-wizard-recap { display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
 .resa-wizard-recap > div { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .resa-wizard-recap > div > span:first-child { width: 22px; flex: none; }
-.resa-wizard-deposit { margin-top: 14px; background: var(--cream-dim); border-radius: 12px; padding: 10px 12px; }
+.resa-wizard-deposit { margin-top: 14px; background: var(--cream-dim); border-radius: var(--radius-card-sm); padding: 10px 12px; }
 .resa-wizard-done { text-align: center; }
 .resa-wizard-done-icon { font-size: 44px; margin-bottom: 6px; }
 .resa-wizard-done .resa-wizard-recap { text-align: left; }
@@ -2549,7 +2907,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .admin-app-icon { font-size: 28px; line-height: 1; margin-bottom: 4px; }
 .admin-app-name { font-weight: 700; font-size: 15px; }
 .admin-app-desc { line-height: 1.35; }
-.admin-badge { position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 11px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
+.admin-badge { position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
 .admin-badge.tone-danger { background: var(--red); }
 .admin-badge.tone-info { background: var(--cream-dim); color: var(--ink-soft); }
 .admin-page-header { margin-bottom: 14px; }
@@ -2585,7 +2943,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .kanban-card b { display: block; font-size: 13px; }
 .kanban-empty { text-align: center; padding: 12px 0; opacity: .5; }
 .kanban-col-foot { margin-top: 8px; }
-.admin-progress { height: 4px; background: var(--line); border-radius: 2px; margin-top: 4px; overflow: hidden; width: 90px; }
+.admin-progress { height: 4px; background: var(--line); border-radius: var(--radius-pill); margin-top: 4px; overflow: hidden; width: 90px; }
 .admin-progress span { display: block; height: 100%; background: var(--iris); }
 .admin-stars { color: var(--iris); letter-spacing: 1px; }
 .admin-stars span { color: var(--line); }
@@ -2593,10 +2951,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .admin-review-lines { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
 .admin-review-comment { margin-left: 6px; }
 .dashboard-nav-group { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-faint); padding: 10px 12px 2px; font-weight: 700; }
-.dashboard-nav-link .nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
+.dashboard-nav-link .nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
 .dashboard-nav-link .nav-badge.tone-danger { background: var(--red); }
 .dashboard-nav-link .nav-badge.tone-info { background: var(--line); color: var(--ink-soft); }
-.admin-search-hint { position: absolute; right: 26px; top: 9px; font-size: 10px; color: var(--ink-faint); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; pointer-events: none; }
+.admin-search-hint { position: absolute; right: 26px; top: 9px; font-size: 10px; color: var(--ink-faint); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 1px 5px; pointer-events: none; }
 @media (max-width: 900px) {
   .dashboard-nav-group { display: none; }
   .dashboard-nav-link .nav-badge { position: absolute; top: 2px; right: 6px; height: 16px; min-width: 16px; font-size: 10px; padding: 0 4px; }
@@ -2653,7 +3011,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .diet-filters { display: flex; gap: 6px; flex: none; }
 button.recherche-pastille { font: inherit; cursor: pointer; }
 .recherche-pastille.active { background: var(--iris); border-color: var(--iris); color: #fff; }
-.diet-chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px; padding: 9px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
+.diet-chip { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-pill); padding: 9px 12px; font-weight: 600; font-size: 13px; white-space: nowrap; }
 .diet-chip:hover { border-color: var(--iris); }
 .diet-chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 @media (max-width: 560px) { .diet-filters { width: 100%; } .diet-chip { flex: 1; } }
@@ -2675,7 +3033,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .podium-editer { background: none; border: none; cursor: pointer; padding: 0 2px; font-size: 12px; }
 .podium-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
 .podium-liste li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: center; }
-.podium-liste li.moi { background: rgba(200,240,60,0.25); border-radius: 6px; padding: 1px 4px; margin: 0 -4px; }
+.podium-liste li.moi { background: rgba(200,240,60,0.25); border-radius: var(--radius-field); padding: 1px 4px; margin: 0 -4px; }
 .podium-pseudo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .podium-score { color: var(--iris); }
 .podium-vide, .podium-moi { margin: 2px 0 0; opacity: 0.8; }
@@ -2683,14 +3041,14 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .pseudo-public { display: flex; gap: 10px; align-items: flex-start; margin-top: 8px; cursor: pointer; }
 .pseudo-public input { margin-top: 3px; }
 /* Admin › Restaurants : visibilité d'une vraie inscription sur le site client. */
-.pill.listing-on { background: rgba(31,138,112,0.14); color: var(--teal-deep, #1F8A70); }
+.pill.listing-on { background: rgba(31,138,112,0.14); color: var(--teal-deep); }
 .pill.listing-off { background: rgba(20,18,31,0.08); color: var(--ink-soft, #3A4A63); }
 /* Barre de recherche d'adresse (AddressSearch.jsx) au-dessus des champs rue / numéro / code postal. */
 .address-search { position: relative; margin-bottom: 10px; }
 .address-search label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .address-search-help { margin: 4px 0 0; opacity: 0.75; }
-.address-search-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% - 18px); margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); box-shadow: 0 8px 24px rgba(20,18,31,.12); max-height: 260px; overflow-y: auto; }
-.address-search-list li { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: 8px; cursor: pointer; }
+.address-search-list { position: absolute; z-index: 20; left: 0; right: 0; top: calc(100% - 18px); margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); box-shadow: var(--shadow-1); max-height: 260px; overflow-y: auto; }
+.address-search-list li { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: var(--radius-field); cursor: pointer; }
 .address-search-list li:hover, .address-search-list li.active { background: rgba(59,47,181,0.08); }
 .address-search-list li.address-search-empty { cursor: default; opacity: 0.75; font-size: 13px; }
 .address-reco-confirm { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -2700,17 +3058,19 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .jeu--large .jeu-hud-boutons { grid-column: auto; grid-row: auto; }
 .jeu-regles-btn.active { border-color: var(--iris); background: rgba(59,47,181,0.12); }
 .jeu-indice { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }
-.tracking-fullscreen-overlay .jeu-indice { color: rgba(255,255,255,0.8); }
+/* 2,85 pour 1 mesure a l'ecran : le gris --ink-soft du mode clair, pose sur #14121F. Le rappel
+   des commandes etait a peine lisible, exactement comme les boutons juste au-dessus. */
+.tracking-fullscreen-overlay .jeu-indice, .jeu--plein .jeu-indice { color: rgba(255,255,255,0.8); }
 .tracking-fullscreen-bar { padding: 4px 2px; }
-.tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: 999px; }
+.tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: var(--radius-pill); }
 .tracking-fullscreen-eta { font-size: 14px; padding: 9px 14px; }
 .tracking-fullscreen-close {
-  width: auto; height: auto; padding: 9px 14px; border-radius: 999px; font-size: 15px; font-weight: 700;
+  width: auto; height: auto; padding: 9px 14px; border-radius: var(--radius-pill); font-size: 15px; font-weight: 700;
   display: inline-flex; align-items: center; gap: 6px; background: #fff; color: var(--ink); border-color: #fff;
 }
 .tracking-fullscreen-close:hover { background: var(--lime); border-color: var(--lime); }
-.tracking-fullscreen-tabs { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: 999px; padding: 4px; gap: 4px; }
-.tracking-fullscreen-tabs button { padding: 9px 16px; border-radius: 999px; border: none; background: transparent; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+.tracking-fullscreen-tabs { display: inline-flex; background: rgba(255,255,255,0.12); border-radius: var(--radius-pill); padding: 4px; gap: 4px; }
+.tracking-fullscreen-tabs button { padding: 9px 16px; border-radius: var(--radius-pill); border: none; background: transparent; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
 .tracking-fullscreen-tabs button.active { background: var(--lime); color: var(--ink); }
 .tracking-fullscreen-game[hidden] { display: none; }
 .tracking-fullscreen-aide { color: rgba(255,255,255,0.6); text-align: center; margin: 8px 0 0; flex-shrink: 0; }
@@ -2722,14 +3082,14 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
   .tracking-fullscreen-aide { display: none; }
 }
 /* Aperçu client d'un commerce pas encore publié : bandeau d'avertissement au-dessus de la fiche. */
-.preview-not-visible { background: #FFF6E5; border: 1px solid #F1D9A6; margin-bottom: 14px; }
+.preview-not-visible { background: var(--surface-soft); border: none; margin-bottom: 14px; }
 /* Mon compte › Paiement (PaiementRestaurant.jsx). */
 .paiement-resto { display: flex; flex-direction: column; gap: 4px; }
 .paiement-titre { margin: 10px 0 6px; font-size: 14px; }
 .paiement-etapes { margin: 0 0 10px; padding-left: 20px; font-size: 13px; line-height: 1.5; }
 .paiement-etapes li { margin-bottom: 4px; }
 .paiement-encart { background: rgba(59,47,181,0.06); border-left: 3px solid var(--iris); border-radius: var(--radius-chip); padding: 10px 12px; }
-.paiement-activation { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: #FFF6E5; border: 1px solid #F1D9A6; border-radius: var(--radius-chip); padding: 12px 14px; margin: 4px 0 8px; }
+.paiement-activation { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--surface-soft); border: none; border-radius: var(--radius-chip); padding: 12px 14px; margin: 4px 0 8px; }
 .paiement-activation.fermee button { opacity: 0.6; cursor: not-allowed; }
 .paiement-table td, .paiement-table th { white-space: nowrap; }
 .paiement-table tfoot td { border-top: 2px solid var(--line); }
@@ -2753,7 +3113,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .business-search-row #business-search-cp { flex: 0 0 96px; width: 96px; text-align: center; letter-spacing: 1px; }
 .business-search-row #business-search-filter { flex: 1 1 auto; min-width: 0; }
 .business-zone-list { margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
-.business-zone-list li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: 8px; cursor: pointer; color: inherit; font: inherit; }
+.business-zone-list li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: var(--radius-field); cursor: pointer; color: inherit; font: inherit; }
 .business-zone-list li button:hover, .business-zone-list li button:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
 .business-zone-emoji { flex: 0 0 auto; font-size: 18px; line-height: 1.2; }
 .business-zone-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -2771,7 +3131,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .business-found { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 8px 10px; }
 .company-check { color: var(--ink); }
 .services-choice .service-option { display: flex; gap: 10px; align-items: flex-start; font-weight: 600; font-size: 15px; line-height: 1.35; margin: 8px 0; cursor: pointer; }
-.services-choice .service-option input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--brand, #3b2fb5); }
+.services-choice .service-option input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--iris); }
 .services-choice .service-option span { min-width: 0; }
 .services-choice .service-option input { margin: 0; }
 .service-suboptions { margin: 2px 0 8px 28px; display: flex; flex-direction: column; gap: 4px; }
@@ -2792,23 +3152,23 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* Centré SANS transform : la règle générale button:active (scale, ou transform: none sur tactile) remplaçait le
    translateY(-50%). À l'appui, l'œil sautait d'une demi-hauteur, le doigt ou la souris se relâchait à côté, et le
    clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
-.password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; font-size: 18px; line-height: 1; border-radius: 8px; touch-action: manipulation; }
+.password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: 8px; touch-action: manipulation; }
 .password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
 
 /* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
 .courier-state { border-left: 4px solid var(--line); }
-.courier-state.ok { border-left-color: var(--teal-deep, #1F8A70); }
-.courier-state.warn { border-left-color: var(--gold-deep, #B8860B); }
+.courier-state.ok { border-left-color: var(--teal-deep); }
+.courier-state.warn { border-left-color: var(--gold-deep); }
 .courier-state.danger { border-left-color: var(--red); }
 .courier-steps { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
 .courier-step { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; cursor: pointer; }
 .courier-step.active { border-color: var(--iris); background: rgba(59,47,181,0.08); font-weight: 700; }
-.courier-step.done .courier-step-num { background: var(--teal-deep, #1F8A70); color: #fff; }
+.courier-step.done .courier-step-num { background: var(--teal-deep); color: #fff; }
 .courier-step-num { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--cream-dim); font-size: 12px; font-weight: 700; }
 .courier-compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
 .courier-compare-card { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px; display: flex; flex-direction: column; gap: 6px; background: #fff; }
-.courier-compare-card.active { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); }
+.courier-compare-card.active { border-color: var(--iris); box-shadow: var(--ring); }
 .courier-compare-card.soon { opacity: 0.75; }
 .courier-compare-head { display: flex; align-items: center; gap: 8px; }
 .courier-compare-list { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 3px 8px; font-size: 13px; }
@@ -2824,16 +3184,16 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .courier-doc-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .courier-missing { margin: 0; padding-left: 18px; }
 .courier-missing li { margin: 2px 0; }
-.courier-bar { height: 10px; background: var(--cream-dim); border-radius: 999px; overflow: hidden; }
-.courier-bar > div { height: 100%; background: var(--teal-deep, #1F8A70); transition: width .3s; }
-.courier-bar.warn > div { background: var(--gold-deep, #B8860B); }
+.courier-bar { height: 10px; background: var(--cream-dim); border-radius: var(--radius-pill); overflow: hidden; }
+.courier-bar > div { height: 100%; background: var(--teal-deep); transition: width .3s; }
+.courier-bar.warn > div { background: var(--gold-deep); }
 .courier-bar.danger > div { background: var(--red); }
 @media (max-width: 480px) { .courier-doc { flex-direction: column; } }
 
 /* Import de menu en deux temps (MenuImportStaging.jsx) : liste des documents, puis avancement page par page. */
 /* Jusqu'a 25 documents : la liste defile au lieu de pousser les boutons hors de l'ecran. */
 .menu-staging-list { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-direction: column; gap: 4px; max-height: 320px; overflow-y: auto; }
-.menu-staging-list li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--cream-dim); border-radius: 8px; font-size: 13px; }
+.menu-staging-list li { display: flex; align-items: center; gap: 8px; padding: 6px 8px; background: var(--cream-dim); border-radius: var(--radius-field); font-size: 13px; }
 .menu-staging-icon { flex: 0 0 auto; }
 .menu-staging-name { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .menu-staging-progress { border-top: 1px dashed var(--line); padding-top: 8px; }
@@ -2860,8 +3220,8 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .doc-slot.rempli { border-style: solid; }
 .doc-slot.input-invalid { border-color: var(--red); }
 .doc-slot-body { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
-.doc-slot-img { width: 64px; height: 44px; object-fit: cover; border-radius: 6px; flex: 0 0 auto; background: var(--cream-dim); }
-.doc-slot-vide { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 44px; border-radius: 6px; background: var(--cream-dim); font-size: 22px; flex: 0 0 auto; text-decoration: none; }
+.doc-slot-img { width: 64px; height: 44px; object-fit: cover; border-radius: var(--radius-field); flex: 0 0 auto; background: var(--cream-dim); }
+.doc-slot-vide { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 44px; border-radius: var(--radius-field); background: var(--cream-dim); font-size: 22px; flex: 0 0 auto; text-decoration: none; }
 .doc-slot-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .doc-slot-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doc-slot-retirer { position: absolute; top: 4px; right: 4px; padding: 2px 6px; font-size: 12px; }
@@ -2869,7 +3229,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* Téléphone pays + numéro (components/PhoneInput.jsx) : un seul cadre, le sélecteur de pays réduit à son
    drapeau + indicatif (la liste complète s'ouvre au clic), le numéro local à droite. */
 .phone-input { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--radius-chip); background: #fff; overflow: hidden; }
-.phone-input:focus-within { border-color: var(--iris); box-shadow: 0 0 0 3px rgba(59,47,181,0.12); }
+.phone-input:focus-within { border-color: var(--iris); box-shadow: var(--ring); }
 .phone-input.input-invalid { border-color: var(--red); }
 .phone-input .phone-input-pays { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .phone-input { position: relative; }
@@ -2888,7 +3248,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .statut-choix.input-invalid .statut-carte { border-color: var(--red); }
 .statut-carte { display: flex; flex-direction: column; gap: 4px; padding: 12px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; cursor: pointer; font-size: 13px; }
 .statut-carte:hover { border-color: var(--iris); }
-.statut-carte.active { border-color: var(--iris); box-shadow: 0 0 0 2px rgba(59,47,181,0.15); background: rgba(59,47,181,0.04); }
+.statut-carte.active { border-color: var(--iris); box-shadow: var(--ring); background: rgba(59,47,181,0.04); }
 .statut-carte.ferme { opacity: 0.6; cursor: not-allowed; }
 .statut-carte.ferme:hover { border-color: var(--line); }
 
@@ -2932,56 +3292,56 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 @keyframes hero-dot { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
 .hero-preview-list { display: flex; flex-direction: column; gap: 8px; }
 /* Vitrine, pas lien : pas de survol qui invite au clic (voir HeroPreview.jsx). */
-.hero-preview-card { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 12px; color: inherit; }
-.hero-preview-img { width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: var(--cream-dim); display: block; }
+.hero-preview-card { display: grid; grid-template-columns: 56px 1fr auto; gap: 12px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); color: inherit; }
+.hero-preview-img { width: 56px; height: 56px; border-radius: var(--radius-card-sm); object-fit: cover; background: var(--cream-dim); display: block; }
 .hero-preview-body { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.hero-preview-body b { font-size: 14.5px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hero-preview-body b { font-size: 14.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-preview-meta { font-size: 12.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .hero-preview-side { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .hero-preview-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
-.hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 999px; background: rgba(200,240,60,0.35); color: #2F4A00; white-space: nowrap; }
+.hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); white-space: nowrap; }
 .hero-preview-open.ferme { background: var(--cream-dim); color: var(--ink-soft); }
 .hero-preview-skeleton { pointer-events: none; }
 .hero-preview-skeleton .hero-preview-img { animation: shimmer 1.4s ease infinite; background: linear-gradient(90deg, var(--cream-dim) 25%, #fff 37%, var(--cream-dim) 63%); background-size: 400px 100%; }
 .hero-preview-lines { display: flex; flex-direction: column; gap: 6px; }
-.hero-preview-lines span { display: block; height: 10px; border-radius: 5px; background: var(--cream-dim); width: 70%; }
+.hero-preview-lines span { display: block; height: 10px; border-radius: var(--radius-pill); background: var(--cream-dim); width: 70%; }
 .hero-preview-lines span:last-child { width: 45%; }
 
 /* Icônes vectorielles des arguments (components/landing/FeatureIcons.jsx). */
-.feature-icon-svg { color: var(--iris); display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: 12px; background: rgba(59,47,181,0.08); margin-bottom: 14px; }
+.feature-icon-svg { color: var(--iris); display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: var(--radius-card-sm); background: rgba(59,47,181,0.08); margin-bottom: 14px; }
 
 /* Vitrine « Découvre les commerces » (components/landing/DiscoverSection.jsx). */
 /* Vitrine « Découvre » (components/landing/DiscoverSection.jsx) : un panneau crème posé sur la page, des cartes
    photo avec le type de cuisine et la note sur l'image, le nom et la commune dessous. */
-.discover-section { margin: 6px 0 36px; padding: 26px 26px 28px; background: var(--cream, #FBF8F1); border: 1px solid var(--line); border-radius: 24px; box-shadow: 0 18px 50px rgba(20, 18, 31, 0.08); }
+.discover-section { margin: 6px 0 36px; padding: 26px 26px 28px; background: #fff; border: 1px solid var(--line); border-radius: 24px; box-shadow: var(--shadow-1); }
 .discover-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
 .pill.hero.discover-eyebrow { color: var(--iris); }
-.discover-all { font-size: 14px; font-weight: 700; text-decoration: none; padding: 9px 16px; border-radius: 999px; white-space: nowrap; }
+.discover-all { font-size: 14px; font-weight: 700; text-decoration: none; padding: 9px 16px; border-radius: var(--radius-pill); white-space: nowrap; }
 .discover-filtres { display: flex; gap: 6px; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin: 0 -4px 16px; padding: 2px 4px 6px; }
 .discover-filtres::-webkit-scrollbar { display: none; }
-.discover-filtres .chip { flex: 0 0 auto; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
+.discover-filtres .chip { flex: 0 0 auto; padding: 8px 14px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-soft); cursor: pointer; transition: background .15s, color .15s, border-color .15s; }
 .discover-filtres .chip:hover { border-color: var(--iris); color: var(--iris); }
 .discover-filtres .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 .discover-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
-.discover-tile { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; text-decoration: none; color: inherit; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.04); transition: transform .25s ease, box-shadow .25s ease, border-color .15s ease; }
-.discover-tile:hover { transform: translateY(-4px); border-color: rgba(59, 47, 181, 0.35); box-shadow: 0 16px 34px rgba(20, 18, 31, 0.14); }
+.discover-tile { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; text-decoration: none; color: inherit; box-shadow: var(--shadow-3); transition: transform .25s ease, box-shadow .25s ease, border-color .15s ease; }
+.discover-tile:hover { transform: translateY(-4px); border-color: rgba(59, 47, 181, 0.35); box-shadow: var(--shadow-2); }
 .discover-tile-img { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--cream-dim); }
 .discover-tile-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s ease; }
 .discover-tile:hover .discover-tile-img img { transform: scale(1.06); }
 .discover-tile-img::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20, 18, 31, 0.55) 0%, rgba(20, 18, 31, 0) 45%); pointer-events: none; }
-.discover-tile-cuisine { position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 4px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.92); color: var(--iris); font-size: 12px; font-weight: 700; letter-spacing: 0.01em; backdrop-filter: blur(6px); }
-.discover-tile-rating { position: absolute; right: 10px; top: 10px; z-index: 1; padding: 4px 9px; border-radius: 999px; background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.18); }
+.discover-tile-cuisine { position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 4px 10px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.92); color: var(--iris); font-size: 12px; font-weight: 700; letter-spacing: 0.01em; backdrop-filter: blur(6px); }
+.discover-tile-rating { position: absolute; right: 10px; top: 10px; z-index: 1; padding: 4px 9px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 800; box-shadow: var(--shadow-3); }
 .discover-tile-body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 3px; }
-.discover-tile-body b { font-size: 15.5px; letter-spacing: -0.01em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.discover-tile-body b { font-size: 15.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .discover-tile-meta { font-size: 13px; color: var(--ink-soft); }
 .discover-tile-reviews { color: var(--ink-soft); opacity: 0.8; }
-@media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: 18px; } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: 14px; } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
+@media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: var(--radius); } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: var(--radius); } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
 
 /* Accueil : ligne de confiance sous les boutons de la bannière, compteur du panneau, bénéfices des portes d'entrée. */
 /* Quartiers déjà servis, sous la ligne de confiance du hero : des noms vrais, en petites étiquettes. */
 .landing-quartiers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 0; font-size: 12.5px; color: rgba(255,255,255,0.85); }
 .landing-quartiers-label { margin-right: 4px; color: rgba(255,255,255,0.7); }
-.landing-quartier { padding: 3px 9px; border-radius: 999px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-weight: 600; letter-spacing: 0.01em; }
+.landing-quartier { padding: 3px 9px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-weight: 600; letter-spacing: 0.01em; }
 .landing-trust { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 0; padding: 0; font-size: 12.5px; color: rgba(255,255,255,0.8); }
 .hero-preview-count { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--iris); }
 /* Téléphone : la phrase des pré-inscriptions passe sous le titre au lieu de s'écraser sur trois lignes à côté. */
@@ -3010,39 +3370,62 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 
 /* Pastilles de domaine sous le champ e-mail de l'inscription (components/EmailDomainChips.jsx). */
 .email-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
-.email-chip { padding: 5px 10px; border-radius: 999px; border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.email-chip { padding: 5px 10px; border-radius: var(--radius-pill); border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 .email-chip:hover { border-color: var(--iris); color: var(--iris); }
 .email-chip-autre { color: var(--ink-soft); font-weight: 500; }
 
 /* Bouton « + Ajouter… » discret (2e téléphone, 2e e-mail) — inscription et Mon commerce. */
-.btn-link-plus { background: none; border: 0; padding: 2px 0; margin: 0 0 10px; color: var(--iris, #3b2fb5); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.btn-link-plus { background: none; border: 0; padding: 2px 0; margin: 0 0 10px; color: var(--iris); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .btn-link-plus:hover { text-decoration: underline; }
 .contacts-commerce .contact-ligne { margin: 2px 0 4px; }
-.contacts-commerce .contact-second { margin: 4px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 10px; }
+.contacts-commerce .contact-second { margin: 4px 0 10px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: var(--radius-card-sm); }
+/* ─────────────────────────────────────────────────────────────────────────────
+   LES BANDEAUX PERDENT LEURS TEINTES.
+
+   Six couleurs de fond hors palette vivaient ici : un jaune #fff4d6 cerné de #f0d28a avec du
+   texte brun #6b4d00, un crème #FFF6E5 cerné de #F1D9A6, un vert sapin #1E8A7A en aplat, et un
+   dégradé menthe #f3fbf6 → blanc cerné de #cfe9dc, décliné sur trois familles de blocs. Le
+   CLAUDE.md du dépôt écrit pourtant, comme règle non négociable : « Backgrounds are white or
+   iris. No third background colour, and no gradients. »
+
+   Ce n'était pas qu'une entorse de principe. La fiche d'un commerce pouvait empiler CINQ
+   bandeaux de cinq couleurs différentes — fermeture en rouge, ouverture du service en jaune,
+   avantage Fairide en vert, promotion en rouge, livraison offerte en iris — avant le premier
+   plat. Cinq couleurs qui crient toutes également fort ne hiérarchisent rien.
+
+   La règle appliquée ici : une information neutre prend le gris de surface et l'encre du texte
+   courant ; une information qui doit vraiment arrêter l'œil prend l'iris plein ; le rouge reste
+   à l'alerte réelle — celle qui empêche de commander. Le message n'est plus porté par la teinte
+   mais par le contraste : un seul bloc foncé dans un écran clair se voit mieux que cinq blocs
+   pastel côte à côte.
+   ───────────────────────────────────────────────────────────────────────────── */
+
 /* Bandeau « Fairide agit comme le restaurateur » en haut du tableau de bord du commerce. */
-.agir-bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border-radius: 12px; background: #fff4d6; border: 1px solid #f0d28a; color: #6b4d00; font-weight: 600; font-size: 14px; }
+.agir-bandeau { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; padding: 10px 14px; border-radius: var(--radius-card-sm); background: var(--surface-soft); color: var(--ink); font-weight: 600; font-size: 14px; }
 
 /* « Avantage Fairide » — page Promotions du restaurateur (facultatif, ton de proposition). */
-.avantage-fairide { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); }
+.avantage-fairide { border: 1px solid var(--line); background: #fff; }
 .avantage-tete { display: flex; gap: 12px; align-items: flex-start; }
 .avantage-icone { font-size: 26px; line-height: 1; }
-.avantage-note { margin: 10px 0 12px; padding: 8px 12px; border-radius: 10px; background: #fff; border: 1px dashed #cfe9dc; }
+.avantage-note { margin: 10px 0 12px; padding: 8px 12px; border-radius: var(--radius-card-sm); background: var(--surface-soft); border: none; }
 .avantage-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-.avantage-option { padding: 12px 14px; border-radius: 12px; background: #fff; border: 1px solid var(--line); }
-.avantage-option.est-actif { border-color: #1E8A7A; box-shadow: inset 3px 0 0 #1E8A7A; }
-.avantage-option .chip.chip-on { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
-.avantage-bandeau { background: #1E8A7A; color: #fff; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-weight: 700; font-size: 13px; }
+.avantage-option { padding: 12px 14px; border-radius: var(--radius-card-sm); background: #fff; border: 1px solid var(--line); }
+/* L'option retenue se marque par une arête iris de 2px, comme partout ailleurs (champ au focus,
+   carte sélectionnée) — au lieu du liseré vert sapin qui n'appartenait à aucun système. */
+.avantage-option.est-actif { border-color: var(--iris); box-shadow: inset 2px 0 0 var(--iris); }
+.avantage-option .chip.chip-on { background: var(--iris); color: #fff; border-color: var(--iris); }
+.avantage-bandeau { background: var(--iris); color: #fff; border-radius: var(--radius-card-sm); padding: 8px 14px; margin-bottom: 14px; font-weight: 700; font-size: 13px; }
 
 /* « Geste prix » (relecture d'import et carte en ligne) : même famille visuelle que l'Avantage Fairide. */
-.geste-prix, .geste-prix-carte { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); }
-.geste-prix .chip.active, .geste-prix-carte .chip.active { background: var(--iris, #3b2fb5); color: #fff; border-color: var(--iris, #3b2fb5); }
+.geste-prix, .geste-prix-carte { border: 1px solid var(--line); background: #fff; }
+.geste-prix .chip.active, .geste-prix-carte .chip.active { background: var(--iris); color: #fff; border-color: var(--iris); }
 
 /* Mon menu : la méthode « Démarrer en 1 clic », mise en avant au-dessus des autres quand la carte est vide. */
-.methode-un-clic { border: 1px solid #cfe9dc; background: linear-gradient(180deg, #f3fbf6 0%, #fff 70%); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; }
-.methode-un-clic .methode-num { background: #1E8A7A; color: #fff; }
+.methode-un-clic { border: 1px solid var(--iris); background: #fff; border-radius: var(--radius-card-sm); padding: 12px 14px; margin-bottom: 12px; }
+.methode-un-clic .methode-num { background: var(--iris); color: #fff; }
 
 /* Ouverture des commandes (10 octobre 2026) : bandeau sur la fiche commerce et note sur l'accueil. */
-.ouverture-bandeau { background: #fff4d6; color: #6b4d00; border: 1px solid #f0d28a; border-radius: 10px; padding: 8px 14px; margin-bottom: 14px; font-weight: 600; font-size: 13px; }
+.ouverture-bandeau { background: var(--surface-soft); color: var(--ink); border: none; border-radius: var(--radius-card-sm); padding: 10px 14px; margin-bottom: 14px; font-weight: 500; font-size: 13px; }
 /* Dates d'ouverture, posées sur l'aplat iris de la bannière. La classe .small qui l'accompagne peint
    le texte en encre sombre (prévue pour les fonds clairs) : sur le violet, ça ne se lisait pas. Blanc
    presque plein et un cran plus grand que .small — c'est une information de calendrier, elle doit se
@@ -3051,9 +3434,9 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 
 /* Tuile d'information en fin de vitrine « Découvre » : occupe les cellules restantes de la dernière rangée
    (ou une rangée entière si la précédente est complète). Aplat iris, comme la bannière. */
-.discover-info { grid-column: auto / -1; display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; border-radius: 18px; background: linear-gradient(135deg, #3b2fb5 0%, #2a2190 100%); color: #fff; min-height: 220px; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.08); }
+.discover-info { grid-column: auto / -1; display: flex; flex-direction: column; gap: 8px; padding: 18px 20px; border-radius: var(--radius); background: var(--iris); color: #fff; min-height: 220px; box-shadow: var(--shadow-3); }
 .discover-info-eyebrow { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; opacity: .8; }
-.discover-info-title { font-size: 20px; line-height: 1.2; letter-spacing: -0.01em; }
+.discover-info-title { font-size: 20px; line-height: 1.2; }
 .discover-info-stats { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; opacity: .95; }
 .discover-info-stats b { font-size: 16px; margin-right: 2px; }
 .discover-info-text { margin: 0; color: rgba(255, 255, 255, .86); line-height: 1.45; }
@@ -3061,21 +3444,21 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 @media (max-width: 640px) { .discover-info { grid-column: 1 / -1; min-height: 0; padding: 14px 14px; } .discover-info-title { font-size: 17px; } }
 
 /* Mon menu › copier-coller guidé depuis le site ou la page plateforme du commerce. */
-.copier-coller { margin-top: 12px; padding: 12px 14px; border-radius: 12px; border: 1px dashed var(--line); background: var(--cream-dim, #f6f3ec); }
+.copier-coller { margin-top: 12px; padding: 12px 14px; border-radius: var(--radius-card-sm); border: 1px dashed var(--line); background: var(--cream-dim); }
 .copier-coller-etapes { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
 .copier-coller-etapes li { line-height: 1.5; }
 
 /* Mon menu en trois étapes : ① créer, ② modifier si besoin, ③ aller plus loin. */
 .menu-etape { display: flex; align-items: center; gap: 12px; margin: 22px 0 10px; }
 .menu-etape:first-child { margin-top: 0; }
-.menu-etape-num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--iris, #3b2fb5); color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
-.menu-etape-titre { margin: 0; font-size: 18px; letter-spacing: -0.01em; }
+.menu-etape-num { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; background: var(--iris); color: #fff; font-weight: 800; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+.menu-etape-titre { margin: 0; font-size: 18px; }
 .menu-legende { margin: 0 0 12px; }
-.menu-legende summary { cursor: pointer; color: var(--iris, #3b2fb5); font-weight: 600; }
+.menu-legende summary { cursor: pointer; color: var(--iris); font-weight: 600; }
 
 /* Vitrine de l'accueil : simples illustrations, sans lien vers les fiches (l'intérieur est réservé aux comptes). */
 .discover-tile-static { cursor: default; }
-.discover-tile-static:hover { transform: none; box-shadow: 0 2px 8px rgba(20, 18, 31, 0.04); border-color: var(--line); }
+.discover-tile-static:hover { transform: none; box-shadow: var(--shadow-3); border-color: var(--line); }
 .discover-tile-static:hover .discover-tile-img img { transform: none; }
 
 /* Mini-jeux en plein écran (bouton ⛶ du tableau de bord du jeu). Deux cas, même rendu : le vrai plein écran du
@@ -3095,7 +3478,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
 /* Astuce discrète quand le téléphone est tenu à la verticale : on n'impose rien, on suggère. */
 .jeu-rotation {
-  align-self: center; margin-top: 6px; padding: 6px 12px; border: 0; border-radius: 999px;
+  align-self: center; margin-top: 6px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
   background: rgba(255, 255, 255, .14); color: var(--cream, #FBF8F2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
 }
 .jeu-rotation:hover { background: rgba(255, 255, 255, .24); }
@@ -3107,15 +3490,20 @@ html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-b
 @media (prefers-contrast: more) { .wrap-fond-doux .card { background: #fff; } }
 
 /* Pendant une partie, et dans la vue agrandie carte + jeux : pas de panier flottant par-dessus (demande du
-   fondateur, 2026-09-14). Il revient dès la partie terminée ou la vue refermée. */
-html.jeu-en-cours .floating-cart, html.jeu-en-cours .floating-cart-bubble,
-html.tracking-plein-actif .floating-cart, html.tracking-plein-actif .floating-cart-bubble,
-html.jeux-sur-page .floating-cart, html.jeux-sur-page .floating-cart-bubble { display: none !important; }
+   fondateur, 2026-09-14). Il revient dès la partie terminée ou la vue refermée.
+
+   Cette règle ne visait plus rien. Elle nommait .floating-cart et .floating-cart-bubble, les classes
+   de la bulle dépliante qui a été remplacée par la pilule .panier-pilule : les sélecteurs sont restés
+   accrochés à des classes que plus aucun composant ne rend, donc la pilule s'affichait bel et bien
+   par-dessus les jeux. Corrigé en même temps que la suppression du CSS mort de l'ancienne bulle. */
+html.jeu-en-cours .panier-pilule,
+html.tracking-plein-actif .panier-pilule,
+html.jeux-sur-page .panier-pilule { display: none !important; }
 
 /* Boutons nommés du plein écran et de l'écran scindé : assez gros pour le pouce, lisibles sur fond sombre. */
 .jeu-plein-btn {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: 999px;
-  background: var(--lime, #C8F03C); color: #14121F; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
+  background: var(--lime); color: #14121F; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
 }
 .jeu-plein-btn--ghost { background: rgba(255, 255, 255, .16); color: #fff; }
 .jeu-plein-btn:hover { filter: brightness(1.06); }
@@ -3124,7 +3512,32 @@ html.jeux-sur-page .floating-cart, html.jeux-sur-page .floating-cart-bubble { di
 /* Plein écran : fond sombre, donc score et niveau en clair (l'encre sombre du mode normal y disparaissait). */
 .jeu--plein .jeu-score { color: #fff; }
 .jeu--plein .jeu-niveau { color: rgba(255,255,255,.7); }
-.jeu--plein .jeu-best { color: #FFD166; }
+/* #FFD166 était un jaune hors palette, oublié lors du nettoyage des teintes. Le lime le remplace :
+   sur ce fond presque noir il tranche autant, et il appartient à la marque. L'interdiction du
+   CLAUDE.md vise le lime en TEXTE SUR PAGE BLANCHE, où il disparaît — ici le fond est #14121F. */
+.jeu--plein .jeu-best, .tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
+.tracking-fullscreen-overlay .jeu-score { color: #fff; }
+.tracking-fullscreen-overlay .jeu-niveau { color: rgba(255,255,255,.7); }
+
+/* LES BOUTONS DE LA BARRE, SUR FOND SOMBRE.
+   Ils gardaient le gris clair et le texte encre du mode normal. En plein écran le fond passe à
+   #14121F : « Balade douce » s'affichait donc en NOIR PUR sur un bleu-nuit — mesuré à l'écran,
+   texte rgb(0,0,0) sur rgb(20,18,31), soit un rapport de contraste d'environ 1,6 pour 1 quand il
+   en faut 4,5. Le libellé était simplement invisible.
+   Les trois autres réglages de couleur du plein écran (score, niveau, record) avaient été faits
+   juste au-dessus ; ceux des boutons avaient été oubliés. */
+.jeu--plein .jeu-regles-btn,
+.tracking-fullscreen-overlay .jeu-regles-btn {
+  background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.28); color: #fff;
+}
+.jeu--plein .jeu-regles-btn:hover,
+.tracking-fullscreen-overlay .jeu-regles-btn:hover { border-color: rgba(255, 255, 255, 0.55); }
+/* Le réglage actif en aplat lime avec du texte encre : c'est l'emploi que le CLAUDE.md autorise
+   pour le lime, et sur ce fond sombre rien ne se voit mieux. */
+.jeu--plein .jeu-regles-btn.active,
+.tracking-fullscreen-overlay .jeu-regles-btn.active {
+  background: var(--lime); border-color: var(--lime); color: var(--ink);
+}
 /* Téléphone en plein écran : record et score sur une ligne, les boutons dessous, alignés à droite. */
 @media (max-width: 560px) {
   .jeu--plein .jeu-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -3155,7 +3568,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .modal-overlay.pseudo-modal-overlay { z-index: 400; }
 
 /* Inscription : relecture obligatoire de ce qui a été pré-rempli (site, horaires, type trouvés sur le web). */
-.verif-prefill { background: var(--cream-dim, #F4F2EC); border-left: 3px solid var(--iris, #3B2FB5); border-radius: 10px; padding: 10px 12px; }
+.verif-prefill { background: var(--cream-dim); border-left: 3px solid var(--iris); border-radius: var(--radius-card-sm); padding: 10px 12px; }
 .verif-prefill--erreur { border-left-color: var(--red, #D64545); }
 .verif-prefill a { overflow-wrap: anywhere; }
 .verif-prefill-case { display: flex; gap: 8px; align-items: flex-start; font-weight: 700; cursor: pointer; }
@@ -3163,8 +3576,8 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 
 /* Livreur dans le suivi client (DriverBadge.jsx) : photo ronde, rôle, prénom, téléphone cliquable. */
 .driver-badge { display: inline-flex; align-items: center; gap: 10px; min-width: 0; }
-.driver-badge-photo { flex: 0 0 auto; border-radius: 50%; object-fit: cover; background: var(--cream-dim, #F4F2EC); box-shadow: 0 0 0 2px var(--lime, #C8F03C); }
-.driver-badge-initiales { display: inline-grid; place-items: center; font-weight: 800; font-size: 15px; color: var(--iris, #3B2FB5); }
+.driver-badge-photo { flex: 0 0 auto; border-radius: 50%; object-fit: cover; background: var(--cream-dim); box-shadow: 0 0 0 2px var(--lime); }
+.driver-badge-initiales { display: inline-grid; place-items: center; font-weight: 800; font-size: 15px; color: var(--iris); }
 .driver-badge-texte { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
 .driver-badge-role { font-size: 11.5px; opacity: .7; }
 .driver-badge-texte b { font-size: 14px; }
@@ -3204,3 +3617,133 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .alerte-livreur { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 14px; }
 .alerte-livreur strong { font-size: 15px; }
 .alerte-livreur-aide { flex: 1 1 260px; }
+
+/* LA PILULE DU PANIER, posee au-dessus de la barre d'onglets et centree comme elle.
+   L'ancienne bulle etait un rectangle colle en bas a gauche, qui se depliait en une demi-page de
+   paiement par-dessus le menu. Ici : une pilule, un compteur sur l'icone, un total, et un lien. */
+.panier-pilule {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(80px + env(safe-area-inset-bottom)); z-index: 45;
+  display: inline-flex; align-items: center; gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 12px 20px; border-radius: var(--radius-pill);
+  background: var(--iris); color: var(--cream); text-decoration: none;
+  font-size: 15px; font-weight: 500; box-shadow: var(--shadow-2);
+  white-space: nowrap;
+}
+.panier-pilule b { font-weight: 700; }
+.panier-pilule-icone { position: relative; display: flex; align-items: center; }
+/* Le compteur mord sur l'icone : c'est ce qui le fait lire comme « ce panier contient 2 » plutot
+   que comme un nombre pose a cote. */
+.panier-pilule-compte {
+  position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; padding: 0 5px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--lime); color: var(--ink); border-radius: var(--radius-pill);
+  font-size: 11px; font-weight: 700; line-height: 1;
+}
+/* Au-dessus de 900px la barre laterale remplace les onglets du bas : la pilule redescend. */
+@media (min-width: 901px) {
+  .panier-pilule { bottom: 24px; left: auto; right: 24px; transform: none; }
+}
+
+/* La page Panier. */
+.panier-retour { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 10px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
+.panier-retour:hover { text-decoration: underline; }
+.panier-lignes { padding: 6px 16px; }
+.panier-ligne { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.panier-ligne:last-of-type { border-bottom: none; }
+.panier-ligne-image { flex-shrink: 0; width: 56px; height: 56px; border-radius: var(--radius-chip); object-fit: cover; background: var(--surface-soft); }
+.panier-ligne-image-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.panier-ligne-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.panier-ligne-prix { font-size: 14px; color: var(--ink-soft); }
+.panier-stepper { display: inline-flex; align-items: center; gap: 2px; flex-shrink: 0; background: var(--surface-soft); border-radius: var(--radius-pill); padding: 2px; }
+.panier-stepper button { width: 34px; height: 34px; padding: 0; border-radius: var(--radius-pill); background: #fff; color: var(--ink); font-size: 17px; }
+.panier-stepper span { min-width: 26px; text-align: center; font-weight: 500; }
+.panier-vider { padding: 10px 0 4px; font-size: 13px; }
+.panier-remise { justify-content: space-between; padding: 2px 4px; }
+/* La barre d'action ne doit pas finir sous les onglets flottants. */
+.panier-page .cart-bar { margin-bottom: calc(24px + 68px); }
+
+/* Titre de section portant une icone : elle s'aligne sur la ligne de base du texte plutot que de
+   flotter au-dessus, ce que fait un SVG pose nu a cote d'un mot. */
+.section-titre-icone { display: flex; align-items: center; gap: 8px; }
+
+/* LA RANGÉE DE FILTRES DE L'ACCUEIL n'avait aucune règle : la classe était posée dans le JSX mais
+   n'existait nulle part ici. Ses trois boutons se disposaient donc par défaut, séparés par les
+   espaces du code source, et la rangée n'avait aucune marge — mesuré au navigateur, il y avait
+   EXACTEMENT 0px entre le dernier filtre et le titre « Autour de vous » juste dessous, qui se
+   touchaient. Une vraie rangée, avec son écartement et l'air qu'il faut sous elle. */
+.liste-filtres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+/* Le panneau d'un filtre ouvert se glisse entre la rangée et le contenu : il reprend la marge à
+   son compte pour que le titre ne remonte pas contre lui. */
+.liste-filtres:has(+ .liste-panneau) { margin-bottom: 8px; }
+.liste-panneau { margin-bottom: 22px; }
+
+/* Le HUD d'un jeu : ses glyphes sont maintenant des traces, qui doivent s'aligner sur la ligne de
+   base du chiffre a cote plutot que de flotter au-dessus. */
+.jeu-best { display: inline-flex; align-items: center; gap: 5px; }
+/* La consigne de commandes : le trace reste cale en haut a gauche et le texte s'enroule seul a
+   cote, au lieu de flotter au milieu du paragraphe une fois la ligne cassee. */
+.jeu-indice { display: flex; align-items: flex-start; justify-content: center; gap: 7px; text-align: left; }
+.jeu-indice > svg { flex-shrink: 0; margin-top: 2px; }
+
+/* LE JEU DEROULE SOUS UNE COMMANDE (voir Orders.jsx).
+   Il vivait sur sa propre page : on y jouait bien, mais pour revoir ou en etait sa livraison il
+   fallait revenir en arriere, et la partie etait perdue. Ici il s'ouvre juste sous la commande
+   concernee — on remonte d'un coup de pouce pour relire son suivi, on redescend pour reprendre.
+   La hauteur est ferme et bornee : assez pour jouer, jamais assez pour que la commande sorte de
+   portee du pouce. */
+/* Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une, juste en dessous. En
+   fixant la hauteur du panneau, ce qui depassait — le podium, les boutons de l'ecran de depart —
+   sortait de la boite et se posait sur le contenu suivant. Le terrain borne, le panneau suit. */
+.commande-jeu {
+  display: flex; flex-direction: column;
+  margin: 0 0 16px; padding: 14px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  animation: jeu-deroule .22s cubic-bezier(.22,.61,.36,1) both;
+}
+/* flex: none et une hauteur ferme : assez pour jouer, jamais assez pour que la commande juste
+   au-dessus sorte de portee du pouce. */
+.commande-jeu .jeu-cadre { flex: none; height: min(52svh, 420px); min-height: 300px; }
+@keyframes jeu-deroule { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
+/* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
+
+/* L'entete d'une carte de commande : le nom a gauche, le statut a droite. */
+.commande-entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
+/* La barre de « Mes commandes » : les deux filtres a gauche, le bouton du jeu POUSSE tout a
+   droite par une marge automatique. Sur telephone la rangee se replie, et le bouton garde sa
+   place de dernier element. */
+.commandes-barre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
+.commandes-barre .suivi-jouer { margin-left: auto; }
+/* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
+   de filtres, pas l'action principale de la page. */
+.suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
+
+/* Le tableau des sous-traitants, sur la politique de confidentialite.
+   Aucune regle <table> n'existait dans cette feuille : les seuls tableaux du projet vivent dans
+   l'admin et sont construits en <div>. Celui-ci est un vrai tableau parce que c'en est un — deux
+   colonnes, un en-tete par colonne, un en-tete par ligne — et parce qu'un lecteur d'ecran doit
+   pouvoir annoncer « Stripe : le paiement... » plutot qu'une suite de phrases sans attache.
+   Le conteneur defile horizontalement plutot que de forcer la page entiere a le faire. */
+.sous-traitants { margin: 18px 0 6px; }
+.sous-traitants-tableau { overflow-x: auto; margin: 10px 0 12px; }
+.sous-traitants-tableau table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sous-traitants-tableau th,
+.sous-traitants-tableau td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); }
+.sous-traitants-tableau thead th { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.sous-traitants-tableau tbody th { font-weight: 500; color: var(--ink); white-space: nowrap; padding-right: 18px; }
+.sous-traitants-tableau tbody td { color: var(--ink-soft); }
+.sous-traitants-tableau tbody tr:last-child th,
+.sous-traitants-tableau tbody tr:last-child td { border-bottom: 0; }
+
+/* Titre d'un GROUPE de controles (un jeu de boutons radio, une liste de cases), par opposition a
+   l'etiquette d'un champ unique.
+   Ces titres etaient ecrits en <label>, ce qui est faux des qu'il y a plus d'un controle dessous :
+   une etiquette designe UN champ, et un htmlFor n'a alors rien vers quoi pointer. Le texte devient
+   donc un <span> et c'est le conteneur du groupe qui porte le nom, via aria-labelledby — un lecteur
+   d'ecran annonce alors « Statut, groupe de boutons radio » en entrant dedans, au lieu de lire un
+   titre flottant sans rapport declare avec ce qui suit.
+   Meme rendu que `label` (ligne 349), pour que rien ne bouge a l'ecran. */
+.titre-groupe { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }

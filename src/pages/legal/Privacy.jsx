@@ -8,6 +8,31 @@ import { useLanguage } from '../../context/LanguageContext';
 const SECTIONS = ['collected', 'purpose', 'sharing', 'retention', 'rights', 'cookies'];
 const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 
+// Les sous-traitants, dans l'ordre où ils interviennent : payer, être prévenu, se connecter, être
+// livré, puis ce qui tourne en arrière-plan.
+//
+// LA LISTE VIENT DU CODE, PAS D'UN SOUVENIR. Elle a été établie en relisant les appels réellement
+// émis — geocode.js pour Nominatim, DeliveryTrackingMap.jsx pour OSRM et les fonds de carte,
+// menuImport.js et menuTranslate.js pour Anthropic, cloudinary.js, main.jsx pour Sentry. La
+// politique n'en citait que trois (Stripe, Resend, Google) ; cinq recevaient des données
+// personnelles sans être déclarés nulle part. Ajouter un service ici quand on en branche un.
+// Les noms sont des noms propres : ils ne se traduisent pas, seule la description est dans les
+// trois langues.
+const SOUS_TRAITANTS = [
+  ['stripe', 'Stripe'],
+  ['resend', 'Resend'],
+  ['google', 'Google'],
+  ['nominatim', 'Nominatim (OpenStreetMap)'],
+  ['osrm', 'OSRM'],
+  ['osmTiles', 'OpenStreetMap'],
+  ['anthropic', 'Anthropic (Claude)'],
+  ['cloudinary', 'Cloudinary'],
+  ['sentry', 'Sentry'],
+  ['vercel', 'Vercel'],
+  ['railway', 'Railway'],
+  ['unsplash', 'Unsplash']
+];
+
 export default function Privacy() {
   const { t } = useLanguage();
   usePageMeta({ title: t('privacy.pageTitle'), path: '/confidentialite' });
@@ -21,9 +46,44 @@ export default function Privacy() {
         <div key={s}>
           <h3>{t(`privacy.${s}Title`)}</h3>
           <p className="small"><Rich text={t(`privacy.${s}`)} /></p>
+          {/* Le tableau se glisse juste après « Partage des données », dont il est le détail :
+              cette section dit à qui les données vont, celui-ci dit quoi, service par service. */}
+          {s === 'sharing' && <SousTraitants />}
         </div>
       ))}
       <PrivacyRequestForm />
+    </div>
+  );
+}
+
+// Le tableau des sous-traitants. Deux colonnes seulement, et pas trois : sur un téléphone, une
+// troisième colonne « finalité » forcerait un défilement horizontal sur la page qu'on lit le plus
+// souvent sur mobile, en petits caractères. La finalité tient dans la description.
+function SousTraitants() {
+  const { t } = useLanguage();
+  return (
+    <div className="sous-traitants">
+      <h3>{t('privacy.subprocessorsTitle')}</h3>
+      <p className="small">{t('privacy.subprocessorsIntro')}</p>
+      <div className="sous-traitants-tableau">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">{t('privacy.subprocessorsService')}</th>
+              <th scope="col">{t('privacy.subprocessorsData')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {SOUS_TRAITANTS.map(([cle, nom]) => (
+              <tr key={cle}>
+                <th scope="row">{nom}</th>
+                <td>{t(`privacy.sub_${cle}`)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="small">{t('privacy.subprocessorsOutsideEu')}</p>
     </div>
   );
 }

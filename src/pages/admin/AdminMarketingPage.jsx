@@ -135,7 +135,7 @@ export default function AdminMarketingPage() {
           )}
 
           <div className="admin-control-panel">
-            <input placeholder={tr('adminMarketing.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} aria-label={tr('adminMarketing.phSearch')} />
+            <input aria-label={tr('adminMarketing.phSearch')} placeholder={tr('adminMarketing.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} aria-label={tr('adminMarketing.phSearch')} />
             <div className="role-pick mk-status-filter" style={{ margin: 0 }}>
               {[['', tr('adminCommon.allF')], ...STATUSES.map((s) => [s, tr(`adminMarketing.status_${s}`)])].map(([k, l]) => (
                 <div key={k || 'all'} role="button" tabIndex={0} className={`chip${statut === k ? ' active' : ''}`} onClick={() => setStatut(k)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setStatut(k); } }}>{l}</div>

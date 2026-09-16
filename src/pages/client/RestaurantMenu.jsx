@@ -2,7 +2,8 @@ import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { useCart } from '../../context/CartContext';
+import { useCart, DELIVERY_FEE } from '../../context/CartContext';
+import Icone from '../../components/Icone';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -32,7 +33,17 @@ export default function RestaurantMenu() {
   const [discover, setDiscover] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [favoriteBusy, setFavoriteBusy] = useState(false);
-  const [hoursExpanded, setHoursExpanded] = useState(false);
+  // Les horaires, l'adresse, le téléphone et le site vivaient en clair sous le titre, soit six
+  // lignes de métadonnées avant le premier plat. Ils passent derrière « Infos », comme sur la
+  // fiche d'Uber : un visiteur vient lire une carte, pas un annuaire.
+  const [infosOuvertes, setInfosOuvertes] = useState(false);
+  // Livraison ou à emporter, choisi ici plutôt qu'au paiement. Le commerce déclare déjà les deux
+  // capacités (offersDelivery / offersPickup) mais elles n'étaient lues qu'au moment de payer :
+  // le client découvrait donc à la fin qu'il pouvait venir chercher sa commande.
+  const [mode, setMode] = useState(null);
+  // Recherche dans la carte. Une carte de supermarché compte plusieurs centaines de lignes ;
+  // la seule façon d'y trouver un article était de faire défiler.
+  const [requete, setRequete] = useState('');
   const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
@@ -136,7 +147,8 @@ export default function RestaurantMenu() {
 
   const isFavorite = favoriteIds.has(id);
   const openStatus = getOpenStatus(restaurant.hours, now, restaurant.closures);
-  const presentSections = (restaurant.sections || []).filter((s) => restaurant.menu.some((i) => (i.category || 'plat') === s.name));
+  // Les sections proposées à la navigation rapide suivent la recherche : filtrer la carte sans
+  // filtrer sa table des matières laisserait des onglets qui ne mènent nulle part.
 
   async function toggleFavorite() {
     if (!user) {
@@ -160,6 +172,30 @@ export default function RestaurantMenu() {
   }
 
   const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
+
+  // La bascule ne s'affiche que si le commerce propose vraiment les deux : un seul mode possible
+  // n'est pas un choix, c'est une information — elle tient alors dans le panneau des frais.
+  const modesPossibles = [restaurant.offersDelivery && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
+  const modeActif = mode && modesPossibles.includes(mode) ? mode : modesPossibles[0];
+
+  // Le choix est déposé pour le paiement, qui le relit au montage. sessionStorage et non un état
+  // partagé : le mode appartient à cette visite-ci de cette fiche-ci, il n'a pas à survivre à la
+  // fermeture de l'onglet ni à suivre l'utilisateur d'un commerce à l'autre.
+  function choisirMode(m) {
+    setMode(m);
+    try { sessionStorage.setItem(`fairide_mode_${id}`, m); } catch { /* navigation privée : le paiement reprendra son défaut */ }
+  }
+
+  // Frais annoncés sur la fiche. DELIVERY_FEE (CartContext) est une ESTIMATION forfaitaire côté
+  // client — le montant réel dépend de la distance et se calcule au serveur — d'où le « dès ».
+  const q = requete.trim().toLowerCase();
+  const menuFiltre = q
+    ? restaurant.menu.filter((i) => {
+        const loc = localizedItem(i, language);
+        return `${loc.name} ${loc.desc || ''}`.toLowerCase().includes(q);
+      })
+    : restaurant.menu;
+  const sectionsFiltrees = (restaurant.sections || []).filter((s) => menuFiltre.some((i) => (i.category || 'plat') === s.name));
 
   function addToCart(item) {
     if (!user) {
@@ -205,119 +241,152 @@ export default function RestaurantMenu() {
 
   return (
     <div>
-      <CategoryQuickNav categories={presentSections} />
+      <CategoryQuickNav categories={sectionsFiltrees} />
       <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
-      <div className="card">
+
+      {/* L'EN-TÊTE SORT DE LA CARTE.
+          Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
+          avec 24px de marge intérieure, dans lequel la photo devait déborder par des marges
+          négatives de -22px pour paraître pleine largeur. Le contour n'apportait rien — il
+          encadrait le sujet de la page, pas un élément parmi d'autres — et le débordement était
+          un contournement de ce contour. Les deux partent ensemble. */}
+      <header className="fiche-entete">
         {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
-          <div className={`restaurant-header-media${restaurant.coverImageUrl ? '' : ' no-cover'}`}>
-            {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="cover-banner-detail" />}
-            {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" className="restaurant-logo-badge" />}
+          <div className={`fiche-media${restaurant.coverImageUrl ? '' : ' sans-photo'}`}>
+            {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt={restaurant.name} className="fiche-couverture" />}
+            {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" className="fiche-logo" />}
           </div>
         )}
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div className="fiche-titre-ligne">
           {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
               référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
-          <h1 className="restaurant-header-name-row" style={{ marginBottom: 2 }}>
+          <h1 className="fiche-nom">
             <span>{restaurant.name}</span>
             {restaurant.certified && <CertifiedBadge size={20} />}
           </h1>
           <FavoriteHeart active={isFavorite} busy={favoriteBusy} onClick={toggleFavorite} title={t('restaurantList.addFavorite')} className="favorite-heart-inline" />
         </div>
-        <div className="row" style={{ gap: 6, margin: '2px 0' }}>
-          <StarsDisplay value={restaurant.rating} />
-          <span className="small">{restaurant.reviewCount > 0 ? t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('restaurantList.newBadge')}</span>
-        </div>
-        <p className="small" style={{ margin: '0 0 4px' }}>{restaurant.desc || ''} · {restaurant.commune}</p>
-        {(restaurant.website || restaurant.phone) && (
-          <p className="small" style={{ margin: '0 0 6px' }}>
-            {restaurant.website && <a href={restaurant.website} target="_blank" rel="noreferrer">🌐 {restaurant.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}</a>}
-            {restaurant.website && restaurant.phone ? ' · ' : ''}
-            {restaurant.phone && <a href={`tel:${restaurant.phone.replace(/[^+\d]/g, '')}`}>📞 {restaurant.phone}</a>}
-          </p>
-        )}
-        {restaurant.hours && (
-          openStatus.isExceptionalClosure ? (
-            <div className="closed-banner">
-              <div className="closed-banner-title">{t('restoMenuUi.exceptionalClosure')}</div>
-              {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
-              <p className="small" style={{ margin: '4px 0 0' }}>
-                {openStatus.reopensDate ? t('restoMenuUi.reopenOn', { date: formatDateFr(openStatus.reopensDate) }) : t('restoMenuUi.reopenUnknown')}
-              </p>
-            </div>
-          ) : openStatus.isOpen ? (
-            <div style={{ margin: '0 0 10px' }}>
-              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.openNow', { schedule: formatDaySchedule(restaurant.hours, openStatus.todayKey, t) })}</p>
-              <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => setHoursExpanded((v) => !v)}>
-                {hoursExpanded ? t('restoMenuUi.hideHours') : t('restoMenuUi.showHours')}
-              </button>
-              {hoursExpanded && (
-                <div className="closed-banner-schedule">
-                  {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
-                </div>
-              )}
-            </div>
+
+        {/* UNE SEULE LIGNE DE MÉTA, à la place de six.
+            Il y avait, empilées : la note, la description + commune, le site, le téléphone, les
+            horaires du jour, et un bouton pour déplier la semaine. Uber tient l'équivalent sur une
+            ligne — « 4.1 ★ (4 000+) · €1.79 Delivery Fee · Info » — et range le reste derrière
+            « Info ». Le visiteur vient lire une carte. */}
+        <p className="fiche-meta">
+          {/* Pas d'étoiles quand personne n'a encore noté : cinq étoiles vides à côté du mot
+              « Nouveau » se lisaient comme une note de zéro sur cinq, ce qui est le contraire de
+              ce qu'on veut dire d'un commerce qui vient d'arriver. */}
+          {restaurant.reviewCount > 0 ? (
+            <>
+              <span className="fiche-meta-note"><StarsDisplay value={restaurant.rating} size={13} /></span>
+              <span>{t('restaurantMenu.ratingReviews', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount })}</span>
+            </>
           ) : (
-            <div className="closed-banner">
-              <div className="closed-banner-title">{t('restoMenuUi.currentlyClosed')}</div>
-              {openStatus.opensToday ? (
-                <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
-              ) : (
-                <p className="small" style={{ margin: 0 }}>
-                  {t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
-                </p>
-              )}
-              <div className="closed-banner-schedule">
-                {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
-              </div>
-            </div>
-          )
-        )}
-        {restaurant.lat && restaurant.lng && (
-          <div style={{ marginBottom: 14 }}>
-            <Suspense fallback={<div style={{ height: 220 }} />}>
-              <RestaurantsMap restaurants={[restaurant]} height={220} singleMarker />
-            </Suspense>
+            <span>{t('restaurantList.newBadge')}</span>
+          )}
+          {restaurant.commune && <><span aria-hidden="true">·</span><span>{restaurant.commune}</span></>}
+          <span aria-hidden="true">·</span>
+          <button type="button" className="fiche-infos-lien" onClick={() => setInfosOuvertes(true)}>
+            {t('restaurantMenu.infoButton')}
+          </button>
+        </p>
+        {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
+
+        {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. */}
+        {modesPossibles.length > 1 && (
+          <div className="fiche-modes" role="group" aria-label={t('restaurantMenu.modeLabel')}>
+            <button type="button" className={modeActif === 'delivery' ? 'est-actif' : ''} aria-pressed={modeActif === 'delivery'} onClick={() => choisirMode('delivery')}>
+              {t('restaurantMenu.modeDelivery')}
+            </button>
+            <button type="button" className={modeActif === 'pickup' ? 'est-actif' : ''} aria-pressed={modeActif === 'pickup'} onClick={() => choisirMode('pickup')}>
+              {t('restaurantMenu.modePickup')}
+            </button>
           </div>
         )}
+
+        {/* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
+            forfaitaire côté client : le montant exact dépend de la distance et se calcule au
+            serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure —
+            aucun champ de temps de préparation n'existe, ni ici ni au serveur. */}
+        {!onlineOrderingDisabled && (
+          <div className="fiche-panneau">
+            <b>{modeActif === 'pickup'
+              ? t('restaurantMenu.feePickup')
+              : restaurant.freeDelivery
+                ? t('restaurantMenu.feeFree')
+                : t('restaurantMenu.feeFrom', { amount: DELIVERY_FEE.toFixed(2).replace('.', ',') })}</b>
+            <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
+          </div>
+        )}
+
+        {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
+            La promotion et la livraison offerte étaient deux <div> sans classe, l'un rouge l'autre
+            iris, écrits en style inline. Ils disent la même chose — « tu paies moins ici » — donc
+            ils tiennent dans un seul encart, celui de « Savings and more ». */}
+        {(restaurant.fairideAdvantage || restaurant.hasPromo || restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
+          <div className="fiche-offres">
+            <span className="fiche-offres-icone" aria-hidden="true"><Icone nom="etiquette" taille={20} /></span>
+            <div className="fiche-offres-texte">
+              {restaurant.fairideAdvantage && (
+                <span>{restaurant.fairideAdvantage.mode === 'amount'
+                  ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
+                  : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}</span>
+              )}
+              {restaurant.hasPromo && !restaurant.fairideAdvantage && <span>{t('restaurantMenu.promoBanner')}</span>}
+              {(restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
+                <span>{restaurant.freeDelivery
+                  ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name })
+                  : restaurant.freeDeliveryMinOrder != null
+                    ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) })
+                    : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}</span>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* La fermeture reste seule en alerte : c'est la seule information qui empêche de commander.
+            Les sept lignes d'horaires qu'elle dépliait sont maintenant dans « Infos ». */}
+        {restaurant.hours && openStatus.isExceptionalClosure && (
+          <div className="closed-banner">
+            <div className="closed-banner-title">{t('restoMenuUi.exceptionalClosure')}</div>
+            {openStatus.closedReason && <p className="small" style={{ margin: 0 }}>{openStatus.closedReason}</p>}
+            <p className="small" style={{ margin: '4px 0 0' }}>
+              {openStatus.reopensDate ? t('restoMenuUi.reopenOn', { date: formatDateFr(openStatus.reopensDate) }) : t('restoMenuUi.reopenUnknown')}
+            </p>
+          </div>
+        )}
+        {restaurant.hours && !openStatus.isExceptionalClosure && !openStatus.isOpen && (
+          <div className="closed-banner">
+            <div className="closed-banner-title">{t('restoMenuUi.currentlyClosed')}</div>
+            {openStatus.opensToday ? (
+              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
+            ) : (
+              <p className="small" style={{ margin: 0 }}>
+                {t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Avant le 5 octobre : réservations et à emporter à venir ; du 5 au 15 : seule la livraison attend. */}
         {(!commandesOuvertes(user) || (restaurant.offersDelivery && !livraisonOuverte(user))) && (
           <div className="ouverture-bandeau" role="status">
-            🗓️ {commandesOuvertes(user)
+            {commandesOuvertes(user)
               ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
               : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureReservations(getLocale()) })}
           </div>
         )}
-        {restaurant.fairideAdvantage && (
-          <div className="avantage-bandeau">
-            💚 {restaurant.fairideAdvantage.mode === 'amount'
-              ? t('restaurantMenu.fairideAdvantageAmount', { name: restaurant.name, v: `${Number(restaurant.fairideAdvantage.value).toFixed(2).replace('.', ',').replace(/,00$/, '')} €` })
-              : t('restaurantMenu.fairideAdvantagePercent', { name: restaurant.name, v: restaurant.fairideAdvantage.value })}
-          </div>
-        )}
-        {restaurant.hasPromo && !restaurant.fairideAdvantage && (
-          <div style={{ background: 'var(--red)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            {t('restaurantMenu.promoBanner')}
-          </div>
-        )}
-        {(restaurant.freeDelivery || restaurant.freeDeliveryMinOrder != null || restaurant.deliveryFeeDiscount > 0) && (
-          <div style={{ background: 'var(--teal)', color: '#fff', borderRadius: 10, padding: '8px 14px', marginBottom: 14, fontWeight: 700, fontSize: 13 }}>
-            {restaurant.freeDelivery ? t('restoMenuUi.freeDeliveryBy', { name: restaurant.name }) : restaurant.freeDeliveryMinOrder != null ? t('restoMenuUi.freeDeliveryFrom', { name: restaurant.name, min: restaurant.freeDeliveryMinOrder.toFixed(2) }) : t('restoMenuUi.deliveryDiscountBy', { name: restaurant.name, amount: restaurant.deliveryFeeDiscount.toFixed(2) })}
-          </div>
-        )}
+
         {restaurant.offersDineIn && (reservationsOuvertes(user) ? (
-          <button
-            type="button"
-            className="btn-outline btn-block"
-            onClick={() => navigate(`/restaurants/${id}/reserver`)}
-          >
+          <button type="button" className="btn-outline btn-block" onClick={() => navigate(`/restaurants/${id}/reserver`)}>
             {t('restaurantMenu.reserveTable')}
           </button>
         ) : (
           <button type="button" className="btn-outline btn-block" disabled title={t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}>
-            🗓️ {t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}
+            {t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}
           </button>
         ))}
-      </div>
+      </header>
 
       {onlineOrderingDisabled && (
         <div className="card">
@@ -325,9 +394,31 @@ export default function RestaurantMenu() {
         </div>
       )}
 
+      {/* RECHERCHE DANS LA CARTE, comme le « Search in McDonald's® » de la capture. Sans elle, le
+          seul moyen de trouver un article dans la carte d'un supermarché était de faire défiler.
+          Même habillage que la recherche du site (.recherche-champ), pour ne pas inventer un
+          second type de champ de recherche. */}
+      {restaurant.menu.length > 8 && (
+        <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => e.preventDefault()}>
+          <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
+          <input
+            type="search" value={requete} onChange={(e) => setRequete(e.target.value)}
+            placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
+          />
+          {requete && (
+            <button type="button" className="recherche-effacer" onClick={() => setRequete('')} aria-label={t('restaurantMenu.clearSearch')}>
+              <Icone nom="interdit" taille={16} />
+            </button>
+          )}
+        </form>
+      )}
+
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
-        <MenuCategorySections menu={restaurant.menu} sections={restaurant.sections || []} onAdd={addToCart} hideAdd={onlineOrderingDisabled} />
+        {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
+          <p className="small" style={{ margin: 0 }}>{t('restaurantMenu.noDishMatch', { q: requete })}</p>
+        )}
+        <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} hideAdd={onlineOrderingDisabled} />
       </div>
 
       {reviews && reviews.reviews.length > 0 && (
@@ -362,6 +453,62 @@ export default function RestaurantMenu() {
             setPickerItem(null);
           }}
         />
+      )}
+
+      {/* LA FEUILLE « INFOS ».
+          Elle recueille tout ce qui encombrait le haut de la page : les sept lignes d'horaires de
+          la semaine, l'adresse, le téléphone, le site, et la carte de 220px de haut qui s'insérait
+          entre le titre et le premier plat. Aucune de ces informations n'est perdue — elles sont
+          simplement à un toucher, au lieu d'être devant le plat qu'on venait voir. */}
+      {infosOuvertes && (
+        <div className="modal-overlay" onClick={() => setInfosOuvertes(false)}>
+          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-titre">{t('restaurantMenu.infoTitle')}</h3>
+
+            {restaurant.hours && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="horloge" taille={16} />{t('restaurantMenu.hoursLabel')}</h4>
+                <div className="closed-banner-schedule">
+                  {formatFullSchedule(restaurant.hours, t).map((line) => <span key={line}>{line}</span>)}
+                </div>
+              </section>
+            )}
+
+            {(restaurant.address || restaurant.commune) && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="position" taille={16} />{t('restaurantMenu.addressLabel')}</h4>
+                <p className="small">{[restaurant.address, restaurant.commune].filter(Boolean).join(', ')}</p>
+                {restaurant.lat && restaurant.lng && (
+                  <Suspense fallback={<div style={{ height: 180 }} />}>
+                    <RestaurantsMap restaurants={[restaurant]} height={180} singleMarker />
+                  </Suspense>
+                )}
+              </section>
+            )}
+
+            {restaurant.phone && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="antenne" taille={16} />{t('restaurantMenu.phoneLabel')}</h4>
+                <p className="small"><a href={`tel:${restaurant.phone.replace(/[^+\d]/g, '')}`}>{restaurant.phone}</a></p>
+              </section>
+            )}
+
+            {restaurant.website && (
+              <section className="fiche-infos-bloc">
+                <h4><Icone nom="globe" taille={16} />{t('restaurantMenu.websiteLabel')}</h4>
+                <p className="small">
+                  <a href={restaurant.website} target="_blank" rel="noreferrer">
+                    {restaurant.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
+                  </a>
+                </p>
+              </section>
+            )}
+
+            <div className="modal-pied">
+              <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
+            </div>
+          </div>
+        </div>
       )}
 
       {conflictItem && (

@@ -25,7 +25,7 @@ import ConfirmDialog from './ConfirmDialog';
  * l'approbation, de l'abonnement et de la vérification Stripe. Les libellés le disent en clair
  * plutôt que de laisser la déception venir après le clic. */
 
-const ICONES = { client: '🛍️', restaurant: '🏪', driver: '🛵' };
+const ICONES = { client: 'sac', restaurant: 'commerce', driver: 'scooter' };
 const ORDRE = ['client', 'restaurant', 'driver'];
 
 export default function MesCasquettes() {

@@ -186,8 +186,8 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       </div>
       {existingItemCount > 0 && (
         <div className="field" style={{ marginBottom: 14 }}>
-          <label>{t('menuImport.whatAboutExisting', { n: existingItemCount })}</label>
-          <div className="role-pick" style={{ marginBottom: 0 }}>
+          <span className="titre-groupe" id="import-existants-titre">{t('menuImport.whatAboutExisting', { n: existingItemCount })}</span>
+          <div className="role-pick" style={{ marginBottom: 0 }} role="group" aria-labelledby="import-existants-titre">
             <div className={`chip${mode === 'append' ? ' active' : ''}`} onClick={() => setMode('append')}>
               {t('menuImport.keepAndAdd')}
             </div>
@@ -213,14 +213,14 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
           <span className="dish-thumb-empty">🍽️</span>
           <div style={{ flex: 1, display: 'grid', gap: 6 }}>
             <div className="row" style={{ gap: 8 }}>
-              <input style={{ flex: 2 }} disabled placeholder={t('menuImport.phName')} />
-              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phPrice')} />
+              <input aria-label={t('menuImport.phName')} style={{ flex: 2 }} disabled placeholder={t('menuImport.phName')} />
+              <input aria-label={t('menuImport.phPrice')} style={{ flex: 1 }} disabled placeholder={t('menuImport.phPrice')} />
             </div>
             <div className="row" style={{ gap: 8 }}>
-              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phSection')} />
-              <input style={{ flex: 1 }} disabled placeholder={t('menuImport.phSubsection')} />
+              <input aria-label={t('menuImport.phSection')} style={{ flex: 1 }} disabled placeholder={t('menuImport.phSection')} />
+              <input aria-label={t('menuImport.phSubsection')} style={{ flex: 1 }} disabled placeholder={t('menuImport.phSubsection')} />
             </div>
-            <input disabled placeholder={t('menuImport.phDescription')} />
+            <input aria-label={t('menuImport.phDescription')} disabled placeholder={t('menuImport.phDescription')} />
           </div>
         </div>
         <p className="small" style={{ margin: '10px 0 0' }}>

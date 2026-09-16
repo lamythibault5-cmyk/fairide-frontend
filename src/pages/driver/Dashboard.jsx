@@ -7,6 +7,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
@@ -237,40 +238,38 @@ export default function DriverDashboard() {
           droite quand il y en a une — plus trois encadrés colorés empilés. */}
       <div className="card account-groupe" aria-label={t('dashDriver.ariaAccount')}>
         {user?.adminStatus === 'blocked' && (
-          <LigneCompte accent="danger" icone="🚫" titre={t('dashDriver.blockedTitle')} sous={t('dashDriver.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+          <LigneCompte accent="danger" icone="interdit" titre={t('dashDriver.blockedTitle')} sous={t('dashDriver.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
             <p className="small" style={{ margin: 0 }}>
               {t('dashDriver.blockedText')}
             </p>
           </LigneCompte>
         )}
-        <LigneCompte to="/driver/onboarding" icone="🪪" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
-        {user?.adminStatus !== 'approved' && user?.adminStatus !== 'blocked' && (
-          <LigneCompte accent="warn" icone="🕐" titre={t('dashDriver.pendingTitle')} sous={t('dashDriver.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
-            <p className="small" style={{ margin: 0 }}>
-              {t('dashDriver.pendingText')}
-            </p>
-          </LigneCompte>
-        )}
+        <LigneCompte to="/driver/onboarding" icone="dossier" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
+        {/* Plus de rangée « En attente de validation » ici : dès que le compte n'est pas validé,
+            le corps de la page est REMPLACÉ par une carte qui dit la même chose, avec la même
+            horloge et davantage de détail (voir plus bas, dashDriver.waitingTitle). Le livreur
+            lisait donc deux fois le même message, l'un sous l'autre, sur le même écran. C'est la
+            carte qui reste : elle explique ce qui est vérifié et quand il sera prévenu. */}
         {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
           <LigneCompte
-            accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
+            accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
             titre={user?.stripeConnectStatus === 'restricted' ? t('dashDriver.paymentInfoTitle') : t('dashDriver.paymentsToConfigure')}
             sous={user?.stripeConnectStatus === 'restricted'
               ? t('dashDriver.stripeNeedsInfo')
-              : t('dashDriver.viaStripe')}
+              : t('dashDriver.viaStripe', { date: dateOuverturePaiements(getLocale()) })}
             action={user?.stripeConnectStatus === 'restricted' ? (
               <button type="button" className="btn-gold" style={{ padding: '8px 12px', fontSize: 13 }} disabled={connecting} onClick={connectOnboard}>
                 {connecting ? '...' : t('dashDriver.complete')}
               </button>
             ) : (
               // Activation fermée jusqu'à fin septembre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
-              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn')}</Link>
+              <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
             )}
           />
         )}
         {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
           <LigneCompte
-            accent={user?.driverPaused ? 'warn' : 'ok'} icone={user?.driverPaused ? '⏸️' : '✅'}
+            accent={user?.driverPaused ? 'warn' : 'ok'} icone={user?.driverPaused ? 'horloge' : 'bouclier'}
             titre={user?.driverPaused ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}
             sous={user?.driverPaused ? t('dashDriver.pausedSub') : t('dashDriver.availableSub')}
             action={(
@@ -282,7 +281,7 @@ export default function DriverDashboard() {
         )}
         {active.length > 0 && (
           <LigneCompte
-            accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="📍"
+            accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="position"
             titre={t('dashDriver.locationSharing')}
             sous={user?.locationSharingEnabled === false
               ? t('dashDriver.sharingDisabledSub')
@@ -296,7 +295,7 @@ export default function DriverDashboard() {
 
       {user?.adminStatus !== 'approved' ? (
         <div className="empty" style={{ padding: '40px 20px' }}>
-          <div style={{ fontSize: 34, marginBottom: 8 }}>{user?.adminStatus === 'blocked' ? '🚫' : '🕐'}</div>
+          <div style={{ fontSize: 34, marginBottom: 8 }}>{user?.adminStatus === 'blocked' ? 'interdit' : 'horloge'}</div>
           <b>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedTitle') : t('dashDriver.waitingTitle')}</b>
           <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedText') : t('dashDriver.waitingEmpty')}</p>
         </div>
@@ -389,7 +388,7 @@ export default function DriverDashboard() {
           <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
           {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
           <div className="row" style={{ marginTop: 8, gap: 8 }}>
-            <input
+            <input aria-label={t('dashDriver.phCustomerCode')}
               placeholder={t('dashDriver.phCustomerCode')}
               style={{ maxWidth: 140 }}
               value={codeInputs[o.id] || ''}

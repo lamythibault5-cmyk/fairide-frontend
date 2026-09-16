@@ -56,7 +56,7 @@ export default function OptionsPickerModal({ item, onConfirm, onCancel }) {
   return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h3 style={{ margin: '0 0 4px' }}>{item.name}</h3>
+        <h3 className="modal-titre">{item.name}</h3>
         {step === 0 && item.desc && <p className="small" style={{ margin: '0 0 10px' }}>{item.desc}</p>}
 
         {groups.length > 1 && (
@@ -108,19 +108,22 @@ export default function OptionsPickerModal({ item, onConfirm, onCancel }) {
             <b>{unitPrice.toFixed(2)}€</b>
           </div>
         )}
-        <div className="row" style={{ gap: 8 }}>
-          {step === 0 && <button className="btn-ghost" onClick={onCancel}>{t('common.cancel')}</button>}
-          {step > 0 && <button className="btn-outline" onClick={() => setStep((s) => s - 1)}>{t('optionsPicker.back')}</button>}
+        {/* L'action principale d'abord, pleine largeur, puis le retour en arrière : sur un
+            téléphone la feuille monte du bas, et ce qui est en bas de la feuille tombe sous le
+            pouce. C'est « Go to checkout » des captures, pas une rangée de boutons à droite. */}
+        <div className="modal-pied">
           {!isLastStep && (
-            <button className="btn-gold" style={{ flex: 1 }} disabled={currentStepBlocked} onClick={() => setStep((s) => s + 1)}>
+            <button className="btn-gold" disabled={currentStepBlocked} onClick={() => setStep((s) => s + 1)}>
               {t('optionsPicker.next')}
             </button>
           )}
           {isLastStep && (
-            <button className="btn-gold" style={{ flex: 1 }} disabled={missingRequired.length > 0} onClick={() => onConfirm(optionItemIds, snapshot, unitPrice)}>
+            <button className="btn-gold" disabled={missingRequired.length > 0} onClick={() => onConfirm(optionItemIds, snapshot, unitPrice)}>
               {t('optionsPicker.addToCart')}
             </button>
           )}
+          {step === 0 && <button className="btn-ghost" onClick={onCancel}>{t('common.cancel')}</button>}
+          {step > 0 && <button className="btn-ghost" onClick={() => setStep((s) => s - 1)}>{t('optionsPicker.back')}</button>}
         </div>
       </div>
     </div>,

@@ -38,6 +38,8 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
   const mapRef = useRef(null);
   const markersRef = useRef([]);
   const homeMarkerRef = useRef(null);
+  // Le dernier cadrage calculé, rejouable par le ResizeObserver ci-dessous.
+  const recadrerRef = useRef(null);
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [selected, setSelected] = useState(null);
@@ -57,7 +59,14 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     // dans un onglet/section pas encore visible...), les tuiles restent calées sur l'ancienne largeur
     // et une bande grise apparaît. Un ResizeObserver + invalidateSize() corrige ça à chaque changement
     // réel de taille, plutôt qu'un seul recalcul au montage qui rate les cas ci-dessus.
-    const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
+    // …et il faut REFAIRE le cadrage après, pas seulement recalculer la taille. En pleine hauteur
+    // (height: 100%), le conteneur naît à zéro pixel : fitBounds s'exécute sur une boîte minuscule
+    // et choisit un zoom de rue. invalidateSize corrigeait bien la taille ensuite, mais le cadrage,
+    // lui, restait celui de la boîte d'avant — on arrivait sur deux marqueurs au lieu de vingt-neuf.
+    const resizeObserver = new ResizeObserver(() => {
+      mapRef.current?.invalidateSize();
+      recadrerRef.current?.();
+    });
     resizeObserver.observe(containerRef.current);
     return () => {
       resizeObserver.disconnect();
@@ -91,11 +100,14 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       points.push([userLocation.lat, userLocation.lng]);
     }
 
-    if (points.length === 1) {
-      mapRef.current.setView(points[0], 15);
-    } else if (points.length > 1) {
-      mapRef.current.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
-    }
+    // Le cadrage est gardé sous forme de fonction : le ResizeObserver le rejoue quand le conteneur
+    // atteint enfin sa taille définitive, sans quoi on resterait sur le zoom d'une boîte vide.
+    recadrerRef.current = () => {
+      if (!mapRef.current || !points.length) return;
+      if (points.length === 1) mapRef.current.setView(points[0], 15);
+      else mapRef.current.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
+    };
+    recadrerRef.current();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurants, selected, userLocation, t]);
 
@@ -104,9 +116,12 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurants]);
 
+  // height: 100% pour la carte plein écran (pages/client/MapPage.jsx) — le conteneur suit alors son
+  // parent au lieu d'imposer une hauteur fixe, et perd son arrondi, qui n'a pas de sens bord à bord.
+  const pleineHauteur = height === '100%';
   return (
-    <div style={{ position: 'relative' }}>
-      <div ref={containerRef} style={{ height, borderRadius: 'var(--radius)', overflow: 'hidden' }} />
+    <div style={{ position: 'relative', height: pleineHauteur ? '100%' : undefined }}>
+      <div ref={containerRef} style={{ height, borderRadius: pleineHauteur ? 0 : 'var(--radius)', overflow: 'hidden' }} />
       {selected && (
         <div className="map-detail-card">
           <button className="map-detail-close" onClick={() => setSelected(null)} aria-label={t('map.backToMapAria')}>✕</button>

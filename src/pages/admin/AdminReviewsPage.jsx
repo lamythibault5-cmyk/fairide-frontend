@@ -122,7 +122,7 @@ export default function AdminReviewsPage() {
       {total > PAGE_SIZE && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: (reviews || []).length, total })}</p>}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminReviews.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminReviews.phSearch')} placeholder={tr('adminReviews.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allF')], ['low', tr('adminReviews.filterLow')], ['high', tr('adminReviews.filterHigh')], ['comments', tr('adminReviews.filterComments')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>

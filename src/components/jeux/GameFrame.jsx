@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import Icone from '../Icone';
 import { useLanguage } from '../../context/LanguageContext';
 import { musique } from './musique';
 
@@ -7,7 +8,7 @@ import { musique } from './musique';
 // Chaque jeu (voir jeux.js) n'est qu'une définition — update(dt, input) et draw(ctx). Tout ce qui est
 // commun vit ici et une seule fois : la boucle requestAnimationFrame avec un dt réel et plafonné, la
 // saisie pointeur/clavier normalisée en coordonnées du cadre, le canvas mis à l'échelle du dpr, le
-// meilleur score par jeu, la pause automatique quand l'onglet passe en arrière-plan, le bouton 📖
+// meilleur score par jeu, la pause automatique quand l'onglet passe en arrière-plan, le bouton des regles
 // qui ouvre les règles, la musique de fond (coupée par défaut, voir musique.js), le compte à rebours
 // « Prêt ? → Go ! » avant chaque partie, et une couche d'effets partagée : textes flottants « +1 »,
 // éclats de particules, annonce de niveau, flash de chute. Les jeux la déclenchent via
@@ -23,7 +24,7 @@ const COMPTE_TOTAL = 1.1;
 const VITESSE_CLAVIER = 1.3; // flèches ← → : largeurs de terrain par seconde
 const IRIS = '#3B2FB5'; const LIME = '#C8F03C';
 // Une ligne de règles = une icône + son texte ; le libellé avant le premier « : » est mis en gras.
-const ICONES_REGLES = ['🎯', '🏆', '💀', '🕹️'];
+const ICONES_REGLES = ['cible', 'etoile', 'interdit', 'manette'];
 
 function lireMeilleur(cle) {
   try { return Number(localStorage.getItem(cle)) || 0; } catch { return 0; }
@@ -170,11 +171,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const menuPistes = (
     <div className="jeu-musique-menu" role="menu" aria-label={t('gameFrame.musicMenuTitle')}>
       <div className="jeu-musique-menu-titre">{t('gameFrame.musicMenuTitle')}</div>
-      <button type="button" role="menuitemradio" aria-checked={!musiqueActive} className={`jeu-musique-item${!musiqueActive ? ' active' : ''}`} onClick={() => { musique.arreter(); setMenuMusique(false); }}>🔇 {t('gameFrame.musicNone')}</button>
-      <button type="button" role="menuitemradio" aria-checked={musiqueActive && pisteMusique === 'mix'} className={`jeu-musique-item${musiqueActive && pisteMusique === 'mix' ? ' active' : ''}`} onClick={() => { musique.choisir('mix'); setMenuMusique(false); }}>🎲 {t('gameFrame.musicMix')}</button>
+      <button type="button" role="menuitemradio" aria-checked={!musiqueActive} className={`jeu-musique-item${!musiqueActive ? ' active' : ''}`} onClick={() => { musique.arreter(); setMenuMusique(false); }}><Icone nom="sonCoupe" taille={15} /> {t('gameFrame.musicNone')}</button>
+      <button type="button" role="menuitemradio" aria-checked={musiqueActive && pisteMusique === 'mix'} className={`jeu-musique-item${musiqueActive && pisteMusique === 'mix' ? ' active' : ''}`} onClick={() => { musique.choisir('mix'); setMenuMusique(false); }}>{t('gameFrame.musicMix')}</button>
       {musique.pistes.map((id) => (
         <button key={id} type="button" role="menuitemradio" aria-checked={musiqueActive && pisteMusique === id} className={`jeu-musique-item${musiqueActive && pisteMusique === id ? ' active' : ''}`} onClick={() => { musique.choisir(id); setMenuMusique(false); }}>
-          🎵 {t(`gameFrame.track_${id}`)}<span className="jeu-musique-sous">{t(`gameFrame.track_${id}_sub`)}</span>
+          <Icone nom="son" taille={15} /> {t(`gameFrame.track_${id}`)}<span className="jeu-musique-sous">{t(`gameFrame.track_${id}_sub`)}</span>
         </button>
       ))}
     </div>
@@ -182,6 +183,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   const conteneur = useRef(null);
   const canvas = useRef(null);
+  // Le contexte 2D du canvas, garde entre les images (voir preparerContexte).
+  const ctxRef = useRef(null);
   const pleinRef = useRef(false);
   pleinRef.current = plein;
   const instance = useRef(null);
@@ -208,9 +211,20 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   useEffect(() => {
     if (!fill && !plein) { setTaille({ w: width, h: height }); return undefined; }
     const el = conteneur.current; if (!el) return undefined;
+    // LA BOÎTE DE CONTENU, PAS LA BOÎTE DE BORDURE.
+    //
+    // Cette mesure utilisait getBoundingClientRect(), qui inclut la bordure. Le cadre en porte une
+    // de 1px : le canvas était donc posé 2px plus haut que la place réellement disponible, ce qui
+    // rendait le cadre 2px plus haut — et le ResizeObserver repartait. Le terrain grandissait de
+    // 2px par image, sans jamais s'arrêter.
+    //
+    // C'est aussi ce qui écroulait les images par seconde : à chaque mesure, preparerContexte()
+    // voyait une taille différente et réassignait c.width/c.height, ce qui RÉALLOUE le tampon du
+    // canvas et l'efface. Soixante réallocations d'un tampon de 800×1800 par seconde, pour rien.
+    // clientWidth/clientHeight donnent la boîte de contenu, bordure exclue : la mesure se stabilise
+    // dès la première image.
     const mesurer = () => {
-      const r = el.getBoundingClientRect();
-      const w = Math.max(120, Math.floor(r.width)); const h = Math.max(120, Math.floor(r.height));
+      const w = Math.max(120, el.clientWidth); const h = Math.max(120, el.clientHeight);
       setTaille((tt) => (tt.w === w && tt.h === h ? tt : { w, h }));
     };
     mesurer();
@@ -286,7 +300,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     const { w, h } = tailleRef.current;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
-    const ctx = c.getContext('2d');
+    // Le contexte est gardé : getContext('2d') était rappelé à chaque image, soixante fois par
+    // seconde, alors qu'il rend toujours le même objet pour un canvas donné. On le relit seulement
+    // si le canvas a changé (changement de jeu, remontage).
+    if (ctxRef.current?.canvas !== c) ctxRef.current = c.getContext('2d');
+    const ctx = ctxRef.current;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return ctx;
   }
@@ -536,16 +554,16 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   return (
     <div ref={racine} onPointerDown={surPointeurBasRacine} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
       <div className="jeu-hud">
-        <span className="jeu-best" title={t('gameFrame.bestTitle')}>🥇 {meilleur}</span>
-        <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>🏆 {score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
+        <span className="jeu-best" title={t('gameFrame.bestTitle')}><Icone nom="etoile" taille={14} />{meilleur}</span>
+        <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>{score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
         <span className="jeu-hud-boutons">
           <span style={{ position: 'relative' }}>
             <button type="button" className={`jeu-regles-btn jeu-musique-btn${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique} aria-label={t('gameFrame.musicMenuTitle')} title={t('gameFrame.musicMenuTitle')}>
-              {musiqueActive ? '🎵' : '🔇'}{large && <span className="jeu-musique-label">{musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</span>}
+              <Icone nom={musiqueActive ? 'son' : 'sonCoupe'} taille={16} />{large && <span className="jeu-musique-label">{musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</span>}
             </button>
             {menuMusique && menuPistes}
           </span>
-          <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}>📖</button>
+          <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}><Icone nom="guide" taille={16} /></button>
           {onEcranScinde && (plein || !ecranScindeActif) && (
             <button type="button" className={`jeu-regles-btn${large || plein ? ' jeu-plein-btn jeu-plein-btn--ghost' : ''}`} onClick={ecranScinde}
               aria-label={t('gameFrame.splitScreen')} title={t('gameFrame.splitScreen')}>
@@ -558,7 +576,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               ✕ <span>{t('gameFrame.exitFullscreenShort')}</span>
             </button>
           ) : (
-            <button type="button" className="jeu-regles-btn" onClick={basculerPlein} aria-label={t('gameFrame.fullscreen')} title={t('gameFrame.fullscreen')}>⛶</button>
+            <button type="button" className="jeu-regles-btn" onClick={basculerPlein} aria-label={t('gameFrame.fullscreen')} title={t('gameFrame.fullscreen')}><Icone nom="apercu" taille={16} /></button>
           )}
         </span>
       </div>
@@ -566,7 +584,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       <div className="jeu-progress" aria-hidden="true"><div style={{ width: `${Math.round(progression * 100)}%` }} /></div>
       {/* En grand (plein écran), la commande du jeu reste sous les yeux : on n'a pas à rouvrir les règles pour
           se souvenir s'il faut glisser, taper ou maintenir. */}
-      {large && <p className="jeu-indice">🎮 {tJeu(t, jeu, 'regles_3', jeu.controles)}</p>}
+      {large && <p className="jeu-indice"><Icone nom="manette" taille={14} /><span>{tJeu(t, jeu, 'regles_3', jeu.controles)}</span></p>}
 
       {/* En `fill`, c'est le cadre (et non tout le bloc, qui contient aussi le tableau de bord et les
           boutons) qui est mesuré : le canvas doit remplir exactement la place laissée au terrain. */}
@@ -588,13 +606,13 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <span className="jeu-emoji" aria-hidden="true">{jeu.emoji}</span>
               <span className="jeu-titre">{jeu.label}</span>
               <span className="jeu-sous">{tJeu(t, jeu, 'sub', jeu.sub)}</span>
-              {meilleur > 0 && <span className="jeu-sous jeu-record">🥇 {t('gameFrame.bestScore', { n: meilleur })}</span>}
+              {meilleur > 0 && <span className="jeu-sous jeu-record"><Icone nom="etoile" taille={14} /> {t('gameFrame.bestScore', { n: meilleur })}</span>}
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
               <div className="jeu-ligne-boutons">
                 <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
-                {!plein && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={basculerPlein}>⛶ {t('gameFrame.fullscreen')}</button>}
+                {!plein && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={basculerPlein}><Icone nom="apercu" taille={15} /> {t('gameFrame.fullscreen')}</button>}
                 <span style={{ position: 'relative', flex: 1, display: 'flex' }}>
-                  <button type="button" className={`jeu-btn jeu-btn-ghost jeu-btn-musique${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique}>{musiqueActive ? '🎵' : '🔇'} {musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</button>
+                  <button type="button" className={`jeu-btn jeu-btn-ghost jeu-btn-musique${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique}><Icone nom={musiqueActive ? 'son' : 'sonCoupe'} taille={15} /> {musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</button>
                   {menuMusique && menuPistes}
                 </span>
               </div>
@@ -605,7 +623,9 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           <div className="jeu-overlay">
             <div className="jeu-carte">
               <span className="jeu-titre">{t('gameFrame.paused')}</span>
-              <span className="jeu-sous">🏆 {score} · 🥇 {meilleur}</span>
+              {/* Deux clés existantes plutôt qu'une nouvelle : « Score : 12 · Record : 40 ». Les
+                  deux glyphes 🏆 et 🥇 qui les remplaçaient ne disaient pas lequel était lequel. */}
+              <span className="jeu-sous">{t('gameFrame.score', { score, record: '' })} · {t('gameFrame.bestScore', { n: meilleur })}</span>
               <button type="button" className="jeu-btn" onClick={() => setStatus('playing')}>{t('gameFrame.resume')}</button>
               <button type="button" className="jeu-btn jeu-btn-ghost" onClick={commencer}>{t('gameFrame.restart')}</button>
             </div>
@@ -633,7 +653,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <div className="jeu-regles-corps">
                 <ul>
                   {lignesRegles.map((r, i) => (
-                    <li key={r}><span className="jeu-regles-ico" aria-hidden="true">{ICONES_REGLES[i]}</span><span><LigneRegle texte={r} /></span></li>
+                    <li key={r}><span className="jeu-regles-ico" aria-hidden="true"><Icone nom={ICONES_REGLES[i]} taille={15} /></span><span><LigneRegle texte={r} /></span></li>
                   ))}
                 </ul>
               </div>
@@ -648,7 +668,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       </div>
 
       {astuceRotation && (
-        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}>📱↔️ {t('gameFrame.rotateHint')}</button>
+        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}><Icone nom="mobile" taille={14} /> {t('gameFrame.rotateHint')}</button>
       )}
       {/* Une SEULE sortie du plein écran, celle du bandeau du haut : la seconde, ici, doublonnait — deux
           boutons pour le même geste, dont un qui prenait de la hauteur au terrain sur un téléphone couché. */}

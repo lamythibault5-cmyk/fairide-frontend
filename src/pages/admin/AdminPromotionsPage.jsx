@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
@@ -167,7 +167,7 @@ export default function AdminPromotionsPage() {
       )}
 
       <div className="admin-control-panel">
-        <input placeholder={tr('adminPromos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
+        <input aria-label={tr('adminPromos.phSearch')} placeholder={tr('adminPromos.phSearch')} value={search} onChange={(e) => setSearch(e.target.value)} style={{ flex: 1, minWidth: 180 }} />
         <div className="role-pick" style={{ margin: 0 }}>
           {[['all', tr('adminCommon.allF')], ['active', tr('adminPromos.filterActive')], ['inactive', tr('adminPromos.filterInactive')], ['exhausted', tr('adminPromos.filterExhausted')]].map(([k, l]) => (
             <div key={k} className={`chip${filtre === k ? ' active' : ''}`} onClick={() => setFiltre(k)}>{l}</div>
@@ -196,6 +196,9 @@ export default function AdminPromotionsPage() {
 // Fiche d'un code : Infos (édition de la valeur, du plafond, de l'expiration) et Commandes (celles qui
 // l'ont utilisé, GET /admin/promo-codes/:id/orders).
 function PromoDrawer({ p, onClose, onPatch, onToggle, onDelete, libelleType, etat }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -238,9 +241,9 @@ function PromoDrawer({ p, onClose, onPatch, onToggle, onDelete, libelleType, eta
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCommon.edit')}</h4>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminSettings.valueUnit', { unit: p.type === 'client_balance' ? '€' : tr('adminSettings.months') })}</label><input type="number" step="1" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminSettings.maxUses')}</label><input type="number" step="1" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} placeholder={tr('adminSettings.phUnlimited')} /></div>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminPromos.expiresAtOptional')}</label><input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-valueunit'}>{tr('adminSettings.valueUnit', { unit: p.type === 'client_balance' ? '€' : tr('adminSettings.months') })}</label><input id={idsA11y + '-valueunit'} type="number" step="1" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-maxuses'}>{tr('adminSettings.maxUses')}</label><input id={idsA11y + '-maxuses'} type="number" step="1" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} placeholder={tr('adminSettings.phUnlimited')} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-expiresatoptional'}>{tr('adminPromos.expiresAtOptional')}</label><input id={idsA11y + '-expiresatoptional'} type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
           </div>
           <p className="small" style={{ opacity: 0.7, margin: '0 0 8px' }}>{tr('adminPromos.editHint')}</p>
           <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : tr('adminCommon.save')}</button>

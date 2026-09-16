@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 
 function emptyItem() {
@@ -6,6 +6,9 @@ function emptyItem() {
 }
 
 function OptionGroupForm({ initial, onSave, onCancel, saving }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const [name, setName] = useState(initial?.name || '');
   const [type, setType] = useState(initial?.type || 'multiple');
@@ -38,10 +41,10 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
 
   return (
     <div className="card" style={{ marginBottom: 10 }}>
-      <div className="field"><label>{t('optionGroups.groupName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('optionGroups.phGroupName')} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-groupname'}>{t('optionGroups.groupName')}</label><input id={idsA11y + '-groupname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('optionGroups.phGroupName')} /></div>
       <div className="field">
-        <label>{t('optionGroups.type')}</label>
-        <select value={type} onChange={(e) => setType(e.target.value)}>
+        <label htmlFor={idsA11y + '-type'}>{t('optionGroups.type')}</label>
+        <select id={idsA11y + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
           <option value="multiple">{t('optionGroups.multiple')}</option>
           <option value="single">{t('optionGroups.single')}</option>
         </select>
@@ -52,14 +55,14 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
       </label>
       {type === 'multiple' && (
         <div className="field">
-          <label>{t('optionGroups.maxChoices')}</label>
-          <input type="number" min="1" step="1" value={maxSelections} onChange={(e) => setMaxSelections(e.target.value)} placeholder={t('optionGroups.phUnlimited')} />
+          <label htmlFor={idsA11y + '-maxchoices'}>{t('optionGroups.maxChoices')}</label>
+          <input id={idsA11y + '-maxchoices'} type="number" min="1" step="1" value={maxSelections} onChange={(e) => setMaxSelections(e.target.value)} placeholder={t('optionGroups.phUnlimited')} />
         </div>
       )}
-      <label className="small" style={{ display: 'block', marginBottom: 6 }}>{t('optionGroups.options')}</label>
+      <label className="small" style={{ display: 'block', marginBottom: 6 }} htmlFor={idsA11y + '-options'}>{t('optionGroups.options')}</label>
       {items.map((it, idx) => (
         <div className="row" key={idx} style={{ gap: 8, marginBottom: 6 }}>
-          <input style={{ flex: 2 }} value={it.name} onChange={(e) => setItemField(idx, 'name', e.target.value)} placeholder={t('optionGroups.phOption')} />
+          <input id={idsA11y + '-options'} style={{ flex: 2 }} value={it.name} onChange={(e) => setItemField(idx, 'name', e.target.value)} placeholder={t('optionGroups.phOption')} />
           <input style={{ flex: 1 }} type="number" step="0.5" value={it.priceDelta} onChange={(e) => setItemField(idx, 'priceDelta', e.target.value)} placeholder="+1.00" />
           <button type="button" className="btn-danger-ghost" style={{ padding: '4px 10px' }} onClick={() => removeRow(idx)} disabled={items.length <= 1}>✕</button>
         </div>

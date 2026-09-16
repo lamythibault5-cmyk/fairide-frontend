@@ -75,7 +75,7 @@ export default function GuestReliability({ restoId, reservationId, token, toast,
                   <button key={i} type="button" role="radio" aria-checked={note === i} className={i <= note ? 'pleine' : ''} onClick={() => setNote(i)} aria-label={`${i}/5`}>★</button>
                 ))}
               </div>
-              <textarea rows={2} maxLength={500} value={commentaire} placeholder={t('resa.ratePh')} onChange={(e) => setCommentaire(e.target.value)} />
+              <textarea aria-label={t('resa.ratePh')} rows={2} maxLength={500} value={commentaire} placeholder={t('resa.ratePh')} onChange={(e) => setCommentaire(e.target.value)} />
               <p className="small" style={{ margin: '4px 0 6px', opacity: 0.8 }}>{t('resa.rateRules')}</p>
               <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={envoi} onClick={enregistrer}>{envoi ? '…' : t('resa.rateSave')}</button>
             </>
