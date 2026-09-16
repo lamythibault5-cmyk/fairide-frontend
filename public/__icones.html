@@ -1,0 +1,71 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Gabarits d'icônes Fairide</title>
+<style>
+  html, body { margin: 0; padding: 0; background: #888; }
+  .tuile { display: block; line-height: 0; }
+  #i192 { width: 192px; height: 192px; }
+  #i512 { width: 512px; height: 512px; }
+  #imask { width: 512px; height: 512px; }
+  svg { display: block; width: 100%; height: 100%; }
+</style>
+
+<!--
+  Gabarits pour produire les PNG du manifeste. Le glyphe d'origine (public/icons/icon.svg) occupe
+  une boîte dont le centre est (66, 70) dans le repère 132×132, et non (66, 66) : les roues pèsent
+  vers le bas. Les deux transformations ci-dessous le recentrent avant de le mettre à l'échelle.
+
+  « any »      : glyphe à 118 % — l'icône est déjà rognée par l'OS qui veut bien.
+  « maskable » : glyphe à 95 %, pour tenir dans le cercle de sécurité (80 % du côté) que les
+                 lanceurs Android découpent. Sans cette marge, les roues sont tranchées.
+  Les deux sont opaques et pleine page : c'est la forme attendue d'une icône d'application, et
+  les coins arrondis sont appliqués par le système, pas par nous.
+-->
+
+<div class="tuile" id="i192" role="img" aria-label="icone192">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132">
+    <rect width="132" height="132" fill="#3B2FB5"/>
+    <g transform="translate(66 66) scale(1.18) translate(-66 -70)">
+      <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
+        <circle cx="15" cy="29" r="12.5"/>
+        <circle cx="61" cy="29" r="12.5"/>
+      </g>
+      <g transform="translate(28 44)" fill="#C8F03C">
+        <rect x="16" y="8" width="44" height="5" rx="2.5"/>
+        <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<div class="tuile" id="i512" role="img" aria-label="icone512">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132">
+    <rect width="132" height="132" fill="#3B2FB5"/>
+    <g transform="translate(66 66) scale(1.18) translate(-66 -70)">
+      <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
+        <circle cx="15" cy="29" r="12.5"/>
+        <circle cx="61" cy="29" r="12.5"/>
+      </g>
+      <g transform="translate(28 44)" fill="#C8F03C">
+        <rect x="16" y="8" width="44" height="5" rx="2.5"/>
+        <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+      </g>
+    </g>
+  </svg>
+</div>
+
+<div class="tuile" id="imask" role="img" aria-label="iconemask">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132">
+    <rect width="132" height="132" fill="#3B2FB5"/>
+    <g transform="translate(66 66) scale(0.95) translate(-66 -70)">
+      <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
+        <circle cx="15" cy="29" r="12.5"/>
+        <circle cx="61" cy="29" r="12.5"/>
+      </g>
+      <g transform="translate(28 44)" fill="#C8F03C">
+        <rect x="16" y="8" width="44" height="5" rx="2.5"/>
+        <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"/>
+      </g>
+    </g>
+  </svg>
+</div>
