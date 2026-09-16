@@ -81,6 +81,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
   const [occupation, setOccupation] = useState(null);
   const [occChargement, setOccChargement] = useState(false);
   const [occErreur, setOccErreur] = useState('');
+  const [occVersion, setOccVersion] = useState(0); // relance la lecture de l'occupation après une action rapide
   const [enregistrement, setEnregistrement] = useState(false);
   const [enCours, setEnCours] = useState(null);
   const [glisse, setGlisse] = useState(null);
@@ -157,7 +158,18 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       .catch((e) => { if (!annule) { setOccupation(null); setOccErreur(e.message); } })
       .finally(() => { if (!annule) setOccChargement(false); });
     return () => { annule = true; };
-  }, [mode, restoId, date, heure, token, tables]);
+  }, [mode, restoId, date, heure, token, tables, occVersion]);
+
+  // Actions rapides du mode direct : table occupée par des clients sans réservation / libérée, et ouverture à la
+  // réservation en ligne. Un appui, et le plan comme les créneaux proposés en ligne sont à jour.
+  async function actionTable(tb, chemin, body) {
+    try {
+      const maj = await api(`/restaurants/${restoId}/tables/${tb.id}${chemin}`, { method: 'PATCH', token, body });
+      setTables?.((liste) => (liste || []).map((x) => (x.id === maj.id ? { ...x, ...maj } : x)));
+      setOccVersion((v) => v + 1);
+      return maj;
+    } catch (e) { toast(e.message); return null; }
+  }
 
   const choisie = affichees.find((tb) => tb.id === selection) || null;
   const salleElChoisi = selEl ? sallesAff.find((s) => s.id === selEl.roomId) : null;
@@ -649,6 +661,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
                           <b>{tb.number ?? '–'}</b>
                           <span>{tb.name}</span>
                           <small>{tb.seats} 👤</small>
+                          {tb.onlineBookable === false && <span className="fp-hors-ligne" title={t('floorPlan.notOnlineShort')} aria-label={t('floorPlan.notOnlineShort')}>📞</span>}
                           {edit && selection === tb.id && <span className="fp-poignee" aria-hidden="true" onPointerDown={(e) => debutRedimTable(e, tb)} />}
                         </div>
                       );
@@ -678,7 +691,10 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
             onSupprimer={() => supprimerElement(salleElChoisi, elChoisi)} />
         )}
         {choisie && mode === 'live' && (
-          <FicheOccupation tb={choisie} salle={salleDe(choisie)} etat={occupation?.[choisie.id] || null} onFermer={() => setSelection(null)} />
+          <FicheOccupation tb={choisie} salle={salleDe(choisie)} etat={occupation?.[choisie.id] || null} onFermer={() => setSelection(null)}
+            onOccuper={(minutes) => actionTable(choisie, '/walk-in', { occupied: true, minutes })}
+            onLiberer={() => actionTable(choisie, '/walk-in', { occupied: false })}
+            onEnLigne={(v) => actionTable(choisie, '', { onlineBookable: v })} />
         )}
       </div>
       <ConfirmDialog open={!!confirmation} danger={confirmation?.type !== 'num'}
@@ -707,12 +723,13 @@ function FicheTable({ tb, salle, salles, acompteActif, enCours, onFermer, onPlan
   const { t } = useLanguage();
   const [f, setF] = useState({
     number: tb.number ?? '', name: tb.name, seats: tb.seats, roomId: salle.id, shape: tb.shape, joinable: !!tb.joinable,
-    minParty: tb.minParty ?? '', maxParty: tb.maxParty ?? '', depositAmount: tb.depositAmount ?? '', notes: tb.notes || '', active: tb.active
+    minParty: tb.minParty ?? '', maxParty: tb.maxParty ?? '', depositAmount: tb.depositAmount ?? '', notes: tb.notes || '', active: tb.active,
+    onlineBookable: tb.onlineBookable !== false
   });
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const change = f.number !== (tb.number ?? '') || f.name !== tb.name || Number(f.seats) !== tb.seats || f.roomId !== salle.id || f.shape !== tb.shape
     || f.joinable !== !!tb.joinable || String(f.minParty) !== String(tb.minParty ?? '') || String(f.maxParty) !== String(tb.maxParty ?? '')
-    || String(f.depositAmount) !== String(tb.depositAmount ?? '') || f.notes !== (tb.notes || '') || f.active !== tb.active;
+    || String(f.depositAmount) !== String(tb.depositAmount ?? '') || f.notes !== (tb.notes || '') || f.active !== tb.active || f.onlineBookable !== (tb.onlineBookable !== false);
   const ratio = salle.widthM / salle.depthM;
   const largeurCm = Math.round((tb.width || 10) * salle.widthM);
   const profondeurCm = Math.round((tb.height || 10) * salle.depthM);
@@ -723,7 +740,7 @@ function FicheTable({ tb, salle, salles, acompteActif, enCours, onFermer, onPlan
     const body = {
       number: f.number === '' ? null : Number(f.number), name: f.name.trim(), seats: Number(f.seats), shape: f.shape,
       joinable: f.joinable, minParty: f.minParty === '' ? null : Number(f.minParty), maxParty: f.maxParty === '' ? null : Number(f.maxParty),
-      notes: f.notes, active: f.active
+      notes: f.notes, active: f.active, onlineBookable: f.onlineBookable
     };
     if (f.roomId !== salle.id) {
       const cible = salles.find((s) => s.id === f.roomId);
@@ -788,6 +805,10 @@ function FicheTable({ tb, salle, salles, acompteActif, enCours, onFermer, onPlan
         </div>
         <div className="fp-large">
           <label className="fp-case"><input type="checkbox" checked={f.active} onChange={champ('active')} /><span>{t('floorPlan.fActive')}</span></label>
+        </div>
+        <div className="fp-large">
+          <label className="fp-case"><input type="checkbox" checked={f.onlineBookable} disabled={!f.active} onChange={champ('onlineBookable')} /><span>🌐 {t('floorPlan.fOnlineBookable')}</span></label>
+          <p className="small" style={{ margin: '2px 0 0 24px' }}>{t('floorPlan.onlineBookableHelp')}</p>
         </div>
         <div className="fp-large">
           <label htmlFor="fp-notes">{t('floorPlan.fNotes')}</label>
@@ -873,9 +894,14 @@ function FicheElement({ el, salle, onFermer, onPoser, onDupliquer, onSupprimer }
 }
 
 // Volet latéral en mode occupation : l'état de la table et la réservation en cours / suivante.
-function FicheOccupation({ tb, salle, etat, onFermer }) {
+const DUREES_OCCUPATION = [60, 90, 120, 180];
+function FicheOccupation({ tb, salle, etat, onFermer, onOccuper, onLiberer, onEnLigne }) {
   const { t } = useLanguage();
   const statut = etat?.status || (tb.active ? 'free' : 'blocked');
+  const [duree, setDuree] = useState(90);
+  const [envoi, setEnvoi] = useState(false);
+  const agir = async (fn) => { setEnvoi(true); try { await fn(); } finally { setEnvoi(false); } };
+  const enLigne = etat?.onlineBookable ?? tb.onlineBookable !== false;
   const resa = (r, titre) => (
     <div className="fp-resa">
       <span className="small">{titre}</span>
@@ -896,8 +922,36 @@ function FicheOccupation({ tb, salle, etat, onFermer }) {
       </p>
       {etat?.reservation && resa(etat.reservation, t('floorPlan.currentResa'))}
       {etat?.next && resa(etat.next, t('floorPlan.nextResa'))}
-      {!etat?.reservation && !etat?.next && statut !== 'blocked' && <p className="small" style={{ margin: '8px 0 0' }}>{t('floorPlan.noResaLater')}</p>}
+      {!etat?.reservation && !etat?.next && statut !== 'blocked' && !etat?.walkIn && <p className="small" style={{ margin: '8px 0 0' }}>{t('floorPlan.noResaLater')}</p>}
       {tb.notes && <p className="small" style={{ margin: '8px 0 0' }}>📝 {tb.notes}</p>}
+
+      {/* Clients arrivés sans réservation : un appui, la table est prise et retirée des créneaux en ligne. */}
+      {statut !== 'blocked' && (
+        <div className="fp-rapide">
+          {etat?.walkIn ? (
+            <>
+              <p className="small" style={{ margin: '0 0 6px' }}>👥 {t('floorPlan.walkInUntil', { from: heureLocale(etat.walkIn.since), to: heureLocale(etat.walkIn.until) })}</p>
+              <button type="button" className="btn-teal btn-block" disabled={envoi} onClick={() => agir(onLiberer)}>✅ {t('floorPlan.freeTable')}</button>
+            </>
+          ) : !etat?.reservation && (
+            <>
+              <p className="small" style={{ margin: '0 0 6px' }}><b>{t('floorPlan.walkInTitle')}</b></p>
+              <div className="fp-durees" role="radiogroup" aria-label={t('floorPlan.walkInDuration')}>
+                {DUREES_OCCUPATION.map((m) => (
+                  <button key={m} type="button" role="radio" aria-checked={duree === m} className={`chip${duree === m ? ' active' : ''}`} onClick={() => setDuree(m)}>
+                    {m % 60 ? `${Math.floor(m / 60)} h ${m % 60}` : `${m / 60} h`}
+                  </button>
+                ))}
+              </div>
+              <button type="button" className="btn-gold btn-block" disabled={envoi} onClick={() => agir(() => onOccuper(duree))}>👥 {t('floorPlan.markOccupied')}</button>
+            </>
+          )}
+          <label className="fp-case" style={{ marginTop: 10 }}>
+            <input type="checkbox" checked={enLigne} disabled={envoi} onChange={(e) => agir(() => onEnLigne(e.target.checked))} />
+            <span>🌐 {t('floorPlan.fOnlineBookable')}</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

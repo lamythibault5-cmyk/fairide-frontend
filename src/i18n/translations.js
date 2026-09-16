@@ -20,6 +20,14 @@ export const translations = {
       poweredBy: 'Réservation propulsée par Fairide, la plateforme belge à commission réduite.'
     },
     floorPlan: {
+      notOnlineShort: 'Non réservable en ligne',
+      fOnlineBookable: 'Réservable en ligne',
+      onlineBookableHelp: 'Décoché : la table reste sur ton plan mais n\'est jamais proposée aux clients sur le site. Tu peux toujours y placer une réservation prise au téléphone.',
+      walkInTitle: 'Des clients arrivent sans réservation ?',
+      walkInDuration: 'Durée d’occupation',
+      markOccupied: 'Marquer la table occupée',
+      walkInUntil: 'Occupée sans réservation de {from} à {to}. Elle n’est pas proposée en ligne pendant ce temps.',
+      freeTable: 'Libérer la table',
       area_inside: 'Intérieur',
       area_outside: 'Terrasse / Extérieur',
       area_bar: 'Bar',
@@ -6535,6 +6543,14 @@ export const translations = {
       poweredBy: 'Reservation powered by Fairide, the Belgian low-commission platform.'
     },
     floorPlan: {
+      notOnlineShort: 'Not bookable online',
+      fOnlineBookable: 'Bookable online',
+      onlineBookableHelp: 'Unticked: the table stays on your plan but is never offered to customers on the site. You can still place a phone booking on it.',
+      walkInTitle: 'Guests arriving without a booking?',
+      walkInDuration: 'Occupancy duration',
+      markOccupied: 'Mark table as occupied',
+      walkInUntil: 'Occupied without a booking from {from} to {to}. It is not offered online during that time.',
+      freeTable: 'Free the table',
       area_inside: 'Inside',
       area_outside: 'Terrace / Outside',
       area_bar: 'Bar',
@@ -13026,6 +13042,14 @@ export const translations = {
       poweredBy: 'Reservering via Fairide, het Belgische platform met lage commissie.'
     },
     floorPlan: {
+      notOnlineShort: 'Niet online reserveerbaar',
+      fOnlineBookable: 'Online reserveerbaar',
+      onlineBookableHelp: 'Uitgevinkt: de tafel blijft op je plan, maar wordt nooit aan klanten op de site aangeboden. Je kan er nog altijd een telefonische reservatie op zetten.',
+      walkInTitle: 'Komen er klanten zonder reservatie?',
+      walkInDuration: 'Duur van de bezetting',
+      markOccupied: 'Tafel als bezet markeren',
+      walkInUntil: 'Bezet zonder reservatie van {from} tot {to}. Ze wordt in die tijd niet online aangeboden.',
+      freeTable: 'Tafel vrijgeven',
       area_inside: 'Binnen',
       area_outside: 'Terras / Buiten',
       area_bar: 'Bar',
