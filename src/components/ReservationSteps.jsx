@@ -369,8 +369,8 @@ export default function ReservationSteps({ restaurantId, restaurant, mode = 'cli
         <div className="resa-wizard-body">
           {resto && (
             <div className="field">
-              <label>{t('resa.receivedVia')}</label>
-              <div className="resa-choices">
+              <span className="titre-groupe" id="resa-source-titre">{t('resa.receivedVia')}</span>
+              <div className="resa-choices" role="group" aria-labelledby="resa-source-titre">
                 {[['phone', '📞', t('resa.phone')], ['walk_in', '🚶', t('resa.walkIn')], ['restaurant', '✉️', t('resa.otherSource')]].map(([v, ico, lib]) => (
                   <button key={v} type="button" className={source === v ? 'active' : ''} onClick={() => setSource(v)}>{ico} {lib}</button>
                 ))}

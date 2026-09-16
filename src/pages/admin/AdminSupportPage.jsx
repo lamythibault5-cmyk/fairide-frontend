@@ -324,7 +324,7 @@ function CreateTicketModal({ onClose, onCreated }) {
           </select>
         </div>
       </div>
-      <div className="field"><label>{tr('adminSupport.assignedTo')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-assignedto'}>{tr('adminSupport.assignedTo')}</label><AssigneeSelect id={idsA11y + '-assignedto'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
       <div className="field"><label htmlFor={idsA11y + '-requestername'}>{tr('adminSupport.requesterName')}</label><input id={idsA11y + '-requestername'} value={form.requesterName} onChange={(e) => setForm({ ...form, requesterName: e.target.value })} /></div>
       <div className="row" style={{ gap: 8 }}>
         <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-email'}>{tr('adminCommon.email')}</label><input id={idsA11y + '-email'} value={form.requesterEmail} onChange={(e) => setForm({ ...form, requesterEmail: e.target.value })} /></div>
@@ -534,7 +534,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
               </select>
             </div>
           </div>
-          <div className="field"><label>{tr('adminSupport.assignedTo')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-assignedto-2'}>{tr('adminSupport.assignedTo')}</label><AssigneeSelect id={idsA11y + '-assignedto-2'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
           <div className="field"><label htmlFor={idsA11y + '-tags'}>{tr('adminSupport.tags')}</label><input id={idsA11y + '-tags'} value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>

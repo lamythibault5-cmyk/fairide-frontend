@@ -302,7 +302,7 @@ function Parametres({ tr, token, toast }) {
         <div className="field" style={{ maxWidth: 160 }}><label htmlFor={idsA11y + '-year'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} /></div>
         {f && (
           <div className="courier-grid">
-            {champs.map(([k, u]) => <div key={k} className="field"><label>{tr(`adminCouriers.th_${k}`)} ({u})</label><input type="number" step="any" value={f[k]} onChange={(e) => setF((x) => ({ ...x, [k]: e.target.value }))} /></div>)}
+            {champs.map(([k, u]) => <div key={k} className="field"><label htmlFor={`bareme-${k}`}>{tr(`adminCouriers.th_${k}`)} ({u})</label><input id={`bareme-${k}`} type="number" step="any" value={f[k]} onChange={(e) => setF((x) => ({ ...x, [k]: e.target.value }))} /></div>)}
           </div>
         )}
         <button className="btn-teal" disabled={busy || !f} onClick={sauver}>{tr('adminCouriers.saveYear', { year: annee })}</button>

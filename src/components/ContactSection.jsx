@@ -60,8 +60,8 @@ export default function ContactSection({ messageInitial = '' }) {
         ) : (
           <form onSubmit={submit}>
             <div className="field">
-              <label>{t('contact.roleLabel')}</label>
-              <div className="role-pick" style={{ marginBottom: 0 }}>
+              <span className="titre-groupe" id="contact-role-titre">{t('contact.roleLabel')}</span>
+              <div className="role-pick" style={{ marginBottom: 0 }} role="group" aria-labelledby="contact-role-titre">
                 {ROLES.map((r) => (
                   <button type="button" key={r.value} aria-pressed={senderRole === r.value} className={`chip${senderRole === r.value ? ' active' : ''}`} onClick={() => setSenderRole(r.value)}>
                     {r.label}

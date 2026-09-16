@@ -186,8 +186,8 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       </div>
       {existingItemCount > 0 && (
         <div className="field" style={{ marginBottom: 14 }}>
-          <label>{t('menuImport.whatAboutExisting', { n: existingItemCount })}</label>
-          <div className="role-pick" style={{ marginBottom: 0 }}>
+          <span className="titre-groupe" id="import-existants-titre">{t('menuImport.whatAboutExisting', { n: existingItemCount })}</span>
+          <div className="role-pick" style={{ marginBottom: 0 }} role="group" aria-labelledby="import-existants-titre">
             <div className={`chip${mode === 'append' ? ' active' : ''}`} onClick={() => setMode('append')}>
               {t('menuImport.keepAndAdd')}
             </div>

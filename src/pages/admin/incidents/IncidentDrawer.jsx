@@ -204,8 +204,8 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
           <input id={idsA11y + '-amounteur'} type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} placeholder="0.00" />
         </div>
         <div className="field full">
-          <label>{tr('adminIncidents.assignedTo')}</label>
-          <AssigneeSelect value={form.assignedTo} onChange={(v) => setForm((f) => ({ ...f, assignedTo: v }))} />
+          <label htmlFor={idsA11y + '-assignedto'}>{tr('adminIncidents.assignedTo')}</label>
+          <AssigneeSelect id={idsA11y + '-assignedto'} value={form.assignedTo} onChange={(v) => setForm((f) => ({ ...f, assignedTo: v }))} />
         </div>
         <div className="field full">
           <label htmlFor={idsA11y + '-description'}>{tr('adminIncidents.description')}</label>

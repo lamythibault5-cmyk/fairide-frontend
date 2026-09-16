@@ -109,8 +109,9 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
                 </p>
                 {Object.entries(item.translations).map(([lang, tr]) => (
                   <div key={lang} style={{ marginBottom: 12 }}>
-                    <label style={{ textTransform: 'uppercase' }}>{lang}{tr.editedByOwner ? t('menuItem.fixedByYou') : ''}</label>
+                    <label style={{ textTransform: 'uppercase' }} htmlFor={`trad-${item.id}-${lang}`}>{lang}{tr.editedByOwner ? t('menuItem.fixedByYou') : ''}</label>
                     <input
+                      id={`trad-${item.id}-${lang}`}
                       value={translationDrafts[lang]?.name ?? tr.name ?? ''}
                       onChange={(e) => setTranslationDrafts((d) => ({ ...d, [lang]: { ...(d[lang] || tr), name: e.target.value } }))}
                       placeholder={t('menuItem.phName')}
@@ -203,7 +204,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         )}
         {allOptionGroups.length > 0 && (
           <div className="field">
-            <label>{t('menuItem.optionGroups')}</label>
+            <span className="titre-groupe">{t('menuItem.optionGroups')}</span>
             {allOptionGroups.map((g) => (
               <label key={g.id} className="row" style={{ gap: 8, marginBottom: 4, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={groupIds.has(g.id)} onChange={() => toggleGroup(g.id)} />

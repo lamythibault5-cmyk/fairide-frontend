@@ -455,8 +455,8 @@ export default function EditPage() {
           onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
         />
         <div className="field"><label htmlFor={idsA11y + '-description'}>{t('editResto.description')}</label><input id={idsA11y + '-description'} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
-        <div className="field">
-          <label>{t('editResto.coverLabel')}</label>
+        <div className="field" role="group" aria-labelledby="edit-couverture">
+          <span className="titre-groupe" id="edit-couverture">{t('editResto.coverLabel')}</span>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {editCover && <img src={editCover} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />}
             <button type="button" className="btn-ghost" onClick={openCoverPicker}>{t('editResto.choosePhoto')}</button>
@@ -473,8 +473,8 @@ export default function EditPage() {
             onCancel={() => setCoverPickerOpen(false)}
           />
         )}
-        <div className="field">
-          <label>{t('editResto.logoLabel')}</label>
+        <div className="field" role="group" aria-labelledby="edit-logo">
+          <span className="titre-groupe" id="edit-logo">{t('editResto.logoLabel')}</span>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             {editLogo && <img src={editLogo} alt="" className="dish-thumb" style={{ flexShrink: 0, borderRadius: '50%' }} />}
             <button type="button" className="btn-ghost" onClick={openLogoPicker}>{t('editResto.chooseLogo')}</button>
@@ -492,8 +492,8 @@ export default function EditPage() {
             onCancel={() => setLogoPickerOpen(false)}
           />
         )}
-        <label>{t('editResto.openingHours')}</label>
-        <OpeningHoursEditor value={editHours} onChange={setEditHours} />
+        <span className="titre-groupe" id="edit-horaires">{t('editResto.openingHours')}</span>
+        <div role="group" aria-labelledby="edit-horaires"><OpeningHoursEditor value={editHours} onChange={setEditHours} /></div>
         <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
           <span className="small">{t('editResto.openVisible')}</span>
@@ -501,7 +501,7 @@ export default function EditPage() {
         <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
 
         <div className="divider" />
-        <label>{t('editResto.closuresTitle')}</label>
+        <h4 className="titre-groupe">{t('editResto.closuresTitle')}</h4>
         <p className="small" style={{ margin: '0 0 10px' }}>
           {t('editResto.closuresIntro')}
         </p>

@@ -300,7 +300,7 @@ export default function Checkout() {
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
                   les options, au lieu de trois boutons sans contexte. */}
-              <label id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</label>
+              <span className="titre-groupe" id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</span>
               {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
                   « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
                   l'option retenue cernée d'une arête iris. Trois pilules côte à côte se lisaient

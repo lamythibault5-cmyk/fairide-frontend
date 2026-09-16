@@ -871,10 +871,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
               <div className="menu-grid dashboard-menu-grid">
                 {reorderSectionId !== section.id && selectSectionId !== section.id && (addSectionId === section.id ? (
                   <div className="card" id={`ajout-plat-${section.id}`} style={{ gridColumn: '1 / -1', marginBottom: 0 }}>
-                    <div className="field"><label>{t('menuPage.name')}</label><input value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
-                    <div className="field"><label>{t('menuPage.price')}</label><input type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
+                    <div className="field"><label htmlFor={`plat-nom-${section.id}`}>{t('menuPage.name')}</label><input id={`plat-nom-${section.id}`} value={itemName} onChange={(e) => setItemName(e.target.value)} placeholder={t('menuPage.phDishName')} /></div>
+                    <div className="field"><label htmlFor={`plat-prix-${section.id}`}>{t('menuPage.price')}</label><input id={`plat-prix-${section.id}`} type="number" step="0.5" value={itemPrice} onChange={(e) => setItemPrice(e.target.value)} placeholder="12.50" /></div>
                     <div className="field">
-                      <label>{t('menuPage.imageOptional')}</label>
+                      <span className="titre-groupe">{t('menuPage.imageOptional')}</span>
                       <div className="row" style={{ gap: 8, alignItems: 'center' }}>
                         {itemName.trim() && (
                           resolveItemImage({ name: itemName, category: itemCategory, imageUrl: itemImageUrl }, restaurant.sections) ? (

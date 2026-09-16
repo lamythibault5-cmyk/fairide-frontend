@@ -262,7 +262,7 @@ function ChampsProspect({ form, setForm, tr }) {
             <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
           </select>
         </div>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.salesOwner')}</label><AssigneeSelect value={form.ownerEmail} onChange={(v) => setForm({ ...form, ownerEmail: v })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-salesowner'}>{tr('adminCrm.salesOwner')}</label><AssigneeSelect id={idsA11y + '-salesowner'} value={form.ownerEmail} onChange={(v) => setForm({ ...form, ownerEmail: v })} /></div>
       </div>
       <div className="row" style={{ gap: 8 }}>
         <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-source'}>{tr('adminCrm.source')}</label><input id={idsA11y + '-source'} placeholder={tr('adminCrm.phSource')} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>

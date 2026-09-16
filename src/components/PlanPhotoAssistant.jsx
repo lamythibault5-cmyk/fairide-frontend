@@ -158,12 +158,12 @@ export default function PlanPhotoAssistant({ restoId, token, toast, salles, tabl
                 <>
                   <div className="fp-champs">
                     <div className="fp-large">
-                      <label>{t('floorPlan.aiRoomName')}</label>
-                      <input value={p.name} maxLength={40} onChange={(e) => maj(i, { name: e.target.value })} />
+                      <label htmlFor={`fp-nom-${i}`}>{t('floorPlan.aiRoomName')}</label>
+                      <input id={`fp-nom-${i}`} value={p.name} maxLength={40} onChange={(e) => maj(i, { name: e.target.value })} />
                     </div>
                     <div className="fp-large">
-                      <label>{t('floorPlan.roomKind')}</label>
-                      <div className="fp-types">
+                      <span className="titre-groupe" id={`fp-type-titre-${i}`}>{t('floorPlan.roomKind')}</span>
+                      <div className="fp-types" role="group" aria-labelledby={`fp-type-titre-${i}`}>
                         {AREAS.map((a) => (
                           <button type="button" key={a} className={`chip${p.kind === a ? ' active' : ''}`} onClick={() => maj(i, { kind: a })}>{AREA_ICONS[a]} {areaLabel(t, a)}</button>
                         ))}
@@ -171,8 +171,8 @@ export default function PlanPhotoAssistant({ restoId, token, toast, salles, tabl
                     </div>
                     {!cible && salles.length > 0 && (
                       <div className="fp-large">
-                        <label>{t('floorPlan.aiTarget')}</label>
-                        <select value={p.cible} onChange={(e) => maj(i, { cible: e.target.value })}>
+                        <label htmlFor={`fp-cible-${i}`}>{t('floorPlan.aiTarget')}</label>
+                        <select id={`fp-cible-${i}`} value={p.cible} onChange={(e) => maj(i, { cible: e.target.value })}>
                           <option value="">{t('floorPlan.aiNewRoom')}</option>
                           {salles.map((s) => <option key={s.id} value={s.id}>{AREA_ICONS[s.kind]} {s.name}</option>)}
                         </select>

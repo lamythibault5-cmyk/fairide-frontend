@@ -88,8 +88,9 @@ export default function AdminSettingsPage() {
             </p>
             {pricingFields(tr).map((f) => (
               <div className="field" key={f.key}>
-                <label>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> · {f.hint}</span> : null}</label>
+                <label htmlFor={`tarif-${f.key}`}>{f.label} ({f.suffix}){f.hint ? <span className="small" style={{ opacity: 0.6 }}> · {f.hint}</span> : null}</label>
                 <input
+                  id={`tarif-${f.key}`}
                   type="number" step="0.01"
                   value={pricingForm[f.key]}
                   onChange={(e) => setPricingForm({ ...pricingForm, [f.key]: e.target.value })}

@@ -272,7 +272,7 @@ function CreateTaskModal({ onClose, onCreated }) {
           </select>
         </div>
       </div>
-      <div className="field"><label>{tr('adminCommon.ownerOptional')}</label><AssigneeSelect value={assignedToEmail} onChange={setAssignedToEmail} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-owneroptional'}>{tr('adminCommon.ownerOptional')}</label><AssigneeSelect id={idsA11y + '-owneroptional'} value={assignedToEmail} onChange={setAssignedToEmail} /></div>
     </RecordDrawer>,
     document.body
   );
@@ -397,7 +397,7 @@ function TaskDrawer({ id, onClose, onChanged }) {
               </select>
             </div>
           </div>
-          <div className="field"><label>{tr('adminCommon.owner')}</label><AssigneeSelect value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-owner'}>{tr('adminCommon.owner')}</label><AssigneeSelect id={idsA11y + '-owner'} value={form.assignedToEmail} onChange={(v) => setForm({ ...form, assignedToEmail: v })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
             <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>
