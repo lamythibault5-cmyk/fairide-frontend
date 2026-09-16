@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -57,6 +57,9 @@ export default function MapPage() {
   const [prix, setPrix] = useState(0); // 0 = tous, sinon 1 / 2 / 3
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'prix' | 'tri' | null
+  // Hauteur du tiroir : 'basse' (la carte domine), 'moyenne', 'haute' (la liste couvre la carte).
+  const [hauteur, setHauteur] = useState('basse');
+  const departY = useRef(null);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
@@ -114,7 +117,7 @@ export default function MapPage() {
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
 
   return (
-    <div className="carte-page">
+    <div className={`carte-page carte-page-${hauteur}`}>
       <div className="carte-plein">
         <Suspense fallback={<div className="carte-attente" />}>
           <RestaurantsMap
@@ -206,8 +209,27 @@ export default function MapPage() {
       </div>
 
       {/* La liste sous la carte : les mêmes commerces, dans le même ordre, avec ce qu'une épingle
-          ne peut pas montrer — la photo, la note, la distance. On y arrive en faisant défiler. */}
-      <div className="carte-feuille">
+          ne peut pas montrer — la photo, la note, la distance.
+          LA POIGNÉE SE TIRE. Trois hauteurs : la liste juste amorcée sous la carte, la liste à
+          mi-écran, la liste plein écran (la carte disparaît). On la tire au doigt, ou on tape la
+          poignée pour passer au cran suivant — taper est plus sûr que glisser sur un écran où le
+          moindre mouvement fait aussi défiler la liste elle-même. */}
+      <div className={`carte-feuille carte-feuille-${hauteur}`}>
+        <button
+          type="button" className="carte-poignee" aria-label={t('mapClient.sheetHandle')}
+          onClick={() => setHauteur((h) => (h === 'haute' ? 'basse' : h === 'basse' ? 'moyenne' : 'haute'))}
+          onPointerDown={(e) => { departY.current = e.clientY; e.currentTarget.setPointerCapture(e.pointerId); }}
+          onPointerUp={(e) => {
+            if (departY.current == null) return;
+            const dy = e.clientY - departY.current;
+            departY.current = null;
+            // 24px : au-delà c'est un glissement, en deçà c'est un tap (traité par onClick).
+            if (dy < -24) setHauteur((h) => (h === 'basse' ? 'moyenne' : 'haute'));
+            else if (dy > 24) setHauteur((h) => (h === 'haute' ? 'moyenne' : 'basse'));
+          }}
+        >
+          <span className="carte-poignee-barre" aria-hidden="true" />
+        </button>
         <h2 className="carte-feuille-titre">{t('mapClient.nearbyTitle')}</h2>
         {chargement && <p className="small">{t('mapClient.loading')}</p>}
         {!chargement && liste.length === 0 && <p className="small">{t('mapClient.noneMatch')}</p>}

@@ -1725,12 +1725,32 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
 }
 
-/* La liste sous la carte. Le coin arrondi en haut et le leger recouvrement disent qu'elle glisse
-   par-dessus la carte : c'est ce qui fait comprendre qu'on peut descendre, sans fleche ni consigne. */
+/* Le tiroir sous la carte. Il se TIRE : trois hauteurs, obtenues en deplacant sa marge negative.
+   « basse » l'amorce sous la carte, « moyenne » le monte a mi-ecran, « haute » lui fait couvrir la
+   carte entierement. Le coin arrondi et le recouvrement disent qu'il glisse par-dessus, sans fleche
+   ni consigne ; la barre grise en haut dit qu'on peut l'attraper. */
 .carte-feuille {
-  position: relative; z-index: 1; margin-top: -18px; background: #fff;
-  border-radius: 18px 18px 0 0; padding: 20px 20px 40px; box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+  position: relative; z-index: 1; background: #fff;
+  border-radius: 18px 18px 0 0; padding: 0 20px 40px; box-shadow: 0 -8px 24px rgba(0,0,0,.08);
+  transition: margin-top .28s cubic-bezier(.22,.61,.36,1);
 }
+.carte-feuille-basse { margin-top: -18px; }
+.carte-feuille-moyenne { margin-top: -36svh; }
+/* -72svh annule exactement la hauteur de .carte-plein : la liste part du haut de l'ecran. */
+.carte-feuille-haute { margin-top: -72svh; min-height: 72svh; }
+/* Tiroir plein ecran : les filtres appartiennent a la carte, qui n'est plus visible. Les laisser
+   flotter les posait sur le titre de la liste, ou ils filtraient quelque chose qu'on ne voyait
+   plus. Ils reviennent des que le tiroir redescend. */
+.carte-page-haute .carte-controles { opacity: 0; pointer-events: none; }
+.carte-controles { transition: opacity .2s ease; }
+/* La poignee : une cible de 40px de haut pour le doigt, une barre de 5px pour l'oeil. */
+.carte-poignee {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 40px; margin: 0 -20px; padding: 0 20px; background: none; border: 0;
+  cursor: grab; touch-action: none;
+}
+.carte-poignee:active { cursor: grabbing; }
+.carte-poignee-barre { display: block; width: 44px; height: 5px; border-radius: 999px; background: var(--line); }
 .carte-feuille-titre { font-size: 21px; margin: 0 0 14px; }
 .carte-feuille-ligne {
   display: flex; align-items: center; gap: 12px; padding: 10px 0; text-decoration: none; color: inherit;
