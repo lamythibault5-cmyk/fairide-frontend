@@ -15,10 +15,12 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
   return createPortal(
     <div className="modal-overlay" onClick={onCancel}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
-        <h3 style={{ margin: '0 0 8px' }}>{title}</h3>
-        {message && <p className="small" style={{ margin: '0 0 16px' }}>{message}</p>}
-        <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
-          <button className="btn-ghost" onClick={onCancel} disabled={loading}>{t('common.cancel')}</button>
+        <h3 className="modal-titre">{title}</h3>
+        {message && <p className="small" style={{ margin: '0 0 4px' }}>{message}</p>}
+        {/* Pied collant : l'action décisive barre toute la largeur, l'annulation est un lien en
+            dessous. Les deux boutons étaient auparavant alignés à droite, à la suite du message —
+            dans une modale un peu longue, ils passaient sous la ligne de flottaison. */}
+        <div className="modal-pied">
           {/* btn-gold et non btn-teal : il n'existe aucune règle CSS pour `.btn-teal` sur un <button>
               (seulement `a.btn-teal`, voir styles.css), ce bouton s'affichait donc sans aucun style,
               avec l'apparence par défaut du navigateur. Reliquat du retrait du teal de l'identité
@@ -26,6 +28,7 @@ export default function ConfirmDialog({ open, title, message, confirmLabel = 'Co
           <button className={danger ? 'btn-outline' : 'btn-gold'} style={danger ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined} onClick={onConfirm} disabled={loading}>
             {loading ? '...' : confirmLabel}
           </button>
+          <button className="btn-ghost" onClick={onCancel} disabled={loading}>{t('common.cancel')}</button>
         </div>
       </div>
     </div>,
