@@ -185,19 +185,22 @@ export default function Orders() {
   if (listeAffichee.length === 0) {
     return (
       <div>
-        <h1 className="page-title">{titre}</h1>
+        <div className="commandes-entete">
+          <h1 className="page-title">{titre}</h1>
+          {/* SUR LA LIGNE DU TITRE, pas dans la rangee des filtres. A cote de « Toutes » et
+              « Reservations » il ne tenait pas : 225px de filtres plus 175px de bouton depassent
+              un telephone de 400px, donc il passait a la ligne et n etait plus « en haut a droite »
+              mais en dessous. Le titre, lui, peut se resserrer ; les filtres non. */}
+          <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+            <Icone nom="manette" taille={17} /><span className="jouer-long">{t('games.playWhileWaiting')}</span><span className="jouer-court">{t('games.playWhileWaitingShort')}</span>
+          </button>
+        </div>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
-            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
-            intention ; il dit maintenant la meme chose en permanence. */}
-        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
-          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
-        </button>
-      </div>
+</div>
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
@@ -221,19 +224,22 @@ export default function Orders() {
 
   return (
     <div>
-      <h1 className="page-title">{titre}</h1>
+      <div className="commandes-entete">
+        <h1 className="page-title">{titre}</h1>
+        {/* SUR LA LIGNE DU TITRE, pas dans la rangee des filtres. A cote de « Toutes » et
+            « Reservations » il ne tenait pas : 225px de filtres plus 175px de bouton depassent
+            un telephone de 400px, donc il passait a la ligne et n etait plus « en haut a droite »
+            mais en dessous. Le titre, lui, peut se resserrer ; les filtres non. */}
+        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
+          <Icone nom="manette" taille={17} /><span className="jouer-long">{t('games.playWhileWaiting')}</span><span className="jouer-court">{t('games.playWhileWaitingShort')}</span>
+        </button>
+      </div>
       {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
           « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
       <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-        {/* Tout a droite de la rangee, en lime : le bouton ne bascule rien, il DESCEND jusqu'au jeu
-            pose en bas de page. Il disait donc tantot « Jouer », tantot « Fermer », pour une seule
-            intention ; il dit maintenant la meme chose en permanence. */}
-        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
-          <Icone nom="manette" taille={17} />{t('games.playWhileWaiting')}
-        </button>
-      </div>
+</div>
       {rappels.map((o) => {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
         return (

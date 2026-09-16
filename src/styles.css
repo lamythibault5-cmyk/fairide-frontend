@@ -3716,7 +3716,15 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
    droite par une marge automatique. Sur telephone la rangee se replie, et le bouton garde sa
    place de dernier element. */
 .commandes-barre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
-.commandes-barre .suivi-jouer { margin-left: auto; }
+/* Le bouton « Jouer en attendant » vit sur la ligne du TITRE, pas dans la rangee des filtres.
+   A cote de « Toutes » et « Reservations », il ne tenait pas sur un telephone : 225px de filtres
+   plus 175px de bouton depassent les 400px d'un ecran courant, donc il passait a la ligne — et se
+   retrouvait sous les filtres au lieu d'etre en haut a droite. Le titre, lui, peut se resserrer.
+   S'il devait quand meme passer a la ligne sur un tres petit ecran, margin-left: auto le garde
+   colle a droite plutot que de le renvoyer a gauche. */
+.commandes-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.commandes-entete .page-title { margin: 0; }
+.commandes-entete .suivi-jouer { flex: none; margin-left: auto; }
 /* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
    de filtres, pas l'action principale de la page. */
 .suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
@@ -3747,3 +3755,14 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
    titre flottant sans rapport declare avec ce qui suit.
    Meme rendu que `label` (ligne 349), pour que rien ne bouge a l'ecran. */
 .titre-groupe { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
+
+/* Le libelle du bouton « Jouer en attendant » se raccourcit sur telephone.
+   A 400px de large, « Mes commandes » (194px) et le bouton entier (175px) demandent 381px dans un
+   conteneur qui en offre 368 : le bouton passait a la ligne pour treize pixels. Plutot que de
+   rogner la police jusqu'a l'illisible, le bouton dit simplement « Jouer » sous 520px — a cote
+   d'une manette, il ne manque rien a comprendre. */
+.jouer-court { display: none; }
+@media (max-width: 520px) {
+  .jouer-long { display: none; }
+  .jouer-court { display: inline; }
+}
