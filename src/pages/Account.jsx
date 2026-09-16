@@ -462,7 +462,10 @@ export default function Account() {
           (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
       <div className={`card account-groupe account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
         <div id="section-messages">
-          <LigneCompte icone="courrier" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : t('inbox.rowSub')} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
+          {/* Le sous-titre ne s'affiche QUE s'il y a des messages non lus : ça, c'est une
+              information. « Les réponses de l'équipe » sous un titre « Messages » n'en était pas
+              une, c'était le titre écrit deux fois. */}
+          <LigneCompte icone="courrier" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : undefined} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
             {ouvertes.has('messages') && <InboxSection />}
           </LigneCompte>
         </div>
@@ -591,7 +594,7 @@ export default function Account() {
           <PhoneVerification />
         </LigneCompte>
 
-        <LigneCompte icone="cle" titre={t('account.passwordTitle')} sous={t('accountUi.newPasswordSub')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+        <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
           <form onSubmit={savePassword}>
             <div className="field">
               <label>{t('account.currentPassword')}</label>
@@ -723,17 +726,17 @@ export default function Account() {
               fasse 56px (voir DashboardSidebar.jsx). On les ouvre moins souvent que la liste, la
               recherche ou ses commandes — c'est le sixième par l'usage, donc celui qui part. */}
           <LigneCompte to="/favorites" icone="favoris" titre={t('nav.favorites')} />
-          <LigneCompte to="/invoices" icone="document" titre={t('accountUi.myInvoices')} sous={t('accountUi.invoicesSub')} />
-          <LigneCompte icone="bouclier" titre={t('accountUi.guestReviewsTitle')} sous={t('accountUi.guestReviewsSub')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
+          <LigneCompte to="/invoices" icone="document" titre={t('accountUi.myInvoices')} />
+          <LigneCompte icone="bouclier" titre={t('accountUi.guestReviewsTitle')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
             {ouvertes.has('avisRestos') && <MyGuestReviews />}
           </LigneCompte>
           {/* La rangée « Adresse de livraison » a disparu : elle affichait mot pour mot l'adresse déjà
               écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
               donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
               adresse ; elle vit donc à un seul endroit, sous « Mes infos », où elle se modifie. */}
-          <LigneCompte to="/aide?sujet=paiement" icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
+          <LigneCompte to="/aide?sujet=paiement" icone="carteBancaire" titre={t('accountUi.paymentMethods')} />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
-          <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />
+          <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
         </div>
       )}
 
@@ -745,7 +748,7 @@ export default function Account() {
               d'emploi, partis avant elles pour la même raison. */}
           <LigneCompte to="/dashboard/preview" icone="apercu" titre={t('nav.customerPreview')} />
           <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
-          <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} sous={t('ticketHelp.rowSub')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
+          <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
             {ouvertes.has('tickets') && <TicketHelp />}
           </LigneCompte>
           <div id="section-contrat" />
@@ -953,9 +956,9 @@ export default function Account() {
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom.
               Les réservations (agenda, plan de salle, règles, agenda externe) ont leur propre rubrique principale. */}
-          <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
+          <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
           <LigneCompte to="/dashboard/invoices" icone="document" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
-          <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />
+          <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
           <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
         </div>
       )}
@@ -973,7 +976,7 @@ export default function Account() {
           <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>
-          <LigneCompte to="/driver/reviews" icone="etoile" titre={t('accountUi.myReviews')} sous={t('accountUi.myReviewsSub')} />
+          <LigneCompte to="/driver/reviews" icone="etoile" titre={t('accountUi.myReviews')} />
           <LigneCompte to="/driver/invoices" icone="document" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
         </div>
       )}
@@ -991,7 +994,7 @@ export default function Account() {
         <LigneCompte to="/aide?sujet=avis" icone="etoile" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
         <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
         <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
-        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />}
+        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
