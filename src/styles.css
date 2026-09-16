@@ -1748,7 +1748,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @keyframes jeu-apparait { from { opacity: 0; } to { opacity: 1; } }
 .jeu-overlay--fin .jeu-carte { animation: jeu-monte .3s ease-out .5s both; }
 @keyframes jeu-monte { from { transform: translateY(10px); } to { transform: none; } }
-.jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; color: #fff; text-align: center; }
+.jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; margin: auto; color: #fff; text-align: center; }
+/* Terrain court (téléphone couché, plein écran) : la carte de démarrage se compacte, et si elle ne tient
+   toujours pas, elle défile DANS le terrain au lieu de déborder par-dessus le bandeau et ses boutons. */
+.jeu-overlay { overflow-y: auto; overscroll-behavior: contain; }
+@media (max-height: 470px) {
+  .jeu--plein .jeu-emoji { font-size: 26px; }
+  .jeu--plein .jeu-carte { gap: 5px; }
+  .jeu--plein .jeu-titre { font-size: 15px; }
+  .jeu--plein .jeu-sous { font-size: 12px; }
+  .jeu--plein .jeu-btn { padding: 7px 14px; font-size: 13px; }
+  .jeu--plein .jeu-indice { font-size: 11px; margin: 0 0 3px; }
+}
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
 .jeu-btn {
@@ -3071,7 +3082,10 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
   display: flex; flex-direction: column; background: #14121F;
   padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
 }
-.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; border-radius: 14px; }
+/* align-self: stretch est indispensable — `.jeu` centre ses enfants (align-items: center), donc le cadre
+   prenait la largeur de son canvas au lieu de celle de l'écran : en plein écran sur un téléphone couché, le
+   terrain restait un timbre-poste au milieu, et la carte de démarrage débordait par-dessus les boutons. */
+.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; align-self: stretch; border-radius: 14px; }
 .jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
 .jeu--plein .jeu-indice { margin: 2px 0 6px; }
 html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }

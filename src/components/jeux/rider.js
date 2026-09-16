@@ -75,6 +75,23 @@ const MOTS_DEFAUT = 'VÉLO,MENU,RESTO,REPAS,LOCAL,PANIER,CUISINE,LIVREUR,FAIRIDE
 const LETTRES_EN_JEU = 2; // lettres posées devant soi au plus en même temps : le mot se gagne, il ne se ramasse pas
 const FETE_MOT = 1.8; // s pendant lesquelles le mot complet reste affiché avant le suivant
 
+// Chute (2026-09-16) : le pilote ne s'éteint plus avec son vélo, il est ÉJECTÉ — il part par-dessus le guidon,
+// roule au sol, le vélo part de son côté. L'écran de fin n'arrive qu'après cette seconde-là : on voit ce qui
+// s'est passé, et on comprend pourquoi on a chuté.
+const EJECTION_DUREE = 1.15; // s d'animation avant l'écran de fin
+const EJECTION_ELAN = 0.75; // part de la vitesse du vélo gardée par le corps
+const EJECTION_SAUT = 0.42; // poussée verticale à l'éjection, en U/s
+const EJECTION_REBOND = 0.35; // ce qui reste de la vitesse verticale après un rebond
+const EJECTION_FROTTEMENT = 2.6; // freinage de la glissade au sol, 1/s
+// Cœurs : une vie de secours. RARES et HAUTS — placés bien au-dessus de ce qu'un simple saut atteint
+// (SAUT_HAUTEUR = 0,32 U), donc il faut une vraie trajectoire de tremplin ou de falaise pour aller les chercher.
+const COEUR_MAX = 2; // on n'en garde pas plus : c'est un filet, pas un stock
+const COEUR_CHANCE = 0.12; // probabilité par section éligible
+const COEUR_DEBUT = 6; // aucune avant la 6e section : le temps de tenir sur la piste
+const COEUR_ECART = 6; // et jamais deux à moins de six sections d'intervalle
+const COEUR_HAUT = [0.52, 0.76]; // hauteur au-dessus du sol, en U
+const INVINCIBLE = 1.4; // s d'immunité après avoir consommé un cœur (le temps de se remettre dans l'axe)
+
 const OBSTACLES = ['🪨', '🚧', '🛢️', '📦', '🛴'];
 const BONUS = ['🍕', '🍔', '🌮', '🍩'];
 const DEUX_PI = Math.PI * 2;
@@ -189,6 +206,10 @@ export function creerRider(api) {
   let H = []; let T = []; let x0 = 0; let xGen = 0; let yFin = 0; let yBase = 0; let sections = 0;
   // Objets du monde
   let obstacles = []; let bonus = []; let prochainJalon = 0;
+  // Cœurs : ceux posés sur la piste, ceux en poche, la section du dernier semis, l'immunité en cours,
+  // et l'éjection du pilote quand ça tourne mal (voir chuter / pasEjection).
+  let coeursPistes = []; let coeurs = 0; let sectionDernierCoeur = -99; let invincible = 0; let ejection = null;
+  let niveauCourant = 0;
   // Loopings : un anneau ne peut pas vivre dans un relief en hauteurs (deux altitudes pour un même x).
   // C'est donc un rail circulaire posé sur la piste, que le vélo emprunte le temps d'un tour.
   let boucles = []; let boucle = null; let phi = 0; let vBoucle = 0;
@@ -344,6 +365,20 @@ export function creerRider(api) {
       return;
     }
   };
+  // Un cœur, une fois de temps en temps, très haut au-dessus de la piste : hors de portée d'un saut, il se
+  // gagne en sortant d'un tremplin ou d'une falaise avec de la vitesse. C'est ce qui en fait une récompense.
+  const semerCoeur = (u, xDeb) => {
+    if (sections < COEUR_DEBUT || sections - sectionDernierCoeur < COEUR_ECART) return;
+    if (coeurs >= COEUR_MAX || Math.random() > COEUR_CHANCE) return;
+    for (let essai = 0; essai < 8; essai++) {
+      const px = xDeb + (xGen - xDeb) * aleatoire(0.25, 0.85);
+      if (boucles.some((b) => Math.abs(px - b.x) < b.r + u * 0.2)) continue;
+      const appui = trou(px) ? yBase : sol(px); // au-dessus d'un trou, on prend l'altitude de référence
+      coeursPistes.push({ x: px, y: appui - u * aleatoire(COEUR_HAUT[0], COEUR_HAUT[1]), pris: false, phase: Math.random() * 6 });
+      sectionDernierCoeur = sections;
+      return;
+    }
+  };
   const genererSection = (n) => {
     const u = U();
     sections += 1;
@@ -363,6 +398,7 @@ export function creerRider(api) {
     let r = Math.random() * poids.reduce((a, [, q]) => a + q, 0);
     for (const [faire, q] of poids) { if (r < q) { faire(); break; } r -= q; }
     semerLettre(u, xDeb);
+    semerCoeur(u, xDeb);
   };
   const assurer = (jusqua, n) => { while (xGen < jusqua) genererSection(n); };
   const elaguer = () => {
@@ -372,6 +408,7 @@ export function creerRider(api) {
     H.splice(0, k); T.splice(0, k); x0 += k * PAS;
     obstacles = obstacles.filter((o) => o.x > x - u);
     bonus = bonus.filter((b) => b.x > x - u);
+    coeursPistes = coeursPistes.filter((c) => c.x > x - u);
     // Une lettre ratée repart dans le semis : elle reviendra plus loin.
     for (const l of lettres) if (!l.pris && l.x <= x - u) enJeu.delete(l.i);
     lettres = lettres.filter((l) => l.x > x - u);
@@ -379,13 +416,54 @@ export function creerRider(api) {
   };
 
   const poussierer = (px, py, n, force) => { for (let k = 0; k < n; k++) poussiere.push({ x: px + (Math.random() - 0.5) * 24, y: py, vx: (Math.random() - 0.5) * force - force * 0.3, vy: -Math.random() * force * 0.5, reste: 0.45 }); };
-  const chuter = (px, py, raison) => { derniereChute = { raison, x: px, tempsVol, ecart: normaliser(angle - Math.atan(pente(px))) }; poussierer(px, py, 16, 200); api.eclat?.(px - camX, py - camY, LIME, 10); return api.perdre(); };
+  // Remet le vélo sur ses roues, au premier sol solide devant (un trou se franchit : on ne réapparaît pas
+  // dedans), dans l'axe de la pente et à une vitesse honnête. Sert après un cœur consommé.
+  const remettreEnSelle = () => {
+    const u = U();
+    let px = x;
+    for (let k = 0; k < 600 && trou(px); k++) px += PAS;
+    x = px + PAS; assurer(x + w * 3, niveauCourant);
+    y = sol(x); vy = 0; vx = Math.max(vx * 0.75, croisiere(niveauCourant) * 0.9);
+    auSol = true; tempsVol = 0; sautEnCours = false; sautDemande = 0; boucle = null; phi = 0; vBoucle = 0;
+    angle = Math.atan(pente(x)); omega = 0; angleDepart = angle; flips = 0; serie = 0;
+    ecrasement = 0.22; vEcrasement = 0; air = 0;
+    camY = y - h * 0.55; secousse = u * 0.02;
+    poussierer(x, y, 14, 170);
+  };
+
+  // La chute. Trois issues : immunité en cours (on ne tombe pas), un cœur en poche (il est consommé, on
+  // repart), sinon l'éjection — le pilote passe par-dessus le guidon et l'écran de fin attend qu'il ait roulé.
+  const chuter = (px, py, raison) => {
+    if (invincible > 0) return undefined;
+    derniereChute = { raison, x: px, tempsVol, ecart: normaliser(angle - Math.atan(pente(px))) };
+    const u = U();
+    if (coeurs > 0) {
+      coeurs -= 1; invincible = INVINCIBLE;
+      api.effet?.(px - camX, py - camY - taille(), tr('jeux.rider_coeur_perdu', '❤️ −1'), '#FF5C8A');
+      api.eclat?.(px - camX, py - camY, '#FF5C8A', 16);
+      flash = { texte: tr('jeux.rider_coeur_utilise', '❤️ Vie de secours — on repart !'), reste: 1.8 };
+      remettreEnSelle();
+      return undefined;
+    }
+    poussierer(px, py, 16, 200); api.eclat?.(px - camX, py - camY, LIME, 10);
+    // Le corps part vers l'avant avec l'élan du vélo, le vélo part de son côté en tournant.
+    ejection = {
+      t: 0,
+      cx: x, cy: y - taille() * 0.95, cvx: vx * EJECTION_ELAN + u * 0.1, cvy: Math.min(vy, 0) * 0.5 - u * EJECTION_SAUT,
+      ca: angle, cw: (Math.random() < 0.5 ? -1 : 1) * aleatoire(5, 9),
+      vx2: x, vy2: y, vvx: vx * 0.45, vvy: Math.min(vy, 0) * 0.4 - u * 0.2,
+      va: angle, vw: aleatoire(-7, 7), fini: false
+    };
+    secousse = u * 0.08;
+    return undefined;
+  };
 
   return {
     reset() {
       const u = U();
       H = []; T = []; x0 = 0; xGen = 0; sections = 0; yBase = h * 0.62; yFin = yBase; ajouter(yBase); ajouter(yBase);
       obstacles = []; bonus = []; boucles = []; boucle = null; phi = 0; vBoucle = 0; prochainJalon = u * JALON;
+      coeursPistes = []; coeurs = 0; sectionDernierCoeur = -99; invincible = 0; ejection = null; niveauCourant = 0;
       lettres = []; mot = []; motsFinis = 0; pointsMot = 0; nouveauMot();
       horloge = 0; dernierAppui = -9; enfoncePrec = false; sautDemande = 0; sautEnCours = false; sautsFaits = 0; astuces = 0;
       x = u * 0.5; assurer(x + w * 3, 0);
@@ -398,7 +476,7 @@ export function creerRider(api) {
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
-    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
+    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, coeurs, coeursPistes: coeursPistes.filter((c) => !c.pris).length, invincible, ejection: ejection ? ejection.t : 0, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
     // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
     // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
     // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
@@ -427,8 +505,39 @@ export function creerRider(api) {
       }
       return fin;
     },
+    // L'éjection : plus de commandes, seulement la gravité. Le corps roule, le vélo rebondit et s'arrête ;
+    // quand c'est fini, l'écran de fin s'affiche (api.perdre), pas avant.
+    pasEjection(dt) {
+      const u = U(); const g = GRAVITE * u; const e = ejection;
+      e.t += dt;
+      for (const p of [{ px: 'cx', py: 'cy', vx: 'cvx', vy: 'cvy', a: 'ca', w: 'cw', sol: taille() * 0.28 }, { px: 'vx2', py: 'vy2', vx: 'vvx', vy: 'vvy', a: 'va', w: 'vw', sol: 0 }]) {
+        e[p.vy] += g * dt;
+        e[p.px] += e[p.vx] * dt; e[p.py] += e[p.vy] * dt;
+        e[p.a] += e[p.w] * dt;
+        const ySol = sol(e[p.px]) - p.sol;
+        if (!trou(e[p.px]) && e[p.py] >= ySol) {
+          if (e[p.vy] > u * 0.12) { poussierer(e[p.px], ySol + p.sol, 5, 120); api.eclat?.(e[p.px] - camX, ySol - camY, '#FFD166', 4); }
+          e[p.py] = ySol;
+          e[p.vy] = -e[p.vy] * EJECTION_REBOND;
+          if (Math.abs(e[p.vy]) < u * 0.08) e[p.vy] = 0;
+          e[p.vx] -= e[p.vx] * Math.min(1, EJECTION_FROTTEMENT * dt);
+          e[p.w] -= e[p.w] * Math.min(1, EJECTION_FROTTEMENT * 1.4 * dt);
+        }
+      }
+      camX = suivre(camX, e.cx - decal, CAM_SUIVI_X * 0.6, dt);
+      camY = suivre(camY, e.cy - h * 0.55, CAM_SUIVI, dt);
+      secousse = Math.max(0, secousse - dt * 18);
+      for (const pp of poussiere) { pp.x += pp.vx * dt; pp.y += pp.vy * dt; pp.vy += 200 * dt; pp.reste -= dt; }
+      poussiere = poussiere.filter((pp) => pp.reste > 0);
+      if (flash) { flash.reste -= dt; if (flash.reste <= 0) flash = null; }
+      if (e.t >= EJECTION_DUREE && !e.fini) { e.fini = true; api.perdre(); return true; }
+      return undefined;
+    },
     pasPhysique(dt, input) {
+      if (ejection) return this.pasEjection(dt);
       const n = input.niveau; const u = U(); const t = taille();
+      niveauCourant = n;
+      invincible = Math.max(0, invincible - dt);
       const g = GRAVITE * u; const base = croisiere(n); const plafond = maxi(n);
 
       // --- Saisie : maintenir, ou un tap qui vaut un appui court.
@@ -614,6 +723,23 @@ export function creerRider(api) {
           api.effet?.(b.x - camX, b.y - camY - t * 0.4, '+1', '#FFD166'); api.eclat?.(b.x - camX, b.y - camY, '#FFD166', 8);
         }
       }
+      // Cœurs : une vie de secours en poche. Déjà deux ? Le cœur vaut alors des points, pour que le geste
+      // difficile serve toujours à quelque chose.
+      for (const c of coeursPistes) {
+        c.phase += dt * 2.4;
+        if (c.pris) continue;
+        if (Math.hypot(x - c.x, (y - t * 0.55) - c.y) < t * 0.8) {
+          c.pris = true;
+          if (coeurs < COEUR_MAX) {
+            coeurs += 1;
+            api.effet?.(c.x - camX, c.y - camY - t * 0.5, tr('jeux.rider_coeur_pris', '❤️ VIE DE SECOURS'), '#FF5C8A');
+          } else {
+            marquer(3);
+            api.effet?.(c.x - camX, c.y - camY - t * 0.5, '+3', '#FF5C8A');
+          }
+          api.eclat?.(c.x - camX, c.y - camY, '#FF5C8A', 18);
+        }
+      }
 
       // --- Caméra : suivi vertical souple, léger recul du vélo quand on va vite, secousse à l'impact.
       decal = suivre(decal, w * (0.32 - CAM_AVANCE * borner(vx / plafond, 0, 1.2)), 3, dt);
@@ -763,6 +889,15 @@ export function creerRider(api) {
         halo(ctx, b.x, by, t * 0.6, '255,209,102', 0.5);
         dessinerSacRepas(ctx, b.x, by, t * 0.66, b.emoji, Math.sin(b.phase * 0.7) * 0.12);
       }
+      // Cœurs de la piste : haut perchés, ils battent doucement et sont cerclés d'un halo rose — on les voit
+      // de loin, c'est le fait de les atteindre qui est difficile, pas le fait de les repérer.
+      for (const c of coeursPistes) {
+        if (c.pris || c.x < camX - t || c.x > xFin + t) continue;
+        const cy = c.y + Math.sin(c.phase) * 4;
+        const bat = 1 + Math.sin(c.phase * 2) * 0.07;
+        halo(ctx, c.x, cy, t * 0.85, '255,92,138', 0.75);
+        emoji(ctx, '❤️', c.x, cy, t * 0.72 * bat);
+      }
       // Ombre du vélo (plus petite et plus pâle quand il est haut)
       const ySolIci = sol(x); const haut = Math.max(0, ySolIci - y);
       if (!trou(x)) {
@@ -777,9 +912,27 @@ export function creerRider(api) {
       ctx.fillStyle = 'rgba(200,240,60,.9)';
       for (const pp of poussiere) { ctx.globalAlpha = Math.max(0, pp.reste * 2.2); ctx.beginPath(); ctx.arc(pp.x, pp.y, 2.2, 0, Math.PI * 2); ctx.fill(); }
       ctx.globalAlpha = 1;
-      // Le vélo et son cycliste
-      dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air);
+      // Le vélo et son cycliste. Après une chute, les deux sont séparés : le vélo tombe de son côté, le pilote
+      // roule au sol. Pendant l'immunité qui suit un cœur, le vélo clignote — on voit qu'on est encore protégé.
+      if (ejection) {
+        dessinerVelo(ctx, ejection.vx2, ejection.vy2, t, ejection.va, roue, pedale, 0, 0, 1, true);
+        dessinerPilote(ctx, ejection.cx, ejection.cy, t, ejection.ca);
+      } else {
+        if (invincible > 0) ctx.globalAlpha = 0.45 + 0.55 * Math.abs(Math.sin(invincible * 14));
+        dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air);
+        ctx.globalAlpha = 1;
+      }
       ctx.restore();
+
+      // Vies de secours en poche, en haut à gauche : un cœur plein par vie, un cœur éteint pour la place libre.
+      if (COEUR_MAX > 0) {
+        const tc = Math.max(13, Math.min(22, w * 0.045));
+        for (let i = 0; i < COEUR_MAX; i++) {
+          ctx.globalAlpha = i < coeurs ? 1 : 0.22;
+          emoji(ctx, '❤️', 10 + tc * 0.5 + i * tc * 1.05, 10 + tc * 0.5, tc);
+        }
+        ctx.globalAlpha = 1;
+      }
 
       // Le mot à compléter : une case par lettre, allumée quand elle est attrapée, dorée pendant la fête.
       const c = Math.max(15, Math.min(26, w * 0.055));
@@ -821,7 +974,7 @@ export function creerRider(api) {
 // roue = angle des roues, pedale = angle du pédalier, ecrasement = suspension (0 = repos, > 0 = écrasé), penche =
 // posture du cycliste (+1 gaz : couché sur le guidon ; -1 en l'air : il tire sur le guidon), air = 0 au sol → 1 en vol
 // (le cycliste se lève sur les pédales).
-function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air) {
+function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air, sansPilote = false) {
   const r = t * 0.28; // rayon des roues
   ctx.save();
   ctx.translate(x, y);
@@ -860,6 +1013,8 @@ function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air
   const pied2 = { x: pedalier.x - Math.cos(pa) * lp, y: pedalier.y - Math.sin(pa) * lp };
   ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1.5, r * 0.14);
   ctx.beginPath(); ctx.moveTo(pied1.x, pied1.y); ctx.lineTo(pied2.x, pied2.y); ctx.stroke();
+  // Vélo seul (le pilote vient d'en être éjecté) : on s'arrête là.
+  if (sansPilote) { ctx.restore(); return; }
   // Cycliste : bassin sur la selle (plus bas quand la suspension s'écrase = il s'accroupit, un peu levé en l'air),
   // buste penché vers le guidon (couché en accélération, redressé/tiré en arrière en l'air).
   const accroupi = Math.max(0, Math.min(1, ecrasement * 2.5));
@@ -895,6 +1050,50 @@ function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air
   ctx.beginPath(); ctx.moveTo(epaule.x, epaule.y); ctx.lineTo(coude.x, coude.y); ctx.lineTo(guidon.x, guidon.y); ctx.stroke();
   // Tête et casque
   const tete = { x: epaule.x + Math.sin(inclinaison) * r * 0.55, y: epaule.y - Math.cos(inclinaison) * r * 0.55 };
+  ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.42, 0, Math.PI * 2); ctx.fillStyle = '#F2C9A0'; ctx.fill();
+  ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.fillStyle = LIME; ctx.fill();
+  ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.1); ctx.stroke();
+  ctx.restore();
+}
+
+// Le pilote éjecté : même silhouette que sur le vélo (casque lime, sac isotherme sur le dos), mais en boule,
+// bras et jambes repliés, qui tourne autour de son bassin. Dessiné à part parce qu'il n'est plus attaché au
+// cadre : c'est ce qui donne à la chute son « aïe » — on voit quelqu'un passer par-dessus le guidon.
+function dessinerPilote(ctx, x, y, t, angle) {
+  const r = t * 0.28;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  const bassin = { x: 0, y: r * 0.45 };
+  const epaule = { x: 0, y: -r * 0.6 };
+  // Jambes repliées (genoux vers la poitrine), bras devant la tête : la position qu'on prend en tombant.
+  ctx.strokeStyle = '#5B4FE0'; ctx.lineWidth = Math.max(2.5, r * 0.3);
+  for (const sens of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(bassin.x, bassin.y);
+    ctx.lineTo(bassin.x + r * 0.75 * sens * 0.6 + r * 0.35, bassin.y + r * 0.25);
+    ctx.lineTo(bassin.x + r * 0.2, bassin.y - r * 0.55 + sens * r * 0.2);
+    ctx.stroke();
+  }
+  // Le sac sur le dos, derrière le buste.
+  ctx.save();
+  ctx.translate(-r * 0.62, -r * 0.05);
+  arrondi(ctx, -r * 0.52, -r * 0.66, r * 1.04, r * 1.32, r * 0.22);
+  ctx.fillStyle = IRIS; ctx.fill();
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.11); ctx.stroke();
+  ctx.fillStyle = LIME; ctx.font = `800 ${Math.max(6, r * 0.95).toFixed(1)}px system-ui, sans-serif`;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('f', 0, 0);
+  ctx.restore();
+  // Buste
+  ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = Math.max(3, r * 0.38);
+  ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(epaule.x, epaule.y); ctx.stroke();
+  // Bras repliés devant
+  ctx.lineWidth = Math.max(2, r * 0.24);
+  ctx.beginPath(); ctx.moveTo(epaule.x, epaule.y); ctx.lineTo(epaule.x + r * 0.6, epaule.y + r * 0.1); ctx.lineTo(epaule.x + r * 0.35, epaule.y - r * 0.5); ctx.stroke();
+  // Tête et casque
+  const tete = { x: epaule.x + r * 0.1, y: epaule.y - r * 0.55 };
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.42, 0, Math.PI * 2); ctx.fillStyle = '#F2C9A0'; ctx.fill();
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.fillStyle = LIME; ctx.fill();
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.1); ctx.stroke();
