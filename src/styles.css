@@ -1820,11 +1820,33 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* La carte occupe la premiere hauteur d'ecran, la liste commence juste dessous : on voit la carte
    en arrivant, on obtient la liste en descendant. La page defile donc normalement, elle n'est plus
    figee a la hauteur de l'ecran. */
-.carte-page { margin: -24px -28px -40px; height: 100svh; overflow: hidden; }
+/* LA CARTE PREND TOUT L'ECRAN, et les commandes ne bougent plus quand on la deplace.
+   Elle etait posee dans le flux de la page, avec des marges negatives censees annuler la gouttiere
+   (-28px). Deux defauts en decoulaient, mesures a 400px de large :
+     - la gouttiere reelle vaut 16px sur telephone, pas 28 : il restait une bande blanche de chaque
+       cote, et la carte ressemblait a un rectangle pose sur la page au lieu d'etre la page ;
+     - le document faisait 1045px pour une fenetre de 850 : la PAGE defilait. Les pastilles, posees
+       en absolu dans la carte, partaient donc vers le haut des qu'on faisait glisser le doigt.
+   position: fixed regle les deux d'un coup : plus de gouttiere a annuler quelle qu'elle soit, plus
+   de hauteur de document a depasser, donc plus de defilement de page — et les commandes restent ou
+   elles sont pendant qu'on deplace la carte. z-index 1 : sous la barre de navigation (z 50), qui
+   doit continuer de flotter par-dessus. */
+.carte-plein-ecran { position: fixed; inset: 0; z-index: 1; overflow: hidden; max-width: none; margin: 0; }
+/* Au-dessus de 900px, la barre laterale de 240px reste a gauche : une carte qui la recouvrirait
+   prendrait toute la fenetre mais retirerait au passage le seul moyen de quitter la page. */
+@media (min-width: 901px) { .carte-plein-ecran { left: 240px; } }
 .carte-plein { position: relative; height: 100%; }
 .carte-attente { height: 100%; background: var(--surface-soft); }
 /* Les contrôles ne prennent pas les clics de la carte : seuls les boutons en prennent. */
-.carte-controles { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
+.carte-controles { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: stretch; pointer-events: none; }
+/* Le champ de recherche, en tete des commandes. Fond plein et ombre portee : pose sur une carte,
+   un champ transparent devient illisible des qu'un toit clair passe dessous. */
+.carte-recherche { display: flex; align-items: center; gap: 8px; width: 100%; padding: 0 12px; background: #fff; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); color: var(--ink-soft); }
+.carte-recherche input { flex: 1; min-width: 0; height: 44px; border: 0; background: none; padding: 0; font-size: 15px; color: var(--ink); }
+.carte-recherche input:focus { outline: none; }
+.carte-recherche input::-webkit-search-cancel-button { display: none; }
+.carte-recherche-vider { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--ink-faint); cursor: pointer; padding: 0 2px; min-height: 44px; }
+.carte-pastilles { align-self: flex-start; }
 .carte-controles > * { pointer-events: auto; }
 .carte-pastilles { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding-bottom: 2px; scrollbar-width: none; }
 .carte-pastilles::-webkit-scrollbar { display: none; }
@@ -3209,7 +3231,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 
 /* Pages Carte restaurateur / livreur : sans jeux, la carte est l'unique contenu — centrée, pleine largeur du
    bloc, actions centrées dessous (voir TrackingWithGames jeux={false}). */
-.carte-page { max-width: 960px; margin: 0 auto; }
+.carte-page:not(.carte-plein-ecran) { max-width: 960px; margin: 0 auto; }
 .tracking-with-game.carte-seule { display: block; }
 .tracking-with-game.carte-seule > .tracking-map-col { width: 100%; }
 .carte-page .tracking-actions { justify-content: center; }
