@@ -3677,3 +3677,15 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 @media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
 /* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
 .suivi-jouer.est-ouvert { background: var(--iris); color: #fff; }
+
+/* L'entete d'une carte de commande : le nom a gauche, le statut et le declencheur du jeu a droite.
+   Ils se replient l'un sous l'autre quand la largeur manque, plutot que d'ecraser le nom. */
+.commande-entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.commande-entete-droite { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+/* Le declencheur est plus petit que les boutons d'action pleine taille : c'est une proposition
+   posee a cote d'un badge de statut, pas l'action principale de la page. */
+.suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
+/* Ouvert, il ferme : l'iris dit que le geste a change de sens. */
+.suivi-jouer.est-ouvert { background: var(--iris); border-color: var(--iris); color: #fff; }
+/* Le meme declencheur sous l'ecran vide, ou il n'a aucun badge a cote de lui. */
+.jeu-sans-commande { display: flex; justify-content: center; margin: -8px 0 16px; }

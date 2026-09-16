@@ -211,6 +211,26 @@ export default function Orders() {
           actionVers="/restaurants"
           actionTexte={t('orders.emptyAction')}
         />
+        {/* JOUER SANS RIEN AVOIR COMMANDÉ. Les jeux ne dépendent d'aucune commande — c'est leur
+            seule porte d'entrée qui en dépendait, puisqu'elle vivait sur une commande en cours.
+            Ici, sous l'écran vide, elle est ouverte à tout le monde. Le bouton reste discret :
+            on ne vient pas sur Fairide pour jouer, on y tombe en attendant. */}
+        <div className="jeu-sans-commande">
+          <button
+            type="button"
+            className={`btn-gold suivi-jouer${jeuOuvert === 'vide' ? ' est-ouvert' : ''}`}
+            aria-expanded={jeuOuvert === 'vide'}
+            onClick={() => basculerJeu('vide')}
+          >
+            <Icone nom="manette" taille={17} />
+            {jeuOuvert === 'vide' ? t('games.closeGame') : t('games.playWhileWaiting')}
+          </button>
+        </div>
+        {jeuOuvert === 'vide' && (
+          <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+            <GameSwitcher fill large />
+          </section>
+        )}
       </div>
     );
   }
@@ -236,9 +256,26 @@ export default function Orders() {
       {listeAffichee.map((o) => (
         <Fragment key={o.id}>
         <div className={`card order-type-${orderTypeColor(o)}`}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
+          <div className="commande-entete">
             <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+            <span className="commande-entete-droite">
+              <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+              {/* EN HAUT A DROITE, ET EN LIME. Il vivait en pied de carte, en gris discret : il
+                  fallait lire toute la commande pour le trouver, et rien n'y invitait. Le lime est
+                  la seule couleur de la marque faite pour appeler un doigt, et c'est le seul accent
+                  lime de cette page. */}
+              {EN_COURS.includes(o.status) && (
+                <button
+                  type="button"
+                  className={`btn-gold suivi-jouer${jeuOuvert === o.id ? ' est-ouvert' : ''}`}
+                  aria-expanded={jeuOuvert === o.id}
+                  onClick={() => basculerJeu(o.id)}
+                >
+                  <Icone nom="manette" taille={17} />
+                  {jeuOuvert === o.id ? t('games.closeGame') : t('games.playWhileWaiting')}
+                </button>
+              )}
+            </span>
           </div>
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
@@ -370,21 +407,6 @@ export default function Orders() {
               order={o} token={token} toast={toast} t={t}
               onDone={() => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true } : x))); }}
             />
-          )}
-          {/* JOUER SANS QUITTER SA COMMANDE. Le bouton menait à une page dédiée : on y jouait bien,
-              mais pour revoir où en était sa livraison il fallait revenir en arrière, et la partie
-              était perdue. Il déroule maintenant le jeu JUSTE SOUS cette commande-ci : on remonte
-              d'un coup de pouce pour relire son suivi, on redescend pour reprendre. */}
-          {EN_COURS.includes(o.status) && (
-            <button
-              type="button"
-              className={`btn-subtle suivi-jouer${jeuOuvert === o.id ? ' est-ouvert' : ''}`}
-              aria-expanded={jeuOuvert === o.id}
-              onClick={() => basculerJeu(o.id)}
-            >
-              <Icone nom="manette" taille={18} />
-              {jeuOuvert === o.id ? t('games.closeGame') : t('games.playWhileWaiting')}
-            </button>
           )}
         </div>
         {jeuOuvert === o.id && (
