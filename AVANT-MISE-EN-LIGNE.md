@@ -11,6 +11,11 @@ Ce qui a été traité ce jour-là vit sur les branches `fix/avant-mise-en-ligne
 
 Chaque point a été vérifié dans le code — rien ici n'est supposé.
 
+**Mis à jour le 16 septembre 2026 (soir)** : audit de sécurité des 17 catégories d'`AI-CHECKLIST.md`
+sur les deux dépôts — voir **§17**, et le rapport dans [security/AUDIT.md](security/AUDIT.md). Trois
+failles ouvraient la plateforme entière et étaient en production ; elles sont corrigées sur
+`hotfix/securite-critique` et `fix/securite`, **qui restent à fusionner**.
+
 **Légende :** 🔴 bloquant · 🟠 obligation légale · 🟡 fiabilité · ⚪️ qualité
 
 ---
@@ -20,6 +25,10 @@ Chaque point a été vérifié dans le code — rien ici n'est supposé.
 Tout le reste de ce document est du contexte. Voici la liste courte, et elle ne contient plus que
 des choses qui demandent **un compte, une clé, un appareil ou une décision** — rien qui s'écrive.
 
+0. 🔴 **SÉCURITÉ, avant tout le reste** (§17) — un audit complet a trouvé trois failles qui ouvraient
+   la plateforme entière, **en production**. La plus grave délivrait un jeton d'administrateur contre
+   une simple adresse e-mail. Dans l'ordre : fusionner `hotfix/securite-critique`, vérifier
+   `JWT_SECRET` sur Railway, puis changer ce secret, puis regarder les journaux.
 1. **Faire passer un commerce par les quatre conditions, puis une vraie commande** (§1)
 2. **Vérifier `STRIPE_SECRET_KEY`, `APP_URL`, `STRIPE_WEBHOOK_SECRET` sur Railway** (§2)
 3. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel, PUIS reconstruire** — avant le premier vrai
@@ -432,3 +441,125 @@ l'inverse. Cinq caractères est par ailleurs court pour un compte qui porte une 
 et un historique de commandes.
 
 - [ ] Choisir une règle unique et l'appliquer aux trois endroits
+
+---
+
+## 🔴 17. Sécurité : audit complet du 16 septembre 2026
+
+Les 17 catégories de `AI-CHECKLIST.md` ont été passées sur les deux dépôts. Le rapport détaillé est
+dans **[security/AUDIT.md](security/AUDIT.md)** ; ce qui suit est seulement ce qui **ne se règle pas
+en écrivant du code** — il faut une clé, un accès, une migration ou une décision.
+
+L'essentiel du travail est fait : sur les 17 catégories, 13 sont conformes après correctifs, et
+`npm audit` est passé de 5 vulnérabilités à 0. Mais **trois failles ouvraient la plateforme entière,
+et elles étaient sur `main`** — donc en production pendant que ce document existait.
+
+### 17.1 🔴 À FAIRE EN PREMIER : fusionner et déployer le correctif d'urgence
+
+Branche `hotfix/securite-critique` (backend), partie de `main`, trois fichiers.
+
+Ce qui était ouvert, vérifié en l'exploitant pour de vrai :
+
+| Faille | Ce qu'elle donnait |
+|---|---|
+| `verify-email` ne comparait pas le code | Un jeton **administrateur** de 30 jours contre une simple adresse e-mail — et l'adresse est publiée sur le site |
+| Adresse d'équipe prenable | S'inscrire avec, ou y basculer son e-mail, donnait les droits admin |
+| Quantité de commande non validée | Total négatif → commande **marquée payée sans encaissement** |
+
+La troisième n'était pas encore exploitable : les commandes en ligne sont fermées jusqu'au
+10 octobre. Les deux premières l'étaient.
+
+- [ ] Fusionner `hotfix/securite-critique` et vérifier que Railway a bien redéployé
+
+### 17.2 🔴 Vérifier `JWT_SECRET` sur Railway — AVANT de fusionner `fix/securite`
+
+Le secret de signature retombait en silence sur une chaîne publique écrite dans le dépôt. Le serveur
+**refuse désormais de démarrer en production sans cette variable** — c'est voulu : un site éteint se
+remarque et se répare, un site ouvert à tous non.
+
+Conséquence directe : **si la variable n'existe pas sur Railway, ce correctif coupe le site.**
+
+- [ ] Railway → Variables → confirmer que `JWT_SECRET` existe et n'est pas vide
+- [ ] Seulement ensuite, fusionner `fix/securite`
+
+### 17.3 🟠 Changer `JWT_SECRET`, une fois le 17.1 déployé
+
+Tant que la première faille était ouverte, n'importe qui a pu se délivrer des jetons valables
+30 jours. Les corriger ne les révoque pas : un jeton déjà émis reste valable jusqu'à son échéance.
+Changer le secret est le seul moyen de tous les invalider.
+
+**Effet de bord assumé : tout le monde est déconnecté** et devra se reconnecter. C'est le prix, et il
+est faible.
+
+À faire dans cet ordre, sinon ça ne sert à rien : d'abord déployer 17.1, ensuite changer le secret.
+
+- [ ] Changer `JWT_SECRET` sur Railway par une longue chaîne aléatoire, puis redéployer
+
+### 17.4 🔴 Regarder si la faille a servi
+
+Je n'en ai trouvé aucune trace, mais **je n'ai pas cherché dans les journaux de production** — je n'y
+ai pas accès. Un appel à `POST /api/auth/verify-email` suivi d'une activité administrateur
+inattendue est le motif à chercher.
+
+Si la faille a été exploitée, la notification à l'Autorité de protection des données est une
+obligation légale (72 heures), pas une option. C'est une décision qui t'appartient.
+
+- [ ] Parcourir les journaux Railway sur les semaines écoulées
+
+### 17.5 🟠 Documents d'identité des livreurs : URL publiques
+
+Les cartes d'identité, permis et titres de séjour envoyés par les livreurs sont stockés chez
+Cloudinary à des adresses **publiques, permanentes et non signées**. La route de l'API est bien
+protégée ; le fichier, lui, ne l'est pas — l'adresse suffit à le télécharger, sans compte.
+
+Les identifiants sont aléatoires, donc personne ne peut les deviner. Mais une adresse qui apparaît
+une fois dans un journal, un ticket de support ou un en-tête de référent reste valable pour toujours.
+Pour des pièces d'identité sous RGPD, c'est une livraison signée qu'il faut (`type: 'authenticated'`,
+URL à durée limitée).
+
+Ce n'est pas un simple réglage : **les adresses déjà enregistrées en base deviendront invalides**, il
+faut migrer l'existant. Je peux écrire la migration, dis-le-moi.
+
+- [ ] Décider, puis planifier la migration
+
+### 17.6 🟠 `COURIER_DATA_KEY` : attention, piège
+
+Les numéros de registre national des livreurs sont bien chiffrés (AES-256-GCM, correctement mis en
+œuvre). Mais faute de clé dédiée, la clé est **dérivée de `JWT_SECRET`**.
+
+D'où le piège, qui touche aussi le 17.3 : **changer `JWT_SECRET` sans poser d'abord
+`COURIER_DATA_KEY` rendra les numéros déjà chiffrés illisibles.** Il faut un script qui déchiffre
+avec l'ancienne clé et rechiffre avec la nouvelle, lancé pendant que les deux sont connues.
+
+- [ ] Me demander le script de re-chiffrement avant de toucher à l'une ou l'autre variable
+
+### 17.7 🟡 Passer la politique de contenu en mode bloquant
+
+`vercel.json` pose maintenant une politique de sécurité du contenu, mais en **observation seule** :
+posée d'un coup en mode bloquant, une politique stricte casse silencieusement Leaflet, la connexion
+Google ou Sentry. Les origines ont été relevées dans le code, mais seule la vraie page le dira.
+
+- [ ] Après déploiement, ouvrir la console du navigateur (F12) sur : l'accueil, une fiche commerce,
+      la carte, le paiement, la console admin
+- [ ] Si rien n'est signalé, retirer `-Report-Only` du nom de l'en-tête dans `vercel.json`
+
+### 17.8 🟡 Les décisions qui restent
+
+- **Règle de mot de passe** : 5 caractères aujourd'hui, sur une plateforme qui détient des moyens de
+  paiement et des pièces d'identité. Voir §16 — c'est le même sujet, vu sous l'angle sécurité.
+- **Agenda iCal** : le jeton n'est pas devinable, mais l'URL circule dans Google/Apple Calendar, et
+  l'option « détails » y expose téléphone et e-mail des clients. Le défaut mériterait d'être inversé.
+- **`CORS_ORIGINS`** : poser la variable en production pour retirer les origines `localhost` de la
+  liste par défaut.
+- **Railway** : vérifier que la construction utilise `npm ci` et non `npm install`, sinon le verrou
+  de dépendances ne sert à rien.
+
+### 17.9 Ce qui a été corrigé, pour mémoire
+
+Sans action de ta part, déjà sur les branches : le SSRF non authentifié (redirections revérifiées à
+chaque saut), les accès admin ouverts par la casse de l'URL et par la méthode HTTP, le XSS stocké des
+cartes (un nom de commerce s'exécutait dans le navigateur du livreur), les en-têtes de sécurité des
+deux côtés, les générateurs de codes prévisibles (dont les bons cadeaux, remboursables en argent),
+les limites manquantes sur les appels d'IA et sur les codes de solde, les litiges Stripe qui
+n'étaient pas traités, le webhook qui avalait ses erreurs, la fiche des commerces non publiés qui
+exposait leur identification légale, et `npm audit` ramené à zéro.
