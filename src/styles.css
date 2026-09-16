@@ -1888,6 +1888,11 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
    se retrouvaient dessous, inatteignables. Ils passent en bas à droite, au-dessus de la barre
    d'onglets, seul coin de cette page qui ne porte rien. */
 .carte-plein .leaflet-top.leaflet-left { top: auto; left: auto; bottom: 84px; right: 12px; }
+/* La bande de resultats passe a la meme hauteur que les boutons de zoom, qui sont dessines par
+   Leaflet au-dessus : la troisieme pastille disparaissait derriere eux. Quand des resultats sont
+   affiches, le zoom remonte juste au-dessus de la bande. :has() evite d'avoir a poser une classe
+   depuis React pour un decalage purement visuel. */
+.carte-plein:has(.carte-resultats) .leaflet-top.leaflet-left { bottom: 152px; }
 .carte-plein .leaflet-control-zoom { margin: 0; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; box-shadow: var(--shadow-3); }
 /* L'attribution OpenStreetMap remonte au-dessus des pastilles flottantes : c'est une mention
    obligatoire, elle doit rester lisible et non passer sous un bouton. */
@@ -3744,9 +3749,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
    retrouvait sous les filtres au lieu d'etre en haut a droite. Le titre, lui, peut se resserrer.
    S'il devait quand meme passer a la ligne sur un tres petit ecran, margin-left: auto le garde
    colle a droite plutot que de le renvoyer a gauche. */
-.commandes-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.commandes-entete .page-title { margin: 0; }
-.commandes-entete .suivi-jouer { flex: none; margin-left: auto; }
+.commandes-barre .suivi-jouer { flex: none; margin-left: auto; }
 /* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
    de filtres, pas l'action principale de la page. */
 .suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
@@ -3788,3 +3791,30 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
   .jouer-long { display: none; }
   .jouer-court { display: inline; }
 }
+
+/* Les resultats d'une recherche sur la carte : une pastille par commerce, en bas de l'ecran.
+   Posee AU-DESSUS de la barre de navigation flottante (qui vit a 16px du bas, hauteur ~56) pour ne
+   pas la recouvrir — c'est la seule facon de quitter la page. Defilement horizontal a l'inertie,
+   sans barre visible : la carte reste lisible dessous, ce qu'une liste en pleine page interdirait. */
+.carte-resultats {
+  position: absolute; left: 0; right: 0; z-index: 500;
+  bottom: calc(92px + env(safe-area-inset-bottom));
+  display: flex; gap: 8px; padding: 0 12px;
+  overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.carte-resultats::-webkit-scrollbar { display: none; }
+.carte-resultat {
+  flex: 0 0 auto; scroll-snap-align: start;
+  display: flex; align-items: center; gap: 10px;
+  max-width: 260px; padding: 6px 14px 6px 6px;
+  background: #fff; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+  text-decoration: none; color: var(--ink);
+}
+.carte-resultat img,
+.carte-resultat-vide {
+  width: 36px; height: 36px; flex: none; border-radius: 50%;
+  object-fit: cover; background: var(--surface-soft);
+  display: flex; align-items: center; justify-content: center; color: var(--ink-soft);
+}
+.carte-resultat-nom { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

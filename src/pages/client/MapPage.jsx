@@ -1,4 +1,5 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -117,6 +118,7 @@ export default function MapPage() {
             restaurants={liste}
             height="100%"
             userLocation={position ? { ...position, address: user.address } : null}
+            cadrerSurCommerces={!!recherche.trim()}
           />
         </Suspense>
 
@@ -208,6 +210,29 @@ export default function MapPage() {
             )}
           </div>
         </div>
+
+        {/* LES RESULTATS EN BAS, une pastille par commerce. Chercher un nom et ne voir qu'une epingle
+            sur une carte oblige a viser un point de huit pixels pour savoir ce qu'on a trouve. Une
+            pastille porte la photo et le nom, et mene a la fiche d'un seul appui. Elles defilent
+            horizontalement quand il y en a plusieurs — la carte reste visible dessous, ce qu'une
+            liste en pleine page ne permettrait pas.
+            Affichee seulement pendant une recherche : sans elle, ce serait une deuxieme liste de
+            commerces posee sur la carte, c'est-a-dire ce que le tiroir « Commerces pres de toi »
+            faisait avant d'etre retire. */}
+        {!!recherche.trim() && liste.length > 0 && (
+          <div className="carte-resultats" role="list">
+            {liste.map((r) => (
+              <Link key={r.id} to={`/restaurants/${r.id}`} className="carte-resultat" role="listitem">
+                {r.coverImageUrl || r.logoImageUrl ? (
+                  <img src={r.logoImageUrl || r.coverImageUrl} alt="" loading="lazy" />
+                ) : (
+                  <span className="carte-resultat-vide" aria-hidden="true"><Icone nom="restaurants" taille={18} /></span>
+                )}
+                <span className="carte-resultat-nom">{r.name}</span>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

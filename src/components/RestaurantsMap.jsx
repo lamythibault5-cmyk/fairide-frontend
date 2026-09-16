@@ -33,7 +33,7 @@ function homeIcon() {
   });
 }
 
-export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false, userLocation = null }) {
+export default function RestaurantsMap({ restaurants, height = 420, singleMarker = false, userLocation = null, cadrerSurCommerces = false }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -92,7 +92,8 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
       markersRef.current.push(marker);
     });
 
-    const points = withCoords.map((r) => [r.lat, r.lng]);
+    const pointsCommerces = withCoords.map((r) => [r.lat, r.lng]);
+    const points = pointsCommerces.slice();
     if (userLocation?.lat && userLocation?.lng) {
       homeMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: homeIcon(), zIndexOffset: 1000 })
         .addTo(mapRef.current)
@@ -103,13 +104,20 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     // Le cadrage est gardé sous forme de fonction : le ResizeObserver le rejoue quand le conteneur
     // atteint enfin sa taille définitive, sans quoi on resterait sur le zoom d'une boîte vide.
     recadrerRef.current = () => {
-      if (!mapRef.current || !points.length) return;
-      if (points.length === 1) mapRef.current.setView(points[0], 15);
-      else mapRef.current.fitBounds(L.latLngBounds(points), { padding: [30, 30] });
+      if (!mapRef.current) return;
+      // CADRER SUR LES RESULTATS, PAS SUR LE DOMICILE. Le cadrage englobe la position du client,
+      // ce qui est juste quand on decouvre son quartier : on veut se voir au milieu de ses commerces.
+      // Mais des qu'on CHERCHE un nom, le seul resultat peut etre a trois kilometres — l'englober avec
+      // le domicile donne une vue d'ensemble ou le commerce trouve n'est qu'un point parmi les rues.
+      // On cadre alors sur les commerces seuls, et sur un seul on s'approche pour de bon.
+      const cibles = cadrerSurCommerces && pointsCommerces.length ? pointsCommerces : points;
+      if (!cibles.length) return;
+      if (cibles.length === 1) mapRef.current.setView(cibles[0], 16);
+      else mapRef.current.fitBounds(L.latLngBounds(cibles), { padding: [40, 40] });
     };
     recadrerRef.current();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, selected, userLocation, t]);
+  }, [restaurants, selected, userLocation, t, cadrerSurCommerces]);
 
   useEffect(() => {
     if (selected && !(restaurants || []).some((r) => r.id === selected.id)) setSelected(null);
