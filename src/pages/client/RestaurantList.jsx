@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,7 +10,6 @@ import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
 // est un affichage secondaire, choisi par l'utilisateur.
-const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
@@ -150,7 +149,6 @@ export default function RestaurantList() {
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
   const [bio, setBio] = useState(!!filtresInitiaux.bio);
   const [vegan, setVegan] = useState(!!filtresInitiaux.vegan);
-  const [view, setView] = useState('list');
   const toast = useToast();
 
   useEffect(() => {
@@ -301,30 +299,20 @@ export default function RestaurantList() {
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
       </div>
-      <div className="role-pick" style={{ marginBottom: 14 }}>
-        <div className={`chip${view === 'list' ? ' active' : ''}`} onClick={() => setView('list')}>{t('restaurantList.viewList')}</div>
-        <div className={`chip${view === 'map' ? ' active' : ''}`} onClick={() => setView('map')}>{t('restaurantList.viewMap')}</div>
-      </div>
+      {/* La bascule « Liste / Carte » vivait ici. Elle a disparu le jour où la carte a pris son
+          propre onglet, en bas de l'écran : demander à quelqu'un qui parcourt une liste s'il ne
+          préférerait pas une carte, alors qu'un onglet dédié l'y emmène, c'est poser deux fois la
+          même question. Cette page est la liste ; la carte est la carte. */}
       {!loading && hasActiveFilter && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
       {loading && <SkeletonCards count={4} />}
-      {!loading && view === 'map' && (
-        <div className="card">
-          <Suspense fallback={<SkeletonCards count={1} />}>
-            <RestaurantsMap
-              restaurants={hasActiveFilter ? list : restaurants}
-              userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
-            />
-          </Suspense>
-        </div>
-      )}
-      {!loading && view === 'list' && hasActiveFilter && (
+      {!loading && hasActiveFilter && (
         <div className="rest-grid">
           {list.map((r) => (
             <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
           ))}
         </div>
       )}
-      {!loading && view === 'list' && !hasActiveFilter && (
+      {!loading && !hasActiveFilter && (
         <>
           <Section title={t('restaurantList.sectionNearby')} icon="📍" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="🏷️" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />

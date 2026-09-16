@@ -34,6 +34,7 @@ export default function MapPage() {
   const [promosSeules, setPromosSeules] = useState(false);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
   const [cuisine, setCuisine] = useState('');
+  const [cuisinesOuvertes, setCuisinesOuvertes] = useState(false);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
@@ -96,18 +97,28 @@ export default function MapPage() {
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
               <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
             </button>
-            {/* Un <select> natif plutôt qu'un menu maison : sur téléphone il ouvre la roue du
-                système, qui se manipule mieux au pouce que n'importe quelle liste déroulante
-                dessinée à la main. */}
-            <label className={`cuisine-chip carte-chip-select${cuisine ? ' active' : ''}`}>
+            {/* Un panneau de pastilles, plus un <select> natif. Le menu du système s'ouvre au
+                milieu de l'écran dans le style du navigateur — une liste grise sans rapport avec
+                le reste de la page, posée par-dessus une carte. Ici, les mêmes pastilles que la
+                rangée au-dessus, dans un panneau qui descend sous le bouton. */}
+            <button type="button" className={`cuisine-chip${cuisine ? ' active' : ''}`} aria-expanded={cuisinesOuvertes} onClick={() => setCuisinesOuvertes((v) => !v)}>
               <Icone nom="restaurants" taille={16} />
-              <span>{cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}</span>
-              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} aria-label={t('mapClient.filterCuisine')}>
-                <option value="">{t('mapClient.filterAllCuisines')}</option>
-                {cuisinesPresentes.map((c) => <option key={c.value} value={c.value}>{restaurantTypeLabel(c.value, t)}</option>)}
-              </select>
-            </label>
+              {cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}
+            </button>
           </div>
+          {cuisinesOuvertes && (
+            <div className="carte-cuisines">
+              <button type="button" className={`cuisine-chip${cuisine ? '' : ' active'}`} onClick={() => { setCuisine(''); setCuisinesOuvertes(false); }}>
+                {t('mapClient.filterAllCuisines')}
+              </button>
+              {cuisinesPresentes.map((c) => (
+                <button key={c.value} type="button" className={`cuisine-chip${cuisine === c.value ? ' active' : ''}`}
+                  onClick={() => { setCuisine(c.value === cuisine ? '' : c.value); setCuisinesOuvertes(false); }}>
+                  <span className="emoji">{c.emoji}</span>{restaurantTypeLabel(c.value, t)}
+                </button>
+              ))}
+            </div>
+          )}
           {/* Zéro résultat se voyait par une carte vide, sans un mot : on ne savait pas si aucun
               commerce ne correspondait ou si la carte n'avait pas fini de charger. Combiner
               « Offres » et « Ouvert » un matin de semaine suffit à y arriver. */}

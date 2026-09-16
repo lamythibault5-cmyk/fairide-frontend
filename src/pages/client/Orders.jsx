@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
+import EtatVide from '../../components/EtatVide';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -180,11 +181,16 @@ export default function Orders() {
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
       </div>
-        <div className="empty">
-          {typeFiltre === 'dine_in'
-            ? t('orders.noReservations')
-            : t('orders.empty')}
-        </div>
+        {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
+            ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
+            remplit — parcourir les commerces. */}
+        <EtatVide
+          icone={typeFiltre === 'dine_in' ? 'reservations' : 'sac'}
+          titre={typeFiltre === 'dine_in' ? t('orders.noReservations') : t('orders.empty')}
+          texte={t('orders.emptyHint')}
+          actionVers="/restaurants"
+          actionTexte={t('orders.emptyAction')}
+        />
       </div>
     );
   }
