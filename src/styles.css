@@ -1848,66 +1848,17 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   font-size: 13px; font-weight: 500; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
 }
 
-/* Le tiroir sous la carte. Il se TIRE : trois hauteurs, obtenues en deplacant sa marge negative.
-   « basse » l'amorce sous la carte, « moyenne » le monte a mi-ecran, « haute » lui fait couvrir la
-   carte entierement. Le coin arrondi et le recouvrement disent qu'il glisse par-dessus, sans fleche
-   ni consigne ; la barre grise en haut dit qu'on peut l'attraper. */
-/* UN VRAI TIROIR : fixe, et deplace par transform.
-   La premiere version animait `margin-top`. Une marge fait partie de la mise en page : la changer
-   force le navigateur a recalculer la position de TOUT ce qui suit, soixante fois par seconde -
-   d'ou un glissement saccade, et une liste qui sautait au lieu de glisser. `transform` ne touche
-   a rien : le compositeur deplace la couche deja dessinee. C'est la difference entre une animation
-   qui rame et une qui ne coute rien.
-   Le tiroir est donc fixe, haut comme l'ecran, et c'est SON contenu qui defile - pas la page. */
-.carte-feuille {
-  position: fixed; left: 0; right: 0; top: 0; z-index: 30;
-  height: 100svh; display: flex; flex-direction: column;
-  background: #fff; border-radius: var(--radius) var(--radius) 0 0; padding: 0 20px;
-  box-shadow: var(--shadow-feuille);
-  transition: transform .3s cubic-bezier(.22,.61,.36,1);
-  will-change: transform;
-}
-/* Trois crans, en pourcentage de la hauteur du tiroir : il depasse en bas, on ne voit que ce qui
-   remonte au-dessus du bord de l'ecran. */
-.carte-feuille-basse { transform: translateY(71svh); }
-.carte-feuille-moyenne { transform: translateY(40svh); }
-.carte-feuille-haute { transform: translateY(0); }
-/* Tiroir plein ecran : les filtres appartiennent a la carte, qui n'est plus visible. Les laisser
-   flotter les posait sur le titre de la liste, ou ils filtraient quelque chose qu'on ne voyait
-   plus. Ils reviennent des que le tiroir redescend. */
-.carte-page-haute .carte-controles { opacity: 0; pointer-events: none; }
-.carte-controles { transition: opacity .2s ease; }
-/* La poignee : une cible de 40px de haut pour le doigt, une barre de 5px pour l'oeil. */
-.carte-poignee {
-  display: flex; align-items: center; justify-content: center;
-  width: 100%; height: 40px; margin: 0 -20px; padding: 0 20px; background: none; border: 0;
-  cursor: grab; touch-action: none;
-}
-.carte-poignee:active { cursor: grabbing; }
-.carte-poignee-barre { display: block; width: 44px; height: 5px; border-radius: var(--radius-pill); background: var(--line); }
-
-/* La rangee de filtres de la liste des commerces : les memes pastilles que sur la carte, posees
-   dans le flux de la page et non flottantes, parce qu'ici il n'y a rien dessous a laisser voir. */
-.liste-filtres { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 12px; scrollbar-width: none; }
-.liste-filtres::-webkit-scrollbar { display: none; }
-.liste-panneau { margin-bottom: 14px; }
-.carte-feuille-titre { font-size: 21px; margin: 0 0 14px; flex-shrink: 0; }
-/* La liste prend la hauteur restante et defile seule : le tiroir, lui, ne bouge qu'a la poignee. */
-.carte-feuille-liste { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 96px; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
-.carte-feuille-ligne {
-  display: flex; align-items: center; gap: 12px; padding: 10px 0; text-decoration: none; color: inherit;
-  border-bottom: 1px solid var(--line);
-}
-.carte-feuille-ligne:last-child { border-bottom: none; }
-.carte-feuille-image { flex-shrink: 0; width: 64px; height: 64px; border-radius: var(--radius-chip); object-fit: cover; background: var(--surface-soft); }
-.carte-feuille-image-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
-.carte-feuille-texte { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
-.carte-feuille-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.carte-feuille-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px; color: var(--ink-soft); }
-.carte-feuille-promo { flex-shrink: 0; }
 .carte-bandeau-livraison {
   display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
   background: var(--iris); color: var(--cream); font-size: 14px; font-weight: 500;
+  padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+/* Le raccourci vers les jeux, même forme que le bandeau de livraison mais en blanc : sur cette
+   carte, l'iris est réservé à la seule chose qui presse — une livraison en route. Jouer ne presse
+   pas, c'est une proposition. */
+.carte-bandeau-jeux {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: #fff; color: var(--ink); font-size: 14px; font-weight: 500;
   padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
 }
 .carte-compte { margin: 0; align-self: flex-start; background: rgba(255,255,255,0.92); color: var(--ink-soft); font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); }
@@ -3644,3 +3595,11 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 /* Titre de section portant une icone : elle s'aligne sur la ligne de base du texte plutot que de
    flotter au-dessus, ce que fait un SVG pose nu a cote d'un mot. */
 .section-titre-icone { display: flex; align-items: center; gap: 8px; }
+
+/* Le HUD d'un jeu : ses glyphes sont maintenant des traces, qui doivent s'aligner sur la ligne de
+   base du chiffre a cote plutot que de flotter au-dessus. */
+.jeu-best { display: inline-flex; align-items: center; gap: 5px; }
+/* La consigne de commandes : le trace reste cale en haut a gauche et le texte s'enroule seul a
+   cote, au lieu de flotter au milieu du paragraphe une fois la ligne cassee. */
+.jeu-indice { display: flex; align-items: flex-start; justify-content: center; gap: 7px; text-align: left; }
+.jeu-indice > svg { flex-shrink: 0; margin-top: 2px; }

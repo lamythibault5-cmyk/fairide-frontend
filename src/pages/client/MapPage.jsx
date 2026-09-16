@@ -1,26 +1,26 @@
-import { Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { RESTAURANT_TYPES, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
-import { StarsDisplay } from '../../components/Stars';
 import Icone from '../../components/Icone';
 
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 
-// La carte des commerces, et la liste qui la prolonge.
+// La carte des commerces.
 //
 // CET ONGLET MONTRAIT LE SUIVI DE LIVRAISON. C'était le mauvais contenu derrière la bonne icône :
 // on clique sur une carte pour explorer un quartier — voir qui est ouvert, qui fait une promo, ce
 // qu'il y a à deux rues — pas pour regarder un livreur avancer. Le suivi vit dans « Mes commandes »,
 // et tant qu'une livraison est en cours un bandeau y mène depuis ici.
 //
-// LA CARTE D'ABORD, LA LISTE ENSUITE. La carte occupe la première hauteur d'écran et les contrôles
-// FLOTTENT par-dessus ; la liste des commerces commence juste sous elle et se découvre en faisant
-// défiler. C'est la disposition de l'application dont le fondateur a fourni les captures : on voit
-// la carte en arrivant, on obtient la liste en descendant, sans changer de page ni d'onglet.
+// RIEN QUE LA CARTE. Elle occupait la première hauteur d'écran et un tiroir « Commerces près de
+// toi » se tirait par-dessus, à trois hauteurs. Ce tiroir répétait la liste de /restaurants, qui
+// la montre mieux — avec ses rangées de sections, ses filtres et ses photos en grand — sur une
+// page faite pour ça. Deux listes des mêmes commerces à deux endroits, c'est une de trop, et
+// c'est celle qui recouvrait la carte qui part. Ici il reste une carte, et ce qui flotte dessus.
 
 // Bandes de prix, calculées sur le prix MÉDIAN des plats de la carte.
 //
@@ -57,9 +57,6 @@ export default function MapPage() {
   const [prix, setPrix] = useState(0); // 0 = tous, sinon 1 / 2 / 3
   const [tri, setTri] = useState('recommande'); // 'recommande' | 'note' | 'distance'
   const [panneau, setPanneau] = useState(null); // 'cuisine' | 'prix' | 'tri' | null
-  // Hauteur du tiroir : 'basse' (la carte domine), 'moyenne', 'haute' (la liste couvre la carte).
-  const [hauteur, setHauteur] = useState('basse');
-  const departY = useRef(null);
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
@@ -117,7 +114,7 @@ export default function MapPage() {
   const LIBELLE_TRI = { recommande: t('mapClient.sortRecommended'), note: t('mapClient.sortRating'), distance: t('mapClient.sortDistance') };
 
   return (
-    <div className={`carte-page carte-page-${hauteur}`}>
+    <div className="carte-page">
       <div className="carte-plein">
         <Suspense fallback={<div className="carte-attente" />}>
           <RestaurantsMap
@@ -135,6 +132,17 @@ export default function MapPage() {
               <span aria-hidden="true">›</span>
             </Link>
           )}
+          {/* LES JEUX, SANS AVOIR À COMMANDER.
+              Ils n'étaient atteignables que par un bouton du suivi de livraison : il fallait donc
+              une commande en cours pour y accéder, alors qu'ils n'en dépendent en rien — la page
+              /jeux ne lit aucune commande, elle n'attendait qu'une porte d'entrée. Celle-ci en est
+              une, ouverte en permanence. Le libellé change selon qu'une livraison est en route ou
+              non : « en attendant ton livreur » quand c'est le cas, l'invitation simple sinon. */}
+          <Link to="/jeux" state={{ from: '/map' }} className="carte-bandeau-jeux">
+            <Icone nom="manette" taille={20} />
+            <span>{enCours.length > 0 ? t('mapClient.playWhileWaiting') : t('mapClient.playGames')}</span>
+            <span aria-hidden="true">›</span>
+          </Link>
           <div className="carte-pastilles">
             <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
               <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
@@ -205,51 +213,6 @@ export default function MapPage() {
               <button type="button" className="carte-reinit" onClick={toutReinitialiser}>{t('mapClient.reset')}</button>
             )}
           </div>
-        </div>
-      </div>
-
-      {/* La liste sous la carte : les mêmes commerces, dans le même ordre, avec ce qu'une épingle
-          ne peut pas montrer — la photo, la note, la distance.
-          LA POIGNÉE SE TIRE. Trois hauteurs : la liste juste amorcée sous la carte, la liste à
-          mi-écran, la liste plein écran (la carte disparaît). On la tire au doigt, ou on tape la
-          poignée pour passer au cran suivant — taper est plus sûr que glisser sur un écran où le
-          moindre mouvement fait aussi défiler la liste elle-même. */}
-      <div className={`carte-feuille carte-feuille-${hauteur}`}>
-        <button
-          type="button" className="carte-poignee" aria-label={t('mapClient.sheetHandle')}
-          onClick={() => setHauteur((h) => (h === 'haute' ? 'basse' : h === 'basse' ? 'moyenne' : 'haute'))}
-          onPointerDown={(e) => { departY.current = e.clientY; e.currentTarget.setPointerCapture(e.pointerId); }}
-          onPointerUp={(e) => {
-            if (departY.current == null) return;
-            const dy = e.clientY - departY.current;
-            departY.current = null;
-            // 24px : au-delà c'est un glissement, en deçà c'est un tap (traité par onClick).
-            if (dy < -24) setHauteur((h) => (h === 'basse' ? 'moyenne' : 'haute'));
-            else if (dy > 24) setHauteur((h) => (h === 'haute' ? 'moyenne' : 'basse'));
-          }}
-        >
-          <span className="carte-poignee-barre" aria-hidden="true" />
-        </button>
-        <h2 className="carte-feuille-titre">{t('mapClient.nearbyTitle')}</h2>
-        <div className="carte-feuille-liste">
-        {chargement && <p className="small">{t('mapClient.loading')}</p>}
-        {!chargement && liste.length === 0 && <p className="small">{t('mapClient.noneMatch')}</p>}
-        {liste.map((r) => (
-          <Link key={r.id} to={`/restaurants/${r.id}`} className="carte-feuille-ligne">
-            {r.coverImageUrl
-              ? <img className="carte-feuille-image" src={r.coverImageUrl} alt="" loading="lazy" />
-              : <span className="carte-feuille-image carte-feuille-image-vide" aria-hidden="true"><Icone nom="restaurants" taille={22} /></span>}
-            <span className="carte-feuille-texte">
-              <b>{r.name}</b>
-              <span className="carte-feuille-meta">
-                <StarsDisplay value={r.rating} />
-                {r.distanceKm != null && <span>{r.distanceKm < 1 ? `${Math.round(r.distanceKm * 1000)} m` : `${r.distanceKm.toFixed(1)} km`}</span>}
-                <span>{r.commune}</span>
-              </span>
-            </span>
-            {r.hasPromo && <span className="pill gold carte-feuille-promo">{t('restoMap.promo')}</span>}
-          </Link>
-        ))}
         </div>
       </div>
     </div>

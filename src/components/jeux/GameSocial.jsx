@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import Icone from '../Icone';
 import { useLanguage } from '../../context/LanguageContext';
 
 // La couche « sociale » des mini-jeux : pseudo du joueur, accord pour l'afficher, meilleurs scores
@@ -81,7 +82,7 @@ export function PseudoModal({ profil, onSave, onClose, apres }) {
   return (
     <div className="modal-overlay pseudo-modal-overlay" role="dialog" aria-modal="true" aria-label={t('gameSocial.modalTitle')} onClick={obligatoire ? undefined : onClose}>
       <form className="modal-box pseudo-modal" onClick={(e) => e.stopPropagation()} onSubmit={valider}>
-        <h3 style={{ marginTop: 0 }}>🎮 {t('gameSocial.modalTitle')}</h3>
+        <h3 className="modal-titre">{t('gameSocial.modalTitle')}</h3>
         <p className="small">{t('gameSocial.modalIntro')}</p>
         <div className="field">
           <label htmlFor="pseudo-jeu">{t('gameSocial.pseudoLabel')}</label>
@@ -114,7 +115,7 @@ export function Podium({ jeu, entrees, profil, connecte, moiId, onEditer, large 
       <div className="podium-titre">
         <span>{t('gameSocial.podiumTitle')} · {jeu.label}</span>
         {connecte && profil && (
-          <button type="button" className="podium-editer" onClick={onEditer} title={t('gameSocial.editPseudo')} aria-label={t('gameSocial.editPseudo')}>✏️</button>
+          <button type="button" className="podium-editer" onClick={onEditer} title={t('gameSocial.editPseudo')} aria-label={t('gameSocial.editPseudo')}><Icone nom="crayon" taille={14} /></button>
         )}
       </div>
       {entrees.length === 0 ? (

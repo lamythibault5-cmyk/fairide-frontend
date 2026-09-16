@@ -89,7 +89,22 @@ const TRACES = {
   // Paiement en ligne / sur place : la carte bancaire existe déjà (carteBancaire), voici l'espèce.
   billet: <><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01" /><path d="M18 12h.01" /></>,
   // Un message du commerce, au paiement.
-  bulle: <path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12Z" />
+  bulle: <path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12Z" />,
+  // La manette des mini-jeux : une croix directionnelle à gauche, deux boutons à droite.
+  manette: <><rect x="2" y="7" width="20" height="11" rx="4" /><path d="M7 11v3" /><path d="M5.5 12.5h3" /><circle cx="16" cy="11.8" r=".9" /><circle cx="18.2" cy="14" r=".9" /></>,
+  // Le son : un haut-parleur, et sa variante barrée quand la musique est coupée.
+  son: <><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z" /><path d="M15.5 9.2a4 4 0 0 1 0 5.6" /><path d="M18 6.7a7.5 7.5 0 0 1 0 10.6" /></>,
+  sonCoupe: <><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z" /><path d="m16 10 4 4" /><path d="m20 10-4 4" /></>,
+  // Piste tirée au sort dans le menu de musique.
+  melanger: <><path d="M3 7h3l3 4.5" /><path d="M3 17h3l8-12h4" /><path d="M14 19h4" /><path d="m16 3 2 2-2 2" /><path d="m16 17 2 2-2 2" /></>,
+  // L'astuce « tourne ton téléphone » : un appareil en portrait, avec sa flèche de rotation.
+  mobile: <><rect x="7" y="2.5" width="10" height="19" rx="2" /><path d="M11 18.5h2" /></>,
+  // Modifier son pseudo sur le podium.
+  crayon: <><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" /><path d="m14.5 6.5 3 3" /></>,
+  // L'explication repliée derrière une bulle d'aide.
+  ampoule: <><path d="M9.5 18h5" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9V15h7v-1.1A6 6 0 0 0 12 3Z" /></>,
+  // Le but d'un jeu, dans sa fiche de règles.
+  cible: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.4" /></>
 };
 
 export default function Icone({ nom, taille = 20, className }) {

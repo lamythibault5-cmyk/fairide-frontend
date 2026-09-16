@@ -4,11 +4,12 @@ import GameFrame, { tJeu } from './jeux/GameFrame';
 import { JEUX } from './jeux/jeux';
 import { Podium, PseudoModal, useGameSocial } from './jeux/GameSocial';
 import { musique } from './jeux/musique';
+import Icone from './Icone';
 import { useLanguage } from '../context/LanguageContext';
 
 // Le choix du mini-jeu à côté de la carte de suivi. Six jeux, chacun avec son meilleur score
 // (localStorage, une clé par jeu — voir jeux.js) ; changer de jeu démonte l'ancien proprement grâce au
-// `key`, ce qui arrête sa boucle. Le bouton 📖 des règles vit dans le cadre du jeu (GameFrame) : il
+// `key`, ce qui arrête sa boucle. Le bouton des règles vit dans le cadre du jeu (GameFrame) : il
 // est toujours celui du jeu affiché, pas un par onglet — six petits livres côte à côte ne se liraient
 // pas.
 //
@@ -49,7 +50,7 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
       {pourquoi && !compact && (
         <div className="game-switcher-entete">
           <span className="game-switcher-entete-titre">{t('games.title')}</span>
-          <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label={t('games.why')} title={t('games.why')}>💡</button>
+          <button type="button" className="game-switcher-pourquoi" onClick={() => setPourquoiOuvert((o) => !o)} aria-expanded={pourquoiOuvert} aria-label={t('games.why')} title={t('games.why')}><Icone nom="ampoule" taille={15} /></button>
         </div>
       )}
       {pourquoi && pourquoiOuvert && (

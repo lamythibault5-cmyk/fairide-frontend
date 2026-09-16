@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import GameSwitcher from '../../components/GameSwitcher';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
@@ -14,17 +14,30 @@ import Icone from '../../components/Icone';
 // toute la page. Celui qui attend sa commande sans envie de jouer ne voit qu'un bouton ; celui qui
 // veut jouer a un vrai jeu.
 //
-// Le retour est explicite, en tête de page : on est venu du suivi, on doit pouvoir y retourner sans
-// chercher — la barre du bas mènerait ailleurs.
+// ON N'A PLUS BESOIN D'UNE COMMANDE POUR JOUER. Cette page n'a jamais rien lu d'une commande : elle
+// montre trois jeux, c'est tout. Mais son unique porte d'entrée était un bouton du suivi de
+// livraison, ce qui la rendait inaccessible tant qu'on n'avait rien commandé. La carte en ouvre une
+// seconde, ouverte en permanence.
+//
+// Le retour est explicite, en tête de page, et il mène là d'où l'on vient — le suivi de commande ou
+// la carte. La barre du bas mènerait ailleurs, et sur cette page qui occupe tout l'écran, repartir
+// au hasard est le seul vrai risque.
 export default function JeuxPage() {
   const { t } = useLanguage();
+  const location = useLocation();
   usePageMeta({ title: `${t('games.pageTitle')} · Fairide`, path: '/jeux' });
+
+  // `state.from` est posé par le lien d'où l'on vient. Sans lui — lien partagé, page rechargée,
+  // ouverture directe — on repart vers la carte, qui est désormais l'entrée principale des jeux.
+  const venuDesCommandes = location.state?.from === '/orders';
+  const retourVers = venuDesCommandes ? '/orders' : '/map';
 
   return (
     <div className="jeux-page">
       <div className="jeux-entete">
-        <Link to="/orders" className="jeux-retour">
-          <Icone nom="commandes" taille={18} />{t('games.backToOrders')}
+        <Link to={retourVers} className="jeux-retour">
+          <Icone nom={venuDesCommandes ? 'commandes' : 'carte'} taille={18} />
+          {venuDesCommandes ? t('games.backToOrders') : t('games.backToMap')}
         </Link>
         <h1 className="page-title" style={{ margin: 0 }}>{t('games.pageTitle')}</h1>
         <p className="small" style={{ margin: '4px 0 0' }}>{t('games.pageSub')}</p>

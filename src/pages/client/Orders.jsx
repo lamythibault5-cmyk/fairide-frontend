@@ -274,8 +274,8 @@ export default function Orders() {
               {/* Les mini-jeux vivaient serrés dans une colonne à côté de la carte, qu'on les veuille
                   ou non. Ils sont maintenant une proposition : un bouton, et une page entière pour
                   jouer. Celui qui attend sans envie de jouer ne voit qu'un bouton. */}
-              <Link to="/jeux" className="btn-subtle suivi-jouer">
-                <Icone nom="etoile" taille={18} />{t('games.playWhileWaiting')}
+              <Link to="/jeux" state={{ from: '/orders' }} className="btn-subtle suivi-jouer">
+                <Icone nom="manette" taille={18} />{t('games.playWhileWaiting')}
               </Link>
             </div>
           )}
