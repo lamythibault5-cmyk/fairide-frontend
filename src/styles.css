@@ -550,23 +550,11 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    carrément deux plats de la grille menu, capture d'écran à l'appui). Une barre sticky en haut de page
    pousse le contenu au lieu de flotter par-dessus : elle ne peut plus jamais chevaucher quoi que ce
    soit, quel que soit l'écran ou la position de scroll. */
-/* La pastille de marque (.dashboard-marque) est fixée en haut à droite au-dessus de 150 en z-index,
-   sur tout écran de moins de 900px. Cette barre de sections est collante en haut, sur toute la
-   largeur : les deux se superposaient, et la pastille recouvrait la dernière pilule visible, qui
-   devenait illisible et incliquable. On réserve sa place à droite plutôt que de la faire passer
-   dessous — la barre défile horizontalement, donc une pilule cachée n'est pas rattrapable. */
 .category-quicknav {
   position: sticky; top: 0; z-index: 40;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
   gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
   background: linear-gradient(to bottom, var(--cream) 78%, rgba(255,255,255,0));
-}
-@media (max-width: 900px) {
-  /* La marge est portée par le conteneur QUI DÉFILE, pas par la barre : une marge intérieure sur
-     la barre allonge le contenu sans rétrécir la fenêtre visible, donc les pilules continuaient de
-     passer sous la pastille en défilant. Une marge extérieure sur le conteneur de défilement
-     arrête la fenêtre elle-même avant la pastille. */
-  .category-quicknav-sections { margin-right: 108px; }
 }
 /* Conteneur du défilement horizontal des sections (Entrées/Plats/Desserts...) — occupe toute la barre :
    le panier vit désormais uniquement dans FloatingCart (bulle en bas à gauche), plus ici. */
@@ -1821,23 +1809,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-nav-icon { width: 24px; height: 24px; }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
-  /* La pastille de marque est fixée en haut à droite et flotte au-dessus du contenu : le titre de
-     page doit lui laisser sa place, sinon il passe dessous. En français à 430px on ne le voyait
-     pas — « Restaurants et commerces à Bruxelles » s'arrête avant. En néerlandais à 375px,
-     « Restaurants en zaken in Brussel » tient sur une ligne et courait 75px sous la pastille, qui
-     en mangeait la fin. Le défaut n'apparaissait donc que dans une langue et sur les écrans
-     étroits, ce qui est la meilleure façon de ne jamais le voir en le cherchant en français.
-
-     Le sélecteur ne peut pas être « enfant direct » de .dashboard-main : le titre vit deux niveaux
-     plus bas (MAIN > .page-fade > div de page > h1.page-title). */
-  .dashboard-main .page-fade > * > .page-title,
-  .dashboard-main .page-fade > .page-title,
-  .dashboard-main .page-fade > * > h2.section-title:first-child { padding-right: 108px; }
-  /* L'en-tête de Mon compte pose son avatar tout à droite : c'est LUI qui se retrouvait sous la
-     pastille, pas le titre. La réserve se porte donc sur la rangée entière, et le titre qu'elle
-     contient n'a plus besoin de la sienne. */
-  .dashboard-main .page-fade > * > .account-entete { padding-right: 108px; }
-  .dashboard-main .page-fade > * > .account-entete > .page-title { padding-right: 0; }
+  /* Les titres de page et l'en-tête de Mon compte réservaient ici la place de la pastille de
+     marque, fixée en haut à droite. Elle a été retirée (voir Layout.jsx) : ils reprennent toute la
+     largeur. */
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
   /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
@@ -2629,22 +2603,10 @@ button.account-link-row:last-child { border-bottom: none; }
    z-index 150 : au-dessus du contenu et des cartes Leaflet (dont les contrôles sont confinés par
    isolation: isolate, voir plus bas), mais SOUS la vue plein écran carte + jeux (z 200), qui doit
    recouvrir tout. */
-.dashboard-marque { display: none; }
 .dashboard-retour { display: inline-block; font-size: 14px; font-weight: 600; color: var(--iris); text-decoration: none; margin: 0 0 10px; padding: 6px 0; }
 .dashboard-retour:hover { text-decoration: underline; }
 
 @media (max-width: 900px) {
-  .dashboard-marque {
-    position: fixed; top: 10px; right: 12px; z-index: 150;
-    display: flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px;
-    background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(220, 216, 208, 0.7); border-radius: 999px;
-    box-shadow: 0 2px 10px rgba(20, 18, 31, 0.06); text-decoration: none;
-  }
-  .dashboard-marque span {
-    font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 15px;
-    color: var(--ink); letter-spacing: -0.03em; line-height: 1;
-  }
 }
 
 /* Les cartes Leaflet et leurs pastilles forment chacune leur propre contexte d'empilement : leurs

@@ -126,28 +126,19 @@ export default function Layout() {
   const fondDoux = location.pathname === '/aide' || location.pathname === '/restaurants' || RESTAURANT_DETAIL_PATH.test(location.pathname);
   const fondCuisine = fondVitrine || fondDoux;
 
-  // Sous 900px la barre latérale devient la barre du BAS, et sa règle CSS y masque son propre logo :
-  // un utilisateur connecté n abordait donc plus aucune marque à l écran. On la remonte en haut à
-  // droite du contenu, à cette largeur seulement — au-dessus, la barre latérale la porte déjà.
-  const accueilConnecte = user?.isAdmin ? '/admin'
-    : role === 'restaurant' ? '/dashboard'
-    : role === 'driver' ? '/driver'
-    : '/restaurants';
   if (user && isDashboardPath(location.pathname)) {
     return (
       <>
         <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}`}>
           <DashboardSidebar />
           <main className="dashboard-main">
-            {/* La marque, incrustée en haut à droite de l écran sur mobile et tablette : une pastille
-                fixe qui flotte au-dessus du contenu, pas une barre qui prendrait une ligne entière
-                (au-dessus de 900px la barre latérale la porte déjà, voir styles.css). Le retour vers
-                Mon compte, lui, est du contenu : un simple lien en tête de page, seulement dans les
-                sous-sections du compte. */}
-            <Link className="dashboard-marque" to={accueilConnecte} aria-label={t('nav.homeAria')}>
-              <BrandMark size={22} />
-              <span>fairide</span>
-            </Link>
+            {/* Il y avait ici une pastille « fairide » fixée en haut à droite, flottant au-dessus du
+                contenu sur mobile et tablette. Elle est partie : elle ne servait qu'à rappeler le nom
+                du site à quelqu'un qui y est déjà connecté, et elle le payait cher — elle mangeait la
+                fin des titres de page (visible en néerlandais sur écran étroit), recouvrait la barre
+                des sections d'une carte, et se posait sur l'avatar de Mon compte. Trois réserves
+                d'espace ont été écrites pour la contourner ; les trois partent avec elle.
+                Au-dessus de 900px la barre latérale porte déjà la marque, et c'est assez. */}
             {estSousSectionCompte(location.pathname) && (
               <Link to="/account" state={{ restaurerDefilement: true }} className="dashboard-retour">{t('nav.backToAccount')}</Link>
             )}
