@@ -25,7 +25,7 @@ des choses qui demandent **un compte, une clé, un appareil ou une décision** �
 3. **Poser les clés VAPID sur Railway** et vérifier une notification sur un vrai téléphone (§6)
 4. **Appliquer `schema.sql` sur Railway** — deux nouvelles tables attendent (§13)
 5. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel** avant le premier vrai commerce (§9)
-6. **Trancher les dates affichées** : elles se contredisent entre elles (§14)
+6. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
 7. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4)
 8. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)
 
@@ -49,10 +49,11 @@ Pour qu'une commande soit acceptée, un commerce doit remplir **quatre** conditi
 Un commerce fraîchement créé échoue donc sur **trois conditions sur quatre**. Deux d'entre
 elles ne peuvent venir que de Stripe : aucune manipulation dans l'application ne les force.
 
-**Il y a une cinquième condition, absente de ce tableau jusqu'ici :** une date. `routes/orders.js:11`
-refuse toute commande en ligne avant le **10 octobre 2026**, réservations exceptées (1er octobre).
-Elle est pilotée par `FAIRIDE_ORDERS_OPEN_AT`. Voir §14 : cette date ne correspond pas à ce que
-l'accueil promet.
+**Il y a une cinquième condition, absente de ce tableau jusqu'ici :** une date. `routes/orders.js`
+refuse chaque service avant son ouverture — réservation et à emporter le **5 octobre 2026**,
+livraison le **15**. Chacune est pilotée par sa propre variable (`FAIRIDE_DINE_IN_OPEN_AT`,
+`FAIRIDE_PICKUP_OPEN_AT`, `FAIRIDE_DELIVERY_OPEN_AT`), donc déplaçable sans redéploiement. Les
+comptes administrateurs et de test passent outre, ce qui permet d'essayer avant l'ouverture.
 
 - [ ] Faire passer **au moins un commerce** par les quatre conditions, de bout en bout
 - [ ] Passer **une vraie commande complète** : panier → paiement → réception côté commerçant →
@@ -90,7 +91,7 @@ Deux branches attendent maintenant une relecture, toutes deux du 16 septembre :
 | Dépôt | Branche | Contenu |
 |---|---|---|
 | frontend | `fix/avant-mise-en-ligne` | robots.txt, sous-traitants RGPD, PWA + Web Push, accessibilité, quartier admin |
-| backend | `fix/avant-mise-en-ligne` | replis `APP_URL`, refus du caractère illisible, Web Push |
+| backend | `fix/avant-mise-en-ligne` | replis `APP_URL`, refus du caractère illisible, Web Push, fusion de `main` |
 
 ⚠️ **Le frontend et le backend doivent partir ensemble.** Le frontend seul afficherait un bouton
 « Activer les notifications » dont l'API n'existe pas encore côté serveur.
@@ -303,30 +304,33 @@ Le code est écrit et fusionné dans `main`. Rien n'a encore été exécuté con
 
 ---
 
-## 🟠 14. Les dates affichées se contredisent
+## ✅ 14. Les dates s'accordent enfin — reste la promesse d'application
 
-Le document signalait une promesse d'application au 15 octobre. Le problème est plus large : **le
-site et le serveur n'annoncent pas les mêmes dates.**
+**Corrigé entre-temps, par `main`.** Ce point signalait une contradiction réelle : l'accueil invitait
+à commander à emporter dès le 5 octobre quand le serveur refusait jusqu'au 10. Les commits du
+16 septembre ont refondu le calendrier côté serveur, et les deux côtés disent maintenant la même
+chose :
 
-| Où | Ce qui est dit |
-|---|---|
-| Accueil (`landing.appSoonSub`) | appli le **1er octobre**, emporter dès le **5**, livraison dès le **15** |
-| Serveur (`routes/orders.js:11`) | commandes en ligne — livraison **et** emporter — le **10 octobre** |
-| Serveur (`routes/orders.js:15`) | réservations le **1er octobre** |
-| Serveur (`routes/restaurants.js:36`) | abonnement le **15 octobre** |
+| Service | Ouverture | Où |
+|---|---|---|
+| Réservation de table | 5 octobre | `FAIRIDE_DINE_IN_OPEN_AT` |
+| À emporter | 5 octobre | `FAIRIDE_PICKUP_OPEN_AT` |
+| Livraison | 15 octobre | `FAIRIDE_DELIVERY_OPEN_AT` |
+| Abonnement commerce | 1er octobre | `FAIRIDE_SUBSCRIPTION_OPEN_AT` |
 
-Un client qui lit l'accueil essaiera donc de commander à emporter le 5 octobre et sera refusé
-pendant cinq jours, avec un message qui lui annonce le 10. Ce n'est pas un choix de date : c'est une
-contradiction entre deux fichiers.
+Ce qui correspond à l'accueil : « réserve ta table ou commande à emporter dès le 5 octobre, en
+livraison dès le 15 ». Vérifié à l'écran sur la fiche d'un commerce, qui affiche exactement cette
+phrase. Les anciennes variables (`FAIRIDE_ORDERS_OPEN_AT`, `FAIRIDE_RESERVATIONS_OPEN_AT`) portaient
+l'ancien calendrier et sont désormais ignorées — ne pas les reposer sur Railway.
 
-**Et l'application mobile n'existe pas.** Il n'y a pas de projet natif ; la PWA est désormais
-installable, ce qui n'est pas la même promesse que « sur iOS, Android et AppGallery ».
+**Reste la promesse d'application mobile.** L'accueil annonce l'appli « le 1er octobre sur iOS,
+Android et AppGallery ». Il n'y a pas de projet natif. La PWA est maintenant installable, ce qui
+n'est pas la même promesse : ajouter un site à son écran d'accueil n'est pas le télécharger sur une
+boutique.
 
-- [ ] **Trancher, et aligner les deux côtés.** Les dates vivent dans ~14 clés × 3 langues côté site,
-      et dans trois variables d'environnement côté serveur (`FAIRIDE_ORDERS_OPEN_AT`,
-      `FAIRIDE_RESERVATIONS_OPEN_AT`, `FAIRIDE_SUBSCRIPTION_OPEN_AT`) — donc modifiables sans
-      redéploiement.
-- [ ] Décider ce que devient la promesse « iOS, Android et AppGallery »
+- [ ] Décider : livrer un emballage natif, repousser la date, ou retirer la promesse. Les dates
+      vivent dans ~14 clés × 3 langues, et les ouvertures de service sont pilotées par les quatre
+      variables ci-dessus — donc modifiables sans redéploiement.
 
 ---
 
