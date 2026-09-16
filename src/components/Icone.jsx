@@ -99,7 +99,3 @@ export default function Icone({ nom, taille = 20, className }) {
     </svg>
   );
 }
-
-// Exposé pour la page de contrôle visuel : voir tous les tracés côte à côte est le seul moyen de
-// repérer celui qui pèse plus que ses voisins ou qui ne se lit pas à 20px.
-export const NOMS_ICONES = Object.keys(TRACES);

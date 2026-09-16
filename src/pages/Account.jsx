@@ -462,7 +462,7 @@ export default function Account() {
           (annonces, réponses), avec le compteur de non-lus. /account?ouvrir=messages arrive dessus déplié. ——— */}
       <div className={`card account-groupe account-groupe-messages${nonLus > 0 ? ' a-non-lus' : ''}`} aria-label={t('inbox.rowTitle')}>
         <div id="section-messages">
-          <LigneCompte icone="✉️" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : t('inbox.rowSub')} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
+          <LigneCompte icone="courrier" titre={t('inbox.rowTitle')} sous={nonLus > 0 ? t('inbox.rowSubUnread', { n: nonLus }) : t('inbox.rowSub')} accent={nonLus > 0 ? 'warn' : undefined} ouverte={ouvertes.has('messages')} onClick={() => basculer('messages')}>
             {ouvertes.has('messages') && <InboxSection />}
           </LigneCompte>
         </div>
@@ -470,7 +470,7 @@ export default function Account() {
 
       {/* ——— Mon profil : tout ce qui décrit la personne et son accès. ——— */}
       <div className="card account-groupe" aria-label={t('accountUi.myProfile')}>
-        <LigneCompte icone="👤" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
+        <LigneCompte icone="compte" titre={t('accountUi.myInfo')} sous={adresseResume || t('accountUi.profileSub')} ouverte={ouvertes.has('infos')} onClick={() => basculer('infos')}>
           <form onSubmit={saveInfo}>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
@@ -575,7 +575,7 @@ export default function Account() {
             tronqué à l'ellipse sur un téléphone, il finissait par cacher l'avertissement même qu'il
             portait. L'e-mail suffit à identifier la rangée, et l'alerte de vérification passe seule
             quand elle a lieu d'être — c'est la seule des trois informations qui appelle une action. */}
-        <LigneCompte icone="🔒" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
+        <LigneCompte icone="cadenas" titre={t('accountUi.loginDetails')} sous={user.phone && !user.phoneVerified ? t('accountUi.phoneNotVerifiedShort') : user.email} ouverte={ouvertes.has('connexion')} onClick={() => basculer('connexion')}>
           <p className="small" style={{ margin: '0 0 6px', opacity: 0.75 }}>
             {t('accountUi.contactCodeInfo')}
           </p>
@@ -591,7 +591,7 @@ export default function Account() {
           <PhoneVerification />
         </LigneCompte>
 
-        <LigneCompte icone="🔑" titre={t('account.passwordTitle')} sous={t('accountUi.newPasswordSub')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
+        <LigneCompte icone="cle" titre={t('account.passwordTitle')} sous={t('accountUi.newPasswordSub')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
           <form onSubmit={savePassword}>
             <div className="field">
               <label>{t('account.currentPassword')}</label>
@@ -612,18 +612,18 @@ export default function Account() {
         {/* Langue de l'interface. Elle vivait dans la barre latérale, où elle était visible en permanence
             — mais une barre de navigation n'est pas l'endroit d'un réglage. Le choix est mémorisé dans
             localStorage (voir LanguageContext) : on ne le règle qu'une fois. Sa place est donc ici. */}
-        <LigneCompte icone="🌍" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
+        <LigneCompte icone="globe" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           <LanguageSwitcher />
         </LigneCompte>
 
         {role === 'driver' && (
-          <LigneCompte icone="🪪" titre={t('driverDocs.title')} sous={t('driverDocs.sub')} ouverte={ouvertes.has('documents')} onClick={() => basculer('documents')}>
+          <LigneCompte icone="dossier" titre={t('driverDocs.title')} sous={t('driverDocs.sub')} ouverte={ouvertes.has('documents')} onClick={() => basculer('documents')}>
             {ouvertes.has('documents') && <DriverDocuments />}
           </LigneCompte>
         )}
         {role === 'driver' && (
-          <LigneCompte icone="📡" titre={t('account.geoTitle')} sous={locationSharingEnabled ? t('accountUi.sharingOn') : t('accountUi.sharingOff')} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
+          <LigneCompte icone="antenne" titre={t('account.geoTitle')} sous={locationSharingEnabled ? t('accountUi.sharingOn') : t('accountUi.sharingOff')} ouverte={ouvertes.has('geo')} onClick={() => basculer('geo')}>
             <p className="small" style={{ margin: '0 0 10px' }}>{t('account.geoExplain')}</p>
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
               <input type="checkbox" style={{ width: 'auto' }} checked={locationSharingEnabled} disabled={savingLocationSharing} onChange={toggleLocationSharing} />
@@ -636,7 +636,7 @@ export default function Account() {
       {/* ——— Solde et avantages. ——— */}
       <div className="card account-groupe" aria-label={t('accountUi.balanceBenefits')}>
         {role === 'client' && (
-          <LigneCompte icone="💰" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
+          <LigneCompte icone="solde" titre={t('accountUi.myBalance')} sous={t('accountUi.balanceSub', { balance: solde })} ouverte={ouvertes.has('solde')} onClick={() => basculer('solde')}>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
               <div className="num">{solde}€</div>
               <div className="label">{t('account.balance')}</div>
@@ -653,7 +653,7 @@ export default function Account() {
         {/* Icône différente de celle de « Mon solde » juste au-dessus : les deux rangées se suivent,
             et le même 💰 sur les deux les faisait lire comme une seule répétée. */}
         {(role === 'restaurant' || role === 'driver') && (
-          <LigneCompte icone="🏦" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
+          <LigneCompte icone="banque" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
             <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
               <div className="num">{solde}€</div>
@@ -684,7 +684,7 @@ export default function Account() {
             démonstration), le résumé s'affichait « Ton code : · 0.00€ gagnés » — un deux-points
             suivi d'un point médian, sans rien entre les deux. On retombe alors sur la phrase
             d'invitation, qui reste vraie quoi qu'il arrive. */}
-        <LigneCompte icone="🎁" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
+        <LigneCompte icone="cadeau" titre={t('account.referral.title')} sous={referralStats && referralStats.code ? t('accountUi.referralSummary', { code: referralStats.code, earned: referralStats.earnedTotal.toFixed(2) }) : t('accountUi.referralSub')} ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
           <p className="small" style={{ margin: '0 0 12px' }}>{t(`account.referral.how.${role}`)}</p>
           {referralStats && (
             <>
@@ -719,38 +719,48 @@ export default function Account() {
           réglage — Fairide n'enregistre pas de carte et n'accepte pas encore les titres-restaurant. */}
       {role === 'client' && (
         <div className="card account-groupe" aria-label={t('accountUi.ordersAndFairide')}>
-          <LigneCompte to="/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.invoicesSub')} />
-          <LigneCompte icone="🛡️" titre={t('accountUi.guestReviewsTitle')} sous={t('accountUi.guestReviewsSub')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
+          {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
+              fasse 56px (voir DashboardSidebar.jsx). On les ouvre moins souvent que la liste, la
+              recherche ou ses commandes — c'est le sixième par l'usage, donc celui qui part. */}
+          <LigneCompte to="/favorites" icone="favoris" titre={t('nav.favorites')} />
+          <LigneCompte to="/invoices" icone="document" titre={t('accountUi.myInvoices')} sous={t('accountUi.invoicesSub')} />
+          <LigneCompte icone="bouclier" titre={t('accountUi.guestReviewsTitle')} sous={t('accountUi.guestReviewsSub')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
             {ouvertes.has('avisRestos') && <MyGuestReviews />}
           </LigneCompte>
           {/* La rangée « Adresse de livraison » a disparu : elle affichait mot pour mot l'adresse déjà
               écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
               donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
               adresse ; elle vit donc à un seul endroit, sous « Mes infos », où elle se modifie. */}
-          <LigneCompte to="/aide?sujet=paiement" icone="💳" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
-          <LigneCompte to="/aide?sujet=titres-restaurant" icone="🎫" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
-          <LigneCompte to="/notre-histoire" icone="🧭" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />
+          <LigneCompte to="/aide?sujet=paiement" icone="carteBancaire" titre={t('accountUi.paymentMethods')} sous={t('accountUi.paymentSub')} />
+          <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
+          <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />
         </div>
       )}
 
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
-          <LigneCompte icone="🖨️" titre={t('ticketHelp.rowTitle')} sous={t('ticketHelp.rowSub')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
+          {/* « Aperçu client » et « Carte » ont quitté la barre du bas, ramenée à cinq onglets pour
+              que chaque cible fasse 56px (voir DashboardSidebar.jsx). Ce sont des pages qu'on ouvre
+              de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
+              d'emploi, partis avant elles pour la même raison. */}
+          <LigneCompte to="/dashboard/preview" icone="apercu" titre={t('nav.customerPreview')} />
+          <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
+          <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} sous={t('ticketHelp.rowSub')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
             {ouvertes.has('tickets') && <TicketHelp />}
           </LigneCompte>
           <div id="section-contrat" />
-          <LigneCompte icone="📜" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
+          <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <div id="section-paiement">
-            <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' && !restaurant.reservationDepositEnabled ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' && !restaurant.reservationDepositEnabled ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
           {/* Formule Réservation : l'abonnement n'est pas nécessaire tant que ni livraison ni emporter ne sont choisis. */}
           <div id="section-abonnement">
-          <LigneCompte icone="💳" titre={t('accountUi.subscription')} sous={restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) ? t('accountUi.subNotNeeded') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) ? t('accountUi.subNotNeeded') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -863,7 +873,7 @@ export default function Account() {
           </div>
 
           <LigneCompte
-            icone="🛎️" titre={t('accountUi.servicesOffered')}
+            icone="cloche" titre={t('accountUi.servicesOffered')}
             sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup'), offersDineIn && t('accountUi.reservation')].filter(Boolean).join(' · ') || 'Aucun service actif'}
             ouverte={ouvertes.has('services')} onClick={() => basculer('services')}
           >
@@ -899,7 +909,7 @@ export default function Account() {
                       effet: t('accountUi.svcDeliveryDesc') },
                     { cle: 'pickup', icone: '🥡', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
                       effet: t('accountUi.svcPickupDesc') },
-                    { cle: 'dine_in', icone: '🍽️', nom: t('accountUi.svcReservation'), valeur: offersDineIn, set: setOffersDineIn,
+                    { cle: 'dine_in', icone: 'restaurants', nom: t('accountUi.svcReservation'), valeur: offersDineIn, set: setOffersDineIn,
                       effet: t('accountUi.svcReservationDesc') }
                   ].map((s) => (
                     <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
@@ -943,10 +953,10 @@ export default function Account() {
 
           {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom.
               Les réservations (agenda, plan de salle, règles, agenda externe) ont leur propre rubrique principale. */}
-          <LigneCompte to="/dashboard/promotions" icone="🏷️" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
-          <LigneCompte to="/dashboard/invoices" icone="📄" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
-          <LigneCompte to="/dashboard/guide" icone="📘" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />
-          <LigneCompte to="/dashboard/reviews" icone="⭐" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
+          <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} sous={t('accountUi.promotionsSub')} />
+          <LigneCompte to="/dashboard/invoices" icone="document" titre={t('accountUi.invoices')} sous={t('accountUi.commissionInvoicesSub')} />
+          <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} sous={t('accountUi.guideSub')} />
+          <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
         </div>
       )}
 
@@ -954,17 +964,17 @@ export default function Account() {
           qu'il consulte en course : commandes, carte, pourboires. */}
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
-          <LigneCompte icone="📊" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
+          <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
             <DriverActivity deliveries={driverDeliveries} reviews={driverReviews} t={t} />
           </LigneCompte>
-          <LigneCompte icone="📜" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
+          <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
           </LigneCompte>
-          <LigneCompte icone="💶" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+          <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>
-          <LigneCompte to="/driver/reviews" icone="⭐" titre={t('accountUi.myReviews')} sous={t('accountUi.myReviewsSub')} />
-          <LigneCompte to="/driver/invoices" icone="📄" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
+          <LigneCompte to="/driver/reviews" icone="etoile" titre={t('accountUi.myReviews')} sous={t('accountUi.myReviewsSub')} />
+          <LigneCompte to="/driver/invoices" icone="document" titre={t('accountUi.myInvoices')} sous={t('accountUi.selfInvoicesSub')} />
         </div>
       )}
 
@@ -977,11 +987,11 @@ export default function Account() {
           signaler un bug qu'un client. « Supprimer mon compte » n'y figure pas : il est au bout de
           « Mes infos », avec le reste de ce qui concerne la personne. */}
       <div className="card account-groupe" aria-label={t('accountUi.support')}>
-        <LigneCompte to="/aide" icone="🛟" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
-        <LigneCompte to="/aide?sujet=avis" icone="⭐" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
-        <LigneCompte icone="🔗" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
-        <LigneCompte to="/aide?sujet=bug" icone="🐞" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
-        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="🧭" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />}
+        <LigneCompte to="/aide" icone="bouee" titre={t('accountUi.needHelp')} sous={t('accountUi.needHelpSub')} />
+        <LigneCompte to="/aide?sujet=avis" icone="etoile" titre={t('accountUi.feedback')} sous={t('accountUi.feedbackSub')} />
+        <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
+        <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
+        {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} sous={t('accountUi.ourStorySub')} />}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>

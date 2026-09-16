@@ -538,14 +538,14 @@ export default function DashboardLayout() {
       {restaurant && (restaurant.adminStatus !== 'approved' || restaurant.stripeConnectStatus !== 'active' || (!restaurant.publicListed && !restaurant.isDemo)) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (
-            <LigneCompte accent="danger" icone="🚫" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="danger" icone="interdit" titre={t('dashResto.blockedTitle')} sous={t('dashResto.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 {t('dashResto.blockedText')}
               </p>
             </LigneCompte>
           )}
           {restaurant.adminStatus !== 'approved' && restaurant.adminStatus !== 'blocked' && (
-            <LigneCompte accent="warn" icone="🕐" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
+            <LigneCompte accent="warn" icone="horloge" titre={t('dashResto.pendingTitle')} sous={t('dashResto.pendingSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
               <p className="small" style={{ margin: 0 }}>
                 {t('dashResto.pendingText')}
               </p>
@@ -554,13 +554,13 @@ export default function DashboardLayout() {
           {/* Validé mais pas encore publié : le commerce n'apparaît pas aux clients, et le restaurateur doit le
               savoir sans avoir à le deviner en cherchant sa fiche sur le site. */}
           {restaurant.adminStatus === 'approved' && !restaurant.publicListed && !restaurant.isDemo && (
-            <LigneCompte accent="warn" icone="🙈" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
+            <LigneCompte accent="warn" icone="masque" titre={t('dashResto.notListedTitle')} sous={t('dashResto.notListedSub')} ouverte={statutOuvert === 'visibilite'} onClick={() => setStatutOuvert(statutOuvert === 'visibilite' ? null : 'visibilite')}>
               <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
           {restaurant.stripeConnectStatus !== 'active' && (
             <LigneCompte
-              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
+              accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}
               sous={restaurant.stripeConnectStatus === 'restricted'
                 ? t('dashResto.stripeNeedsInfoResto')

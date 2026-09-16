@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import BrandMark from './BrandMark';
+import Icone from './Icone';
 import AdminGlobalSearch from './admin/AdminGlobalSearch';
 import useAdminOverview from '../hooks/useAdminOverview';
 import useAdminRole from '../hooks/useAdminRole';
@@ -20,33 +21,33 @@ const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', dr
 function navItemsForRole(role, t) {
   if (role === 'client') {
     return [
-      // Six onglets : ce qu'on ouvre au quotidien. Les factures sont parties dans Mon compte — on les
-      // consulte rarement, et une rubrique ne figure qu'à UN endroit, jamais aux deux.
+      // CINQ onglets, plus six. Sur un téléphone, la barre du bas n'a de place que pour cinq cibles
+      // confortables : à six, chacune tombait à 38px de haut, sous le minimum de 44px, et il fallait
+      // viser. Les factures étaient déjà parties dans Mon compte pour la même raison ; les favoris
+      // les y rejoignent. La règle ne change pas : une rubrique ne figure qu'à UN endroit.
       // « Recherche » a sa propre page, transversale : commerces, plats, cuisines, communes, aide,
       // commandes — pas seulement la liste des restaurants filtrée.
-      { to: '/restaurants', icon: '🍽️', label: t('nav.restaurants') },
-      { to: '/recherche', icon: '🔍', label: t('nav.search') },
-      { to: '/orders', icon: '📦', label: t('nav.orders') },
-      { to: '/favorites', icon: '❤️', label: t('nav.favorites') },
-      { to: '/map', icon: '🗺️', label: t('nav.map') },
-      { to: '/account', icon: '👤', label: t('nav.account') }
+      { to: '/restaurants', icon: 'restaurants', label: t('nav.restaurants') },
+      { to: '/map', icon: 'carte', label: t('nav.map') },
+      { to: '/recherche', icon: 'recherche', label: t('nav.search') },
+      { to: '/orders', icon: 'commandes', label: t('nav.orders') },
+      { to: '/account', icon: 'compte', label: t('nav.account') }
     ];
   }
   if (role === 'restaurant') {
     return [
       // Mon commerce = les infos du restaurant lui-même (création, puis modification) ; Ma carte = ce qu'il vend.
-      { to: '/dashboard', end: true, icon: '🏪', label: t('nav.myBusiness') },
-      { to: '/dashboard/menu', icon: '🍽️', label: t('nav.myMenu') },
-      { to: '/dashboard/orders', icon: '📦', label: t('nav.orders') },
+      { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness') },
+      { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu') },
+      { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders') },
       // Réservations : agenda, plan de salle, règles de réservation, agenda externe, bons, statistiques — onglets
       // d'une même page. Rubrique principale depuis le 2026-09-15 (demande du fondateur), retirée de Mon compte.
-      { to: '/dashboard/reservations', icon: '📅', label: t('nav.reservations') },
-      { to: '/dashboard/preview', icon: '👁️', label: t('nav.customerPreview') },
+      { to: '/dashboard/reservations', icon: 'reservations', label: t('nav.reservations') },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
-      // qu'on ouvre de temps en temps, pas au service. Neuf onglets ne tiennent pas dans une barre
-      // du bas — sous 520px ils deviennent des icônes muettes, et la sixième est déjà de trop.
-      { to: '/dashboard/map', icon: '🗺️', label: t('nav.map') },
-      { to: '/account', icon: '👤', label: t('nav.account') }
+      // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
+      // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un
+      // téléphone donnait des cibles de 38px, sous le minimum de 44px. Cinq, pas plus.
+      { to: '/account', icon: 'compte', label: t('nav.account') }
     ];
   }
   if (role === 'driver') {
@@ -54,14 +55,14 @@ function navItemsForRole(role, t) {
       // Ce qu'un livreur regarde EN COURSE : ses commandes, la carte, ses pourboires. Avis et factures
       // sont partis dans Mon compte — on les ouvre de temps en temps, pas au guidon. Même règle que
       // pour le client : une rubrique ne figure qu'à UN endroit, jamais aux deux.
-      { to: '/driver', end: true, icon: '📦', label: 'Mes commandes' },
-      { to: '/driver/onboarding', icon: '🪪', label: t('nav.courierFile') },
-      { to: '/driver/map', icon: '🗺️', label: t('nav.map') },
-      { to: '/driver/tips', icon: '💶', label: 'Pourboires' },
-      { to: '/account', icon: '👤', label: t('nav.account') }
+      { to: '/driver', end: true, icon: 'commandes', label: 'Mes commandes' },
+      { to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile') },
+      { to: '/driver/map', icon: 'carte', label: t('nav.map') },
+      { to: '/driver/tips', icon: 'euro', label: 'Pourboires' },
+      { to: '/account', icon: 'compte', label: t('nav.account') }
     ];
   }
-  return [{ to: '/account', icon: '👤', label: t('nav.account') }];
+  return [{ to: '/account', icon: 'compte', label: t('nav.account') }];
 }
 
 // ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
@@ -152,7 +153,7 @@ export default function DashboardSidebar() {
       <nav className="dashboard-nav">
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
-            <span className="dashboard-nav-icon">{item.icon}</span>
+            <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} /></span>
             <span>{item.label}</span>
             {item.to === '/account' && nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
           </NavLink>

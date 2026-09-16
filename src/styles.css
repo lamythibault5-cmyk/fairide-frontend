@@ -1648,7 +1648,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 }
 .dashboard-nav-link:hover { background: var(--cream-dim); color: var(--ink); }
 .dashboard-nav-link.active { background: rgba(59,47,181,0.12); color: var(--teal-deep); }
-.dashboard-nav-icon { font-size: 17px; line-height: 1; width: 20px; text-align: center; flex-shrink: 0; }
+/* Assez large pour un tracé de 22px : les icônes de la nav sont des SVG (voir Icone.jsx), plus des
+   emojis dimensionnés par font-size. La règle garde font-size pour la nav admin, restée en emojis. */
+.dashboard-nav-icon { font-size: 17px; line-height: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
 /* Variante fond clair du sélecteur de langue. Sa version d'origine est dessinée pour l'aplat
    iris de la bannière publique : piste en blanc translucide, texte en --cream. Posée telle
@@ -1694,13 +1696,22 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
     grid-template-columns: 1fr;
     grid-template-areas: "main" "right" "footer";
   }
+  /* PASTILLES FLOTTANTES, plus une barre pleine (DESIGN.md, et l'application Uber dont le
+     fondateur a fourni les captures). La barre collée en bas donnait, à six ou sept onglets, des
+     cibles d'environ 38px de haut — sous le minimum de 44px, et il fallait viser. Cinq ronds de
+     56px qui flottent au-dessus du contenu règlent la cible et séparent les boutons à l'œil.
+     Le conteneur n'a donc plus ni fond ni bordure : ce sont les pastilles qui portent le blanc. */
   .dashboard-sidebar {
-    position: fixed; left: 0; right: 0; bottom: 0; top: auto; height: auto; width: 100%;
-    flex-direction: row; align-items: stretch; padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
-    border-right: none; border-top: 1px solid var(--line);
-    box-shadow: none; z-index: 50;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    position: fixed; left: 0; right: 0; top: auto; height: auto; width: 100%;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    flex-direction: row; align-items: center; justify-content: center; gap: 10px;
+    padding: 0 12px;
+    background: transparent; border-right: none; border-top: none;
+    box-shadow: none; z-index: 50; pointer-events: none;
+    overflow: visible;
   }
+  /* Le conteneur laisse passer les clics (il couvre toute la largeur), les pastilles les prennent. */
+  .dashboard-sidebar > * { pointer-events: auto; }
   .dashboard-sidebar::-webkit-scrollbar { display: none; }
   .dashboard-sidebar-brand, .dashboard-profile-card { display: none; }
   /* En mobile, c'est la NAV qui défile, et non plus la barre entière. Utile même maintenant que
@@ -1709,53 +1720,39 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
      pendant que les onglets glissent dessous plutôt que de partir hors écran avec eux. */
   .dashboard-sidebar { overflow-x: visible; }
   .dashboard-nav {
-    flex-direction: row; gap: 2px; width: auto; flex: 1 1 auto; min-width: 0;
-    overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+    flex-direction: row; gap: 10px; width: auto; flex: 0 1 auto; min-width: 0;
+    justify-content: center; overflow: visible; pointer-events: auto;
   }
-  .dashboard-nav::-webkit-scrollbar { display: none; }
-  /* flex: 1 0 auto — les trois valeurs comptent, chacune corrige un défaut distinct.
-
-     grow: 1 — les onglets se partagent la place restante et la barre est occupée sur toute sa
-     largeur. Sans lui (grow: 0), ils se tassaient à gauche en laissant un grand vide à droite sur
-     tablette, où la barre est large et les six libellés courts.
-
-     shrink: 0 et basis: auto — un onglet ne descend jamais sous la largeur de son libellé. C'est
-     ce qui protège du défaut d'origine : les libellés sont en white-space: nowrap SANS
-     overflow: hidden, donc une boîte trop étroite ne les tronque pas, elle les laisse déborder
-     par-dessus l'onglet voisin. « Mes commandes » fait environ 72px à 10px de corps. Quand la
-     somme des libellés dépasse la barre, rien ne se comprime : la barre défile, ce qu'elle sait
-     déjà faire. */
+  /* Un rond de 56px : la cible confortable d'un pouce, et la dimension des pastilles d'Uber.
+     Le libellé sort de l'écran mais reste porté par title et aria-label (DashboardSidebar.jsx) :
+     il n'est retiré qu'à l'œil, jamais aux lecteurs d'écran. Cinq icônes se reconnaissent sans
+     légende ; c'est justement pour cela qu'on n'en met que cinq. */
   .dashboard-nav-link {
-    flex-direction: column; gap: 2px; justify-content: center; align-items: center;
-    padding: 6px 10px; flex: 1 0 auto; min-width: 54px; border-radius: var(--radius-chip);
+    flex: 0 0 auto; width: 56px; height: 56px; padding: 0;
+    justify-content: center; align-items: center; gap: 0;
+    border-radius: var(--radius-pill);
+    background: #fff; border: 1px solid var(--line); box-shadow: var(--shadow-3);
+    color: var(--ink);
   }
-  .dashboard-nav-link span:last-child { display: block; font-size: 10px; white-space: nowrap; line-height: 1; }
-  .dashboard-nav-icon { font-size: 20px; width: auto; }
+  .dashboard-nav-link span:last-child { display: none; }
+  .dashboard-nav-link:hover { background: #fff; }
+  .dashboard-nav-link.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+  .dashboard-nav-icon { width: 24px; height: 24px; }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
-  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 66px); }
+  /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
+     diamètre). Le dernier bloc de la page doit donc dégager cette hauteur, plus une respiration,
+     sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
+     cette marge, le pied dépassait de 68px exactement. */
+  .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 68px + env(safe-area-inset-bottom)); }
 }
 
-/* Sous 520px : icônes seules dans la barre du bas.
-
-   Six libellés ne tiennent pas sur un téléphone. En néerlandais, « Restaurants », « Favorieten »,
-   « Mijn bestellingen », « Facturen », « Kaart » et « Mijn account » totalisent à eux seuls plus
-   de 320px de texte, auxquels s'ajoutent l'espacement de chaque onglet et le sélecteur de langue.
-   La barre défilait donc, et le dernier onglet — « Mon compte » — restait hors écran, caché
-   derrière le sélecteur épinglé à droite. Un onglet qu'on ne voit pas est un onglet qui n'existe
-   pas : c'est la carte du compte, déjà masquée en mobile, qui aurait dû prendre le relais.
-
-   En icônes seules, les six onglets se partagent la largeur et sont tous visibles d'un coup, sans
-   défilement. Le libellé reste porté par title et aria-label (voir DashboardSidebar.jsx) : il
-   n'est retiré qu'à l'œil, pas aux lecteurs d'écran. C'est la disposition habituelle d'une barre
-   d'onglets de téléphone, et la seule qui tienne dans les trois langues. */
-@media (max-width: 520px) {
-  .dashboard-nav-link { flex: 1 1 0; min-width: 0; padding: 8px 2px; }
-  .dashboard-nav-link span:last-child { display: none; }
-  .dashboard-nav-icon { font-size: 22px; }
-}
+/* La regle qui vivait ici est partie avec le probleme qu'elle reglait. Sous 520px, elle cachait
+   les libelles des six onglets pour qu'ils tiennent tous a l'ecran sans defilement. Les onglets
+   sont maintenant cinq pastilles rondes de 56px, sans libelle a aucune largeur : il n'y a plus ni
+   libelle a cacher, ni barre a faire defiler. */
 
 .opening-hours-editor { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .opening-hours-day-row { border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; }
@@ -2141,9 +2138,14 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .account-link-row:last-child { border-bottom: none; }
 .account-link-row:hover { background: var(--cream-dim); }
 .account-link-row:active { background: var(--cream-dim); }
+/* L'icône est NUE : plus de tuile grise de 34px derrière elle. La tuile servait à donner du corps
+   à un emoji, dont la taille optique varie d'un caractère à l'autre — elle les recadrait tous dans
+   le même carré. Avec des tracés d'une seule épaisseur (Icone.jsx), elle n'a plus rien à recadrer,
+   et trente tuiles empilées dans Mon compte faisaient une colonne de damier. La largeur fixe reste,
+   elle : c'est elle qui aligne les titres. */
 .account-link-icon {
-  flex-shrink: 0; width: 34px; height: 34px; border-radius: var(--radius-chip, 8px);
-  background: var(--cream-dim); display: flex; align-items: center; justify-content: center; font-size: 17px;
+  flex-shrink: 0; width: 26px; height: 26px; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 17px;
 }
 /* min-width: 0 indispensable : sans lui un sous-titre long élargit la ligne au lieu d'être tronqué,
    et la rangée déborde de la carte sur les écrans étroits. */
@@ -2406,9 +2408,12 @@ button.account-link-row:last-child { border-bottom: none; }
   .account-link-row { flex-wrap: wrap; }
   .account-link-action { flex-basis: 100%; margin-left: 46px; margin-top: 10px; }
 }
-.account-link-icon--ok { background: rgba(200, 240, 60, 0.45); }
-.account-link-icon--warn { background: rgba(240, 200, 60, 0.28); }
-.account-link-icon--danger { background: rgba(220, 60, 60, 0.14); }
+/* Les rangées d'état (« en attente de validation », « paiements à configurer », « suspendu »)
+   teintaient leur tuile. La tuile est partie ; c'est le TRACÉ qui prend la couleur, ce qu'un emoji
+   ne savait pas faire. Un avertissement se lit mieux en orange plein qu'en fond orange pâle. */
+.account-link-icon--ok { color: var(--iris); }
+.account-link-icon--warn { color: var(--orange); }
+.account-link-icon--danger { color: var(--red); }
 /* Le sous-titre d une rangée d état peut être long : on le laisse passer sur deux lignes. */
 .account-link-row--statique .account-link-text .small { white-space: normal; }
 
