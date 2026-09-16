@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -13,6 +13,7 @@ import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
+import GameSwitcher from '../../components/GameSwitcher';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -101,8 +102,16 @@ function ReviewForm({ order, token, toast, onDone, t }) {
   );
 }
 
+// Les etats ou une commande est encore en cours : c'est pendant ceux-la, et seulement ceux-la,
+// qu'on peut avoir envie de patienter en jouant. Une commande livree ou annulee ne propose rien.
+const EN_COURS = ['nouveau', 'preparation', 'pret', 'livraison'];
+
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  // La commande dont le jeu est deroule, ou null. UNE seule a la fois : chaque jeu monte un canvas
+  // et sa boucle d'animation, donc en ouvrir trois ferait tourner trois boucles pour un seul joueur.
+  const [jeuOuvert, setJeuOuvert] = useState(null);
+  const jeuRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
@@ -160,6 +169,16 @@ export default function Orders() {
     }
   }
 
+  // Ouvre le jeu sous une commande, et y amene l'ecran. Le defilement attend la peinture suivante :
+  // au moment du clic la section n'est pas encore dans le document, il n'y a rien vers quoi aller.
+  function basculerJeu(id) {
+    setJeuOuvert((actuel) => (actuel === id ? null : id));
+  }
+  useEffect(() => {
+    if (!jeuOuvert || !jeuRef.current) return;
+    jeuRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [jeuOuvert]);
+
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
   // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
@@ -215,7 +234,8 @@ export default function Orders() {
         );
       })}
       {listeAffichee.map((o) => (
-        <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
+        <Fragment key={o.id}>
+        <div className={`card order-type-${orderTypeColor(o)}`}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
             <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
@@ -271,12 +291,6 @@ export default function Orders() {
               <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
                 {o.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}
               </div>
-              {/* Les mini-jeux vivaient serrés dans une colonne à côté de la carte, qu'on les veuille
-                  ou non. Ils sont maintenant une proposition : un bouton, et une page entière pour
-                  jouer. Celui qui attend sans envie de jouer ne voit qu'un bouton. */}
-              <Link to="/jeux" state={{ from: '/orders' }} className="btn-subtle suivi-jouer">
-                <Icone nom="manette" taille={18} />{t('games.playWhileWaiting')}
-              </Link>
             </div>
           )}
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
@@ -357,7 +371,28 @@ export default function Orders() {
               onDone={() => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true } : x))); }}
             />
           )}
+          {/* JOUER SANS QUITTER SA COMMANDE. Le bouton menait à une page dédiée : on y jouait bien,
+              mais pour revoir où en était sa livraison il fallait revenir en arrière, et la partie
+              était perdue. Il déroule maintenant le jeu JUSTE SOUS cette commande-ci : on remonte
+              d'un coup de pouce pour relire son suivi, on redescend pour reprendre. */}
+          {EN_COURS.includes(o.status) && (
+            <button
+              type="button"
+              className={`btn-subtle suivi-jouer${jeuOuvert === o.id ? ' est-ouvert' : ''}`}
+              aria-expanded={jeuOuvert === o.id}
+              onClick={() => basculerJeu(o.id)}
+            >
+              <Icone nom="manette" taille={18} />
+              {jeuOuvert === o.id ? t('games.closeGame') : t('games.playWhileWaiting')}
+            </button>
+          )}
         </div>
+        {jeuOuvert === o.id && (
+          <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
+            <GameSwitcher fill large />
+          </section>
+        )}
+        </Fragment>
       ))}
     </div>
   );

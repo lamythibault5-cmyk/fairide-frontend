@@ -1113,50 +1113,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
 
-/* La page des mini-jeux : l'en-tête reste court, tout le reste est du terrain. */
-.jeux-page { display: flex; flex-direction: column; gap: 14px; }
-.jeux-entete { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
-.jeux-retour { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
-.jeux-retour:hover { text-decoration: underline; }
-/* UNE HAUTEUR DÉFINIE, pas seulement un minimum. `min-height` laissait le terrain se dimensionner
-   sur son contenu — c'est-à-dire sur le canvas, que le canvas lui-même mesurait depuis lui : le
-   serpent se mordait la queue. Une hauteur ferme coupe la boucle à la racine, et le canvas n'a
-   plus qu'à s'y couler. 100svh moins la place de l'en-tête (retour, titre, sous-titre) et de la
-   barre d'onglets du bas. */
-.jeux-terrain { height: calc(100svh - 300px); min-height: 280px; display: flex; flex-direction: column; }
-
-/* Le terrain et le suivi de commande côte à côte. Sur téléphone, le suivi passe AU-DESSUS du
-   terrain : la partie se joue avec le pouce en bas de l'écran, et un panneau glissé là aurait pris
-   la place des mains. */
-.jeux-corps { display: flex; flex-direction: column; gap: 14px; }
-@media (min-width: 901px) {
-  .jeux-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 18px; }
-  /* Le suivi vient en premier dans le document (voir JeuxPage) ; la grille le renvoie a droite. */
-  .jeux-corps .jeux-terrain { grid-column: 1; grid-row: 1; height: calc(100svh - 220px); }
-  .jeux-corps .suivi-panneau { grid-column: 2; grid-row: 1; }
-}
-
-/* Le panneau de suivi (components/SuiviEnCours.jsx). */
-.suivi-panneau {
-  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 16px; display: flex; flex-direction: column; gap: 10px;
-}
-.suivi-panneau-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.suivi-panneau-tete b { font-size: var(--t-body-md); }
-.suivi-panneau-type { margin: -4px 0 0; }
-.suivi-panneau-livreur { margin: 2px 0; }
-.suivi-panneau-carte { border-radius: var(--radius-field); overflow: hidden; }
-.suivi-panneau-note { margin: -4px 0 0; text-align: center; }
-.suivi-panneau-code {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  background: var(--surface-soft); border-radius: var(--radius-field); padding: 10px 12px;
-}
-.suivi-panneau-code b { font-size: 20px; letter-spacing: 4px; font-variant-numeric: tabular-nums; }
-.suivi-panneau-lien {
-  display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
-  font-size: var(--t-body-sm); font-weight: 500; color: var(--iris); text-decoration: none;
-}
-.suivi-panneau-lien:hover { text-decoration: underline; }
 
 /* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
    carte, pas un terrain de jeu imposé à côté d'elle. */
@@ -2181,7 +2137,13 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-actions button { font-size: 14px; padding: 8px 16px; }
 /* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
 .jeu--fill { flex: 1; min-height: 0; }
-.jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; align-self: stretch; }
+/* UN PLANCHER SUR LE TERRAIN LUI-MEME, pas seulement sur son conteneur.
+   Le conteneur prenait une hauteur calculee depuis la fenetre ; les onglets, le tableau de bord et
+   le rappel des commandes se servaient d'abord, et le terrain heritait du reste. Mesure sur une
+   fenetre de 600px de haut : 43 PIXELS de terrain. Le jeu etait injouable, ce que le fondateur a
+   constate avant moi. Un minimum ferme ici : si la place manque, c'est la page qui defile, pas le
+   terrain qui disparait. */
+.jeu--fill .jeu-cadre { flex: 1; min-height: 300px; width: 100%; align-self: stretch; }
 /* Le canvas sort du flux quand il remplit son cadre : ainsi il ne peut PLUS pousser la hauteur de
    ce cadre, donc plus jamais reformer la boucle mesure -> agrandissement -> mesure qui faisait
    descendre le terrain sans fin. La mesure de GameFrame est deja corrigee ; ceci ferme la porte. */
@@ -3692,3 +3654,26 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
    cote, au lieu de flotter au milieu du paragraphe une fois la ligne cassee. */
 .jeu-indice { display: flex; align-items: flex-start; justify-content: center; gap: 7px; text-align: left; }
 .jeu-indice > svg { flex-shrink: 0; margin-top: 2px; }
+
+/* LE JEU DEROULE SOUS UNE COMMANDE (voir Orders.jsx).
+   Il vivait sur sa propre page : on y jouait bien, mais pour revoir ou en etait sa livraison il
+   fallait revenir en arriere, et la partie etait perdue. Ici il s'ouvre juste sous la commande
+   concernee — on remonte d'un coup de pouce pour relire son suivi, on redescend pour reprendre.
+   La hauteur est ferme et bornee : assez pour jouer, jamais assez pour que la commande sorte de
+   portee du pouce. */
+/* Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une, juste en dessous. En
+   fixant la hauteur du panneau, ce qui depassait — le podium, les boutons de l'ecran de depart —
+   sortait de la boite et se posait sur le contenu suivant. Le terrain borne, le panneau suit. */
+.commande-jeu {
+  display: flex; flex-direction: column;
+  margin: 0 0 16px; padding: 14px;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  animation: jeu-deroule .22s cubic-bezier(.22,.61,.36,1) both;
+}
+/* flex: none et une hauteur ferme : assez pour jouer, jamais assez pour que la commande juste
+   au-dessus sorte de portee du pouce. */
+.commande-jeu .jeu-cadre { flex: none; height: min(52svh, 420px); min-height: 300px; }
+@keyframes jeu-deroule { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
+/* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
+.suivi-jouer.est-ouvert { background: var(--iris); color: #fff; }

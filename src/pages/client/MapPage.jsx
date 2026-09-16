@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,8 +12,12 @@ const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 //
 // CET ONGLET MONTRAIT LE SUIVI DE LIVRAISON. C'était le mauvais contenu derrière la bonne icône :
 // on clique sur une carte pour explorer un quartier — voir qui est ouvert, qui fait une promo, ce
-// qu'il y a à deux rues — pas pour regarder un livreur avancer. Le suivi vit dans « Mes commandes »,
-// et tant qu'une livraison est en cours un bandeau y mène depuis ici.
+// qu'il y a à deux rues — pas pour regarder un livreur avancer. Le suivi vit dans « Mes commandes ».
+//
+// DEUX BANDEAUX FLOTTAIENT ICI, l'un vers le suivi de livraison, l'autre vers les jeux. Ils se
+// posaient par-dessus la carte, c'est-à-dire par-dessus le contenu qu'on venait voir, pour mener
+// ailleurs. Les deux sont partis : ce qu'ils annonçaient vit sur « Mes commandes », à côté de la
+// commande concernée, qui est le seul endroit où cette information a un sens.
 //
 // RIEN QUE LA CARTE. Elle occupait la première hauteur d'écran et un tiroir « Commerces près de
 // toi » se tirait par-dessus, à trois hauteurs. Ce tiroir répétait la liste de /restaurants, qui
@@ -47,9 +50,8 @@ function bandePrix(resto) {
 
 export default function MapPage() {
   const { t } = useLanguage();
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
-  const [enCours, setEnCours] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [promosSeules, setPromosSeules] = useState(false);
   const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
@@ -62,19 +64,10 @@ export default function MapPage() {
     api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
   }, []);
 
-  // Les livraisons en cours, relues régulièrement : c'est la seule chose qui justifie encore un
-  // aller-retour périodique sur cette page, et elle ne sert qu'au bandeau.
-  useEffect(() => {
-    if (!token) return undefined;
-    function lire() {
-      api('/orders/mine', { token })
-        .then((cmds) => setEnCours((cmds || []).filter((o) => o.status === 'livraison' && o.orderType === 'delivery')))
-        .catch(() => {});
-    }
-    lire();
-    const id = setInterval(lire, 30000);
-    return () => clearInterval(id);
-  }, [token]);
+  // Plus aucun appel périodique ici. Cette page interrogeait /orders/mine toutes les trente
+  // secondes, uniquement pour savoir s'il fallait afficher le bandeau « ta livraison est en
+  // route ». Les deux bandeaux sont partis : la carte n'a plus besoin de connaître les commandes,
+  // et elle cesse d'interroger le serveur en boucle pour une bannière.
 
   const position = user?.lat && user?.lng ? { lat: user.lat, lng: user.lng } : null;
 
@@ -125,24 +118,6 @@ export default function MapPage() {
         </Suspense>
 
         <div className="carte-controles">
-          {enCours.length > 0 && (
-            <Link to="/orders" className="carte-bandeau-livraison">
-              <Icone nom="scooter" taille={20} />
-              <span>{t('mapClient.trackingBanner', { n: enCours.length })}</span>
-              <span aria-hidden="true">›</span>
-            </Link>
-          )}
-          {/* LES JEUX, SANS AVOIR À COMMANDER.
-              Ils n'étaient atteignables que par un bouton du suivi de livraison : il fallait donc
-              une commande en cours pour y accéder, alors qu'ils n'en dépendent en rien — la page
-              /jeux ne lit aucune commande, elle n'attendait qu'une porte d'entrée. Celle-ci en est
-              une, ouverte en permanence. Le libellé change selon qu'une livraison est en route ou
-              non : « en attendant ton livreur » quand c'est le cas, l'invitation simple sinon. */}
-          <Link to="/jeux" state={{ from: '/map' }} className="carte-bandeau-jeux">
-            <Icone nom="manette" taille={20} />
-            <span>{enCours.length > 0 ? t('mapClient.playWhileWaiting') : t('mapClient.playGames')}</span>
-            <span aria-hidden="true">›</span>
-          </Link>
           <div className="carte-pastilles">
             <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
               <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
