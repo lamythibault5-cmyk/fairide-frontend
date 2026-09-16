@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
@@ -142,7 +143,7 @@ export default function SearchPage() {
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('search.title')}</h2>
 
       <form className="recherche-champ" onSubmit={soumettre} role="search">
-        <span className="recherche-loupe" aria-hidden="true">🔍</span>
+        <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={20} /></span>
         <input
           ref={champ}
           type="search"
@@ -216,37 +217,37 @@ export default function SearchPage() {
         <>
           <Groupe titre={t('search.businesses')} quand={resultats.commerces.length}>
             {resultats.commerces.map((r) => (
-              <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="🏪" titre={r.name}
+              <Ligne key={r.id} to={`/restaurants/${r.id}`} image={r.coverImageUrl} icone="commerce" titre={r.name}
                 sous={[r.cuisine, r.commune].filter(Boolean).join(' · ')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.dishes')} quand={resultats.plats.length}>
             {resultats.plats.map(({ restaurant, plat }) => (
-              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} to={`/restaurants/${restaurant.id}`} image={plat.imageUrl} icone={plat.healthy ? '🥗' : '🍽️'}
+              <Ligne key={`${restaurant.id}-${plat.id || plat.name}`} to={`/restaurants/${restaurant.id}`} image={plat.imageUrl} icone="restaurants"
                 titre={plat.name} sous={`${restaurant.name}${prix(plat) ? ` · ${prix(plat)}` : ''}`} />
             ))}
           </Groupe>
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
-              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={c.emoji} titre={c.value} sous={t('search.seeTypeBusinesses')} />
+              <Ligne key={c.value} to="/restaurants" state={{ cuisine: c.value }} icone={<span style={{ fontSize: 18 }}>{c.emoji}</span>} titre={c.value} sous={t('search.seeTypeBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>
             {resultats.communes.map((c) => (
-              <Ligne key={c} to="/restaurants" state={{ commune: c }} icone="📍" titre={c} sous={t('search.seeMunicipalityBusinesses')} />
+              <Ligne key={c} to="/restaurants" state={{ commune: c }} icone="position" titre={c} sous={t('search.seeMunicipalityBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.myOrders')} quand={resultats.mesCommandes.length}>
             {resultats.mesCommandes.map((o) => (
-              <Ligne key={o.id} to="/orders" icone="📦" titre={o.restaurantName || o.restaurant?.name || 'Commande'}
+              <Ligne key={o.id} to="/orders" icone="commandes" titre={o.restaurantName || o.restaurant?.name || 'Commande'}
                 sous={[statuts(t)[o.status] || o.status, o.total != null ? `${Number(o.total).toFixed(2)}€` : null].filter(Boolean).join(' · ')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.help')} quand={resultats.aide.length}>
-            {resultats.aide.map((s) => <Ligne key={s.to + s.titre} to={s.to} icone="🛟" titre={s.titre} sous={s.sous} />)}
+            {resultats.aide.map((s) => <Ligne key={s.to + s.titre} to={s.to} icone="bouee" titre={s.titre} sous={s.sous} />)}
           </Groupe>
           <Groupe titre={t('search.myAccount')} quand={resultats.rubriques.length}>
-            {resultats.rubriques.map((s) => <Ligne key={s.to} to={s.to} icone="👤" titre={s.titre} sous={s.sous} />)}
+            {resultats.rubriques.map((s) => <Ligne key={s.to} to={s.to} icone="compte" titre={s.titre} sous={s.sous} />)}
           </Groupe>
         </>
       )}
@@ -265,14 +266,18 @@ function Groupe({ titre, quand, children }) {
 }
 
 // Même dessin que les rangées de Mon compte, pour qu'un résultat se lise comme une destination et
-// non comme une carte de plus.
+// non comme une carte de plus. Même contrat d'icône aussi : une chaîne est un NOM de tracé
+// (Icone.jsx), tout autre nœud est rendu tel quel — ce qui laisse passer l'emoji d'un type de
+// cuisine, qui est du contenu et pas de l'interface.
 function Ligne({ to, state, image, icone, titre, sous }) {
   return (
     <Link to={to} state={state} className="account-link-row recherche-ligne">
       {image ? (
         <img className="recherche-vignette" src={image} alt="" loading="lazy" />
       ) : (
-        <span className="account-link-icon" aria-hidden="true">{icone}</span>
+        <span className="account-link-icon" aria-hidden="true">
+          {typeof icone === 'string' ? <Icone nom={icone} taille={22} /> : icone}
+        </span>
       )}
       <span className="account-link-text">
         <b>{titre}</b>

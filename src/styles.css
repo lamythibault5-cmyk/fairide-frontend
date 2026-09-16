@@ -2548,7 +2548,7 @@ button.account-link-row:last-child { border-bottom: none; }
   transition: border-color .15s ease;
 }
 .recherche-champ:focus-within { border-color: var(--iris); }
-.recherche-loupe { font-size: 18px; flex-shrink: 0; }
+.recherche-loupe { display: flex; align-items: center; flex-shrink: 0; color: var(--ink-soft); }
 .recherche-champ input {
   flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
   font: inherit; font-size: 17px; padding: 12px 0; color: var(--ink);
