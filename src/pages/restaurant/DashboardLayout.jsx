@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { formatFullSchedule } from '../../openingHours';
 import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
+import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -134,6 +135,8 @@ export default function DashboardLayout() {
   const [erreurChargement, setErreurChargement] = useState(null);
   const tentatives = useRef(0);
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
+  // Notifications push : la seule alerte qui survive a l'onglet ferme (voir src/push.js).
+  const push = usePushNotifications(token);
 
   const [connecting, setConnecting] = useState(false);
   // La rangée d'état dépliée en tête du tableau de bord (validation), null si aucune.
@@ -580,7 +583,7 @@ export default function DashboardLayout() {
 
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
-      {restaurant && <NewOrderAlertBar {...orderAlert} />}
+      {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
 
       {!restaurant && myRestos.length > 0 && !surCarte && (
         erreurChargement && erreurChargement.n >= 2 ? (
