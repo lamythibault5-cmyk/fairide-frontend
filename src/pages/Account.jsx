@@ -108,7 +108,8 @@ export default function Account() {
   const [converting, setConverting] = useState(false);
   const [offersDelivery, setOffersDelivery] = useState(true);
   const [offersPickup, setOffersPickup] = useState(true);
-  const [pickupPayOnSite, setPickupPayOnSite] = useState(false);
+  // À emporter : 'online' (en ligne seulement), 'on_site' (sur place seulement) ou 'both' (le client choisit).
+  const [pickupPaymentMode, setPickupPaymentMode] = useState('online');
   const [offersDineIn, setOffersDineIn] = useState(true);
   const [savingServices, setSavingServices] = useState(false);
   const servicesInitRef = useRef(false);
@@ -246,7 +247,7 @@ export default function Account() {
     // emporter restent cochés ici mais fermés côté client (voir formules.js côté serveur).
     setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
     setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
-    setPickupPayOnSite(!!restaurant.pickupPayOnSite);
+    setPickupPaymentMode(restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online'));
     setOffersDineIn(restaurant.offersDineIn);
   }, [restaurant]);
 
@@ -257,7 +258,7 @@ export default function Account() {
     }
     setSavingServices(true);
     try {
-      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn, pickupPayOnSite: offersPickup && pickupPayOnSite } });
+      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn, pickupPaymentMode } });
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {
@@ -915,13 +916,20 @@ export default function Account() {
               </table>
             </div>
             {offersPickup && (
-              <label className="paiement-encart" style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '12px 0', cursor: 'pointer' }}>
-                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={pickupPayOnSite} disabled={savingServices} onChange={(e) => setPickupPayOnSite(e.target.checked)} />
-                <span>
-                  <b>💶 {t('accountUi.payOnSiteTitle')}</b><br />
-                  <span className="small">{t('accountUi.payOnSiteText')}</span>
-                </span>
-              </label>
+              <fieldset className="paiement-encart" style={{ margin: '12px 0', border: 0 }}>
+                <legend style={{ fontWeight: 700, padding: 0, marginBottom: 6 }}>💶 {t('accountUi.pickupPayTitle')}</legend>
+                {[
+                  { v: 'online', titre: t('accountUi.pickupPayOnline'), texte: t('accountUi.pickupPayOnlineText') },
+                  { v: 'on_site', titre: t('accountUi.pickupPayOnSiteOnly'), texte: t('accountUi.pickupPayOnSiteOnlyText') },
+                  { v: 'both', titre: t('accountUi.pickupPayBoth'), texte: t('accountUi.pickupPayBothText') }
+                ].map((o) => (
+                  <label key={o.v} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '0 0 8px', cursor: 'pointer' }}>
+                    <input type="radio" name="pickup-payment-mode" style={{ width: 'auto', marginTop: 3 }} checked={pickupPaymentMode === o.v} disabled={savingServices} onChange={() => setPickupPaymentMode(o.v)} />
+                    <span><b>{o.titre}</b><br /><span className="small">{o.texte}</span></span>
+                  </label>
+                ))}
+                {pickupPaymentMode !== 'online' && <p className="small" style={{ margin: '4px 0 0' }}>⚠️ {t('accountUi.pickupPayNoShowWarn')}</p>}
+              </fieldset>
             )}
             {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
                 d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}

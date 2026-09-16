@@ -558,7 +558,7 @@ export default function DashboardLayout() {
           )}
           {/* Réservation seule, sans acompte : c'est gratuit, aucun paiement ne transite par Fairide — la rangée
               n'a rien à demander (même règle que formules.paiementsRequis côté serveur). */}
-          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || restaurant.wantsPickup || restaurant.reservationDepositEnabled) && (
+          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site') || restaurant.reservationDepositEnabled) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="💳"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}

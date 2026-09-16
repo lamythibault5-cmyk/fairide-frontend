@@ -216,7 +216,9 @@ export default function Checkout() {
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
-  const surPlaceChoisi = fulfillmentType === 'pickup' && !!restaurant.pickupPayOnSite && paiementSurPlace;
+  // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
+  const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
+  const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && paiementSurPlace));
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
@@ -278,7 +280,7 @@ export default function Checkout() {
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
       // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
-      const surPlace = fulfillmentType === 'pickup' && !!restaurant?.pickupPayOnSite && paiementSurPlace;
+      const surPlace = surPlaceChoisi;
       const order = await api('/orders', {
         method: 'POST', token,
         body: {
@@ -500,7 +502,13 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
-            {fulfillmentType === 'pickup' && restaurant.pickupPayOnSite && (
+            {fulfillmentType === 'pickup' && modeEmporter === 'on_site' && (
+              <div className="paiement-encart" style={{ marginBottom: 10 }}>
+                <p className="small" style={{ margin: 0 }}><b>💶 {t('checkout.payOnSiteOnly')}</b></p>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t('checkout.payOnSiteNote')}</p>
+              </div>
+            )}
+            {fulfillmentType === 'pickup' && modeEmporter === 'both' && (
               <div className="field" role="radiogroup" aria-labelledby="checkout-paiement-label">
                 <label id="checkout-paiement-label">{t('checkout.payWhen')}</label>
                 <label className="row" style={{ gap: 8, cursor: 'pointer', marginBottom: 4 }}>

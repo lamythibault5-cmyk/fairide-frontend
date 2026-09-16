@@ -4915,6 +4915,14 @@ export const translations = {
       confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
     },
     accountUi: {
+      pickupPayTitle: 'Paiement des commandes à emporter',
+      pickupPayOnline: 'En ligne uniquement',
+      pickupPayOnlineText: 'Le client paie en commandant, via Fairide. La commande est garantie ; commission Fairide sur ces commandes.',
+      pickupPayOnSiteOnly: 'Sur place uniquement',
+      pickupPayOnSiteOnlyText: 'Le client paie au retrait, chez toi. Tu encaisses toi-même : aucune commission Fairide, et pas besoin d\'activer les paiements en ligne pour l\'à emporter.',
+      pickupPayBoth: 'Au choix du client',
+      pickupPayBothText: 'Le client choisit entre payer en ligne et payer au retrait. Seules les commandes payées en ligne sont commissionnées.',
+      pickupPayNoShowWarn: 'Si un client qui paie sur place ne vient pas chercher sa commande, Fairide ne prend pas ce cas en charge (ni remboursement, ni indemnisation). Tu peux la signaler « Client pas venu ».',
       contactCodeInfo: 'Un code de confirmation est envoyé par email à ton adresse actuelle avant tout changement d\'email ou de téléphone.',
       subPastDue: 'Le dernier prélèvement de ton abonnement Fairide (20€/mois) a échoué. Ton restaurant n\'est plus visible aux clients tant que ce n\'est pas régularisé.',
       subPaused: 'Ton restaurant n\'est plus visible aux clients et ne reçoit plus de commandes. Aucun prélèvement tant qu\'il reste en pause.',
@@ -5988,6 +5996,7 @@ export const translations = {
       stage_annulee: 'Refusée / annulée'
     },
     checkout: {
+      payOnSiteOnly: 'Ce commerce se paie sur place, au retrait',
       notAvailable: "Ce restaurant n'est plus disponible.",
       upsellTitle: 'Un dessert ou une boisson avec ça ?',
       continueToDetails: 'Continuer →',
@@ -11406,6 +11415,14 @@ export const translations = {
       confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
     },
     accountUi: {
+      pickupPayTitle: 'Payment for takeaway orders',
+      pickupPayOnline: 'Online only',
+      pickupPayOnlineText: 'Customers pay when ordering, via Fairide. The order is guaranteed; Fairide commission applies to these orders.',
+      pickupPayOnSiteOnly: 'On site only',
+      pickupPayOnSiteOnlyText: 'Customers pay at collection, at your place. You take the payment yourself: no Fairide commission, and no need to activate online payments for takeaway.',
+      pickupPayBoth: 'Customer\'s choice',
+      pickupPayBothText: 'Customers choose between paying online and paying at collection. Only orders paid online are subject to commission.',
+      pickupPayNoShowWarn: 'If a customer paying on site does not come to collect their order, Fairide does not cover it (no refund, no compensation). You can mark it “Customer didn’t show”.',
       contactCodeInfo: 'A confirmation code is sent by e-mail to your current address before any e-mail or phone change.',
       subPastDue: 'The last payment of your Fairide subscription (€20/month) failed. Your restaurant is hidden from customers until it is settled.',
       subPaused: 'Your restaurant is hidden from customers and receives no orders. Nothing is charged while it stays paused.',
@@ -12472,6 +12489,7 @@ export const translations = {
       stage_annulee: 'Refused / cancelled'
     },
     checkout: {
+      payOnSiteOnly: 'This shop is paid on site, at collection',
       notAvailable: 'This restaurant is no longer available.',
       upsellTitle: 'Fancy a dessert or a drink with that?',
       continueToDetails: 'Continue →',
@@ -17888,6 +17906,14 @@ export const translations = {
       confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
     },
     accountUi: {
+      pickupPayTitle: 'Betaling van afhaalbestellingen',
+      pickupPayOnline: 'Alleen online',
+      pickupPayOnlineText: 'De klant betaalt bij het bestellen, via Fairide. De bestelling is gegarandeerd; Fairide-commissie op deze bestellingen.',
+      pickupPayOnSiteOnly: 'Alleen ter plaatse',
+      pickupPayOnSiteOnlyText: 'De klant betaalt bij het ophalen, bij jou. Je rekent zelf af: geen Fairide-commissie, en je hoeft online betalingen niet te activeren voor afhalen.',
+      pickupPayBoth: 'Naar keuze van de klant',
+      pickupPayBothText: 'De klant kiest tussen online betalen en betalen bij het ophalen. Alleen online betaalde bestellingen worden gecommissioneerd.',
+      pickupPayNoShowWarn: 'Komt een klant die ter plaatse betaalt zijn bestelling niet ophalen, dan komt Fairide niet tussen (geen terugbetaling, geen vergoeding). Je kunt ze markeren als “Klant niet gekomen”.',
       contactCodeInfo: 'Vóór elke wijziging van e-mail of telefoon wordt een bevestigingscode naar je huidige e-mailadres gestuurd.',
       subPastDue: 'De laatste betaling van je Fairide-abonnement (€20/maand) is mislukt. Je restaurant is onzichtbaar voor klanten tot dit geregeld is.',
       subPaused: 'Je restaurant is onzichtbaar voor klanten en ontvangt geen bestellingen. Er wordt niets aangerekend zolang het gepauzeerd is.',
@@ -18954,6 +18980,7 @@ export const translations = {
       stage_annulee: 'Geweigerd / geannuleerd'
     },
     checkout: {
+      payOnSiteOnly: 'Deze zaak betaal je ter plaatse, bij het ophalen',
       notAvailable: 'Dit restaurant is niet meer beschikbaar.',
       upsellTitle: 'Zin in een dessert of een drankje erbij?',
       continueToDetails: 'Doorgaan →',
