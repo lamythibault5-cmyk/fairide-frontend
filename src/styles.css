@@ -970,7 +970,17 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .menu-item:last-child { border-bottom: none; }
 .price { font-weight: 700; color: var(--teal-deep); white-space: nowrap; margin-left: 12px; }
 
-.cart-bar { position: sticky; bottom: 0; background: var(--ink); color: var(--cream); border-radius: var(--radius); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; margin-top: 14px; box-shadow: none; }
+/* Bande d'action du paiement : IRIS et non noir. C'est la bande sombre de mi-page de la référence,
+   et la décision de cette refonte est que là où elle pose du noir, Fairide pose son iris — sinon la
+   page de commande, qui est le moment le plus engageant du parcours, est la seule qui ne porte plus
+   la couleur de la marque. */
+.cart-bar { position: sticky; bottom: 0; background: var(--iris); color: var(--cream); border-radius: var(--radius); padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 14px; box-shadow: none; }
+/* Sur un téléphone, les trois blocs de cette bande — revenir à la carte, le total, l'avertissement
+   de date — se partageaient la largeur en trois colonnes d'à peine cent pixels : chaque phrase se
+   cassait sur quatre lignes et « Ajouter un plat » se lisait sur trois. Ils s'empilent. */
+@media (max-width: 600px) {
+  .cart-bar { flex-direction: column; align-items: stretch; text-align: left; gap: 10px; }
+}
 .divider { height: 1px; background: var(--line); margin: 16px 0; }
 .breakdown { font-size: 13px; color: var(--ink-soft); }
 .breakdown .line { display: flex; justify-content: space-between; padding: 3px 0; }

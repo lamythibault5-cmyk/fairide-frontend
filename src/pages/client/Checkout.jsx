@@ -363,7 +363,7 @@ export default function Checkout() {
         <>
           <LastChanceUpsell desserts={upsellDesserts} drinks={upsellDrinks} restaurant={restaurant} cart={cart} t={t} />
           <div className="cart-bar">
-            <span>{t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) })}</span>
+            <span>{t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) })}</span>
             <button className="btn-gold" onClick={() => setStep('details')}>{t('checkout.continueToDetails')}</button>
           </div>
         </>
@@ -655,7 +655,7 @@ export default function Checkout() {
 
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
-            <span>{cart.count > 0 ? t('checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
+            <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
             {serviceOuvert(fulfillmentType, user) ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
