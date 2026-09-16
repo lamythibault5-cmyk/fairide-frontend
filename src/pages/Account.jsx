@@ -524,7 +524,7 @@ export default function Account() {
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 2 }}>
-                <label>{t('auth.street')}</label>
+                <label htmlFor="champ-adresse">{t('auth.street')}</label>
                 <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
               </div>
               <div className="field" style={{ flex: 1 }}>
@@ -622,16 +622,16 @@ export default function Account() {
         <LigneCompte icone="cle" titre={t('account.passwordTitle')} ouverte={ouvertes.has('mdp')} onClick={() => basculer('mdp')}>
           <form onSubmit={savePassword}>
             <div className="field">
-              <label>{t('account.currentPassword')}</label>
-              <PasswordInput value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+              <label htmlFor="mdp-actuel">{t('account.currentPassword')}</label>
+              <PasswordInput id="mdp-actuel" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
             </div>
             <div className="field">
-              <label>{t('account.newPassword')}</label>
-              <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
+              <label htmlFor="mdp-nouveau">{t('account.newPassword')}</label>
+              <PasswordInput id="mdp-nouveau" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder={t('account.newPasswordPlaceholder')} />
             </div>
             <div className="field">
-              <label>{t('auth.passwordConfirm')}</label>
-              <PasswordInput value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} placeholder={t('auth.phPasswordConfirm')} />
+              <label htmlFor="mdp-confirme">{t('auth.passwordConfirm')}</label>
+              <PasswordInput id="mdp-confirme" value={newPasswordConfirm} onChange={(e) => setNewPasswordConfirm(e.target.value)} placeholder={t('auth.phPasswordConfirm')} />
             </div>
             <button type="submit" className="btn-outline" disabled={savingPassword}>{savingPassword ? '...' : t('account.changePassword')}</button>
           </form>

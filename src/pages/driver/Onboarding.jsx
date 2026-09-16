@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, useId } from 'react';
+import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -226,7 +226,26 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
 }
 
 function Champ({ label, children, help }) {
-  return <div className="field"><label>{label}</label>{children}{help && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{help}</p>}</div>;
+  // L'ASSOCIATION SE FAIT ICI, UNE FOIS. Ce composant enveloppe les dix-huit champs de
+  // l'inscription livreur, et son étiquette était posée à côté du champ sans aucun lien : un
+  // lecteur d'écran annonçait « zone de texte » sans dire laquelle, sur un parcours d'inscription
+  // entier. Plutôt que de répéter un id à chaque appel — dix-huit occasions de se tromper —
+  // l'identifiant est fabriqué ici et injecté dans l'enfant.
+  //
+  // useId donne une valeur par instance, donc deux Champ sur la même page ne se marchent pas
+  // dessus. Un enfant qui porte déjà un id garde le sien, et un enfant qui n'est pas un élément
+  // unique (fragment, tableau) est laissé tel quel : mieux vaut ne rien faire que produire un
+  // htmlFor qui pointe dans le vide.
+  const id = useId();
+  const enfantUnique = isValidElement(children) && !children.props.id;
+  const champ = enfantUnique ? cloneElement(children, { id }) : children;
+  return (
+    <div className="field">
+      {enfantUnique ? <label htmlFor={id}>{label}</label> : <span className="titre-groupe">{label}</span>}
+      {champ}
+      {help && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{help}</p>}
+    </div>
+  );
 }
 
 function EtapeInfos({ d, t, busy, token, action, onNext }) {

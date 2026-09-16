@@ -56,12 +56,12 @@ export default function ResetPassword() {
           {token && !done && (
             <form onSubmit={submit}>
               <div className="field">
-                <label>{t('resetPassword.title')}</label>
-                <PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('resetPassword.phPassword')} />
+                <label htmlFor="reset-mdp">{t('resetPassword.title')}</label>
+                <PasswordInput id="reset-mdp" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('resetPassword.phPassword')} />
               </div>
               <div className="field">
-                <label>{t('resetPassword.confirm')}</label>
-                <PasswordInput value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('resetPassword.phConfirm')} />
+                <label htmlFor="reset-mdp-confirme">{t('resetPassword.confirm')}</label>
+                <PasswordInput id="reset-mdp-confirme" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)} placeholder={t('resetPassword.phConfirm')} />
               </div>
               <button type="submit" className="btn-gold btn-block" disabled={loading}>
                 {loading ? '...' : t('resetPassword.submit')}

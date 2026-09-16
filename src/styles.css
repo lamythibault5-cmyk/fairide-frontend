@@ -3708,3 +3708,13 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .sous-traitants-tableau tbody td { color: var(--ink-soft); }
 .sous-traitants-tableau tbody tr:last-child th,
 .sous-traitants-tableau tbody tr:last-child td { border-bottom: 0; }
+
+/* Titre d'un GROUPE de controles (un jeu de boutons radio, une liste de cases), par opposition a
+   l'etiquette d'un champ unique.
+   Ces titres etaient ecrits en <label>, ce qui est faux des qu'il y a plus d'un controle dessous :
+   une etiquette designe UN champ, et un htmlFor n'a alors rien vers quoi pointer. Le texte devient
+   donc un <span> et c'est le conteneur du groupe qui porte le nom, via aria-labelledby — un lecteur
+   d'ecran annonce alors « Statut, groupe de boutons radio » en entrant dedans, au lieu de lire un
+   titre flottant sans rapport declare avec ce qui suit.
+   Meme rendu que `label` (ligne 349), pour que rien ne bouge a l'ecran. */
+.titre-groupe { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }

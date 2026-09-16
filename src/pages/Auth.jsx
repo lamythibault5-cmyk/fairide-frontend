@@ -831,9 +831,9 @@ export default function Auth() {
                 {role === 'driver' && (
                   <>
                     <div className="field">
-                      <label>{t('auth.courierStatusTitle')}</label>
+                      <span className="titre-groupe" id="auth-statut-titre">{t('auth.courierStatusTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
-                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup">
+                      <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
                         {(courierOptions?.statuses || ['student', 'p2p', 'independent']).map((st) => {
                           const ferme = st === 'p2p' && courierOptions && !courierOptions.p2pEnabled;
                           return (
@@ -859,8 +859,8 @@ export default function Auth() {
                       </div>
                     )}
                     <div className="field">
-                      <label>{t('auth.vehicleTitle')}</label>
-                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup">
+                      <span className="titre-groupe" id="auth-vehicule-titre">{t('auth.vehicleTitle')}</span>
+                      <div className={`role-pick statements-chips${errors.vehicleType ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-vehicule-titre">
                         {(courierOptions?.vehicles || ['velo', 'velo_electrique', 'scooter', 'voiture']).map((v) => (
                           <div key={v} role="radio" aria-checked={vehicleType === v} tabIndex={0} className={`chip${vehicleType === v ? ' active' : ''}`}
                             onClick={() => setVehicleType(v)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setVehicleType(v); }}>
@@ -876,9 +876,9 @@ export default function Auth() {
                       )}
                     </div>
                     <div className="field">
-                      <label>{t('auth.bagTitle')}</label>
+                      <span className="titre-groupe" id="auth-sacoche-titre">{t('auth.bagTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.bagHelp')}</p>
-                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup">
+                      <div className={`statut-choix${errors.bagOption ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-sacoche-titre">
                         {['own', 'fairide'].map((b) => (
                           <div key={b} role="radio" aria-checked={bagOption === b} tabIndex={0} className={`statut-carte${bagOption === b ? ' active' : ''}`}
                             onClick={() => setBagOption(b)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setBagOption(b); }}>
@@ -910,8 +910,8 @@ export default function Auth() {
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
-                <div className="field">
-                  <label>{t('auth.hoursTitle')}</label>
+                <div className="field" role="group" aria-labelledby="auth-horaires-titre">
+                  <span className="titre-groupe" id="auth-horaires-titre">{t('auth.hoursTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>
                     {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
                     {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
@@ -945,8 +945,8 @@ export default function Auth() {
                 )}
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
                     (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
-                <div className="field contacts-commerce">
-                  <label>{t('auth.contactsTitle')}</label>
+                <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
+                  <span className="titre-groupe" id="auth-contacts-titre">{t('auth.contactsTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
                   <p className="small contact-ligne">📞 <b>{phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
                   {!phoneSecondaryOuvert ? (
@@ -992,8 +992,8 @@ export default function Auth() {
                   />
                   {fieldError('responsibleName')}
                 </div>
-                <div className="field services-choice">
-                  <label>{t('auth.servicesTitle')}</label>
+                <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
+                  <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
                   <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
                   {services.delivery && (
