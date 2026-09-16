@@ -1775,6 +1775,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   .dashboard-nav-icon { width: 24px; height: 24px; }
   /* La barre d'onglets du bas est fixée : c'est au DERNIER bloc de la page de lui laisser sa
      hauteur (66px), plus au contenu principal qui n'est plus le dernier. */
+  /* La pastille de marque est fixée en haut à droite et flotte au-dessus du contenu : le titre de
+     page doit lui laisser sa place, sinon il passe dessous. En français à 430px on ne le voyait
+     pas — « Restaurants et commerces à Bruxelles » s'arrête avant. En néerlandais à 375px,
+     « Restaurants en zaken in Brussel » tient sur une ligne et courait 75px sous la pastille, qui
+     en mangeait la fin. Le défaut n'apparaissait donc que dans une langue et sur les écrans
+     étroits, ce qui est la meilleure façon de ne jamais le voir en le cherchant en français.
+
+     Le sélecteur ne peut pas être « enfant direct » de .dashboard-main : le titre vit deux niveaux
+     plus bas (MAIN > .page-fade > div de page > h1.page-title). */
+  .dashboard-main .page-fade > * > .page-title,
+  .dashboard-main .page-fade > .page-title,
+  .dashboard-main .page-fade > * > h2.section-title:first-child { padding-right: 108px; }
   .dashboard-main { padding: 18px 16px 30px; }
   .dashboard-right { padding: 0 16px 24px; }
   /* Les pastilles flottent : elles occupent les 68 derniers pixels de l'écran (12 de marge + 56 de
