@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -12,6 +12,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
+import Icone from '../../components/Icone';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -249,6 +250,12 @@ export default function Orders() {
               <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
                 {o.driverLat ? t('orders.driverLiveLocation') : t('orders.driverWaitingLocation')}
               </div>
+              {/* Les mini-jeux vivaient serrés dans une colonne à côté de la carte, qu'on les veuille
+                  ou non. Ils sont maintenant une proposition : un bouton, et une page entière pour
+                  jouer. Celui qui attend sans envie de jouer ne voit qu'un bouton. */}
+              <Link to="/jeux" className="btn-subtle suivi-jouer">
+                <Icone nom="etoile" taille={18} />{t('games.playWhileWaiting')}
+              </Link>
             </div>
           )}
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (

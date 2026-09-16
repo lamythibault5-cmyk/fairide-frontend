@@ -3765,6 +3765,10 @@ export const translations = {
     },
     games: {
       title: '🎮 Mini-jeux',
+      pageTitle: 'Mini-jeux',
+      pageSub: 'Trois jeux courts, pour patienter pendant la livraison.',
+      playWhileWaiting: 'Jouer en attendant',
+      backToOrders: 'Retour à mes commandes',
       whyTitle: '💡 Pourquoi des jeux ?',
       gotIt: 'Compris',
       why: 'Pourquoi des jeux ?',
@@ -10256,6 +10260,10 @@ export const translations = {
     },
     games: {
       title: '🎮 Mini-games',
+      pageTitle: 'Mini-games',
+      pageSub: 'Three short games, to pass the time during delivery.',
+      playWhileWaiting: 'Play while you wait',
+      backToOrders: 'Back to my orders',
       whyTitle: '💡 Why games?',
       gotIt: 'Got it',
       why: 'Why games?',
@@ -16733,6 +16741,10 @@ export const translations = {
     },
     games: {
       title: '🎮 Minispelletjes',
+      pageTitle: 'Minigames',
+      pageSub: 'Drie korte spellen, om de wachttijd te korten.',
+      playWhileWaiting: 'Spelen tijdens het wachten',
+      backToOrders: 'Terug naar mijn bestellingen',
       whyTitle: '💡 Waarom spelletjes?',
       gotIt: 'Begrepen',
       why: 'Waarom spelletjes?',

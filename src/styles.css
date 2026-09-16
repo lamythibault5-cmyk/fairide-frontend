@@ -989,6 +989,17 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
 
+/* La page des mini-jeux : l'en-tête reste court, tout le reste est du terrain. */
+.jeux-page { display: flex; flex-direction: column; gap: 14px; }
+.jeux-entete { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.jeux-retour { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
+.jeux-retour:hover { text-decoration: underline; }
+.jeux-terrain { min-height: 58svh; display: flex; flex-direction: column; }
+
+/* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
+   carte, pas un terrain de jeu imposé à côté d'elle. */
+.suivi-jouer { display: inline-flex; align-items: center; gap: 8px; margin: 10px auto 0; text-decoration: none; }
+
 .status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
 .status-nouveau { background: rgba(217,45,60,0.12); color: var(--red); }
 .status-preparation { background: var(--lime); color: var(--ink); }

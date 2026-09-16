@@ -34,6 +34,7 @@ const Favorites = lazyPage(() => import('./pages/client/Favorites'));
 const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
 const ClientMapPage = lazyPage(() => import('./pages/client/MapPage'));
+const JeuxPage = lazyPage(() => import('./pages/client/JeuxPage'));
 const ClientInvoicesPage = lazyPage(() => import('./pages/client/InvoicesPage'));
 const Account = lazyPage(() => import('./pages/Account'));
 
@@ -129,6 +130,9 @@ export default function App() {
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
         <Route path="/map" element={<ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
+        {/* Les mini-jeux ont leur page : on y arrive par un bouton du suivi de commande, pas par la
+            barre du bas — on ne vient pas sur Fairide pour jouer, on y tombe en attendant. */}
+        <Route path="/jeux" element={<ProtectedRoute><JeuxPage /></ProtectedRoute>} />
         <Route path="/invoices" element={<ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>} />
         <Route path="/order-success" element={<ProtectedRoute role="client"><OrderResult success /></ProtectedRoute>} />
         <Route path="/order-cancelled" element={<ProtectedRoute role="client"><OrderResult success={false} /></ProtectedRoute>} />
