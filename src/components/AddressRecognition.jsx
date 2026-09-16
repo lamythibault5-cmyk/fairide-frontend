@@ -10,7 +10,10 @@ import { useLanguage } from '../context/LanguageContext';
 // onStatus(etat) informe le parent ('idle' | 'loading' | 'done' | 'none' | 'error') ; quand l'adresse n'est pas
 // reconnue, une case « Je confirme que cette adresse est correcte » apparaît et onConfirm(bool) remonte
 // le choix : le restaurateur reste maître de son adresse, on lui demande juste de la confirmer.
-export default function AddressRecognition({ street, number, postalCode, city, onResult, onPickCandidate, onStatus, onConfirm, compact = false }) {
+// `discret` (espace commerçant) : l'adresse a déjà été donnée et reconnue à l'inscription. On garde la
+// vérification en arrière-plan (commune remplie, case de confirmation si l'adresse est inconnue), mais on
+// n'affiche plus « Adresse reconnue » ni « Est-ce votre commerce ? » (fondateur, 2026-09-16 : inutile ici).
+export default function AddressRecognition({ street, number, postalCode, city, onResult, onPickCandidate, onStatus, onConfirm, compact = false, discret = false }) {
   const { t } = useLanguage();
   const [confirme, setConfirme] = useState(false);
   const [etat, setEtat] = useState('idle'); // idle | loading | done | none | error
@@ -49,6 +52,7 @@ export default function AddressRecognition({ street, number, postalCode, city, o
   }, [cle]);
 
   if (etat === 'idle') return null;
+  if (discret && (etat === 'loading' || etat === 'done')) return null;
   return (
     <div className={`address-reco${compact ? ' compact' : ''}`} aria-live="polite">
       {etat === 'loading' && <p className="small" style={{ margin: 0 }}>🔎 {t('addressReco.searching')}</p>}

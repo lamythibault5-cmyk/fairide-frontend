@@ -447,7 +447,7 @@ export default function EditPage() {
           </div>
         </div>
         <AddressRecognition
-          street={editAddressStreet} number={editAddressNumber} postalCode={editAddressPostalCode} city={editCommune} compact
+          street={editAddressStreet} number={editAddressNumber} postalCode={editAddressPostalCode} city={editCommune} compact discret
           onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setEditCommune(r.commune); if (r.neighborhood) setEditNeighborhood((v) => v || r.neighborhood); }}
           onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
         />
