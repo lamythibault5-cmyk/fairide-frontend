@@ -668,7 +668,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       </div>
 
       {astuceRotation && (
-        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}>📱↔️ {t('gameFrame.rotateHint')}</button>
+        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}><Icone nom="mobile" taille={14} /> {t('gameFrame.rotateHint')}</button>
       )}
       <div className="jeu-actions">
         {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label={t('gameFrame.pauseAria')}>{t('gameFrame.pause')}</button>}

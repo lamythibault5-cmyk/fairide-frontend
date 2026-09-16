@@ -2181,7 +2181,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu--large .jeu-actions button { font-size: 14px; padding: 8px 16px; }
 /* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
 .jeu--fill { flex: 1; min-height: 0; }
-.jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; }
+.jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; align-self: stretch; }
 /* Le canvas sort du flux quand il remplit son cadre : ainsi il ne peut PLUS pousser la hauteur de
    ce cadre, donc plus jamais reformer la boucle mesure -> agrandissement -> mesure qui faisait
    descendre le terrain sans fin. La mesure de GameFrame est deja corrigee ; ceci ferme la porte. */
@@ -3082,7 +3082,9 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .jeu--large .jeu-hud-boutons { grid-column: auto; grid-row: auto; }
 .jeu-regles-btn.active { border-color: var(--iris); background: rgba(59,47,181,0.12); }
 .jeu-indice { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }
-.tracking-fullscreen-overlay .jeu-indice { color: rgba(255,255,255,0.8); }
+/* 2,85 pour 1 mesure a l'ecran : le gris --ink-soft du mode clair, pose sur #14121F. Le rappel
+   des commandes etait a peine lisible, exactement comme les boutons juste au-dessus. */
+.tracking-fullscreen-overlay .jeu-indice, .jeu--plein .jeu-indice { color: rgba(255,255,255,0.8); }
 .tracking-fullscreen-bar { padding: 4px 2px; }
 .tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: var(--radius-pill); }
 .tracking-fullscreen-eta { font-size: 14px; padding: 9px 14px; }
@@ -3490,7 +3492,13 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
   display: flex; flex-direction: column; background: #14121F;
   padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
 }
-.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; border-radius: var(--radius); }
+/* width: 100% et align-self: stretch, pas width: auto.
+   .jeu pose align-items: center, donc ses enfants ne s'etirent PAS : le cadre prenait la largeur
+   de son contenu, c'est-a-dire du canvas — que le canvas lui-meme mesurait depuis le cadre. Meme
+   serpent qui se mord la queue que sur la hauteur, mais sur l'axe horizontal, et celui-la se
+   figeait au plancher de 120px impose par la mesure : le terrain en plein ecran faisait donc
+   120px de large sur un ecran entier. Une largeur ferme coupe la boucle. */
+.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: 100%; align-self: stretch; border-radius: var(--radius); }
 .jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
 .jeu--plein .jeu-indice { margin: 2px 0 6px; }
 html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
@@ -3530,7 +3538,32 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 /* Plein écran : fond sombre, donc score et niveau en clair (l'encre sombre du mode normal y disparaissait). */
 .jeu--plein .jeu-score { color: #fff; }
 .jeu--plein .jeu-niveau { color: rgba(255,255,255,.7); }
-.jeu--plein .jeu-best { color: #FFD166; }
+/* #FFD166 était un jaune hors palette, oublié lors du nettoyage des teintes. Le lime le remplace :
+   sur ce fond presque noir il tranche autant, et il appartient à la marque. L'interdiction du
+   CLAUDE.md vise le lime en TEXTE SUR PAGE BLANCHE, où il disparaît — ici le fond est #14121F. */
+.jeu--plein .jeu-best, .tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
+.tracking-fullscreen-overlay .jeu-score { color: #fff; }
+.tracking-fullscreen-overlay .jeu-niveau { color: rgba(255,255,255,.7); }
+
+/* LES BOUTONS DE LA BARRE, SUR FOND SOMBRE.
+   Ils gardaient le gris clair et le texte encre du mode normal. En plein écran le fond passe à
+   #14121F : « Balade douce » s'affichait donc en NOIR PUR sur un bleu-nuit — mesuré à l'écran,
+   texte rgb(0,0,0) sur rgb(20,18,31), soit un rapport de contraste d'environ 1,6 pour 1 quand il
+   en faut 4,5. Le libellé était simplement invisible.
+   Les trois autres réglages de couleur du plein écran (score, niveau, record) avaient été faits
+   juste au-dessus ; ceux des boutons avaient été oubliés. */
+.jeu--plein .jeu-regles-btn,
+.tracking-fullscreen-overlay .jeu-regles-btn {
+  background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.28); color: #fff;
+}
+.jeu--plein .jeu-regles-btn:hover,
+.tracking-fullscreen-overlay .jeu-regles-btn:hover { border-color: rgba(255, 255, 255, 0.55); }
+/* Le réglage actif en aplat lime avec du texte encre : c'est l'emploi que le CLAUDE.md autorise
+   pour le lime, et sur ce fond sombre rien ne se voit mieux. */
+.jeu--plein .jeu-regles-btn.active,
+.tracking-fullscreen-overlay .jeu-regles-btn.active {
+  background: var(--lime); border-color: var(--lime); color: var(--ink);
+}
 /* Téléphone en plein écran : record et score sur une ligne, les boutons dessous, alignés à droite. */
 @media (max-width: 560px) {
   .jeu--plein .jeu-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
@@ -3640,6 +3673,17 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 /* Titre de section portant une icone : elle s'aligne sur la ligne de base du texte plutot que de
    flotter au-dessus, ce que fait un SVG pose nu a cote d'un mot. */
 .section-titre-icone { display: flex; align-items: center; gap: 8px; }
+
+/* LA RANGÉE DE FILTRES DE L'ACCUEIL n'avait aucune règle : la classe était posée dans le JSX mais
+   n'existait nulle part ici. Ses trois boutons se disposaient donc par défaut, séparés par les
+   espaces du code source, et la rangée n'avait aucune marge — mesuré au navigateur, il y avait
+   EXACTEMENT 0px entre le dernier filtre et le titre « Autour de vous » juste dessous, qui se
+   touchaient. Une vraie rangée, avec son écartement et l'air qu'il faut sous elle. */
+.liste-filtres { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px; }
+/* Le panneau d'un filtre ouvert se glisse entre la rangée et le contenu : il reprend la marge à
+   son compte pour que le titre ne remonte pas contre lui. */
+.liste-filtres:has(+ .liste-panneau) { margin-bottom: 8px; }
+.liste-panneau { margin-bottom: 22px; }
 
 /* Le HUD d'un jeu : ses glyphes sont maintenant des traces, qui doivent s'aligner sur la ligne de
    base du chiffre a cote plutot que de flotter au-dessus. */
