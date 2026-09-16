@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +9,9 @@ import { useLanguage } from '../../context/LanguageContext';
 // pré-lie le ticket à la fiche courante via linkedClientId/linkedDriverId/linkedRestaurantId/linkedOrderId
 // (voir routes/adminSupport.js POST /admin/support/tickets).
 export default function CreateTicketButton({ linkType, linkId, label }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -41,11 +44,11 @@ export default function CreateTicketButton({ linkType, linkId, label }) {
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <h3 style={{ margin: '0 0 4px' }}>{tr('adminCommon.newTicket')}</h3>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>{tr('adminCommon.linkedTo', { label })}</p>
-            <div className="field"><label>{tr('adminCommon.subject')}</label><input value={subject} onChange={(e) => setSubject(e.target.value)} autoFocus /></div>
-            <div className="field"><label>{tr('adminCommon.message')}</label><textarea rows={4} value={message} onChange={(e) => setMessage(e.target.value)} /></div>
+            <div className="field"><label htmlFor={idsA11y + '-subject'}>{tr('adminCommon.subject')}</label><input id={idsA11y + '-subject'} value={subject} onChange={(e) => setSubject(e.target.value)} autoFocus /></div>
+            <div className="field"><label htmlFor={idsA11y + '-message'}>{tr('adminCommon.message')}</label><textarea id={idsA11y + '-message'} rows={4} value={message} onChange={(e) => setMessage(e.target.value)} /></div>
             <div className="field">
-              <label>{tr('adminCommon.priority')}</label>
-              <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+              <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+              <select id={idsA11y + '-priority'} value={priority} onChange={(e) => setPriority(e.target.value)}>
                 <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option><option value="urgent">{tr('adminCommon.urgent')}</option>
               </select>
             </div>

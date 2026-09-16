@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { api, apiUpload } from '../../api';
@@ -187,6 +187,9 @@ export default function AdminDocumentsPage() {
 }
 
 function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTargetId, presetTargetLabel }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -236,15 +239,15 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
         {!presetTargetId && (
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminDocs.targetType')}</label>
-              <select value={targetType} onChange={(e) => setTargetType(e.target.value)}>
+              <label htmlFor={idsA11y + '-targettype'}>{tr('adminDocs.targetType')}</label>
+              <select id={idsA11y + '-targettype'} value={targetType} onChange={(e) => setTargetType(e.target.value)}>
                 {Object.entries(DOCUMENT_TARGET_TYPE_LABELS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}
               </select>
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminDocs.target')}</label>
+              <label htmlFor={idsA11y + '-target'}>{tr('adminDocs.target')}</label>
               {TARGET_TYPES_WITH_PICKER[targetType] ? (
-                <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
+                <select id={idsA11y + '-target'} value={targetId} onChange={(e) => setTargetId(e.target.value)}>
                   <option value="">{tr('adminCommon.choose')}</option>
                   {entities && entities.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
                 </select>
@@ -257,16 +260,16 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
         {presetTargetId && <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminDocs.linkedTo', { label: presetTargetLabel })}</p>}
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>{tr('adminDocs.documentType')}</label>
-            <select value={documentType} onChange={(e) => setDocumentType(e.target.value)}>
+            <label htmlFor={idsA11y + '-documenttype'}>{tr('adminDocs.documentType')}</label>
+            <select id={idsA11y + '-documenttype'} value={documentType} onChange={(e) => setDocumentType(e.target.value)}>
               {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</option>)}
             </select>
           </div>
-          <div className="field" style={{ flex: 1 }}><label>{tr('adminDocs.expiryOptional')}</label><input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></div>
+          <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-expiryoptional'}>{tr('adminDocs.expiryOptional')}</label><input id={idsA11y + '-expiryoptional'} type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)} /></div>
         </div>
-        <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} /></div>
-        <div className="field"><label>{tr('adminDocs.notesOptional')}</label><textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
-        <div className="field"><label>{tr('adminDocs.file')}</label><input type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-title'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title'} value={title} onChange={(e) => setTitle(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-notesoptional'}>{tr('adminDocs.notesOptional')}</label><textarea id={idsA11y + '-notesoptional'} rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-file'}>{tr('adminDocs.file')}</label><input id={idsA11y + '-file'} type="file" onChange={(e) => setFile(e.target.files?.[0] || null)} /></div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={uploading} onClick={upload}>{uploading ? '...' : tr('adminCommon.addPlain')}</button>
           <button className="btn-ghost" onClick={onClose}>{tr('adminCommon.cancel')}</button>
@@ -280,6 +283,9 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
 // Fiche document dans le tiroir commun : aperçu et lien vers la fiche concernée, vérification (validation
 // confirmée, rejet avec motif), édition, suppression confirmée.
 function DocumentDrawer({ id, onClose, onChanged }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -387,17 +393,17 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       )}
       {d && editing && form && (
         <div>
-          <div className="field"><label>{tr('adminCommon.title')}</label><input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-title-2'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title-2'} value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>{tr('adminCommon.type')}</label>
-              <select value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}>
+              <label htmlFor={idsA11y + '-type'}>{tr('adminCommon.type')}</label>
+              <select id={idsA11y + '-type'} value={form.documentType} onChange={(e) => setForm({ ...form, documentType: e.target.value })}>
                 {DOCUMENT_TYPES.map((t) => <option key={t} value={t}>{DOCUMENT_TYPE_LABELS[t]}</option>)}
               </select>
             </div>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminDocs.expiry')}</label><input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-expiry'}>{tr('adminDocs.expiry')}</label><input id={idsA11y + '-expiry'} type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} /></div>
           </div>
-          <div className="field"><label>{tr('adminCommon.notes')}</label><textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-notes'}>{tr('adminCommon.notes')}</label><textarea id={idsA11y + '-notes'} rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>
             <button className="btn-ghost" onClick={() => setEditing(false)}>{tr('adminCommon.cancel')}</button>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { api } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
@@ -12,6 +12,9 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // restaurant… via GET /admin/orders?q=), puis on qualifie l'incident. `onCreated(incident)` reçoit la
 // fiche créée pour l'ouvrir directement.
 export default function NewIncidentForm({ onCreated, onCancel, presetOrderId = '' }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -68,8 +71,8 @@ export default function NewIncidentForm({ onCreated, onCancel, presetOrderId = '
         </div>
       ) : (
         <div className="field inc-order-search">
-          <label>{tr('adminIncidents.orderSearch')}</label>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('adminIncidents.orderSearchPlaceholder')} autoFocus autoComplete="off" />
+          <label htmlFor={idsA11y + '-ordersearch'}>{tr('adminIncidents.orderSearch')}</label>
+          <input id={idsA11y + '-ordersearch'} value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('adminIncidents.orderSearchPlaceholder')} autoFocus autoComplete="off" />
           {(cherche || (resultats && resultats.length > 0) || (resultats && resultats.length === 0 && !UUID_RE.test(q.trim()))) && (
             <div className="inc-order-results">
               {cherche && <button type="button" disabled><span className="small">{tr('adminCommon.loading')}</span></button>}
@@ -87,24 +90,24 @@ export default function NewIncidentForm({ onCreated, onCancel, presetOrderId = '
       )}
       <div className="inc-form-grid">
         <div className="field">
-          <label>{tr('adminCommon.type')}</label>
-          <select value={form.type} onChange={set('type')}>{INCIDENT_TYPES.map((t) => <option key={t} value={t}>{typeLabel(tr, t)}</option>)}</select>
+          <label htmlFor={idsA11y + '-type'}>{tr('adminCommon.type')}</label>
+          <select id={idsA11y + '-type'} value={form.type} onChange={set('type')}>{INCIDENT_TYPES.map((t) => <option key={t} value={t}>{typeLabel(tr, t)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminIncidents.responsibility')}</label>
-          <select value={form.responsibility} onChange={set('responsibility')}>{RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
+          <label htmlFor={idsA11y + '-responsibility'}>{tr('adminIncidents.responsibility')}</label>
+          <select id={idsA11y + '-responsibility'} value={form.responsibility} onChange={set('responsibility')}>{RESPONSIBILITIES.map((r) => <option key={r} value={r}>{respLabel(tr, r)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminCommon.priority')}</label>
-          <select value={form.priority} onChange={set('priority')}>{PRIORITIES.map((p) => <option key={p} value={p}>{priorityLabel(tr, p)}</option>)}</select>
+          <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+          <select id={idsA11y + '-priority'} value={form.priority} onChange={set('priority')}>{PRIORITIES.map((p) => <option key={p} value={p}>{priorityLabel(tr, p)}</option>)}</select>
         </div>
         <div className="field">
-          <label>{tr('adminIncidents.amountEur')} <span className="small">({tr('adminCommon.optional')})</span></label>
-          <input type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} placeholder="0.00" />
+          <label htmlFor={idsA11y + '-amounteur'}>{tr('adminIncidents.amountEur')} <span className="small">({tr('adminCommon.optional')})</span></label>
+          <input id={idsA11y + '-amounteur'} type="number" min="0" step="0.01" value={form.amount} onChange={set('amount')} placeholder="0.00" />
         </div>
         <div className="field full">
-          <label>{tr('adminIncidents.description')}</label>
-          <textarea rows={4} value={form.description} onChange={set('description')} placeholder={tr('adminIncidents.descriptionPlaceholder')} />
+          <label htmlFor={idsA11y + '-description'}>{tr('adminIncidents.description')}</label>
+          <textarea id={idsA11y + '-description'} rows={4} value={form.description} onChange={set('description')} placeholder={tr('adminIncidents.descriptionPlaceholder')} />
         </div>
       </div>
       <div className="inc-form-actions">

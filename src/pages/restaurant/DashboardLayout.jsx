@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { Link, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { formatFullSchedule } from '../../openingHours';
@@ -27,6 +27,9 @@ import { cuisineDepuisOsm } from '../../osmCuisine';
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 
 export default function DashboardLayout() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const { token, user, actingAs, actingAdminEmail, quitterAction } = useAuth();
   const navigate = useNavigate();
@@ -441,35 +444,35 @@ export default function DashboardLayout() {
             if (f.openingHours) setOpeningHoursTexte(f.openingHours);
           }} />}
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
-          <div className="field"><label>{t('dashResto.businessName')}</label><input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-businessname'}>{t('dashResto.businessName')}</label><input id={idsA11y + '-businessname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
           <div className="field">
-            <label>{t('dashResto.businessType')}</label>
-            <select value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
+            <label htmlFor={idsA11y + '-businesstype'}>{t('dashResto.businessType')}</label>
+            <select id={idsA11y + '-businesstype'} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
               {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
             </select>
           </div>
           {cuisine === 'Autre' && (
-            <div className="field"><label>{t('dashResto.specifyType')}</label><input value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
+            <div className="field"><label htmlFor={idsA11y + '-specifytype'}>{t('dashResto.specifyType')}</label><input id={idsA11y + '-specifytype'} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
           )}
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.addressForDrivers')}</h4>
           <div className="field">
-            <label>{t('dashResto.municipality')}</label>
-            <select value={commune} onChange={(e) => setCommune(e.target.value)}>
+            <label htmlFor={idsA11y + '-municipality'}>{t('dashResto.municipality')}</label>
+            <select id={idsA11y + '-municipality'} value={commune} onChange={(e) => setCommune(e.target.value)}>
               {COMMUNES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
           <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setCommune(a.city); }} />
-          <div className="field"><label>{t('dashResto.street')}</label><input value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-street'}>{t('dashResto.street')}</label><input id={idsA11y + '-street'} value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
-              <label>{t('dashResto.number')}</label>
-              <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
+              <label htmlFor={idsA11y + '-number'}>{t('dashResto.number')}</label>
+              <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
             </div>
             <div className="field" style={{ flex: 1 }}>
-              <label>{t('dashResto.postalCode')}</label>
-              <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
+              <label htmlFor={idsA11y + '-postalcode'}>{t('dashResto.postalCode')}</label>
+              <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
             </div>
           </div>
           <AddressRecognition
@@ -479,7 +482,7 @@ export default function DashboardLayout() {
             onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
           {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
-          <div className="field"><label>{t('dashResto.neighbourhoodOptional')}</label><input value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-neighbourhoodoptional'}>{t('dashResto.neighbourhoodOptional')}</label><input id={idsA11y + '-neighbourhoodoptional'} value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.openingHours')}</h4>
@@ -498,8 +501,8 @@ export default function DashboardLayout() {
 
           <div className="divider" />
           <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.presentationOptional')}</h4>
-          <div className="field"><label>{t('dashResto.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
-          <div className="field"><label>{t('dashResto.coverUrl')}</label><input value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
+          <div className="field"><label htmlFor={idsA11y + '-description'}>{t('dashResto.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-coverurl'}>{t('dashResto.coverUrl')}</label><input id={idsA11y + '-coverurl'} value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="new-resto-site">{t('dashResto.website')}</label>
@@ -520,8 +523,8 @@ export default function DashboardLayout() {
             <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
             {offersDelivery && (
               <div className="service-suboptions">
-                <label>{t('dashResto.whoDelivers')}</label>
-                <select value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
+                <label htmlFor={idsA11y + '-whodelivers'}>{t('dashResto.whoDelivers')}</label>
+                <select id={idsA11y + '-whodelivers'} value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
                   <option value="fairide">{t('dashResto.fairidePool')}</option>
                   <option value="own">{t('dashResto.ownDrivers')}</option>
                 </select>

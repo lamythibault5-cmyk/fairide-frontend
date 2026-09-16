@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api, totalDepuisEntetes } from '../../api';
@@ -240,30 +240,33 @@ export default function AdminCrmPage() {
 }
 
 function ChampsProspect({ form, setForm, tr }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   return (
     <>
-      <div className="field"><label>{tr('adminCrm.restaurantName')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-restaurantname'}>{tr('adminCrm.restaurantName')}</label><input id={idsA11y + '-restaurantname'} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
       <div className="row" style={{ gap: 8 }}>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.municipality')}</label><input value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.cuisine')}</label><input value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-municipality'}>{tr('adminCommon.municipality')}</label><input id={idsA11y + '-municipality'} value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-cuisine'}>{tr('adminCrm.cuisine')}</label><input id={idsA11y + '-cuisine'} value={form.cuisine} onChange={(e) => setForm({ ...form, cuisine: e.target.value })} /></div>
       </div>
-      <div className="field"><label>{tr('adminCrm.contact')}</label><input placeholder={tr('adminCrm.phContactName')} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
+      <div className="field"><label htmlFor={idsA11y + '-contact'}>{tr('adminCrm.contact')}</label><input id={idsA11y + '-contact'} placeholder={tr('adminCrm.phContactName')} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} /></div>
       <div className="row" style={{ gap: 8 }}>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.email')}</label><input value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCommon.phone')}</label><input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-email'}>{tr('adminCommon.email')}</label><input id={idsA11y + '-email'} value={form.contactEmail} onChange={(e) => setForm({ ...form, contactEmail: e.target.value })} /></div>
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-phone'}>{tr('adminCommon.phone')}</label><input id={idsA11y + '-phone'} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} /></div>
       </div>
       <div className="row" style={{ gap: 8 }}>
         <div className="field" style={{ flex: 1 }}>
-          <label>{tr('adminCommon.priority')}</label>
-          <select value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
+          <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+          <select id={idsA11y + '-priority'} value={form.priority} onChange={(e) => setForm({ ...form, priority: e.target.value })}>
             <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
           </select>
         </div>
         <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.salesOwner')}</label><AssigneeSelect value={form.ownerEmail} onChange={(v) => setForm({ ...form, ownerEmail: v })} /></div>
       </div>
       <div className="row" style={{ gap: 8 }}>
-        <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.source')}</label><input placeholder={tr('adminCrm.phSource')} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
-        {form.nextFollowUpAt !== undefined && <div className="field" style={{ flex: 1 }}><label>{tr('adminCrm.nextFollowUp')}</label><input type="date" value={form.nextFollowUpAt} onChange={(e) => setForm({ ...form, nextFollowUpAt: e.target.value })} /></div>}
+        <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-source'}>{tr('adminCrm.source')}</label><input id={idsA11y + '-source'} placeholder={tr('adminCrm.phSource')} value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })} /></div>
+        {form.nextFollowUpAt !== undefined && <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-nextfollowup'}>{tr('adminCrm.nextFollowUp')}</label><input id={idsA11y + '-nextfollowup'} type="date" value={form.nextFollowUpAt} onChange={(e) => setForm({ ...form, nextFollowUpAt: e.target.value })} /></div>}
       </div>
     </>
   );

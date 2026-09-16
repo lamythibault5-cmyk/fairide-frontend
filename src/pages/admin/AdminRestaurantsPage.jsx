@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -349,6 +349,9 @@ export default function AdminRestaurantsPage() {
 }
 
 function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -470,7 +473,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       )}
       {detail && onglet === 'apercu' && editing && form && (
         <div>
-          <div className="field"><label>{tr('adminCommon.name')}</label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-name'}>{tr('adminCommon.name')}</label><input id={idsA11y + '-name'} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
           {/* Le quartier se corrigeait jusqu'ici en se connectant sous le compte du commerçant :
               l'API l'acceptait déjà (PATCH /admin/restaurants/:id), seul le formulaire ne l'offrait
               pas. Il est posé à côté de la commune, qui le contient. */}
@@ -478,20 +481,20 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <div className="field" style={{ flex: 1 }}><label htmlFor="resto-commune">{tr('adminCommon.municipality')}</label><input id="resto-commune" value={form.commune} onChange={(e) => setForm({ ...form, commune: e.target.value })} /></div>
             <div className="field" style={{ flex: 1 }}><label htmlFor="resto-quartier">{tr('adminCommon.neighborhood')}</label><input id="resto-quartier" value={form.neighborhood} onChange={(e) => setForm({ ...form, neighborhood: e.target.value })} /></div>
           </div>
-          <div className="field"><label>{tr('adminRestos.restoPhone')}</label><input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+32 2 000 00 00" /></div>
+          <div className="field"><label htmlFor={idsA11y + '-restophone'}>{tr('adminRestos.restoPhone')}</label><input id={idsA11y + '-restophone'} type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+32 2 000 00 00" /></div>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 3 }}><label>{tr('adminRestos.street')}</label><input value={form.addressStreet} onChange={(e) => setForm({ ...form, addressStreet: e.target.value })} /></div>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.number')}</label><input value={form.addressNumber} onChange={(e) => setForm({ ...form, addressNumber: e.target.value })} /></div>
+            <div className="field" style={{ flex: 3 }}><label htmlFor={idsA11y + '-street'}>{tr('adminRestos.street')}</label><input id={idsA11y + '-street'} value={form.addressStreet} onChange={(e) => setForm({ ...form, addressStreet: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-number'}>{tr('adminRestos.number')}</label><input id={idsA11y + '-number'} value={form.addressNumber} onChange={(e) => setForm({ ...form, addressNumber: e.target.value })} /></div>
           </div>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.postalCode')}</label><input value={form.addressPostalCode} onChange={(e) => setForm({ ...form, addressPostalCode: e.target.value })} /></div>
-            <div className="field" style={{ flex: 2 }}><label>{tr('adminRestos.city')}</label><input value={form.addressCity} onChange={(e) => setForm({ ...form, addressCity: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-postalcode'}>{tr('adminRestos.postalCode')}</label><input id={idsA11y + '-postalcode'} value={form.addressPostalCode} onChange={(e) => setForm({ ...form, addressPostalCode: e.target.value })} /></div>
+            <div className="field" style={{ flex: 2 }}><label htmlFor={idsA11y + '-city'}>{tr('adminRestos.city')}</label><input id={idsA11y + '-city'} value={form.addressCity} onChange={(e) => setForm({ ...form, addressCity: e.target.value })} /></div>
           </div>
-          <div className="field"><label>{tr('adminCommon.owner')}</label><input value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
-          <div className="field"><label>{tr('adminRestos.legalName')}</label><input value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-owner'}>{tr('adminCommon.owner')}</label><input id={idsA11y + '-owner'} value={form.responsibleName} onChange={(e) => setForm({ ...form, responsibleName: e.target.value })} /></div>
+          <div className="field"><label htmlFor={idsA11y + '-legalname'}>{tr('adminRestos.legalName')}</label><input id={idsA11y + '-legalname'} value={form.legalName} onChange={(e) => setForm({ ...form, legalName: e.target.value })} /></div>
           <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}><label>{tr('adminRestos.companyNumber')}</label><input value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
-            <div className="field" style={{ flex: 1 }}><label>TVA</label><input value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-companynumber'}>{tr('adminRestos.companyNumber')}</label><input id={idsA11y + '-companynumber'} value={form.companyNumber} onChange={(e) => setForm({ ...form, companyNumber: e.target.value })} /></div>
+            <div className="field" style={{ flex: 1 }}><label htmlFor={idsA11y + '-tva'}>TVA</label><input id={idsA11y + '-tva'} value={form.vatNumber} onChange={(e) => setForm({ ...form, vatNumber: e.target.value })} /></div>
           </div>
           <div className="row" style={{ gap: 8 }}>
             <button className="btn-teal" disabled={saving} onClick={saveEdit}>{saving ? '...' : tr('adminCommon.save')}</button>

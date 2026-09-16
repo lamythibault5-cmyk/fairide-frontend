@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
@@ -10,6 +10,9 @@ import { galleryForSection } from '../menuCategories';
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
 export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   // useSortable est toujours appelé (règle des hooks), même hors mode réorganisation — seul le handle
   // reçoit alors les listeners de drag, donc rien n'est réellement déplaçable tant que reorderMode est faux.
@@ -85,9 +88,9 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   if (editing && !reorderMode && !selectMode) {
     return (
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
-        <div className="field"><label>{t('menuItem.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} /></div>
-        <div className="field"><label>{t('menuItem.description')}</label><input value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
-        <div className="field"><label>{t('menuItem.price')}</label><input type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-name'}>{t('menuItem.name')}</label><input id={idsA11y + '-name'} value={name} onChange={(e) => setName(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-description'}>{t('menuItem.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('menuItem.phDescription')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
             restaurateur n'a rien à y faire dans le cas normal — Claude les remplit quand il clique
@@ -125,16 +128,16 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           </div>
         )}
         <div className="field">
-          <label>{t('menuItem.category')}</label>
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <label htmlFor={idsA11y + '-category'}>{t('menuItem.category')}</label>
+          <select id={idsA11y + '-category'} value={category} onChange={(e) => setCategory(e.target.value)}>
             {(sections.length ? sections.map((s) => s.name) : CATEGORIES.map((c) => c.value)).map((name) => (
               <option key={name} value={name}>{categoryLabel(name, t)}</option>
             ))}
           </select>
         </div>
         <div className="field">
-          <label>{t('menuItem.subsection')}</label>
-          <input
+          <label htmlFor={idsA11y + '-subsection'}>{t('menuItem.subsection')}</label>
+          <input id={idsA11y + '-subsection'}
             value={subsection}
             onChange={(e) => setSubsection(e.target.value)}
             placeholder={t('menuItem.phSubsection')}
@@ -147,14 +150,14 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
           )}
         </div>
         <div className="field">
-          <label>{t('menuItem.imageOptional')}</label>
+          <label htmlFor={idsA11y + '-imageoptional'}>{t('menuItem.imageOptional')}</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
             {resolveItemImage({ name, category, imageUrl }, sections) ? (
               <img loading="lazy" src={resolveItemImage({ name, category, imageUrl }, sections)} alt="" className="dish-thumb" style={{ flexShrink: 0 }} />
             ) : (
               <span className="dish-thumb-empty">{categoryEmoji(category)}</span>
             )}
-            <input style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder={t('menuItem.phPhotoUrl')} />
+            <input id={idsA11y + '-imageoptional'} style={{ flex: 1 }} value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} placeholder={t('menuItem.phPhotoUrl')} />
           </div>
           {restoId && (
             <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => setGalleryOpen(true)}>

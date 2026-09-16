@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -61,6 +61,9 @@ const ABONNEMENT_RESUME = {
 };
 
 export default function Account() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { user, role, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
   const toast = useToast();
 
@@ -499,24 +502,24 @@ export default function Account() {
           <form onSubmit={saveInfo}>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.firstName')}</label>
-                <input value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+                <label htmlFor={idsA11y + '-firstname'}>{t('auth.firstName')}</label>
+                <input id={idsA11y + '-firstname'} value={firstName} onChange={(e) => setFirstName(e.target.value)} />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.lastName')}</label>
-                <input value={lastName} onChange={(e) => setLastName(e.target.value)} />
+                <label htmlFor={idsA11y + '-lastname'}>{t('auth.lastName')}</label>
+                <input id={idsA11y + '-lastname'} value={lastName} onChange={(e) => setLastName(e.target.value)} />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.gender')}</label>
-                <select value={gender} onChange={(e) => setGender(e.target.value)}>
+                <label htmlFor={idsA11y + '-gender'}>{t('auth.gender')}</label>
+                <select id={idsA11y + '-gender'} value={gender} onChange={(e) => setGender(e.target.value)}>
                   {GENDERS.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('account.birthDate')}</label>
-                <input type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                <label htmlFor={idsA11y + '-birthdate'}>{t('account.birthDate')}</label>
+                <input id={idsA11y + '-birthdate'} type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
@@ -525,18 +528,18 @@ export default function Account() {
                 <input id="champ-adresse" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.number')}</label>
-                <input value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
+                <label htmlFor={idsA11y + '-number'}>{t('auth.number')}</label>
+                <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} />
               </div>
             </div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{t('auth.postalCode')}</label>
-                <input value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
+                <label htmlFor={idsA11y + '-postalcode'}>{t('auth.postalCode')}</label>
+                <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} />
               </div>
               <div className="field" style={{ flex: 2 }}>
-                <label>{t('auth.city')}</label>
-                <input value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+                <label htmlFor={idsA11y + '-city'}>{t('auth.city')}</label>
+                <input id={idsA11y + '-city'} value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
               </div>
             </div>
             <button type="submit" className="btn-teal" disabled={savingInfo}>{savingInfo ? '...' : t('common.save')}</button>
@@ -556,14 +559,14 @@ export default function Account() {
                 {!deleteCodeSent && (
                   <>
                     <div className="field">
-                      <label>{t('account.deleteWhy')}</label>
-                      <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+                      <label htmlFor={idsA11y + '-deletewhy'}>{t('account.deleteWhy')}</label>
+                      <select id={idsA11y + '-deletewhy'} value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
                         {DELETION_REASONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                       </select>
                     </div>
                     <div className="field">
-                      <label>{t('account.deleteComment')}</label>
-                      <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
+                      <label htmlFor={idsA11y + '-deletecomment'}>{t('account.deleteComment')}</label>
+                      <input id={idsA11y + '-deletecomment'} value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('account.deleteCommentPlaceholder')} />
                     </div>
                     <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                       <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={sendingCode} onClick={handleSendDeleteCode}>
@@ -579,8 +582,8 @@ export default function Account() {
                       {role === 'client' ? t('account.deleteCodeSentText') : t('account.deleteCodeSentTextAdmin')}
                     </p>
                     <div className="field">
-                      <label>{t('account.deleteCodeLabel')}</label>
-                      <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
+                      <label htmlFor={idsA11y + '-deletecodelabel'}>{t('account.deleteCodeLabel')}</label>
+                      <input id={idsA11y + '-deletecodelabel'} value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
                     </div>
                     <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
                       <button type="button" className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={handleDeleteAccount}>
@@ -854,8 +857,8 @@ export default function Account() {
             {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
-                  <label>{t('auth.promoCode')}</label>
-                  <input value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
+                  <label htmlFor={idsA11y + '-promocode'}>{t('auth.promoCode')}</label>
+                  <input id={idsA11y + '-promocode'} value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
                 </div>
                 <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
                   {subscribing ? '...' : t('accountUi.subscribeBtn', { months: t('accountUi.firstMonthFree') })}

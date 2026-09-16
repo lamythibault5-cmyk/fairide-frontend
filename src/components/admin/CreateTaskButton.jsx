@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -9,6 +9,9 @@ import { useLanguage } from '../../context/LanguageContext';
 // facture/prospect CRM (module Tâches) — pré-lie la tâche à la fiche courante via targetType/targetId
 // (voir routes/adminTasks.js POST /admin/tasks). Même pattern que CreateTicketButton.jsx.
 export default function CreateTaskButton({ targetType, targetId, label }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token, user } = useAuth();
   const toast = useToast();
@@ -44,22 +47,22 @@ export default function CreateTaskButton({ targetType, targetId, label }) {
           <div className="modal-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <h3 style={{ margin: '0 0 4px' }}>{tr('adminCommon.newTask')}</h3>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>{tr('adminCommon.linkedTo', { label })}</p>
-            <div className="field"><label>{tr('adminCommon.title')}</label><input value={title} onChange={(e) => setTitle(e.target.value)} autoFocus /></div>
+            <div className="field"><label htmlFor={idsA11y + '-title'}>{tr('adminCommon.title')}</label><input id={idsA11y + '-title'} value={title} onChange={(e) => setTitle(e.target.value)} autoFocus /></div>
             <div className="row" style={{ gap: 8 }}>
               <div className="field" style={{ flex: 1 }}>
-                <label>{tr('adminCommon.dueDate')}</label>
-                <input type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
+                <label htmlFor={idsA11y + '-duedate'}>{tr('adminCommon.dueDate')}</label>
+                <input id={idsA11y + '-duedate'} type="datetime-local" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
               </div>
               <div className="field" style={{ flex: 1 }}>
-                <label>{tr('adminCommon.priority')}</label>
-                <select value={priority} onChange={(e) => setPriority(e.target.value)}>
+                <label htmlFor={idsA11y + '-priority'}>{tr('adminCommon.priority')}</label>
+                <select id={idsA11y + '-priority'} value={priority} onChange={(e) => setPriority(e.target.value)}>
                   <option value="low">{tr('adminCommon.low')}</option><option value="medium">{tr('adminCommon.medium')}</option><option value="high">{tr('adminCommon.high')}</option>
                 </select>
               </div>
             </div>
             <div className="field">
-              <label>{tr('adminCommon.ownerOptional')}</label>
-              <input value={assignedToEmail} onChange={(e) => setAssignedToEmail(e.target.value)} placeholder={user?.email || 'email@fairide.be'} />
+              <label htmlFor={idsA11y + '-owneroptional'}>{tr('adminCommon.ownerOptional')}</label>
+              <input id={idsA11y + '-owneroptional'} value={assignedToEmail} onChange={(e) => setAssignedToEmail(e.target.value)} placeholder={user?.email || 'email@fairide.be'} />
             </div>
             <div className="row" style={{ gap: 8, marginTop: 8 }}>
               <button className="btn-teal" disabled={creating} onClick={create}>{creating ? '...' : tr('adminCommon.create')}</button>

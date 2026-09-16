@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useId } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -6,6 +6,9 @@ import { useLanguage } from '../context/LanguageContext';
 // déjà amorcé avec ce qu'il faut nous dire. Une trame vaut mieux qu'un champ vide — c'est elle qui
 // fait la différence entre « ça marche pas » et un rapport exploitable.
 export default function ContactSection({ messageInitial = '' }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const INFO_CARDS = [
     { icon: '✉️', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
@@ -67,20 +70,20 @@ export default function ContactSection({ messageInitial = '' }) {
               </div>
             </div>
             <div className="field">
-              <label>{t('contact.fullName')}</label>
-              <input value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} />
+              <label htmlFor={idsA11y + '-fullname'}>{t('contact.fullName')}</label>
+              <input id={idsA11y + '-fullname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} />
             </div>
             <div className="field">
-              <label>{t('contact.emailLabel')}</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('contact.emailPlaceholder')} />
+              <label htmlFor={idsA11y + '-emaillabel'}>{t('contact.emailLabel')}</label>
+              <input id={idsA11y + '-emaillabel'} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('contact.emailPlaceholder')} />
             </div>
             <div className="field">
-              <label>{t('contact.phone')}</label>
-              <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} />
+              <label htmlFor={idsA11y + '-phone'}>{t('contact.phone')}</label>
+              <input id={idsA11y + '-phone'} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} />
             </div>
             <div className="field">
-              <label>{t('contact.message')}</label>
-              <textarea rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} />
+              <label htmlFor={idsA11y + '-message'}>{t('contact.message')}</label>
+              <textarea id={idsA11y + '-message'} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} />
             </div>
             {error && <p className="small" style={{ color: 'var(--red)', margin: '0 0 10px' }}>{error}</p>}
             <button className="btn-gold" type="submit" disabled={sending} style={{ width: '100%' }}>

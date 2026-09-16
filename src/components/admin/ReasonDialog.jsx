@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -9,6 +9,9 @@ import { useLanguage } from '../../context/LanguageContext';
 //
 // Remplace window.prompt / window.confirm, supprimés ou muets dans une PWA installée.
 export default function ReasonDialog({ open, title, message, label, placeholder, required = true, multiline = false, confirmLabel, danger, loading, initialValue = '', children, onConfirm, onCancel }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const [motif, setMotif] = useState(initialValue);
   useEffect(() => { if (open) setMotif(initialValue); }, [open, initialValue]);
@@ -27,9 +30,9 @@ export default function ReasonDialog({ open, title, message, label, placeholder,
         {message && <p className="small" style={{ margin: '0 0 12px' }}>{message}</p>}
         {children}
         <div className="field">
-          <label>{label || tr('adminCommon.reasonLabel')}{required ? '' : ` (${tr('adminCommon.optional')})`}</label>
+          <label htmlFor={idsA11y + '-reasonlabel'}>{label || tr('adminCommon.reasonLabel')}{required ? '' : ` (${tr('adminCommon.optional')})`}</label>
           {multiline
-            ? <textarea rows={3} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus />
+            ? <textarea id={idsA11y + '-reasonlabel'} rows={3} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus />
             : <input value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter' && !bloque) onConfirm(motif.trim()); }} />}
         </div>
         <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>

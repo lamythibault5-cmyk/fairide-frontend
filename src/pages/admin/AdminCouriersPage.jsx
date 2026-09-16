@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api, API_BASE } from '../../api';
@@ -139,6 +139,9 @@ function ViewTabs({ onglet, setOnglet, tr }) {
 // Fiche d'un dossier dans le tiroir commun de l'ERP (onglets Dossier / Documents / Plafonds / Décision /
 // Journal). Toutes les décisions passent par une confirmation, avec motif quand le serveur l'exige.
 function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const [d, setD] = useState(null); const [erreur, setErreur] = useState(null); const [busy, setBusy] = useState(false); const [nouveauStatut, setNouveauStatut] = useState('independent');
   const [onglet, setOnglet] = useState('dossier');
@@ -254,7 +257,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           </div>
           <div className="divider" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-            <div className="field" style={{ margin: 0 }}><label>{tr('adminCouriers.changeStatusTo')}</label><select value={nouveauStatut} onChange={(e) => setNouveauStatut(e.target.value)}>{['student', 'p2p', 'independent'].map((x) => <option key={x} value={x}>{statut(x)}</option>)}</select></div>
+            <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-changestatusto'}>{tr('adminCouriers.changeStatusTo')}</label><select id={idsA11y + '-changestatusto'} value={nouveauStatut} onChange={(e) => setNouveauStatut(e.target.value)}>{['student', 'p2p', 'independent'].map((x) => <option key={x} value={x}>{statut(x)}</option>)}</select></div>
             <button className="btn-outline" disabled={busy || nouveauStatut === c.statusType} onClick={() => setConfirm({ title: tr('adminCouriers.changeStatus'), message: tr('adminCouriers.changeStatusConfirm'), danger: true, run: () => agir(() => api(`/admin/couriers/${id}/status-type`, { method: 'PATCH', token, body: { statusType: nouveauStatut } }), tr('adminCouriers.toastStatusChanged')) })}>{tr('adminCouriers.changeStatus')}</button>
           </div>
         </>
@@ -271,6 +274,9 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
 }
 
 function Parametres({ tr, token, toast }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const [lignes, setLignes] = useState(null); const [flags, setFlags] = useState(null); const [busy, setBusy] = useState(false); const [erreur, setErreur] = useState(null);
   const an = new Date().getFullYear(); const [annee, setAnnee] = useState(an); const [f, setF] = useState(null);
   const [confirmP2p, setConfirmP2p] = useState(false);
@@ -293,7 +299,7 @@ function Parametres({ tr, token, toast }) {
       <div className="card">
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>⚖️ {tr('adminCouriers.thresholdsTitle')}</h3>
         <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.thresholdsHelp')}</p>
-        <div className="field" style={{ maxWidth: 160 }}><label>{tr('adminCouriers.year')}</label><input type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} /></div>
+        <div className="field" style={{ maxWidth: 160 }}><label htmlFor={idsA11y + '-year'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} /></div>
         {f && (
           <div className="courier-grid">
             {champs.map(([k, u]) => <div key={k} className="field"><label>{tr(`adminCouriers.th_${k}`)} ({u})</label><input type="number" step="any" value={f[k]} onChange={(e) => setF((x) => ({ ...x, [k]: e.target.value }))} /></div>)}
@@ -307,6 +313,9 @@ function Parametres({ tr, token, toast }) {
 }
 
 function Exports({ tr, token, toast }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const [annee, setAnnee] = useState(new Date().getFullYear()); const [trim, setTrim] = useState('');
   const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message));
   return (
@@ -314,8 +323,8 @@ function Exports({ tr, token, toast }) {
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📤 {tr('adminCouriers.exportsTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{tr('adminCouriers.exportsHelp')}</p>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-        <div className="field" style={{ margin: 0 }}><label>{tr('adminCouriers.year')}</label><input type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
-        <div className="field" style={{ margin: 0 }}><label>{tr('adminCouriers.quarter')}</label><select value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
+        <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-year-2'}>{tr('adminCouriers.year')}</label><input id={idsA11y + '-year-2'} type="number" value={annee} onChange={(e) => setAnnee(e.target.value)} style={{ width: 110 }} /></div>
+        <div className="field" style={{ margin: 0 }}><label htmlFor={idsA11y + '-quarter'}>{tr('adminCouriers.quarter')}</label><select id={idsA11y + '-quarter'} value={trim} onChange={(e) => setTrim(e.target.value)}><option value="">{tr('adminCouriers.allQuarters')}</option>{[1, 2, 3, 4].map((q) => <option key={q} value={q}>T{q}</option>)}</select></div>
         <button className="btn-outline" onClick={() => go(`/admin/couriers/export/dac7?year=${annee}${trim ? `&quarter=${trim}` : ''}`, `dac7-${annee}${trim ? `-T${trim}` : ''}.csv`)}>⬇️ DAC7</button>
         <button className="btn-outline" onClick={() => go(`/admin/couriers/export/281-29?year=${annee}`, `fiches-281-29-${annee}.csv`)}>⬇️ 281.29</button>
       </div>

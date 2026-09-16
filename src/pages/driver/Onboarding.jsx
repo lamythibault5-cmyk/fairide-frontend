@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -361,6 +361,9 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
 }
 
 function EtapeContrat({ d, t, busy, token, action, onNext }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier;
   const [nom, setNom] = useState(`${c.identity.firstName} ${c.identity.lastName}`.trim() || d.user?.name || '');
   const [accepte, setAccepte] = useState(false);
@@ -381,8 +384,8 @@ function EtapeContrat({ d, t, busy, token, action, onNext }) {
           {ancien && <p className="small" style={{ margin: '0 0 8px' }}>🆕 {t('driverTerms.newVersion', { version: versionCourante, old: ancien.version })}</p>}
           <button type="button" className="btn-outline" onClick={apercu}>📄 {t('courierOnboarding.contractPreview')}</button>
           <div className="field" style={{ marginTop: 12 }}>
-            <label>{t('courierOnboarding.typedName')}</label>
-            <input value={nom} onChange={(e) => setNom(e.target.value)} />
+            <label htmlFor={idsA11y + '-typedname'}>{t('courierOnboarding.typedName')}</label>
+            <input id={idsA11y + '-typedname'} value={nom} onChange={(e) => setNom(e.target.value)} />
           </div>
           <label className="service-option"><input type="checkbox" checked={accepte} onChange={(e) => setAccepte(e.target.checked)} /> <span>{t('courierOnboarding.acceptContract')}</span></label>
           <p className="small" style={{ margin: '6px 0 10px', opacity: 0.8 }}>{t('courierOnboarding.signatureHelp')}</p>
@@ -441,6 +444,9 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
 }
 
 function Compteurs({ d, t, token, action, busy }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier; const s = d.situation; const legal = d.legal; const th = d.thresholds;
   const [ext, setExt] = useState(c.statusType === 'student' ? th.hoursExternalDeclared : th.grossIncomeExternalDeclared);
   if (!s || s.type === 'none') {
@@ -457,8 +463,8 @@ function Compteurs({ d, t, token, action, busy }) {
       {c.statusType === 'p2p' && <p className="small" style={{ margin: '6px 0 0' }}>{t('courierOnboarding.withholdingSoFar', { amount: euro(th.withholdingTotal) })}</p>}
       <div className="row" style={{ gap: 8, alignItems: 'flex-end', marginTop: 10, flexWrap: 'wrap' }}>
         <div className="field" style={{ margin: 0, flex: '1 1 220px' }}>
-          <label>{s.type === 'hours' ? t('courierOnboarding.fHoursExternal') : t('courierOnboarding.fIncomeExternal')}</label>
-          <input type="number" min="0" value={ext} onChange={(e) => setExt(e.target.value)} />
+          <label htmlFor={idsA11y + '-fhoursexternal'}>{s.type === 'hours' ? t('courierOnboarding.fHoursExternal') : t('courierOnboarding.fIncomeExternal')}</label>
+          <input id={idsA11y + '-fhoursexternal'} type="number" min="0" value={ext} onChange={(e) => setExt(e.target.value)} />
         </div>
         <button type="button" className="btn-outline" disabled={busy} onClick={() => action(() => api('/couriers/me', { method: 'PATCH', token, body: s.type === 'hours' ? { hoursExternalDeclared: ext } : { incomeExternalDeclared: ext } }), t('courierOnboarding.toastSaved'))}>{t('courierOnboarding.save')}</button>
       </div>
@@ -468,6 +474,9 @@ function Compteurs({ d, t, token, action, busy }) {
 }
 
 function ChangementStatut({ d, t, token, action, busy }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const c = d.courier; const [cible, setCible] = useState(c.statusType === 'independent' ? 'student' : 'independent'); const [raison, setRaison] = useState('');
   const [ouvert, setOuvert] = useState(c.lifecycleStatus === 'blocked_threshold');
   return (
@@ -481,10 +490,10 @@ function ChangementStatut({ d, t, token, action, busy }) {
           <p className="small" style={{ margin: '0 0 8px' }}>{c.lifecycleStatus === 'blocked_threshold' ? t('courierOnboarding.changeStatusBlocked') : t('courierOnboarding.changeStatusHelp')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
             <div className="field" style={{ margin: 0 }}>
-              <label>{t('courierOnboarding.newStatus')}</label>
-              <select value={cible} onChange={(e) => setCible(e.target.value)}>{['student', 'p2p', 'independent'].filter((x) => x !== c.statusType).map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
+              <label htmlFor={idsA11y + '-newstatus'}>{t('courierOnboarding.newStatus')}</label>
+              <select id={idsA11y + '-newstatus'} value={cible} onChange={(e) => setCible(e.target.value)}>{['student', 'p2p', 'independent'].filter((x) => x !== c.statusType).map((x) => <option key={x} value={x}>{t(`courierOnboarding.status_${x}`)}</option>)}</select>
             </div>
-            <div className="field" style={{ margin: 0, flex: '1 1 220px' }}><label>{t('courierOnboarding.reason')}</label><input value={raison} onChange={(e) => setRaison(e.target.value)} /></div>
+            <div className="field" style={{ margin: 0, flex: '1 1 220px' }}><label htmlFor={idsA11y + '-reason'}>{t('courierOnboarding.reason')}</label><input id={idsA11y + '-reason'} value={raison} onChange={(e) => setRaison(e.target.value)} /></div>
             <button type="button" className="btn-outline" disabled={busy} onClick={() => action(() => api('/couriers/me/request-status-change', { method: 'POST', token, body: { statusType: cible, reason: raison } }), t('courierOnboarding.toastChangeRequested'))}>{t('courierOnboarding.requestChange')}</button>
           </div>
           {c.statusType === 'student' && c.lifecycleStatus === 'blocked_threshold' && <p className="small" style={{ margin: '8px 0 0' }}>{t('courierOnboarding.ordinaryOption')}</p>}

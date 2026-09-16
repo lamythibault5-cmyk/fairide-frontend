@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { api } from '../../api';
@@ -270,6 +270,9 @@ function AgedTab({ token, toast }) {
 }
 
 function GenerateInvoiceModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -300,15 +303,15 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateCommissionInvoice')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminInvoices.generateHelp')}</p>
         <div className="field">
-          <label>{tr('adminCommon.restaurant')}</label>
-          <select value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
+          <label htmlFor={idsA11y + '-restaurant'}>{tr('adminCommon.restaurant')}</label>
+          <select id={idsA11y + '-restaurant'} value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {restaurants && restaurants.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
@@ -568,6 +571,9 @@ function DriverStatementsTab({ token, toast }) {
 }
 
 function GenerateStatementModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -597,15 +603,15 @@ function GenerateStatementModal({ onClose, onGenerated }) {
       <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateDriverStatement')}</h3>
         <div className="field">
-          <label>{tr('adminCommon.driver')}</label>
-          <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+          <label htmlFor={idsA11y + '-driver'}>{tr('adminCommon.driver')}</label>
+          <select id={idsA11y + '-driver'} value={driverId} onChange={(e) => setDriverId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
         </div>
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month-2'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month-2'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>
@@ -699,6 +705,9 @@ function SelfBillingTab({ token, toast }) {
 }
 
 function GenerateSelfBillingModal({ onClose, onGenerated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -760,8 +769,8 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
       <div className="modal-box drawer-box" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 520 }}>
         <h3 style={{ margin: '0 0 8px' }}>{tr('adminInvoices.generateSelfBilling')}</h3>
         <div className="field">
-          <label>{tr('adminCommon.driver')}</label>
-          <select value={driverId} onChange={(e) => setDriverId(e.target.value)}>
+          <label htmlFor={idsA11y + '-driver-2'}>{tr('adminCommon.driver')}</label>
+          <select id={idsA11y + '-driver-2'} value={driverId} onChange={(e) => setDriverId(e.target.value)}>
             <option value="">{tr('adminCommon.choose')}</option>
             {drivers && drivers.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
           </select>
@@ -794,8 +803,8 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
           </div>
         )}
         <div className="field">
-          <label>{tr('adminInvoices.month')}</label>
-          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          <label htmlFor={idsA11y + '-month-3'}>{tr('adminInvoices.month')}</label>
+          <input id={idsA11y + '-month-3'} type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
         </div>
         <div className="row" style={{ gap: 8, marginTop: 8 }}>
           <button className="btn-teal" disabled={generating || !canGenerate} onClick={generate}>{generating ? '...' : tr('adminInvoices.generate')}</button>

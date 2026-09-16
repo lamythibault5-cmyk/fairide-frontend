@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useId } from 'react';
 import { api } from '../../api';
 import ConfirmDialog from '../ConfirmDialog';
 import { AREA_ICONS, areaLabel } from '../FloorPlan';
@@ -16,6 +16,9 @@ const ETIQUETTES = ['habitue', 'allergie', 'vip', 'anniversaire', 'enfants', 'te
 const TAGS_ALERTE = ['allergie'];
 
 export default function ReservationRow({ r, tables, ouverte, onToggle, token, toast, restoId, restaurant, onMaj, onRecharger, onPlacer }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const tablesResa = (r.tableIds && r.tableIds.length ? r.tableIds : (r.tableId ? [r.tableId] : [])).map((id) => tables.find((tb) => tb.id === id)).filter(Boolean);
   const [enCours, setEnCours] = useState(null);
@@ -174,26 +177,26 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
             <div className="resa-deplacer">
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
                 <div style={{ flex: '1 1 130px' }}>
-                  <label>{t('resa.day')}</label>
-                  <input type="date" value={jour} onChange={(e) => setJour(e.target.value)} />
+                  <label htmlFor={idsA11y + '-day'}>{t('resa.day')}</label>
+                  <input id={idsA11y + '-day'} type="date" value={jour} onChange={(e) => setJour(e.target.value)} />
                 </div>
                 <div style={{ flex: '0 0 100px' }}>
-                  <label>{t('resa.time')}</label>
-                  <input type="time" step="900" value={heure} onChange={(e) => setHeure(e.target.value)} />
+                  <label htmlFor={idsA11y + '-time'}>{t('resa.time')}</label>
+                  <input id={idsA11y + '-time'} type="time" step="900" value={heure} onChange={(e) => setHeure(e.target.value)} />
                 </div>
                 <div style={{ flex: '0 0 96px' }}>
-                  <label>{t('resa.duration')}</label>
-                  <select value={duree} onChange={(e) => setDuree(Number(e.target.value))}>
+                  <label htmlFor={idsA11y + '-duration'}>{t('resa.duration')}</label>
+                  <select id={idsA11y + '-duration'} value={duree} onChange={(e) => setDuree(Number(e.target.value))}>
                     {[60, 90, 120, 150, 180, 240].map((m) => <option key={m} value={m}>{m % 60 ? t('resa.durationHM', { h: Math.floor(m / 60), m: m % 60 }) : t('resa.durationH', { h: m / 60 })}</option>)}
                   </select>
                 </div>
                 <div style={{ flex: '0 0 90px' }}>
-                  <label>{t('resa.ppl')}</label>
-                  <input type="number" min="1" max="200" value={couverts} onChange={(e) => setCouverts(e.target.value)} />
+                  <label htmlFor={idsA11y + '-ppl'}>{t('resa.ppl')}</label>
+                  <input id={idsA11y + '-ppl'} type="number" min="1" max="200" value={couverts} onChange={(e) => setCouverts(e.target.value)} />
                 </div>
                 <div style={{ flex: '1 1 140px' }}>
-                  <label>{t('resa.table')}</label>
-                  <select value={r.tableId || ''} disabled={!!enCours}
+                  <label htmlFor={idsA11y + '-table'}>{t('resa.table')}</label>
+                  <select id={idsA11y + '-table'} value={r.tableId || ''} disabled={!!enCours}
                     onChange={(e) => action('table', () => champ({ tableId: e.target.value || null, notifier: false }))}>
                     <option value="">{t('resa.automatic')}</option>
                     {tables.filter((tb) => tb.active).map((tb) => <option key={tb.id} value={tb.id}>{nomTable(tb)} ({t('resa.seatsShort', { n: tb.seats })}, {areaLabel(t, tb.area)})</option>)}
@@ -202,16 +205,16 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 8 }}>
                 <div style={{ flex: '1 1 140px' }}>
-                  <label>{t('resa.name')}</label>
-                  <input value={contact.nom} maxLength={80} onChange={(e) => setContact((c) => ({ ...c, nom: e.target.value }))} />
+                  <label htmlFor={idsA11y + '-name'}>{t('resa.name')}</label>
+                  <input id={idsA11y + '-name'} value={contact.nom} maxLength={80} onChange={(e) => setContact((c) => ({ ...c, nom: e.target.value }))} />
                 </div>
                 <div style={{ flex: '1 1 140px' }}>
-                  <label>{t('resa.phone')}</label>
-                  <input type="tel" value={contact.tel} maxLength={30} onChange={(e) => setContact((c) => ({ ...c, tel: e.target.value }))} />
+                  <label htmlFor={idsA11y + '-phone'}>{t('resa.phone')}</label>
+                  <input id={idsA11y + '-phone'} type="tel" value={contact.tel} maxLength={30} onChange={(e) => setContact((c) => ({ ...c, tel: e.target.value }))} />
                 </div>
                 <div style={{ flex: '1 1 160px' }}>
-                  <label>{t('resa.emailOptional')}</label>
-                  <input type="email" value={contact.email} maxLength={200} onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))} />
+                  <label htmlFor={idsA11y + '-emailoptional'}>{t('resa.emailOptional')}</label>
+                  <input id={idsA11y + '-emailoptional'} type="email" value={contact.email} maxLength={200} onChange={(e) => setContact((c) => ({ ...c, email: e.target.value }))} />
                 </div>
               </div>
               <div className="row" style={{ gap: 6, marginTop: 8, flexWrap: 'wrap' }}>

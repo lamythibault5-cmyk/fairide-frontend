@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -410,6 +410,9 @@ function emptyLine() { return { accountCode: '', debit: '', credit: '', vatAmoun
 // Saisie d'une écriture manuelle : date, libellé, lignes compte / débit / crédit / TVA, contrôle
 // d'équilibre en direct, envoi bloqué tant que débit ≠ crédit.
 function NewEntryDrawer({ token, toast, onClose, onCreated }) {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t: tr } = useLanguage();
   const accounts = useApiData(() => api('/admin/accounting/accounts', { token }), []);
   const [entryDate, setEntryDate] = useState(todayIso());
@@ -452,9 +455,9 @@ function NewEntryDrawer({ token, toast, onClose, onCreated }) {
       }>
       {accounts.error && !accounts.data && <ErrorState error={accounts.error} onRetry={accounts.reload} />}
       <div className="fin-form-grid">
-        <div className="field"><label>{tr('adminCommon.date')}</label><input type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} /></div>
-        <div className="field"><label>{tr('adminAccounting.reference')}</label><input value={reference} onChange={(e) => setReference(e.target.value)} placeholder={tr('adminAccounting.phReference')} /></div>
-        <div className="field wide"><label>{tr('adminAccounting.memo')}</label><input value={memo} onChange={(e) => setMemo(e.target.value)} placeholder={tr('adminAccounting.phMemo')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-date'}>{tr('adminCommon.date')}</label><input id={idsA11y + '-date'} type="date" value={entryDate} onChange={(e) => setEntryDate(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-reference'}>{tr('adminAccounting.reference')}</label><input id={idsA11y + '-reference'} value={reference} onChange={(e) => setReference(e.target.value)} placeholder={tr('adminAccounting.phReference')} /></div>
+        <div className="field wide"><label htmlFor={idsA11y + '-memo'}>{tr('adminAccounting.memo')}</label><input id={idsA11y + '-memo'} value={memo} onChange={(e) => setMemo(e.target.value)} placeholder={tr('adminAccounting.phMemo')} /></div>
       </div>
       <div className="fin-drawer-section">{tr('adminAccounting.lines')}</div>
       <div className="fin-lines">

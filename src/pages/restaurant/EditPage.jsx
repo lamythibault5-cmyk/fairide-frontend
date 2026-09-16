@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useId } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -24,6 +24,9 @@ const RESTO_DELETION_REASONS = [
 const RESTO_DELETION_KEYS = ['reasonClosing', 'reasonSwitching', 'reasonFewOrders', 'reasonCommissions', 'reasonMistake', 'reasonOther'];
 
 export default function EditPage() {
+  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
+  // quand ce composant est rendu plusieurs fois sur la meme page.
+  const idsA11y = useId();
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -370,22 +373,22 @@ export default function EditPage() {
 
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('editResto.infoTitle')}</h3>
-        <div className="field"><label>{t('editResto.nameLabel')}</label><input value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('editResto.phName')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-namelabel'}>{t('editResto.nameLabel')}</label><input id={idsA11y + '-namelabel'} value={editName} onChange={(e) => setEditName(e.target.value)} placeholder={t('editResto.phName')} /></div>
 
         <div className="divider" />
         <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.legalTitle')}</h4>
-        <div className="field"><label>{t('editResto.legalName')}</label><input value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder={t('editResto.phLegalName')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-legalname'}>{t('editResto.legalName')}</label><input id={idsA11y + '-legalname'} value={editLegalName} onChange={(e) => setEditLegalName(e.target.value)} placeholder={t('editResto.phLegalName')} /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>{t('editResto.companyNumber')}</label>
-            <input value={editCompanyNumber} onChange={(e) => setEditCompanyNumber(e.target.value)} placeholder="0123.456.789" />
+            <label htmlFor={idsA11y + '-companynumber'}>{t('editResto.companyNumber')}</label>
+            <input id={idsA11y + '-companynumber'} value={editCompanyNumber} onChange={(e) => setEditCompanyNumber(e.target.value)} placeholder="0123.456.789" />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>{t('editResto.vatNumber')}</label>
-            <input value={editVatNumber} onChange={(e) => setEditVatNumber(e.target.value)} placeholder={t('editResto.phVat')} />
+            <label htmlFor={idsA11y + '-vatnumber'}>{t('editResto.vatNumber')}</label>
+            <input id={idsA11y + '-vatnumber'} value={editVatNumber} onChange={(e) => setEditVatNumber(e.target.value)} placeholder={t('editResto.phVat')} />
           </div>
         </div>
-        <div className="field"><label>{t('editResto.manager')}</label><input value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder={t('editResto.phManager')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-manager'}>{t('editResto.manager')}</label><input id={idsA11y + '-manager'} value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder={t('editResto.phManager')} /></div>
         <div className="field">
           <label htmlFor="edit-tel">{t('editResto.phone')}</label>
           <PhoneInput id="edit-tel" value={editPhone} onChange={setEditPhone} autoComplete="off" />
@@ -428,22 +431,22 @@ export default function EditPage() {
         <div className="divider" />
         <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.address')}</h4>
         <div className="field">
-          <label>{t('editResto.municipality')}</label>
-          <select value={editCommune} onChange={(e) => setEditCommune(e.target.value)}>
+          <label htmlFor={idsA11y + '-municipality'}>{t('editResto.municipality')}</label>
+          <select id={idsA11y + '-municipality'} value={editCommune} onChange={(e) => setEditCommune(e.target.value)}>
             {COMMUNES.map((c) => <option key={c}>{c}</option>)}
           </select>
         </div>
-        <div className="field"><label>{t('editResto.neighbourhoodOptional')}</label><input value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder={t('editResto.phNeighbourhood')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-neighbourhoodoptional'}>{t('editResto.neighbourhoodOptional')}</label><input id={idsA11y + '-neighbourhoodoptional'} value={editNeighborhood} onChange={(e) => setEditNeighborhood(e.target.value)} placeholder={t('editResto.phNeighbourhood')} /></div>
         <AddressSearch compact onSelect={(a) => { setEditAddressStreet(a.street); if (a.number) setEditAddressNumber(a.number); if (a.postalCode) setEditAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setEditCommune(a.city); }} />
-        <div className="field"><label>{t('editResto.streetForDrivers')}</label><input value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-streetfordrivers'}>{t('editResto.streetForDrivers')}</label><input id={idsA11y + '-streetfordrivers'} value={editAddressStreet} onChange={(e) => setEditAddressStreet(e.target.value)} placeholder={t('editResto.phStreet')} /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 1 }}>
-            <label>{t('editResto.number')}</label>
-            <input value={editAddressNumber} onChange={(e) => setEditAddressNumber(e.target.value)} placeholder="12" />
+            <label htmlFor={idsA11y + '-number'}>{t('editResto.number')}</label>
+            <input id={idsA11y + '-number'} value={editAddressNumber} onChange={(e) => setEditAddressNumber(e.target.value)} placeholder="12" />
           </div>
           <div className="field" style={{ flex: 1 }}>
-            <label>{t('editResto.postalCode')}</label>
-            <input value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
+            <label htmlFor={idsA11y + '-postalcode'}>{t('editResto.postalCode')}</label>
+            <input id={idsA11y + '-postalcode'} value={editAddressPostalCode} onChange={(e) => setEditAddressPostalCode(e.target.value)} placeholder="1000" />
           </div>
         </div>
         <AddressRecognition
@@ -451,7 +454,7 @@ export default function EditPage() {
           onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setEditCommune(r.commune); if (r.neighborhood) setEditNeighborhood((v) => v || r.neighborhood); }}
           onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
         />
-        <div className="field"><label>{t('editResto.description')}</label><input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
+        <div className="field"><label htmlFor={idsA11y + '-description'}>{t('editResto.description')}</label><input id={idsA11y + '-description'} value={editDesc} onChange={(e) => setEditDesc(e.target.value)} /></div>
         <div className="field">
           <label>{t('editResto.coverLabel')}</label>
           <div className="row" style={{ gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -521,16 +524,16 @@ export default function EditPage() {
         )}
         <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 12 }}>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>{t('editResto.from')}</label>
-            <input type="date" value={newClosureStart} onChange={(e) => setNewClosureStart(e.target.value)} />
+            <label htmlFor={idsA11y + '-from'}>{t('editResto.from')}</label>
+            <input id={idsA11y + '-from'} type="date" value={newClosureStart} onChange={(e) => setNewClosureStart(e.target.value)} />
           </div>
           <div className="field" style={{ marginBottom: 0 }}>
-            <label>{t('editResto.toOptional')}</label>
-            <input type="date" value={newClosureEnd} onChange={(e) => setNewClosureEnd(e.target.value)} />
+            <label htmlFor={idsA11y + '-tooptional'}>{t('editResto.toOptional')}</label>
+            <input id={idsA11y + '-tooptional'} type="date" value={newClosureEnd} onChange={(e) => setNewClosureEnd(e.target.value)} />
           </div>
           <div className="field" style={{ marginBottom: 0, flex: 1, minWidth: 200 }}>
-            <label>{t('editResto.reasonVisible')}</label>
-            <input value={newClosureReason} onChange={(e) => setNewClosureReason(e.target.value)} placeholder={t('editResto.phClosureReason')} />
+            <label htmlFor={idsA11y + '-reasonvisible'}>{t('editResto.reasonVisible')}</label>
+            <input id={idsA11y + '-reasonvisible'} value={newClosureReason} onChange={(e) => setNewClosureReason(e.target.value)} placeholder={t('editResto.phClosureReason')} />
           </div>
           <button className="btn-teal" disabled={addingClosure} onClick={addClosure}>{addingClosure ? '...' : '+ Ajouter'}</button>
         </div>
@@ -546,17 +549,17 @@ export default function EditPage() {
               {t('editResto.changeTypeHelp')}
             </p>
             <div className="field">
-              <label>{t('editResto.newType')}</label>
-              <select value={newCuisine} onChange={(e) => setNewCuisine(e.target.value)}>
+              <label htmlFor={idsA11y + '-newtype'}>{t('editResto.newType')}</label>
+              <select id={idsA11y + '-newtype'} value={newCuisine} onChange={(e) => setNewCuisine(e.target.value)}>
                 {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
               </select>
             </div>
             {newCuisine === 'Autre' && (
-              <div className="field"><label>{t('editResto.specifyType')}</label><input value={newCustomCuisine} onChange={(e) => setNewCustomCuisine(e.target.value)} placeholder={t('editResto.phType')} /></div>
+              <div className="field"><label htmlFor={idsA11y + '-specifytype'}>{t('editResto.specifyType')}</label><input id={idsA11y + '-specifytype'} value={newCustomCuisine} onChange={(e) => setNewCustomCuisine(e.target.value)} placeholder={t('editResto.phType')} /></div>
             )}
             <div className="field">
-              <label>{t('editResto.whatAboutMenu')}</label>
-              <select value={replaceMenuChoice} onChange={(e) => setReplaceMenuChoice(e.target.value)}>
+              <label htmlFor={idsA11y + '-whataboutmenu'}>{t('editResto.whatAboutMenu')}</label>
+              <select id={idsA11y + '-whataboutmenu'} value={replaceMenuChoice} onChange={(e) => setReplaceMenuChoice(e.target.value)}>
                 <option value="keep">{t('editResto.keepDishes')}</option>
                 <option value="replace">{t('editResto.replaceDishes')}</option>
               </select>
@@ -575,8 +578,8 @@ export default function EditPage() {
                   {t('editResto.codeSentHelp')}
                 </p>
                 <div className="field">
-                  <label>{t('editResto.codeByEmail')}</label>
-                  <input value={cuisineCode} onChange={(e) => setCuisineCode(e.target.value)} placeholder="123456" maxLength={6} />
+                  <label htmlFor={idsA11y + '-codebyemail'}>{t('editResto.codeByEmail')}</label>
+                  <input id={idsA11y + '-codebyemail'} value={cuisineCode} onChange={(e) => setCuisineCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-teal" disabled={changingCuisine} onClick={confirmCuisineChange}>
@@ -600,14 +603,14 @@ export default function EditPage() {
               {t('editResto.deleteConfirm')}
             </p>
             <div className="field">
-              <label>{t('editResto.deleteWhy')}</label>
-              <select value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
+              <label htmlFor={idsA11y + '-deletewhy'}>{t('editResto.deleteWhy')}</label>
+              <select id={idsA11y + '-deletewhy'} value={deleteReason} onChange={(e) => setDeleteReason(e.target.value)}>
                 {RESTO_DELETION_REASONS.map((r, i) => <option key={r} value={r}>{t(`editResto.${RESTO_DELETION_KEYS[i]}`)}</option>)}
               </select>
             </div>
             <div className="field">
-              <label>{t('editResto.commentOptional')}</label>
-              <input value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('editResto.phComment')} />
+              <label htmlFor={idsA11y + '-commentoptional'}>{t('editResto.commentOptional')}</label>
+              <input id={idsA11y + '-commentoptional'} value={deleteComment} onChange={(e) => setDeleteComment(e.target.value)} placeholder={t('editResto.phComment')} />
             </div>
             {!deleteCodeSent && (
               <div className="row" style={{ gap: 8 }}>
@@ -623,8 +626,8 @@ export default function EditPage() {
                   {t('editResto.deleteRequestSent')}
                 </p>
                 <div className="field">
-                  <label>{t('editResto.codeByEmail')}</label>
-                  <input value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
+                  <label htmlFor={idsA11y + '-codebyemail-2'}>{t('editResto.codeByEmail')}</label>
+                  <input id={idsA11y + '-codebyemail-2'} value={deleteCode} onChange={(e) => setDeleteCode(e.target.value)} placeholder="123456" maxLength={6} />
                 </div>
                 <div className="row" style={{ gap: 8 }}>
                   <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={deleting} onClick={deleteRestaurant}>
@@ -695,8 +698,8 @@ export default function EditPage() {
         </label>
         {!freeDeliveryEdit && (
           <div className="field" style={{ maxWidth: 220 }}>
-            <label>{t('editResto.fixedDiscount')}</label>
-            <input type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder={t('editResto.phEx2')} />
+            <label htmlFor={idsA11y + '-fixeddiscount'}>{t('editResto.fixedDiscount')}</label>
+            <input id={idsA11y + '-fixeddiscount'} type="number" min="0" max="50" step="0.5" value={deliveryFeeDiscountEdit} onChange={(e) => setDeliveryFeeDiscountEdit(e.target.value)} placeholder={t('editResto.phEx2')} />
           </div>
         )}
         {!freeDeliveryEdit && (
@@ -707,8 +710,8 @@ export default function EditPage() {
             </label>
             {freeDeliveryMinOrderEnabled && (
               <div className="field" style={{ maxWidth: 220 }}>
-                <label>{t('editResto.minOrderAmount')}</label>
-                <input type="number" min="5" max="200" step="1" value={freeDeliveryMinOrderEdit} onChange={(e) => setFreeDeliveryMinOrderEdit(e.target.value)} placeholder={t('editResto.phEx25')} />
+                <label htmlFor={idsA11y + '-minorderamount'}>{t('editResto.minOrderAmount')}</label>
+                <input id={idsA11y + '-minorderamount'} type="number" min="5" max="200" step="1" value={freeDeliveryMinOrderEdit} onChange={(e) => setFreeDeliveryMinOrderEdit(e.target.value)} placeholder={t('editResto.phEx25')} />
               </div>
             )}
           </>
