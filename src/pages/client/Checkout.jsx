@@ -405,7 +405,9 @@ export default function Checkout() {
                   {totals.deliveryDiscount > 0 && (
                     <div className="line"><span>🚴 {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+                  {/* TVA comprise : la ligne affichait les frais hors TVA alors que le total, lui, la contenait —
+                      la somme des lignes ne tombait jamais sur le total affiché juste en dessous. */}
+                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{(totals.serviceFee + totals.serviceFeeVat).toFixed(2)}€</span></div>
                 </>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}

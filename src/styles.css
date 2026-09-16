@@ -3180,3 +3180,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .offre-quand ol { margin: 6px 0 0; padding-left: 18px; }
 .offre-quand li { margin: 3px 0; }
 .offre-note { margin: 8px 0 0; color: var(--ink); }
+
+/* « Et maintenant ? » sous le statut d'une commande client (voir orderStatus.jsx) : une phrase qui dit ce
+   qui se passe et ce qu'il y a à faire, plutôt qu'un badge à interpréter. */
+.order-next { margin: 4px 0 2px; color: var(--ink-soft); line-height: 1.45; }

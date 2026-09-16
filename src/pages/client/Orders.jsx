@@ -6,7 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, formatOrderItem, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
@@ -211,11 +211,12 @@ export default function Orders() {
         <div className={`card order-type-${orderTypeColor(o)}`} key={o.id}>
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
           </div>
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
+          <ProchaineEtape order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('orders.reservationNoOrder')}</div>
           {o.orderType === 'pickup' && (
             <div className="small">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>

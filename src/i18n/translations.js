@@ -5919,6 +5919,17 @@ export const translations = {
       ordersOpenSoon: 'Les commandes à emporter ouvrent le {date} (livraison dès le {dateLivraison}) : ton panier t\'attend.'
     },
     orderStatus: {
+      next_nouveau: '⏳ Le commerce doit encore confirmer ta commande. Tu reçois un e-mail dès qu\'il l\'accepte — et tu peux encore l\'annuler d\'ici là.',
+      next_preparation_delivery: '👨‍🍳 C\'est en préparation. Un livreur viendra ensuite la chercher sur place ; tu seras prévenu par e-mail quand il partira.',
+      next_preparation_pickup: '👨‍🍳 C\'est en préparation. Tu reçois un e-mail dès que c\'est prêt à être retiré.',
+      next_pret_delivery: '📦 La commande est prête et attend qu\'un livreur passe la prendre. Dès qu\'il part, tu reçois son nom et le trajet en direct.',
+      next_pret_pickup: '🥡 À récupérer au commerce : montre le code ci-dessous au comptoir.',
+      next_livraison: '🛵 En route vers toi. Donne ton code au livreur à l’arrivée : c’est lui qui clôture la course.',
+      next_livre_delivery: '✅ Livrée. Tu peux laisser un avis sur le repas et la livraison, et ajouter un pourboire pour ton livreur.',
+      next_livre_pickup: '✅ Récupérée. Tu peux laisser un avis sur le repas.',
+      next_refuse: '😞 Le commerce n\'a pas pu accepter cette commande. Si tu avais payé, le remboursement est parti vers ton moyen de paiement (1 à 3 jours ouvrables).',
+      next_annule: 'Commande annulée. Un paiement éventuel est remboursé sur ton moyen de paiement.',
+      next_no_show: 'Commande non récupérée : elle a été annulée par le commerce. Rien ne t\'a été débité.',
       deliveryInstruction: {
         sonner: '🔔 Sonner et attendre',
         deposer: '🚪 Déposer devant la porte',
@@ -5926,6 +5937,8 @@ export const translations = {
         appeler: "📞 M'appeler à l'arrivée"
       },
       status: {
+        nouveauClient: 'En attente du commerce',
+        pretDelivery: 'Prête · en attente du livreur',
         nouveau: 'Nouvelle',
         preparation: 'En préparation',
         pret: 'Prête',
@@ -12390,6 +12403,17 @@ export const translations = {
       ordersOpenSoon: 'Takeaway orders open on {date} (delivery from {dateLivraison}): your cart is waiting for you.'
     },
     orderStatus: {
+      next_nouveau: '⏳ The shop still has to confirm your order. You get an e-mail as soon as it accepts — and you can still cancel until then.',
+      next_preparation_delivery: '👨‍🍳 It is being prepared. A courier will then pick it up; you will get an e-mail when they set off.',
+      next_preparation_pickup: '👨‍🍳 It is being prepared. You get an e-mail as soon as it is ready for pickup.',
+      next_pret_delivery: '📦 The order is ready and waiting for a courier to pick it up. As soon as one sets off, you get their name and live tracking.',
+      next_pret_pickup: '🥡 Ready to collect at the shop: show the code below at the counter.',
+      next_livraison: '🛵 On the way to you. Give your code to the courier on arrival: that is how the delivery is closed.',
+      next_livre_delivery: '✅ Delivered. You can rate the meal and the delivery, and add a tip for your courier.',
+      next_livre_pickup: '✅ Collected. You can rate the meal.',
+      next_refuse: '😞 The shop could not accept this order. If you had paid, the refund is on its way to your payment method (1 to 3 working days).',
+      next_annule: 'Order cancelled. Any payment is refunded to your payment method.',
+      next_no_show: 'Order not collected: the shop cancelled it. Nothing was charged to you.',
       deliveryInstruction: {
         sonner: '🔔 Ring and wait',
         deposer: '🚪 Leave at the door',
@@ -12397,6 +12421,8 @@ export const translations = {
         appeler: '📞 Call me on arrival'
       },
       status: {
+        nouveauClient: 'Waiting for the shop',
+        pretDelivery: 'Ready · waiting for a courier',
         nouveau: 'New',
         preparation: 'Preparing',
         pret: 'Ready',
@@ -18859,6 +18885,17 @@ export const translations = {
       ordersOpenSoon: 'Afhaalbestellingen kunnen vanaf {date} (levering vanaf {dateLivraison}): je winkelmandje wacht op je.'
     },
     orderStatus: {
+      next_nouveau: '⏳ De zaak moet je bestelling nog bevestigen. Je krijgt een e-mail zodra ze aanvaard is — tot dan kan je nog annuleren.',
+      next_preparation_delivery: '👨‍🍳 Ze wordt klaargemaakt. Daarna komt een koerier ze ophalen; je krijgt een e-mail wanneer hij vertrekt.',
+      next_preparation_pickup: '👨‍🍳 Ze wordt klaargemaakt. Je krijgt een e-mail zodra ze klaar is om af te halen.',
+      next_pret_delivery: '📦 De bestelling is klaar en wacht op een koerier. Zodra hij vertrekt, zie je zijn naam en de rit live.',
+      next_pret_pickup: '🥡 Af te halen in de zaak: toon de code hieronder aan de toonbank.',
+      next_livraison: '🛵 Onderweg naar jou. Geef je code aan de koerier bij aankomst: zo wordt de rit afgesloten.',
+      next_livre_delivery: '✅ Geleverd. Je kan het eten en de levering beoordelen, en je koerier een fooi geven.',
+      next_livre_pickup: '✅ Afgehaald. Je kan het eten beoordelen.',
+      next_refuse: '😞 De zaak kon deze bestelling niet aanvaarden. Had je betaald, dan is de terugbetaling onderweg naar je betaalmiddel (1 tot 3 werkdagen).',
+      next_annule: 'Bestelling geannuleerd. Een eventuele betaling wordt teruggestort op je betaalmiddel.',
+      next_no_show: 'Bestelling niet afgehaald: de zaak heeft ze geannuleerd. Er werd niets aangerekend.',
       deliveryInstruction: {
         sonner: '🔔 Aanbellen en wachten',
         deposer: '🚪 Voor de deur achterlaten',
@@ -18866,6 +18903,8 @@ export const translations = {
         appeler: '📞 Bel me bij aankomst'
       },
       status: {
+        nouveauClient: 'Wacht op de zaak',
+        pretDelivery: 'Klaar · wacht op een koerier',
         nouveau: 'Nieuw',
         preparation: 'In bereiding',
         pret: 'Klaar',

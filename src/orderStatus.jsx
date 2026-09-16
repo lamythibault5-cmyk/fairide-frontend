@@ -31,7 +31,14 @@ const STATUS_LABELS_FR = {
 // puis elle est confirmée. Les mêmes statuts bruts, des mots qui parlent de tables.
 const STATUS_LABELS_DINE_IN_FR = { nouveau: 'À confirmer', preparation: 'Confirmée', pret: 'Table prête' };
 
-export function statusLabel(status, orderType, t) {
+// `pourClient` : le client et le commerce ne lisent pas le même mot pour le même statut. « Nouvelle » dit
+// au restaurateur « à traiter » ; au client, ça ne dit pas que le commerce n'a pas encore confirmé. De même,
+// « Prête » pour une livraison laisse croire que ça arrive, alors qu'on attend encore un livreur.
+export function statusLabel(status, orderType, t, pourClient = false) {
+  if (pourClient && t && orderType !== 'dine_in') {
+    if (status === 'nouveau') return t('orderStatus.status.nouveauClient');
+    if (status === 'pret' && orderType === 'delivery') return t('orderStatus.status.pretDelivery');
+  }
   if (status === 'livre' && orderType === 'pickup') return t ? t('orderStatus.status.livrePickup') : 'Récupérée';
   if (status === 'livre' && orderType === 'dine_in') return t ? t('orderStatus.status.livreDineIn') : 'Terminée';
   if (orderType === 'dine_in' && STATUS_LABELS_DINE_IN_FR[status]) {
@@ -173,6 +180,26 @@ export function DeliveryTiming({ order }) {
       {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : t('orderStatus.timing.imminent')}
     </div>
   );
+}
+
+// « Et maintenant ? » — une phrase sous le statut, qui dit ce qui se passe et ce que le client a à faire.
+// Les badges seuls laissaient deviner : entre « Prête » et l'arrivée du livreur, plus rien n'expliquait
+// l'attente. Rien pour une réservation de table : elle a ses propres messages.
+export function ProchaineEtape({ order }) {
+  const { t } = useLanguage();
+  const { status, orderType } = order;
+  if (orderType === 'dine_in') return null;
+  const livraison = orderType === 'delivery';
+  let cle = null;
+  if (status === 'nouveau') cle = 'next_nouveau';
+  else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
+  else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';
+  else if (status === 'livraison') cle = 'next_livraison';
+  else if (status === 'livre') cle = livraison ? 'next_livre_delivery' : 'next_livre_pickup';
+  else if (status === 'refuse') cle = 'next_refuse';
+  else if (status === 'annule') cle = order.pickupNoShow ? 'next_no_show' : 'next_annule';
+  if (!cle) return null;
+  return <div className="small order-next">{t(`orderStatus.${cle}`)}</div>;
 }
 
 export function ProgressBar({ status, orderType }) {
