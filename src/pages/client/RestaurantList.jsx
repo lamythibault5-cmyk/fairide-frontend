@@ -10,6 +10,7 @@ import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // rares gardées en import statique pour le référencement. Sans ce découpage, tout visiteur d'une fiche
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
 // est un affichage secondaire, choisi par l'utilisateur.
+import Icone from '../../components/Icone';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
@@ -19,6 +20,19 @@ import { getOpenStatus } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
+
+// Bandes de prix, calculees sur le prix MEDIAN des plats de la carte : aucune colonne « niveau de
+// prix » n'existe en base, et un euro affiche au juge serait faux pour la moitie des commerces.
+// Memes seuils que la page Carte (pages/client/MapPage.jsx) — les deux doivent classer pareil.
+const SEUIL_MOYEN = 7;
+const SEUIL_CHER = 11;
+function bandePrix(resto) {
+  const prix = (resto.menu || []).map((p) => Number(p.price)).filter((n) => Number.isFinite(n) && n > 0).sort((a, b) => a - b);
+  if (!prix.length) return null;
+  const milieu = Math.floor(prix.length / 2);
+  const m = prix.length % 2 ? prix[milieu] : (prix[milieu - 1] + prix[milieu]) / 2;
+  return m < SEUIL_MOYEN ? 1 : m < SEUIL_CHER ? 2 : 3;
+}
 
 // Types "courses alimentaires" plutôt que "repas à commander" — regroupés dans leur propre section
 // (Supermarchés) au lieu d'être mélangés avec les restos dans Autour de vous / Offres / À découvrir.
@@ -149,6 +163,12 @@ export default function RestaurantList() {
   const [cuisine, setCuisine] = useState(filtresInitiaux.cuisine || '');
   const [bio, setBio] = useState(!!filtresInitiaux.bio);
   const [vegan, setVegan] = useState(!!filtresInitiaux.vegan);
+  // Les memes filtres que sur la carte, avec les memes noms : prix, emporter, et un tri.
+  // Les avoir des deux cotes evite d'avoir a changer de vue pour affiner une recherche.
+  const [prix, setPrix] = useState(0);
+  const [emporter, setEmporter] = useState(false);
+  const [tri, setTri] = useState('recommande');
+  const [panneau, setPanneau] = useState(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -198,7 +218,10 @@ export default function RestaurantList() {
     else setCuisine(cuisine === opt.value ? '' : opt.value);
   };
 
-  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan);
+  const hasActiveFilter = !!(search || cuisine || commune || bio || vegan || prix || emporter || tri !== 'recommande');
+
+  // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
+  const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
 
   const list = restaurants
     .filter((r) => {
@@ -207,13 +230,26 @@ export default function RestaurantList() {
       if (bio && !restoBio(r)) return false;
       if (vegan && !restoVegan(r)) return false;
       if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
+      if (prix && bandePrix(r) !== prix) return false;
+      if (emporter && !r.offersPickup) return false;
       return true;
+    })
+    // Le tri choisi passe AVANT le rangement par anneaux de communes ci-dessous : demander « les
+    // mieux notes » et recevoir d'abord sa propre commune ne serait pas un tri.
+    //
+    // PAS DE TRI « ARRIVE LE PLUS TOT ». Il faudrait un temps de preparation par commerce et une
+    // estimation de course ; ni l'un ni l'autre n'existe. La distance est la seule approximation
+    // honnete dont on dispose, et elle porte son vrai nom.
+    .sort((a, b) => {
+      if (tri === 'note') return (b.rating || 0) - (a.rating || 0);
+      if (tri === 'distance') return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity);
+      return 0;
     })
     // Sans filtre de commune explicite : d'abord les commerces de la commune du client, puis ceux
     // des communes limitrophes, de proche en proche. Sort étant stable, l'ordre existant (plus
     // récent d'abord, envoyé par le serveur) reste la règle de départage au sein d'un même anneau.
     .sort((a, b) => {
-      if (!homeCommune || commune) return 0;
+      if (!homeCommune || commune || tri !== 'recommande') return 0;
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
     });
 
@@ -299,6 +335,41 @@ export default function RestaurantList() {
           {COMMUNES.map((c) => <option key={c}>{c}</option>)}
         </select>
       </div>
+      {/* Les memes filtres que sur la page Carte, avec les memes noms et les memes seuils : on ne
+          change pas de vocabulaire selon qu'on regarde une liste ou une carte. « Emporter » n'est
+          pas sur la carte, il n'a de sens que devant une liste de commerces qu'on va chercher. */}
+      <div className="liste-filtres">
+        <button type="button" className={`cuisine-chip${emporter ? ' active' : ''}`} aria-pressed={emporter} onClick={() => setEmporter((v) => !v)}>
+          <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
+        </button>
+        <button type="button" className={`cuisine-chip${prix ? ' active' : ''}`} aria-expanded={panneau === 'prix'} onClick={() => setPanneau((x) => (x === 'prix' ? null : 'prix'))}>
+          <Icone nom="euro" taille={16} />{prix ? '€'.repeat(prix) : t('mapClient.filterPrice')}
+        </button>
+        <button type="button" className={`cuisine-chip${tri !== 'recommande' ? ' active' : ''}`} aria-expanded={panneau === 'tri'} onClick={() => setPanneau((x) => (x === 'tri' ? null : 'tri'))}>
+          <Icone nom="stats" taille={16} />{tri === 'recommande' ? t('mapClient.sort') : (tri === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance'))}
+        </button>
+      </div>
+      {panneau === 'prix' && (
+        <div className="carte-panneau liste-panneau">
+          {[0, 1, 2, 3].map((n) => (
+            <button key={n} type="button" className={`cuisine-chip${prix === n ? ' active' : ''}`} onClick={() => { setPrix(n); setPanneau(null); }}>
+              {n === 0 ? t('mapClient.filterAllPrices') : '€'.repeat(n)}
+            </button>
+          ))}
+        </div>
+      )}
+      {panneau === 'tri' && (
+        <div className="carte-panneau liste-panneau">
+          {['recommande', 'note', 'distance'].map((cle) => (
+            <button key={cle} type="button" className={`cuisine-chip${tri === cle ? ' active' : ''}`}
+              disabled={cle === 'distance' && !(user?.lat && user?.lng)}
+              title={cle === 'distance' && !(user?.lat && user?.lng) ? t('mapClient.sortDistanceNeedsAddress') : undefined}
+              onClick={() => { setTri(cle); setPanneau(null); }}>
+              {cle === 'recommande' ? t('mapClient.sortRecommended') : cle === 'note' ? t('mapClient.sortRating') : t('mapClient.sortDistance')}
+            </button>
+          ))}
+        </div>
+      )}
       {/* La bascule « Liste / Carte » vivait ici. Elle a disparu le jour où la carte a pris son
           propre onglet, en bas de l'écran : demander à quelqu'un qui parcourt une liste s'il ne
           préférerait pas une carte, alors qu'un onglet dédié l'y emmène, c'est poser deux fois la

@@ -5870,6 +5870,7 @@ export const translations = {
     },
     restaurantList: {
       searchPlaceholder: 'Chercher un restaurant ou un plat',
+      filterPickup: 'À emporter',
       allCommunes: 'Toutes les communes',
       allCuisines: 'Tous',
       count: '{count} restaurant(s)',
@@ -12354,6 +12355,7 @@ export const translations = {
     },
     restaurantList: {
       searchPlaceholder: 'Search for a restaurant or a dish',
+      filterPickup: 'Pickup',
       allCommunes: 'All communes',
       allCuisines: 'All',
       count: '{count} restaurant(s)',
@@ -18836,6 +18838,7 @@ export const translations = {
     },
     restaurantList: {
       searchPlaceholder: 'Zoek een restaurant of een gerecht',
+      filterPickup: 'Afhalen',
       allCommunes: 'Alle gemeenten',
       allCuisines: 'Alle',
       count: '{count} restaurant(s)',
