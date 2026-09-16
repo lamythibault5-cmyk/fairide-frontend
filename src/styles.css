@@ -3691,3 +3691,20 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 /* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
    de filtres, pas l'action principale de la page. */
 .suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
+
+/* Le tableau des sous-traitants, sur la politique de confidentialite.
+   Aucune regle <table> n'existait dans cette feuille : les seuls tableaux du projet vivent dans
+   l'admin et sont construits en <div>. Celui-ci est un vrai tableau parce que c'en est un — deux
+   colonnes, un en-tete par colonne, un en-tete par ligne — et parce qu'un lecteur d'ecran doit
+   pouvoir annoncer « Stripe : le paiement... » plutot qu'une suite de phrases sans attache.
+   Le conteneur defile horizontalement plutot que de forcer la page entiere a le faire. */
+.sous-traitants { margin: 18px 0 6px; }
+.sous-traitants-tableau { overflow-x: auto; margin: 10px 0 12px; }
+.sous-traitants-tableau table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.sous-traitants-tableau th,
+.sous-traitants-tableau td { text-align: left; vertical-align: top; padding: 9px 12px 9px 0; border-bottom: 1px solid var(--line); }
+.sous-traitants-tableau thead th { font-weight: 700; color: var(--ink); white-space: nowrap; }
+.sous-traitants-tableau tbody th { font-weight: 500; color: var(--ink); white-space: nowrap; padding-right: 18px; }
+.sous-traitants-tableau tbody td { color: var(--ink-soft); }
+.sous-traitants-tableau tbody tr:last-child th,
+.sous-traitants-tableau tbody tr:last-child td { border-bottom: 0; }
