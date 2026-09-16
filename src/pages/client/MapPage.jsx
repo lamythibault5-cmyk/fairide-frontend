@@ -1,130 +1,123 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
-import { usePreviewMode } from '../../context/PreviewModeContext';
-import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
-import TrackingWithGames from '../../components/TrackingWithGames';
-import DriverBadge from '../../components/DriverBadge';
 import { useLanguage } from '../../context/LanguageContext';
+import { getOpenStatus } from '../../openingHours';
+import { RESTAURANT_TYPES, restaurantTypeLabel } from '../../menuCategories';
+import Icone from '../../components/Icone';
 
-// Suivi en direct des livraisons en cours du client (livreur à deux roues en route vers chez lui),
-// accessible en permanence depuis la nav plutôt que caché dans le détail d'une commande. Sans livraison,
-// la carte montre la maison du client — et les mini-jeux restent jouables, en petit à côté de la carte
-// ou en plein écran (carte masquable). Voir TrackingWithGames pour le bloc commun aux trois rôles.
+const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 
-// Où est « chez toi » quand rien n'est en cours ? D'abord les coordonnées du profil (géocodées par le
-// serveur à l'inscription), sinon l'adresse de la dernière commande livrée, sinon l'adresse du profil
-// géocodée ici via Nominatim (OpenStreetMap) et gardée en cache : une adresse ne bouge pas, on ne la
-// redemande pas à chaque visite.
-const CLE_CACHE_MAISON = 'fairide_home_geo_v1';
-
-function adresseProfil(user) {
-  if (!user?.addressStreet || !user?.addressCity) return null;
-  return [`${user.addressStreet} ${user.addressNumber || ''}`.trim(), `${user.addressPostalCode || ''} ${user.addressCity}`.trim(), 'Belgique'].join(', ');
-}
-
-async function geocoder(adresse) {
-  let cache = {};
-  try { cache = JSON.parse(localStorage.getItem(CLE_CACHE_MAISON) || '{}'); } catch { cache = {}; }
-  if (cache[adresse]) return cache[adresse];
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=be&q=${encodeURIComponent(adresse)}`;
-  const res = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!res.ok) throw new Error('geocode-failed');
-  const [hit] = await res.json();
-  if (!hit) throw new Error('geocode-empty');
-  const pos = { lat: Number(hit.lat), lng: Number(hit.lon) };
-  try { localStorage.setItem(CLE_CACHE_MAISON, JSON.stringify({ ...cache, [adresse]: pos })); } catch { /* sans stockage, on regéocodera la prochaine fois */ }
-  return pos;
-}
-
-function useMaison(user, orders) {
-  const [maison, setMaison] = useState(null);
-  const profil = user?.lat && user?.lng ? { lat: user.lat, lng: user.lng } : null;
-  const derniereLivree = orders?.find((o) => o.orderType === 'delivery' && o.deliveryLat && o.deliveryLng);
-  const adresse = adresseProfil(user);
-  useEffect(() => {
-    if (profil) { setMaison(profil); return undefined; }
-    if (derniereLivree) { setMaison({ lat: derniereLivree.deliveryLat, lng: derniereLivree.deliveryLng }); return undefined; }
-    if (!adresse) return undefined;
-    let annule = false;
-    geocoder(adresse).then((pos) => { if (!annule) setMaison(pos); }).catch(() => { /* pas de maison plutôt qu une fausse */ });
-    return () => { annule = true; };
-  }, [profil?.lat, profil?.lng, derniereLivree?.deliveryLat, derniereLivree?.deliveryLng, adresse]); // eslint-disable-line react-hooks/exhaustive-deps
-  return maison;
-}
+// La carte des commerces, en plein écran.
+//
+// CET ONGLET MONTRAIT LE SUIVI DE LIVRAISON. C'était le mauvais contenu derrière la bonne icône :
+// on clique sur une carte pour explorer un quartier — voir qui est ouvert, qui fait une promo, ce
+// qu'il y a à deux rues — pas pour regarder un livreur avancer. Le suivi n'est pas perdu pour
+// autant : il vit déjà dans « Mes commandes », et tant qu'une livraison est en cours un bandeau y
+// mène depuis ici, en un toucher.
+//
+// La carte des commerces, elle, existait bien mais était CACHÉE derrière une bascule « Liste /
+// Carte » au milieu de la liste des restaurants — c'est-à-dire à l'endroit où l'on est déjà en
+// train de parcourir une liste. Elle a maintenant son onglet, et la pleine hauteur.
+//
+// Pleine hauteur, justement : la carte prend tout ce qui reste sous l'en-tête, et les contrôles
+// FLOTTENT par-dessus au lieu de la pousser vers le bas. C'est ce que fait l'application dont le
+// fondateur a fourni les captures : on voit d'abord la carte, les pastilles ne gênent pas.
 
 export default function MapPage() {
   const { t } = useLanguage();
-  const { token, role, user } = useAuth();
-  const toast = useToast();
-  const { previewMode } = usePreviewMode();
-  const [orders, setOrders] = useState(null);
-  const maison = useMaison(user, orders);
+  const { user, token } = useAuth();
+  const [restaurants, setRestaurants] = useState([]);
+  const [enCours, setEnCours] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [promosSeules, setPromosSeules] = useState(false);
+  const [ouvertsSeuls, setOuvertsSeuls] = useState(false);
+  const [cuisine, setCuisine] = useState('');
 
   useEffect(() => {
-    // Un restaurateur en mode aperçu n'a pas de vraies commandes client (l'API les refuse, 403) — page
-    // vide plutôt qu'un message d'erreur trompeur, et surtout pas bloquée indéfiniment sur "Chargement..."
-    // (voir plus bas : sans ce filet, orders resterait null pour toujours si l'appel échoue).
-    const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    function load() {
-      api('/orders/mine', { token }).then(setOrders).catch((e) => {
-        if (!isPreviewingRestaurant) toast(e.message);
-        setOrders([]);
-      });
-    }
-    load();
-    const interval = setInterval(load, 15000);
-    return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    api('/restaurants').then(setRestaurants).catch(() => {}).finally(() => setChargement(false));
   }, []);
 
-  if (!orders) return <div className="empty">{t('mapClient.loading')}</div>;
-  const inDelivery = orders.filter(
-    (o) => o.status === 'livraison' && o.orderType === 'delivery' && o.restaurantLat && o.deliveryLat
-  );
+  // Les livraisons en cours, relues régulièrement : c'est la seule chose qui justifie encore un
+  // aller-retour périodique sur cette page, et elle ne sert qu'au bandeau.
+  useEffect(() => {
+    if (!token) return undefined;
+    function lire() {
+      api('/orders/mine', { token })
+        .then((cmds) => setEnCours((cmds || []).filter((o) => o.status === 'livraison' && o.orderType === 'delivery')))
+        .catch(() => {});
+    }
+    lire();
+    const id = setInterval(lire, 30000);
+    return () => clearInterval(id);
+  }, [token]);
+
+  const liste = useMemo(() => {
+    const maintenant = new Date();
+    return restaurants.filter((r) => {
+      if (promosSeules && !r.hasPromo) return false;
+      if (cuisine && r.cuisine !== cuisine) return false;
+      if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
+      return true;
+    });
+  }, [restaurants, promosSeules, ouvertsSeuls, cuisine]);
+
+  // Les types de cuisine réellement représentés : proposer « Sushi » quand aucun commerce n'en fait
+  // donne un filtre qui ne renvoie jamais rien.
+  const cuisinesPresentes = useMemo(() => {
+    const vus = new Set(restaurants.map((r) => r.cuisine).filter(Boolean));
+    return RESTAURANT_TYPES.filter((c) => vus.has(c.value));
+  }, [restaurants]);
 
   return (
-    <div>
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('mapClient.title')}</h2>
-      <p className="small" style={{ marginBottom: 16 }}>
-        {t('mapClient.intro')}
-      </p>
-      {inDelivery.length === 0 ? (
-        <div className="card" style={{ marginBottom: 16 }}>
-          <div className="empty" style={{ marginBottom: 10 }}>{t('mapClient.noneOngoing')}</div>
-          <TrackingWithGames
-            role="client"
-            legende={`${maison ? t('mapClient.hereIsHome') : ''}${t('mapClient.whenStarts')}`}
-            etaSansEstimation={t('mapClient.nothingOngoing')}
-            rendreCarte={({ height, onEta }) => <DeliveryTrackingMap height={height} onEta={onEta} homeLat={maison?.lat} homeLng={maison?.lng} />}
+    <div className="carte-page">
+      <div className="carte-plein">
+        <Suspense fallback={<div className="carte-attente" />}>
+          <RestaurantsMap
+            restaurants={liste}
+            height="100%"
+            userLocation={user?.lat && user?.lng ? { lat: user.lat, lng: user.lng, address: user.address } : null}
           />
-        </div>
-      ) : (
-        inDelivery.map((o) => (
-          <div className="card" key={o.id} style={{ marginBottom: 16 }}>
-            <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <b>{o.restaurantName}</b>
-              {o.driverName && <DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} />}
-            </div>
-            <div className="small" style={{ margin: '4px 0' }}>📍 {o.address}</div>
-            <TrackingWithGames
-              role="client"
-              legende={o.driverLat ? t('mapClient.livePosition', { name: o.driverName || t('mapClient.yourCourier') }) : t('mapClient.waitingPosition')}
-              etaSansEstimation={o.driverLat ? t('mapClient.courierOnWay') : t('mapClient.courierAwaited')}
-              rendreCarte={({ height, onEta }) => (
-                <DeliveryTrackingMap
-                  restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
-                  deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
-                  driverLat={o.driverLat} driverLng={o.driverLng}
-                  lastUpdatedAt={o.driverLocationUpdatedAt}
-                  height={height} onEta={onEta}
-                />
-              )}
-            />
+        </Suspense>
+
+        <div className="carte-controles">
+          {enCours.length > 0 && (
+            <Link to="/orders" className="carte-bandeau-livraison">
+              <Icone nom="scooter" taille={20} />
+              <span>{t('mapClient.trackingBanner', { n: enCours.length })}</span>
+              <span aria-hidden="true">›</span>
+            </Link>
+          )}
+          <div className="carte-pastilles">
+            <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
+              <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
+            </button>
+            <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
+              <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
+            </button>
+            {/* Un <select> natif plutôt qu'un menu maison : sur téléphone il ouvre la roue du
+                système, qui se manipule mieux au pouce que n'importe quelle liste déroulante
+                dessinée à la main. */}
+            <label className={`cuisine-chip carte-chip-select${cuisine ? ' active' : ''}`}>
+              <Icone nom="restaurants" taille={16} />
+              <span>{cuisine ? restaurantTypeLabel(cuisine, t) : t('mapClient.filterCuisine')}</span>
+              <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} aria-label={t('mapClient.filterCuisine')}>
+                <option value="">{t('mapClient.filterAllCuisines')}</option>
+                {cuisinesPresentes.map((c) => <option key={c.value} value={c.value}>{restaurantTypeLabel(c.value, t)}</option>)}
+              </select>
+            </label>
           </div>
-        ))
-      )}
+          {/* Zéro résultat se voyait par une carte vide, sans un mot : on ne savait pas si aucun
+              commerce ne correspondait ou si la carte n'avait pas fini de charger. Combiner
+              « Offres » et « Ouvert » un matin de semaine suffit à y arriver. */}
+          {!chargement && (
+            <p className="carte-compte">
+              {liste.length === 0 ? t('mapClient.noneMatch') : t('mapClient.count', { n: liste.length })}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

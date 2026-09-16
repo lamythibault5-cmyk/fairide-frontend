@@ -1677,6 +1677,41 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .dashboard-profile-logout { background: none; border: none; color: var(--ink-soft); font-size: 12px; font-weight: 600; cursor: pointer; padding: 3px 0 0; text-decoration: underline; align-self: flex-start; }
 
 .dashboard-main { padding: 24px 28px 40px; min-width: 0; }
+
+/* CARTE PLEIN ÉCRAN (pages/client/MapPage.jsx).
+   On voit la carte AVANT tout le reste : elle prend toute la hauteur restante et va d'un bord à
+   l'autre, et les contrôles flottent par-dessus au lieu de la pousser vers le bas. Un titre, un
+   paragraphe d'explication et une rangée de filtres au-dessus d'une carte de 420px, c'est une
+   carte qu'on ne voit plus qu'en vignette sur un téléphone.
+   Les marges négatives annulent celles de .dashboard-main : c'est le seul moyen d'aller bord à
+   bord depuis l'intérieur d'une colonne qui a sa propre marge intérieure. */
+.carte-page { margin: -24px -28px -40px; height: calc(100svh - 0px); }
+.carte-plein { position: relative; height: 100%; }
+.carte-attente { height: 100%; background: var(--surface-soft); }
+/* Les contrôles ne prennent pas les clics de la carte : seuls les boutons en prennent. */
+.carte-controles { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; pointer-events: none; }
+.carte-controles > * { pointer-events: auto; }
+.carte-pastilles { display: flex; gap: 8px; overflow-x: auto; max-width: 100%; padding-bottom: 2px; scrollbar-width: none; }
+.carte-pastilles::-webkit-scrollbar { display: none; }
+.carte-pastilles .cuisine-chip { box-shadow: var(--shadow-3); }
+/* Le <select> couvre toute la pastille, invisible : on garde la roue native du système au toucher
+   et l'apparence d'une pastille comme ses voisines. */
+.carte-chip-select { position: relative; }
+.carte-chip-select select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; padding: 0; cursor: pointer; }
+.carte-bandeau-livraison {
+  display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+  background: var(--iris); color: var(--cream); font-size: 14px; font-weight: 500;
+  padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
+}
+.carte-compte { margin: 0; align-self: flex-start; background: rgba(255,255,255,0.92); color: var(--ink-soft); font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); }
+/* Leaflet pose ses boutons de zoom en haut à gauche, exactement là où flottent les filtres : ils
+   se retrouvaient dessous, inatteignables. Ils passent en bas à droite, au-dessus de la barre
+   d'onglets, seul coin de cette page qui ne porte rien. */
+.carte-plein .leaflet-top.leaflet-left { top: auto; left: auto; bottom: 84px; right: 12px; }
+.carte-plein .leaflet-control-zoom { margin: 0; border: 1px solid var(--line); border-radius: var(--radius-chip); overflow: hidden; box-shadow: var(--shadow-3); }
+/* L'attribution OpenStreetMap remonte au-dessus des pastilles flottantes : c'est une mention
+   obligatoire, elle doit rester lisible et non passer sous un bouton. */
+.carte-plein .leaflet-bottom.leaflet-left { bottom: 78px; }
 .dashboard-right { padding: 24px 20px 40px 0; }
 /* Le retrait horizontal est porté ici depuis que ce bloc est une zone de la grille et non plus un
    enfant de .dashboard-main, dont il héritait la marge intérieure. */
