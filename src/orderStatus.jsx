@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from './context/LanguageContext';
 
 // `icon` porte maintenant un NOM DE TRACÉ (voir components/Icone.jsx) et non plus un emoji : les
@@ -36,7 +37,14 @@ const STATUS_LABELS_FR = {
 // puis elle est confirmée. Les mêmes statuts bruts, des mots qui parlent de tables.
 const STATUS_LABELS_DINE_IN_FR = { nouveau: 'À confirmer', preparation: 'Confirmée', pret: 'Table prête' };
 
-export function statusLabel(status, orderType, t) {
+// `pourClient` : le client et le commerce ne lisent pas le même mot pour le même statut. « Nouvelle » dit
+// au restaurateur « à traiter » ; au client, ça ne dit pas que le commerce n'a pas encore confirmé. De même,
+// « Prête » pour une livraison laisse croire que ça arrive, alors qu'on attend encore un livreur.
+export function statusLabel(status, orderType, t, pourClient = false) {
+  if (pourClient && t && orderType !== 'dine_in') {
+    if (status === 'nouveau') return t('orderStatus.status.nouveauClient');
+    if (status === 'pret' && orderType === 'delivery') return t('orderStatus.status.pretDelivery');
+  }
   if (status === 'livre' && orderType === 'pickup') return t ? t('orderStatus.status.livrePickup') : 'Récupérée';
   if (status === 'livre' && orderType === 'dine_in') return t ? t('orderStatus.status.livreDineIn') : 'Terminée';
   if (orderType === 'dine_in' && STATUS_LABELS_DINE_IN_FR[status]) {
@@ -135,6 +143,29 @@ function formatTime(ms) {
   return new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
 
+// Heure limite d'acceptation d'une commande (côté commerce) : sans réponse avant, elle est annulée et le client
+// remboursé automatiquement (voir backend acceptation.js). Le compte à rebours se met à jour toutes les 20 s et
+// passe en rouge sous 5 minutes.
+export function EcheanceAcceptation({ order }) {
+  const { t } = useLanguage();
+  const [maintenant, setMaintenant] = useState(Date.now());
+  useEffect(() => {
+    if (!order.acceptDeadline) return undefined;
+    const id = setInterval(() => setMaintenant(Date.now()), 20000);
+    return () => clearInterval(id);
+  }, [order.acceptDeadline]);
+  if (!order.acceptDeadline || order.status !== 'nouveau') return null;
+  const minutes = Math.max(0, Math.ceil((order.acceptDeadline - maintenant) / 60000));
+  const urgent = minutes <= 5;
+  return (
+    <div className={`small echeance-acceptation${urgent ? ' urgente' : ''}`} role={urgent ? 'alert' : undefined}>
+      ⏳ {minutes > 0
+        ? t('orderStatus.acceptBefore', { time: formatTime(order.acceptDeadline), min: minutes })
+        : t('orderStatus.acceptNow')}
+    </div>
+  );
+}
+
 function formatDateTime(ms) {
   const isToday = new Date(ms).toDateString() === new Date().toDateString();
   return isToday
@@ -178,6 +209,32 @@ export function DeliveryTiming({ order }) {
       {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : t('orderStatus.timing.imminent')}
     </div>
   );
+}
+
+// « Et maintenant ? » — une phrase sous le statut, qui dit ce qui se passe et ce que le client a à faire.
+// Les badges seuls laissaient deviner : entre « Prête » et l'arrivée du livreur, plus rien n'expliquait
+// l'attente. Rien pour une réservation de table : elle a ses propres messages.
+export function ProchaineEtape({ order }) {
+  const { t } = useLanguage();
+  const { status, orderType } = order;
+  if (orderType === 'dine_in') return null;
+  const livraison = orderType === 'delivery';
+  let cle = null;
+  if (status === 'nouveau' && order.acceptDeadline) {
+    return <div className="small order-next">{t('orderStatus.next_nouveau_deadline', { time: formatTime(order.acceptDeadline) })}</div>;
+  }
+  if (status === 'annule' && order.expiredUnaccepted) {
+    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
+  }
+  if (status === 'nouveau') cle = 'next_nouveau';
+  else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
+  else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';
+  else if (status === 'livraison') cle = 'next_livraison';
+  else if (status === 'livre') cle = livraison ? 'next_livre_delivery' : 'next_livre_pickup';
+  else if (status === 'refuse') cle = 'next_refuse';
+  else if (status === 'annule') cle = order.pickupNoShow ? 'next_no_show' : 'next_annule';
+  if (!cle) return null;
+  return <div className="small order-next">{t(`orderStatus.${cle}`)}</div>;
 }
 
 export function ProgressBar({ status, orderType }) {

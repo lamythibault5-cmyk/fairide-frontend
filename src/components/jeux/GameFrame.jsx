@@ -670,9 +670,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       {astuceRotation && (
         <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}><Icone nom="mobile" taille={14} /> {t('gameFrame.rotateHint')}</button>
       )}
+      {/* Une SEULE sortie du plein écran, celle du bandeau du haut : la seconde, ici, doublonnait — deux
+          boutons pour le même geste, dont un qui prenait de la hauteur au terrain sur un téléphone couché. */}
       <div className="jeu-actions">
         {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label={t('gameFrame.pauseAria')}>{t('gameFrame.pause')}</button>}
-        {plein && <button type="button" onClick={basculerPlein}>🗗 {t('gameFrame.exitFullscreen')}</button>}
       </div>
     </div>
   );

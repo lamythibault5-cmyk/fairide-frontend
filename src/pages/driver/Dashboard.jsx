@@ -9,6 +9,8 @@ import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../..
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
+import useAlerteLivreur from '../../hooks/useAlerteLivreur';
+import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -107,6 +109,12 @@ export default function DriverDashboard() {
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);
   }, [mine]);
+
+  // Son, vibration, notification et compteur d'onglet : nouvelle course disponible, course prise devenue prête.
+  const alerte = useAlerteLivreur({
+    disponibles: available, mesCourses: mine, pret: !loading,
+    actif: user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused
+  });
 
   // Partage de position : watchPosition plutôt qu'un getCurrentPosition relancé toutes les 12 s.
   //
@@ -295,6 +303,7 @@ export default function DriverDashboard() {
         <div className="empty">{t('dashDriver.pausedText')}</div>
       ) : (
         <>
+          <AlerteLivreurBar {...alerte} />
           {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
             <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
               <b>🟢 {t('dashDriver.bagTitle')}</b>

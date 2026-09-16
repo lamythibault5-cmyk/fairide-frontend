@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SOURCES, decalerJour, euros, isoDuJour } from './resaUtils';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // STATISTIQUES — volume, couverts, absents, acomptes, remplissage par service, heures de pointe,
 // tendance par jour ou par semaine, avis laissés après une réservation. Période au choix.
@@ -23,7 +24,7 @@ function bornes(periode) {
 
 export default function ReservationStats({ token, restoId }) {
   const { t } = useLanguage();
-  const [periode, setPeriode] = useState('30');
+  const [periode, setPeriode] = useEtatPage('periodeStats', '30');
   const [stats, setStats] = useState(null);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState('');

@@ -2068,7 +2068,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 @keyframes jeu-apparait { from { opacity: 0; } to { opacity: 1; } }
 .jeu-overlay--fin .jeu-carte { animation: jeu-monte .3s ease-out .5s both; }
 @keyframes jeu-monte { from { transform: translateY(10px); } to { transform: none; } }
-.jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; color: #fff; text-align: center; }
+.jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; margin: auto; color: #fff; text-align: center; }
+/* Terrain court (téléphone couché, plein écran) : la carte de démarrage se compacte, et si elle ne tient
+   toujours pas, elle défile DANS le terrain au lieu de déborder par-dessus le bandeau et ses boutons. */
+.jeu-overlay { overflow-y: auto; overscroll-behavior: contain; }
+@media (max-height: 470px) {
+  .jeu--plein .jeu-emoji { font-size: 26px; }
+  .jeu--plein .jeu-carte { gap: 5px; }
+  .jeu--plein .jeu-titre { font-size: 15px; }
+  .jeu--plein .jeu-sous { font-size: 12px; }
+  .jeu--plein .jeu-btn { padding: 7px 14px; font-size: 13px; }
+  .jeu--plein .jeu-indice { font-size: 11px; margin: 0 0 3px; }
+}
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
 .jeu-btn {
@@ -3138,10 +3149,11 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 /* Champ mot de passe avec œil (PasswordInput.jsx). */
 .password-input { position: relative; }
 .password-input input { width: 100%; padding-right: 44px; }
-/* L'œil est passé d'un emoji à un tracé (PasswordInput.jsx) : il prend donc la couleur du texte
-   secondaire au lieu de la couleur imposée par la police emoji du système, et s'aligne sur une
-   cible ronde de 36px — assez grande pour le doigt, ce que 4px de marge intérieure ne donnait pas. */
-.password-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: 0; display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: var(--radius-pill); }
+/* Centré SANS transform : la règle générale button:active (scale, ou transform: none sur tactile) remplaçait le
+   translateY(-50%). À l'appui, l'œil sautait d'une demi-hauteur, le doigt ou la souris se relâchait à côté, et le
+   clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
+.password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: 8px; touch-action: manipulation; }
+.password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
 .password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
 
 /* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
@@ -3457,13 +3469,10 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
   display: flex; flex-direction: column; background: #14121F;
   padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
 }
-/* width: 100% et align-self: stretch, pas width: auto.
-   .jeu pose align-items: center, donc ses enfants ne s'etirent PAS : le cadre prenait la largeur
-   de son contenu, c'est-a-dire du canvas — que le canvas lui-meme mesurait depuis le cadre. Meme
-   serpent qui se mord la queue que sur la hauteur, mais sur l'axe horizontal, et celui-la se
-   figeait au plancher de 120px impose par la mesure : le terrain en plein ecran faisait donc
-   120px de large sur un ecran entier. Une largeur ferme coupe la boucle. */
-.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: 100%; align-self: stretch; border-radius: var(--radius); }
+/* align-self: stretch est indispensable — `.jeu` centre ses enfants (align-items: center), donc le cadre
+   prenait la largeur de son canvas au lieu de celle de l'écran : en plein écran sur un téléphone couché, le
+   terrain restait un timbre-poste au milieu, et la carte de démarrage débordait par-dessus les boutons. */
+.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; align-self: stretch; border-radius: 14px; }
 .jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
 .jeu--plein .jeu-indice { margin: 2px 0 6px; }
 html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
@@ -3588,6 +3597,26 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .offre-quand ol { margin: 6px 0 0; padding-left: 18px; }
 .offre-quand li { margin: 3px 0; }
 .offre-note { margin: 8px 0 0; color: var(--ink); }
+
+/* « Et maintenant ? » sous le statut d'une commande client (voir orderStatus.jsx) : une phrase qui dit ce
+   qui se passe et ce qu'il y a à faire, plutôt qu'un badge à interpréter. */
+.order-next { margin: 4px 0 2px; color: var(--ink-soft); line-height: 1.45; }
+
+/* Inscription et horaires sur écran tactile : les petits boutons-liens (« ← Revoir la liste », « Relire mon site »,
+   « ＋ Ajouter un 2e numéro », « Appliquer à tous les jours ») et la case « Fermé » faisaient 19 à 22 px de haut —
+   moins de la moitié d'un doigt. Même texte et même apparence que sur ordinateur, seule la zone de toucher grandit. */
+@media (pointer: coarse) {
+  .auth-box .btn-ghost, .auth-box .btn-link-plus, .opening-hours-apply-all { min-height: 40px; display: inline-flex; align-items: center; }
+  .opening-hours-apply-all { font-size: 12.5px; }
+  .opening-hours-closed-toggle { min-height: 40px; display: inline-flex; align-items: center; gap: 6px; }
+}
+
+/* Heure limite d'acceptation (commerce) et barre d'alertes du livreur. */
+.echeance-acceptation { margin: 4px 0 2px; color: var(--gold-deep, #8A6100); font-weight: 600; }
+.echeance-acceptation.urgente { color: var(--red); }
+.alerte-livreur { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 14px; }
+.alerte-livreur strong { font-size: 15px; }
+.alerte-livreur-aide { flex: 1 1 260px; }
 
 /* LA PILULE DU PANIER, posee au-dessus de la barre d'onglets et centree comme elle.
    L'ancienne bulle etait un rectangle colle en bas a gauche, qui se depliait en une demi-page de

@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
@@ -248,11 +248,12 @@ export default function Orders() {
         <div className={`card order-type-${orderTypeColor(o)}`}>
           <div className="commande-entete">
             <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
           </div>
           <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
+          <ProchaineEtape order={o} />
           {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
               Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
               (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur

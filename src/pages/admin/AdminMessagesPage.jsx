@@ -14,6 +14,7 @@ import { ErrorCard, Pager } from '../../components/admin/AdminListTools';
 import { fmtDateTime, useDebouncedValue, estCompteSupprime } from './adminUtils';
 import { COMMUNES } from '../../menuCategories';
 import '../../admin-messages.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Application « Messages » : Fairide écrit à ses comptes (annonce par type / commune / comptes précis,
 // ou message direct), lit leurs réponses et réactions, répond — une conversation par personne.
@@ -33,7 +34,7 @@ function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refre
   const [stats, setStats] = useState(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [role, setRole] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useEtatPage('statutFils', '');
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);
@@ -441,7 +442,7 @@ export default function AdminMessagesPage() {
   const { token } = useAuth();
   const toast = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [onglet, setOnglet] = useState(() => (searchParams.get('new') === '1' ? 'compose' : (TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'threads')));
+  const [onglet, setOnglet] = useEtatPage('onglet', () => (searchParams.get('new') === '1' ? 'compose' : (TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'threads')), { forcer: searchParams.get('new') === '1' || TABS.includes(searchParams.get('tab')) });
   const [broadcastFilter, setBroadcastFilter] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unread, setUnread] = useState(null);

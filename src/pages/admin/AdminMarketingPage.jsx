@@ -13,6 +13,7 @@ import CampaignDrawer from './marketing/CampaignDrawer';
 import { StatusPill } from './marketing/MarketingPills';
 import { STATUSES, resumeAudience } from './marketing/marketingUtils';
 import '../../admin-marketing.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Application Marketing : campagnes e-mail ciblées. Trois onglets — Campagnes (KPI + liste + fiche
 // dans le tiroir), Nouvelle campagne (formulaire avec audience en direct et aperçu), Désinscrits.
@@ -20,13 +21,13 @@ export default function AdminMarketingPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const [onglet, setOnglet] = useState('campagnes');
+  const [onglet, setOnglet] = useEtatPage('onglet', 'campagnes');
   const [stats, setStats] = useState(null);
   const [statsErr, setStatsErr] = useState(null);
   const [liste, setListe] = useState(null);
   const [total, setTotal] = useState(0);
   const [listeErr, setListeErr] = useState(null);
-  const [statut, setStatut] = useState('');
+  const [statut, setStatut] = useEtatPage('statut', '');
   const [search, setSearch] = useState('');
   const q = useDebouncedValue(search, 300);
   const [templates, setTemplates] = useState([]);

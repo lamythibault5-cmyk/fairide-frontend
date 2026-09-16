@@ -18,6 +18,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -38,7 +39,7 @@ export default function AdminDocumentsPage() {
   const [targetType, setTargetType] = useState(searchParams.get('targetType') || '');
   const [documentType, setDocumentType] = useState('');
   const [verificationStatus, setVerificationStatus] = useState(searchParams.get('verification') || '');
-  const [expiry, setExpiry] = useState(searchParams.get('expiry') || '');
+  const [expiry, setExpiry] = useEtatPage('expiration', searchParams.get('expiry') || '', { forcer: !!(searchParams.get('expiry') || '') });
   const [qInput, setQInput] = useState(location.state?.presetSearch || searchParams.get('q') || '');
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);

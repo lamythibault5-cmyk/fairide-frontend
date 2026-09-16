@@ -19,6 +19,7 @@ import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -81,7 +82,7 @@ export default function AdminRestaurantsPage() {
   const toast = useToast();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -90,11 +91,11 @@ export default function AdminRestaurantsPage() {
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
-  const [nature, setNature] = useState('all'); // all | real | test | deleted
-  const [commune, setCommune] = useState('');
-  const [cuisine, setCuisine] = useState('');
-  const [groupBy, setGroupBy] = useState('');
-  const [triServeur, setTriServeur] = useState('created_desc');
+  const [nature, setNature] = useEtatPage('nature', 'all'); // all | real | test | deleted
+  const [commune, setCommune] = useEtatPage('commune', '');
+  const [cuisine, setCuisine] = useEtatPage('cuisine', '');
+  const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
+  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
   const { sort, toggle } = useTableSort('revenue');
   const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 

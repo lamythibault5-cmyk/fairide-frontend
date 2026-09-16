@@ -11,6 +11,7 @@ import AdminBarChart from '../../components/admin/AdminBarChart';
 import { money, pct } from './adminUtils';
 import AccountsTable from '../../components/admin/AccountsTable';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const periods = (tr) => [
   { key: 'today', label: tr('adminCommon.today') },
@@ -31,7 +32,7 @@ export default function AdminDashboardPage() {
   const { token } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
-  const [period, setPeriod] = useState('30d');
+  const [period, setPeriod] = useEtatPage('periode', '30d');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
   const [data, setData] = useState(null);

@@ -12,6 +12,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import { ErrorCard, ResultCount } from '../../components/admin/AdminListTools';
 import { fmtDate, fmtDateTime, money, filterBySearch, downloadCsv } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Application Promotions : codes promo (solde offert au client, mois d'essai restaurateur), leur
 // usage et leur activation. Liste triable (AdminDataTable), fiche dans le tiroir commun (édition de la
@@ -28,7 +29,7 @@ export default function AdminPromotionsPage() {
   const [codes, setCodes] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [search, setSearch] = useState('');
-  const [filtre, setFiltre] = useState('all'); // all | active | inactive | exhausted
+  const [filtre, setFiltre] = useEtatPage('filtre', 'all'); // all | active | inactive | exhausted
   const [type, setType] = useState('');
   const [form, setForm] = useState({ code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '' });
   const [creation, setCreation] = useState(false);

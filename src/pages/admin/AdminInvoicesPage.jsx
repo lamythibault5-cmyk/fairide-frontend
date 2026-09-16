@@ -21,6 +21,7 @@ const PAGE_SIZE = 25;
 const statusFilters = (tr) => [{ key: '', label: tr('adminInvoices.all') }, ...Object.entries(INVOICE_STATUS_LABELS).map(([key, v]) => ({ key, label: v.label }))];
 
 import { peppolLabels } from '../../components/InvoiceArchive';
+import useEtatPage from '../../hooks/useEtatPage';
 
 function peppolPill(status, tr) {
   const l = peppolLabels(tr)[status] || peppolLabels(tr).en_attente;
@@ -77,7 +78,7 @@ export default function AdminInvoicesPage() {
   const { token } = useAuth();
   const toast = useToast();
   const location = useLocation();
-  const [tab, setTab] = useState('Factures');
+  const [tab, setTab] = useEtatPage('onglet', 'Factures');
   const [restaurantFilter, setRestaurantFilter] = useState(location.state?.restaurantId || '');
 
   return (
@@ -104,7 +105,7 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
   const { t: tr } = useLanguage();
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useEtatPage('statutFactures', '');
   const [minAmount, setMinAmount] = useState('');
   const [maxAmount, setMaxAmount] = useState('');
   const [page, setPage] = useState(0);

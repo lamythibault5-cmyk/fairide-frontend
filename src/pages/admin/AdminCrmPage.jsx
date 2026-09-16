@@ -18,6 +18,7 @@ import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { fmtDate, fmtDateTime, downloadCsv, useDebouncedValue, pct, CRM_STAGES, CRM_STAGE_LABELS, CRM_PRIORITY_LABELS, TASK_STATUS_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const PAGE_SIZE = 100;
 const periodTypes = (tr) => [{ key: 'month', label: tr('adminCommon.month') }, { key: 'quarter', label: tr('adminCommon.quarter') }, { key: 'year', label: tr('adminCommon.year') }];
@@ -42,7 +43,7 @@ export default function AdminCrmPage() {
   const q = useDebouncedValue(search, 350);
   const [selectedId, setSelectedId] = useState(null);
   const [showCreate, setShowCreate] = useState(() => searchParams.get('new') === '1');
-  const [periodType, setPeriodType] = useState('month');
+  const [periodType, setPeriodType] = useEtatPage('typePeriode', 'month');
   const [month, setMonth] = useState(currentMonthValue());
   const [year, setYear] = useState(new Date().getFullYear());
   const [stats, setStats] = useState(null);

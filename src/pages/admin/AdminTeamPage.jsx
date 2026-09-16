@@ -15,6 +15,7 @@ import useAdminRole from '../../hooks/useAdminRole';
 import { fmtDateTime, useDebouncedValue } from './adminUtils';
 import { ADMIN_GROUPS, ADMIN_MODULES } from './adminModules';
 import '../../admin-team.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Équipe & accès — qui fait partie de l'équipe Fairide, avec quel rôle, et ce que chacun a fait dans la
 // console. Trois onglets (?tab=) : Membres (cartes + invitation), Rôles (matrice rôles × applications,
@@ -111,7 +112,7 @@ function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, 
   const { t } = useLanguage();
   const [recherche, setRecherche] = useState('');
   const q = useDebouncedValue(recherche, 200).trim().toLowerCase();
-  const [filtre, setFiltre] = useState('all'); // all | active | inactive
+  const [filtre, setFiltre] = useEtatPage('filtre', 'all'); // all | active | inactive
   const [edition, setEdition] = useState(null); // membre en cours de modification (drawer)
   const [confirm, setConfirm] = useState(null); // { kind: 'deactivate'|'reactivate'|'remove'|'role', membre, role? }
   const [occupe, setOccupe] = useState(false);

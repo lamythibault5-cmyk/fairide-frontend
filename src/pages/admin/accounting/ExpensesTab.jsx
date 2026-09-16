@@ -7,6 +7,7 @@ import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useLanguage } from '../../../context/LanguageContext';
 import { money, fmtDate, downloadCsv } from '../adminUtils';
 import { useApiData, LoadState, ErrorState, Pagination, todayIso, toNumber, sortAccounts, StatusPill } from './common';
+import useEtatPage from '../../../hooks/useEtatPage';
 
 // Achats & frais : les dépenses de Fairide (abonnements logiciels, frais bancaires, matériel…), du
 // brouillon à la comptabilisation puis au paiement. Comptabiliser génère l'écriture (charge + TVA
@@ -24,7 +25,7 @@ const paymentLabels = (tr) => ({ bank: tr('adminAccounting.pay_bank'), card: tr(
 
 export default function ExpensesTab({ token, toast, periodKey, searchParams, go }) {
   const { t: tr } = useLanguage();
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [status, setStatus] = useEtatPage('statutDepenses', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(0);
   const [editing, setEditing] = useState(searchParams.get('new') === '1' ? {} : null); // {} = nouvelle

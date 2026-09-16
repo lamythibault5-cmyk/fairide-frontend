@@ -232,3 +232,11 @@
     max-height: 42vh; overflow-y: auto; z-index: 55; border-color: var(--ink);
   }
 }
+
+/* Actions rapides du plan en direct : clients sans réservation, ouverture à la réservation en ligne. */
+.fp-rapide { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.fp-durees { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 8px; }
+.fp-durees .chip { padding: 8px 12px; min-height: 40px; border-radius: var(--radius-chip); border: 1px solid var(--line); background: #fff; font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.fp-durees .chip.active { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+/* Table gardée hors de la réservation en ligne : petit téléphone dans le coin. */
+.fp-hors-ligne { position: absolute; top: 2px; right: 3px; font-size: 10px; line-height: 1; opacity: .85; pointer-events: none; }

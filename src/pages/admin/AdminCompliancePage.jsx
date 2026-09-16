@@ -13,6 +13,7 @@ import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTa
 import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListTools';
 import { fmtDate, fmtDateTime, downloadPdf, useDebouncedValue } from './adminUtils';
 import '../../admin-compliance.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Application « Conformité & RGPD » : registre des demandes des personnes concernées (délai légal d'un
 // mois), export / suppression des données d'un compte, suivi des versions de contrats des partenaires,
@@ -30,7 +31,7 @@ function StatusPill({ status, tr }) {
 
 export default function AdminCompliancePage() {
   const { t: tr } = useLanguage();
-  const [onglet, setOnglet] = useState('requests');
+  const [onglet, setOnglet] = useEtatPage('onglet', 'requests');
   const [showCreate, setShowCreate] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -59,7 +60,7 @@ export default function AdminCompliancePage() {
 function RequestsTab({ refreshKey }) {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
-  const [status, setStatus] = useState('open');
+  const [status, setStatus] = useEtatPage('statutDemandes', 'open');
   const [type, setType] = useState('');
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
@@ -144,7 +145,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
   const { token } = useAuth();
   const toast = useToast();
   const [r, setR] = useState(initial);
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useEtatPage('ongletRegistre', 'overview');
   const [form, setForm] = useState({ status: initial.status, notes: initial.notes || '', handledBy: initial.handledBy || '' });
   const [busy, setBusy] = useState(false);
   const [confirm, setConfirm] = useState(null); // { title, message, danger, confirmLabel, run }

@@ -17,14 +17,15 @@ const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: 
 
 // siteTrouve : site officiel trouvé par la recherche web de l'inscription quand la fiche n'en avait pas — ajouté à la
 // fiche (et donc proposé à la relecture), jamais par-dessus un site déjà renseigné.
-export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '' }) {
+// initialFiche : fiche déjà choisie (reprise d'une inscription après un rechargement) — affichée d'emblée.
+export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '', initialFiche = null }) {
   const { t } = useLanguage();
   const [cp, setCp] = useState(initialPostalCode);
   const [zone, setZone] = useState(null); // { results, unavailable, pending }
   const [chargement, setChargement] = useState(false);
   const [filtre, setFiltre] = useState('');
-  const [fiche, setFiche] = useState(null); // fiche affichée et modifiable (choisie ou saisie à la main)
-  const [origine, setOrigine] = useState(null); // 'web' | 'manuel'
+  const [fiche, setFiche] = useState(initialFiche); // fiche affichée et modifiable (choisie ou saisie à la main)
+  const [origine, setOrigine] = useState(initialFiche ? (initialFiche.source === 'web' ? 'web' : 'manuel') : null); // 'web' | 'manuel'
   const [reponseNom, setReponseNom] = useState(null); // repli : recherche par nom
   const listeRef = useRef(null);
 

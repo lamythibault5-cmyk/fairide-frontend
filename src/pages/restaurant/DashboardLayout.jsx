@@ -476,9 +476,8 @@ export default function DashboardLayout() {
             </div>
           </div>
           <AddressRecognition
-            street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact
+            street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact discret
             onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
-            onPickCandidate={(c) => { setName(c.name); }}
             onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
           {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
@@ -564,7 +563,9 @@ export default function DashboardLayout() {
               <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
-          {restaurant.stripeConnectStatus !== 'active' && (
+          {/* Réservation seule, sans acompte : c'est gratuit, aucun paiement ne transite par Fairide — la rangée
+              n'a rien à demander (même règle que formules.paiementsRequis côté serveur). */}
+          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site') || restaurant.reservationDepositEnabled) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}

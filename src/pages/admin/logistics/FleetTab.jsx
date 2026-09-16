@@ -7,6 +7,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { useToast } from '../../../context/ToastContext';
 import { downloadCsv, fmtDateTime } from '../adminUtils';
 import { useApiData, LoadState, KpiCard, Freshness, useAutoRefresh, useDriverStatusLabels, useVehicleLabels } from './common';
+import useEtatPage from '../../../hooks/useEtatPage';
 
 const STATUTS = ['delivering', 'online', 'paused', 'offline'];
 
@@ -23,7 +24,7 @@ export default function FleetTab() {
   useAutoRefresh(fleet.reload, 30000);
   const { sort, toggle } = useTableSort('status', 'asc');
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useEtatPage('filtreFlotte', '');
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();

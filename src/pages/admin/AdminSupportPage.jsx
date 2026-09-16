@@ -21,6 +21,7 @@ import {
 import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -55,11 +56,11 @@ export default function AdminSupportPage() {
   const toast = useToast();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [periodType, setPeriodType] = useState('month');
+  const [periodType, setPeriodType] = useEtatPage('typePeriode', 'month');
   const [month, setMonth] = useState(currentMonthValue());
   const [year, setYear] = useState(new Date().getFullYear());
   const [stats, setStats] = useState(null);
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [status, setStatus] = useEtatPage('statut', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
   const [priority, setPriority] = useState('');
   const [category, setCategory] = useState('');
   const [tag, setTag] = useState(searchParams.get('tag') || '');

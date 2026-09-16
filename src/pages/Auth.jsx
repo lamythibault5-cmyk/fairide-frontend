@@ -1,5 +1,5 @@
 import OffreFormules from '../components/OffreFormules';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -57,6 +57,9 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 // coller sous l'en-tête — qui recouvrait alors le titre — et le clavier s'ouvrait tout seul, donnant
 // l'impression d'être enfermé dans le formulaire dès l'arrivée ou au moindre changement d'onglet.
 // Le gain d'un tap ne vaut pas ce saut de page à chaque étape.
+const CLE_BROUILLON = 'fairide_inscription_brouillon';
+const BROUILLON_MAX_MS = 6 * 3600 * 1000; // au-delà, une inscription interrompue ne se reprend plus
+
 export default function Auth() {
   const { t } = useLanguage();
   const ROLES = roles(t);
@@ -303,6 +306,58 @@ export default function Auth() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSubmitted, setForgotSubmitted] = useState(false);
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // BROUILLON DE L'INSCRIPTION. Un rafraîchissement (geste réflexe sur téléphone, onglet rechargé par le système)
+  // effaçait tout : type de compte, étape, identité, commerce trouvé, horaires, services. On garde un instantané
+  // dans sessionStorage (propre à l'onglet, effacé à la fermeture) et on le reprend au rechargement.
+  // Jamais les mots de passe, ni le jeton Google, ni les pièces d'identité (fichiers) : ceux-là se redonnent.
+  // Repris seulement sur un vrai rechargement, et récent : un visiteur qui revient plus tard par « Connexion »
+  // tombe sur un formulaire vierge, pas sur une inscription abandonnée.
+  const champsBrouillon = {
+    mode: [mode, setMode], role: [role, setRole], step: [step, setStep],
+    firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone], email: [email, setEmail],
+    addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber],
+    addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
+    referralCode: [referralCode, setReferralCode], referralOpen: [referralOpen, setReferralOpen],
+    legalName: [legalName, setLegalName], companyNumber: [companyNumber, setCompanyNumber], vatNumber: [vatNumber, setVatNumber],
+    responsibleName: [responsibleName, setResponsibleName], responsibleTouched: [responsibleTouched, setResponsibleTouched],
+    courierStatus: [courierStatus, setCourierStatus], vehicleType: [vehicleType, setVehicleType], bagOption: [bagOption, setBagOption], docKind: [docKind, setDocKind],
+    commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
+    cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
+    phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
+    emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
+    siteTrouve: [siteTrouve, setSiteTrouve], infosVerifiees: [infosVerifiees, setInfosVerifiees], typeDepuisSite: [typeDepuisSite, setTypeDepuisSite],
+    // Code de vérification en attente : sans eux, un rechargement renvoyait au formulaire alors que le compte existe.
+    pendingEmail: [pendingEmail, setPendingEmail], pendingChannel: [pendingChannel, setPendingChannel], pendingPhone: [pendingPhone, setPendingPhone],
+    forgotMode: [forgotMode, setForgotMode], forgotEmail: [forgotEmail, setForgotEmail]
+  };
+  const brouillonRepris = useRef(false);
+  const attenteBrouillon = useRef(null); // { role, mode } restaurés, tant qu'ils ne sont pas encore appliqués
+  useLayoutEffect(() => {
+    brouillonRepris.current = true;
+    try {
+      const nav = performance.getEntriesByType?.('navigation')?.[0];
+      if (nav?.type !== 'reload') { sessionStorage.removeItem(CLE_BROUILLON); return; }
+      const b = JSON.parse(sessionStorage.getItem(CLE_BROUILLON) || 'null');
+      if (!b || Date.now() - (b.at || 0) > BROUILLON_MAX_MS) return;
+      attenteBrouillon.current = { role: b.champs?.role ?? role, mode: b.champs?.mode ?? mode };
+      for (const [cle, valeur] of Object.entries(b.champs || {})) champsBrouillon[cle]?.[1](valeur);
+    } catch { /* stockage indisponible ou brouillon illisible : formulaire vierge */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const valeursBrouillon = Object.values(champsBrouillon).map((c) => c[0]);
+  useEffect(() => {
+    if (!brouillonRepris.current) return undefined;
+    const minuteur = setTimeout(() => {
+      try {
+        const champs = Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur]));
+        sessionStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), champs }));
+      } catch { /* stockage plein ou indisponible */ }
+    }, 250);
+    return () => clearTimeout(minuteur);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, valeursBrouillon);
+
   const { login, register, verifyEmail, resendCode, forgotPassword, loginWithGoogle } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -316,6 +371,7 @@ export default function Auth() {
   // naviguer, et le bouton reste en « Chargement… » jusque-là. Sans cela, le bouton redevenait actif pendant
   // que la page d'arrivée se téléchargeait en coulisse — sur mobile, on croyait que le toucher n'avait pas pris.
   async function allerApresConnexion(user) {
+    try { sessionStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
     await attendrePage(from === '/' ? espaceApresConnexion(user) : from);
     navigate(from);
   }
@@ -357,7 +413,20 @@ export default function Auth() {
   /* Un commerce a une étape de plus qu'un client : changer de rôle en cours de route (ou passer
      de "Créer un compte" à "Se connecter") doit ramener au début, sinon on peut se retrouver à
      une étape 3 qui n'existe plus pour le nouveau rôle. */
-  useEffect(() => { setStep(0); setErrors({}); }, [role, mode]);
+  // Retour à la première étape quand on CHANGE de type de compte ou d'onglet — pas au montage, ni pendant la
+  // reprise d'un brouillon (sinon un rechargement ramenait toujours à l'étape 1).
+  const roleModePrecedent = useRef(null);
+  useEffect(() => {
+    if (attenteBrouillon.current) {
+      if (role === attenteBrouillon.current.role && mode === attenteBrouillon.current.mode) attenteBrouillon.current = null;
+      roleModePrecedent.current = { role, mode };
+      return;
+    }
+    const avant = roleModePrecedent.current;
+    roleModePrecedent.current = { role, mode };
+    if (!avant || (avant.role === role && avant.mode === mode)) return;
+    setStep(0); setErrors({});
+  }, [role, mode]);
 
   /* Valide UNE étape et renvoie ses erreurs, par champ. Les règles reproduisent exactement celles
      de POST /register côté backend (routes/auth.js) : prénom, nom, email, mot de passe, téléphone
@@ -896,7 +965,7 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
-                <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} />
+                <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} initialFiche={commerceTrouve} />
                 {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
                 <div className="field">
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>

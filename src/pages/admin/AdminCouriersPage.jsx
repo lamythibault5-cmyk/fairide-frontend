@@ -14,6 +14,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Dossiers livreurs (statuts étudiant / P2P / indépendant) : file de validation, pièces, identité,
 // compteurs légaux, contrats, journal ; paramètres légaux par année, drapeau P2P, exports DAC7 et 281.29.
@@ -36,11 +37,11 @@ export default function AdminCouriersPage() {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [erreur, setErreur] = useState(null);
-  const [filtre, setFiltre] = useState('pending_review');
-  const [nature, setNature] = useState('all');
+  const [filtre, setFiltre] = useEtatPage('filtre', 'pending_review');
+  const [nature, setNature] = useEtatPage('nature', 'all');
   const [search, setSearch] = useState(location.state?.presetSearch || '');
   const [selection, setSelection] = useState(null);
-  const [onglet, setOnglet] = useState('dossiers');
+  const [onglet, setOnglet] = useEtatPage('onglet', 'dossiers');
   const [mode, setMode] = useViewMode('couriers', 'table');
   const { sort, toggle } = useTableSort('updatedAt');
 

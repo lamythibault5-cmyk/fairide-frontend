@@ -147,7 +147,9 @@ export default function Checkout() {
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
-  const surPlaceChoisi = fulfillmentType === 'pickup' && !!restaurant.pickupPayOnSite && paiementSurPlace;
+  // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
+  const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
+  const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && paiementSurPlace));
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
@@ -209,7 +211,7 @@ export default function Checkout() {
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
       // créée côté serveur — on affiche donc le total exact avant de rediriger vers le paiement.
-      const surPlace = fulfillmentType === 'pickup' && !!restaurant?.pickupPayOnSite && paiementSurPlace;
+      const surPlace = surPlaceChoisi;
       const order = await api('/orders', {
         method: 'POST', token,
         body: {
@@ -370,10 +372,20 @@ export default function Checkout() {
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
-            {/* C'étaient deux boutons radio natifs, dont la cible utile était la pastille de 13px
-                dessinée par le navigateur. Ils deviennent des pastilles, comme le reste du
+            {/* LE COMMERCE CHOISIT LE MODE DE PAIEMENT A EMPORTER (modeEmporter, pose par main) :
+                en ligne seulement, sur place seulement, ou au choix du client. Quand il n'y a pas de
+                choix a faire, on l'annonce au lieu d'afficher une bascule a une seule option — c'est
+                une information, pas une question. */}
+            {fulfillmentType === 'pickup' && modeEmporter === 'on_site' && (
+              <div className="paiement-encart" style={{ marginBottom: 10 }}>
+                <p className="small" style={{ margin: 0 }}><b><Icone nom="billet" taille={16} /> {t('checkout.payOnSiteOnly')}</b></p>
+                <p className="small" style={{ margin: '4px 0 0' }}>{t('checkout.payOnSiteNote')}</p>
+              </div>
+            )}
+            {/* C'etaient deux boutons radio natifs, dont la cible utile etait la pastille de 13px
+                dessinee par le navigateur. Ils deviennent des pastilles, comme le reste du
                 formulaire. */}
-            {fulfillmentType === 'pickup' && restaurant.pickupPayOnSite && (
+            {fulfillmentType === 'pickup' && modeEmporter === 'both' && (
               <div className="field">
                 <span className="field-intitule">{t('checkout.payWhen')}</span>
                 <ChoixPastilles
@@ -577,7 +589,9 @@ export default function Checkout() {
                   {totals.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.serviceFee.toFixed(2)}€</span></div>
+                  {/* TVA comprise : la ligne affichait les frais hors TVA alors que le total, lui, la contenait —
+                      la somme des lignes ne tombait jamais sur le total affiché juste en dessous. */}
+                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{(totals.serviceFee + totals.serviceFeeVat).toFixed(2)}€</span></div>
                 </>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
