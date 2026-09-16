@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import { escapeHtml } from '../escapeHtml';
 
 // Variante de DeliveryTrackingMap orientée navigation pour le livreur lui-même : au lieu de montrer le
 // trajet fixe restaurant → client avec un livreur observé de l'extérieur, celle-ci trace le trajet depuis
@@ -77,7 +78,11 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
     if (!mapRef.current) return;
     if (targetLat && targetLng) {
       if (!targetMarkerRef.current) {
-        targetMarkerRef.current = L.marker([targetLat, targetLng], { icon: targetIconRef.current }).addTo(mapRef.current).bindPopup(targetLabel || '');
+        // escapeHtml : bindPopup insère du HTML brut, et `targetLabel` est le nom du commerce ou
+        // l'adresse du client — deux chaînes saisies par quelqu'un d'autre, et jamais échappées côté
+        // serveur. Sans ça, un nom de commerce contenant du balisage s'exécutait ici, dans le
+        // navigateur du livreur, qui y garde son jeton de session.
+        targetMarkerRef.current = L.marker([targetLat, targetLng], { icon: targetIconRef.current }).addTo(mapRef.current).bindPopup(escapeHtml(targetLabel));
       } else {
         targetMarkerRef.current.setLatLng([targetLat, targetLng]);
       }
