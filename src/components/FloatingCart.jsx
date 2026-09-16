@@ -10,9 +10,9 @@ import { commandesOuvertes, dateOuvertureCommandes, dateOuvertureLivraison } fro
 // gauche de l'écran : une petite bulle tant qu'on ne clique pas dessus, plutôt que le récap complet
 // toujours déployé — moins intrusif pendant qu'on parcourt le site, mais jamais perdu en changeant de
 // page grâce à CartContext (sessionStorage). Seul et unique accès panier de l'appli (pas de doublon
-// dans la barre de sections du menu, voir CategoryQuickNav). Reste affiché même à vide (indicateur
-// estompé, non cliquable) pour que le client sache toujours où se trouve son panier plutôt que de le
-// voir disparaître entièrement de l'écran une fois vidé.
+// dans la barre de sections du menu, voir CategoryQuickNav). Il ne s'affiche QUE s'il contient
+// quelque chose : l'indicateur « panier vide » permanent qu'on décrivait ici recouvrait le contenu
+// des autres pages sans rien apprendre à personne (voir le commentaire du return null plus bas).
 export default function FloatingCart() {
   const cart = useCart();
   const navigate = useNavigate();
@@ -59,12 +59,16 @@ export default function FloatingCart() {
   // quelque chose.
   if (cart.count === 0) return null;
 
+  // « 1 article(s) » : la parenthese disait au lecteur de choisir lui-meme la bonne forme. Les trois
+  // langues ont maintenant leur singulier et leur pluriel, choisis ici.
+  const compteArticles = t(cart.count > 1 ? 'floatingCart.itemCountPlural' : 'floatingCart.itemCount', { count: cart.count });
+
   if (!expanded) {
     return (
       <button type="button" className="floating-cart-bubble" onClick={handleExpand}>
         <span className="floating-cart-bubble-icon">🛒</span>
         <span className="floating-cart-bubble-text">
-          <span className="floating-cart-bubble-count">{t('floatingCart.itemCount', { count: cart.count })}</span>
+          <span className="floating-cart-bubble-count">{compteArticles}</span>
           <span className="floating-cart-bubble-total">{cart.rawTotal.toFixed(2)}€</span>
         </span>
       </button>
@@ -81,7 +85,7 @@ export default function FloatingCart() {
         <div className="floating-cart-header-text">
           <b>{t('floatingCart.title')}</b>
           <div className="small floating-cart-header-sub">
-            {cart.restaurantName ? `${cart.restaurantName} · ` : ''}{t('floatingCart.itemCount', { count: cart.count })}
+            {cart.restaurantName ? `${cart.restaurantName} · ` : ''}{compteArticles}
           </div>
         </div>
         <button type="button" className="floating-cart-collapse" onClick={() => setExpanded(false)} aria-label={t('floatingCart.collapse')}>✕</button>

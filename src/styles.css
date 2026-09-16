@@ -550,11 +550,23 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    carrément deux plats de la grille menu, capture d'écran à l'appui). Une barre sticky en haut de page
    pousse le contenu au lieu de flotter par-dessus : elle ne peut plus jamais chevaucher quoi que ce
    soit, quel que soit l'écran ou la position de scroll. */
+/* La pastille de marque (.dashboard-marque) est fixée en haut à droite au-dessus de 150 en z-index,
+   sur tout écran de moins de 900px. Cette barre de sections est collante en haut, sur toute la
+   largeur : les deux se superposaient, et la pastille recouvrait la dernière pilule visible, qui
+   devenait illisible et incliquable. On réserve sa place à droite plutôt que de la faire passer
+   dessous — la barre défile horizontalement, donc une pilule cachée n'est pas rattrapable. */
 .category-quicknav {
   position: sticky; top: 0; z-index: 40;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
   gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
   background: linear-gradient(to bottom, var(--cream) 78%, rgba(255,255,255,0));
+}
+@media (max-width: 900px) {
+  /* La marge est portée par le conteneur QUI DÉFILE, pas par la barre : une marge intérieure sur
+     la barre allonge le contenu sans rétrécir la fenêtre visible, donc les pilules continuaient de
+     passer sous la pastille en défilant. Une marge extérieure sur le conteneur de défilement
+     arrête la fenêtre elle-même avant la pastille. */
+  .category-quicknav-sections { margin-right: 108px; }
 }
 /* Conteneur du défilement horizontal des sections (Entrées/Plats/Desserts...) — occupe toute la barre :
    le panier vit désormais uniquement dans FloatingCart (bulle en bas à gauche), plus ici. */

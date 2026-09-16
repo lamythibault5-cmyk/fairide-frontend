@@ -650,8 +650,10 @@ export default function Account() {
           </LigneCompte>
         )}
 
+        {/* Icône différente de celle de « Mon solde » juste au-dessus : les deux rangées se suivent,
+            et le même 💰 sur les deux les faisait lire comme une seule répétée. */}
         {(role === 'restaurant' || role === 'driver') && (
-          <LigneCompte icone="💰" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
+          <LigneCompte icone="🏦" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
             <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
               <div className="num">{solde}€</div>

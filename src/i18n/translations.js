@@ -1188,7 +1188,7 @@ export const translations = {
     },
     driverDocs: {
       title: 'Mes documents',
-      sub: 'Pièce d\'identité recto / verso, attestation étudiant, autres pièces',
+      sub: 'Identité, attestation, autres pièces',
       intro: 'Les documents déposés à l\'inscription et pendant ton dossier livreur. Tu peux remplacer une face tant qu\'elle n\'est pas vérifiée par Fairide.',
       identityVerified: 'Identité vérifiée via {provider}',
       verified: 'Vérifié',
@@ -4981,7 +4981,7 @@ export const translations = {
       customerReviews: 'Avis clients',
       myRides: 'Mes courses',
       myReviews: 'Mes avis',
-      myReviewsSub: 'Ce que les clients disent de tes livraisons',
+      myReviewsSub: 'Ce que les clients disent',
       selfInvoicesSub: 'Tes autofactures mensuelles',
       support: 'Assistance',
       needHelp: 'Besoin d\'aide ?',
@@ -5016,7 +5016,7 @@ export const translations = {
       subNotVisible: '🔒 Pas encore visible aux clients',
       shareText: 'Les commerces de ton quartier, livrés chez toi, 10 % de commission au lieu de 22 à 32 %.',
       profileSub: 'Prénom, nom, date de naissance, adresse',
-      sharingOn: 'Partage activé pendant tes courses',
+      sharingOn: 'Activé pendant tes courses',
       sharingOff: 'Partage désactivé',
       referralSub: 'Invite un ami, gagne du crédit',
       addressSub: 'Celle qui pré-remplit tes commandes',
@@ -5902,9 +5902,10 @@ export const translations = {
       reserveSoon: 'Réservations dès le {date}'
     },
     floatingCart: {
-      title: '🛒 Ton panier',
+      title: 'Ton panier',
       emptyLabel: 'Panier vide',
-      itemCount: '{count} article(s)',
+      itemCount: '{count} article',
+      itemCountPlural: '{count} articles',
       removeItem: 'Retirer ce produit',
       order: 'Commander',
       clear: 'Vider',
@@ -7679,7 +7680,7 @@ export const translations = {
     },
     driverDocs: {
       title: 'My documents',
-      sub: 'ID document front / back, student certificate, other documents',
+      sub: 'ID, student certificate, other papers',
       intro: 'The documents added at sign-up and during your courier file. You can replace a side as long as Fairide has not verified it.',
       identityVerified: 'Identity verified via {provider}',
       verified: 'Verified',
@@ -11457,7 +11458,7 @@ export const translations = {
       customerReviews: 'Customer reviews',
       myRides: 'My deliveries',
       myReviews: 'My reviews',
-      myReviewsSub: 'What customers say about your deliveries',
+      myReviewsSub: 'What customers say',
       selfInvoicesSub: 'Your monthly self-billing invoices',
       support: 'Support',
       needHelp: 'Need help?',
@@ -12371,9 +12372,10 @@ export const translations = {
       reserveSoon: 'Reservations from {date}'
     },
     floatingCart: {
-      title: '🛒 Your cart',
+      title: 'Your cart',
       emptyLabel: 'Empty cart',
-      itemCount: '{count} item(s)',
+      itemCount: '{count} item',
+      itemCountPlural: '{count} items',
       removeItem: 'Remove this item',
       order: 'Order',
       clear: 'Clear',
@@ -18838,9 +18840,10 @@ export const translations = {
       reserveSoon: 'Reservaties vanaf {date}'
     },
     floatingCart: {
-      title: '🛒 Jouw winkelmandje',
+      title: 'Jouw winkelmandje',
       emptyLabel: 'Winkelmandje leeg',
-      itemCount: '{count} artikel(en)',
+      itemCount: '{count} artikel',
+      itemCountPlural: '{count} artikelen',
       removeItem: 'Dit product verwijderen',
       order: 'Bestellen',
       clear: 'Leegmaken',
