@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
+import { escapeHtml } from '../escapeHtml';
 import { StarsDisplay } from './Stars';
 import CertifiedBadge from './CertifiedBadge';
 import { useLanguage } from '../context/LanguageContext';
@@ -97,7 +98,9 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
     if (userLocation?.lat && userLocation?.lng) {
       homeMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: homeIcon(), zIndexOffset: 1000 })
         .addTo(mapRef.current)
-        .bindPopup(`<b>🏠 ${t('map.home')}</b>${userLocation.address ? '<br/>' + userLocation.address : ''}`);
+        // L'adresse est celle du visiteur lui-même : il ne peut s'attaquer que lui-même. On l'échappe
+        // quand même, parce qu'une adresse contenant « & » ou « < » s'affichait déjà de travers.
+        .bindPopup(`<b>🏠 ${escapeHtml(t('map.home'))}</b>${userLocation.address ? '<br/>' + escapeHtml(userLocation.address) : ''}`);
       points.push([userLocation.lat, userLocation.lng]);
     }
 

@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+// L'échappement vivait ici, et c'était le seul des quatre cartes à l'avoir : il est maintenant partagé.
+import { escapeHtml } from '../../../escapeHtml';
 
 // Carte Leaflet des livraisons en cours : livreurs (violet, rouge si en retard), restaurants (or) et
 // points de livraison (encre). RestaurantsMap.jsx est trop lié à la fiche restaurant (popup, navigation
@@ -8,10 +10,6 @@ import 'leaflet/dist/leaflet.css';
 // `points` : [{ id, kind: 'driver' | 'restaurant' | 'client', lat, lng, label, sub, late }]
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 const EMOJI = { driver: '🚴', restaurant: '🍽️', client: '🏠' };
-
-function escapeHtml(s) {
-  return String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
 
 function icone(p) {
   return L.divIcon({

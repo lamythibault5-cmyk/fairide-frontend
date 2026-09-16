@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import { escapeHtml } from '../escapeHtml';
 
 const BRUSSELS_CENTER = [50.8503, 4.3517];
 
@@ -158,7 +159,10 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       return;
     }
     if (!homeMarkerRef.current) {
-      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: emojiIcon(homeEmoji, homeColor) }).addTo(mapRef.current).bindPopup(homeLabel);
+      // `homeLabel` est aujourd'hui alimenté par une clé de traduction, donc sans danger — mais c'est
+      // une propriété publique du composant, et rien n'empêcherait un prochain appelant d'y passer le
+      // nom d'un commerce. On échappe maintenant, tant que la question est encore théorique.
+      homeMarkerRef.current = L.marker([homeLat, homeLng], { icon: emojiIcon(homeEmoji, homeColor) }).addTo(mapRef.current).bindPopup(escapeHtml(homeLabel));
     } else {
       homeMarkerRef.current.setLatLng([homeLat, homeLng]);
     }
