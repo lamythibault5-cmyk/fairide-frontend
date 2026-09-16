@@ -1118,7 +1118,45 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .jeux-entete { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .jeux-retour { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
 .jeux-retour:hover { text-decoration: underline; }
-.jeux-terrain { min-height: 58svh; display: flex; flex-direction: column; }
+/* UNE HAUTEUR DÉFINIE, pas seulement un minimum. `min-height` laissait le terrain se dimensionner
+   sur son contenu — c'est-à-dire sur le canvas, que le canvas lui-même mesurait depuis lui : le
+   serpent se mordait la queue. Une hauteur ferme coupe la boucle à la racine, et le canvas n'a
+   plus qu'à s'y couler. 100svh moins la place de l'en-tête (retour, titre, sous-titre) et de la
+   barre d'onglets du bas. */
+.jeux-terrain { height: calc(100svh - 300px); min-height: 280px; display: flex; flex-direction: column; }
+
+/* Le terrain et le suivi de commande côte à côte. Sur téléphone, le suivi passe AU-DESSUS du
+   terrain : la partie se joue avec le pouce en bas de l'écran, et un panneau glissé là aurait pris
+   la place des mains. */
+.jeux-corps { display: flex; flex-direction: column; gap: 14px; }
+@media (min-width: 901px) {
+  .jeux-corps { display: grid; grid-template-columns: minmax(0, 1fr) 320px; align-items: start; gap: 18px; }
+  /* Le suivi vient en premier dans le document (voir JeuxPage) ; la grille le renvoie a droite. */
+  .jeux-corps .jeux-terrain { grid-column: 1; grid-row: 1; height: calc(100svh - 220px); }
+  .jeux-corps .suivi-panneau { grid-column: 2; grid-row: 1; }
+}
+
+/* Le panneau de suivi (components/SuiviEnCours.jsx). */
+.suivi-panneau {
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px;
+}
+.suivi-panneau-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.suivi-panneau-tete b { font-size: var(--t-body-md); }
+.suivi-panneau-type { margin: -4px 0 0; }
+.suivi-panneau-livreur { margin: 2px 0; }
+.suivi-panneau-carte { border-radius: var(--radius-field); overflow: hidden; }
+.suivi-panneau-note { margin: -4px 0 0; text-align: center; }
+.suivi-panneau-code {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--surface-soft); border-radius: var(--radius-field); padding: 10px 12px;
+}
+.suivi-panneau-code b { font-size: 20px; letter-spacing: 4px; font-variant-numeric: tabular-nums; }
+.suivi-panneau-lien {
+  display: inline-flex; align-items: center; gap: 7px; align-self: flex-start;
+  font-size: var(--t-body-sm); font-weight: 500; color: var(--iris); text-decoration: none;
+}
+.suivi-panneau-lien:hover { text-decoration: underline; }
 
 /* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
    carte, pas un terrain de jeu imposé à côté d'elle. */
@@ -1853,12 +1891,15 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   background: var(--iris); color: var(--cream); font-size: 14px; font-weight: 500;
   padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
 }
-/* Le raccourci vers les jeux, même forme que le bandeau de livraison mais en blanc : sur cette
-   carte, l'iris est réservé à la seule chose qui presse — une livraison en route. Jouer ne presse
-   pas, c'est une proposition. */
+/* Le raccourci vers les jeux. Il était blanc, au motif que l'iris devait rester à la livraison :
+   sur une carte couverte de pastilles blanches, il se fondait dans le décor et personne ne le
+   voyait. Il passe au LIME, qui est exactement fait pour ça — le CLAUDE.md l'autorise « as a
+   filled block with --ink text on it », et c'est le seul accent lime de cet écran, donc la règle
+   du « un seul accent par vue » tient. C'est maintenant la chose la plus visible de la carte,
+   ce qui est le but. */
 .carte-bandeau-jeux {
   display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
-  background: #fff; color: var(--ink); font-size: 14px; font-weight: 500;
+  background: var(--lime); color: var(--ink); font-size: 14px; font-weight: 700;
   padding: 11px 16px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3);
 }
 .carte-compte { margin: 0; align-self: flex-start; background: rgba(255,255,255,0.92); color: var(--ink-soft); font-size: 13px; padding: 5px 12px; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); }
@@ -2141,6 +2182,10 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 /* …et le terrain remplit la place laissée par son conteneur (GameFrame le mesure avec un ResizeObserver). */
 .jeu--fill { flex: 1; min-height: 0; }
 .jeu--fill .jeu-cadre { flex: 1; min-height: 0; width: 100%; }
+/* Le canvas sort du flux quand il remplit son cadre : ainsi il ne peut PLUS pousser la hauteur de
+   ce cadre, donc plus jamais reformer la boucle mesure -> agrandissement -> mesure qui faisait
+   descendre le terrain sans fin. La mesure de GameFrame est deja corrigee ; ceci ferme la porte. */
+.jeu--fill .jeu-canvas { position: absolute; inset: 0; width: 100% !important; height: 100% !important; }
 
 /* Sélecteur de jeu : six onglets emoji au-dessus du jeu (GameSwitcher.jsx). */
 .game-switcher { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }

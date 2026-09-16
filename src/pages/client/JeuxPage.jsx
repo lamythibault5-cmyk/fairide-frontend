@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import GameSwitcher from '../../components/GameSwitcher';
+import SuiviEnCours from '../../components/SuiviEnCours';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
@@ -42,8 +43,18 @@ export default function JeuxPage() {
         <h1 className="page-title" style={{ margin: 0 }}>{t('games.pageTitle')}</h1>
         <p className="small" style={{ margin: '4px 0 0' }}>{t('games.pageSub')}</p>
       </div>
-      <div className="jeux-terrain">
-        <GameSwitcher fill large />
+      {/* LE SUIVI VIENT AU JOUEUR. Il fallait sortir du jeu pour savoir où en était sa commande —
+          et la partie était perdue. Le panneau ne rend rien quand rien n'est en cours, auquel cas
+          le terrain récupère toute la largeur sans qu'aucune règle ne change. */}
+      <div className="jeux-corps">
+        {/* Le suivi AVANT le terrain dans le document, et non apres : sur telephone il s'affiche
+            au-dessus, et l'ordre de lecture au clavier comme au lecteur d'ecran doit etre celui
+            qu'on voit. Un column-reverse aurait inverse l'un sans l'autre. Sur grand ecran, la
+            grille le place en seconde colonne sans toucher a cet ordre. */}
+        <SuiviEnCours />
+        <div className="jeux-terrain">
+          <GameSwitcher fill large />
+        </div>
       </div>
     </div>
   );

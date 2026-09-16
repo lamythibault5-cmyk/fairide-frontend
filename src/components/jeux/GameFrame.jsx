@@ -183,6 +183,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   const conteneur = useRef(null);
   const canvas = useRef(null);
+  // Le contexte 2D du canvas, garde entre les images (voir preparerContexte).
+  const ctxRef = useRef(null);
   const pleinRef = useRef(false);
   pleinRef.current = plein;
   const instance = useRef(null);
@@ -209,9 +211,20 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   useEffect(() => {
     if (!fill && !plein) { setTaille({ w: width, h: height }); return undefined; }
     const el = conteneur.current; if (!el) return undefined;
+    // LA BOÎTE DE CONTENU, PAS LA BOÎTE DE BORDURE.
+    //
+    // Cette mesure utilisait getBoundingClientRect(), qui inclut la bordure. Le cadre en porte une
+    // de 1px : le canvas était donc posé 2px plus haut que la place réellement disponible, ce qui
+    // rendait le cadre 2px plus haut — et le ResizeObserver repartait. Le terrain grandissait de
+    // 2px par image, sans jamais s'arrêter.
+    //
+    // C'est aussi ce qui écroulait les images par seconde : à chaque mesure, preparerContexte()
+    // voyait une taille différente et réassignait c.width/c.height, ce qui RÉALLOUE le tampon du
+    // canvas et l'efface. Soixante réallocations d'un tampon de 800×1800 par seconde, pour rien.
+    // clientWidth/clientHeight donnent la boîte de contenu, bordure exclue : la mesure se stabilise
+    // dès la première image.
     const mesurer = () => {
-      const r = el.getBoundingClientRect();
-      const w = Math.max(120, Math.floor(r.width)); const h = Math.max(120, Math.floor(r.height));
+      const w = Math.max(120, el.clientWidth); const h = Math.max(120, el.clientHeight);
       setTaille((tt) => (tt.w === w && tt.h === h ? tt : { w, h }));
     };
     mesurer();
@@ -287,7 +300,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const dpr = Math.min(3, window.devicePixelRatio || 1);
     const { w, h } = tailleRef.current;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
-    const ctx = c.getContext('2d');
+    // Le contexte est gardé : getContext('2d') était rappelé à chaque image, soixante fois par
+    // seconde, alors qu'il rend toujours le même objet pour un canvas donné. On le relit seulement
+    // si le canvas a changé (changement de jeu, remontage).
+    if (ctxRef.current?.canvas !== c) ctxRef.current = c.getContext('2d');
+    const ctx = ctxRef.current;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return ctx;
   }
