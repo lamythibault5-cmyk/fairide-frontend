@@ -22,12 +22,15 @@ des choses qui demandent **un compte, une clé, un appareil ou une décision** �
 
 1. **Faire passer un commerce par les quatre conditions, puis une vraie commande** (§1)
 2. **Vérifier `STRIPE_SECRET_KEY`, `APP_URL`, `STRIPE_WEBHOOK_SECRET` sur Railway** (§2)
-3. **Poser les clés VAPID sur Railway** et vérifier une notification sur un vrai téléphone (§6)
-4. **Appliquer `schema.sql` sur Railway** — deux nouvelles tables attendent (§13)
-5. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel** avant le premier vrai commerce (§9)
-6. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
-7. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4)
-8. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)
+3. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel, PUIS reconstruire** — avant le premier vrai
+   commerce (§9). Les clés VAPID sont posées sur Railway depuis le 16 septembre ; reste à vérifier
+   une notification sur un vrai téléphone une fois les branches fusionnées (§6).
+4. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4)
+5. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
+6. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)
+
+`schema.sql` ne figure plus dans cette liste : il s'applique tout seul au démarrage du serveur,
+donc déployer suffit (§13).
 
 ---
 
@@ -55,6 +58,25 @@ livraison le **15**. Chacune est pilotée par sa propre variable (`FAIRIDE_DINE_
 `FAIRIDE_PICKUP_OPEN_AT`, `FAIRIDE_DELIVERY_OPEN_AT`), donc déplaçable sans redéploiement. Les
 comptes administrateurs et de test passent outre, ce qui permet d'essayer avant l'ouverture.
 
+**Relevé le 16 septembre 2026 sur les 90 commerces de production** (l'API publique expose les trois
+conditions de données) :
+
+| Condition | Remplie |
+|---|---|
+| `subscription_status` actif | **90 / 90** ✅ |
+| `admin_status` = `approved` | **90 / 90** ✅ |
+| `stripe_connect_status` = `active` | **0 / 90** ❌ |
+| Commerces réels (hors démo) | **0** |
+
+Autrement dit : **les 90 commerces en ligne sont des jeux de démonstration**, et aucun n'a configuré
+ses paiements. Le blocage ne tient donc pas au code mais à l'absence de vrais commerçants.
+
+À noter, c'est moins bloquant qu'il n'y paraît : sans Stripe Connect, un commerce peut quand même
+prendre des **réservations de table** (gratuites) et des **commandes à emporter payées sur place**
+(`routes/orders.js`, deux exemptions explicites). Ce qui reste impossible, c'est la livraison et tout
+paiement en ligne. Et pour la livraison, chaque **livreur** doit lui aussi avoir son Stripe Connect
+actif avant de pouvoir accepter une course.
+
 - [ ] Faire passer **au moins un commerce** par les quatre conditions, de bout en bout
 - [ ] Passer **une vraie commande complète** : panier → paiement → réception côté commerçant →
       attribution à un livreur → livraison confirmée. Cela n'a encore jamais été fait.
@@ -69,10 +91,26 @@ sur Stripe, sur l'attribution à un livreur, ni sur la livraison.
 
 ## 🔴 2. Configuration Stripe et Railway
 
-- [ ] **Vérifier `STRIPE_SECRET_KEY`** : `sk_test_` (aucun argent réel) ou `sk_live_` ?
-      Il faut le savoir avant d'annoncer quoi que ce soit à un commerçant.
-- [ ] **Vérifier `APP_URL` sur Railway.** Vérification de 10 secondes, conséquence majeure.
-- [ ] Confirmer que `STRIPE_WEBHOOK_SECRET` reste définie.
+**Relevé le 16 septembre 2026 sur `/api/health` en production** — le serveur expose lui-même quelles
+variables sont présentes (sans jamais révéler leur valeur) :
+
+| Variable | Présente ? |
+|---|---|
+| `APP_URL` | ✅ |
+| `STRIPE_SECRET_KEY` | ✅ |
+| `STRIPE_WEBHOOK_SECRET` | ✅ |
+| e-mail (Resend) | ✅ |
+| `ANTHROPIC_API_KEY` | ✅ |
+| PEPPOL | ✅ |
+| SMS (Twilio) | ❌ — facultatif, les codes repartent par e-mail |
+| itsme | ❌ — l'identité passe par Stripe Identity |
+
+- [x] `APP_URL` est bien définie — le point le plus risqué du §5 est donc sans objet en production
+- [x] `STRIPE_WEBHOOK_SECRET` est définie
+- [ ] **Reste à vérifier : la clé Stripe est-elle `sk_test_` ou `sk_live_` ?** `/api/health` dit
+      seulement qu'elle existe, pas laquelle. À lire dans les variables Railway, ou dans le tableau
+      de bord Stripe (bascule Test / Live). Il faut le savoir avant d'annoncer quoi que ce soit à un
+      commerçant : avec une clé de test, aucun argent ne bouge.
 
 Le code ne retombe plus sur `localhost` quand ces variables manquent (voir §5), mais il **refuse**
 alors de servir : paiement, abonnement, inscription Stripe et lien de réinitialisation répondent
@@ -185,9 +223,13 @@ C'est construit, des deux côtés :
 - les abonnements morts (404/410) sont supprimés à l'envoi, sans quoi la table se remplirait
   d'adresses qu'on retenterait à chaque commande.
 
-- [ ] **Générer une paire VAPID et la poser sur Railway** (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
-      `VAPID_SUBJECT`). Sans elles, la fonction se déclare inactive et rien ne casse : les commandes
-      restent notifiées par e-mail.
+- [x] **Générer une paire VAPID et la poser sur Railway** (`VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+      `VAPID_SUBJECT`) — **fait le 16 septembre 2026.** Sans elles, la fonction se serait déclarée
+      inactive sans rien casser : les commandes seraient restées notifiées par e-mail.
+      Pas encore vérifiable : la route `/api/push/key` n'existera en production qu'une fois la branche
+      backend fusionnée. Après la fusion, ouvrir
+      `https://fairide-backend-production.up.railway.app/api/push/key` : elle doit répondre
+      `"enabled": true` et une longue clé. Si elle répond `false`, les variables ne sont pas prises.
 - [ ] **Vérifier la réception sur un vrai téléphone.** Ce point n'a pas pu être vérifié : le
       navigateur piloté refuse la permission de notification sans interface, donc aucun abonnement
       réel n'a pu être créé. Ce qui a été vérifié : signature VAPID, envoi HTTP réel, purge d'une
@@ -239,11 +281,26 @@ trompeuse, et c'est **le commerçant** qui reçoit la réclamation.
 
 **Décision : couper à la mise en ligne**, garder actif pour les démonstrations.
 
-- [ ] Ajouter `VITE_STOCK_DISH_PHOTOS=off` sur Vercel avant le premier vrai commerce
+- [ ] **Poser la variable sur Vercel, puis reconstruire.** Marche à suivre :
+      1. vercel.com → projet **fairide-frontend** → **Settings** → **Environment Variables**
+      2. **Add** : nom `VITE_STOCK_DISH_PHOTOS`, valeur `off` (trois lettres, minuscules, sans espace)
+      3. Cocher **Production** — et **Preview** aussi, si les aperçus doivent être propres
+      4. **Save**
+      5. **Deployments** → le déploiement le plus récent → **⋯** → **Redeploy**
 
-⚠️ Le défaut est `on`, et **seule la valeur exacte `off` désactive** : une faute de frappe laisse les
-photos actives. Le défaut peut être inversé pour que l'oubli coupe au lieu d'activer — au prix des
-démonstrations, qui s'en trouveraient dépeuplées. À décider.
+⚠️ **L'étape 5 n'est pas optionnelle.** Vite lit les variables `VITE_*` *pendant la construction* et
+inscrit leur valeur dans le JavaScript produit ; le site en ligne ne relit jamais la variable.
+Poser la variable sans reconstruire ne change donc rien du tout — contrairement à Railway, où le
+serveur relit ses variables à chaque démarrage.
+
+⚠️ **Seule la valeur exacte `off` désactive.** `Off`, `OFF`, `false`, `0` ou un espace en trop
+laissent les photos **actives** (`menuCategories.js`, le test est `!== 'off'`). Le défaut est `on` :
+une faute de frappe échoue donc du mauvais côté. Le défaut peut être inversé pour que l'oubli coupe
+au lieu d'activer — au prix des démonstrations, qui s'en trouveraient dépeuplées. À décider.
+
+**Pour vérifier :** ouvrir une fiche de commerce sur fairide.be dont des plats n'ont pas de vraie
+photo. Ils doivent montrer l'emoji de leur catégorie, et non une photo. Si les photos sont toujours
+là, c'est la reconstruction qui manque, pas la variable.
 
 ---
 
@@ -292,9 +349,12 @@ parcours de paiement continue d'être vérifiée à la main — d'où l'importan
 
 Le code est écrit et fusionné dans `main`. Rien n'a encore été exécuté contre la base de production.
 
-- [ ] **Appliquer `schema.sql` sur Railway.** Tout est en `CREATE TABLE IF NOT EXISTS`, donc rejouer
-      le fichier entier est sans risque. **Deux tables attendent maintenant** : `menu_item_translations`
-      et `push_subscriptions` (§6).
+- [x] **Appliquer `schema.sql` sur Railway — RIEN À FAIRE À LA MAIN.** Le fichier est rejoué à
+      chaque démarrage du serveur (`initSchema()` dans `db.js`, appelé par `server.js` ; la première
+      ligne de `schema.sql` le dit). Tout est en `CREATE TABLE IF NOT EXISTS`, donc c'est sans risque
+      pour les données. **Déployer, c'est appliquer le schéma** : les deux tables qui attendent
+      (`menu_item_translations` et `push_subscriptions`) arriveront à la fusion des branches. Aucune
+      console SQL, aucune commande.
 - [ ] **Vérifier `ANTHROPIC_API_KEY`.** Déjà requise par l'import de menu : si l'import fonctionne,
       la clé est là.
 - [ ] **Tester sur UN seul commerce** avant d'annoncer le bouton aux autres.
