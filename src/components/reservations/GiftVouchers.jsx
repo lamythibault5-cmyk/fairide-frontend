@@ -3,6 +3,7 @@ import { api } from '../../api';
 import ConfirmDialog from '../ConfirmDialog';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateCourte, euros } from './resaUtils';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // BONS CADEAUX — vendus et encaissés par le restaurant lui-même (comptoir, virement) : création avec
 // carte imprimable et envoi par e-mail, recherche par code ou nom, utilisation partielle au comptoir,
@@ -20,7 +21,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
   const [totaux, setTotaux] = useState(null);
   const [erreur, setErreur] = useState('');
   const [q, setQ] = useState('');
-  const [statut, setStatut] = useState('tous');
+  const [statut, setStatut] = useEtatPage('statutBons', 'tous');
   const [creation, setCreation] = useState(false);
   const [ouvert, setOuvert] = useState(null);
   const [version, setVersion] = useState(0);

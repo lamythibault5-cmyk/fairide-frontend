@@ -7,6 +7,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { estCompteTest, TestBadge, fmtDate } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const SECTIONS = ['Tarification', 'Utilisateurs'];
 const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Avis": tr('adminSettings.section_reviews'), "Codes promo": tr('adminSettings.section_promos') });
@@ -39,7 +40,7 @@ export default function AdminSettingsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const [section, setSection] = useState('Tarification');
+  const [section, setSection] = useEtatPage('section', 'Tarification');
   const [pricing, setPricing] = useState(null);
   const [pricingForm, setPricingForm] = useState(null);
   const [confirmSave, setConfirmSave] = useState(false);

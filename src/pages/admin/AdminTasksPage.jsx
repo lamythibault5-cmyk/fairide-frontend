@@ -17,6 +17,7 @@ import {
   TASK_PRIORITY_LABELS, TASK_STATUSES, TASK_STATUS_LABELS, TASK_DUE_STATE_LABELS, TASK_TARGET_TYPE_LABELS
 } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -34,7 +35,7 @@ export default function AdminTasksPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState(null);
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [status, setStatus] = useEtatPage('statut', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
   const [priority, setPriority] = useState('');
   const [due, setDue] = useState(searchParams.get('due') || '');
   const [assignee, setAssignee] = useState('');

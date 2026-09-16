@@ -9,6 +9,7 @@ import { useLanguage } from '../../../context/LanguageContext';
 import { useToast } from '../../../context/ToastContext';
 import { downloadCsv, fmtDateTime } from '../adminUtils';
 import { useApiData, LoadState, KpiCard } from './common';
+import useEtatPage from '../../../hooks/useEtatPage';
 
 // Onglet Zones : les 19 communes, leur état (active / suspendue), leur activité sur 30 jours et une fiche
 // (tiroir) pour le supplément, le délai annoncé et les notes internes. Suspendre une commune passe par
@@ -20,7 +21,7 @@ export default function ZonesTab() {
   const zones = useApiData(() => api('/admin/logistics/zones', { token }), []);
   const { sort, toggle } = useTableSort('commune', 'asc');
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useEtatPage('filtreZones', 'all');
   const [pending, setPending] = useState(null); // zone à suspendre (confirmation)
   const [busy, setBusy] = useState(null); // commune en cours d'enregistrement
   const [ouverte, setOuverte] = useState(null); // zone affichée dans le tiroir

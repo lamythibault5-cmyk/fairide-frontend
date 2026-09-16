@@ -5,6 +5,7 @@ import FloorPlan, { AREA_ICONS, areaLabel } from '../FloorPlan';
 import { useLanguage } from '../../context/LanguageContext';
 import ReservationRow from './ReservationRow';
 import { dateCourte, decalerJour, estActive, etatResa, euros, heureInput, heureLocale, instantBruxelles, isoDuJour, libelleJour, lundiDe, minutesDansLeJour, nomTable } from './resaUtils';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // AGENDA — le cahier de réservation : vue jour (grille salle × heures + liste), vue semaine, saisie
 // rapide d'une réservation reçue par téléphone, recherche par nom / téléphone, filtres par état,
@@ -32,7 +33,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
     const demandee = new URLSearchParams(window.location.search).get('date');
     return /^\d{4}-\d{2}-\d{2}$/.test(demandee || '') ? demandee : isoDuJour(new Date());
   });
-  const [vue, setVue] = useState('jour');
+  const [vue, setVue] = useEtatPage('vueAgenda', 'jour');
   const [donnees, setDonnees] = useState(null);
   const [semaine, setSemaine] = useState(null);
   const [chargement, setChargement] = useState(true);
@@ -40,7 +41,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
   const [ouverte, setOuverte] = useState(null);
   const [formulaire, setFormulaire] = useState(null); // null | 'rapide' | 'assistant'
   const [placer, setPlacer] = useState(null);
-  const [filtre, setFiltre] = useState('tous');
+  const [filtre, setFiltre] = useEtatPage('filtreAgenda', 'tous');
   const [recherche, setRecherche] = useState('');
   const [resultats, setResultats] = useState(null);
   const [rechercheEnCours, setRechercheEnCours] = useState(false);

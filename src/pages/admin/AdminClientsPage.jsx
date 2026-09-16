@@ -19,6 +19,7 @@ import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, downloadCsv, useDebouncedValue, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -31,7 +32,7 @@ export default function AdminClientsPage() {
   const toast = useToast();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -39,10 +40,10 @@ export default function AdminClientsPage() {
   const [busy, setBusy] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
   const [mode, setMode] = useViewMode('clients', 'cards');
-  const [filtre, setFiltre] = useState(searchParams.get('filter') || 'all');
-  const [nature, setNature] = useState('all');
-  const [groupBy, setGroupBy] = useState('');
-  const [triServeur, setTriServeur] = useState('created_desc');
+  const [filtre, setFiltre] = useEtatPage('filtre', searchParams.get('filter') || 'all', { forcer: !!searchParams.get('filter') });
+  const [nature, setNature] = useEtatPage('nature', 'all');
+  const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
+  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
   const { sort, toggle } = useTableSort('totalSpent');
   // Ajustement de solde : { client, sens: 'credit' | 'debit' } ; le montant est saisi dans le dialogue.
   const [solde, setSolde] = useState(null);

@@ -11,6 +11,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApiData, LoadState, Pagination, RestaurantLink, DriverLink, OrderLink } from './accounting/common';
 import { StripeBalanceCard } from './accounting/OtherTabs';
 import '../../admin-finance.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Paiements — encaissements Stripe, virements aux partenaires, rapprochement. Le sélecteur de période
 // est celui du groupe Finance (corrige au passage l'ancien trimestre envoyé sans son numéro).
@@ -23,7 +24,7 @@ export default function AdminPaymentsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const [tab, setTab] = useState('overview');
+  const [tab, setTab] = useEtatPage('onglet', 'overview');
   const { period, setPeriod, queryString } = usePeriod();
   const labels = tabLabels(tr);
 
@@ -75,7 +76,7 @@ function OverviewTab({ token, periodQuery }) {
 function PaymentsListTab({ token, toast }) {
   const { t: tr } = useLanguage();
   const { sort, toggle } = useTableSort('createdAt');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useEtatPage('statutPaiements', '');
   const [paymentMode, setPaymentMode] = useState('');
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
@@ -149,8 +150,8 @@ const payoutComponentLabels = (tr) => ({ restaurant_share: tr('adminPayments.com
 function PayoutsTab({ token, toast, periodQuery }) {
   const { t: tr } = useLanguage();
   const { sort, toggle } = useTableSort('createdAt');
-  const [recipientType, setRecipientType] = useState('');
-  const [status, setStatus] = useState('pending');
+  const [recipientType, setRecipientType] = useEtatPage('typeBeneficiaire', '');
+  const [status, setStatus] = useEtatPage('statutVersements', 'pending');
   const [page, setPage] = useState(0);
   const comp = payoutComponentLabels(tr);
 
@@ -220,7 +221,7 @@ const reconciliationLabels = (tr) => ({ rapproche: tr('adminCommon.reconciledOne
 // l'angle « Paiements » : compteurs, liste filtrable, CSV, et un lien vers la vue complète.
 function ReconciliationTab({ token, toast, periodQuery }) {
   const { t: tr } = useLanguage();
-  const [filter, setFilter] = useState('non_rapproche');
+  const [filter, setFilter] = useEtatPage('filtreRappro', 'non_rapproche');
   const state = useApiData(() => api(`/admin/accounting/reconciliation?${periodQuery}`, { token }), [periodQuery]);
   const labels = reconciliationLabels(tr);
 

@@ -17,6 +17,7 @@ import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTa
 import { ErrorCard, Pager, ResultCount, SelectBox, SelectionBar, runForEach, selectionColumn, useSelection } from '../../components/admin/AdminListTools';
 import { money, fmtDateTime, downloadCsv, useDebouncedValue, ORDER_STATUS_LABELS, ORDER_STATUSES, ACCOUNTING_ENTRY_TYPE_LABELS } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const filters = (tr) => [
   { key: '', label: tr('adminCommon.allF') },
@@ -67,13 +68,13 @@ export default function AdminOrdersPage() {
   const [erreur, setErreur] = useState(null);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
-  const [qInput, setQInput] = useState(searchParams.get('q') || '');
+  const [qInput, setQInput] = useEtatPage('recherche', searchParams.get('q') || '', { forcer: !!(searchParams.get('q') || '') });
   const q = useDebouncedValue(qInput, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [mode, setMode] = useViewMode('orders');
   const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
-  const [groupBy, setGroupBy] = useState('');
+  const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
   const { sort, toggle } = useTableSort('createdAt');
   const [exporting, setExporting] = useState(false);
   const sel = useSelection(orders);

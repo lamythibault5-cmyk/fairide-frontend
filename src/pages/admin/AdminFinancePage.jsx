@@ -10,6 +10,7 @@ import { money, fmtDate, fmtDateTime, downloadCsv } from './adminUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useApiData, LoadState, Pagination, RestaurantLink, DriverLink, OrderLink } from './accounting/common';
 import '../../admin-finance.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Finance — vue économique : ce que Fairide gagne sur la période, ce qu'elle doit reverser, détail par
 // restaurant, par livreur, par transaction et par remboursement. Même sélecteur de période que la
@@ -29,7 +30,7 @@ export default function AdminFinancePage() {
   const { token } = useAuth();
   const toast = useToast();
   const { period, setPeriod, bounds } = usePeriod({ allowAll: true });
-  const [tableTab, setTableTab] = useState('by-restaurant');
+  const [tableTab, setTableTab] = useEtatPage('ongletTableau', 'by-restaurant');
   const [page, setPage] = useState(0);
   const { sort, toggle } = useTableSort('');
   const { from, to } = bounds;

@@ -11,6 +11,7 @@ import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListTools';
 import { fmtDateTime, filterBySearch, downloadCsv } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Application Avis : modération des avis clients (plats et livraison), avec recherche, filtre par note,
 // notes moyennes, et suppression d'un avis abusif. Pagination côté serveur (limit/offset + X-Total-Count) ;
@@ -46,7 +47,7 @@ export default function AdminReviewsPage() {
   const [page, setPage] = useState(0);
   const [erreur, setErreur] = useState(null);
   const [search, setSearch] = useState('');
-  const [filtre, setFiltre] = useState(searchParams.get('low') ? 'low' : 'all'); // all | low | high | comments
+  const [filtre, setFiltre] = useEtatPage('filtre', searchParams.get('low') ? 'low' : 'all', { forcer: !!searchParams.get('low') }); // all | low | high | comments
   const [aSupprimer, setASupprimer] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('reviews', 'cards');

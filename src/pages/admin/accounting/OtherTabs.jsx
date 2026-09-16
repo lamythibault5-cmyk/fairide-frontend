@@ -4,6 +4,7 @@ import ConfirmDialog from '../../../components/ConfirmDialog';
 import { useLanguage } from '../../../context/LanguageContext';
 import { money, fmtDate, fmtDateTime, downloadCsv } from '../adminUtils';
 import { useApiData, LoadState, ErrorState, ReasonDialog, RestaurantLink, DriverLink, OrderLink } from './common';
+import useEtatPage from '../../../hooks/useEtatPage';
 
 // Rapprochement (paiements Stripe ↔ commandes ↔ remboursements ↔ virements), clôture des périodes
 // (verrouillage mois par mois) et plan comptable.
@@ -39,7 +40,7 @@ export function StripeBalanceCard({ token }) {
 
 export function ReconciliationTab({ token, toast, periodKey }) {
   const { t: tr } = useLanguage();
-  const [filter, setFilter] = useState('non_rapproche');
+  const [filter, setFilter] = useEtatPage('filtreRapprochement', 'non_rapproche');
   const state = useApiData(() => api(`/admin/accounting/reconciliation?${periodKey}`, { token }), [periodKey]);
   const labels = reconciliationLabels(tr);
 

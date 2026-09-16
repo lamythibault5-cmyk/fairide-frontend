@@ -19,6 +19,7 @@ import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const activityLabels = (tr) => ({
   disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
@@ -44,7 +45,7 @@ export default function AdminDriversPage() {
   const toast = useToast();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [search, setSearch] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const [search, setSearch] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
   const q = useDebouncedValue(search, 350);
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
@@ -52,16 +53,16 @@ export default function AdminDriversPage() {
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('drivers', 'cards');
   const filtre = searchParams.get('status') || 'all';
-  const [nature, setNature] = useState('all');
+  const [nature, setNature] = useEtatPage('nature', 'all');
   // Type de livreur (statut légal du dossier coursier) : student | p2p | independent | none (pas encore choisi).
-  const [typeLivreur, setTypeLivreur] = useState('all');
+  const [typeLivreur, setTypeLivreur] = useEtatPage('typeLivreur', 'all');
   const TYPES_LIVREUR = ['student', 'p2p', 'independent'];
   const typeDe = (d) => d.courier?.statusType || 'none';
   const libelleType = (k) => (k === 'none' ? tr('adminDrivers.statusNotChosen') : tr(`courierOnboarding.status_${k}`));
   const emojiType = (k) => ({ student: '🎓', p2p: '🤝', independent: '💼' }[k] || '❔');
-  const [activite, setActivite] = useState('');
-  const [groupBy, setGroupBy] = useState('');
-  const [triServeur, setTriServeur] = useState('created_desc');
+  const [activite, setActivite] = useEtatPage('activite', '');
+  const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
+  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
   const { sort, toggle } = useTableSort('deliveriesCount');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);

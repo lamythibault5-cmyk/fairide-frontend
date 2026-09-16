@@ -17,6 +17,7 @@ import LedgerTab from './accounting/LedgerTab';
 import { IncomeStatementTab, BalanceSheetTab, VatTab } from './accounting/ReportsTabs';
 import { ReconciliationTab, ClosingTab, ChartOfAccountsTab } from './accounting/OtherTabs';
 import '../../admin-finance.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 // Comptabilité — application du groupe Finance, dans l'esprit d'Odoo Comptabilité : une période
 // partagée en haut, des onglets qui vont du pilotage (vue d'ensemble) aux documents légaux (compte de
@@ -219,7 +220,7 @@ function groupEntries(rows) {
 function JournalTab({ token, toast, dateFrom, dateTo, searchParams, go }) {
   const { t: tr } = useLanguage();
   const [entryType, setEntryType] = useState('');
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [status, setStatus] = useEtatPage('statutCompta', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
   const [q, setQ] = useState('');
   const [page, setPage] = useState(0);
   const [openGroup, setOpenGroup] = useState(null);

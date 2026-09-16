@@ -15,6 +15,7 @@ import PartnersTab from './incidents/PartnersTab';
 import NewIncidentForm from './incidents/NewIncidentForm';
 import { INCIDENT_TYPES, RESPONSIBILITIES, STATUSES, PRIORITIES, typeLabel, respLabel, statusLabel, priorityLabel, estOuvert } from './incidents/labels';
 import '../../admin-incidents.css';
+import useEtatPage from '../../hooks/useEtatPage';
 
 const PAGE_SIZE = 25;
 const TABS = ['list', 'partners', 'new'];
@@ -28,14 +29,14 @@ export default function AdminIncidentsPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { period, setPeriod, queryString } = usePeriod({ allowAll: true });
-  const [tab, setTab] = useState(() => (searchParams.get('new') === '1' ? 'new' : (TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'list')));
-  const [status, setStatus] = useState(searchParams.get('status') || '');
+  const [tab, setTab] = useEtatPage('onglet', () => (searchParams.get('new') === '1' ? 'new' : (TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'list')), { forcer: searchParams.get('new') === '1' || TABS.includes(searchParams.get('tab')) });
+  const [status, setStatus] = useEtatPage('statut', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
   const [type, setType] = useState(searchParams.get('type') || '');
   const [responsibility, setResponsibility] = useState(searchParams.get('responsibility') || '');
   const [priority, setPriority] = useState('');
-  const [overdueOnly, setOverdueOnly] = useState(searchParams.get('overdue') === '1');
+  const [overdueOnly, setOverdueOnly] = useEtatPage('enRetard', searchParams.get('overdue') === '1', { forcer: searchParams.get('overdue') === '1' });
   const [partner, setPartner] = useState(null); // { key: 'restaurantId' | 'driverId' | 'clientId', id, name }
-  const [qInput, setQInput] = useState(location.state?.presetSearch || searchParams.get('q') || '');
+  const [qInput, setQInput] = useEtatPage('recherche', location.state?.presetSearch || searchParams.get('q') || '', { forcer: !!(location.state?.presetSearch || searchParams.get('q') || '') });
   const q = useDebouncedValue(qInput, 350);
   const [page, setPage] = useState(0);
   const [data, setData] = useState(null);
