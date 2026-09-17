@@ -1789,8 +1789,7 @@ export const translations = {
       publicYesSub: 'Il apparaîtra sur le podium, visible par tous les utilisateurs, si tu es dans le top 3 d\'un jeu.',
       publicNo: 'Non, je le garde privé',
       publicNoSub: 'Tes scores sont gardés, mais tu n\'apparais sur aucun podium. Tu peux changer d\'avis plus tard.',
-      publicRequired: 'Réponds à la question : ton pseudo peut-il être affiché publiquement ?',
-      later: 'Plus tard'
+      publicRequired: 'Réponds à la question : ton pseudo peut-il être affiché publiquement ?'
     },
     addressReco: {
       searching: 'Reconnaissance de l\'adresse…',
@@ -8418,8 +8417,7 @@ export const translations = {
       publicYesSub: 'It will appear on the leaderboard, visible to all users, if you are in the top 3 of a game.',
       publicNo: 'No, keep it private',
       publicNoSub: 'Your scores are kept, but you won\'t appear on any leaderboard. You can change your mind later.',
-      publicRequired: 'Please answer: can your nickname be shown publicly?',
-      later: 'Later'
+      publicRequired: 'Please answer: can your nickname be shown publicly?'
     },
     addressReco: {
       searching: 'Recognising the address…',
@@ -15023,8 +15021,7 @@ export const translations = {
       publicYesSub: 'Hij verschijnt op het podium, zichtbaar voor alle gebruikers, als je in de top 3 van een spel staat.',
       publicNo: 'Nee, ik hou hem privé',
       publicNoSub: 'Je scores worden bewaard, maar je staat op geen enkel podium. Je kunt later van gedachten veranderen.',
-      publicRequired: 'Beantwoord de vraag: mag je bijnaam openbaar getoond worden?',
-      later: 'Later'
+      publicRequired: 'Beantwoord de vraag: mag je bijnaam openbaar getoond worden?'
     },
     addressReco: {
       searching: 'Adres herkennen…',

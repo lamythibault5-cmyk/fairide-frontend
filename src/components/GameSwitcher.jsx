@@ -81,7 +81,7 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
       {/* Rendue dans l'élément en plein écran s'il y en a un, sinon dans la page : ailleurs, elle restait cachée
           derrière la vue agrandie (z-index 200) ou le vrai plein écran du navigateur. */}
       {social.modal && createPortal(
-        <PseudoModal profil={social.profil} apres={social.modal.apres} accueil={!!social.modal.accueil} onSave={social.sauverProfil} onClose={social.fermerModal} />,
+        <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />,
         document.fullscreenElement || document.webkitFullscreenElement || document.body
       )}
     </div>
