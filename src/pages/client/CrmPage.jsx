@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -9,9 +8,9 @@ import RetourCompte from '../../components/RetourCompte';
 
 import '../../crm.css';
 
-// CRM des commerciaux (« sales ») : la personne qui a saisi un code commercial dans Mon compte enregistre ici les
+// CRM des commerciaux (« sales ») : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
 // commerces qu'elle démarche, et où ils en sont — étape, visites, appels, notes datées, avis du restaurateur,
-// prochaine action. Un compte client sans code n'a pas accès à cette page (le serveur répond 403 NOT_SALES_AGENT,
+// prochaine action. Un compte client sans cet accès n'a pas cette page (le serveur répond 403 NOT_SALES_AGENT,
 // et Mon compte n'affiche pas le lien). Serveur : routes/adminSales.js (/sales/…).
 
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
@@ -29,7 +28,7 @@ export default function CrmPage() {
   const { token } = useAuth();
   const toast = useToast();
   const locale = getLocale();
-  const [etat, setEtat] = useState(null); // { agent, stats } ; agent: false = pas de code
+  const [etat, setEtat] = useState(null); // { agent, stats } ; agent: false = accès non donné par l'admin
   const [prospects, setProspects] = useState(null);
   const [filtre, setFiltre] = useState('');
   const [recherche, setRecherche] = useState('');
@@ -51,7 +50,7 @@ export default function CrmPage() {
       <div>
         <RetourCompte />
         <h1 className="section-title" style={{ marginTop: 0 }}>{t('sales.title')}</h1>
-        <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.notAgent')} <Link to="/account?ouvrir=commercial">{t('sales.enterCode')}</Link></p></div>
+        <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.notAgent')}</p></div>
       </div>
     );
   }

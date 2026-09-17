@@ -48,5 +48,5 @@
 textarea { font: inherit; }
 
 /* Admin › Sales : codes, agents, prospects. */
-.sales-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .06em; }
-.sales-inactif { opacity: .55; }
+.sales-resultats { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+.sales-resultats li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }

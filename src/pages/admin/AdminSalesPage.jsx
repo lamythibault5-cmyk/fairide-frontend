@@ -12,10 +12,10 @@ import { ErrorCard } from '../../components/admin/AdminListTools';
 import useEtatPage from '../../hooks/useEtatPage';
 import '../../crm.css';
 
-// Application « Sales » : les codes commerciaux (créés ici, donnés aux proches qui démarchent), les agents qui les
-// ont activés, et tous les commerces démarchés avec leur étape et leur historique. Côté agent : pages/client/CrmPage.jsx.
+// Application « Sales » : les commerciaux (des comptes clients auxquels l'admin donne l'accès ici — pas de code à
+// distribuer) et tous les commerces démarchés avec leur étape et leur historique. Côté agent : pages/client/CrmPage.jsx.
 // Serveur : routes/adminSales.js.
-const TABS = ['codes', 'agents', 'prospects'];
+const TABS = ['agents', 'prospects'];
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
 const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
@@ -27,7 +27,7 @@ export default function AdminSalesPage() {
   const locale = getLocale();
   const [searchParams] = useSearchParams();
   const tabDemande = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : null;
-  const [onglet, setOnglet] = useEtatPage('onglet', tabDemande || 'codes', { forcer: !!tabDemande });
+  const [onglet, setOnglet] = useEtatPage('onglet', tabDemande || 'agents', { forcer: !!tabDemande });
   const [stats, setStats] = useState(null);
   const [rafraichir, setRafraichir] = useState(0);
   useEffect(() => { api('/admin/sales/stats', { token }).then(setStats).catch(() => {}); }, [token, rafraichir]);
@@ -40,7 +40,6 @@ export default function AdminSalesPage() {
       <AdminPageHeader module="sales" />
       {stats && (
         <div className="stat-grid">
-          <div className="stat-card"><div className="num">{stats.codesActive}/{stats.codes}</div><div className="label">{tr('adminSales.statCodes')}</div></div>
           <div className="stat-card"><div className="num">{stats.agents}</div><div className="label">{tr('adminSales.statAgents')}</div></div>
           <div className="stat-card"><div className="num">{stats.prospects}</div><div className="label">{tr('adminSales.statProspects')}</div></div>
           <div className="stat-card"><div className="num">{stats.newThisWeek}</div><div className="label">{tr('adminSales.statWeek')}</div></div>
@@ -51,87 +50,90 @@ export default function AdminSalesPage() {
       <div className="role-pick" style={{ marginBottom: 14 }}>
         {TABS.map((k) => <button key={k} type="button" className={`chip${onglet === k ? ' active' : ''}`} onClick={() => setOnglet(k)}>{tr(`adminSales.tab_${k}`)}</button>)}
       </div>
-      {onglet === 'codes' && <CodesTab {...commun} />}
-      {onglet === 'agents' && <AgentsTab {...commun} onVoirProspects={() => setOnglet('prospects')} />}
+      {onglet === 'agents' && <AgentsTab {...commun} />}
       {onglet === 'prospects' && <ProspectsTab {...commun} retardInitial={searchParams.get('overdue') === '1'} />}
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------------------------- codes
-function CodesTab({ token, tr, toast, fmt, onChanged }) {
-  const [codes, setCodes] = useState(null);
-  const [erreur, setErreur] = useState(null);
-  const [form, setForm] = useState({ label: '', code: '', maxUses: '' });
-  const [envoi, setEnvoi] = useState(false);
-  const { sort, toggle } = useTableSort('createdAt', 'desc');
-  const charger = useCallback(() => { setErreur(null); api('/admin/sales/codes', { token }).then(setCodes).catch((e) => setErreur(e.message)); }, [token]);
-  useEffect(charger, [charger]);
-
-  async function creer(e) {
-    e.preventDefault(); setEnvoi(true);
-    try {
-      const c = await api('/admin/sales/codes', { method: 'POST', token, body: { label: form.label, code: form.code || undefined, maxUses: form.maxUses === '' ? null : Number(form.maxUses) } });
-      setForm({ label: '', code: '', maxUses: '' }); toast(tr('adminSales.toastCodeCreated', { code: c.code })); charger(); onChanged();
-    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
-  }
-  async function basculer(c) {
-    try { await api(`/admin/sales/codes/${c.id}`, { method: 'PATCH', token, body: { active: !c.active } }); charger(); onChanged(); } catch (err) { toast(err.message); }
-  }
-  function copier(code) { navigator.clipboard?.writeText(code).then(() => toast(tr('adminSales.toastCopied'))).catch(() => {}); }
-
-  const columns = [
-    { key: 'code', label: tr('adminSales.colCode'), get: (c) => <span className={`sales-code${c.active ? '' : ' sales-inactif'}`}>{c.code}</span>, sortValue: (c) => c.code },
-    { key: 'label', label: tr('adminSales.colLabel'), get: (c) => c.label || '-' },
-    { key: 'usesCount', label: tr('adminSales.colUses'), get: (c) => `${c.usesCount}${c.maxUses ? ` / ${c.maxUses}` : ''}`, sortValue: (c) => c.usesCount, align: 'right' },
-    { key: 'agentsCount', label: tr('adminSales.colAgents'), get: (c) => c.agentsCount, align: 'right' },
-    { key: 'active', label: tr('adminSales.colStatus'), get: (c) => <span className={`pill ${c.active ? 'listing-on' : 'listing-off'}`}>{c.active ? tr('adminSales.active') : tr('adminSales.inactive')}</span>, sortValue: (c) => (c.active ? 1 : 0) },
-    { key: 'createdAt', label: tr('adminSales.colCreated'), get: (c) => fmt(c.createdAt), sortValue: (c) => c.createdAt },
-    { key: 'actions', label: '', get: (c) => (
-      <span className="row" style={{ gap: 6 }}>
-        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); copier(c.code); }}>{tr('adminSales.copy')}</button>
-        <button type="button" className={c.active ? 'btn-danger-ghost' : 'btn-outline'} style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); basculer(c); }}>{c.active ? tr('adminSales.deactivate') : tr('adminSales.reactivate')}</button>
-      </span>
-    ) }
-  ];
-  return (
-    <div>
-      <form className="card" onSubmit={creer} style={{ marginBottom: 14 }}>
-        <b>{tr('adminSales.newCodeTitle')}</b>
-        <p className="small" style={{ margin: '4px 0 10px' }}>{tr('adminSales.newCodeHelp')}</p>
-        <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          <div className="field" style={{ flex: '2 1 200px', margin: 0 }}><label htmlFor="sales-label">{tr('adminSales.fLabel')}</label><input id="sales-label" value={form.label} onChange={(e) => setForm({ ...form, label: e.target.value })} placeholder={tr('adminSales.fLabelPh')} /></div>
-          <div className="field" style={{ flex: '1 1 160px', margin: 0 }}><label htmlFor="sales-code">{tr('adminSales.fCode')}</label><input id="sales-code" value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder={tr('adminSales.fCodePh')} /></div>
-          <div className="field" style={{ flex: '0 1 120px', margin: 0 }}><label htmlFor="sales-max">{tr('adminSales.fMaxUses')}</label><input id="sales-max" type="number" min="1" value={form.maxUses} onChange={(e) => setForm({ ...form, maxUses: e.target.value })} placeholder="∞" /></div>
-          <button type="submit" className="btn-gold" disabled={envoi}>{envoi ? '…' : tr('adminSales.createCode')}</button>
-        </div>
-      </form>
-      {erreur && <ErrorCard message={erreur} onRetry={charger} />}
-      {codes && <AdminDataTable columns={columns} rows={codes} sort={sort} onSort={toggle} emptyLabel={tr('adminSales.noCodes')} />}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------------------------- agents
-function AgentsTab({ token, tr, fmt }) {
+// ---------------------------------------------------------------------------------------------- commerciaux
+// L'admin choisit ici quels comptes clients deviennent commerciaux : il cherche le compte (nom ou e-mail), clique
+// « Donner l'accès », et la rubrique « CRM commerçants » apparaît dans le Mon compte de cette personne. « Retirer
+// l'accès » sur la ligne la referme ; ses commerces démarchés restent visibles dans l'onglet suivant.
+function AgentsTab({ token, tr, fmt, toast, onChanged }) {
   const [agents, setAgents] = useState(null);
   const [erreur, setErreur] = useState(null);
+  const [q, setQ] = useState('');
+  const [resultats, setResultats] = useState(null);
+  const [label, setLabel] = useState('');
+  const [aRetirer, setARetirer] = useState(null);
   const { sort, toggle } = useTableSort('activatedAt', 'desc');
   const charger = useCallback(() => { setErreur(null); api('/admin/sales/agents', { token }).then(setAgents).catch((e) => setErreur(e.message)); }, [token]);
   useEffect(charger, [charger]);
+
+  // Recherche d'un compte client (nom ou e-mail), avec un léger délai pour ne pas interroger à chaque frappe.
+  useEffect(() => {
+    const terme = q.trim();
+    if (terme.length < 2) { setResultats(null); return undefined; }
+    const id = setTimeout(() => {
+      api(`/admin/users?role=client&search=${encodeURIComponent(terme)}`, { token })
+        .then((rows) => setResultats(rows.filter((u) => !u.isDeleted).slice(0, 8)))
+        .catch(() => setResultats([]));
+    }, 250);
+    return () => clearTimeout(id);
+  }, [q, token]);
+  const estAgent = (u) => !!agents?.some((a) => a.userId === u.id);
+
+  async function donner(u) {
+    try {
+      await api('/admin/sales/agents', { method: 'POST', token, body: { userId: u.id, label } });
+      toast(tr('adminSales.toastAgentAdded', { name: u.name })); setQ(''); setResultats(null); setLabel(''); charger(); onChanged();
+    } catch (err) { toast(err.message); }
+  }
+  async function retirer() {
+    const a = aRetirer; setARetirer(null);
+    try { await api(`/admin/sales/agents/${a.userId}`, { method: 'DELETE', token }); toast(tr('adminSales.toastAgentRemoved', { name: a.name })); charger(); onChanged(); } catch (err) { toast(err.message); }
+  }
+
   const columns = [
     { key: 'name', label: tr('adminSales.colAgent'), get: (a) => <><b>{a.name}</b><br /><span className="small">{a.email}{a.phone ? ` · ${a.phone}` : ''}</span></>, sortValue: (a) => a.name },
-    { key: 'code', label: tr('adminSales.colCode'), get: (a) => <span className="sales-code">{a.code || '-'}</span>, sortValue: (a) => a.code || '' },
+    { key: 'label', label: tr('adminSales.colLabel'), get: (a) => a.label || '-', sortValue: (a) => a.label },
     { key: 'prospects', label: tr('adminSales.colProspects'), get: (a) => a.prospects, align: 'right', sum: true },
     { key: 'signed', label: tr('adminSales.colSigned'), get: (a) => a.signed, align: 'right', sum: true },
     { key: 'active', label: tr('adminSales.colActiveRestos'), get: (a) => a.active, align: 'right', sum: true },
     { key: 'lastActivity', label: tr('adminSales.colLastActivity'), get: (a) => fmt(a.lastActivity), sortValue: (a) => a.lastActivity || 0 },
-    { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt }
+    { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt },
+    { key: 'actions', label: '', get: (a) => (
+      <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
+    ) }
   ];
   return (
     <div>
+      <div className="card" style={{ marginBottom: 14 }}>
+        <b>{tr('adminSales.addAgentTitle')}</b>
+        <p className="small" style={{ margin: '4px 0 10px' }}>{tr('adminSales.addAgentHelp')}</p>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <div className="field" style={{ flex: '2 1 220px', margin: 0 }}><label htmlFor="sales-user">{tr('adminSales.fUser')}</label><input id="sales-user" value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr('adminSales.fUserPh')} autoComplete="off" /></div>
+          <div className="field" style={{ flex: '1 1 160px', margin: 0 }}><label htmlFor="sales-label">{tr('adminSales.fLabel')}</label><input id="sales-label" value={label} onChange={(e) => setLabel(e.target.value)} placeholder={tr('adminSales.fLabelPh')} /></div>
+        </div>
+        {resultats && (resultats.length === 0
+          ? <p className="small" style={{ margin: '10px 0 0' }}>{tr('adminSales.noUserFound')}</p>
+          : (
+            <ul className="sales-resultats">
+              {resultats.map((u) => (
+                <li key={u.id}>
+                  <span><b>{u.name}</b> <span className="small">{u.email}</span></span>
+                  {estAgent(u)
+                    ? <span className="pill listing-on">{tr('adminSales.alreadyAgent')}</span>
+                    : <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => donner(u)}>{tr('adminSales.giveAccess')}</button>}
+                </li>
+              ))}
+            </ul>
+          ))}
+      </div>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
       {agents && <AdminDataTable columns={columns} rows={agents} sort={sort} onSort={toggle} emptyLabel={tr('adminSales.noAgents')} showTotals />}
+      <ConfirmDialog open={!!aRetirer} danger title={tr('adminSales.confirmRemoveTitle')} message={aRetirer ? tr('adminSales.confirmRemoveText', { name: aRetirer.name }) : ''} confirmLabel={tr('adminSales.removeAccess')} onConfirm={retirer} onCancel={() => setARetirer(null)} />
     </div>
   );
 }
