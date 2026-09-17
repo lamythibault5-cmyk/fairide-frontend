@@ -46,7 +46,9 @@ const REPLI = {
   '\u{1F6F5}': ['#C8F03C', 'vehicule'], '\u{1F9FA}': ['#C8F03C', 'vehicule'], '\u{1F3AF}': ['#D92D3B', 'cible'],
   '\u{1F355}': ['#F2A33C', 'rond'], '\u{1F354}': ['#E08A3C', 'rond'], '\u{1F35F}': ['#F2C53C', 'barre'],
   '\u{1F369}': ['#E87FB0', 'rond'], '\u{1F363}': ['#F0EDE6', 'rond'], '\u{1F32E}': ['#E0B23C', 'rond'],
-  '\u{1F950}': ['#D9A05B', 'rond'], '\u{1F366}': ['#F0D9C0', 'rond']
+  '\u{1F950}': ['#D9A05B', 'rond'], '\u{1F366}': ['#F0D9C0', 'rond'],
+  // Déchets de FairSort : teintes sales et sombres, jamais celles d'un plat.
+  '\u{1F5D1}\u{FE0F}': ['#6E7480', 'barre'], '\u{1F9A0}': ['#6FAE3A', 'rond'], '\u{1F480}': ['#D8D3C6', 'rond'], '\u{1F9EA}': ['#8E4FC6', 'barre']
 };
 
 function forme(ctx, e, taille) {

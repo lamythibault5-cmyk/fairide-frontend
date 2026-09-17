@@ -200,8 +200,19 @@ function creerChute(api, cfg) {
         // Vert = à attraper, doré = bonus, rouge façon panneau = à éviter (obstacle, déchet).
         const danger = o.mauvais || cfg.route;
         const pulse = o.or || danger ? 1 + Math.sin(o.phase * 2) * 0.05 : 1;
-        jeton(ctx, o.x, o.y, t * 0.66 * pulse * (0.7 + 0.3 * s), danger ? 'danger' : o.or ? 'or' : 'bon');
+        const rj = t * 0.66 * pulse * (0.7 + 0.3 * s);
+        // FairSort : un déchet porte un anneau d'alerte pointillé qui palpite, en plus de son jeton rouge — le
+        // tri doit se faire à la COULEUR et à la FORME, sans avoir à reconnaître un petit emoji en pleine chute.
+        if (cfg.badges && o.mauvais) {
+          ctx.save();
+          ctx.strokeStyle = `rgba(255,92,110,${(0.55 + Math.sin(o.phase * 3) * 0.35).toFixed(3)})`;
+          ctx.lineWidth = Math.max(2, rj * 0.1); ctx.setLineDash([rj * 0.32, rj * 0.22]); ctx.lineDashOffset = -o.phase * rj * 0.4;
+          ctx.beginPath(); ctx.arc(o.x, o.y, rj * 1.22, 0, Math.PI * 2); ctx.stroke();
+          ctx.restore();
+        }
+        jeton(ctx, o.x, o.y, rj, danger ? (cfg.badges ? 'dechet' : 'danger') : o.or ? 'or' : 'bon');
         emoji(ctx, o.emoji, o.x, o.y, o.taille * 0.82 * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance + o.rot);
+        if (cfg.badges) badge(ctx, o.x + rj * 0.74, o.y - rj * 0.74, Math.max(7, rj * 0.36), !o.mauvais);
         ctx.globalAlpha = 1;
       }
       // Frôlement d'un déchet (FairSort) : le cadre clignote orange, bref.
@@ -230,8 +241,21 @@ function creerChute(api, cfg) {
 const JETONS = {
   bon: { fond: '#FFFFFF', anneau: '#2BB673' },
   or: { fond: '#FFF3C9', anneau: '#F5B800' },
-  danger: { fond: '#FFFFFF', anneau: '#E0344A' }
+  danger: { fond: '#FFFFFF', anneau: '#E0344A' },
+  dechet: { fond: '#FFE3E6', anneau: '#D0263D' }
 };
+// Petite pastille posée sur le jeton (FairSort) : ✓ vert = à attraper, ✕ rouge = à laisser tomber. Tracée au
+// trait, pas en texte : nette à toute taille et indépendante des polices.
+function badge(ctx, x, y, r, bon) {
+  ctx.fillStyle = bon ? '#1E9E5A' : '#D0263D';
+  ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#FFFFFF'; ctx.lineWidth = Math.max(1.5, r * 0.22); ctx.stroke();
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(2, r * 0.3);
+  ctx.beginPath();
+  if (bon) { ctx.moveTo(x - r * 0.45, y + r * 0.02); ctx.lineTo(x - r * 0.1, y + r * 0.38); ctx.lineTo(x + r * 0.48, y - r * 0.36); }
+  else { ctx.moveTo(x - r * 0.38, y - r * 0.38); ctx.lineTo(x + r * 0.38, y + r * 0.38); ctx.moveTo(x + r * 0.38, y - r * 0.38); ctx.lineTo(x - r * 0.38, y + r * 0.38); }
+  ctx.stroke();
+}
 function jeton(ctx, x, y, r, genre) {
   const j = JETONS[genre];
   ctx.fillStyle = 'rgba(0,0,0,.25)';
@@ -240,6 +264,15 @@ function jeton(ctx, x, y, r, genre) {
   ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
   ctx.strokeStyle = j.anneau; ctx.lineWidth = Math.max(3, r * 0.16);
   ctx.beginPath(); ctx.arc(x, y, r - ctx.lineWidth / 2, 0, Math.PI * 2); ctx.stroke();
+}
+
+// Rectangle arrondi, avec repli quand ctx.roundRect manque (iPhone d'avant iOS 16 : FairArrow y plantait au premier mur).
+function rectArrondi(ctx, x, y, l, ht, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) { ctx.roundRect(x, y, l, ht, r); return; }
+  const rr = Math.max(0, Math.min(r, l / 2, ht / 2));
+  ctx.moveTo(x + rr, y); ctx.arcTo(x + l, y, x + l, y + ht, rr); ctx.arcTo(x + l, y + ht, x, y + ht, rr);
+  ctx.arcTo(x, y + ht, x, y, rr); ctx.arcTo(x, y, x + l, y, rr); ctx.closePath();
 }
 
 // Part linéaire de la courbe de chute (le reste est accéléré) : 0,7 = départ à 70 % de la vitesse moyenne, arrivée à 130 %.
@@ -386,7 +419,8 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#14573F', '#33B07E'], eclat: LIME, demiContact: 1.3,
+      // Ciel vert profond (et non plus vert vif) : les jetons blancs cerclés de vert s'y fondaient.
+      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true,
       nouvelObjet: (n) => {
         const mauvais = Math.random() < Math.min(0.45, 0.22 + n * 0.03);
         return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
@@ -489,58 +523,125 @@ export const JEUX = [
           return undefined;
         },
         draw(ctx) {
-          fondDegrade(ctx, w, h, '#2B2550', '#5548C8');
-          // Étoiles en trois plans qui descendent moins vite que les murs : la profondeur donne la vitesse.
-          for (let i = 0; i < 22; i++) {
-            const plan = 0.2 + (i % 3) * 0.18;
-            const px = ((i * 137.5) % w);
-            const py = (((i * 89) % h) + defile * plan) % h;
-            ctx.fillStyle = `rgba(255,255,255,${(0.08 + plan * 0.25).toFixed(2)})`;
-            ctx.fillRect(px, py, 1.5 + plan * 2, (1.5 + plan * 2) * (1 + vDecor / h * 1.2));
+          // Nuit violette plus profonde qu'avant : les barrières claires et le passage lime ressortent mieux.
+          fondDegrade(ctx, w, h, '#17123A', '#3B31A0');
+          // Lignes de vitesse en trois plans, qui filent vers le bas moins vite que les murs : on sent qu'on fonce.
+          for (let i = 0; i < 18; i++) {
+            const plan = 0.3 + (i % 3) * 0.25;
+            const px = (i * 97.3 + 13) % w;
+            const lg = h * (0.04 + plan * 0.07) * (1 + vDecor / h * 0.6);
+            const py = ((((i * 131) % (h + lg)) + defile * plan) % (h + lg)) - lg;
+            ctx.fillStyle = `rgba(255,255,255,${(0.05 + plan * 0.12).toFixed(3)})`;
+            ctx.fillRect(px, py, 1.2 + plan, lg);
           }
           const yf = yFleche(); const L = longueur();
-          // Le prochain mur à franchir : son ouverture est éclairée, pour lire d'un coup d'œil où viser.
+          // Le prochain mur à franchir.
           let prochain = null;
           for (const m of murs) if (!m.compte && (!prochain || m.y > prochain.y)) prochain = m;
+          const alignee = !prochain || (ax - 7 > prochain.x && ax + 7 < prochain.x + prochain.largeur);
+          const accent = alignee ? LIME : OR;
+
           if (prochain) {
-            const g = ctx.createLinearGradient(0, prochain.y + prochain.ep, 0, prochain.y + prochain.ep + h * 0.14);
-            g.addColorStop(0, 'rgba(200,240,60,.22)'); g.addColorStop(1, 'rgba(200,240,60,0)');
-            ctx.fillStyle = g; ctx.fillRect(prochain.x, prochain.y + prochain.ep, prochain.largeur, h * 0.14);
-          }
-          for (const m of murs) {
-            ctx.fillStyle = '#E9E6DE';
-            ctx.beginPath(); ctx.roundRect(0, m.y, Math.max(0, m.x), m.ep, 4); ctx.fill();
-            ctx.beginPath(); ctx.roundRect(m.x + m.largeur, m.y, Math.max(0, w - m.x - m.largeur), m.ep, 4); ctx.fill();
-            if (m === prochain) {
-              // Bords de l'ouverture soulignés en vert.
-              ctx.fillStyle = LIME;
-              ctx.fillRect(Math.max(0, m.x - 3), m.y, 3, m.ep); ctx.fillRect(m.x + m.largeur, m.y, 3, m.ep);
+            const bas = prochain.y + prochain.ep;
+            // Faisceau lumineux sous le passage : on lit d'un coup d'œil où viser, même de loin.
+            const g = ctx.createLinearGradient(0, bas, 0, bas + h * 0.24);
+            g.addColorStop(0, 'rgba(200,240,60,.42)'); g.addColorStop(1, 'rgba(200,240,60,0)');
+            ctx.fillStyle = g; ctx.fillRect(prochain.x, bas, prochain.largeur, h * 0.24);
+            // Chevrons qui montent dans le faisceau : « passe par ici ».
+            const pasC = Math.max(12, h * 0.035); const cx = prochain.x + prochain.largeur / 2; const lc = Math.min(prochain.largeur * 0.22, 16);
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            for (let k = 0; k < 3; k++) {
+              const yc = bas + pasC * (k + 1) - ((defile * 0.25) % pasC);
+              ctx.strokeStyle = `rgba(200,240,60,${(0.85 - k * 0.25).toFixed(2)})`;
+              ctx.beginPath(); ctx.moveTo(cx - lc, yc + lc * 0.5); ctx.lineTo(cx, yc - lc * 0.1); ctx.lineTo(cx + lc, yc + lc * 0.5); ctx.stroke();
+            }
+            // Ligne de visée pointillée, de la pointe au mur : verte si l'on passe, ambre sinon.
+            if (bas < yf - L * 0.7) {
+              ctx.save();
+              ctx.setLineDash([6, 7]); ctx.lineDashOffset = defile * 0.4;
+              ctx.strokeStyle = alignee ? 'rgba(200,240,60,.75)' : 'rgba(255,209,102,.8)'; ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(ax, yf - L * 0.7); ctx.lineTo(ax, bas + 2); ctx.stroke();
+              ctx.restore();
             }
           }
-          // Traînée : un ruban qui s'affine et pâlit derrière la flèche.
+
+          // Les murs : des barrières rayées rouge et blanc, franches ; les suivants, plus loin dans la file,
+          // restent estompés pour ne pas voler l'attention au prochain.
+          for (const m of murs) {
+            const actif = m === prochain;
+            ctx.globalAlpha = actif ? 1 : 0.5;
+            for (const [x0, lw] of [[0, m.x], [m.x + m.largeur, w - m.x - m.largeur]]) {
+              if (lw <= 0) continue;
+              ctx.fillStyle = 'rgba(0,0,0,.3)';
+              rectArrondi(ctx, x0, m.y + 3, lw, m.ep, Math.min(5, m.ep / 2)); ctx.fill();
+              ctx.fillStyle = '#F4F1EA';
+              rectArrondi(ctx, x0, m.y, lw, m.ep, Math.min(5, m.ep / 2)); ctx.fill();
+              ctx.save();
+              rectArrondi(ctx, x0, m.y, lw, m.ep, Math.min(5, m.ep / 2)); ctx.clip();
+              ctx.fillStyle = '#E0344A';
+              const pasR = m.ep * 1.5;
+              for (let sx = x0 - m.ep; sx < x0 + lw + m.ep; sx += pasR) {
+                ctx.beginPath(); ctx.moveTo(sx, m.y + m.ep); ctx.lineTo(sx + m.ep * 0.75, m.y + m.ep); ctx.lineTo(sx + m.ep * 1.5, m.y); ctx.lineTo(sx + m.ep * 0.75, m.y); ctx.closePath(); ctx.fill();
+              }
+              ctx.restore();
+            }
+            if (actif) {
+              // Poteaux lime de part et d'autre du passage, avec un halo : la porte à franchir.
+              const hp = m.ep + 10;
+              for (const px of [m.x - 3, m.x + m.largeur + 3]) {
+                const gh = ctx.createRadialGradient(px, m.y + m.ep / 2, 1, px, m.y + m.ep / 2, hp);
+                gh.addColorStop(0, 'rgba(200,240,60,.55)'); gh.addColorStop(1, 'rgba(200,240,60,0)');
+                ctx.fillStyle = gh; ctx.beginPath(); ctx.arc(px, m.y + m.ep / 2, hp, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = LIME; rectArrondi(ctx, px - 3, m.y - 5, 6, m.ep + 10, 3); ctx.fill();
+              }
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          // Traînée : un ruban qui s'affine et pâlit derrière la flèche, de la couleur de la visée.
           if (traine.length > 1) {
+            ctx.lineCap = 'round';
             for (let i = 1; i < traine.length; i++) {
               const a = traine[i - 1]; const b = traine[i]; const k = b.reste / TRAINE;
-              ctx.globalAlpha = k * 0.55; ctx.strokeStyle = LIME; ctx.lineWidth = 1 + k * 3; ctx.lineCap = 'round';
+              ctx.globalAlpha = k * 0.6; ctx.strokeStyle = accent; ctx.lineWidth = 1.5 + k * 5;
               ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
             }
             ctx.globalAlpha = 1;
           }
-          // La flèche : un fût et une pointe, inclinés dans le sens du mouvement. La pointe est verte quand
-          // elle est alignée avec le prochain passage, ambre sinon.
-          const alignee = !prochain || (ax - 7 > prochain.x && ax + 7 < prochain.x + prochain.largeur);
+
+          // La flèche : halo, fût épais cerné d'encre, empennage rose et violet, pointe verte (alignée) ou ambre.
           ctx.save(); ctx.translate(ax, yf); ctx.rotate(borner(inclinaison, -0.5, 0.5));
-          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-          ctx.beginPath(); ctx.moveTo(0, L * 0.45); ctx.lineTo(0, -L * 0.35); ctx.stroke();
-          ctx.fillStyle = alignee ? LIME : OR; ctx.beginPath(); ctx.moveTo(0, -L * 0.6); ctx.lineTo(-9, -L * 0.3); ctx.lineTo(9, -L * 0.3); ctx.closePath(); ctx.fill();
-          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 2; ctx.stroke();
-          ctx.beginPath(); ctx.moveTo(0, L * 0.45); ctx.lineTo(-7, L * 0.62); ctx.moveTo(0, L * 0.45); ctx.lineTo(7, L * 0.62); ctx.stroke();
+          const gHalo = ctx.createRadialGradient(0, -L * 0.2, 2, 0, -L * 0.2, L * 0.95);
+          gHalo.addColorStop(0, alignee ? 'rgba(200,240,60,.35)' : 'rgba(255,209,102,.35)'); gHalo.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gHalo; ctx.beginPath(); ctx.arc(0, -L * 0.2, L * 0.95, 0, Math.PI * 2); ctx.fill();
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          // Empennage
+          for (const sens of [-1, 1]) {
+            ctx.fillStyle = sens < 0 ? '#FF5C8A' : '#8C7CFF';
+            ctx.beginPath(); ctx.moveTo(0, L * 0.18); ctx.lineTo(sens * 11, L * 0.46); ctx.lineTo(sens * 11, L * 0.66); ctx.lineTo(0, L * 0.44); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#14121F'; ctx.lineWidth = 1.5; ctx.stroke();
+          }
+          // Fût
+          ctx.strokeStyle = '#14121F'; ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(0, L * 0.5); ctx.lineTo(0, -L * 0.3); ctx.stroke();
+          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(0, L * 0.5); ctx.lineTo(0, -L * 0.3); ctx.stroke();
+          // Pointe
+          ctx.fillStyle = accent;
+          ctx.beginPath(); ctx.moveTo(0, -L * 0.66); ctx.lineTo(-13, -L * 0.26); ctx.lineTo(0, -L * 0.34); ctx.lineTo(13, -L * 0.26); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#14121F'; ctx.lineWidth = 2; ctx.stroke();
           ctx.restore();
-          // Impact : une étoile rouge à l'endroit du choc, le temps que la carte de fin apparaisse.
+
+          // Impact : un éclat rouge en étoile et une onde, le temps que la carte de fin apparaisse.
           if (impact) {
-            ctx.fillStyle = ROUGE;
-            for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4; ctx.beginPath(); ctx.arc(impact.x + Math.cos(a) * 9, impact.y + Math.sin(a) * 9, 2.5, 0, Math.PI * 2); ctx.fill(); }
-            ctx.beginPath(); ctx.arc(impact.x, impact.y, 4, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = ROUGE; ctx.lineWidth = 3; ctx.lineCap = 'round';
+            for (let i = 0; i < 10; i++) {
+              const a = i * Math.PI / 5;
+              ctx.beginPath(); ctx.moveTo(impact.x + Math.cos(a) * 7, impact.y + Math.sin(a) * 7); ctx.lineTo(impact.x + Math.cos(a) * 17, impact.y + Math.sin(a) * 17); ctx.stroke();
+            }
+            ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(impact.x, impact.y, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,107,107,.6)'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(impact.x, impact.y, 24, 0, Math.PI * 2); ctx.stroke();
           }
         }
       };
