@@ -215,6 +215,22 @@ a { color: inherit; }
    intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
 .mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
 .mark svg { display: block; width: 100%; height: 100%; }
+/* Logo animé (BrandMark.jsx, Landing.jsx HeroFrame) : joué UNE fois au montage, puis le logo reste tel quel
+   (fill-mode forwards, aucune boucle). Séquence : roues tracées (0 → 0,7 s, l'avant décalée), tube supérieur
+   qui glisse depuis l'arrière (0,55 s), tube de selle (0,7 s), moyeux qui apparaissent (0,95 s). Le tracé des
+   roues joue sur stroke-dashoffset : 2π·12,5 ≈ 78,6 unités de périmètre. */
+.mark-anime .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .7s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mark-anime .bm-roue-avant { animation-delay: .12s; }
+.mark-anime .bm-tube { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: bm-tube .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+.mark-anime .bm-tube-haut { animation-delay: .55s; }
+.mark-anime .bm-tube-selle { animation-delay: .7s; }
+.mark-anime .bm-moyeu { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: bm-pop .32s .95s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+@keyframes bm-roue { to { stroke-dashoffset: 0; } }
+@keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
+@keyframes bm-pop { to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .mark-anime .bm-roue, .mark-anime .bm-tube, .mark-anime .bm-moyeu { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+}
 /* 24% du côté, exactement le rayon d'icône de la spec — et plus de liseré lime autour : sur
    la bannière iris, la tuile du logo est de la même couleur que le fond, seul le cadre lime
    se détache. C'est voulu : la marque flotte dans l'en-tête au lieu d'y être encadrée. */
