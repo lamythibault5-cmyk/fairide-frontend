@@ -1227,14 +1227,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .field-label-row label { margin-bottom: 5px; }
 .field-toggle { padding: 0; font-size: 12px; color: var(--iris); }
 
-.restaurant-search-row { display: flex; gap: 10px; margin-bottom: 14px; }
-.restaurant-search-row input { flex: 2; min-width: 160px; }
-.restaurant-search-row select { flex: 1; min-width: 130px; }
 /* Sous 560px les deux champs se retrouvaient trop serrés (texte tronqué illisible) — chacun prend
    toute la largeur sur sa propre ligne à la place. */
 @media (max-width: 560px) {
-  .restaurant-search-row { flex-direction: column; gap: 8px; }
-  .restaurant-search-row input, .restaurant-search-row select { flex: none; min-width: 0; width: 100%; }
 }
 
 /* Version de main : le carrousel de cuisines est passé au composant générique .auto-scroll-row.

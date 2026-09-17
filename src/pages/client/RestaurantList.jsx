@@ -366,17 +366,35 @@ export default function RestaurantList() {
           )}
         />
       </div>
-      <div className="restaurant-search-row">
-        <input aria-label={t('restaurantList.searchPlaceholder')} placeholder={t('restaurantList.searchPlaceholder')} value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select value={commune} onChange={(e) => setCommune(e.target.value)}>
-          <option value="">{t('restaurantList.allCommunes')}</option>
-          {COMMUNES.map((c) => <option key={c}>{c}</option>)}
-        </select>
-      </div>
+      {/* LE CHAMP DE RECHERCHE ET LE MENU DES COMMUNES ONT QUITTÉ CETTE PAGE (fondateur, 2026-09-17).
+          Deux commandes de plus en haut du fil, alors que la recherche a déjà son propre écran — une
+          pastille lui est dédiée dans la barre du bas — et que les communes se choisissent aussi
+          depuis là. C'est la forme d'Uber Eats : l'adresse et les catégories en tête, la recherche
+          ailleurs.
+
+          MAIS LES FILTRES EUX-MÊMES RESTENT, et c'est volontaire : `search` et `commune` sont aussi
+          alimentés par la page Recherche, qui ouvre cette liste DÉJÀ filtrée en passant par l'état de
+          navigation (voir filtresInitiaux, et SearchPage.jsx). Retirer l'état en même temps que les
+          commandes aurait cassé ce chemin-là sans que rien ne le signale. */}
       {/* Les memes filtres que sur la page Carte, avec les memes noms et les memes seuils : on ne
           change pas de vocabulaire selon qu'on regarde une liste ou une carte. « Emporter » n'est
           pas sur la carte, il n'a de sens que devant une liste de commerces qu'on va chercher. */}
       <div className="liste-filtres">
+        {/* LA SORTIE D'UN FILTRE VENU D'AILLEURS. La page Recherche peut ouvrir cette liste déjà
+            filtrée sur une commune ou un mot ; le menu déroulant était jusqu'ici la seule façon de
+            revenir à tout, et il vient d'être retiré. Sans cette pastille, on serait resté enfermé
+            dans le filtre sans rien pour l'enlever — il n'existe aucun bouton « réinitialiser »
+            ailleurs sur la page. Elle n'apparaît QUE si un tel filtre est actif. */}
+        {commune && (
+          <button type="button" className="cuisine-chip active" onClick={() => setCommune('')}>
+            <Icone nom="position" taille={16} />{commune}<span aria-hidden="true"> ×</span>
+          </button>
+        )}
+        {search && (
+          <button type="button" className="cuisine-chip active" onClick={() => setSearch('')}>
+            <Icone nom="recherche" taille={16} />{search}<span aria-hidden="true"> ×</span>
+          </button>
+        )}
         <button type="button" className={`cuisine-chip${emporter ? ' active' : ''}`} aria-pressed={emporter} onClick={() => setEmporter((v) => !v)}>
           <Icone nom="sac" taille={16} />{t('restaurantList.filterPickup')}
         </button>
