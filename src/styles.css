@@ -1986,7 +1986,9 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   width: 44px; height: 44px;
   background: #fff; color: var(--ink);
   border: 1px solid var(--line); border-radius: var(--radius-pill);
-  text-decoration: none; line-height: 1;
+  /* Le même bouton est tantôt un <a> (changer de page), tantôt un <button> (reculer d'une étape) :
+     on neutralise ce que le navigateur applique d'office au second pour qu'ils soient identiques. */
+  text-decoration: none; line-height: 1; cursor: pointer; font-family: inherit; padding: 0;
   /* Le chevron et la croix n'ont pas la même chasse optique : la croix est plus petite à taille
      égale. Deux tailles pour qu'ils pèsent pareil à l'œil. */
   font-size: 22px; font-weight: 500;
@@ -3870,3 +3872,31 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
   .plat-pied > * { max-width: 720px; }
   .plat-pied { justify-content: center; }
 }
+
+/* ── LE PAIEMENT EN ÉTAPES ─────────────────────────────────────────────────────────────────────
+   Bandeau d'avancement : où l'on en est, et ce qu'il reste. Les étapes franchies sont cliquables
+   (revenir corriger son adresse est le geste le plus courant), les suivantes ne le sont pas.
+   Voir ETAPES_PAR_MODE dans Checkout.jsx. */
+.checkout-etapes {
+  display: flex; flex-wrap: wrap; gap: 6px; list-style: none;
+  margin: 0 0 14px; padding: 0;
+}
+.checkout-etape button {
+  background: none; border: 0; padding: 4px 2px; font-family: inherit;
+  font-size: 13px; font-weight: 500; color: var(--ink-faint); cursor: pointer;
+  /* Le trait sous l'étape est porté par le bouton, pas par un pseudo-élément : il doit s'aligner
+     sur le TEXTE et non sur la case, dont la largeur varie avec la langue. */
+  border-bottom: 2px solid transparent;
+}
+.checkout-etape button:disabled { cursor: default; }
+/* Une étape franchie reste lisible et cliquable ; l'étape en cours porte le trait iris. */
+.checkout-etape.est-faite button { color: var(--ink-soft); }
+.checkout-etape.est-active button { color: var(--iris); border-bottom-color: var(--iris); }
+/* Le séparateur vit dans la CSS et non dans le balisage : un « · » en dur serait lu à voix haute
+   entre chaque étape par un lecteur d'écran. */
+.checkout-etape + .checkout-etape::before {
+  content: '·'; color: var(--line); margin-right: 4px; align-self: center;
+}
+.checkout-etape { display: flex; align-items: center; gap: 4px; }
+/* « Continuer » : pleine largeur, à la fin de la carte, là où le pouce arrive après avoir rempli. */
+.checkout-continuer { width: 100%; min-height: 48px; margin-top: 6px; }

@@ -6205,6 +6205,17 @@ export const translations = {
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
     },
+    checkoutSteps: {
+      progress: 'Étapes du paiement',
+      continue: 'Continuer',
+      mode: 'Réception',
+      adresse: 'Adresse',
+      remise: 'Remise',
+      retrait: 'Retrait',
+      reservation: 'Table',
+      horaire: 'Horaire',
+      payer: 'Paiement'
+    },
     platSheet: {
       quantity: 'Quantité',
       less: 'Un de moins',
@@ -12807,6 +12818,17 @@ export const translations = {
       confirmOnSite: 'Confirm the order (pay on site)',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
     },
+    checkoutSteps: {
+      progress: 'Checkout steps',
+      continue: 'Continue',
+      mode: 'Method',
+      adresse: 'Address',
+      remise: 'Handover',
+      retrait: 'Pickup',
+      reservation: 'Table',
+      horaire: 'Time',
+      payer: 'Payment'
+    },
     platSheet: {
       quantity: 'Quantity',
       less: 'One less',
@@ -19406,6 +19428,17 @@ export const translations = {
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
+    },
+    checkoutSteps: {
+      progress: 'Stappen afrekenen',
+      continue: 'Doorgaan',
+      mode: 'Ontvangst',
+      adresse: 'Adres',
+      remise: 'Overhandiging',
+      retrait: 'Afhalen',
+      reservation: 'Tafel',
+      horaire: 'Tijd',
+      payer: 'Betaling'
     },
     platSheet: {
       quantity: 'Aantal',
