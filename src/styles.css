@@ -3961,3 +3961,33 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
   padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
   border-bottom: 1px solid var(--line);
 }
+
+/* ── LE CARNET D'ADRESSES ──────────────────────────────────────────────────────────────────────
+   Écran de choix « Où livrer ? » : recherche en haut, adresses enregistrées en dessous, celle en
+   cours mise en évidence. Voir components/ChoixAdresse.jsx. */
+.adresses-titre { font-size: 15px; margin: 18px 0 8px; }
+.adresses-vide { color: var(--ink-soft); }
+.adresse-ligne { display: flex; align-items: stretch; gap: 4px; border-bottom: 1px solid var(--line); }
+.adresse-ligne:last-child { border-bottom: 0; }
+/* L'adresse retenue porte une arête iris à gauche : on doit voir laquelle est active sans la lire. */
+.adresse-ligne.est-active { border-left: 3px solid var(--iris); background: var(--cream-dim); }
+.adresse-choisir {
+  display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0;
+  /* 60px : deux lignes de texte, et on la tape au pouce. */
+  min-height: 60px; padding: 10px 8px; text-align: left;
+  background: none; border: 0; font-family: inherit; color: var(--ink); cursor: pointer;
+}
+.adresse-choisir:disabled { opacity: 0.6; cursor: default; }
+.adresse-texte { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+/* Une adresse longue se coupe plutôt que de pousser la croix de suppression hors de l'écran. */
+.adresse-nom { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adresse-sous { font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adresse-supprimer {
+  flex: 0 0 auto; width: 44px; align-self: center; height: 44px;
+  background: none; border: 0; border-radius: var(--radius-pill);
+  font-size: 22px; line-height: 1; color: var(--ink-faint); cursor: pointer;
+}
+.adresse-supprimer:hover { background: var(--cream-dim); color: var(--red); }
+/* La rangée « Livrer à » est devenue un <button> (elle ouvre le carnet) : on neutralise ce que le
+   navigateur lui applique d'office, pour qu'elle reste identique au lien qu'elle était. */
+button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font-size: inherit; cursor: pointer; }

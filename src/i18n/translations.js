@@ -6082,6 +6082,15 @@ export const translations = {
       stage_terminee: 'Terminée',
       stage_annulee: 'Refusée / annulée'
     },
+    adresses: {
+      title: "Adresses",
+      saved: "Adresses enregistrées",
+      empty: "Aucune adresse enregistrée. Cherche-la ci-dessus pour l'ajouter.",
+      needNumber: "Choisis une adresse avec un numéro.",
+      remove: "Supprimer {adresse}",
+      removeShort: "Supprimer",
+      loading: "Chargement…"
+    },
     checkout: {
       whenLabel: 'Quand la recevoir ?',
       whenAsap: 'Dès que possible',
@@ -12708,6 +12717,15 @@ export const translations = {
       stage_terminee: 'Completed',
       stage_annulee: 'Refused / cancelled'
     },
+    adresses: {
+      title: "Addresses",
+      saved: "Saved addresses",
+      empty: "No saved address yet. Search above to add one.",
+      needNumber: "Pick an address that includes a number.",
+      remove: "Remove {adresse}",
+      removeShort: "Remove",
+      loading: "Loading…"
+    },
     checkout: {
       whenLabel: 'When do you want it?',
       whenAsap: 'As soon as possible',
@@ -19331,6 +19349,15 @@ export const translations = {
       stage_enLivraison: 'Koerier onderweg',
       stage_terminee: 'Afgerond',
       stage_annulee: 'Geweigerd / geannuleerd'
+    },
+    adresses: {
+      title: "Adressen",
+      saved: "Opgeslagen adressen",
+      empty: "Nog geen adres opgeslagen. Zoek hierboven om er een toe te voegen.",
+      needNumber: "Kies een adres met een huisnummer.",
+      remove: "{adresse} verwijderen",
+      removeShort: "Verwijderen",
+      loading: "Laden…"
     },
     checkout: {
       whenLabel: 'Wanneer wil je het?',

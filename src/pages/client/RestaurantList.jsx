@@ -11,6 +11,7 @@ import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
 // est un affichage secondaire, choisi par l'utilisateur.
 import Icone from '../../components/Icone';
+import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
@@ -139,6 +140,8 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
 
 export default function RestaurantList() {
   const { token, user } = useAuth();
+  // Carnet d'adresses, ouvert depuis la rangee « Livrer a » en tete de page.
+  const [choixAdresse, setChoixAdresse] = useState(false);
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -322,7 +325,7 @@ export default function RestaurantList() {
           de choisir un commerce, parce qu'elle détermine ce qui est pertinent.
           Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher. */}
       {user && (
-        <Link to="/account" className="fiche-adresse">
+        <button type="button" className="fiche-adresse" onClick={() => setChoixAdresse(true)}>
           <Icone nom="maison" taille={18} />
           <span className="fiche-adresse-texte">
             <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
@@ -333,8 +336,9 @@ export default function RestaurantList() {
             </span>
           </span>
           <span className="fiche-adresse-modifier">{t('restaurantMenu.changeAddress')}</span>
-        </Link>
+        </button>
       )}
+      {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}

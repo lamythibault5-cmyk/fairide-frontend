@@ -11,6 +11,7 @@ import ChoixPastilles from '../../components/ChoixPastilles';
 import EnteteFlux from '../../components/EnteteFlux';
 import SousEcran from '../../components/SousEcran';
 import AddressSearch from '../../components/AddressSearch';
+import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
@@ -673,7 +674,19 @@ export default function Checkout() {
 
       {/* LES DEUX SOUS-ÉCRANS. Ils portent les mêmes champs qu'avant — rien n'a été réécrit, ils ont
           seulement quitté la page principale, qui n'en montre plus que le résumé. */}
+      {/* La rangee d'adresse ouvre le CARNET, pas les quatre champs : c'est la meme question qu'en
+          tete de la liste des commerces, donc le meme ecran. Les champs restent accessibles depuis
+          le carnet, par la recherche. */}
       {sousEcran === 'adresse' && (
+        <ChoixAdresse
+          onFermer={() => setSousEcran(null)}
+          onChoisie={(a) => {
+            setAddressStreet(a.street); setAddressNumber(a.number);
+            setAddressPostalCode(a.postalCode); setAddressCity(a.city);
+          }}
+        />
+      )}
+      {false && (
         <SousEcran titre={t('checkout.addressTitle')} onFermer={() => setSousEcran(null)} pied={
           <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => {
             if (adresseIncomplete) { toast(t('checkout.toastAddressRequired')); return; }
