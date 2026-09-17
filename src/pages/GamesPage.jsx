@@ -3,6 +3,7 @@ import usePageMeta from '../hooks/usePageMeta';
 import useRevalidation from '../useRevalidation';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
 import RetourCompte from '../components/RetourCompte';
 import GameSwitcher from '../components/GameSwitcher';
@@ -34,6 +35,7 @@ function enLivraison(o) {
 export default function GamesPage() {
   const { t } = useLanguage();
   const { token, role } = useAuth();
+  const toast = useToast();
   const client = role === 'client';
   const [livraisons, setLivraisons] = useState([]);
   const [suivieId, setSuivieId] = useState(null);
@@ -101,7 +103,9 @@ export default function GamesPage() {
         />
       ) : (
         <section className="jeux-page-terrain" aria-label={t('games.pageTitle')}>
-          <GameSwitcher fill large onEcranScinde={client && suivie ? () => setScinde(true) : undefined} />
+          {/* Le bouton ◧ est toujours là pour un client : sans livraison en route, il dit pourquoi la carte
+              n'a encore rien à montrer au lieu de disparaître sans explication. */}
+          <GameSwitcher fill large onEcranScinde={client ? () => (suivie ? setScinde(true) : toast(t('games.pageSplitHint'))) : undefined} />
         </section>
       )}
 

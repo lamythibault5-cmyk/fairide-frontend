@@ -3793,7 +3793,11 @@ export const translations = {
       go: 'Go !',
       levelReached: 'Niveau {n} atteint',
       spaceHint: 'Espace ou Entrée pour rejouer',
-      splitScreen: 'Écran scindé'
+      fullscreen: 'Plein écran',
+      exitFullscreen: 'Quitter le plein écran',
+      splitScreen: 'Écran scindé',
+      exitFullscreenShort: 'Quitter',
+      rotateHint: 'Tourne ton téléphone : le terrain sera bien plus grand.'
     },
     games: {
       title: 'Mini-jeux',
@@ -10402,7 +10406,11 @@ export const translations = {
       go: 'Go!',
       levelReached: 'Level {n} reached',
       spaceHint: 'Space or Enter to play again',
-      splitScreen: 'Split screen'
+      fullscreen: 'Full screen',
+      exitFullscreen: 'Exit full screen',
+      splitScreen: 'Split screen',
+      exitFullscreenShort: 'Exit',
+      rotateHint: 'Turn your phone: the playing field gets much bigger.'
     },
     games: {
       title: 'Mini-games',
@@ -16997,7 +17005,11 @@ export const translations = {
       go: 'Go!',
       levelReached: 'Niveau {n} bereikt',
       spaceHint: 'Spatie of Enter om opnieuw te spelen',
-      splitScreen: 'Gesplitst scherm'
+      fullscreen: 'Volledig scherm',
+      exitFullscreen: 'Volledig scherm verlaten',
+      splitScreen: 'Gesplitst scherm',
+      exitFullscreenShort: 'Sluiten',
+      rotateHint: 'Draai je telefoon: het speelveld wordt veel groter.'
     },
     games: {
       title: 'Minispelletjes',

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Icone from '../Icone';
 import { useLanguage } from '../../context/LanguageContext';
 import { musique } from './musique';
+import { IconeJeu, styleJeu } from './IconeJeu';
 
 // Le moteur commun des mini-jeux : boucle, saisie, rendu, tableau de bord, règles, effets.
 //
@@ -105,8 +106,22 @@ function creerEffets() {
   };
 }
 
-// Partie en cours : le panier flottant n'a rien à faire par-dessus le terrain. Un compteur, parce que
-// la page peut monter deux cadres de jeu à la fois.
+// Plein écran : l'API standard sur Android, PC, Mac et iPad ; sur iPhone, aucun navigateur ne l'autorise pour
+// autre chose qu'une vidéo — on retombe alors sur un calque fixe qui couvre l'écran, même résultat pour le joueur.
+function elementPlein() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+async function demanderPlein(el) {
+  const f = el.requestFullscreen || el.webkitRequestFullscreen || el.webkitEnterFullscreen;
+  if (!f) return false;
+  try { await f.call(el, { navigationUI: 'hide' }); return true; } catch { return false; }
+}
+async function quitterPlein() {
+  const f = document.exitFullscreen || document.webkitExitFullscreen;
+  if (elementPlein() && f) { try { await f.call(document); } catch { /* déjà sorti */ } }
+}
+// Partie en cours (ou plein écran) : le panier flottant n'a rien à faire par-dessus le terrain. Un compteur,
+// parce que la page Carte et sa vue agrandie peuvent monter deux cadres de jeu à la fois.
 let partiesEnCours = 0;
 function signalerPartie(active) {
   partiesEnCours = Math.max(0, partiesEnCours + (active ? 1 : -1));
@@ -122,7 +137,7 @@ const clavierProbable = () => { try { return window.matchMedia('(hover: hover) a
 // onStartRequest(demarrer) : le parent décide quand la partie commence (il peut d'abord demander un
 // pseudo, voir GameSocial.jsx) et appelle demarrer() lui-même. onScore(score) : fin de partie.
 // onEcranScinde : affiche le jeu ET la carte en même temps (fourni par TrackingWithGames). ecranScindeActif :
-// on y est déjà.
+// on y est déjà — le bouton ne sert alors qu'à sortir du plein écran pour retrouver la carte à côté.
 export default function GameFrame({ jeu, width = 140, height = 280, fill = false, large = false, onStartRequest, onScore, onEcranScinde, ecranScindeActif = false }) {
   const { t } = useLanguage();
   const onScoreRef = useRef(onScore);
@@ -140,6 +155,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const [musiqueActive, setMusiqueActive] = useState(() => musique.estActive());
   const [pisteMusique, setPisteMusique] = useState(() => musique.piste());
   const [menuMusique, setMenuMusique] = useState(false);
+  // Plein écran : vrai plein écran quand le navigateur le permet, sinon calque fixe (iPhone). Dans les deux cas
+  // le terrain occupe tout l'écran et le canvas se remesure tout seul (voir la variable remplir, plus bas).
+  const [plein, setPlein] = useState(false);
+  const [astuceRotation, setAstuceRotation] = useState(false);
   const racine = useRef(null);
   useEffect(() => musique.abonner((a, piste) => { setMusiqueActive(a); setPisteMusique(piste); }), []);
   // Le menu se ferme d'un clic ailleurs ou avec Échap.
@@ -167,6 +186,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const canvas = useRef(null);
   // Le contexte 2D du canvas, garde entre les images (voir preparerContexte).
   const ctxRef = useRef(null);
+  const pleinRef = useRef(false);
+  pleinRef.current = plein;
   const instance = useRef(null);
   const effets = useRef(null);
   if (!effets.current) effets.current = creerEffets();
@@ -175,6 +196,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const statusRef = useRef(status);
   const tailleRef = useRef(taille);
   const input = useRef({ x: null, y: null, enfonce: false, tapes: [], gauche: false, droite: false });
+  const fauxPlein = useRef(false); // true quand on couvre l'écran nous-mêmes (iPhone), sans l'API du navigateur
   const raf = useRef(0);
   const derniereImage = useRef(0);
   const finRaf = useRef(0);
@@ -185,9 +207,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   const niveau = () => Math.min(jeu.maxNiveau, Math.floor(scoreRef.current / jeu.pointsParNiveau));
 
-  // Taille : imposée par les props, ou celle du conteneur quand `fill` est demandé par le parent.
+  // Taille : imposée par les props, ou celle du conteneur quand on remplit l'espace — `fill` demandé par le
+  // parent, ou plein écran, où le terrain doit prendre tout l'écran quelles que soient les props reçues.
   useEffect(() => {
-    if (!fill) { setTaille({ w: width, h: height }); return undefined; }
+    if (!fill && !plein) { setTaille({ w: width, h: height }); return undefined; }
     const el = conteneur.current; if (!el) return undefined;
     // LA BOÎTE DE CONTENU, PAS LA BOÎTE DE BORDURE.
     //
@@ -209,38 +232,68 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const ro = new ResizeObserver(mesurer); ro.observe(el);
     window.addEventListener('resize', mesurer); // rotation d écran : ceinture et bretelles
     return () => { ro.disconnect(); window.removeEventListener('resize', mesurer); };
-  }, [fill, width, height]);
+  }, [fill, plein, width, height]);
 
   // Tactile pendant le jeu : pas de loupe iOS, pas de sélection de texte, pas de menu contextuel au doigt
-  // appuyé, pas de zoom au double tap ni au pincement, sur le canvas.
+  // appuyé, pas de zoom au double tap ni au pincement. Sur le canvas, toujours ; en plein écran, sur toute la
+  // surface — sauf les boutons et la fenêtre des règles (qui défile), qui gardent leur comportement normal.
   useEffect(() => {
-    const cible = canvas.current;
+    const cible = plein ? racine.current : canvas.current;
     if (!cible) return undefined;
     const interactif = (t) => !!t?.closest?.('button, a, input, textarea, select, label, [role="dialog"]');
     const tactile = (e) => { if (e.cancelable && !interactif(e.target)) e.preventDefault(); };
     const bloquer = (e) => { if (!interactif(e.target)) e.preventDefault(); };
+    const pincement = (e) => e.preventDefault();
     cible.addEventListener('touchstart', tactile, { passive: false });
     cible.addEventListener('touchmove', tactile, { passive: false });
     cible.addEventListener('contextmenu', bloquer);
     cible.addEventListener('selectstart', bloquer);
     cible.addEventListener('dblclick', bloquer);
+    if (plein) {
+      document.addEventListener('gesturestart', pincement, { passive: false }); // Safari iOS : pincement
+      libererFocus();
+      try { window.getSelection?.()?.removeAllRanges?.(); } catch { /* rien de sélectionné */ }
+    }
     return () => {
       cible.removeEventListener('touchstart', tactile);
       cible.removeEventListener('touchmove', tactile);
       cible.removeEventListener('contextmenu', bloquer);
       cible.removeEventListener('selectstart', bloquer);
       cible.removeEventListener('dblclick', bloquer);
+      document.removeEventListener('gesturestart', pincement);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [plein]);
 
-  const partieActive = status === 'countdown' || status === 'playing' || status === 'paused';
+  const partieActive = plein || status === 'countdown' || status === 'playing' || status === 'paused';
   useEffect(() => {
     if (!partieActive) return undefined;
     signalerPartie(true);
     return () => signalerPartie(false);
   }, [partieActive]);
 
+  // Le joueur peut sortir du plein écran sans passer par notre bouton (Échap, geste système) : on suit l'état réel.
+  useEffect(() => {
+    const suivre = () => { if (!elementPlein() && pleinRef.current && !fauxPlein.current) setPlein(false); };
+    document.addEventListener('fullscreenchange', suivre);
+    document.addEventListener('webkitfullscreenchange', suivre);
+    return () => { document.removeEventListener('fullscreenchange', suivre); document.removeEventListener('webkitfullscreenchange', suivre); };
+  }, []);
+  // Calque fixe (iPhone) : la page derrière ne doit pas défiler sous le doigt pendant la partie.
+  useEffect(() => {
+    if (!plein) return undefined;
+    document.documentElement.classList.add('jeu-plein-actif');
+    return () => document.documentElement.classList.remove('jeu-plein-actif');
+  }, [plein]);
+  // Téléphone tenu à la verticale : on le signale une fois, sans rien imposer — le terrain marche dans les deux sens.
+  useEffect(() => {
+    if (!plein || !surTelephone()) { setAstuceRotation(false); return undefined; }
+    const verifier = () => setAstuceRotation(window.innerHeight > window.innerWidth * 1.2);
+    verifier();
+    window.addEventListener('resize', verifier);
+    window.addEventListener('orientationchange', verifier);
+    return () => { window.removeEventListener('resize', verifier); window.removeEventListener('orientationchange', verifier); };
+  }, [plein]);
 
   // Le canvas suit la densité de l'écran : sans ça, un emoji dessiné en pixels CSS est flou sur Retina.
   function preparerContexte() {
@@ -415,6 +468,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         input.current[e.code === 'ArrowLeft' ? 'gauche' : 'droite'] = true;
       }
       // Calque de secours (iPhone) : Échap le referme au lieu de mettre en pause.
+      if (e.code === 'Escape' && pleinRef.current && fauxPlein.current) { e.preventDefault(); basculerPlein(); return; }
       if ((e.code === 'Escape' || e.code === 'KeyP') && !reglesOuvertes) {
         if (st === 'playing') setStatus('paused');
         else if (st === 'paused') setStatus('playing');
@@ -445,6 +499,18 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     input.current.tapes.push(p);
     try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché : sans capture, le glissé marche quand même */ }
   }
+  function surPointeurBasRacine(e) {
+    if (!pleinRef.current || statusRef.current !== 'playing') return;
+    if (e.target.closest?.('button, a, input, textarea, select, label, [role="dialog"], .jeu-canvas')) return;
+    const r = canvas.current?.getBoundingClientRect();
+    if (!r) return;
+    libererFocus();
+    const p = { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) };
+    input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
+    input.current.tapes.push(p);
+    // La capture renvoie le relâchement au canvas, qui remet « enfoncé » à faux, où que le doigt se lève.
+    try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché */ }
+  }
   function surPointeurMouv(e) { const p = coord(e); input.current.x = p.x; input.current.y = p.y; }
   function surPointeurHaut() { input.current.enfonce = false; }
 
@@ -455,21 +521,39 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     effets.current.vider();
     setStatus('countdown');
   }
-  function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
-  // Écran scindé : la page affiche le jeu et la carte ensemble.
-  function ecranScinde() {
+  function commencer() { if (onStartRequest && !pleinRef.current) onStartRequest(demarrer); else demarrer(); }
+  // Écran scindé : on quitte d'abord le plein écran (sinon la carte resterait cachée derrière), puis la page
+  // affiche le jeu et la carte ensemble.
+  async function ecranScinde() {
+    if (pleinRef.current) await basculerPlein();
     onEcranScinde?.();
+  }
+  async function basculerPlein() {
+    // pleinRef (et non `plein`) : ce bouton est aussi appelé depuis l'écouteur clavier, monté une fois, dont la
+    // fermeture garderait sinon l'état du premier rendu.
+    if (pleinRef.current) {
+      fauxPlein.current = false;
+      await quitterPlein();
+      try { window.screen?.orientation?.unlock?.(); } catch { /* pas supporté */ }
+      setPlein(false);
+      return;
+    }
+    const ok = racine.current ? await demanderPlein(racine.current) : false;
+    fauxPlein.current = !ok; // refusé (iPhone) : on couvre l'écran nous-mêmes
+    setPlein(true);
+    // Sur téléphone, on propose le paysage au système ; s'il refuse (iOS, tablette bridée), rien ne casse.
+    if (ok && surTelephone()) { try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* refusé */ } }
   }
   commencerRef.current = commencer;
   function ouvrirRegles() { if (statusRef.current === 'playing' || statusRef.current === 'countdown') setStatus('paused'); setReglesOuvertes(true); }
 
   const { w, h } = taille;
-  const remplir = fill;
+  const remplir = fill || plein; // en plein écran, le terrain prend toute la place disponible
   const niv = niveau();
   const progression = niv >= jeu.maxNiveau ? 1 : (score % jeu.pointsParNiveau) / jeu.pointsParNiveau;
   const lignesRegles = [...jeu.regles.map((r, i) => tJeu(t, jeu, `regles_${i}`, r)), tJeu(t, jeu, 'regles_3', jeu.controles)];
   return (
-    <div ref={racine} className={`jeu${large ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}`}>
+    <div ref={racine} onPointerDown={surPointeurBasRacine} style={styleJeu(jeu.key)} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best" title={t('gameFrame.bestTitle')}><Icone nom="etoile" taille={14} />{meilleur}</span>
         <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>{score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
@@ -481,17 +565,28 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
             {menuMusique && menuPistes}
           </span>
           <button type="button" className="jeu-regles-btn" onClick={ouvrirRegles} aria-label={t('gameFrame.rulesOf', { game: jeu.label })} title={t('gameFrame.howToPlayShort')}><Icone nom="guide" taille={16} /></button>
-          {onEcranScinde && !ecranScindeActif && (
-            <button type="button" className={`jeu-regles-btn${large ? ' jeu-action-nommee' : ''}`} onClick={ecranScinde}
+          {onEcranScinde && (plein || !ecranScindeActif) && (
+            <button type="button" className={`jeu-regles-btn${large || plein ? ' jeu-plein-btn jeu-plein-btn--ghost' : ''}`} onClick={ecranScinde}
               aria-label={t('gameFrame.splitScreen')} title={t('gameFrame.splitScreen')}>
-              ◧{large && <span> {t('gameFrame.splitScreen')}</span>}
+              ◧{(large || plein) && <span> {t('gameFrame.splitScreen')}</span>}
+            </button>
+          )}
+          {/* En plein écran, la sortie est un vrai bouton nommé, en évidence : une icône seule ne se trouvait pas. */}
+          {plein ? (
+            <button type="button" className="jeu-plein-btn" onClick={basculerPlein} aria-label={t('gameFrame.exitFullscreen')}>
+              ✕ <span>{t('gameFrame.exitFullscreenShort')}</span>
+            </button>
+          ) : (
+            // Nommé en grand, comme « Écran scindé » à côté : une icône d'œil seule ne disait pas « plein écran ».
+            <button type="button" className={`jeu-regles-btn${large ? ' jeu-plein-btn jeu-plein-btn--ghost' : ''}`} onClick={basculerPlein} aria-label={t('gameFrame.fullscreen')} title={t('gameFrame.fullscreen')}>
+              ⛶{large && <span> {t('gameFrame.fullscreen')}</span>}
             </button>
           )}
         </span>
       </div>
       {/* Progression vers le prochain palier : une barre fine, lisible d'un coup d'œil pendant la partie. */}
       <div className="jeu-progress" aria-hidden="true"><div style={{ width: `${Math.round(progression * 100)}%` }} /></div>
-      {/* En grand, la commande du jeu reste sous les yeux : on n'a pas à rouvrir les règles pour
+      {/* En grand (plein écran), la commande du jeu reste sous les yeux : on n'a pas à rouvrir les règles pour
           se souvenir s'il faut glisser, taper ou maintenir. */}
       {large && <p className="jeu-indice"><Icone nom="manette" taille={14} /><span>{tJeu(t, jeu, 'regles_3', jeu.controles)}</span></p>}
 
@@ -512,13 +607,15 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         {status === 'idle' && !reglesOuvertes && (
           <div className="jeu-overlay">
             <div className="jeu-carte">
-              <span className="jeu-emoji" aria-hidden="true">{jeu.emoji}</span>
+              <span className="jeu-carte-icone"><IconeJeu cle={jeu.key} taille={34} epaisseur={2.4} /></span>
               <span className="jeu-titre">{jeu.label}</span>
               <span className="jeu-sous">{tJeu(t, jeu, 'sub', jeu.sub)}</span>
               {meilleur > 0 && <span className="jeu-sous jeu-record"><Icone nom="etoile" taille={14} /> {t('gameFrame.bestScore', { n: meilleur })}</span>}
               <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
               <div className="jeu-ligne-boutons">
                 <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
+                {!plein && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={basculerPlein}>⛶ {t('gameFrame.fullscreen')}</button>}
+                {onEcranScinde && (plein || !ecranScindeActif) && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ecranScinde}>◧ {t('gameFrame.splitScreen')}</button>}
                 <span style={{ position: 'relative', flex: 1, display: 'flex' }}>
                   <button type="button" className={`jeu-btn jeu-btn-ghost jeu-btn-musique${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique}><Icone nom={musiqueActive ? 'son' : 'sonCoupe'} taille={15} /> {musiqueActive ? t(`gameFrame.track_${pisteMusique}`) : t('gameFrame.music')}</button>
                   {menuMusique && menuPistes}
@@ -575,6 +672,11 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         )}
       </div>
 
+      {astuceRotation && (
+        <button type="button" className="jeu-rotation" onClick={() => setAstuceRotation(false)}><Icone nom="mobile" taille={14} /> {t('gameFrame.rotateHint')}</button>
+      )}
+      {/* Une SEULE sortie du plein écran, celle du bandeau du haut : la seconde, ici, doublonnait — deux
+          boutons pour le même geste, dont un qui prenait de la hauteur au terrain sur un téléphone couché. */}
       <div className="jeu-actions">
         {status === 'playing' && <button type="button" onClick={() => setStatus('paused')} aria-label={t('gameFrame.pauseAria')}>{t('gameFrame.pause')}</button>}
       </div>
