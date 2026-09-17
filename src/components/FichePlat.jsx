@@ -14,7 +14,7 @@ import { useLanguage } from '../context/LanguageContext';
 // bas qui annonce ce qu'on ajoute ET ce que ça coûte.
 //
 // UN SEUL DÉFILEMENT, ALORS QUE L'ANCIENNE FENÊTRE PROCÉDAIT PAR ÉTAPES — et ce n'est pas un oubli.
-// Le découpage en étapes réglait un vrai problème, écrit dans OptionsPickerModal.jsx : empilés, les
+// Le découpage en étapes réglait un vrai problème, que l'ancienne fenêtre documentait : empilés, les
 // groupes dépassaient l'écran et le bouton « Ajouter » se retrouvait hors champ. Ici l'action est
 // COLLÉE EN BAS : elle reste visible quoi qu'on fasse défiler. La raison d'être des étapes disparaît
 // donc, et on récupère ce qu'elles coûtaient — voir tous ses choix d'un coup, et pouvoir revenir sur

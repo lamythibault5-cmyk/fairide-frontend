@@ -679,12 +679,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 }
 @keyframes feuille-monte { from { transform: translateY(16px); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
-/* Repères d'étape du choix des options (voir OptionsPickerModal) : un point par groupe (boisson, sauce,
-   crudités...), rempli une fois passé, en évidence sur l'étape en cours. */
-.options-picker-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 14px; }
-.options-picker-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex-shrink: 0; }
-.options-picker-dot.done { background: var(--teal); }
-.options-picker-dot.active { background: var(--iris); width: 9px; height: 9px; }
 .order-card-clickable { cursor: pointer; }
 .order-card-clickable:hover { border-color: var(--iris); }
 
