@@ -10,6 +10,7 @@ import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
 import EnteteFlux from '../../components/EnteteFlux';
 import SousEcran from '../../components/SousEcran';
+import AddressSearch from '../../components/AddressSearch';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
@@ -679,40 +680,38 @@ export default function Checkout() {
             setSousEcran(null);
           }}>{t('checkout.addressSave')}</button>
         }>
+                {/* LA RECHERCHE D'ADRESSE, ENFIN ICI. Le composant existait déjà et servait à
+                    l'inscription et à l'espace commerçant, mais PAS au paiement : le client tapait
+                    ses quatre champs à la main, et « rue des cons, 1000 Bruxelles » passait sans
+                    broncher. Les suggestions viennent de Photon/OpenStreetMap, filtrées sur la
+                    Belgique (GET /restaurants/lookup/suggest) — aucune clé, aucun frais, et aucun
+                    tiers de plus à déclarer dans la politique de confidentialité.
+                    ⚠️ Cela AIDE à saisir une vraie adresse, cela ne l'impose pas : les champs restent
+                    modifiables à la main, par choix — une adresse toute neuve peut manquer à la base
+                    cartographique. Refuser une adresse introuvable ne peut se faire qu'au serveur. */}
+                <AddressSearch onSelect={(a) => {
+                  setAddressStreet(a.street);
+                  if (a.number) setAddressNumber(a.number);
+                  if (a.postalCode) setAddressPostalCode(a.postalCode);
+                  if (a.city) setAddressCity(a.city);
+                }} />
                 <div className="field">
-
                   <label htmlFor="checkout-f-1">{t('auth.street')}</label>
-
                   <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
-
                 </div>
-
                 <div className="row" style={{ gap: 8 }}>
-
                   <div className="field" style={{ flex: 1 }}>
-
                     <label htmlFor="checkout-f-2">{t('auth.number')}</label>
-
                     <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
-
                   </div>
-
                   <div className="field" style={{ flex: 1 }}>
-
                     <label htmlFor="checkout-f-3">{t('auth.postalCode')}</label>
-
                     <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
-
                   </div>
-
                 </div>
-
                 <div className="field">
-
                   <label htmlFor="checkout-f-4">{t('auth.city')}</label>
-
                   <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
-
                 </div>
         </SousEcran>
       )}
@@ -723,39 +722,22 @@ export default function Checkout() {
           </button>
         }>
                 <div className="field">
-
                   {/* Un groupe de boutons, pas un champ : l'intitulé n'a rien à désigner par htmlFor. */}
-
                   <span className="field-intitule" id="checkout-consigne-label">{t('checkout.atDelivery')}</span>
-
                   <ChoixPastilles
-
                     libelle={t('checkout.atDelivery')}
-
                     valeur={deliveryInstructions}
-
                     onChange={setDeliveryInstructions}
-
                     options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
-
                       value: o.value,
-
                       label: deliveryInstructionLabel(o.value, t),
-
                       icone: <Icone nom={o.icon} taille={16} />
-
                     }))}
-
                   />
-
                 </div>
-
                 <div className="field">
-
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
-
                   <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
-
                 </div>
         </SousEcran>
       )}

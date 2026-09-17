@@ -311,6 +311,26 @@ export default function RestaurantList() {
       {/* La page n'avait aucun h1 : son titre de niveau 1 était la marque de l'en-tête, donc son
           sujet, pour un moteur, était « fairide » et non les restaurants de Bruxelles. */}
       <h1 className="page-title">{t('restoListUi.heading')}</h1>
+      {/* OÙ SERA LIVRÉE LA COMMANDE, dit dès la première page.
+          L'adresse n'apparaissait qu'au paiement : on parcourait les commerces, on composait son
+          panier, et on découvrait à la fin où tout cela irait — l'adresse du compte, pas forcément
+          celle du moment. C'est la place qu'elle occupe chez Uber Eats : en tête du fil, avant même
+          de choisir un commerce, parce qu'elle détermine ce qui est pertinent.
+          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher. */}
+      {user && (
+        <Link to="/account" className="fiche-adresse">
+          <Icone nom="maison" taille={18} />
+          <span className="fiche-adresse-texte">
+            <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
+            <span className="fiche-adresse-valeur">
+              {user.addressStreet && user.addressCity
+                ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
+                : t('restaurantMenu.noAddress')}
+            </span>
+          </span>
+          <span className="fiche-adresse-modifier">{t('restaurantMenu.changeAddress')}</span>
+        </Link>
+      )}
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}
