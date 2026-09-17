@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import CrmMap from '../../components/CrmMap';
 
 import '../../crm.css';
 
@@ -18,6 +20,19 @@ const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡',
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
 
 const vide = { name: '', address: '', commune: '', phone: '', contactName: '', email: '', cuisine: '', stage: 'a_contacter', notes: '', firstNote: '' };
+// Distance à vol d'oiseau, en mètres (pour « rester dans sa zone » : filtrer la liste sur la zone choisie).
+function distanceM(lat1, lng1, lat2, lng2) {
+  const R = 6371000; const dLat = ((lat2 - lat1) * Math.PI) / 180; const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+// Position du téléphone (bouton « je suis devant le commerce »). Promesse → { lat, lng } ou erreur.
+function maPosition() {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) { reject(new Error('geo')); return; }
+    navigator.geolocation.getCurrentPosition((pos) => resolve({ lat: +pos.coords.latitude.toFixed(6), lng: +pos.coords.longitude.toFixed(6) }), () => reject(new Error('geo')), { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 });
+  });
+}
 // <input type="datetime-local"> attend l'heure locale sans fuseau.
 const versLocal = (ms) => { if (!ms) return ''; const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
 const maintenantLocal = () => versLocal(Date.now());
@@ -33,13 +48,28 @@ export default function CrmPage() {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(null); // id du prospect ouvert
   const [creation, setCreation] = useState(false);
+  // Carte : zones proposées (avec compteurs), commerces des autres commerciaux, zone choisie, carte repliée ou non.
+  const [zones, setZones] = useState([]);
+  const [autres, setAutres] = useState([]);
+  const [zoneActive, setZoneActive] = useState(null);
+  const [carteVisible, setCarteVisible] = useState(() => { try { return localStorage.getItem('crm_carte') !== 'off'; } catch { return true; } });
+  const basculerCarte = () => setCarteVisible((v) => { try { localStorage.setItem('crm_carte', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
 
   const charger = useCallback(() => {
     api('/sales/me', { token }).then(setEtat).catch((e) => toast(e.message));
     const params = new URLSearchParams(); if (filtre) params.set('stage', filtre); if (recherche.trim()) params.set('q', recherche.trim());
     api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message); });
+    api('/sales/zones', { token }).then(setZones).catch(() => {});
+    api('/sales/map', { token }).then(setAutres).catch(() => {});
   }, [token, filtre, recherche, toast]);
   useEffect(() => { charger(); }, [charger]);
+  // Zone choisie : la liste ne montre que les commerces dans son rayon (ceux sans position restent visibles, on ne sait pas où ils sont).
+  const zone = zones.find((z) => z.key === zoneActive) || null;
+  const prospectsAffiches = useMemo(() => {
+    if (!prospects || !zone) return prospects;
+    return prospects.filter((p) => p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
+  }, [prospects, zone]);
+  const sansPosition = (prospects || []).filter((p) => p.lat === null || p.lat === undefined).length;
 
   const fmtDate = (ms) => new Date(ms).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const stageLabel = (s) => `${STAGE_ICONES[s] || ''} ${t(`sales.stage_${s}`)}`;
@@ -63,6 +93,36 @@ export default function CrmPage() {
         <button type="button" className="btn-gold" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
       </div>
 
+      {/* Carte : mes commerces, ceux des autres, et les zones où aller. Repliable (mémorisé) pour garder la liste sous la main. */}
+      <div className="card crm-carte-carte">
+        <div className="crm-carte-tete">
+          <div>
+            <b>{t('sales.mapTitle')}</b>
+            <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.mapIntro')}</p>
+          </div>
+          <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculerCarte}>{carteVisible ? t('sales.mapHide') : t('sales.mapShow')}</button>
+        </div>
+        {carteVisible && (
+          <>
+            <CrmMap prospects={prospects || []} autres={autres} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} />
+            {sansPosition > 0 && <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.noPosition', { n: sansPosition })}</p>}
+            <div className="crm-zones">
+              <b className="crm-bloc-titre" style={{ marginTop: 10 }}>{t('sales.zonesTitle')}</b>
+              <p className="small" style={{ margin: '0 0 8px' }}>{t('sales.zonesIntro')}</p>
+              <div className="role-pick crm-filtres">
+                <button type="button" className={`chip${zoneActive === null ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{t('sales.zoneAll')}</button>
+                {zones.map((z) => (
+                  <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${t(`sales.zoneTag_${z.tag}`)}`}>
+                    🎯 {z.name}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
+                  </button>
+                ))}
+              </div>
+              {zone && <p className="small" style={{ margin: '8px 0 0' }}>🎯 <b>{zone.name}</b> · {zone.commune} · {t(`sales.zoneTag_${zone.tag}`)} · {t('sales.zoneMine', { n: zone.mine })} · {t('sales.zoneOthers', { n: zone.others })}</p>}
+            </div>
+          </>
+        )}
+      </div>
+
       {etat?.stats && (
         <div className="stat-grid crm-stats">
           <div className="stat-card"><div className="num">{etat.stats.total}</div><div className="label">{t('sales.statTotal')}</div></div>
@@ -83,11 +143,11 @@ export default function CrmPage() {
       </div>
 
       {prospects === null && <div className="small">{t('common.loading')}</div>}
-      {prospects && prospects.length === 0 && (
-        <div className="card"><p className="small" style={{ margin: 0 }}>{filtre || recherche ? t('sales.noneFiltered') : t('sales.noneYet')}</p></div>
+      {prospectsAffiches && prospectsAffiches.length === 0 && (
+        <div className="card"><p className="small" style={{ margin: 0 }}>{filtre || recherche || zone ? t('sales.noneFiltered') : t('sales.noneYet')}</p></div>
       )}
       <div className="crm-liste">
-        {(prospects || []).map((p) => (
+        {(prospectsAffiches || []).map((p) => (
           <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}`} onClick={() => setOuvert(p.id)}>
             <div className="crm-carte-tete">
               <b>{p.name}</b>
@@ -117,14 +177,22 @@ export default function CrmPage() {
 function ProspectForm({ token, t, toast, onClose, onSaved }) {
   const [f, setF] = useState(vide);
   const [envoi, setEnvoi] = useState(false);
+  const [position, setPosition] = useState(null); // { lat, lng } posé avec « je suis devant »
+  const [geoEnCours, setGeoEnCours] = useState(false);
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+  async function prendrePosition() {
+    setGeoEnCours(true);
+    try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError')); } finally { setGeoEnCours(false); }
+  }
   async function enregistrer(e) {
     e.preventDefault();
     if (!f.name.trim()) { toast(t('sales.errName')); return; }
     setEnvoi(true);
-    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: f })); toast(t('sales.toastCreated')); } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: position ? { ...f, ...position } : f })); toast(t('sales.toastCreated')); } catch (err) { toast(err.message); } finally { setEnvoi(false); }
   }
-  return (
+  // Portail : la page connectée anime son contenu (page-fade), ce qui crée un contexte d'empilement — rendu dans
+  // la page, le volet passait SOUS la barre de navigation du bas. Même remède que ConfirmDialog.
+  return createPortal(
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={t('sales.addProspect')} onClick={onClose}>
       <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={enregistrer} noValidate>
         <h3 className="modal-titre">{t('sales.addProspect')}</h3>
@@ -146,12 +214,18 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
           <select id="crm-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}</select>
         </div>
         <div className="field"><label htmlFor="crm-note1">{t('sales.fFirstNote')}</label><textarea id="crm-note1" rows={3} value={f.firstNote} onChange={champ('firstNote')} placeholder={t('sales.fFirstNotePh')} /></div>
-        <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
-          <button type="button" className="btn-ghost" onClick={onClose}>{t('common.cancel')}</button>
+        {/* Position : devant le commerce, un appui suffit ; sinon l'adresse est géocodée par le serveur. */}
+        <div className="crm-position">
+          <button type="button" className="btn-outline" style={{ fontSize: 13 }} disabled={geoEnCours} onClick={prendrePosition}>{geoEnCours ? '…' : `📍 ${t('sales.useMyPosition')}`}</button>
+          <span className="small">{position ? t('sales.positionOk') : t('sales.positionHint')}</span>
+        </div>
+        <div className="modal-pied crm-pied">
           <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('common.save')}</button>
+          <button type="button" className="btn-ghost" onClick={onClose}>{t('common.cancel')}</button>
         </div>
       </form>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -190,7 +264,10 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
   }
 
   const evenements = useMemo(() => p?.events || [], [p]);
-  return (
+  async function poserPosition() {
+    try { await patch(await maPosition(), t('sales.positionSet')); } catch (e) { if (e?.message === 'geo') toast(t('sales.positionError')); }
+  }
+  return createPortal(
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={p?.name || ''} onClick={onClose}>
       <div className="modal-box drawer-box crm-fiche" onClick={(e) => e.stopPropagation()}>
         {!p ? <div className="small">{t('common.loading')}</div> : (
@@ -221,6 +298,9 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                   {!p.contactName && !p.phone && !p.email && <i>{t('sales.noContact')}</i>}
                 </p>
                 <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => setEdition({ name: p.name, address: p.address, commune: p.commune, phone: p.phone, contactName: p.contactName, email: p.email, cuisine: p.cuisine, notes: p.notes })}>✏️ {t('sales.editInfo')}</button>
+                <br />
+                <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} disabled={envoi} onClick={poserPosition}>📍 {p.lat !== null && p.lat !== undefined ? t('sales.positionFix') : t('sales.useMyPosition')}</button>
+                <span className="small"> · {p.lat !== null && p.lat !== undefined ? t('sales.positionOnMap') : t('sales.positionMissing')}</span>
               </div>
               <div>
                 <b className="crm-bloc-titre">{t('sales.nextActionTitle')}</b>
@@ -314,7 +394,8 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
         )}
         <ConfirmDialog open={!!confirm} title={confirm?.title} danger={confirm?.danger} onCancel={() => setConfirm(null)} onConfirm={async () => { const c = confirm; setConfirm(null); await c.run(); }} />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

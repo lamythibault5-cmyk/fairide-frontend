@@ -45,6 +45,26 @@
 .crm-hist-suppr:hover { opacity: 1; }
 .crm-edition { position: sticky; bottom: 0; margin-top: 12px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-field); box-shadow: var(--shadow-2); }
 .crm-form .row .field { min-width: 0; }
+/* Pied du formulaire dans un volet (padding 20/20/32) : collé en bas, action principale pleine largeur. */
+.drawer-box .crm-pied { bottom: -32px; margin: 16px -20px -32px; padding: 12px 20px calc(12px + env(safe-area-inset-bottom)); border-top: 1px solid var(--line); }
+.crm-position { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 8px; }
+/* Carte du CRM : mes pins colorés par étape, les points gris des autres commerciaux, les zones en cercles. */
+.crm-carte-carte { margin-bottom: 14px; }
+.crm-carte-map { width: 100%; border-radius: var(--radius-field); overflow: hidden; border: 1px solid var(--line); z-index: 0; }
+.crm-pin.active { transform: rotate(-45deg) scale(1.15); z-index: 2; }
+.crm-point-autre { width: 14px; height: 14px; border-radius: 50%; background: #8A8A8A; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.crm-legende { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin-top: 8px; }
+.crm-legende span { display: inline-flex; align-items: center; gap: 5px; }
+.crm-leg-pin { display: inline-block; width: 12px; height: 12px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); }
+.crm-leg-autre { background: #8A8A8A; border-radius: 50%; transform: none; width: 10px; height: 10px; }
+.crm-leg-zone { display: inline-block; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #F5B800; background: rgba(245, 184, 0, .15); }
+/* Les chips de zones gardent leur largeur naturelle (le .role-pick étire ses chips à parts égales : les noms de lieux se retrouvaient écrasés en boules). */
+.crm-zones .chip { flex: 0 0 auto; white-space: nowrap; padding: 8px 12px; }
+.crm-zone-n { display: inline-block; min-width: 18px; padding: 0 5px; border-radius: 999px; background: var(--iris); color: #fff; font-size: 11px; line-height: 18px; text-align: center; margin-left: 4px; }
+.crm-zone-n-autres { background: #8A8A8A; }
+.chip.active .crm-zone-n { background: #fff; color: var(--iris); }
+.chip.active .crm-zone-n-autres { color: #555; }
+@media (max-width: 640px) { .crm-carte-map { height: 280px !important; } }
 textarea { font: inherit; }
 
 /* Admin › Sales : codes, agents, prospects. */
