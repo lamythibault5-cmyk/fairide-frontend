@@ -30,14 +30,17 @@ import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcon
    est centrée dans son cadre plutôt que collée en bas. */
 function HeroFrame() {
   return (
-    <svg className="landing-frame" viewBox="-3 5 82 42" aria-hidden="true">
-      <g fill="none" stroke="#C8F03C" strokeWidth="5">
-        <circle cx="15" cy="29" r="12.5" />
-        <circle cx="61" cy="29" r="12.5" />
+    /* Se dessine une fois à l'arrivée, comme le logo de l'en-tête : mêmes classes bm-* (voir BrandMark.jsx). */
+    <svg className="landing-frame mark-anime" viewBox="-3 5 82 42" aria-hidden="true" shapeRendering="geometricPrecision">
+      <g fill="none" stroke="#C8F03C" strokeWidth="5" strokeLinecap="round">
+        <circle className="bm-roue" cx="15" cy="29" r="12.5" />
+        <circle className="bm-roue bm-roue-avant" cx="61" cy="29" r="12.5" />
       </g>
       <g fill="#C8F03C">
-        <rect x="16" y="8" width="44" height="5" rx="2.5" />
-        <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)" />
+        <rect className="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
+        <g transform="rotate(42 27 22.5)"><rect className="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
+        <circle className="bm-moyeu" cx="15" cy="29" r="2.4" />
+        <circle className="bm-moyeu" cx="61" cy="29" r="2.4" />
       </g>
     </svg>
   );

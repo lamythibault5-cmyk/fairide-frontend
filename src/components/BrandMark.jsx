@@ -16,23 +16,39 @@
    la bannière) : le vélo occupe alors toute la largeur de l'élément et son trait retrouve les
    6,6 % réglementaires. La boîte n'est plus carrée mais au rapport du dessin, d'où la hauteur
    calculée plutôt que reprise de `size`. */
-export default function BrandMark({ size = 34, tile = true, color }) {
+/* Le dessin est vectoriel : il est net à toute densité d'écran (Retina, 4K), il n'y a pas de version
+   « haute résolution » à fournir. `geometricPrecision` demande au navigateur de privilégier la
+   géométrie exacte à la vitesse, et les extrémités rondes des tubes font le trait propre à grande
+   taille (l'en-tête l'affiche à 78px de large). À partir de 48px, deux moyeux marquent le centre
+   des roues : sans eux, deux grands cercles vides lisent « lunettes » avant « vélo ». */
+/* Animation d'apparition (fondateur, 2026-09-17) : le logo « se dessine » UNE fois quand il arrive à
+   l'écran — la tuile iris d'abord, puis les deux roues qui se tracent, le tube supérieur qui glisse,
+   le tube de selle, les moyeux — et reste ensuite immobile. Pas de boucle. Pilotée par les classes
+   `bm-*` et `.mark-anime` (voir « Logo animé » dans styles.css) ; `animer={false}` pour un rendu
+   figé (aperçus, impressions) ; prefers-reduced-motion coupe l'animation en CSS. Le tube de selle est
+   tourné par un <g> parent : la rotation reste un attribut SVG, la transformation CSS de l'animation
+   ne l'écrase pas. Le dessin partagé avec la bannière d'accueil (Landing.jsx, HeroFrame) porte les
+   mêmes classes. */
+export default function BrandMark({ size = 34, tile = true, color, animer = true }) {
   const stroke = color || (tile ? '#C8F03C' : '#3B2FB5');
   const small = size < 28;
+  const large = size >= 48;
   const height = tile ? size : Math.round((size * 42) / 82);
 
   return (
-    <span className="mark" style={{ width: size, height }}>
-      <svg viewBox={tile ? '0 0 132 132' : '-3 5 82 42'} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairide">
+    <span className={`mark${animer ? ' mark-anime' : ''}`} style={{ width: size, height }}>
+      <svg viewBox={tile ? '0 0 132 132' : '-3 5 82 42'} xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Fairide" shapeRendering="geometricPrecision">
         {tile && <rect width="132" height="132" rx="32" fill="#3B2FB5" />}
         <g transform={tile ? 'translate(28 44)' : undefined}>
-          <g fill="none" stroke={stroke} strokeWidth="5">
-            <circle cx="15" cy="29" r="12.5" />
-            <circle cx="61" cy="29" r="12.5" />
+          <g fill="none" stroke={stroke} strokeWidth="5" strokeLinecap="round">
+            <circle className="bm-roue" cx="15" cy="29" r="12.5" />
+            <circle className="bm-roue bm-roue-avant" cx="61" cy="29" r="12.5" />
           </g>
           <g fill={stroke}>
-            <rect x="16" y="8" width="44" height="5" rx="2.5" />
-            {!small && <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)" />}
+            <rect className="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
+            {!small && <g transform="rotate(42 27 22.5)"><rect className="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>}
+            {large && <circle className="bm-moyeu" cx="15" cy="29" r="2.4" />}
+            {large && <circle className="bm-moyeu" cx="61" cy="29" r="2.4" />}
           </g>
         </g>
       </svg>

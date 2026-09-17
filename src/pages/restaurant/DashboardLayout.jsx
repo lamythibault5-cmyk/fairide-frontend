@@ -563,9 +563,10 @@ export default function DashboardLayout() {
               <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
-          {/* Réservation seule, sans acompte : c'est gratuit, aucun paiement ne transite par Fairide — la rangée
-              n'a rien à demander (même règle que formules.paiementsRequis côté serveur). */}
-          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site') || restaurant.reservationDepositEnabled) && (
+          {/* Version gratuite (réservations, à emporter payé sur place) : aucun paiement ne transite par Fairide — la rangée
+              n'a rien à demander, même avec un acompte coché (il ne s'applique qu'une fois les paiements actifs). Même
+              règle que formules.paiementsRequis côté serveur. */}
+          {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site')) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
               titre={restaurant.stripeConnectStatus === 'restricted' ? t('dashResto.paymentInfoTitle') : t('dashResto.paymentsToConfigure')}

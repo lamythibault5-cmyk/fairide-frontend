@@ -36,11 +36,13 @@ function lireJeuxMasques() { try { return localStorage.getItem(CLE_JEUX_MASQUES)
 // `jeux` : les mini-jeux ne sont proposés qu'aux CLIENTS, qui attendent leur commande. Restaurateur et livreur
 // travaillent : leur page Carte est un outil (suivi au comptoir, guidage), la carte y est seule, au centre,
 // en grand — voir pages/restaurant/MapPage.jsx et pages/driver/MapPage.jsx qui passent jeux={false}.
-export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300, jeux = true }) {
+// `masquable={false}` : pas de « Masquer les jeux » — sur la page Mini-jeux, l'écran scindé est justement ce
+// qu'on vient chercher, et un ancien choix mémorisé ne doit pas y laisser la carte seule.
+export default function TrackingWithGames({ role = 'client', rendreCarte, legende, etaSansEstimation, hauteur = 300, jeux = true, masquable = true }) {
   const { t } = useLanguage();
   const [pleinEcran, setPleinEcran] = useState(false);
   const [jeuxMasquesChoix, setJeuxMasques] = useState(lireJeuxMasques);
-  const jeuxMasques = !jeux || jeuxMasquesChoix;
+  const jeuxMasques = !jeux || (masquable && jeuxMasquesChoix);
   const empile = useLargeurFenetre() <= EMPILE_BREAKPOINT;
   function basculerJeux() {
     setJeuxMasques((m) => { try { localStorage.setItem(CLE_JEUX_MASQUES, m ? '0' : '1'); } catch { /* sans stockage */ } return !m; });
@@ -67,11 +69,11 @@ export default function TrackingWithGames({ role = 'client', rendreCarte, legend
         {!jeuxMasques && <GameSwitcher pourquoi={t(`tracking.${POURQUOI[role]}`)} width={empile ? 240 : 140} height={empile ? 300 : 280} onEcranScinde={revenirAuBloc} ecranScindeActif />}
       </div>
       <div className="tracking-actions">
-        {jeux && <button type="button" className="tracking-expand-btn" onClick={basculerJeux} aria-pressed={jeuxMasques}>{jeuxMasques ? t('tracking.showGames') : t('tracking.hideGames')}</button>}
+        {jeux && masquable && <button type="button" className="tracking-expand-btn" onClick={basculerJeux} aria-pressed={jeuxMasques}>{jeuxMasques ? t('tracking.showGames') : t('tracking.hideGames')}</button>}
         <button type="button" className="tracking-expand-btn" onClick={() => setPleinEcran(true)}>{jeuxMasques ? t('tracking.enlargeMap') : t('tracking.enlarge')}</button>
       </div>
       {pleinEcran && (
-        <TrackingFullscreen role={role} rendreCarte={rendreCarte} legende={legende} etaSansEstimation={etaSansEstimation} jeuxMasques={jeuxMasques} onBasculerJeux={jeux ? basculerJeux : null} onClose={() => setPleinEcran(false)} />
+        <TrackingFullscreen role={role} rendreCarte={rendreCarte} legende={legende} etaSansEstimation={etaSansEstimation} jeuxMasques={jeuxMasques} onBasculerJeux={jeux && masquable ? basculerJeux : null} onClose={() => setPleinEcran(false)} />
       )}
     </>
   );

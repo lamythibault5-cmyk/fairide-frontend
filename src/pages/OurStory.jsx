@@ -27,7 +27,7 @@ const TITRE = { margin: '0 0 6px', fontSize: 13, textTransform: 'uppercase', let
 const BLOCS = [
   ['alternative', 'p'], ['constat', 'p'], ['mission', 'p'], ['demarche', 'ul', 4], ['identite', 'p'], ['valeurs', 'ul', 4], ['objectifs', 'ul', 4]
 ];
-const QUESTIONS = [1, 2, 3, 4];
+const QUESTIONS = [1, 2, 3, 4, 5];
 
 export default function OurStory() {
   const { t } = useLanguage();

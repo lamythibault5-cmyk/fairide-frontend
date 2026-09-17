@@ -182,7 +182,9 @@ a { color: inherit; }
 .hero {
   background: var(--iris);
   color: var(--cream);
-  padding: 14px 24px;
+  padding: 12px 24px;
+  /* Un filet blanc translucide en pied : la bannière se termine net, sans ombre (flat only). */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   position: sticky;
   top: 0;
   z-index: 40;
@@ -201,25 +203,41 @@ a { color: inherit; }
 @media (max-width: 640px) { .hero { padding: 10px 18px; } .hero-lean { padding: 6px 16px; } }
 /* Le halo doré flou du coin haut-droit a été retiré : « no shadows, no gradients, flat color
    only ». La bannière n'a plus qu'un aplat iris. */
-.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
 /* La réserve de 108px (88px sous 480px) qui protégeait le filigrane a été supprimée en même
    temps que le filigrane lui-même sur cette branche — voir le commentaire dans Layout.jsx.
    C'est elle qui rendait la rangée intenable en français et en néerlandais : sur un écran de
    330px, elle en confisquait plus du quart avant même d'avoir placé un seul bouton. */
 
-.brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
 /* Règles universelles (BrandMark est utilisé ailleurs que dans le header, ex. le mockup téléphone de
    AppComingSoonSection) — sans ça, un <svg> sans width/height explicite s'affiche à sa taille
    intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
 .mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
 .mark svg { display: block; width: 100%; height: 100%; }
+/* Logo animé (BrandMark.jsx, Landing.jsx HeroFrame) : joué UNE fois au montage, puis le logo reste tel quel
+   (fill-mode forwards, aucune boucle). Séquence : roues tracées (0 → 0,7 s, l'avant décalée), tube supérieur
+   qui glisse depuis l'arrière (0,55 s), tube de selle (0,7 s), moyeux qui apparaissent (0,95 s). Le tracé des
+   roues joue sur stroke-dashoffset : 2π·12,5 ≈ 78,6 unités de périmètre. */
+.mark-anime .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .7s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mark-anime .bm-roue-avant { animation-delay: .12s; }
+.mark-anime .bm-tube { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: bm-tube .45s cubic-bezier(.2, .8, .2, 1) forwards; }
+.mark-anime .bm-tube-haut { animation-delay: .55s; }
+.mark-anime .bm-tube-selle { animation-delay: .7s; }
+.mark-anime .bm-moyeu { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: bm-pop .32s .95s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+@keyframes bm-roue { to { stroke-dashoffset: 0; } }
+@keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
+@keyframes bm-pop { to { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .mark-anime .bm-roue, .mark-anime .bm-tube, .mark-anime .bm-moyeu { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+}
 /* 24% du côté, exactement le rayon d'icône de la spec — et plus de liseré lime autour : sur
    la bannière iris, la tuile du logo est de la même couleur que le fond, seul le cadre lime
    se détache. C'est voulu : la marque flotte dans l'en-tête au lieu d'y être encadrée. */
-.brand .mark { border-radius: 24%; }
+.brand .mark { border-radius: 0; }
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-.brand .brand-name { display: block; font-weight: 700; font-size: 30px; color: var(--cream); line-height: 1; letter-spacing: -0.03em; }
-.brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
+.brand .brand-name { display: block; font-weight: 800; font-size: 34px; color: var(--cream); line-height: 1; letter-spacing: -0.04em; }
+.brand-slogan { font-size: 13px; font-weight: 600; color: var(--gold); opacity: 0.95; letter-spacing: 0.01em; white-space: nowrap; }
 @media (max-width: 640px) { .brand .brand-name { font-size: 24px; } }
 /* Le mot « fairide » reste affiché à TOUTES les largeurs, à côté du vélo.
 
@@ -231,7 +249,7 @@ a { color: inherit; }
    C'est le SLOGAN qui saute en premier quand la place manque, puis le lien « Connexion » : le
    bouton d'inscription mène de toute façon à un écran qui propose les deux onglets. */
 @media (max-width: 640px) { .brand-slogan { display: none; } }
-@media (max-width: 520px) { .brand .brand-name { font-size: 20px; } .brand { gap: 10px; } }
+@media (max-width: 520px) { .brand .brand-name { font-size: 22px; } .brand { gap: 10px; } }
 
 /* Le filigrane « fairide » fixé en haut à droite a été supprimé le 3 septembre 2026.
 
@@ -267,8 +285,39 @@ a { color: inherit; }
 
    La place réservée au filigrane (voir .hero-inner, padding-right sous 960px) est prise en
    compte : c'est elle qui rendait la rangée si serrée dès la tablette. */
-.header-row { justify-content: flex-end; flex-wrap: nowrap; }
+.header-row { justify-content: flex-end; flex-wrap: nowrap; align-items: center; gap: 18px; }
 .header-row > .brand { margin-right: auto; min-width: 0; }
+/* Navigation dans la rangée : les deux marges automatiques (celle de la marque, celle de la nav) se
+   partagent l'espace libre, la nav se retrouve donc centrée entre la marque et les actions — le
+   bandeau à une ligne des sites modernes. Sous 760px elle occupe sa propre ligne sous la marque. */
+.header-row > .header-nav { margin: 0 auto; flex-shrink: 0; }
+.header-nav a { font-size: 14.5px; font-weight: 600; padding: 8px 14px; opacity: .82; }
+.header-nav a.active, .header-nav a:hover { opacity: 1; background: rgba(255, 255, 255, 0.12); }
+/* Téléphone et petite tablette : deux lignes nettes. Première ligne, la marque et Connexion/Inscription
+   (les actions) ; seconde, la navigation à gauche et les langues à droite. Le saut de ligne est un
+   pseudo-élément de pleine largeur (un élément flex comme un autre) placé entre les deux groupes
+   par `order` — la structure HTML ne change pas. */
+@media (max-width: 760px) {
+  .header-row { flex-wrap: wrap; row-gap: 6px; column-gap: 10px; }
+  .header-row::before { content: ''; flex-basis: 100%; height: 0; order: 2; }
+  .header-row > .brand { order: 0; }
+  .header-row > .header-auth, .header-row > .userbar { order: 1; }
+  .header-row > .header-nav { order: 3; margin: 0 auto 0 -8px; }
+  .header-row > .lang-switcher { order: 4; }
+  .header-nav a { font-size: 13.5px; padding: 6px 10px; }
+}
+/* Sous 400px (iPhone en portrait), la marque et le couple Connexion/Inscription doivent tenir sur la
+   même ligne : vélo 46px, mot 20px, lien sans marge intérieure — mesuré à 375px en français et en
+   néerlandais (« Registreren », le plus long). */
+@media (max-width: 400px) {
+  .header-nav a { font-size: 13px; padding: 6px 8px; }
+  .header-row > .header-nav { margin-left: -6px; }
+  .header-row { column-gap: 8px; }
+  .header-row .brand { gap: 8px; }
+  .header-row .brand .mark { width: 46px !important; height: 24px !important; }
+  .header-row .brand .brand-name { font-size: 20px; }
+  .header-row .header-auth-link { padding: 8px 2px; }
+}
 .header-row > .header-auth,
 .header-row > .lang-switcher,
 .header-row > .userbar { flex-shrink: 0; }
@@ -283,10 +332,10 @@ a { color: inherit; }
 }
 .role-nav a.active, .role-nav a:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
-.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); padding: 2px; }
+.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); padding: 3px; }
 .lang-switcher button {
   background: transparent; border: none; color: var(--cream); opacity: .7;
-  font-size: 11px; font-weight: 700; padding: 5px 8px; border-radius: var(--radius-field);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 6px 9px; border-radius: var(--radius-pill);
 }
 /* Blanc translucide et non lime : le lime de l'en-tête est déjà pris par le bouton « Inscription »,
    et la spec n'autorise qu'un accent appuyé par vue. */
@@ -406,13 +455,13 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 a.btn-primary:active, a.btn-gold:active, a.btn-teal:active, a.btn-outline:active { transform: scale(.97); }
 a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { filter: brightness(1.06); }
 
-.header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14px; opacity: 0.9; display: flex; align-items: center; white-space: nowrap; }
-.header-auth-link:hover { opacity: 1; }
+.header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14.5px; opacity: 0.9; display: flex; align-items: center; white-space: nowrap; padding: 8px 6px; border-radius: var(--radius-pill); }
+.header-auth-link:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
 /* Bloc atomique (non wrappable) de la rangée principale du header (voir Layout.jsx) : tient à côté de
    la marque/langues en large, retombe seul à la ligne dès que la largeur manque plutôt que d'éclater
    Connexion et Inscription chacun sur leur propre ligne. */
-.header-auth { gap: 10px; flex-wrap: nowrap; }
-.header-register-btn { padding: 9px 18px; font-size: 13px; white-space: nowrap; }
+.header-auth { gap: 8px; flex-wrap: nowrap; }
+.header-register-btn { padding: 10px 20px; font-size: 14px; font-weight: 700; white-space: nowrap; border-radius: var(--radius-pill); }
 /* Marge de sécurité pour les langues à libellés longs. « Registreren » et « Inscription »
    sont d'un tiers plus larges que « Sign up » : sans ce resserrement, la rangée tient en
    anglais et déborde en néerlandais, ce qui est exactement le défaut qu'on vient de traiter.
@@ -421,7 +470,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    perd contre un style inline. */
 @media (max-width: 600px) {
   .header-row .lang-switcher button { padding: 5px 6px; }
-  .header-row .brand .mark { width: 36px !important; height: 36px !important; }
+  .header-row .brand .mark { width: 52px !important; height: 27px !important; }
 }
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
@@ -1108,12 +1157,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
 
 
-/* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
-   carte, pas un terrain de jeu imposé à côté d'elle. */
-/* Le bouton du jeu vit maintenant dans la barre de « Mes commandes » (voir .commandes-barre)
-   et non plus centre sous la carte de suivi : sa marge automatique des deux cotes le centrait,
-   ce qui annulait le margin-left: auto cense le pousser a droite. */
-.suivi-jouer { display: inline-flex; align-items: center; margin: 0; text-decoration: none; }
 
 .status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
 .status-nouveau { background: rgba(217,45,60,0.12); color: var(--red); }
@@ -2125,9 +2168,17 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .jeu-overlay--fin .jeu-carte { animation: jeu-monte .3s ease-out .5s both; }
 @keyframes jeu-monte { from { transform: translateY(10px); } to { transform: none; } }
 .jeu-carte { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 100%; max-width: 340px; max-height: 100%; margin: auto; color: #fff; text-align: center; }
-/* Terrain court (téléphone couché) : la carte de démarrage se compacte, et si elle ne tient
+/* Terrain court (téléphone couché, plein écran) : la carte de démarrage se compacte, et si elle ne tient
    toujours pas, elle défile DANS le terrain au lieu de déborder par-dessus le bandeau et ses boutons. */
 .jeu-overlay { overflow-y: auto; overscroll-behavior: contain; }
+@media (max-height: 470px) {
+  .jeu--plein .jeu-emoji { font-size: 26px; }
+  .jeu--plein .jeu-carte { gap: 5px; }
+  .jeu--plein .jeu-titre { font-size: 15px; }
+  .jeu--plein .jeu-sous { font-size: 12px; }
+  .jeu--plein .jeu-btn { padding: 7px 14px; font-size: 13px; }
+  .jeu--plein .jeu-indice { font-size: 11px; margin: 0 0 3px; }
+}
 .jeu-titre { font-weight: 800; font-size: 13px; line-height: 1.3; }
 .jeu-sous { font-size: 11px; line-height: 1.4; color: rgba(255,255,255,0.88); }
 .jeu-btn {
@@ -3108,7 +3159,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .jeu-indice { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); text-align: center; }
 /* 2,85 pour 1 mesure a l'ecran : le gris --ink-soft du mode clair, pose sur #14121F. Le rappel
    des commandes etait a peine lisible, exactement comme les boutons juste au-dessus. */
-.tracking-fullscreen-overlay .jeu-indice { color: rgba(255,255,255,0.8); }
+.tracking-fullscreen-overlay .jeu-indice, .jeu--plein .jeu-indice { color: rgba(255,255,255,0.8); }
 .tracking-fullscreen-bar { padding: 4px 2px; }
 .tracking-fullscreen-toggle { padding: 10px 16px; font-size: 14px; border-radius: var(--radius-pill); }
 .tracking-fullscreen-eta { font-size: 14px; padding: 9px 14px; }
@@ -3509,6 +3560,27 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .discover-tile-static:hover { transform: none; box-shadow: var(--shadow-3); border-color: var(--line); }
 .discover-tile-static:hover .discover-tile-img img { transform: none; }
 
+/* Mini-jeux en plein écran (bouton ⛶ du tableau de bord du jeu). Deux cas, même rendu : le vrai plein écran du
+   navigateur (Android, PC, Mac, iPad) et, quand il est refusé (iPhone), un calque fixe qui couvre l'écran.
+   Les encoches sont respectées, et la page derrière ne défile plus. */
+.jeu--plein {
+  position: fixed; inset: 0; z-index: 300; margin: 0; max-width: none; width: 100vw; height: 100dvh;
+  display: flex; flex-direction: column; background: #14121F;
+  padding: calc(8px + env(safe-area-inset-top)) calc(10px + env(safe-area-inset-right)) calc(8px + env(safe-area-inset-bottom)) calc(10px + env(safe-area-inset-left));
+}
+/* align-self: stretch est indispensable — `.jeu` centre ses enfants (align-items: center), donc le cadre
+   prenait la largeur de son canvas au lieu de celle de l'écran : en plein écran sur un téléphone couché, le
+   terrain restait un timbre-poste au milieu, et la carte de démarrage débordait par-dessus les boutons. */
+.jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; align-self: stretch; border-radius: 14px; }
+.jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
+.jeu--plein .jeu-indice { margin: 2px 0 6px; }
+html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
+/* Astuce discrète quand le téléphone est tenu à la verticale : on n'impose rien, on suggère. */
+.jeu-rotation {
+  align-self: center; margin-top: 6px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, .14); color: var(--cream, #FBF8F2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+.jeu-rotation:hover { background: rgba(255, 255, 255, .24); }
 
 /* Aide, liste des commerces, fiche d'un commerce : même fond, mais les cartes restent opaques (pas de flou :
    une longue liste en paierait le prix sur téléphone). Le montage se voit dans les marges et sous la page. */
@@ -3527,19 +3599,22 @@ html.jeu-en-cours .panier-pilule,
 html.tracking-plein-actif .panier-pilule,
 html.jeux-sur-page .panier-pilule { display: none !important; }
 
-/* Bouton nommé de l'écran scindé : assez gros pour le pouce, lisible sur fond sombre. */
-.jeu-action-nommee {
+/* Boutons nommés du plein écran et de l'écran scindé : assez gros pour le pouce, lisibles sur fond sombre. */
+.jeu-plein-btn {
   display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
   background: var(--lime); color: #14121F; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap;
 }
-.jeu-action-nommee { background: rgba(255, 255, 255, .16); color: #fff; }
-.jeu-action-nommee:hover { filter: brightness(1.06); }
-@media (max-width: 420px) { .jeu-action-nommee span { display: none; } }
+.jeu-plein-btn--ghost { background: rgba(255, 255, 255, .16); color: #fff; }
+.jeu-plein-btn:hover { filter: brightness(1.06); }
+@media (max-width: 420px) { .jeu-plein-btn--ghost span { display: none; } }
 /* Téléphone en plein écran : les boutons passent sous le score au lieu de le recouvrir. */
+/* Plein écran : fond sombre, donc score et niveau en clair (l'encre sombre du mode normal y disparaissait). */
+.jeu--plein .jeu-score { color: #fff; }
+.jeu--plein .jeu-niveau { color: rgba(255,255,255,.7); }
 /* #FFD166 était un jaune hors palette, oublié lors du nettoyage des teintes. Le lime le remplace :
    sur ce fond presque noir il tranche autant, et il appartient à la marque. L'interdiction du
    CLAUDE.md vise le lime en TEXTE SUR PAGE BLANCHE, où il disparaît — ici le fond est #14121F. */
-.tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
+.jeu--plein .jeu-best, .tracking-fullscreen-overlay .jeu-best { color: var(--lime); }
 .tracking-fullscreen-overlay .jeu-score { color: #fff; }
 .tracking-fullscreen-overlay .jeu-niveau { color: rgba(255,255,255,.7); }
 
@@ -3550,14 +3625,23 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
    en faut 4,5. Le libellé était simplement invisible.
    Les trois autres réglages de couleur du plein écran (score, niveau, record) avaient été faits
    juste au-dessus ; ceux des boutons avaient été oubliés. */
+.jeu--plein .jeu-regles-btn,
 .tracking-fullscreen-overlay .jeu-regles-btn {
   background: rgba(255, 255, 255, 0.14); border-color: rgba(255, 255, 255, 0.28); color: #fff;
 }
+.jeu--plein .jeu-regles-btn:hover,
 .tracking-fullscreen-overlay .jeu-regles-btn:hover { border-color: rgba(255, 255, 255, 0.55); }
 /* Le réglage actif en aplat lime avec du texte encre : c'est l'emploi que le CLAUDE.md autorise
    pour le lime, et sur ce fond sombre rien ne se voit mieux. */
+.jeu--plein .jeu-regles-btn.active,
 .tracking-fullscreen-overlay .jeu-regles-btn.active {
   background: var(--lime); border-color: var(--lime); color: var(--ink);
+}
+/* Téléphone en plein écran : record et score sur une ligne, les boutons dessous, alignés à droite. */
+@media (max-width: 560px) {
+  .jeu--plein .jeu-hud { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+  .jeu--plein .jeu-score { text-align: left; }
+  .jeu--plein .jeu-hud-boutons { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 }
 
 /* Écran scindé sur téléphone : la carte garde sa hauteur fixe en haut, le jeu remplit le reste. */
@@ -3571,10 +3655,15 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 .tracking-fullscreen-split.scinde { gap: 8px; }
 .tracking-fullscreen-split.scinde .tracking-fullscreen-game { padding: 6px 8px; }
 
-/* Mini-jeux au doigt : rien ne se sélectionne ni ne s'agrandit (loupe iOS, menu d'appui long). */
+/* Mini-jeux au doigt : rien ne se sélectionne ni ne s'agrandit (loupe iOS, menu d'appui long), et en plein
+   écran toute la surface appartient au jeu — seuls les boutons gardent le tap normal (pause, quitter…). */
 .jeu, .jeu * { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
 .jeu input, .jeu textarea { -webkit-user-select: text; user-select: text; }
-/* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (z-index 200). */
+.jeu--plein { touch-action: none; overscroll-behavior: contain; }
+.jeu--plein button, .jeu--plein .jeu-regles-corps { touch-action: manipulation; }
+.jeu--plein .jeu-regles-corps { touch-action: pan-y; }
+html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+/* Fenêtre de pseudo : au-dessus de la vue agrandie carte + jeux (200) et du plein écran de secours (300). */
 .modal-overlay.pseudo-modal-overlay { z-index: 400; }
 
 /* Inscription : relecture obligatoire de ce qui a été pré-rempli (site, horaires, type trouvés sur le web). */
@@ -3697,45 +3786,29 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 .jeu-indice { display: flex; align-items: flex-start; justify-content: center; gap: 7px; text-align: left; }
 .jeu-indice > svg { flex-shrink: 0; margin-top: 2px; }
 
-/* LE JEU DEROULE SOUS UNE COMMANDE (voir Orders.jsx).
-   Il vivait sur sa propre page : on y jouait bien, mais pour revoir ou en etait sa livraison il
-   fallait revenir en arriere, et la partie etait perdue. Ici il s'ouvre juste sous la commande
-   concernee — on remonte d'un coup de pouce pour relire son suivi, on redescend pour reprendre.
-   La hauteur est ferme et bornee : assez pour jouer, jamais assez pour que la commande sorte de
-   portee du pouce. */
-/* Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une, juste en dessous. En
-   fixant la hauteur du panneau, ce qui depassait — le podium, les boutons de l'ecran de depart —
-   sortait de la boite et se posait sur le contenu suivant. Le terrain borne, le panneau suit. */
-.commande-jeu {
+/* LA PAGE MINI-JEUX (/jeux, voir GamesPage.jsx), ouverte depuis Mon compte.
+   Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une. En fixant la hauteur du
+   panneau, ce qui depassait — le podium, les boutons de l'ecran de depart — sortait de la boite. */
+.jeux-page-terrain {
   display: flex; flex-direction: column;
   margin: 0 0 16px; padding: 14px;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
-  animation: jeu-deroule .22s cubic-bezier(.22,.61,.36,1) both;
 }
-/* flex: none et une hauteur ferme : assez pour jouer, jamais assez pour que la commande juste
-   au-dessus sorte de portee du pouce. */
-.commande-jeu .jeu-cadre { flex: none; height: min(52svh, 420px); min-height: 300px; }
-@keyframes jeu-deroule { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
-/* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
+.jeux-page-terrain .jeu-cadre { flex: none; height: min(62svh, 520px); min-height: 300px; }
+.jeux-page-intro { margin: -4px 0 14px; }
+.jeux-page-aide { margin: 4px 0 16px; text-align: center; }
+/* La livraison en route : le texte, le choix de la commande s'il y en a plusieurs, et le bouton
+   qui ouvre ou referme l'ecran scinde. */
+.jeux-page-livraison { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.jeux-page-livraison-texte { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; flex: 1 1 220px; }
+.jeux-page-livraison > button { flex: none; }
+.jeux-page-choix { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; }
 
 /* L'entete d'une carte de commande : le nom a gauche, le statut a droite. */
 .commande-entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 
-/* La barre de « Mes commandes » : les deux filtres a gauche, le bouton du jeu POUSSE tout a
-   droite par une marge automatique. Sur telephone la rangee se replie, et le bouton garde sa
-   place de dernier element. */
+/* La barre de « Mes commandes » : les deux filtres, qui se replient sur telephone. */
 .commandes-barre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
-/* Le bouton « Jouer en attendant » vit sur la ligne du TITRE, pas dans la rangee des filtres.
-   A cote de « Toutes » et « Reservations », il ne tenait pas sur un telephone : 225px de filtres
-   plus 175px de bouton depassent les 400px d'un ecran courant, donc il passait a la ligne — et se
-   retrouvait sous les filtres au lieu d'etre en haut a droite. Le titre, lui, peut se resserrer.
-   S'il devait quand meme passer a la ligne sur un tres petit ecran, margin-left: auto le garde
-   colle a droite plutot que de le renvoyer a gauche. */
-.commandes-barre .suivi-jouer { flex: none; margin-left: auto; }
-/* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
-   de filtres, pas l'action principale de la page. */
-.suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
 
 /* Le tableau des sous-traitants, sur la politique de confidentialite.
    Aucune regle <table> n'existait dans cette feuille : les seuls tableaux du projet vivent dans
@@ -3764,17 +3837,6 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
    Meme rendu que `label` (ligne 349), pour que rien ne bouge a l'ecran. */
 .titre-groupe { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
 
-/* Le libelle du bouton « Jouer en attendant » se raccourcit sur telephone.
-   A 400px de large, « Mes commandes » (194px) et le bouton entier (175px) demandent 381px dans un
-   conteneur qui en offre 368 : le bouton passait a la ligne pour treize pixels. Plutot que de
-   rogner la police jusqu'a l'illisible, le bouton dit simplement « Jouer » sous 520px — a cote
-   d'une manette, il ne manque rien a comprendre. */
-.jouer-court { display: none; }
-@media (max-width: 520px) {
-  .jouer-long { display: none; }
-  .jouer-court { display: inline; }
-}
-
 /* Les resultats d'une recherche sur la carte : une pastille par commerce, en bas de l'ecran.
    Posee AU-DESSUS de la barre de navigation flottante (qui vit a 16px du bas, hauteur ~56) pour ne
    pas la recouvrir — c'est la seule facon de quitter la page. Defilement horizontal a l'inertie,
@@ -3801,6 +3863,130 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
   display: flex; align-items: center; justify-content: center; color: var(--ink-soft);
 }
 .carte-resultat-nom { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ————— IDENTITÉ DES MINI-JEUX (IconeJeu.jsx) —————
+   Le fondateur, capture à l'appui : « on voit rien, c'est pas clair ». Les onglets étaient des cases
+   gris clair, sous-titres gris pâle, emoji de 22px, et seul l'onglet choisi avait une couleur. Chaque
+   jeu porte maintenant SA couleur (--jeu, posée en style inline) : une tuile pleine avec un picto
+   épais, un liseré teinté au repos, et l'onglet choisi entièrement coloré, soulevé, avec une ombre.
+   Placé en fin de feuille pour primer sur les règles historiques du sélecteur, plus haut. */
+.game-switcher-tab {
+  position: relative; color: var(--ink);
+  background: #fff; border: 2px solid var(--jeu-doux, var(--line)); border-radius: 14px;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, border-color .15s ease;
+}
+.game-switcher-tab:hover { filter: none; border-color: var(--jeu); }
+.game-switcher-tab:focus-visible { outline: 3px solid var(--jeu); outline-offset: 2px; }
+.game-switcher-tab.active {
+  background: var(--jeu); border-color: var(--jeu); transform: translateY(-2px);
+  box-shadow: 0 8px 18px -8px var(--jeu), 0 2px 4px rgba(20, 18, 31, .12);
+}
+.game-switcher-tab-icone {
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+  width: 30px; height: 30px; border-radius: 9px; background: var(--jeu); color: var(--jeu-texte);
+}
+/* Onglet choisi : la tuile s'inverse (fond = couleur du texte, picto = couleur du jeu), pour rester
+   visible sur l'aplat coloré — y compris le jaune de FairDodge, où une tuile blanche disparaissait. */
+.game-switcher-tab.active .game-switcher-tab-icone { background: var(--jeu-texte); color: var(--jeu); }
+
+.game-switcher--large .game-switcher-picker { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.game-switcher--large .game-switcher-tab { flex-direction: column; gap: 6px; padding: 12px 8px 11px; border-radius: 16px; }
+.game-switcher--large .game-switcher-tab-icone { width: 48px; height: 48px; border-radius: 14px; }
+.game-switcher--large .game-switcher-tab-text { gap: 2px; }
+.game-switcher--large .game-switcher-tab-label { font-size: 15px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+.game-switcher--large .game-switcher-tab-sub { font-size: 12.5px; font-weight: 600; line-height: 1.3; color: #3F3D4A; }
+.game-switcher--large .game-switcher-tab.active .game-switcher-tab-label,
+.game-switcher--large .game-switcher-tab.active .game-switcher-tab-sub { color: var(--jeu-texte); }
+@media (max-width: 560px) {
+  .game-switcher--large .game-switcher-picker { gap: 8px; }
+  .game-switcher--large .game-switcher-tab { padding: 10px 4px 9px; gap: 5px; }
+  .game-switcher--large .game-switcher-tab-icone { width: 42px; height: 42px; border-radius: 12px; }
+  .game-switcher--large .game-switcher-tab-label { font-size: 14px; }
+}
+.game-switcher--compact .game-switcher-tab { padding: 4px; border-radius: 12px; }
+.game-switcher--compact .game-switcher-tab.active { transform: none; }
+
+/* Le terrain prend un liseré à la couleur du jeu : on sait à quoi on joue même sans lire l'onglet. */
+.jeu-cadre { border: 2px solid var(--jeu, var(--line)); }
+.jeu-progress > div { background: var(--jeu, var(--iris)); }
+.jeu--plein .jeu-progress { background: rgba(255, 255, 255, .16); }
+
+/* Écran de départ : le picto du jeu dans une grande tuile colorée, au lieu d'un emoji qui se perdait
+   sur le terrain sombre (ou ne s'affichait pas du tout sur certains iPhone). */
+.jeu-carte-icone {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 64px; height: 64px; border-radius: 18px; background: var(--jeu); color: var(--jeu-texte);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .22), 0 10px 24px -10px rgba(0, 0, 0, .6);
+}
+.jeu--large .jeu-carte-icone { width: 84px; height: 84px; border-radius: 22px; }
+.jeu--large .jeu-carte-icone svg { width: 44px; height: 44px; }
+@media (max-height: 470px) { .jeu--plein .jeu-carte-icone { width: 48px; height: 48px; border-radius: 14px; } }
+.jeu-titre { text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
+.jeu-overlay { background: rgba(20, 18, 31, 0.8); }
+.jeu-ligne-boutons { flex-wrap: wrap; }
+.jeu-ligne-boutons .jeu-btn { flex: 1 1 130px; }
+.jeu-btn-ghost { background: rgba(255, 255, 255, .18); border: 1.5px solid rgba(255, 255, 255, .6); font-weight: 700; }
+
+/* LES BOUTONS « PLEIN ÉCRAN » ET « ÉCRAN SCINDÉ » ÉTAIENT INVISIBLES SUR LA PAGE. Leur variante
+   --ghost (texte blanc sur voile blanc) est pensée pour le fond sombre du plein écran ; hors plein
+   écran, en grand, la barre du jeu est posée sur la page blanche : blanc sur blanc. Hors fond sombre,
+   ils prennent donc la couleur du jeu. */
+.jeu--large:not(.jeu--plein) .jeu-plein-btn--ghost {
+  background: #fff; color: var(--ink); border: 2px solid var(--jeu, var(--iris));
+}
+.jeu--large:not(.jeu--plein) .jeu-plein-btn--ghost:hover { background: var(--jeu-doux, var(--cream-dim)); filter: none; }
+.tracking-fullscreen-overlay .jeu--large:not(.jeu--plein) .jeu-plein-btn--ghost {
+  background: rgba(255, 255, 255, .16); color: #fff; border: 0;
+}
+.jeu--large .jeu-regles-btn { border-width: 1.5px; }
+.jeu--large:not(.jeu--plein) .jeu-regles-btn:hover { border-color: var(--jeu, var(--iris)); }
+/* Boutons NOMMÉS de la barre (« Écran scindé », « Plein écran ») : ils portent aussi .jeu-regles-btn, dont la
+   largeur est figée à 34px en grand — leurs libellés débordaient et se chevauchaient. Ils prennent la largeur
+   de leur texte, et la rangée passe à la ligne plutôt que de rogner. */
+.jeu-regles-btn.jeu-plein-btn { width: auto; padding: 0 12px; gap: 6px; }
+.jeu--large .jeu-hud-boutons { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+
+/* Fenêtre de pseudo : la question « affiché publiquement ? » en deux vraies réponses (GameSocial.jsx),
+   aucune choisie d'avance. Deux cartes cliquables en entier, la choisie cerclée d'iris. */
+.pseudo-question { border: 0; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.pseudo-question legend { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; padding: 0; }
+.pseudo-choix {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; cursor: pointer;
+  border: 2px solid var(--line); border-radius: 12px; background: #fff; transition: border-color .15s ease, background .15s ease;
+}
+.pseudo-choix:hover { border-color: #B9B3E8; }
+.pseudo-choix.actif { border-color: var(--iris); background: #F1EFFC; }
+.pseudo-choix input { position: absolute; opacity: 0; pointer-events: none; }
+.pseudo-choix:focus-within { outline: 3px solid var(--iris); outline-offset: 2px; }
+.pseudo-choix-rond { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; border: 2px solid #8A86A0; background: #fff; }
+.pseudo-choix.actif .pseudo-choix-rond { border-color: var(--iris); box-shadow: inset 0 0 0 4px #fff; background: var(--iris); }
+.pseudo-choix b { display: block; font-size: 14px; color: var(--ink); }
+.pseudo-choix .small { display: block; margin-top: 2px; line-height: 1.4; }
+
+/* ————— Cartes du terrain (départ, pause, fin, règles) — 2026-09-17 —————
+   Le bouton qui lance la partie est LE geste de la carte : plus haut, plus gras, une flèche de lecture, une
+   ombre qui le détache du voile sombre. Le pictogramme du jeu revient sur la pause et la fin, pour qu'on
+   sache toujours à quoi on joue. */
+.jeu-btn--go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 14px; letter-spacing: .01em; box-shadow: 0 6px 16px -6px rgba(200, 240, 60, .7); }
+.jeu--large .jeu-btn--go { min-height: 52px; font-size: 17px; }
+.jeu-btn--go > span { font-size: .9em; }
+.jeu-carte-icone--petite { width: 44px; height: 44px; border-radius: 13px; }
+.jeu--large .jeu-carte-icone--petite { width: 52px; height: 52px; border-radius: 15px; }
+.jeu--large .jeu-carte-icone--petite svg { width: 28px; height: 28px; }
+.jeu-carte-icone--mini { width: 28px; height: 28px; border-radius: 8px; box-shadow: none; }
+.jeu--large .jeu-carte-icone--mini, .jeu--large .jeu-carte-icone--mini svg { width: 30px; height: 30px; }
+.jeu--large .jeu-carte-icone--mini svg { width: 18px; height: 18px; }
+.jeu-titre-regles { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* Tableau de bord : le score dans une pastille à la couleur du jeu, lisible d'un coup d'œil en pleine partie. */
+.jeu-score-val { min-width: 1.8em; padding: 1px 9px; border-radius: 999px; background: var(--jeu, var(--iris)); color: var(--jeu-texte, #fff); text-align: center; font-weight: 900; }
+.jeu--large .jeu-score-val { font-size: 17px; padding: 2px 12px; }
+.jeu-best { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Le terminal Fairide dans le bloc des formules (OffreFormules.jsx) : un encart à part, sous « quand est-ce que je paie ». */
+.offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
+
+/* Inscription : « Créer mon compte » avec une étape incomplète — le rappel au-dessus des boutons (Auth.jsx). */
+.auth-incomplet { margin: 0 0 10px; padding: 10px 12px; border-radius: var(--radius-field); background: #FFF1F1; border: 1px solid #F3B4B4; color: #8A1C1C; font-size: 13px; line-height: 1.4; }
 
 /* ── LA FICHE D'UN PLAT ────────────────────────────────────────────────────────────────────────
    Feuille plein écran : la photo en grand, les options, la quantité, et l'action collée en bas.

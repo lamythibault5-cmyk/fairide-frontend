@@ -5,6 +5,7 @@ import { JEUX } from './jeux/jeux';
 import { Podium, PseudoModal, useGameSocial } from './jeux/GameSocial';
 import { musique } from './jeux/musique';
 import Icone from './Icone';
+import { IconeJeu, styleJeu } from './jeux/IconeJeu';
 import { useLanguage } from '../context/LanguageContext';
 
 // Le choix du mini-jeu à côté de la carte de suivi. Six jeux, chacun avec son meilleur score
@@ -16,7 +17,7 @@ import { useLanguage } from '../context/LanguageContext';
 // `pourquoi` : une phrase qui explique ce que des jeux font sur une carte de livraison (rester devant la
 // carte sans attendre pour rien, voir le livreur arriver). Derrière un 💡 : la personne qui se pose la
 // question la trouve, celle qui ne se la pose pas n'a pas un paragraphe sous les yeux.
-// `fill` : le cadre prend toute la place de son conteneur (carte masquée). Sinon la
+// `fill` : le cadre prend toute la place de son conteneur (plein écran, carte masquée). Sinon la
 // taille est fixe, pensée pour la colonne à côté de la carte.
 const CLE_INDEX = 'fairide_game_switcher_index';
 
@@ -62,8 +63,8 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
       <div className="game-switcher-picker" role="tablist" aria-label={t('games.choose')}>
         {JEUX.map((g, i) => (
           <button key={g.key} type="button" role="tab" aria-selected={i === index} title={`${g.label}, ${tJeu(t, g, 'sub', g.sub)}`}
-            className={`game-switcher-tab${i === index ? ' active' : ''}`} onClick={() => choisir(i)}>
-            <span className="game-switcher-tab-emoji" aria-hidden="true">{g.emoji}</span>
+            className={`game-switcher-tab${i === index ? ' active' : ''}`} style={styleJeu(g.key)} onClick={() => choisir(i)}>
+            <span className="game-switcher-tab-icone"><IconeJeu cle={g.key} taille={large ? 26 : 18} /></span>
             {large && (
               <span className="game-switcher-tab-text">
                 <span className="game-switcher-tab-label">{g.label}</span>
@@ -77,11 +78,11 @@ export default function GameSwitcher({ width = 140, height = 280, fill = false, 
         onEcranScinde={onEcranScinde} ecranScindeActif={ecranScindeActif}
         onStartRequest={social.demanderDepart} onScore={(score) => social.envoyerScore(jeu.key, score)} />
       {!compact && <Podium jeu={jeu} entrees={social.podium[jeu.key] || []} profil={social.profil} connecte={social.connecte} moiId={social.moiId} onEditer={social.ouvrirProfil} large={large || fill} />}
-      {/* Rendue dans la page plutôt qu'au fil du composant : son calque est à z-index 400, donc au-dessus
-          de la vue agrandie du suivi (200), qui la cachait sinon. */}
+      {/* Rendue dans l'élément en plein écran s'il y en a un, sinon dans la page : ailleurs, elle restait cachée
+          derrière la vue agrandie (z-index 200) ou le vrai plein écran du navigateur. */}
       {social.modal && createPortal(
         <PseudoModal profil={social.profil} apres={social.modal.apres} onSave={social.sauverProfil} onClose={social.fermerModal} />,
-        document.body
+        document.fullscreenElement || document.webkitFullscreenElement || document.body
       )}
     </div>
   );

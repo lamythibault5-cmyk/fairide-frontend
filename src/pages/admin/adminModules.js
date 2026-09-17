@@ -42,6 +42,8 @@ export const ADMIN_MODULES = [
   { key: 'reports', path: '/admin/reports', icon: '📈', group: 'pilotage', badge: aucun },
   { key: 'team', path: '/admin/team', icon: '🧑‍🤝‍🧑', group: 'configuration', badge: aucun },
   { key: 'messages', path: '/admin/messages', icon: '💬', group: 'services', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
+  // Sales (2026-09-17) : codes commerciaux, commerciaux (proches qui démarchent les restaurateurs) et commerces démarchés.
+  { key: 'sales', path: '/admin/sales', icon: '🧑‍💼', group: 'croissance', badge: (o) => pastille(o.sales?.overdue || 0, 'warn') },
   { key: 'compliance', path: '/admin/compliance', icon: '⚖️', group: 'configuration', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
 
@@ -56,7 +58,8 @@ export const MODULE_ROLES = {
   reports: ['owner', 'admin', 'finance', 'ops'],
   team: ['owner', 'admin'],
   compliance: ['owner', 'admin', 'finance'],
-  messages: ['owner', 'admin', 'ops', 'support']
+  messages: ['owner', 'admin', 'ops', 'support'],
+  sales: ['owner', 'admin', 'ops']
 };
 export function moduleAllowed(mod, role) {
   const roles = MODULE_ROLES[mod.key];
@@ -97,6 +100,7 @@ export function attentionItems(o) {
     { key: 'documentsExpiringSoon', count: n(o.documents?.expiringSoon), to: '/admin/documents?expiry=expiring_soon', tone: 'warn' },
     { key: 'documentsPending', count: n(o.documents?.pending), to: '/admin/documents?verification=en_attente', tone: 'warn' },
     { key: 'crmFollowUps', count: n(o.crm?.followUpsOverdue), to: '/admin/crm?overdue=1', tone: 'warn' },
+    { key: 'salesOverdue', count: n(o.sales?.overdue), to: '/admin/sales?tab=prospects&overdue=1', tone: 'warn' },
     { key: 'invoicesOverdue', count: n(o.invoices?.overdue), to: '/admin/invoices', tone: 'danger' },
     { key: 'incidentsRefunds', count: n(o.incidents?.refundsToday), to: '/admin/orders?refunded=1', tone: 'info' },
     { key: 'reviewsLow', count: n(o.reviews?.low), to: '/admin/reviews?low=1', tone: 'warn' },

@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
 import { useSearchParams } from 'react-router-dom';
@@ -13,7 +13,6 @@ import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
-import GameSwitcher from '../../components/GameSwitcher';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -104,8 +103,6 @@ function ReviewForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
-  // Le jeu est pose une fois pour toutes en bas de page ; ce repere sert au bouton qui y amene.
-  const jeuRef = useRef(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
@@ -163,12 +160,8 @@ export default function Orders() {
     }
   }
 
-  // UN BOUTON QUI NE FAIT QU'AMENER AU JEU. Il ouvrait et refermait, et changeait donc de libelle
-  // selon son etat — deux gestes pour une seule intention. Le jeu est desormais toujours la, en bas
-  // de page : le bouton n'a plus qu'a y descendre, et il dit la meme chose en permanence.
-  function allerAuJeu() {
-    jeuRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  // Les mini-jeux ne vivent plus ici : ils ont leur page (/jeux), ouverte depuis Mon compte, avec
+  // l'écran scindé sur la carte du livreur quand une commande est en route. Voir pages/GamesPage.jsx.
 
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
@@ -191,14 +184,7 @@ export default function Orders() {
       <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-        {/* TOUT A DROITE DE LA RANGEE DES FILTRES, comme demande. Il n'y tenait pas tant que le
-            libelle etait entier — 225px de filtres plus 175px de bouton depassent un telephone de
-            400px. Avec « Jouer » sous 520px, il tient, et il revient donc a sa place : a cote des
-            deux filtres plutot que seul sur la ligne du titre, ou il flottait sans appartenir a rien. */}
-        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
-          <Icone nom="manette" taille={17} /><span className="jouer-long">{t('games.playWhileWaiting')}</span><span className="jouer-court">{t('games.playWhileWaitingShort')}</span>
-        </button>
-</div>
+      </div>
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
@@ -209,13 +195,6 @@ export default function Orders() {
           actionVers="/restaurants"
           actionTexte={t('orders.emptyAction')}
         />
-        {/* JOUER SANS RIEN AVOIR COMMANDÉ. Les jeux ne dépendent d'aucune commande — c'est leur
-            seule porte d'entrée qui en dépendait, puisqu'elle vivait sur une commande en cours.
-            Ici, sous l'écran vide, elle est ouverte à tout le monde. Le bouton reste discret :
-            on ne vient pas sur Fairide pour jouer, on y tombe en attendant. */}
-        <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
-          <GameSwitcher fill large />
-        </section>
       </div>
     );
   }
@@ -228,14 +207,7 @@ export default function Orders() {
       <div className="commandes-barre">
         <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
         <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-        {/* TOUT A DROITE DE LA RANGEE DES FILTRES, comme demande. Il n'y tenait pas tant que le
-            libelle etait entier — 225px de filtres plus 175px de bouton depassent un telephone de
-            400px. Avec « Jouer » sous 520px, il tient, et il revient donc a sa place : a cote des
-            deux filtres plutot que seul sur la ligne du titre, ou il flottait sans appartenir a rien. */}
-        <button type="button" className="btn-gold suivi-jouer" onClick={allerAuJeu}>
-          <Icone nom="manette" taille={17} /><span className="jouer-long">{t('games.playWhileWaiting')}</span><span className="jouer-court">{t('games.playWhileWaitingShort')}</span>
-        </button>
-</div>
+      </div>
       {rappels.map((o) => {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
         return (
@@ -387,12 +359,6 @@ export default function Orders() {
         </div>
         </Fragment>
       ))}
-      {/* Le jeu, une fois, en pied de page : le bouton de la barre y amene. Il etait deroule sous
-          chaque commande, ce qui obligeait a choisir SOUS LAQUELLE jouer — une question que
-          personne ne se pose. */}
-      <section className="commande-jeu" ref={jeuRef} aria-label={t('games.pageTitle')}>
-        <GameSwitcher fill large />
-      </section>
     </div>
   );
 }
