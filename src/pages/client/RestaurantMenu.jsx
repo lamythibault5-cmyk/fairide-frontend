@@ -11,7 +11,7 @@ import { StarsDisplay } from '../../components/Stars';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
-import OptionsPickerModal from '../../components/OptionsPickerModal';
+import FichePlat from '../../components/FichePlat';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
@@ -24,6 +24,7 @@ import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
+import { resolveItemImage } from '../../menuCategories';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
 
@@ -216,11 +217,10 @@ export default function RestaurantMenu() {
       setConflictItem(item);
       return;
     }
-    if (item.optionGroups?.length > 0) {
-      setPickerItem(item);
-    } else {
-      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: item.imageUrl, unitPrice: item.price });
-    }
+    // TOUT plat ouvre sa fiche, avec ou sans options. Avant, un plat sans option partait au panier
+    // au premier contact : on ne pouvait ni lire sa description, ni voir la photo, ni en prendre
+    // deux. La fiche est l'écran du plat, pas un formulaire d'options (voir FichePlat.jsx).
+    setPickerItem(item);
   }
 
   // L'utilisateur a confirmé vouloir vider son panier (d'un autre commerce) pour continuer ici —
@@ -230,14 +230,12 @@ export default function RestaurantMenu() {
   function confirmSwitchRestaurant() {
     const item = conflictItem;
     setConflictItem(null);
-    if (item.optionGroups?.length > 0) {
-      // Ici l'ajout réel n'a lieu qu'après un second aller-retour (choix des options dans la modale),
-      // donc pas de risque de closure périmée — le switch peut être appliqué séparément dès maintenant.
-      cart.switchRestaurant(id, restaurant.name);
-      setPickerItem(item);
-    } else {
-      cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: item.imageUrl, unitPrice: item.price, force: true });
-    }
+    // Plus de branche selon les options : tout plat passe maintenant par sa fiche, donc l'ajout réel
+    // n'a lieu qu'après un second aller-retour. C'est précisément le cas que l'ancien code traitait
+    // déjà à part, et la raison qu'il en donnait vaut désormais pour tous les plats — pas de closure
+    // périmée, le changement de commerce peut être appliqué séparément dès maintenant.
+    cart.switchRestaurant(id, restaurant.name);
+    setPickerItem(item);
   }
 
   return (
@@ -448,12 +446,24 @@ export default function RestaurantMenu() {
 
       {discover.length > 0 && <DiscoverSection restaurants={discover} t={t} />}
 
+      {/* `imageUrl` : la MÊME résolution que la carte du plat (resolveItemImage, MenuCategorySections).
+          Le champ `item.imageUrl` est souvent vide et la photo vient alors de la section ou de la
+          banque d'images — le prendre seul donnait une fiche SANS photo là où la carte en montrait
+          une, c'est-à-dire l'inverse de ce qu'on cherche : la photo en grand.
+          `item` : localizedItem ne renvoie QUE { name, desc }, on l'étale donc sur le plat complet,
+          sinon la fiche perdrait le prix et les groupes d'options. */}
       {pickerItem && (
-        <OptionsPickerModal
-          item={pickerItem}
+        <FichePlat
+          item={{ ...pickerItem, ...localizedItem(pickerItem, language) }}
+          imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
+          onConfirm={(optionItemIds, snapshot, unitPrice, qty) => {
+            // Le nom enregistré est le nom TRADUIT, comme lors d'un ajout direct : l'ancienne
+            // fenêtre gardait `pickerItem.name`, donc un panier en néerlandais pouvait afficher des
+            // plats en français selon la façon dont on les avait ajoutés.
+            // Même image que la fiche et que la carte : sinon le panier affichait le carré gris de
+            // repli pour un plat dont on venait de voir la photo en grand.
+            cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: pickerItem.id, name: localizedItem(pickerItem, language).name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty });
             setPickerItem(null);
           }}
         />

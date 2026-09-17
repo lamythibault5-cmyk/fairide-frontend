@@ -3805,3 +3805,74 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
   display: flex; align-items: center; justify-content: center; color: var(--ink-soft);
 }
 .carte-resultat-nom { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* ── LA FICHE D'UN PLAT ────────────────────────────────────────────────────────────────────────
+   Feuille plein écran : la photo en grand, les options, la quantité, et l'action collée en bas.
+   Voir FichePlat.jsx pour le pourquoi (un plat n'avait aucun écran à lui).
+   z-index 300 : au-dessus des onglets (50), de la pilule du panier (45) et des fenêtres ordinaires
+   (100) — la feuille recouvre tout, c'est ce qui en fait un écran et non un encart. */
+.plat-feuille {
+  position: fixed; inset: 0; z-index: 300;
+  background: #fff; display: flex; flex-direction: column;
+}
+/* Seule cette zone défile : le pied reste en place quoi qu'il arrive. */
+.plat-defile { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
+.plat-photo { width: 100%; aspect-ratio: 16 / 10; background: var(--cream-dim); overflow: hidden; }
+.plat-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plat-fermer {
+  position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px;
+  width: 44px; height: 44px; border-radius: var(--radius-pill);
+  background: #fff; color: var(--ink); border: 1px solid var(--line);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Par-dessus une photo, le filet blanc disparaît dans l'image : on s'appuie sur une ombre. */
+.plat-fermer--sur-photo { border-color: transparent; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28); }
+.plat-corps { padding: 18px 16px 8px; max-width: 720px; margin: 0 auto; }
+.plat-nom { font-size: 24px; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 6px; }
+.plat-prix { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.plat-desc { color: var(--ink-soft); margin: 0 0 18px; }
+.plat-groupe { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 14px; }
+.plat-groupe-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.plat-groupe-tete b { font-size: 16px; }
+.plat-requis {
+  font-size: 12px; font-weight: 500; color: var(--ink-soft);
+  background: var(--cream-dim); border-radius: var(--radius-chip); padding: 3px 8px;
+}
+/* Tant que le groupe obligatoire n'est pas rempli, l'étiquette le dit — en rouge d'état, jamais
+   en lime : le lime est l'accent, pas un signal d'erreur (CLAUDE.md). */
+.plat-requis--manquant { color: var(--red); background: rgba(178, 58, 42, 0.08); }
+.plat-groupe-aide { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; }
+.plat-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  /* 48px : on coche ces lignes au pouce, souvent plusieurs d'affilée. */
+  min-height: 48px; padding: 4px 0; cursor: pointer; border-bottom: 1px solid var(--line);
+}
+.plat-option:last-child { border-bottom: 0; }
+.plat-option--max { opacity: 0.45; cursor: default; }
+.plat-option-gauche { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.plat-option-gauche input { width: auto; flex: 0 0 auto; }
+.plat-option-prix { font-size: 14px; color: var(--ink-soft); white-space: nowrap; }
+.plat-pied {
+  flex: 0 0 auto; border-top: 1px solid var(--line); background: #fff;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.plat-pied > .btn-gold { flex: 1 1 auto; }
+.plat-quantite { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.plat-quantite button {
+  width: 44px; height: 44px; border-radius: var(--radius-pill);
+  background: #fff; color: var(--ink); border: 1px solid var(--line);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.plat-quantite button:disabled { opacity: 0.4; cursor: default; }
+.plat-quantite span { min-width: 28px; text-align: center; font-weight: 700; font-size: 17px; }
+.plat-ajouter { min-height: 48px; }
+.plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
+/* Au-delà du téléphone, la feuille reste plein écran mais son contenu se recentre : une photo
+   étirée sur 1400px et une ligne d'option large comme l'écran seraient illisibles. */
+@media (min-width: 901px) {
+  .plat-photo { aspect-ratio: 21 / 9; }
+  .plat-pied > * { max-width: 720px; }
+  .plat-pied { justify-content: center; }
+}

@@ -6205,6 +6205,13 @@ export const translations = {
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
     },
+    platSheet: {
+      quantity: 'Quantité',
+      less: 'Un de moins',
+      more: 'Un de plus',
+      add: 'Ajouter {n}',
+      chooseRequired: 'Choisis d’abord « {groupe} »'
+    },
     flux: {
       close: 'Fermer',
       back: 'Retour'
@@ -12800,6 +12807,13 @@ export const translations = {
       confirmOnSite: 'Confirm the order (pay on site)',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
     },
+    platSheet: {
+      quantity: 'Quantity',
+      less: 'One less',
+      more: 'One more',
+      add: 'Add {n}',
+      chooseRequired: 'Choose “{groupe}” first'
+    },
     flux: {
       close: 'Close',
       back: 'Back'
@@ -19392,6 +19406,13 @@ export const translations = {
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
+    },
+    platSheet: {
+      quantity: 'Aantal',
+      less: 'Eén minder',
+      more: 'Eén meer',
+      add: '{n} toevoegen',
+      chooseRequired: 'Kies eerst “{groupe}”'
     },
     flux: {
       close: 'Sluiten',
