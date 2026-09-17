@@ -100,6 +100,7 @@ export function attentionItems(o) {
     { key: 'documentsExpiringSoon', count: n(o.documents?.expiringSoon), to: '/admin/documents?expiry=expiring_soon', tone: 'warn' },
     { key: 'documentsPending', count: n(o.documents?.pending), to: '/admin/documents?verification=en_attente', tone: 'warn' },
     { key: 'crmFollowUps', count: n(o.crm?.followUpsOverdue), to: '/admin/crm?overdue=1', tone: 'warn' },
+    { key: 'salesOverdue', count: n(o.sales?.overdue), to: '/admin/sales?tab=prospects&overdue=1', tone: 'warn' },
     { key: 'invoicesOverdue', count: n(o.invoices?.overdue), to: '/admin/invoices', tone: 'danger' },
     { key: 'incidentsRefunds', count: n(o.incidents?.refundsToday), to: '/admin/orders?refunded=1', tone: 'info' },
     { key: 'reviewsLow', count: n(o.reviews?.low), to: '/admin/reviews?low=1', tone: 'warn' },

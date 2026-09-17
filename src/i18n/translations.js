@@ -1922,6 +1922,7 @@ export const translations = {
       att_reservationsPending: '{n} réservation(s) à confirmer',
       att_supportOpen: '{n} ticket(s) ouvert(s)',
       att_tasksDueSoon: '{n} tâche(s) à échéance dans 48 h',
+      att_salesOverdue: '{n} commerce(s) démarché(s) avec une action en retard',
       pulseInProgress: '{n} commande(s) en cours',
       pulseDrivers: '{n} livreur(s) disponible(s)',
       pulseReservations: '{n} réservation(s) dans les 24 h',
@@ -2074,7 +2075,8 @@ export const translations = {
       colNextAction: 'Prochaine action',
       colLinked: 'Lié à',
       searchPh: 'Chercher un commerce, une commune, un commercial…',
-      noProspects: 'Aucun commerce démarché.'
+      noProspects: 'Aucun commerce démarché.',
+      filterOverdue: 'En retard'
     },
     adminModules: {
       dashboard: 'Tableau de bord',
@@ -8766,6 +8768,7 @@ export const translations = {
       att_reservationsPending: '{n} reservation(s) to confirm',
       att_supportOpen: '{n} open ticket(s)',
       att_tasksDueSoon: '{n} task(s) due within 48 h',
+      att_salesOverdue: '{n} canvassed business(es) with an overdue action',
       pulseInProgress: '{n} order(s) in progress',
       pulseDrivers: '{n} courier(s) available',
       pulseReservations: '{n} reservation(s) in the next 24 h',
@@ -8918,7 +8921,8 @@ export const translations = {
       colNextAction: 'Next action',
       colLinked: 'Linked to',
       searchPh: 'Search a business, a municipality, an agent…',
-      noProspects: 'No business canvassed.'
+      noProspects: 'No business canvassed.',
+      filterOverdue: 'Overdue'
     },
     adminModules: {
       dashboard: 'Dashboard',
@@ -15586,6 +15590,7 @@ export const translations = {
       att_reservationsPending: '{n} reservering(en) te bevestigen',
       att_supportOpen: '{n} open ticket(s)',
       att_tasksDueSoon: '{n} ta(a)k(en) met deadline binnen 48 u',
+      att_salesOverdue: '{n} benaderde zaak/zaken met een actie te laat',
       pulseInProgress: '{n} bestelling(en) bezig',
       pulseDrivers: '{n} koerier(s) beschikbaar',
       pulseReservations: '{n} reservering(en) in de komende 24 u',
@@ -15738,7 +15743,8 @@ export const translations = {
       colNextAction: 'Volgende actie',
       colLinked: 'Gekoppeld aan',
       searchPh: 'Zoek een zaak, een gemeente, een commercieel…',
-      noProspects: 'Geen benaderde zaak.'
+      noProspects: 'Geen benaderde zaak.',
+      filterOverdue: 'Te laat'
     },
     adminModules: {
       dashboard: 'Dashboard',

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -24,7 +25,9 @@ export default function AdminSalesPage() {
   const { token } = useAuth();
   const toast = useToast();
   const locale = getLocale();
-  const [onglet, setOnglet] = useEtatPage('onglet', 'codes');
+  const [searchParams] = useSearchParams();
+  const tabDemande = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : null;
+  const [onglet, setOnglet] = useEtatPage('onglet', tabDemande || 'codes', { forcer: !!tabDemande });
   const [stats, setStats] = useState(null);
   const [rafraichir, setRafraichir] = useState(0);
   useEffect(() => { api('/admin/sales/stats', { token }).then(setStats).catch(() => {}); }, [token, rafraichir]);
@@ -50,7 +53,7 @@ export default function AdminSalesPage() {
       </div>
       {onglet === 'codes' && <CodesTab {...commun} />}
       {onglet === 'agents' && <AgentsTab {...commun} onVoirProspects={() => setOnglet('prospects')} />}
-      {onglet === 'prospects' && <ProspectsTab {...commun} />}
+      {onglet === 'prospects' && <ProspectsTab {...commun} retardInitial={searchParams.get('overdue') === '1'} />}
     </div>
   );
 }
@@ -134,8 +137,11 @@ function AgentsTab({ token, tr, fmt }) {
 }
 
 // ---------------------------------------------------------------------------------------------- prospects
-function ProspectsTab({ token, tr, fmt, stageLabel, toast }) {
+function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false }) {
   const [rows, setRows] = useState(null);
+  // « En retard » = prochaine action dépassée, hors commerces actifs ou refusés (même règle que /admin/overview).
+  const [retard, setRetard] = useState(retardInitial);
+  const enRetard = (p) => p.nextActionAt && p.nextActionAt < Date.now() && !['actif', 'refuse'].includes(p.stage);
   const [erreur, setErreur] = useState(null);
   const [stage, setStage] = useEtatPage('etapeProspects', '');
   const [q, setQ] = useState('');
@@ -165,9 +171,10 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast }) {
           <button type="button" className={`chip${stage === '' ? ' active' : ''}`} onClick={() => setStage('')}>{tr('sales.allStages')}</button>
           {STAGES.map((s) => <button key={s} type="button" className={`chip${stage === s ? ' active' : ''}`} onClick={() => setStage(s)}>{stageLabel(s)}</button>)}
         </div>
+        <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}>⏰ {tr('adminSales.filterOverdue')}</button>
       </div>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
-      {rows && <AdminDataTable columns={columns} rows={rows} sort={sort} onSort={toggle} onRowClick={(p) => setOuvert(p.id)} emptyLabel={tr('adminSales.noProspects')} />}
+      {rows && <AdminDataTable columns={columns} rows={retard ? rows.filter(enRetard) : rows} sort={sort} onSort={toggle} onRowClick={(p) => setOuvert(p.id)} emptyLabel={tr('adminSales.noProspects')} />}
       {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={stageLabel} toast={toast} onClose={() => setOuvert(null)} />}
     </div>
   );
