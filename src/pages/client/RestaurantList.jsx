@@ -112,7 +112,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
   if (list.length === 0) return null;
   if (loop && list.length > 1) {
     return (
-      <div style={{ marginBottom: 24 }}>
+      <div className="liste-section">
         <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
         <AutoScrollRow
           items={list}
@@ -127,7 +127,7 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
     );
   }
   return (
-    <div style={{ marginBottom: 24 }}>
+    <div className="liste-section">
       <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}</h3>
       <div className="rest-grid rest-grid-scroll">
         {list.map((r) => (

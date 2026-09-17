@@ -538,6 +538,15 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .btn-lg { font-size: 18px; padding: 16px 24px; }
 
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+/* LES RANGÉES SE RAPPROCHENT (fondateur, 2026-09-17 : « rapproche les restaurants entre eux »).
+   Mesuré avant de toucher quoi que ce soit : 46px séparaient le bas d'une rangée du titre suivant,
+   composés de 16px de marge basse héritée de .card, 6px de réserve de défilement, et 24px de marge
+   de section.
+   Les 16px partent en premier, et sans rien coûter : ils viennent de `.card { margin-bottom: 16px }`,
+   pensée pour des cartes EMPILÉES. Ici elles sont côte à côte — dans une rangée défilante il n'y a
+   rien en dessous, et dans la grille c'est `gap` qui espace déjà les lignes. Cette marge n'ajoutait
+   donc que du vide. */
+.rest-grid .rest-card, .rest-grid-loop .rest-card { margin-bottom: 0; }
 /* Rangées "Autour de vous"/"Offres"/"À découvrir"/"Supermarchés" : on peut faire défiler horizontalement
    au doigt/à la molette plutôt que de tout empiler en grille — comme Uber Eats/Deliveroo, demandé par
    le restaurateur pour parcourir plus de restos sans avoir à scroller toute la page verticalement. Le
@@ -4196,3 +4205,8 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 
 /* Message d'erreur d'un champ : sous le champ qu'il concerne, en rouge d'état. */
 .champ-erreur { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--red); }
+
+/* Espace entre deux rangées de commerces. En classe et non en style en ligne : c'est un réglage de
+   rythme vertical, il se lit et se change ici, à côté de .rest-grid. 14px au lieu de 24 — avec la
+   marge basse des cartes neutralisée, l'écart total passe de 46px à 20px. */
+.liste-section { margin-bottom: 14px; }
