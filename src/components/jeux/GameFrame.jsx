@@ -151,6 +151,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const [nouveauRecord, setNouveauRecord] = useState(false);
   const [reglesOuvertes, setReglesOuvertes] = useState(false);
   const [pop, setPop] = useState(0); // incrémenté à chaque point : relance l'animation du score
+  const scoreModifie = useRef(false);
   // Musique de fond (musique.js) : un seul moteur pour tous les jeux, coupée par défaut.
   const [musiqueActive, setMusiqueActive] = useState(() => musique.estActive());
   const [pisteMusique, setPisteMusique] = useState(() => musique.piste());
@@ -298,13 +299,16 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   // Le canvas suit la densité de l'écran : sans ça, un emoji dessiné en pixels CSS est flou sur Retina.
   function preparerContexte() {
     const c = canvas.current; if (!c) return null;
-    const dpr = Math.min(3, window.devicePixelRatio || 1);
+    // Plafond à 2 : au-delà l'œil ne voit plus la différence sur un terrain qui bouge, mais un téléphone 3× dessinait
+    // 2,25 fois plus de pixels à chaque image — c'est là que partaient les saccades en plein écran.
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
     const { w, h } = tailleRef.current;
     if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) { c.width = Math.round(w * dpr); c.height = Math.round(h * dpr); }
     // Le contexte est gardé : getContext('2d') était rappelé à chaque image, soixante fois par
     // seconde, alors qu'il rend toujours le même objet pour un canvas donné. On le relit seulement
     // si le canvas a changé (changement de jeu, remontage).
-    if (ctxRef.current?.canvas !== c) ctxRef.current = c.getContext('2d');
+    // Opaque (alpha: false) : chaque jeu peint tout son fond, le navigateur n'a pas à mélanger le canvas avec la page.
+    if (ctxRef.current?.canvas !== c) ctxRef.current = c.getContext('2d', { alpha: false });
     const ctx = ctxRef.current;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     return ctx;
@@ -325,7 +329,9 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       large,
       marquer(n = 1) {
         const avant = niveau();
-        scoreRef.current += n; setScore(scoreRef.current); setPop((p) => p + 1);
+        // Le score est poussé à React une fois par image (fin de pas()), pas à chaque point : un salto combo
+        // pouvait marquer quatre fois dans la même image, donc quatre rendus du cadre en pleine partie.
+        scoreRef.current += n; scoreModifie.current = true;
         // Palier franchi : une annonce dans le terrain, sans passer par React.
         if (niveau() > avant) effets.current.annoncer(tRef.current('gameFrame.levelUp', { n: niveau() + 1 }));
       },
@@ -337,6 +343,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           meilleurRef.current = scoreRef.current; setMeilleur(scoreRef.current);
           try { localStorage.setItem(jeu.stockage, String(scoreRef.current)); } catch { /* stockage indisponible : le score vit le temps de la page */ }
         }
+        setScore(scoreRef.current); scoreModifie.current = false;
         setNouveauRecord(record);
         setStatus('lost');
         onScoreRef.current?.(scoreRef.current);
@@ -395,6 +402,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       inp.tapes = []; inp.sauts = 0;
       effets.current.update(dt);
       dessiner();
+      if (scoreModifie.current) { scoreModifie.current = false; setScore(scoreRef.current); setPop((p) => p + 1); }
       if (statusRef.current === 'playing') raf.current = requestAnimationFrame(pas);
     };
     raf.current = requestAnimationFrame(pas);
@@ -521,7 +529,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     effets.current.vider();
     setStatus('countdown');
   }
-  function commencer() { if (onStartRequest && !pleinRef.current) onStartRequest(demarrer); else demarrer(); }
+  // Le pseudo est demandé AVANT de jouer, plein écran compris (la fenêtre est rendue dans l'élément en plein écran).
+  function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
   // Écran scindé : on quitte d'abord le plein écran (sinon la carte resterait cachée derrière), puis la page
   // affiche le jeu et la carte ensemble.
   async function ecranScinde() {
@@ -611,7 +620,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
               <span className="jeu-titre">{jeu.label}</span>
               <span className="jeu-sous">{tJeu(t, jeu, 'sub', jeu.sub)}</span>
               {meilleur > 0 && <span className="jeu-sous jeu-record"><Icone nom="etoile" taille={14} /> {t('gameFrame.bestScore', { n: meilleur })}</span>}
-              <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.start')}</button>
+              <button type="button" className="jeu-btn jeu-btn--go" onClick={commencer}><span aria-hidden="true">▶</span> {t('gameFrame.start')}</button>
               <div className="jeu-ligne-boutons">
                 <button type="button" className="jeu-btn jeu-btn-ghost" onClick={ouvrirRegles}>{t('gameFrame.howToPlay')}</button>
                 {!plein && <button type="button" className="jeu-btn jeu-btn-ghost" onClick={basculerPlein}>⛶ {t('gameFrame.fullscreen')}</button>}
@@ -627,11 +636,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         {status === 'paused' && !reglesOuvertes && (
           <div className="jeu-overlay">
             <div className="jeu-carte">
+              <span className="jeu-carte-icone jeu-carte-icone--petite"><IconeJeu cle={jeu.key} taille={24} epaisseur={2.4} /></span>
               <span className="jeu-titre">{t('gameFrame.paused')}</span>
               {/* Deux clés existantes plutôt qu'une nouvelle : « Score : 12 · Record : 40 ». Les
                   deux glyphes 🏆 et 🥇 qui les remplaçaient ne disaient pas lequel était lequel. */}
               <span className="jeu-sous">{t('gameFrame.score', { score, record: '' })} · {t('gameFrame.bestScore', { n: meilleur })}</span>
-              <button type="button" className="jeu-btn" onClick={() => setStatus('playing')}>{t('gameFrame.resume')}</button>
+              <button type="button" className="jeu-btn jeu-btn--go" onClick={() => setStatus('playing')}><span aria-hidden="true">▶</span> {t('gameFrame.resume')}</button>
               <button type="button" className="jeu-btn jeu-btn-ghost" onClick={commencer}>{t('gameFrame.restart')}</button>
             </div>
           </div>
@@ -640,11 +650,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
           // La carte de fin arrive avec un demi-temps de retard (CSS) : on voit d'abord la chute.
           <div className="jeu-overlay jeu-overlay--fin">
             <div className="jeu-carte">
+              <span className="jeu-carte-icone jeu-carte-icone--petite"><IconeJeu cle={jeu.key} taille={24} epaisseur={2.4} /></span>
               <span className="jeu-titre">{tJeu(t, jeu, 'perdu', jeu.perdu)}</span>
               <span className={`jeu-score-final${nouveauRecord ? ' record' : ''}`}>{score}</span>
               <span className="jeu-sous">{nouveauRecord ? t('gameFrame.newRecordLine') : t('gameFrame.bestScore', { n: meilleur })}</span>
               <span className="jeu-sous jeu-fin-niveau">{tDef(t, 'gameFrame.levelReached', `Niveau ${niv + 1} atteint`, { n: niv + 1 })}</span>
-              <button type="button" className="jeu-btn" onClick={commencer}>{t('gameFrame.playAgain')}</button>
+              <button type="button" className="jeu-btn jeu-btn--go" onClick={commencer}><span aria-hidden="true">↻</span> {t('gameFrame.playAgain')}</button>
               {clavierProbable() && <span className="jeu-sous jeu-touche">{tDef(t, 'gameFrame.spaceHint', 'Espace ou Entrée pour rejouer')}</span>}
             </div>
           </div>
@@ -652,7 +663,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         {reglesOuvertes && (
           <div className="jeu-overlay" role="dialog" aria-label={t('gameFrame.rulesOf', { game: jeu.label })}>
             <div className="jeu-carte jeu-regles">
-              <span className="jeu-titre">{jeu.emoji} {jeu.label}</span>
+              <span className="jeu-titre jeu-titre-regles"><span className="jeu-carte-icone jeu-carte-icone--mini"><IconeJeu cle={jeu.key} taille={18} epaisseur={2.4} /></span>{jeu.label}</span>
               {/* Quatre lignes — but, score, fin de partie, commandes — dans une zone qui défile si le terrain est
                   petit ; le bouton reste sous les yeux. */}
               <div className="jeu-regles-corps">

@@ -3867,3 +3867,39 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
    de leur texte, et la rangée passe à la ligne plutôt que de rogner. */
 .jeu-regles-btn.jeu-plein-btn { width: auto; padding: 0 12px; gap: 6px; }
 .jeu--large .jeu-hud-boutons { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 6px; }
+
+/* Fenêtre de pseudo : la question « affiché publiquement ? » en deux vraies réponses (GameSocial.jsx),
+   aucune choisie d'avance. Deux cartes cliquables en entier, la choisie cerclée d'iris. */
+.pseudo-question { border: 0; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 8px; }
+.pseudo-question legend { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; padding: 0; }
+.pseudo-choix {
+  display: flex; align-items: flex-start; gap: 10px; padding: 11px 12px; cursor: pointer;
+  border: 2px solid var(--line); border-radius: 12px; background: #fff; transition: border-color .15s ease, background .15s ease;
+}
+.pseudo-choix:hover { border-color: #B9B3E8; }
+.pseudo-choix.actif { border-color: var(--iris); background: #F1EFFC; }
+.pseudo-choix input { position: absolute; opacity: 0; pointer-events: none; }
+.pseudo-choix:focus-within { outline: 3px solid var(--iris); outline-offset: 2px; }
+.pseudo-choix-rond { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 50%; border: 2px solid #8A86A0; background: #fff; }
+.pseudo-choix.actif .pseudo-choix-rond { border-color: var(--iris); box-shadow: inset 0 0 0 4px #fff; background: var(--iris); }
+.pseudo-choix b { display: block; font-size: 14px; color: var(--ink); }
+.pseudo-choix .small { display: block; margin-top: 2px; line-height: 1.4; }
+
+/* ————— Cartes du terrain (départ, pause, fin, règles) — 2026-09-17 —————
+   Le bouton qui lance la partie est LE geste de la carte : plus haut, plus gras, une flèche de lecture, une
+   ombre qui le détache du voile sombre. Le pictogramme du jeu revient sur la pause et la fin, pour qu'on
+   sache toujours à quoi on joue. */
+.jeu-btn--go { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; font-size: 14px; letter-spacing: .01em; box-shadow: 0 6px 16px -6px rgba(200, 240, 60, .7); }
+.jeu--large .jeu-btn--go { min-height: 52px; font-size: 17px; }
+.jeu-btn--go > span { font-size: .9em; }
+.jeu-carte-icone--petite { width: 44px; height: 44px; border-radius: 13px; }
+.jeu--large .jeu-carte-icone--petite { width: 52px; height: 52px; border-radius: 15px; }
+.jeu--large .jeu-carte-icone--petite svg { width: 28px; height: 28px; }
+.jeu-carte-icone--mini { width: 28px; height: 28px; border-radius: 8px; box-shadow: none; }
+.jeu--large .jeu-carte-icone--mini, .jeu--large .jeu-carte-icone--mini svg { width: 30px; height: 30px; }
+.jeu--large .jeu-carte-icone--mini svg { width: 18px; height: 18px; }
+.jeu-titre-regles { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+/* Tableau de bord : le score dans une pastille à la couleur du jeu, lisible d'un coup d'œil en pleine partie. */
+.jeu-score-val { min-width: 1.8em; padding: 1px 9px; border-radius: 999px; background: var(--jeu, var(--iris)); color: var(--jeu-texte, #fff); text-align: center; font-weight: 900; }
+.jeu--large .jeu-score-val { font-size: 17px; padding: 2px 12px; }
+.jeu-best { display: inline-flex; align-items: center; gap: 4px; }

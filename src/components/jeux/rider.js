@@ -78,11 +78,21 @@ const FETE_MOT = 1.8; // s pendant lesquelles le mot complet reste affiché avan
 // Chute (2026-09-16) : le pilote ne s'éteint plus avec son vélo, il est ÉJECTÉ — il part par-dessus le guidon,
 // roule au sol, le vélo part de son côté. L'écran de fin n'arrive qu'après cette seconde-là : on voit ce qui
 // s'est passé, et on comprend pourquoi on a chuté.
-const EJECTION_DUREE = 1.15; // s d'animation avant l'écran de fin
-const EJECTION_ELAN = 0.75; // part de la vitesse du vélo gardée par le corps
+// (2026-09-17, fondateur : « le bonhomme doit tomber du vélo, tout son corps, et le vélo tombe aussi, mais ne
+// continue pas à rouler dans le vide ».) Le pilote est dessiné EN ENTIER — tête, buste, deux bras, deux jambes —
+// à moitié replié en vol, puis il s'étale et reste couché ; le vélo freine fort, se couche sur le flanc et ses
+// roues s'arrêtent. Au-dessus d'un trou, rien ne glisse plus à l'horizontale : ça tombe, et la caméra ne suit
+// pas dans le vide.
+const EJECTION_MIN = 1.1; // s d'animation au moins avant l'écran de fin
+const EJECTION_MAX = 2.6; // et au plus : l'écran de fin arrive dès que corps et vélo sont immobiles depuis EJECTION_POSE
+const EJECTION_POSE = 0.4; // s d'immobilité (couché) avant l'écran de fin : le temps de voir le pilote à terre
+const EJECTION_AIR = 1.4; // freinage horizontal en vol, 1/s : sans lui, le corps planait loin sur les descentes
+const EJECTION_ELAN = 0.5; // part de la vitesse du vélo gardée par le corps
 const EJECTION_SAUT = 0.42; // poussée verticale à l'éjection, en U/s
-const EJECTION_REBOND = 0.35; // ce qui reste de la vitesse verticale après un rebond
-const EJECTION_FROTTEMENT = 2.6; // freinage de la glissade au sol, 1/s
+const EJECTION_REBOND = 0.3; // ce qui reste de la vitesse verticale après un rebond
+const FROTTEMENT_CORPS = 5; // freinage de la glissade du corps au sol, 1/s
+const FROTTEMENT_VELO = 7; // le vélo couché accroche le sol : il s'arrête vite
+const TROU_FREIN = 6; // au-dessus d'un trou, la vitesse horizontale s'éteint (1/s)
 // Cœurs : une vie de secours. RARES et HAUTS — placés bien au-dessus de ce qu'un simple saut atteint
 // (SAUT_HAUTEUR = 0,32 U), donc il faut une vraie trajectoire de tremplin ou de falaise pour aller les chercher.
 const COEUR_MAX = 2; // on n'en garde pas plus : c'est un filet, pas un stock
@@ -447,12 +457,13 @@ export function creerRider(api) {
     }
     poussierer(px, py, 16, 200); api.eclat?.(px - camX, py - camY, LIME, 10);
     // Le corps part vers l'avant avec l'élan du vélo, le vélo part de son côté en tournant.
+    const t = taille();
     ejection = {
-      t: 0,
-      cx: x, cy: y - taille() * 0.95, cvx: vx * EJECTION_ELAN + u * 0.1, cvy: Math.min(vy, 0) * 0.5 - u * EJECTION_SAUT,
-      ca: angle, cw: (Math.random() < 0.5 ? -1 : 1) * aleatoire(5, 9),
-      vx2: x, vy2: y, vvx: vx * 0.45, vvy: Math.min(vy, 0) * 0.4 - u * 0.2,
-      va: angle, vw: aleatoire(-7, 7), fini: false
+      t: 0, fini: false,
+      // Corps : origine au milieu du buste. `replie` 0 = étendu, 1 = en boule ; `repos` 0 → 1 quand il s'immobilise.
+      corps: { x: x + Math.sin(angle) * t * 0.6, y: y - t * 0.85, vx: vx * EJECTION_ELAN + u * 0.1, vy: Math.min(vy, 0) * 0.5 - u * EJECTION_SAUT, a: angle, w: aleatoire(4, 7), replie: 0.35, repos: 0, auSol: false, frot: FROTTEMENT_CORPS, epais: t * 0.09, cible: Math.PI / 2 },
+      // Vélo : origine au point de contact des roues, comme en course. `couche` 0 → 1 quand il tombe sur le flanc.
+      velo: { x, y, vx: vx * 0.35, vy: Math.min(vy, 0) * 0.4 - u * 0.16, a: angle, w: aleatoire(-5, 5), repos: 0, auSol: false, frot: FROTTEMENT_VELO, epais: 0, cible: 0, roue, vroue: vx / (t * 0.28) }
     };
     secousse = u * 0.08;
     return undefined;
@@ -476,7 +487,7 @@ export function creerRider(api) {
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
-    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, coeurs, coeursPistes: coeursPistes.filter((c) => !c.pris).length, invincible, ejection: ejection ? ejection.t : 0, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
+    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, coeurs, coeursPistes: coeursPistes.filter((c) => !c.pris).length, invincible, ejection: ejection ? ejection.t : 0, corpsRepos: ejection ? ejection.corps.repos : 0, veloRepos: ejection ? ejection.velo.repos : 0, corpsVx: ejection ? ejection.corps.vx : 0, veloVx: ejection ? ejection.velo.vx : 0, veloRoue: ejection ? ejection.velo.vroue : 0, corpsDansTrou: ejection && trou(ejection.corps.x) ? 1 : 0, corpsEcranY: ejection ? ejection.corps.y - camY : 0, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
     // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
     // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
     // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
@@ -510,27 +521,52 @@ export function creerRider(api) {
     pasEjection(dt) {
       const u = U(); const g = GRAVITE * u; const e = ejection;
       e.t += dt;
-      for (const p of [{ px: 'cx', py: 'cy', vx: 'cvx', vy: 'cvy', a: 'ca', w: 'cw', sol: taille() * 0.28 }, { px: 'vx2', py: 'vy2', vx: 'vvx', vy: 'vvy', a: 'va', w: 'vw', sol: 0 }]) {
-        e[p.vy] += g * dt;
-        e[p.px] += e[p.vx] * dt; e[p.py] += e[p.vy] * dt;
-        e[p.a] += e[p.w] * dt;
-        const ySol = sol(e[p.px]) - p.sol;
-        if (!trou(e[p.px]) && e[p.py] >= ySol) {
-          if (e[p.vy] > u * 0.12) { poussierer(e[p.px], ySol + p.sol, 5, 120); api.eclat?.(e[p.px] - camX, ySol - camY, '#FFD166', 4); }
-          e[p.py] = ySol;
-          e[p.vy] = -e[p.vy] * EJECTION_REBOND;
-          if (Math.abs(e[p.vy]) < u * 0.08) e[p.vy] = 0;
-          e[p.vx] -= e[p.vx] * Math.min(1, EJECTION_FROTTEMENT * dt);
-          e[p.w] -= e[p.w] * Math.min(1, EJECTION_FROTTEMENT * 1.4 * dt);
+      for (const b of [e.corps, e.velo]) {
+        if (b.perdu) continue;
+        b.vy += g * dt;
+        if (!b.auSol) b.vx -= b.vx * Math.min(1, EJECTION_AIR * dt);
+        b.x += b.vx * dt; b.y += b.vy * dt;
+        b.a += b.w * dt;
+        if (trou(b.x) && b.y > sol(b.x) - b.epais - u * 0.05) {
+          // Dans le trou : pas de sol, donc pas de glissade — la vitesse horizontale s'éteint et ça tombe.
+          b.vx -= b.vx * Math.min(1, TROU_FREIN * dt);
+          b.auSol = false;
+          if (b.y > camY + h * 1.4) { b.perdu = true; b.vx = 0; b.vy = 0; b.w = 0; }
+          continue;
+        }
+        const ySol = sol(b.x) - b.epais;
+        if (b.y >= ySol) {
+          if (b.vy > u * 0.12) { poussierer(b.x, ySol + b.epais, 6, 130); api.eclat?.(b.x - camX, ySol - camY, '#FFD166', 4); }
+          b.y = ySol; b.auSol = true;
+          b.vy = -b.vy * EJECTION_REBOND;
+          if (Math.abs(b.vy) < u * 0.1) b.vy = 0;
+          b.vx -= b.vx * Math.min(1, b.frot * dt);
+          b.w -= b.w * Math.min(1, b.frot * 1.2 * dt);
+          if (Math.abs(b.vx) < u * 0.02) b.vx = 0;
+        } else if (b.y < ySol - u * 0.02) b.auSol = false;
+        // Immobilisation : couché dans l'axe de la pente (le corps à plat ventre, tête en avant ; le vélo sur le flanc).
+        if (b.auSol && Math.abs(b.vx) < u * 0.35 && b.vy === 0) b.repos = Math.min(1, b.repos + dt * 3.5);
+        if (b.repos > 0) {
+          const cible = Math.atan(pente(b.x)) + b.cible;
+          b.a = cible + normaliser(b.a - cible) * (1 - Math.min(1, dt * 12 * b.repos));
+          b.w *= 1 - Math.min(1, dt * 10);
         }
       }
-      camX = suivre(camX, e.cx - decal, CAM_SUIVI_X * 0.6, dt);
-      camY = suivre(camY, e.cy - h * 0.55, CAM_SUIVI, dt);
+      e.corps.replie = e.corps.auSol ? Math.max(0, 0.35 - e.corps.repos * 0.35) : Math.min(0.6, e.corps.replie + dt * 1.5);
+      e.corps.epais = taille() * (0.09 + e.corps.replie * 0.2);
+      e.velo.vroue -= e.velo.vroue * Math.min(1, (e.velo.auSol ? 5 : 1) * dt);
+      e.velo.roue += e.velo.vroue * dt;
+      // La caméra suit le corps, sans plonger sous la piste quand il tombe dans un trou.
+      const suiviY = Math.min(e.corps.y, sol(e.corps.x));
+      camX = suivre(camX, e.corps.x - decal, CAM_SUIVI_X * 0.6, dt);
+      camY = suivre(camY, suiviY - h * 0.55, CAM_SUIVI, dt);
       secousse = Math.max(0, secousse - dt * 18);
       for (const pp of poussiere) { pp.x += pp.vx * dt; pp.y += pp.vy * dt; pp.vy += 200 * dt; pp.reste -= dt; }
       poussiere = poussiere.filter((pp) => pp.reste > 0);
       if (flash) { flash.reste -= dt; if (flash.reste <= 0) flash = null; }
-      if (e.t >= EJECTION_DUREE && !e.fini) { e.fini = true; api.perdre(); return true; }
+      const immobiles = [e.corps, e.velo].every((b) => b.perdu || b.repos >= 0.95);
+      e.pose = immobiles ? (e.pose || 0) + dt : 0;
+      if (!e.fini && ((e.t >= EJECTION_MIN && e.pose >= EJECTION_POSE) || e.t >= EJECTION_MAX)) { e.fini = true; api.perdre(); return true; }
       return undefined;
     },
     pasPhysique(dt, input) {
@@ -915,8 +951,13 @@ export function creerRider(api) {
       // Le vélo et son cycliste. Après une chute, les deux sont séparés : le vélo tombe de son côté, le pilote
       // roule au sol. Pendant l'immunité qui suit un cœur, le vélo clignote — on voit qu'on est encore protégé.
       if (ejection) {
-        dessinerVelo(ctx, ejection.vx2, ejection.vy2, t, ejection.va, roue, pedale, 0, 0, 1, true);
-        dessinerPilote(ctx, ejection.cx, ejection.cy, t, ejection.ca);
+        const { velo: v, corps: c } = ejection;
+        // Vélo couché sur le flanc : vu de côté, il s'aplatit vers le sol à mesure qu'il se couche.
+        ctx.save();
+        ctx.translate(v.x, v.y); ctx.scale(1, 1 - v.repos * 0.5); ctx.translate(-v.x, -v.y);
+        dessinerVelo(ctx, v.x, v.y, t, v.a, v.roue, pedale, 0, 0, 1, true);
+        ctx.restore();
+        dessinerPilote(ctx, c.x, c.y, t, c.a, c.replie);
       } else {
         if (invincible > 0) ctx.globalAlpha = 0.45 + 0.55 * Math.abs(Math.sin(invincible * 14));
         dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air);
@@ -1056,29 +1097,43 @@ function dessinerVelo(ctx, x, y, t, angle, roue, pedale, ecrasement, penche, air
   ctx.restore();
 }
 
-// Le pilote éjecté : même silhouette que sur le vélo (casque lime, sac isotherme sur le dos), mais en boule,
-// bras et jambes repliés, qui tourne autour de son bassin. Dessiné à part parce qu'il n'est plus attaché au
-// cadre : c'est ce qui donne à la chute son « aïe » — on voit quelqu'un passer par-dessus le guidon.
-function dessinerPilote(ctx, x, y, t, angle) {
+// Le pilote éjecté, EN ENTIER : tête casquée, buste, sac isotherme sur le dos, deux bras et deux jambes articulés
+// (le membre du fond plus sombre, pour la profondeur). Origine = milieu du buste ; axe du corps vertical (tête en
+// haut) avant rotation. `replie` 0 = étendu (couché au sol, bras devant la tête), 1 = en boule (genoux à la
+// poitrine). La version précédente ne montrait qu'un buste et deux moignons repliés : on croyait voir tomber
+// le haut du corps seul.
+function dessinerPilote(ctx, x, y, t, angle, replie = 0.4) {
   const r = t * 0.28;
+  const k = Math.max(0, Math.min(1, replie));
+  const mix = (a, b) => ({ x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k });
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
   ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  const bassin = { x: 0, y: r * 0.45 };
-  const epaule = { x: 0, y: -r * 0.6 };
-  // Jambes repliées (genoux vers la poitrine), bras devant la tête : la position qu'on prend en tombant.
-  ctx.strokeStyle = '#5B4FE0'; ctx.lineWidth = Math.max(2.5, r * 0.3);
-  for (const sens of [-1, 1]) {
-    ctx.beginPath();
-    ctx.moveTo(bassin.x, bassin.y);
-    ctx.lineTo(bassin.x + r * 0.75 * sens * 0.6 + r * 0.35, bassin.y + r * 0.25);
-    ctx.lineTo(bassin.x + r * 0.2, bassin.y - r * 0.55 + sens * r * 0.2);
-    ctx.stroke();
-  }
+  const bassin = { x: 0, y: r * 0.95 };
+  const epaule = { x: 0, y: -r * 0.95 };
+  const jambe = (dx) => ({
+    genou: mix({ x: r * 0.18 + dx, y: bassin.y + r * 1.0 }, { x: r * 1.0 + dx, y: bassin.y - r * 0.25 }),
+    pied: mix({ x: r * 0.1 + dx, y: bassin.y + r * 2.0 }, { x: r * 0.35 + dx, y: bassin.y + r * 0.55 })
+  });
+  const bras = (dx) => ({
+    coude: mix({ x: r * 0.28 + dx, y: epaule.y - r * 0.7 }, { x: r * 0.75 + dx, y: epaule.y + r * 0.45 }),
+    main: mix({ x: r * 0.22 + dx, y: epaule.y - r * 1.45 }, { x: r * 0.55 + dx, y: epaule.y - r * 0.35 })
+  });
+  const membre = (depart, milieu, fin, couleur, epaisseur) => {
+    ctx.strokeStyle = couleur; ctx.lineWidth = epaisseur;
+    ctx.beginPath(); ctx.moveTo(depart.x, depart.y); ctx.lineTo(milieu.x, milieu.y); ctx.lineTo(fin.x, fin.y); ctx.stroke();
+  };
+  const ej = Math.max(2.5, r * 0.3); const eb = Math.max(2, r * 0.24);
+  // Membres du fond (plus sombres), derrière le buste.
+  const jf = jambe(-r * 0.22); const bf = bras(-r * 0.2);
+  membre(bassin, jf.genou, jf.pied, '#3D33A8', ej);
+  membre(epaule, bf.coude, bf.main, '#C9C5BC', eb);
+  // Chaussure du fond
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(jf.pied.x, jf.pied.y, r * 0.2, 0, Math.PI * 2); ctx.fill();
   // Le sac sur le dos, derrière le buste.
   ctx.save();
-  ctx.translate(-r * 0.62, -r * 0.05);
+  ctx.translate(-r * 0.62, -r * 0.1);
   arrondi(ctx, -r * 0.52, -r * 0.66, r * 1.04, r * 1.32, r * 0.22);
   ctx.fillStyle = IRIS; ctx.fill();
   ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.11); ctx.stroke();
@@ -1086,14 +1141,19 @@ function dessinerPilote(ctx, x, y, t, angle) {
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillText('f', 0, 0);
   ctx.restore();
-  // Buste
+  // Buste (maillot clair, contour encre pour qu'il se détache du ciel comme de la piste).
+  ctx.strokeStyle = INK; ctx.lineWidth = Math.max(4, r * 0.5);
+  ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(epaule.x, epaule.y); ctx.stroke();
   ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = Math.max(3, r * 0.38);
   ctx.beginPath(); ctx.moveTo(bassin.x, bassin.y); ctx.lineTo(epaule.x, epaule.y); ctx.stroke();
-  // Bras repliés devant
-  ctx.lineWidth = Math.max(2, r * 0.24);
-  ctx.beginPath(); ctx.moveTo(epaule.x, epaule.y); ctx.lineTo(epaule.x + r * 0.6, epaule.y + r * 0.1); ctx.lineTo(epaule.x + r * 0.35, epaule.y - r * 0.5); ctx.stroke();
+  // Membres de devant.
+  const jd = jambe(r * 0.12); const bd = bras(r * 0.12);
+  membre(bassin, jd.genou, jd.pied, '#5B4FE0', ej);
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.arc(jd.pied.x, jd.pied.y, r * 0.22, 0, Math.PI * 2); ctx.fill();
+  membre(epaule, bd.coude, bd.main, '#F7F5F0', eb);
+  ctx.fillStyle = '#F2C9A0'; ctx.beginPath(); ctx.arc(bd.main.x, bd.main.y, r * 0.14, 0, Math.PI * 2); ctx.fill();
   // Tête et casque
-  const tete = { x: epaule.x + r * 0.1, y: epaule.y - r * 0.55 };
+  const tete = { x: epaule.x + r * 0.08, y: epaule.y - r * 0.58 };
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.42, 0, Math.PI * 2); ctx.fillStyle = '#F2C9A0'; ctx.fill();
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.fillStyle = LIME; ctx.fill();
   ctx.beginPath(); ctx.arc(tete.x, tete.y, r * 0.46, Math.PI * 1.05, Math.PI * 2.05); ctx.strokeStyle = INK; ctx.lineWidth = Math.max(1, r * 0.1); ctx.stroke();
