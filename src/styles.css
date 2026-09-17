@@ -1892,6 +1892,18 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
 .carte-recherche { display: flex; align-items: center; gap: 8px; width: 100%; padding: 0 12px; background: #fff; border-radius: var(--radius-pill); box-shadow: var(--shadow-3); color: var(--ink-soft); }
 .carte-recherche input { flex: 1; min-width: 0; height: 44px; border: 0; background: none; padding: 0; font-size: 15px; color: var(--ink); }
 .carte-recherche input:focus { outline: none; }
+/* PAS DE SECONDE BAGUE À L'INTÉRIEUR D'UN CHAMP HABILLÉ (fondateur, 2026-09-17 : « je garde celle du
+   dehors, pas celle du dedans »).
+   Ces deux barres sont bâties pareil : un CONTENEUR qui porte la bordure et l'arrondi, et dedans un
+   <input> sans bordure. La règle générale `input:focus { box-shadow: var(--ring) }` lui dessinait
+   quand même sa bague de 3px — qui se retrouvait cernée à l'intérieur du conteneur, d'où deux traits
+   bleus concentriques avec un blanc entre les deux. C'est le conteneur qui doit porter le focus,
+   comme le fait déjà .phone-input plus bas.
+   Le repère de focus n'est PAS supprimé pour autant : .recherche-champ passe déjà à l'iris au
+   focus-within, et la barre de la carte reçoit la bague ici, à l'extérieur de la pilule — sans quoi
+   quelqu'un qui navigue au clavier n'aurait plus rien pour savoir où il est. */
+.recherche-champ input:focus, .carte-recherche input:focus { box-shadow: none; }
+.carte-recherche:focus-within { box-shadow: var(--shadow-3), var(--ring); }
 .carte-recherche input::-webkit-search-cancel-button { display: none; }
 .carte-recherche-vider { border: 0; background: none; font-size: 22px; line-height: 1; color: var(--ink-faint); cursor: pointer; padding: 0 2px; min-height: 44px; }
 .carte-pastilles { align-self: flex-start; }
