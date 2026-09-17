@@ -308,9 +308,13 @@ export default function RestaurantList() {
 
   return (
     <div>
-      {/* La page n'avait aucun h1 : son titre de niveau 1 était la marque de l'en-tête, donc son
-          sujet, pour un moteur, était « fairide » et non les restaurants de Bruxelles. */}
-      <h1 className="page-title">{t('restoListUi.heading')}</h1>
+      {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
+          Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
+          titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un
+          moteur de recherche, redevient « fairide » au lieu des restaurants de Bruxelles. Le retirer
+          vraiment annulerait ce gain sans que rien ne le signale.
+          .sr-only le sort de l'affichage et le laisse aux lecteurs d'écran et aux robots. */}
+      <h1 className="sr-only">{t('restoListUi.heading')}</h1>
       {/* OÙ SERA LIVRÉE LA COMMANDE, dit dès la première page.
           L'adresse n'apparaissait qu'au paiement : on parcourait les commerces, on composait son
           panier, et on découvrait à la fin où tout cela irait — l'adresse du compte, pas forcément
