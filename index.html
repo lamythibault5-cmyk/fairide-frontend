@@ -28,17 +28,20 @@
     <meta name="twitter:description" content="Les commerces du quartier, livrés à domicile. Commission plafonnée à 10% à Bruxelles." />
     <meta name="twitter:image" content="https://fairide.be/og-image.png" />
 
+    <!-- Pré-connexion à l'API : la poignée de main TLS se fait pendant que le code se charge, le premier
+         appel (liste des commerces, session) part sans attendre. -->
+    <link rel="preconnect" href="https://fairide-backend-production.up.railway.app" crossorigin />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
     <!-- Écran de chargement (fondateur, 2026-09-17) : plein écran iris avec le logo qui se dessine UNE fois
          (même séquence que BrandMark.jsx), visible dès l'analyse du HTML, avant tout JavaScript. Styles et
-         animation en ligne parce que styles.css n'est pas encore chargé. main.jsx le retire une fois
-         l'application montée — à la première visite de la session il laisse l'animation se terminer
-         (environ 1 s), ensuite il s'efface dès que l'application est prête. -->
+         animation en ligne parce que styles.css n'est pas encore chargé. main.jsx le retire dès que la
+         page est réellement rendue (application montée, plus de squelette), sans jamais retarder : il couvre
+         le chargement, il ne le prolonge pas. -->
     <div id="splash" aria-hidden="true">
       <style>
-        #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .22s ease; }
+        #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .2s ease; will-change: opacity; }
         #splash.splash-fin { opacity: 0; pointer-events: none; }
         #splash svg { width: min(46vw, 220px); height: auto; display: block; shape-rendering: geometricPrecision; }
         #splash .splash-nom { font: 800 34px/1 "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.04em; color: #fff; opacity: 0; animation: splash-nom .3s .78s ease forwards; }

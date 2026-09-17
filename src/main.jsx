@@ -63,22 +63,33 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
   window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
 }
 
-// Écran de chargement (index.html, #splash) : retiré une fois l'application montée. À la TOUTE PREMIÈRE
-// visite (mémorisée dans le navigateur), on laisse le logo finir de se dessiner (1 s depuis l'ouverture
-// de la page) ; ensuite — rechargements compris — il s'efface dès que l'application est prête, en un
-// fondu court : un rafraîchissement ne doit jamais paraître plus long qu'il ne l'est (fondateur,
-// 2026-09-17 : « permet un refresh smooth »). Si le système demande moins d'animations, on n'attend jamais.
+// Écran de chargement (index.html, #splash) : il ne fait que COUVRIR le chargement, jamais le prolonger
+// (fondateur, 2026-09-17 : « le plus smooth possible, pas d'attente longue »). Il s'efface dès que la page
+// est réellement là — l'application montée ET la section demandée rendue (plus de squelette de chargement
+// à l'écran), pour ne pas découvrir un écran gris qui se remplit ensuite. Plafond de 2,5 s : si la section
+// tarde (réseau lent), on montre ce qu'on a plutôt que de faire attendre. Le logo se dessine pendant ce
+// temps ; si la page arrive avant la fin, il s'efface en cours de tracé — le logo de l'en-tête, lui,
+// rejoue la séquence entière. Sondage par setTimeout et non requestAnimationFrame : dans un onglet ouvert
+// en arrière-plan, rAF ne se déclenche pas et l'écran resterait affiché.
 function retirerEcranChargement() {
   const splash = document.getElementById('splash');
   if (!splash) return;
-  let premiere = true;
-  try { premiere = !localStorage.getItem('fairide_splash_vu'); localStorage.setItem('fairide_splash_vu', '1'); } catch { /* sans stockage : on joue l'animation */ }
-  const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-  const attente = premiere && !reduit ? Math.max(0, 1000 - performance.now()) : 0;
-  setTimeout(() => { splash.classList.add('splash-fin'); setTimeout(() => splash.remove(), 240); }, attente);
+  const debut = performance.now();
+  const prete = () => {
+    const root = document.getElementById('root');
+    if (!root || !root.children.length) return false;
+    return !root.querySelector('.skeleton');
+  };
+  const sonder = () => {
+    if (prete() || performance.now() - debut > 2500) {
+      splash.classList.add('splash-fin');
+      setTimeout(() => splash.remove(), 220);
+      return;
+    }
+    setTimeout(sonder, 40);
+  };
+  sonder();
 }
-// setTimeout et non requestAnimationFrame : dans un onglet ouvert en arrière-plan, rAF ne se déclenche
-// pas et l'écran resterait affiché jusqu'au premier passage au premier plan.
 setTimeout(retirerEcranChargement, 0);
 
 createRoot(document.getElementById('root')).render(
