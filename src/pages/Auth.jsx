@@ -1212,8 +1212,8 @@ export default function Auth() {
                       au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>
                 <div className="field">
-                  <label htmlFor="auth-f-19">{t('auth.confirmPassword')}</label>
-                  <PasswordInput id="auth-f-19" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
+                  <label htmlFor="auth-f-pwd2">{t('auth.confirmPassword')}</label>
+                  <PasswordInput id="auth-f-pwd2" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
                     invalid={!!errors.passwordConfirm} autoComplete="new-password" />
                   {fieldError('passwordConfirm')}
                 </div>
