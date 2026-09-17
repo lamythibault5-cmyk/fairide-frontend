@@ -108,7 +108,8 @@ export default function Auth() {
   const [commerceTrouve, setCommerceTrouve] = useState(null);
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
-  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false });
+  // pickupPaymentMode : 'on_site' (version gratuite) | 'online' | 'both' (version complète) — voir OffreFormules.
+  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false, pickupPaymentMode: 'on_site' });
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   const [cuisine, setCuisine] = useState('');
@@ -190,6 +191,7 @@ export default function Auth() {
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: !!services.dineIn,
+      pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
       deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
       // cas l'inscription aboutit à un vrai commerce, la provenance n'est qu'une mention pour l'admin.
@@ -1072,9 +1074,17 @@ export default function Auth() {
                     </div>
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
+                  {services.pickup && (
+                    // Comment l'à emporter est payé décide de la version : sur place = gratuit, en ligne ou au choix = complète.
+                    <div className="service-suboptions" role="group" aria-label={t('accountUi.pickupPayTitle')}>
+                      {[['on_site', 'pickupPayOnSiteOnly'], ['online', 'pickupPayOnline'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
+                        <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}<span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span></span></label>
+                      ))}
+                    </div>
+                  )}
                   <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
                   {/* Gratuit → payant dit en clair dès l'inscription, avec la date du premier prélèvement (voir OffreFormules). */}
-                  <OffreFormules payant={services.delivery || services.pickup} inscription />
+                  <OffreFormules payant={services.delivery || (services.pickup && services.pickupPaymentMode !== 'on_site')} inscription />
                   {fieldError('services')}
                 </div>
               </>
