@@ -93,6 +93,7 @@ const EJECTION_REBOND = 0.3; // ce qui reste de la vitesse verticale après un r
 const FROTTEMENT_CORPS = 5; // freinage de la glissade du corps au sol, 1/s
 const FROTTEMENT_VELO = 7; // le vélo couché accroche le sol : il s'arrête vite
 const TROU_FREIN = 6; // au-dessus d'un trou, la vitesse horizontale s'éteint (1/s)
+const BASCULE_ACCEL = 14; // accélération de la bascule du vélo sur le flanc (0 → 1 en ≈ 0,4 s)
 // Cœurs : une vie de secours. RARES et HAUTS — placés bien au-dessus de ce qu'un simple saut atteint
 // (SAUT_HAUTEUR = 0,32 U), donc il faut une vraie trajectoire de tremplin ou de falaise pour aller les chercher.
 const COEUR_MAX = 2; // on n'en garde pas plus : c'est un filet, pas un stock
@@ -487,7 +488,7 @@ export function creerRider(api) {
     },
     redimensionner(nw, nh) { w = nw; h = nh; },
     // État lisible de l'extérieur (sondes, bancs d'essai) : jamais utilisé par le rendu.
-    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, coeurs, coeursPistes: coeursPistes.filter((c) => !c.pris).length, invincible, ejection: ejection ? ejection.t : 0, corpsRepos: ejection ? ejection.corps.repos : 0, veloRepos: ejection ? ejection.velo.repos : 0, corpsVx: ejection ? ejection.corps.vx : 0, veloVx: ejection ? ejection.velo.vx : 0, veloRoue: ejection ? ejection.velo.vroue : 0, corpsDansTrou: ejection && trou(ejection.corps.x) ? 1 : 0, corpsEcranY: ejection ? ejection.corps.y - camY : 0, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
+    etat() { return { auSol, vx, vy, angle, rotation: angle - angleDepart, omega, dist: x, hauteur: sol(x) - y, U: U(), flips, serie, tempsVol, obstacles: obstacles.length, bonus: bonus.length, boucles: boucles.length, enBoucle: boucle !== null, ecranY: y - camY, ecranX: x - camX, mot: mot.join(''), attrapees: attrapees.filter(Boolean).length, lettres: lettres.length, motsFinis, pointsMot, sautsFaits, coeurs, coeursPistes: coeursPistes.filter((c) => !c.pris).length, invincible, ejection: ejection ? ejection.t : 0, corpsRepos: ejection ? ejection.corps.repos : 0, veloRepos: ejection ? ejection.velo.repos : 0, corpsVx: ejection ? ejection.corps.vx : 0, veloVx: ejection ? ejection.velo.vx : 0, veloRoue: ejection ? ejection.velo.vroue : 0, veloBascule: ejection ? (ejection.velo.bascule || 0) : 0, veloEcranX: ejection ? ejection.velo.x - camX : 0, veloEcranY: ejection ? ejection.velo.y - camY : 0, corpsDansTrou: ejection && trou(ejection.corps.x) ? 1 : 0, corpsEcranY: ejection ? ejection.corps.y - camY : 0, prochainObstacle: (obstacles.find((o) => !o.passe && o.x >= x)?.x ?? x + 1e9) - x, prochaineLettre: (lettres.find((l) => !l.pris && l.x >= x)?.x ?? x + 1e9) - x, derniereChute }; },
     // PAS FIXE. La physique avance toujours par tranches de PAS_PHYSIQUE, jamais du dt de l'écran.
     // Avec un dt variable (60, 120, 144 Hz, une image en retard, un onglet qui se réveille), la même
     // action ne donnait pas tout à fait le même résultat d'une image à l'autre : l'accélération, le
@@ -554,6 +555,19 @@ export function creerRider(api) {
       }
       e.corps.replie = e.corps.auSol ? Math.max(0, 0.35 - e.corps.repos * 0.35) : Math.min(0.6, e.corps.replie + dt * 1.5);
       e.corps.epais = taille() * (0.09 + e.corps.replie * 0.2);
+      // LE VÉLO BASCULE SUR LE FLANC dès qu'il touche le sol : il ne reste pas debout, ni aplati d'un coup. La
+      // bascule accélère comme une vraie chute (≈ 0,4 s), puis un nuage de poussière marque l'impact au sol.
+      const v = e.velo;
+      if (!v.perdu && v.auSol && v.bascule === undefined) { v.bascule = 0; v.vBascule = 0.8; }
+      if (v.bascule !== undefined && v.bascule < 1) {
+        v.vBascule += BASCULE_ACCEL * dt;
+        v.bascule = Math.min(1, v.bascule + v.vBascule * dt);
+        if (v.bascule >= 1) {
+          poussierer(v.x, sol(v.x), 14, 170);
+          api.eclat?.(v.x - camX, sol(v.x) - camY, '#FFD166', 7);
+          secousse = Math.max(secousse, u * 0.025);
+        }
+      }
       e.velo.vroue -= e.velo.vroue * Math.min(1, (e.velo.auSol ? 5 : 1) * dt);
       e.velo.roue += e.velo.vroue * dt;
       // La caméra suit le corps, sans plonger sous la piste quand il tombe dans un trou.
@@ -564,7 +578,7 @@ export function creerRider(api) {
       for (const pp of poussiere) { pp.x += pp.vx * dt; pp.y += pp.vy * dt; pp.vy += 200 * dt; pp.reste -= dt; }
       poussiere = poussiere.filter((pp) => pp.reste > 0);
       if (flash) { flash.reste -= dt; if (flash.reste <= 0) flash = null; }
-      const immobiles = [e.corps, e.velo].every((b) => b.perdu || b.repos >= 0.95);
+      const immobiles = [e.corps, e.velo].every((b) => b.perdu || b.repos >= 0.95) && (e.velo.perdu || e.velo.bascule >= 1);
       e.pose = immobiles ? (e.pose || 0) + dt : 0;
       if (!e.fini && ((e.t >= EJECTION_MIN && e.pose >= EJECTION_POSE) || e.t >= EJECTION_MAX)) { e.fini = true; api.perdre(); return true; }
       return undefined;
@@ -800,12 +814,34 @@ export function creerRider(api) {
     draw(ctx) {
       const t = taille(); const u = U();
       const sx = secousse ? (Math.random() - 0.5) * secousse * 2 : 0; const sy = secousse ? (Math.random() - 0.5) * secousse * 2 : 0;
-      fondDegrade(ctx, w, h, '#2A2180', '#7B6CF0');
-      // Nuages (parallaxe lente)
-      ctx.fillStyle = 'rgba(255,255,255,.10)';
-      for (let i = 0; i < 4; i++) {
-        const cx = ((i * w * 0.37 - camX * 0.1) % (w * 1.4) + w * 1.4) % (w * 1.4) - w * 0.2;
-        ctx.beginPath(); ctx.ellipse(cx, h * (0.1 + (i % 2) * 0.09) - camY * 0.05, w * 0.12, h * 0.035, 0, 0, Math.PI * 2); ctx.fill();
+      fondDegrade(ctx, w, h, '#221A6E', '#7B6CF0');
+      // Étoiles dans le haut du ciel, qui scintillent doucement (parallaxe quasi nulle : elles sont loin).
+      for (let i = 0; i < 26; i++) {
+        const ex = (((i * 173.3 - camX * 0.02) % w) + w) % w; const ey = ((i * 61.7) % (h * 0.42)) + 4;
+        ctx.globalAlpha = 0.25 + 0.35 * (0.5 + 0.5 * Math.sin(horloge * (1.5 + (i % 4) * 0.6) + i));
+        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(ex, ey, i % 5 === 0 ? 2.5 : 1.5, i % 5 === 0 ? 2.5 : 1.5);
+      }
+      ctx.globalAlpha = 1;
+      // La lune au-dessus de Bruxelles, avec son halo : un repère fixe qui rend le défilement lisible.
+      {
+        const lx = w * 0.8 - camX * 0.01; const ly = h * 0.16 - camY * 0.02; const lr = Math.max(14, u * 0.06);
+        const gl = ctx.createRadialGradient(lx, ly, lr * 0.6, lx, ly, lr * 3.2);
+        gl.addColorStop(0, 'rgba(255,244,214,.35)'); gl.addColorStop(1, 'rgba(255,244,214,0)');
+        ctx.fillStyle = gl; ctx.beginPath(); ctx.arc(lx, ly, lr * 3.2, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFF4D6'; ctx.beginPath(); ctx.arc(lx, ly, lr, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(214,200,160,.45)';
+        ctx.beginPath(); ctx.arc(lx - lr * 0.3, ly - lr * 0.15, lr * 0.22, 0, Math.PI * 2); ctx.arc(lx + lr * 0.25, ly + lr * 0.3, lr * 0.15, 0, Math.PI * 2); ctx.fill();
+      }
+      // Nuages en volume (trois bosses), en parallaxe lente.
+      ctx.fillStyle = 'rgba(255,255,255,.13)';
+      for (let i = 0; i < 5; i++) {
+        const cx = ((i * w * 0.31 - camX * 0.1) % (w * 1.5) + w * 1.5) % (w * 1.5) - w * 0.25;
+        const cy = h * (0.12 + (i % 3) * 0.07) - camY * 0.05; const cr = w * (0.05 + (i % 2) * 0.02);
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, cr * 2.2, cr * 0.7, 0, 0, Math.PI * 2);
+        ctx.moveTo(cx - cr * 0.6 + cr, cy - cr * 0.35); ctx.arc(cx - cr * 0.6, cy - cr * 0.35, cr, 0, Math.PI * 2);
+        ctx.moveTo(cx + cr * 0.7 + cr * 0.8, cy - cr * 0.25); ctx.arc(cx + cr * 0.7, cy - cr * 0.25, cr * 0.8, 0, Math.PI * 2);
+        ctx.fill();
       }
       // Bruxelles derrière la piste : trois couches de parallaxe, de la brume au premier plan sombre.
       // Atomium, flèche de l'hôtel de ville, tours de la cathédrale et tissu ordinaire, tirés au sort une
@@ -843,7 +879,20 @@ export function creerRider(api) {
       ctx.beginPath(); ctx.moveTo(xDeb, bas);
       for (let px = xDeb; px <= xFin; px += PAS) ctx.lineTo(px, sol(px));
       ctx.lineTo(xFin, bas); ctx.closePath();
-      ctx.fillStyle = '#241F38'; ctx.fill();
+      // Terre en dégradé (plus claire en surface, plus profonde en bas) : la piste prend du volume.
+      const gp = ctx.createLinearGradient(0, camY + h * 0.45, 0, camY + h);
+      gp.addColorStop(0, '#2E2748'); gp.addColorStop(1, '#15112A');
+      ctx.fillStyle = gp; ctx.fill();
+      // Bande de roulement sous le liseré : une épaisseur de chaussée, plus claire que la terre.
+      {
+        ctx.beginPath(); let coupeB = true;
+        for (let px = xDeb; px <= xFin; px += PAS) {
+          if (trou(px)) { coupeB = true; continue; }
+          const yy = sol(px) + 6;
+          if (coupeB) { ctx.moveTo(px, yy); coupeB = false; } else ctx.lineTo(px, yy);
+        }
+        ctx.strokeStyle = 'rgba(140,124,255,.28)'; ctx.lineWidth = 12; ctx.lineJoin = 'round'; ctx.stroke();
+      }
       // Le liseré lime s'interrompt au-dessus des trous : leur fond était souligné comme le reste de la piste,
       // et on croyait pouvoir s'y poser. Sans liseré, le vide se lit comme du vide.
       ctx.beginPath();
@@ -952,10 +1001,18 @@ export function creerRider(api) {
       // roule au sol. Pendant l'immunité qui suit un cœur, le vélo clignote — on voit qu'on est encore protégé.
       if (ejection) {
         const { velo: v, corps: c } = ejection;
-        // Vélo couché sur le flanc : vu de côté, il s'aplatit vers le sol à mesure qu'il se couche.
+        // Vélo qui tombe sur le flanc : vu de côté, sa hauteur s'écrase (cosinus de l'inclinaison) et le haut du
+        // cadre part de biais, comme un vélo qui se couche vers nous. Il reste posé sur ses points de contact, avec
+        // une ombre qui s'élargit à mesure qu'il touche le sol.
+        const bascule = v.bascule || 0; const incl = bascule * Math.PI / 2;
+        if (!trou(v.x)) {
+          ctx.fillStyle = `rgba(0,0,0,${(0.18 + bascule * 0.22).toFixed(3)})`;
+          ctx.beginPath(); ctx.ellipse(v.x, sol(v.x) + 2, t * (0.5 + bascule * 0.15), t * (0.06 + bascule * 0.07), Math.atan(pente(v.x)), 0, Math.PI * 2); ctx.fill();
+        }
         ctx.save();
-        ctx.translate(v.x, v.y); ctx.scale(1, 1 - v.repos * 0.5); ctx.translate(-v.x, -v.y);
-        dessinerVelo(ctx, v.x, v.y, t, v.a, v.roue, pedale, 0, 0, 1, true);
+        ctx.translate(v.x, v.y); ctx.rotate(v.a);
+        ctx.transform(1, 0, -Math.sin(incl) * 0.28, Math.max(0.34, Math.cos(incl)), 0, 0);
+        dessinerVelo(ctx, 0, 0, t, 0, v.roue, pedale, 0, 0, 1, true);
         ctx.restore();
         dessinerPilote(ctx, c.x, c.y, t, c.a, c.replie);
       } else {

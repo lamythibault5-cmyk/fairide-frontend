@@ -218,10 +218,42 @@ function creerChute(api, cfg) {
       }
       // Sol : une bande CLAIRE, pas une ombre. En sombre sur un ciel sombre, la ligne d'arrivée des
       // objets disparaissait — c'est pourtant là que tout se joue. Le liseré lime la souligne franchement.
-      ctx.fillStyle = 'rgba(255,255,255,.16)';
-      ctx.fillRect(0, h - t * 0.55, w, t * 0.55);
-      ctx.fillStyle = LIME;
-      ctx.fillRect(0, h - t * 0.55, w, 4);
+      if (cfg.decor === 'marche') {
+        // Guirlande lumineuse sous l'auvent : ampoules colorées sur un fil qui pend, avec leur halo.
+        const yFil = t * 1.15;
+        ctx.strokeStyle = 'rgba(20,18,31,.55)'; ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let px = 0; px <= w; px += 8) { const yy = yFil + Math.sin((px / w) * Math.PI * 3) * t * 0.18 + t * 0.18; if (px === 0) ctx.moveTo(px, yy); else ctx.lineTo(px, yy); }
+        ctx.stroke();
+        const COUL = ['200,240,60', '255,92,138', '255,209,102', '140,124,255'];
+        const nb = Math.max(6, Math.round(w / 48));
+        for (let i = 0; i < nb; i++) {
+          const px = (i + 0.5) * (w / nb); const yy = yFil + Math.sin((px / w) * Math.PI * 3) * t * 0.18 + t * 0.18 + 4;
+          const c = COUL[i % COUL.length]; const eclat = 0.6 + 0.4 * Math.sin(horloge * 2.2 + i * 1.3);
+          const gg = ctx.createRadialGradient(px, yy, 1, px, yy, t * 0.55);
+          gg.addColorStop(0, `rgba(${c},${(0.45 * eclat).toFixed(3)})`); gg.addColorStop(1, `rgba(${c},0)`);
+          ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px, yy, t * 0.55, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = `rgb(${c})`; ctx.beginPath(); ctx.arc(px, yy, Math.max(3, t * 0.09), 0, Math.PI * 2); ctx.fill();
+        }
+        // Colonne de visée : une lumière douce au-dessus du panier, pour voir où tomberont les plats rattrapés.
+        const gv = ctx.createLinearGradient(0, h - t * 1.5, 0, h * 0.25);
+        gv.addColorStop(0, 'rgba(200,240,60,.16)'); gv.addColorStop(1, 'rgba(200,240,60,0)');
+        ctx.fillStyle = gv; ctx.fillRect(joueurX - largeurJoueur() / 2, h * 0.25, largeurJoueur(), h * 0.75 - t * 1.5);
+        // Comptoir en bois : planches, chant clair, ombre portée — la ligne d'arrivée se lit comme un vrai plan.
+        const yc = h - t * 0.55;
+        const gb = ctx.createLinearGradient(0, yc, 0, h);
+        gb.addColorStop(0, '#9A6844'); gb.addColorStop(1, '#5C3B25');
+        ctx.fillStyle = gb; ctx.fillRect(0, yc, w, h - yc);
+        ctx.fillStyle = 'rgba(0,0,0,.18)';
+        for (let px = 35; px < w; px += 70) ctx.fillRect(px, yc + 5, 2, h - yc - 5);
+        ctx.fillStyle = '#D79E6E'; ctx.fillRect(0, yc, w, 4);
+        ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(0, yc - 3, w, 3);
+      } else {
+        ctx.fillStyle = 'rgba(255,255,255,.16)';
+        ctx.fillRect(0, h - t * 0.55, w, t * 0.55);
+        ctx.fillStyle = LIME;
+        ctx.fillRect(0, h - t * 0.55, w, 4);
+      }
       for (const o of objets) {
         const k = borner(o.y / sol, 0, 1);
         // Objet en train de s'effacer au sol : il rétrécit et pâlit.
@@ -263,7 +295,29 @@ function creerChute(api, cfg) {
         jeton(ctx, o.x, o.y, rj, danger ? (cfg.badges ? 'dechet' : 'danger') : o.or ? 'or' : 'bon');
         emoji(ctx, o.emoji, o.x, o.y, o.taille * 0.82 * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance + o.rot);
         if (cfg.badges) badge(ctx, o.x + rj * 0.74, o.y - rj * 0.74, Math.max(7, rj * 0.36), !o.mauvais);
+        if (o.or && !o.sortie) {
+          // Plat doré : quatre étincelles qui tournent autour, on le repère avant même qu'il n'approche.
+          ctx.fillStyle = '#FFE38A';
+          for (let k = 0; k < 4; k++) {
+            const a = o.phase * 1.4 + k * Math.PI / 2; const d = rj * 1.35; const ss = Math.max(2.5, rj * 0.14) * (0.7 + 0.3 * Math.sin(o.phase * 4 + k));
+            const ex = o.x + Math.cos(a) * d; const ey = o.y + Math.sin(a) * d;
+            ctx.beginPath(); ctx.moveTo(ex, ey - ss * 1.8); ctx.lineTo(ex + ss * 0.5, ey - ss * 0.5); ctx.lineTo(ex + ss * 1.8, ey); ctx.lineTo(ex + ss * 0.5, ey + ss * 0.5);
+            ctx.lineTo(ex, ey + ss * 1.8); ctx.lineTo(ex - ss * 0.5, ey + ss * 0.5); ctx.lineTo(ex - ss * 1.8, ey); ctx.lineTo(ex - ss * 0.5, ey - ss * 0.5); ctx.closePath(); ctx.fill();
+          }
+        }
         ctx.globalAlpha = 1;
+      }
+      if (cfg.decor === 'marche') {
+        // L'auvent du restaurant, en haut : bandes iris et crème, bord festonné. Les plats en sortent au lieu
+        // d'apparaître dans le vide — on comprend d'où ils viennent.
+        const ha = t * 0.95; const bande = Math.max(22, w / 10);
+        ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(0, 0, w, ha + 6);
+        for (let i = 0, px = 0; px < w; i++, px += bande) {
+          ctx.fillStyle = i % 2 ? '#F4EFE4' : '#3B2FB5';
+          ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px + bande, 0); ctx.lineTo(px + bande, ha);
+          ctx.arc(px + bande / 2, ha, bande / 2, 0, Math.PI, false); ctx.closePath(); ctx.fill();
+        }
+        ctx.fillStyle = '#14121F'; ctx.fillRect(0, 0, w, Math.max(4, t * 0.12));
       }
       // Frôlement d'un déchet (FairSort) : le cadre clignote orange, bref.
       if (alerte > 0) {
@@ -351,7 +405,8 @@ export const JEUX = [
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
-      joueur: '🧺', ciel: ['#2A2280', '#5F51EC'], demiContact: 1.35,
+      // Décor « marché » : auvent rayé d'où sortent les plats, guirlande, comptoir en bois (voir draw).
+      joueur: '🧺', ciel: ['#241C74', '#5F51EC'], demiContact: 1.35, decor: 'marche',
       // Un plat sur dix est doré : il vaut 3 et tombe un peu plus vite.
       nouvelObjet: () => (Math.random() < 0.1 ? { emoji: choix(PLATS), or: true, points: 3, vitesseFacteur: 1.2 } : { emoji: choix(PLATS) }),
       intervalle: (n) => Math.max(0.42, 0.96 - n * 0.072),
