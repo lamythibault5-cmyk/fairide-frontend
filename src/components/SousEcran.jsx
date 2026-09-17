@@ -19,13 +19,28 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
   const { t } = useLanguage();
   const racine = useRef(null);
 
+  /* LE FOCUS SE POSE UNE SEULE FOIS, AU MONTAGE. Et c'est tout l'objet de ces deux effets séparés.
+   *
+   * Avant, un seul effet faisait le tout, avec `onFermer` en dépendance. Or l'appelant écrit
+   * `onFermer={() => setX(null)}` : une NOUVELLE fonction à chaque rendu. L'effet rejouait donc à
+   * chaque frappe et rappelait `racine.current.focus()`, qui ramenait le focus du champ de saisie
+   * vers le dialogue. Symptôme à l'écran : on tapait un caractère, puis il fallait recliquer dans le
+   * champ pour le suivant — signalé par le fondateur sur le numéro de rue (2026-09-17).
+   *
+   * Le verrou du défilement et le focus appartiennent au montage : dépendances vides. */
   useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onFermer(); };
-    document.addEventListener('keydown', surTouche);
     const avant = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     racine.current?.focus();
-    return () => { document.removeEventListener('keydown', surTouche); document.body.style.overflow = avant; };
+    return () => { document.body.style.overflow = avant; };
+  }, []);
+
+  // L'écoute d'Échap, elle, doit suivre `onFermer` — mais elle ne touche pas au focus, donc la
+  // rejouer ne dérange personne.
+  useEffect(() => {
+    const surTouche = (e) => { if (e.key === 'Escape') onFermer(); };
+    document.addEventListener('keydown', surTouche);
+    return () => document.removeEventListener('keydown', surTouche);
   }, [onFermer]);
 
   return createPortal(

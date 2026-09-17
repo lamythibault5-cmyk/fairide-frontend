@@ -36,13 +36,21 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
 
   // Échap ferme, et le fond de page ne défile plus derrière la feuille — même geste que la vue
   // agrandie du suivi (TrackingWithGames.jsx), pour que la fermeture s'apprenne une seule fois.
+  // Deux effets séparés, pour la même raison que dans SousEcran.jsx : `onCancel` est une nouvelle
+  // fonction à chaque rendu, donc un effet unique qui en dépend rejouerait `focus()` à chaque frappe
+  // et volerait le focus des champs. Ici la fiche n'a pas encore de champ de saisie, mais le défaut
+  // est le même et il apparaîtrait au premier ajouté.
   useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onCancel(); };
-    document.addEventListener('keydown', surTouche);
     const avant = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     racine.current?.focus();
-    return () => { document.removeEventListener('keydown', surTouche); document.body.style.overflow = avant; };
+    return () => { document.body.style.overflow = avant; };
+  }, []);
+
+  useEffect(() => {
+    const surTouche = (e) => { if (e.key === 'Escape') onCancel(); };
+    document.addEventListener('keydown', surTouche);
+    return () => document.removeEventListener('keydown', surTouche);
   }, [onCancel]);
 
   function choisirUnique(groupId, optionId) {
