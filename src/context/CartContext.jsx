@@ -73,7 +73,15 @@ export function CartProvider({ children }) {
   // cas, le second lirait encore l'ancien restaurantId/count via la closure du même rendu (React ne
   // rejoue le composant qu'après la fin du handler) et redéclencherait donc un faux conflit — d'où le
   // switch et l'ajout regroupés en une seule mise à jour atomique ici.
-  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [], force = false }) {
+  // `qty` : la fiche d'un plat permet d'en choisir plusieurs avant d'ajouter (voir FichePlat.jsx).
+  // Le nom `addOne` est conservé — il reste la seule façon d'ajouter, et une unité reste le défaut,
+  // donc les appels existants n'ont pas bougé. Renommer aurait touché des appels dans quatre fichiers
+  // sans rien apporter à la lecture.
+  // La quantité est bornée ici AUSSI, et pas seulement dans l'interface : c'est ce qui entre en base.
+  // Une quantité négative rendait le total négatif, et un total négatif était traité comme « payé »
+  // (corrigé côté serveur le 2026-09-17) — le garde-fou vit désormais des deux côtés.
+  function addOne({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, itemId, name, imageUrl, unitPrice, optionItemIds = [], optionsSnapshot = [], force = false, qty = 1 }) {
+    const n = Math.min(99, Math.max(1, Math.floor(Number(qty) || 1)));
     if (!force && hasConflict(newRestaurantId)) return 'conflict';
     const switching = restaurantId !== newRestaurantId;
     if (switching) {
@@ -84,7 +92,7 @@ export function CartProvider({ children }) {
     setLines((prev) => {
       const base = switching ? {} : prev;
       const existing = base[key];
-      return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty: (existing?.qty || 0) + 1 } };
+      return { ...base, [key]: { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty: Math.min(99, (existing?.qty || 0) + n) } };
     });
     return 'ok';
   }

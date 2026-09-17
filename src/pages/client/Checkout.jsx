@@ -8,6 +8,10 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
+import EnteteFlux from '../../components/EnteteFlux';
+import SousEcran from '../../components/SousEcran';
+import AddressSearch from '../../components/AddressSearch';
+import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
@@ -49,6 +53,8 @@ export default function Checkout() {
   const [giftCode, setGiftCode] = useState('');
   const [giftCheck, setGiftCheck] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState(reservationOnly ? 'dine_in' : 'delivery');
+  // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
+  const [sousEcran, setSousEcran] = useState(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions(7, libellesDates)[0].value : '');
   const [scheduleTime, setScheduleTime] = useState('');
@@ -177,6 +183,26 @@ export default function Checkout() {
     }
   }
 
+  /* LE PAIEMENT EST UNE PAGE DE RANGÉES, PAS UN ASSISTANT.
+   *
+   * Première version : un assistant en étapes. Les captures d'Uber Eats fournies par le fondateur
+   * montrent autre chose, et c'est mieux — UNE page qui résume l'état complet de la commande en
+   * rangées (« Livrer à … », « Sonner et attendre »), chacune ouvrant un écran pour la corriger.
+   *
+   * La différence n'est pas cosmétique. Un assistant impose de traverser chaque question dans
+   * l'ordre, même celles dont le défaut convenait ; ici on voit tout d'emblée et on n'ouvre que ce
+   * qu'on veut changer. Sur un paiement où presque tout est déjà connu — l'adresse vient du compte,
+   * la remise a un défaut — c'est la bonne forme.
+   *
+   * RIEN DE LA LOGIQUE N'A BOUGÉ : ni placeOrder, ni confirmAndPay, ni la validation. C'est le
+   * chemin de l'argent ; refaire la présentation ne doit pas être l'occasion d'en réécrire le fond.
+   *
+   * `sousEcran` vaut 'adresse', 'remise' ou null. Voir components/SousEcran.jsx. */
+  const adresseIncomplete = !addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim();
+  const adresseResume = adresseIncomplete
+    ? ''
+    : `${addressStreet.trim()} ${addressNumber.trim()}, ${addressPostalCode.trim()} ${addressCity.trim()}`;
+
   async function placeOrder() {
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       toast(t('checkout.toastAddressRequired'));
@@ -290,7 +316,11 @@ export default function Checkout() {
 
   return (
     <div>
-      <Link to={`/restaurants/${restaurantId}`} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; {restaurant.name}</Link>
+      {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
+          d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
+          ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
+          plus bas, qui garde ce rôle. */}
+      <EnteteFlux vers="/panier" titre={t('checkout.headerTitle')} libelle={t('panier.title')} />
 
 
       {!pendingOrder && (
@@ -298,6 +328,7 @@ export default function Checkout() {
         <div className="checkout-grille">
           <div className="checkout-form">
           <div className="card">
+            {(
             <div className="field">
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
@@ -329,46 +360,37 @@ export default function Checkout() {
                 )}
               </div>
             </div>
-            {fulfillmentType === 'delivery' && (
-              <>
-                <div className="field">
-                  <label htmlFor="checkout-f-1">{t('auth.street')}</label>
-                  <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
-                </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="checkout-f-2">{t('auth.number')}</label>
-                    <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
-                  </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="checkout-f-3">{t('auth.postalCode')}</label>
-                    <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
-                  </div>
-                </div>
-                <div className="field">
-                  <label htmlFor="checkout-f-4">{t('auth.city')}</label>
-                  <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
-                </div>
-                <div className="field">
-                  {/* Un groupe de boutons, pas un champ : l'intitulé n'a rien à désigner par htmlFor. */}
-                  <span className="field-intitule" id="checkout-consigne-label">{t('checkout.atDelivery')}</span>
-                  <ChoixPastilles
-                    libelle={t('checkout.atDelivery')}
-                    valeur={deliveryInstructions}
-                    onChange={setDeliveryInstructions}
-                    options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
-                      value: o.value,
-                      label: deliveryInstructionLabel(o.value, t),
-                      icone: <Icone nom={o.icon} taille={16} />
-                    }))}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
-                  <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
-                </div>
-              </>
             )}
+            {/* LES RANGÉES. Chacune résume une décision déjà prise et s'ouvre pour la corriger —
+                c'est la forme des captures d'Uber, et elle convient parce qu'ici presque tout est
+                déjà connu : l'adresse vient du compte, la remise a un défaut. */}
+            {fulfillmentType === 'delivery' && (
+              <button type="button" className="checkout-rangee" onClick={() => setSousEcran('adresse')}>
+                <Icone nom="maison" taille={20} />
+                <span className="checkout-rangee-texte">
+                  <span className="checkout-rangee-titre">{adresseIncomplete ? t('checkout.addressMissing') : adresseResume}</span>
+                  <span className={`checkout-rangee-sous${adresseIncomplete ? ' est-requis' : ''}`}>
+                    {adresseIncomplete ? t('checkout.addressMissingSub') : t('checkout.addressEdit')}
+                  </span>
+                </span>
+                <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
+              </button>
+            )}
+            {fulfillmentType === 'delivery' && (
+              <button type="button" className="checkout-rangee" onClick={() => setSousEcran('remise')}>
+                <Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((o) => o.value === deliveryInstructions)?.icon || 'sonnette'} taille={20} />
+                <span className="checkout-rangee-texte">
+                  <span className="checkout-rangee-titre">{deliveryInstructionLabel(deliveryInstructions, t)}</span>
+                  <span className="checkout-rangee-sous">{deliveryNote.trim() || t('checkout.dropoffAdd')}</span>
+                </span>
+                <span className="checkout-rangee-chevron" aria-hidden="true">›</span>
+              </button>
+            )}
+            {/* LES OPTIONS DE REMISE, ÉCRAN À PART. Elles existaient déjà — quatre choix, enregistrés
+                et transmis au livreur — mais noyées au milieu du formulaire d'adresse, entre le code
+                postal et l'horaire. Chez Uber c'est un écran qu'on ouvre depuis le paiement
+                (« Dropoff options »), et c'est ce qu'elles méritent : c'est la seule consigne que le
+                client donne à quelqu'un qui viendra chez lui. */}
             {fulfillmentType === 'pickup' && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
@@ -495,21 +517,35 @@ export default function Checkout() {
                 )}
               </>
             )}
+            {/* QUAND LA RECEVOIR — deux cartes, comme le bloc « Delivery options » des captures.
+                C'était une case à cocher isolée, qu'on ne lisait pas : maintenant les deux réponses
+                possibles sont posées côte à côte et l'une est visiblement retenue.
+                Il n'y a pas de troisième carte « Prioritaire » : Fairide n'a pas d'option de
+                livraison payante plus rapide, et on n'invente pas une fonctionnalité pour faire
+                joli — il n'existe même aucun champ de délai de préparation, ni ici ni au serveur. */}
             {fulfillmentType !== 'dine_in' && (
               <div className="field">
-                <label className="row" style={{ gap: 8, cursor: 'pointer', margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    style={{ width: 'auto' }}
-                    checked={scheduleEnabled}
-                    onChange={(e) => {
-                      setScheduleEnabled(e.target.checked);
-                      if (e.target.checked) { setScheduleDate(dateOptions[0].value); setScheduleTime(''); }
-                      else { setScheduleDate(''); setScheduleTime(''); }
-                    }}
-                  />
-                  <span>{t('checkout.scheduleLater')}</span>
-                </label>
+                <span className="titre-groupe" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
+                <div className="choix-cartes" role="group" aria-labelledby="checkout-quand-label">
+                  <button
+                    type="button"
+                    className={`choix-carte${!scheduleEnabled ? ' est-actif' : ''}`}
+                    aria-pressed={!scheduleEnabled}
+                    onClick={() => { setScheduleEnabled(false); setScheduleDate(''); setScheduleTime(''); }}
+                  >
+                    <Icone nom="scooter" taille={20} />
+                    <span>{t('checkout.whenAsap')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`choix-carte${scheduleEnabled ? ' est-actif' : ''}`}
+                    aria-pressed={scheduleEnabled}
+                    onClick={() => { setScheduleEnabled(true); setScheduleDate(dateOptions[0].value); setScheduleTime(''); }}
+                  >
+                    <Icone nom="horloge" taille={20} />
+                    <span>{t('checkout.scheduleLater')}</span>
+                  </button>
+                </div>
                 {scheduleEnabled && (
                   <>
                     <div style={{ marginTop: 8 }}>
@@ -536,9 +572,13 @@ export default function Checkout() {
                 )}
               </div>
             )}
+            {/* « Continuer » n'existe pas à la dernière étape : là, c'est le bouton de paiement du
+                récapitulatif qui prend le relais — deux actions principales sur le même écran
+                feraient hésiter au moment le moins opportun. */}
           </div>
           </div>
 
+          {(
           <aside className="checkout-recap">
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
@@ -627,8 +667,92 @@ export default function Checkout() {
           </div>
           )}
           </aside>
+          )}
         </div>
         </>
+      )}
+
+      {/* LES DEUX SOUS-ÉCRANS. Ils portent les mêmes champs qu'avant — rien n'a été réécrit, ils ont
+          seulement quitté la page principale, qui n'en montre plus que le résumé. */}
+      {/* La rangee d'adresse ouvre le CARNET, pas les quatre champs : c'est la meme question qu'en
+          tete de la liste des commerces, donc le meme ecran. Les champs restent accessibles depuis
+          le carnet, par la recherche. */}
+      {sousEcran === 'adresse' && (
+        <ChoixAdresse
+          onFermer={() => setSousEcran(null)}
+          onChoisie={(a) => {
+            setAddressStreet(a.street); setAddressNumber(a.number);
+            setAddressPostalCode(a.postalCode); setAddressCity(a.city);
+          }}
+        />
+      )}
+      {false && (
+        <SousEcran titre={t('checkout.addressTitle')} onFermer={() => setSousEcran(null)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => {
+            if (adresseIncomplete) { toast(t('checkout.toastAddressRequired')); return; }
+            setSousEcran(null);
+          }}>{t('checkout.addressSave')}</button>
+        }>
+                {/* LA RECHERCHE D'ADRESSE, ENFIN ICI. Le composant existait déjà et servait à
+                    l'inscription et à l'espace commerçant, mais PAS au paiement : le client tapait
+                    ses quatre champs à la main, et « rue des cons, 1000 Bruxelles » passait sans
+                    broncher. Les suggestions viennent de Photon/OpenStreetMap, filtrées sur la
+                    Belgique (GET /restaurants/lookup/suggest) — aucune clé, aucun frais, et aucun
+                    tiers de plus à déclarer dans la politique de confidentialité.
+                    ⚠️ Cela AIDE à saisir une vraie adresse, cela ne l'impose pas : les champs restent
+                    modifiables à la main, par choix — une adresse toute neuve peut manquer à la base
+                    cartographique. Refuser une adresse introuvable ne peut se faire qu'au serveur. */}
+                <AddressSearch onSelect={(a) => {
+                  setAddressStreet(a.street);
+                  if (a.number) setAddressNumber(a.number);
+                  if (a.postalCode) setAddressPostalCode(a.postalCode);
+                  if (a.city) setAddressCity(a.city);
+                }} />
+                <div className="field">
+                  <label htmlFor="checkout-f-1">{t('auth.street')}</label>
+                  <input id="checkout-f-1" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('checkout.streetPlaceholder')} />
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="checkout-f-2">{t('auth.number')}</label>
+                    <input id="checkout-f-2" value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder={t('checkout.numberPlaceholder')} />
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label htmlFor="checkout-f-3">{t('auth.postalCode')}</label>
+                    <input id="checkout-f-3" value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder={t('checkout.postalPlaceholder')} />
+                  </div>
+                </div>
+                <div className="field">
+                  <label htmlFor="checkout-f-4">{t('auth.city')}</label>
+                  <input id="checkout-f-4" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} placeholder={t('checkout.cityPlaceholder')} />
+                </div>
+        </SousEcran>
+      )}
+      {sousEcran === 'remise' && (
+        <SousEcran titre={t('checkout.dropoffTitle')} onFermer={() => setSousEcran(null)} pied={
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} onClick={() => setSousEcran(null)}>
+            {t('checkout.dropoffSave')}
+          </button>
+        }>
+                <div className="field">
+                  {/* Un groupe de boutons, pas un champ : l'intitulé n'a rien à désigner par htmlFor. */}
+                  <span className="field-intitule" id="checkout-consigne-label">{t('checkout.atDelivery')}</span>
+                  <ChoixPastilles
+                    libelle={t('checkout.atDelivery')}
+                    valeur={deliveryInstructions}
+                    onChange={setDeliveryInstructions}
+                    options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
+                      value: o.value,
+                      label: deliveryInstructionLabel(o.value, t),
+                      icone: <Icone nom={o.icon} taille={16} />
+                    }))}
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>
+                  <input id="checkout-f-6" value={deliveryNote} onChange={(e) => setDeliveryNote(e.target.value)} placeholder={t('checkout.driverNotePlaceholder')} />
+                </div>
+        </SousEcran>
       )}
 
       {pendingOrder && (

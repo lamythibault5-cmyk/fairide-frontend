@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { StarsDisplay } from './Stars';
-import OptionsPickerModal from './OptionsPickerModal';
+import FichePlat from './FichePlat';
 import MenuCategorySections from './MenuCategorySections';
+import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 
 const DELIVERY_FEE = 4.5;
@@ -23,11 +24,14 @@ export default function RestaurantPreview({ restaurant }) {
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   const [confirmOpen, setConfirmOpen] = useState(false);
 
-  function addOne(itemId, unitPrice, optionItemIds = [], optionsSnapshot = []) {
+  // `qty` : la fiche d'un plat permet d'en choisir plusieurs avant d'ajouter (voir FichePlat.jsx).
+  // Meme borne que le vrai panier (CartContext) — l'apercu doit se comporter comme ce qu'il montre.
+  function addOne(itemId, unitPrice, optionItemIds = [], optionsSnapshot = [], qty = 1) {
+    const n = Math.min(99, Math.max(1, Math.floor(Number(qty) || 1)));
     const key = lineKeyFor(itemId, optionItemIds);
     setLines((prev) => {
       const existing = prev[key];
-      return { ...prev, [key]: { itemId, optionItemIds, optionsSnapshot, unitPrice, qty: (existing?.qty || 0) + 1 } };
+      return { ...prev, [key]: { itemId, optionItemIds, optionsSnapshot, unitPrice, qty: Math.min(99, (existing?.qty || 0) + n) } };
     });
   }
 
@@ -142,11 +146,12 @@ export default function RestaurantPreview({ restaurant }) {
       )}
 
       {pickerItem && (
-        <OptionsPickerModal
+        <FichePlat
           item={pickerItem}
+          imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            addOne(pickerItem.id, unitPrice, optionItemIds, snapshot);
+          onConfirm={(optionItemIds, snapshot, unitPrice, qty) => {
+            addOne(pickerItem.id, unitPrice, optionItemIds, snapshot, qty);
             setPickerItem(null);
           }}
         />

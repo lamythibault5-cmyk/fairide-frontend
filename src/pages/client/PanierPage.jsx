@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
+import EnteteFlux from '../../components/EnteteFlux';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
 
 // Le panier, sur sa propre page.
@@ -48,10 +49,14 @@ export default function PanierPage() {
 
   return (
     <div className="panier-page">
+      {/* Une flèche, et non une croix : d'ici on RECULE d'un pas, vers la carte du commerce — on ne
+          quitte pas le parcours. Le nom du commerce devient le titre de l'écran, comme chez Uber. */}
       {cart.restaurantId && (
-        <Link to={`/restaurants/${cart.restaurantId}`} className="panier-retour">
-          <Icone nom="restaurants" taille={18} />{cart.restaurantName || t('panier.backToMenu')}
-        </Link>
+        <EnteteFlux
+          vers={`/restaurants/${cart.restaurantId}`}
+          titre={cart.restaurantName || ''}
+          libelle={t('panier.backToMenu')}
+        />
       )}
       <h1 className="page-title" style={{ margin: '0 0 16px' }}>{t('panier.title')}</h1>
 

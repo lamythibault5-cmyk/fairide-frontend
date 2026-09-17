@@ -6194,6 +6194,9 @@ export const translations = {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      deliverTo: 'Livrer à',
+      noAddress: 'Ajoute ton adresse',
+      changeAddress: 'Modifier',
       backToRestaurants: '← Tous les restaurants',
       ratingReviews: '{rating} ({count} avis)',
       promoBanner: '🏷️ Des promos sont en cours sur certains plats, repère le badge rouge !',
@@ -6333,7 +6336,31 @@ export const translations = {
       stage_terminee: 'Terminée',
       stage_annulee: 'Refusée / annulée'
     },
+    adresses: {
+      numberTitle: "Numéro",
+      numberLabel: "Numéro de rue",
+      numberPlaceholder: "Ex. 12, 12A, 30/2",
+      numberSave: "Enregistrer cette adresse",
+      title: "Adresses",
+      saved: "Adresses enregistrées",
+      empty: "Aucune adresse enregistrée. Cherche-la ci-dessus pour l'ajouter.",
+      needNumber: "Choisis une adresse avec un numéro.",
+      remove: "Supprimer {adresse}",
+      removeShort: "Supprimer",
+      loading: "Chargement…"
+    },
     checkout: {
+      whenLabel: 'Quand la recevoir ?',
+      whenAsap: 'Dès que possible',
+      addressMissing: 'Ajoute ton adresse',
+      addressMissingSub: 'Requis pour la livraison',
+      addressEdit: "Modifier l'adresse",
+      addressTitle: 'Adresse de livraison',
+      addressSave: 'Enregistrer',
+      dropoffTitle: 'À la livraison',
+      dropoffAdd: 'Ajouter des consignes',
+      dropoffSave: 'Enregistrer',
+      headerTitle: 'Paiement',
       payOnSiteOnly: 'Ce commerce se paie sur place, au retrait',
       notAvailable: "Ce restaurant n'est plus disponible.",
       upsellTitle: 'Un dessert ou une boisson avec ça ?',
@@ -6457,6 +6484,28 @@ export const translations = {
       toPayOnSite: 'À payer sur place',
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
+    },
+    checkoutSteps: {
+      progress: 'Étapes du paiement',
+      continue: 'Continuer',
+      mode: 'Réception',
+      adresse: 'Adresse',
+      remise: 'Remise',
+      retrait: 'Retrait',
+      reservation: 'Table',
+      horaire: 'Horaire',
+      payer: 'Paiement'
+    },
+    platSheet: {
+      quantity: 'Quantité',
+      less: 'Un de moins',
+      more: 'Un de plus',
+      add: 'Ajouter {n}',
+      chooseRequired: 'Choisis d’abord « {groupe} »'
+    },
+    flux: {
+      close: 'Fermer',
+      back: 'Retour'
     },
     panier: {
       title: 'Ton panier',
@@ -13038,6 +13087,9 @@ export const translations = {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      deliverTo: 'Deliver to',
+      noAddress: 'Add your address',
+      changeAddress: 'Change',
       backToRestaurants: '← All restaurants',
       ratingReviews: '{rating} ({count} reviews)',
       promoBanner: '🏷️ Promotions are running on some dishes, look for the red badge!',
@@ -13177,7 +13229,31 @@ export const translations = {
       stage_terminee: 'Completed',
       stage_annulee: 'Refused / cancelled'
     },
+    adresses: {
+      numberTitle: "Number",
+      numberLabel: "Street number",
+      numberPlaceholder: "E.g. 12, 12A, 30/2",
+      numberSave: "Save this address",
+      title: "Addresses",
+      saved: "Saved addresses",
+      empty: "No saved address yet. Search above to add one.",
+      needNumber: "Pick an address that includes a number.",
+      remove: "Remove {adresse}",
+      removeShort: "Remove",
+      loading: "Loading…"
+    },
     checkout: {
+      whenLabel: 'When do you want it?',
+      whenAsap: 'As soon as possible',
+      addressMissing: 'Add your address',
+      addressMissingSub: 'Required for delivery',
+      addressEdit: 'Edit address',
+      addressTitle: 'Delivery address',
+      addressSave: 'Save',
+      dropoffTitle: 'At delivery',
+      dropoffAdd: 'Add delivery instructions',
+      dropoffSave: 'Save',
+      headerTitle: 'Checkout',
       payOnSiteOnly: 'This shop is paid on site, at collection',
       notAvailable: 'This restaurant is no longer available.',
       upsellTitle: 'Fancy a dessert or a drink with that?',
@@ -13301,6 +13377,28 @@ export const translations = {
       toPayOnSite: 'To pay on site',
       confirmOnSite: 'Confirm the order (pay on site)',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
+    },
+    checkoutSteps: {
+      progress: 'Checkout steps',
+      continue: 'Continue',
+      mode: 'Method',
+      adresse: 'Address',
+      remise: 'Handover',
+      retrait: 'Pickup',
+      reservation: 'Table',
+      horaire: 'Time',
+      payer: 'Payment'
+    },
+    platSheet: {
+      quantity: 'Quantity',
+      less: 'One less',
+      more: 'One more',
+      add: 'Add {n}',
+      chooseRequired: 'Choose “{groupe}” first'
+    },
+    flux: {
+      close: 'Close',
+      back: 'Back'
     },
     panier: {
       title: 'Your cart',
@@ -19880,6 +19978,9 @@ export const translations = {
       reviewsCount: '({count} beoordelingen)'
     },
     restaurantMenu: {
+      deliverTo: 'Bezorgen op',
+      noAddress: 'Voeg je adres toe',
+      changeAddress: 'Wijzigen',
       backToRestaurants: '← Alle restaurants',
       ratingReviews: '{rating} ({count} beoordelingen)',
       promoBanner: '🏷️ Er lopen promoties op bepaalde gerechten, let op het rode label!',
@@ -20019,7 +20120,31 @@ export const translations = {
       stage_terminee: 'Afgerond',
       stage_annulee: 'Geweigerd / geannuleerd'
     },
+    adresses: {
+      numberTitle: "Huisnummer",
+      numberLabel: "Huisnummer",
+      numberPlaceholder: "Bv. 12, 12A, 30/2",
+      numberSave: "Dit adres opslaan",
+      title: "Adressen",
+      saved: "Opgeslagen adressen",
+      empty: "Nog geen adres opgeslagen. Zoek hierboven om er een toe te voegen.",
+      needNumber: "Kies een adres met een huisnummer.",
+      remove: "{adresse} verwijderen",
+      removeShort: "Verwijderen",
+      loading: "Laden…"
+    },
     checkout: {
+      whenLabel: 'Wanneer wil je het?',
+      whenAsap: 'Zo snel mogelijk',
+      addressMissing: 'Voeg je adres toe',
+      addressMissingSub: 'Vereist voor levering',
+      addressEdit: 'Adres wijzigen',
+      addressTitle: 'Bezorgadres',
+      addressSave: 'Opslaan',
+      dropoffTitle: 'Bij levering',
+      dropoffAdd: 'Bezorginstructies toevoegen',
+      dropoffSave: 'Opslaan',
+      headerTitle: 'Afrekenen',
       payOnSiteOnly: 'Deze zaak betaal je ter plaatse, bij het ophalen',
       notAvailable: 'Dit restaurant is niet meer beschikbaar.',
       upsellTitle: 'Zin in een dessert of een drankje erbij?',
@@ -20143,6 +20268,28 @@ export const translations = {
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
+    },
+    checkoutSteps: {
+      progress: 'Stappen afrekenen',
+      continue: 'Doorgaan',
+      mode: 'Ontvangst',
+      adresse: 'Adres',
+      remise: 'Overhandiging',
+      retrait: 'Afhalen',
+      reservation: 'Tafel',
+      horaire: 'Tijd',
+      payer: 'Betaling'
+    },
+    platSheet: {
+      quantity: 'Aantal',
+      less: 'Eén minder',
+      more: 'Eén meer',
+      add: '{n} toevoegen',
+      chooseRequired: 'Kies eerst “{groupe}”'
+    },
+    flux: {
+      close: 'Sluiten',
+      back: 'Terug'
     },
     panier: {
       title: 'Je winkelmandje',

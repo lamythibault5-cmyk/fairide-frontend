@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import OptionsPickerModal from './OptionsPickerModal';
+import FichePlat from './FichePlat';
 import { categoryKind, resolveItemImage } from '../menuCategories';
 
 // « Un dessert ou une boisson avec ça ? » — les suggestions de fin de panier.
@@ -43,10 +43,9 @@ export function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
 
 function UpsellRow({ items, cart, restaurant }) {
   const [pickerItem, setPickerItem] = useState(null);
-  function handleAdd(item) {
-    if (item.optionGroups?.length > 0) { setPickerItem(item); return; }
-    cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: item.id, name: item.name, imageUrl: item.imageUrl, unitPrice: item.price });
-  }
+  // Tout plat passe par sa fiche, avec ou sans options — le meme ecran que depuis la carte du
+  // commerce, pour qu'une suggestion ne s'ajoute pas selon d'autres regles que le reste.
+  function handleAdd(item) { setPickerItem(item); }
   return (
     <div className="upsell-row">
       {items.map((item) => {
@@ -60,11 +59,12 @@ function UpsellRow({ items, cart, restaurant }) {
         );
       })}
       {pickerItem && (
-        <OptionsPickerModal
+        <FichePlat
           item={pickerItem}
+          imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice) => {
-            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: pickerItem.imageUrl, unitPrice, optionItemIds, optionsSnapshot: snapshot });
+          onConfirm={(optionItemIds, snapshot, unitPrice, qty) => {
+            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty });
             setPickerItem(null);
           }}
         />

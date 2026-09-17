@@ -11,6 +11,7 @@ import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
 // est un affichage secondaire, choisi par l'utilisateur.
 import Icone from '../../components/Icone';
+import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
@@ -139,6 +140,8 @@ function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, au
 
 export default function RestaurantList() {
   const { token, user } = useAuth();
+  // Carnet d'adresses, ouvert depuis la rangee « Livrer a » en tete de page.
+  const [choixAdresse, setChoixAdresse] = useState(false);
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -308,9 +311,34 @@ export default function RestaurantList() {
 
   return (
     <div>
-      {/* La page n'avait aucun h1 : son titre de niveau 1 était la marque de l'en-tête, donc son
-          sujet, pour un moteur, était « fairide » et non les restaurants de Bruxelles. */}
-      <h1 className="page-title">{t('restoListUi.heading')}</h1>
+      {/* Le titre est MASQUÉ À L'ŒIL, pas supprimé (fondateur, 2026-09-17 : « retire-le de la page »).
+          Il reste dans le document parce qu'il y avait été mis pour une raison précise : sans h1, le
+          titre de niveau 1 de cette page redevient la marque de l'en-tête, et son sujet, pour un
+          moteur de recherche, redevient « fairide » au lieu des restaurants de Bruxelles. Le retirer
+          vraiment annulerait ce gain sans que rien ne le signale.
+          .sr-only le sort de l'affichage et le laisse aux lecteurs d'écran et aux robots. */}
+      <h1 className="sr-only">{t('restoListUi.heading')}</h1>
+      {/* OÙ SERA LIVRÉE LA COMMANDE, dit dès la première page.
+          L'adresse n'apparaissait qu'au paiement : on parcourait les commerces, on composait son
+          panier, et on découvrait à la fin où tout cela irait — l'adresse du compte, pas forcément
+          celle du moment. C'est la place qu'elle occupe chez Uber Eats : en tête du fil, avant même
+          de choisir un commerce, parce qu'elle détermine ce qui est pertinent.
+          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher. */}
+      {user && (
+        <button type="button" className="fiche-adresse" onClick={() => setChoixAdresse(true)}>
+          <Icone nom="maison" taille={18} />
+          <span className="fiche-adresse-texte">
+            <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
+            <span className="fiche-adresse-valeur">
+              {user.addressStreet && user.addressCity
+                ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
+                : t('restaurantMenu.noAddress')}
+            </span>
+          </span>
+          <span className="fiche-adresse-modifier">{t('restaurantMenu.changeAddress')}</span>
+        </button>
+      )}
+      {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}

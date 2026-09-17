@@ -728,12 +728,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 }
 @keyframes feuille-monte { from { transform: translateY(16px); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { .modal-box { animation: none; } }
-/* Repères d'étape du choix des options (voir OptionsPickerModal) : un point par groupe (boisson, sauce,
-   crudités...), rempli une fois passé, en évidence sur l'étape en cours. */
-.options-picker-progress { display: flex; align-items: center; gap: 5px; margin: 0 0 14px; }
-.options-picker-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--line); flex-shrink: 0; }
-.options-picker-dot.done { background: var(--teal); }
-.options-picker-dot.active { background: var(--iris); width: 9px; height: 9px; }
 .order-card-clickable { cursor: pointer; }
 .order-card-clickable:hover { border-color: var(--iris); }
 
@@ -2013,6 +2007,41 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
      sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
      cette marge, le pied dépassait de 68px exactement. */
   .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 68px + env(safe-area-inset-bottom)); }
+  /* PARCOURS DE COMMANDE : les onglets s'effacent (voir estFluxCommande dans Layout.jsx).
+     Dès qu'on entre dans un commerce, on ne navigue plus, on fait quelque chose. Les onglets ne
+     proposaient plus que de partir, et ils recouvraient le total au moment de payer. La sortie
+     devient le bouton unique en haut à gauche (EnteteFlux.jsx), comme chez Uber Eats.
+     Règle limitée à cette requête média : au-dessus de 900px, la barre latérale est une colonne
+     qui ne recouvre rien et la grille compte dessus — elle reste. */
+  .dashboard-shell--flux .dashboard-sidebar { display: none; }
+  /* Les onglets partis, la réserve qu'ils imposaient au dernier bloc n'a plus lieu d'être. */
+  .dashboard-shell--flux .dashboard-footer-links { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+}
+
+/* En-tête du parcours de commande : la seule sortie de ces pages.
+   Géométrie reprise de `button-floating` (DESIGN.md) — fond blanc, texte encre, forme pilule, ombre
+   légère — exprimée avec les jetons Fairide, comme l'avaient déjà fait les pastilles du bas. */
+.flux-entete { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-height: 44px; }
+.flux-bouton {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  /* 44px : le minimum tactile, celui que DESIGN.md relève aussi sur les pilules d'Uber. Les
+     anciens retours étaient des liens de texte de 18px de haut — on les manquait au pouce. */
+  width: 44px; height: 44px;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  /* Le même bouton est tantôt un <a> (changer de page), tantôt un <button> (reculer d'une étape) :
+     on neutralise ce que le navigateur applique d'office au second pour qu'ils soient identiques. */
+  text-decoration: none; line-height: 1; cursor: pointer; font-family: inherit; padding: 0;
+  /* Le chevron et la croix n'ont pas la même chasse optique : la croix est plus petite à taille
+     égale. Deux tailles pour qu'ils pèsent pareil à l'œil. */
+  font-size: 22px; font-weight: 500;
+}
+.flux-bouton--fermer { font-size: 26px; }
+.flux-bouton:hover { background: var(--cream-dim); }
+.flux-titre {
+  font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
+  /* Un nom de commerce long ne pousse pas le bouton hors de l'écran : il se coupe, lui. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 
 /* La regle qui vivait ici est partie avec le probleme qu'elle reglait. Sous 520px, elle cachait
@@ -3958,3 +3987,197 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 
 /* Inscription : « Créer mon compte » avec une étape incomplète — le rappel au-dessus des boutons (Auth.jsx). */
 .auth-incomplet { margin: 0 0 10px; padding: 10px 12px; border-radius: var(--radius-field); background: #FFF1F1; border: 1px solid #F3B4B4; color: #8A1C1C; font-size: 13px; line-height: 1.4; }
+
+/* ── LA FICHE D'UN PLAT ────────────────────────────────────────────────────────────────────────
+   Feuille plein écran : la photo en grand, les options, la quantité, et l'action collée en bas.
+   Voir FichePlat.jsx pour le pourquoi (un plat n'avait aucun écran à lui).
+   z-index 300 : au-dessus des onglets (50), de la pilule du panier (45) et des fenêtres ordinaires
+   (100) — la feuille recouvre tout, c'est ce qui en fait un écran et non un encart. */
+.plat-feuille {
+  position: fixed; inset: 0; z-index: 300;
+  background: #fff; display: flex; flex-direction: column;
+}
+/* Sur telephone le panneau EST l'ecran ; sur ordinateur il devient une carte centree (plus bas). */
+.plat-panneau { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+/* Seule cette zone défile : le pied reste en place quoi qu'il arrive. */
+.plat-defile { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; position: relative; }
+/* La photo est CADREE, pas etalee. En 16/10 pleine largeur elle mangeait le tiers de l'ecran et
+   poussait le nom du plat sous la ligne de flottaison ; sur ordinateur, etiree sur toute la largeur,
+   elle devenait un bandeau. Un plafond en vh la garde genereuse sans jamais voler la vedette au
+   contenu — c'est le rapport qu'Uber tient sur sa propre fiche. */
+.plat-photo { width: 100%; max-height: 26vh; aspect-ratio: 16 / 10; background: var(--cream-dim); overflow: hidden; }
+.plat-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plat-fermer {
+  position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 12px;
+  width: 44px; height: 44px; border-radius: var(--radius-pill);
+  background: #fff; color: var(--ink); border: 1px solid var(--line);
+  font-size: 26px; line-height: 1; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+/* Par-dessus une photo, le filet blanc disparaît dans l'image : on s'appuie sur une ombre. */
+.plat-fermer--sur-photo { border-color: transparent; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28); }
+.plat-corps { padding: 18px 16px 8px; max-width: 560px; margin: 0 auto; }
+.plat-nom { font-size: 24px; line-height: 1.25; letter-spacing: -0.02em; margin: 0 0 6px; }
+.plat-prix { font-size: 18px; font-weight: 700; margin-bottom: 10px; }
+.plat-desc { color: var(--ink-soft); margin: 0 0 18px; }
+.plat-groupe { border-top: 1px solid var(--line); padding-top: 14px; margin-bottom: 14px; }
+.plat-groupe-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
+.plat-groupe-tete b { font-size: 16px; }
+.plat-requis {
+  font-size: 12px; font-weight: 500; color: var(--ink-soft);
+  background: var(--cream-dim); border-radius: var(--radius-chip); padding: 3px 8px;
+}
+/* Tant que le groupe obligatoire n'est pas rempli, l'étiquette le dit — en rouge d'état, jamais
+   en lime : le lime est l'accent, pas un signal d'erreur (CLAUDE.md). */
+.plat-requis--manquant { color: var(--red); background: rgba(178, 58, 42, 0.08); }
+.plat-groupe-aide { font-size: 13px; color: var(--ink-soft); margin: 0 0 8px; }
+.plat-option {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  /* 48px : on coche ces lignes au pouce, souvent plusieurs d'affilée. */
+  min-height: 48px; padding: 4px 0; cursor: pointer; border-bottom: 1px solid var(--line);
+}
+.plat-option:last-child { border-bottom: 0; }
+.plat-option--max { opacity: 0.45; cursor: default; }
+.plat-option-gauche { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.plat-option-gauche input { width: auto; flex: 0 0 auto; }
+.plat-option-prix { font-size: 14px; color: var(--ink-soft); white-space: nowrap; }
+.plat-pied {
+  flex: 0 0 auto; border-top: 1px solid var(--line); background: #fff;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+.plat-pied > .btn-gold { flex: 1 1 auto; }
+.plat-quantite { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; }
+.plat-quantite button {
+  width: 44px; height: 44px; border-radius: var(--radius-pill);
+  background: #fff; color: var(--ink); border: 1px solid var(--line);
+  font-size: 20px; line-height: 1; cursor: pointer;
+}
+.plat-quantite button:disabled { opacity: 0.4; cursor: default; }
+.plat-quantite span { min-width: 28px; text-align: center; font-weight: 700; font-size: 17px; }
+.plat-ajouter { min-height: 48px; }
+.plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
+/* Au-delà du téléphone, la feuille reste plein écran mais son contenu se recentre : une photo
+   étirée sur 1400px et une ligne d'option large comme l'écran seraient illisibles. */
+/* Sur ordinateur, la fiche devient un PANNEAU CENTRE et non un plein ecran : occuper 1400px de
+   large pour un plat et trois cases a cocher donnait des lignes d'option larges comme l'ecran et une
+   photo en bandeau. La page reste visible derriere, assombrie — on n'a pas quitte la carte, on
+   regarde un plat. */
+@media (min-width: 901px) {
+  .plat-feuille {
+    background: rgba(20, 18, 31, 0.55);
+    align-items: center; justify-content: center; padding: 24px;
+  }
+  .plat-panneau {
+    width: 100%; max-width: 560px; max-height: 88vh;
+    background: #fff; border-radius: var(--radius); overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .plat-photo { max-height: 34vh; aspect-ratio: 16 / 9; }
+  .plat-fermer { position: absolute; }
+}
+
+/* ── LE PAIEMENT EN ÉTAPES ─────────────────────────────────────────────────────────────────────
+   Bandeau d'avancement : où l'on en est, et ce qu'il reste. Les étapes franchies sont cliquables
+   (revenir corriger son adresse est le geste le plus courant), les suivantes ne le sont pas.
+   Voir ETAPES_PAR_MODE dans Checkout.jsx. */
+.checkout-etapes {
+  display: flex; flex-wrap: wrap; gap: 6px; list-style: none;
+  margin: 0 0 14px; padding: 0;
+}
+.checkout-etape button {
+  background: none; border: 0; padding: 4px 2px; font-family: inherit;
+  font-size: 13px; font-weight: 500; color: var(--ink-faint); cursor: pointer;
+  /* Le trait sous l'étape est porté par le bouton, pas par un pseudo-élément : il doit s'aligner
+     sur le TEXTE et non sur la case, dont la largeur varie avec la langue. */
+  border-bottom: 2px solid transparent;
+}
+.checkout-etape button:disabled { cursor: default; }
+/* Une étape franchie reste lisible et cliquable ; l'étape en cours porte le trait iris. */
+.checkout-etape.est-faite button { color: var(--ink-soft); }
+.checkout-etape.est-active button { color: var(--iris); border-bottom-color: var(--iris); }
+/* Le séparateur vit dans la CSS et non dans le balisage : un « · » en dur serait lu à voix haute
+   entre chaque étape par un lecteur d'écran. */
+.checkout-etape + .checkout-etape::before {
+  content: '·'; color: var(--line); margin-right: 4px; align-self: center;
+}
+.checkout-etape { display: flex; align-items: center; gap: 4px; }
+/* « Continuer » : pleine largeur, à la fin de la carte, là où le pouce arrive après avoir rempli. */
+.checkout-continuer { width: 100%; min-height: 48px; margin-top: 6px; }
+
+/* Rangée « Livrer à » sur la fiche d'un commerce : savoir OÙ ira la commande avant de la composer,
+   et non seulement au moment de payer. Voir RestaurantMenu.jsx. */
+.fiche-adresse {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; margin-bottom: 14px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: #fff; color: var(--ink); text-decoration: none;
+  min-height: 56px;
+}
+.fiche-adresse:hover { background: var(--cream-dim); }
+.fiche-adresse-texte { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
+.fiche-adresse-intitule { font-size: 12px; color: var(--ink-faint); }
+/* Une adresse longue se coupe, elle ne pousse pas « Modifier » hors de l'écran. */
+.fiche-adresse-valeur { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fiche-adresse-modifier { flex: 0 0 auto; font-size: 13px; font-weight: 600; color: var(--iris); }
+
+/* ── LE PAIEMENT EN RANGÉES ────────────────────────────────────────────────────────────────────
+   Chaque rangée résume une décision déjà prise et s'ouvre pour la corriger : c'est la forme des
+   captures d'Uber Eats, et elle convient parce qu'ici presque tout est déjà connu (l'adresse vient
+   du compte, la remise a un défaut). Voir Checkout.jsx et components/SousEcran.jsx. */
+.checkout-rangee {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  /* 64px : une rangée se tape au pouce, et elle porte deux lignes de texte. */
+  min-height: 64px; padding: 12px 4px; text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--line);
+  font-family: inherit; color: var(--ink); cursor: pointer;
+}
+.checkout-rangee:last-of-type { border-bottom: 0; }
+.checkout-rangee:hover { background: var(--cream-dim); }
+.checkout-rangee-texte { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; gap: 2px; }
+/* Une adresse longue se coupe plutôt que de pousser le chevron hors de l'écran. */
+.checkout-rangee-titre { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.checkout-rangee-sous { font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Ce qui manque se dit en rouge d'état, jamais en lime : le lime est l'accent, pas un signal. */
+.checkout-rangee-sous.est-requis { color: var(--red); font-weight: 600; }
+.checkout-rangee-chevron { flex: 0 0 auto; font-size: 22px; color: var(--ink-faint); line-height: 1; }
+/* En-tête d'un sous-écran : le même geste de retour que partout ailleurs dans le parcours. */
+.sous-ecran-tete {
+  display: flex; align-items: center; gap: 12px; flex: 0 0 auto;
+  padding: calc(10px + env(safe-area-inset-top)) 12px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+/* ── LE CARNET D'ADRESSES ──────────────────────────────────────────────────────────────────────
+   Écran de choix « Où livrer ? » : recherche en haut, adresses enregistrées en dessous, celle en
+   cours mise en évidence. Voir components/ChoixAdresse.jsx. */
+.adresses-titre { font-size: 15px; margin: 18px 0 8px; }
+.adresses-vide { color: var(--ink-soft); }
+.adresse-ligne { display: flex; align-items: stretch; gap: 4px; border-bottom: 1px solid var(--line); }
+.adresse-ligne:last-child { border-bottom: 0; }
+/* L'adresse retenue porte une arête iris à gauche : on doit voir laquelle est active sans la lire. */
+.adresse-ligne.est-active { border-left: 3px solid var(--iris); background: var(--cream-dim); }
+.adresse-choisir {
+  display: flex; align-items: center; gap: 12px; flex: 1 1 auto; min-width: 0;
+  /* 60px : deux lignes de texte, et on la tape au pouce. */
+  min-height: 60px; padding: 10px 8px; text-align: left;
+  background: none; border: 0; font-family: inherit; color: var(--ink); cursor: pointer;
+}
+.adresse-choisir:disabled { opacity: 0.6; cursor: default; }
+.adresse-texte { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
+/* Une adresse longue se coupe plutôt que de pousser la croix de suppression hors de l'écran. */
+.adresse-nom { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adresse-sous { font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adresse-supprimer {
+  flex: 0 0 auto; width: 44px; align-self: center; height: 44px;
+  background: none; border: 0; border-radius: var(--radius-pill);
+  font-size: 22px; line-height: 1; color: var(--ink-faint); cursor: pointer;
+}
+.adresse-supprimer:hover { background: var(--cream-dim); color: var(--red); }
+/* La rangée « Livrer à » est devenue un <button> (elle ouvre le carnet) : on neutralise ce que le
+   navigateur lui applique d'office, pour qu'elle reste identique au lien qu'elle était. */
+button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font-size: inherit; cursor: pointer; }
+
+/* Seconde étape du carnet : le numéro, quand la suggestion ne portait que la rue. */
+.adresse-numero-rue { font-weight: 700; font-size: 17px; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 2px; }
+.adresse-numero-rue .adresse-sous { font-weight: 400; white-space: normal; }

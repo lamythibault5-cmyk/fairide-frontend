@@ -40,11 +40,29 @@ const attentePage = <div style={{ paddingTop: 8 }}><SkeletonCards count={3} /></
 function isDashboardPath(pathname) {
   return DASHBOARD_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
+/* LE PARCOURS DE COMMANDE : les onglets du bas s'y effacent.
+ *
+ * À partir du moment où l'on entre dans un commerce, on ne navigue plus, on fait quelque chose —
+ * voir la carte, remplir son panier, payer. Les onglets flottants n'y servent qu'à proposer de
+ * partir, et sur téléphone ils RECOUVRAIENT le total au moment de payer : ils flottent à z-index 50
+ * (styles.css) tandis que .cart-bar est collante sans z-index. La page /panier réservait la place,
+ * /checkout ne l'a jamais fait — d'où le montant caché signalé par le fondateur (capture du
+ * 2026-09-17). Les effacer règle la cause, pas le symptôme.
+ *
+ * /restaurants (la LISTE) n'en fait pas partie : on y flâne, les onglets y sont utiles. Le parcours
+ * commence sur la fiche d'un commerce — exactement le geste qui, chez Uber Eats, fait disparaître la
+ * barre du bas (DESIGN.md, et les captures fournies par le fondateur).
+ *
+ * Voir EnteteFlux.jsx, qui porte la seule sortie de ces pages. */
+const FLUX_COMMANDE = ['/panier', '/checkout', '/order-success', '/order-cancelled'];
 // Fiche resto (/restaurants/:id) consultable sans compte (voir App.jsx) — un visiteur non connecté y
 // arrive donc sur la nav publique plutôt que la coquille sidebar. On y allège quand même ce header
 // (pas de gros bloc "Connexion/Inscription" au-dessus d'une carte de menu) : l'ajout au panier redirige
 // déjà vers /login au bon moment (voir RestaurantMenu.jsx), le module d'auth du header y est redondant.
 const RESTAURANT_DETAIL_PATH = /^\/restaurants\/[^/]+$/;
+function estFluxCommande(pathname) {
+  return RESTAURANT_DETAIL_PATH.test(pathname) || FLUX_COMMANDE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
 export default function Layout() {
   const { user, role, logout } = useAuth();
   // En-tête escamotable : il s'efface quand on descend, revient quand on remonte.
@@ -130,10 +148,16 @@ export default function Layout() {
   const fondDoux = location.pathname === '/aide' || location.pathname === '/restaurants' || RESTAURANT_DETAIL_PATH.test(location.pathname);
   const fondCuisine = fondVitrine || fondDoux;
 
+  // Parcours de commande : la coquille reçoit une classe, et c'est la CSS qui efface les onglets —
+  // sous 900px seulement, là où ils flottent par-dessus le contenu. Sur ordinateur la barre latérale
+  // est une colonne de 240px qui ne recouvre rien, et la grille .dashboard-shell compte dessus : la
+  // démonter là-bas casserait la mise en page pour rien. On ne retire donc PAS <DashboardSidebar />
+  // du rendu — cela coûterait en prime un remontage complet à chaque entrée dans le parcours.
+  const dansLeFlux = estFluxCommande(location.pathname);
   if (user && isDashboardPath(location.pathname)) {
     return (
       <>
-        <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}`}>
+        <div className={`dashboard-shell${rightSlot ? ' has-right' : ''}${dansLeFlux ? ' dashboard-shell--flux' : ''}`}>
           <DashboardSidebar />
           <main className="dashboard-main">
             {/* Il y avait ici une pastille « fairide » fixée en haut à droite, flottant au-dessus du
