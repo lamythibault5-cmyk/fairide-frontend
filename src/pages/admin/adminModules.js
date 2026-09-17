@@ -42,6 +42,8 @@ export const ADMIN_MODULES = [
   { key: 'reports', path: '/admin/reports', icon: '📈', group: 'pilotage', badge: aucun },
   { key: 'team', path: '/admin/team', icon: '🧑‍🤝‍🧑', group: 'configuration', badge: aucun },
   { key: 'messages', path: '/admin/messages', icon: '💬', group: 'services', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
+  // Sales (2026-09-17) : codes commerciaux, commerciaux (proches qui démarchent les restaurateurs) et commerces démarchés.
+  { key: 'sales', path: '/admin/sales', icon: '🧑‍💼', group: 'croissance', badge: (o) => pastille(o.sales?.overdue || 0, 'warn') },
   { key: 'compliance', path: '/admin/compliance', icon: '⚖️', group: 'configuration', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
 
@@ -56,7 +58,8 @@ export const MODULE_ROLES = {
   reports: ['owner', 'admin', 'finance', 'ops'],
   team: ['owner', 'admin'],
   compliance: ['owner', 'admin', 'finance'],
-  messages: ['owner', 'admin', 'ops', 'support']
+  messages: ['owner', 'admin', 'ops', 'support'],
+  sales: ['owner', 'admin', 'ops']
 };
 export function moduleAllowed(mod, role) {
   const roles = MODULE_ROLES[mod.key];

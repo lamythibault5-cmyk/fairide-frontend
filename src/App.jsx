@@ -98,6 +98,8 @@ const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const GamesPage = lazyPage(() => import('./pages/GamesPage'));
+const CrmPage = lazyPage(() => import('./pages/client/CrmPage'));
+const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 
 export default function App() {
   return (
@@ -163,6 +165,8 @@ export default function App() {
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         {/* Mini-jeux : rubrique de Mon compte. L'écran scindé avec la carte du livreur n'y apparaît que pour un client. */}
         <Route path="/jeux" element={<ProtectedRoute><GamesPage /></ProtectedRoute>} />
+        {/* CRM des commerciaux : réservé aux comptes qui ont saisi un code commercial (le serveur refuse les autres). */}
+        <Route path="/crm" element={<ProtectedRoute><CrmPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminHomePage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />
@@ -190,6 +194,7 @@ export default function App() {
           <Route path="reports" element={<AdminReportsPage />} />
           <Route path="team" element={<AdminTeamPage />} />
           <Route path="compliance" element={<AdminCompliancePage />} />
+          <Route path="sales" element={<AdminSalesPage />} />
           <Route path="messages" element={<AdminMessagesPage />} />
         </Route>
 

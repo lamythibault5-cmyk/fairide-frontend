@@ -187,6 +187,23 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
+  // Commercial Fairide ? (code saisi) : décide si la rubrique CRM apparaît. Clients seulement.
+  const [salesEtat, setSalesEtat] = useState(null);
+  const [salesCode, setSalesCode] = useState('');
+  const [salesEnvoi, setSalesEnvoi] = useState(false);
+  useEffect(() => {
+    if (role !== 'client') return;
+    api('/sales/me', { token }).then(setSalesEtat).catch(() => setSalesEtat({ agent: false }));
+  }, [role, token]);
+  async function activerCodeCommercial(e) {
+    e.preventDefault();
+    if (!salesCode.trim()) return;
+    setSalesEnvoi(true);
+    try {
+      const r = await api('/sales/activate', { method: 'POST', token, body: { code: salesCode.trim() } });
+      setSalesEtat(r); setSalesCode(''); toast(t('accountUi.salesToastActivated'));
+    } catch (err) { toast(err.message); } finally { setSalesEnvoi(false); }
+  }
   useEffect(() => {
     api('/auth/referral/mine', { token }).then(setReferralStats).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -763,6 +780,24 @@ export default function Account() {
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
           {/* Les mini-jeux ont quitté « Mes commandes » pour cette rubrique, juste après l'histoire. */}
           <LigneCompte to="/jeux" icone="manette" titre={t('accountUi.games')} sous={t('accountUi.gamesSub')} />
+          {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique CRM n'apparaît qu'une fois le code saisi ; sans code, il n'y a
+              que la rangée pour le saisir — un compte client ordinaire ne voit jamais le CRM. */}
+          {salesEtat?.agent && (
+            <LigneCompte to="/crm" icone="stats" titre={t('accountUi.salesCrmRow')} sous={t('accountUi.salesCrmSub', { n: salesEtat.stats?.total ?? 0 })} />
+          )}
+          <LigneCompte icone="lien" titre={t('accountUi.salesCodeRow')} sous={salesEtat?.agent ? t('accountUi.salesActive', { label: salesEtat.label ? ` (${salesEtat.label})` : '' }) : t('accountUi.salesCodeSub')} ouverte={ouvertes.has('commercial')} onClick={() => basculer('commercial')}>
+            {salesEtat?.agent ? (
+              <p className="small" style={{ margin: 0 }}>✅ {t('accountUi.salesActive', { label: salesEtat.label ? ` (${salesEtat.label})` : '' })} · <Link to="/crm">{t('accountUi.salesCrmRow')} →</Link></p>
+            ) : (
+              <form onSubmit={activerCodeCommercial}>
+                <p className="small" style={{ margin: '0 0 8px' }}>{t('accountUi.salesCodeHelp')}</p>
+                <div className="row" style={{ gap: 8 }}>
+                  <div className="field" style={{ flex: 1, margin: 0 }}><input value={salesCode} onChange={(e) => setSalesCode(e.target.value.toUpperCase())} placeholder={t('accountUi.salesCodePlaceholder')} aria-label={t('accountUi.salesCodeRow')} /></div>
+                  <button type="submit" className="btn-teal" disabled={salesEnvoi || !salesCode.trim()}>{salesEnvoi ? '…' : t('accountUi.salesActivate')}</button>
+                </div>
+              </form>
+            )}
+          </LigneCompte>
         </div>
       )}
 

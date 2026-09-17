@@ -1,0 +1,52 @@
+/* CRM des commerciaux (pages/client/CrmPage.jsx) : liste de cartes, fiche en volet, historique daté. */
+.crm-page { padding-bottom: 24px; }
+.crm-entete { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.crm-stats .crm-retard .num { color: var(--red); }
+.crm-filtres { flex-wrap: wrap; }
+.crm-liste { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.crm-carte { text-align: left; cursor: pointer; padding: 12px 14px; margin: 0; border-left: 4px solid var(--line); transition: transform .12s ease, box-shadow .12s ease; font: inherit; color: inherit; }
+.crm-carte:hover { transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.crm-carte-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 4px; }
+.crm-carte-ligne { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+.crm-badge { flex: none; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--cream-dim); white-space: nowrap; }
+.crm-badge-actif, .crm-etape-actif { border-left-color: #0F8049; }
+.crm-badge-actif { background: #D4EFE2; color: #0F5A34; }
+.crm-badge-inscrit, .crm-badge-carte_en_ligne { background: #E4E1F7; color: var(--iris); }
+.crm-etape-inscrit, .crm-etape-carte_en_ligne { border-left-color: var(--iris); }
+.crm-badge-interesse, .crm-badge-rdv { background: #FDF1C7; color: #6B4E00; }
+.crm-etape-interesse, .crm-etape-rdv { border-left-color: #F5B800; }
+.crm-badge-refuse { background: #FBDDE1; color: #8A1C1C; }
+.crm-etape-refuse { border-left-color: #C8243A; }
+.crm-badge-plus_tard { background: #EEE; color: #555; }
+.crm-retard-texte { color: var(--red); font-weight: 700; }
+
+.crm-fiche { max-width: 560px; width: 560px; }
+.crm-fiche-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }
+.crm-bloc { padding: 12px 0; border-top: 1px solid var(--line); }
+.crm-bloc-titre { display: block; margin-bottom: 6px; font-size: 13px; }
+.crm-deux-colonnes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .crm-deux-colonnes { grid-template-columns: 1fr; } }
+.crm-etapes { flex-wrap: wrap; gap: 6px; }
+.crm-etapes .chip { font-size: 12px; padding: 6px 10px; }
+.crm-etoiles { display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
+.crm-etoile { background: none; border: 0; font-size: 24px; line-height: 1; color: #CFCBC3; cursor: pointer; padding: 0 2px; }
+.crm-etoile.pleine { color: #F5B800; }
+.crm-etoiles .small { margin-left: 8px; }
+.crm-resultats { display: flex; flex-direction: column; gap: 2px; margin-top: 6px; }
+.crm-resultats .btn-ghost { text-align: left; padding: 6px 8px; }
+.crm-ajout { display: flex; flex-direction: column; gap: 8px; padding: 10px; background: var(--cream-dim); border-radius: var(--radius-field); }
+.crm-ajout .role-pick { flex-wrap: wrap; }
+.crm-ajout .btn-teal { align-self: flex-end; }
+.crm-historique { list-style: none; margin: 10px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.crm-historique li { display: grid; grid-template-columns: 24px 1fr auto; gap: 8px; align-items: start; padding: 8px 10px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-field); }
+.crm-hist-ico { font-size: 16px; line-height: 1.3; }
+.crm-hist-note { white-space: pre-wrap; font-size: 14px; margin-top: 2px; }
+.crm-hist-suppr { padding: 2px 6px; font-size: 12px; opacity: .6; }
+.crm-hist-suppr:hover { opacity: 1; }
+.crm-edition { position: sticky; bottom: 0; margin-top: 12px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-field); box-shadow: var(--shadow-2); }
+.crm-form .row .field { min-width: 0; }
+textarea { font: inherit; }
+
+/* Admin › Sales : codes, agents, prospects. */
+.sales-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; letter-spacing: .06em; }
+.sales-inactif { opacity: .55; }
