@@ -14,6 +14,12 @@ import { useLanguage } from '../../context/LanguageContext';
 // pas à l'arrivée sur la page : on la pose au moment où la question a un sens (fondateur, 2026-09-17).
 // Refuser l'affichage public garde les scores (on voit son meilleur) mais n'inscrit sur aucun podium.
 // Sans compte, on joue sans pseudo ni podium personnel : rien ne bloque.
+//
+// LES ANCIENS PSEUDOS AUSSI (2026-09-17) : ceux créés avec la case cochée d'avance n'ont jamais vraiment répondu.
+// Le serveur renvoie `consentement: false` tant que la question Oui / Non n'a pas reçu de réponse
+// (users.game_consent_at) ; on la repose alors à leur prochaine partie, pseudo prérempli, sans réponse choisie.
+// `consentement` absent (ancien serveur pendant un déploiement) = on ne repose rien.
+const aRepondu = (p) => !!p?.pseudo && p.consentement !== false;
 
 export function useGameSocial() {
   const { token, user } = useAuth();
@@ -36,20 +42,20 @@ export function useGameSocial() {
   useEffect(() => {
     if (!enAttente || !profil) return;
     const demarrer = enAttente.demarrer; setEnAttente(null);
-    if (profil.pseudo) demarrer(); else setModal({ apres: demarrer });
+    if (aRepondu(profil)) demarrer(); else setModal({ apres: demarrer });
   }, [enAttente, profil]);
 
   // Le jeu demande à démarrer : première partie d'un joueur connecté sans pseudo = on pose d'abord la question.
   const demanderDepart = useCallback((demarrer) => {
     if (!token) { demarrer(); return; }
     if (!profil) { setEnAttente({ demarrer }); return; }
-    if (profil.pseudo) { demarrer(); return; }
+    if (aRepondu(profil)) { demarrer(); return; }
     setModal({ apres: demarrer });
   }, [token, profil]);
 
   const sauverProfil = useCallback(async (pseudo, publique) => {
     const r = await api('/games/profile', { method: 'PATCH', token, body: { pseudo, public: publique } });
-    setProfil((p) => ({ ...(p || { scores: {} }), pseudo: r.pseudo, public: r.public }));
+    setProfil((p) => ({ ...(p || { scores: {} }), pseudo: r.pseudo, public: r.public, consentement: true }));
     chargerPodium();
     return r;
   }, [token, chargerPodium]);
@@ -74,8 +80,10 @@ export function useGameSocial() {
 export function PseudoModal({ profil, onSave, onClose, apres }) {
   const { t } = useLanguage();
   const [pseudo, setPseudo] = useState(profil?.pseudo || '');
-  // null = pas encore répondu. Premier pseudo : rien n'est choisi d'avance ; ensuite, on reprend le choix déjà fait.
-  const [publique, setPublique] = useState(profil?.pseudo ? !!profil.public : null);
+  // null = pas encore répondu : rien n'est choisi d'avance, ni pour un nouveau joueur ni pour un ancien pseudo à qui
+  // on repose la question. Ensuite (modification via le crayon du podium), on reprend le choix déjà fait.
+  const [publique, setPublique] = useState(aRepondu(profil) ? !!profil.public : null);
+  const reposee = !!profil?.pseudo && !aRepondu(profil);
   const [erreur, setErreur] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const obligatoire = typeof apres === 'function';
@@ -105,8 +113,8 @@ export function PseudoModal({ profil, onSave, onClose, apres }) {
   return (
     <div className="modal-overlay pseudo-modal-overlay" role="dialog" aria-modal="true" aria-label={t('gameSocial.modalTitle')} onClick={obligatoire ? undefined : onClose}>
       <form className="modal-box pseudo-modal" onClick={(e) => e.stopPropagation()} onSubmit={valider} noValidate>
-        <h3 className="modal-titre">{t('gameSocial.modalTitle')}</h3>
-        <p className="small">{obligatoire ? t('gameSocial.modalIntroWelcome') : t('gameSocial.modalIntro')}</p>
+        <h3 className="modal-titre">{reposee ? t('gameSocial.modalTitleAgain') : t('gameSocial.modalTitle')}</h3>
+        <p className="small">{reposee ? t('gameSocial.modalIntroAgain') : obligatoire ? t('gameSocial.modalIntroWelcome') : t('gameSocial.modalIntro')}</p>
         <div className="field">
           <label htmlFor="pseudo-jeu">{t('gameSocial.pseudoLabel')}</label>
           <input id="pseudo-jeu" value={pseudo} maxLength={20} autoFocus autoComplete="off" onChange={(e) => { setPseudo(e.target.value); setErreur(''); }} placeholder={t('gameSocial.pseudoPlaceholder')} />
