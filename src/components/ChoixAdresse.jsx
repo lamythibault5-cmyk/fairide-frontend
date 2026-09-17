@@ -26,6 +26,9 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
   const toast = useToast();
   const [adresses, setAdresses] = useState(null);
   const [occupe, setOccupe] = useState(false);
+  // Suggestion retenue mais sans numéro : on reste sur l'écran et on demande le numéro.
+  const [aCompleter, setACompleter] = useState(null);
+  const [numero, setNumero] = useState('');
 
   useEffect(() => {
     api('/auth/me/addresses', { token })
@@ -54,18 +57,37 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
     }
   }
 
-  async function ajouter(suggestion) {
+  // UNE SUGGESTION SANS NUMÉRO OUVRE UNE SECONDE ÉTAPE, ELLE NE REFUSE PLUS.
+  //
+  // Beaucoup de suggestions ne portent que la rue (« numéro à compléter ») : la base cartographique
+  // connaît la voie sans connaître chaque maison. On répondait « Choisis une adresse avec un
+  // numéro », ce qui est une impasse — souvent AUCUNE suggestion n'a de numéro, et le client se
+  // retrouvait sans aucun moyen d'enregistrer une adresse pourtant juste.
+  // On demande donc le numéro, puis on enregistre.
+  //
+  // CE QUI EST VÉRIFIÉ, ET CE QUI NE L'EST PAS — mesuré, pas supposé. Le serveur géocode l'adresse
+  // complète et refuse une RUE qu'il ne connaît pas. Le NUMÉRO, lui, n'est pas vérifié : Nominatim
+  // rend exactement le même point pour « Avenue de Tervueren 204 » et pour « … 99999 », le centre de
+  // la voie, sans jamais renvoyer de numéro de maison. Demander le numéro n'affaiblit donc rien —
+  // il n'était déjà pas contrôlé — mais il ne faut pas croire l'adresse vérifiée jusqu'à la porte.
+  // Distinguer un vrai numéro d'un numéro inventé demanderait un géocodeur qui expose la précision
+  // du résultat (Google le fait, OpenStreetMap non) : c'est le seul endroit du parcours où Google
+  // apporterait vraiment quelque chose.
+  function ajouter(suggestion) {
     if (occupe) return;
-    // La suggestion peut n'avoir que la rue (« numéro à compléter ») : sans numéro, on ne peut pas
-    // livrer, et le serveur refuserait. On le dit ici plutôt que de laisser partir un appel perdu.
-    if (!suggestion.number) { toast(t('adresses.needNumber')); return; }
+    if (!suggestion.number) { setACompleter(suggestion); setNumero(''); return; }
+    enregistrer(suggestion);
+  }
+
+  async function enregistrer(adresse) {
     setOccupe(true);
     try {
       const creee = await api('/auth/me/addresses', {
         method: 'POST', token,
-        body: { street: suggestion.street, number: suggestion.number, postalCode: suggestion.postalCode, city: suggestion.city }
+        body: { street: adresse.street, number: adresse.number, postalCode: adresse.postalCode, city: adresse.city }
       });
       setAdresses((l) => [...(l || []).filter((x) => x.id !== creee.id), creee]);
+      setACompleter(null);
       await choisir(creee);
     } catch (e) {
       toast(e.message);
@@ -84,7 +106,42 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
   }
 
   return (
-    <SousEcran titre={t('adresses.title')} onFermer={onFermer}>
+    <SousEcran titre={aCompleter ? t('adresses.numberTitle') : t('adresses.title')} onFermer={aCompleter ? () => setACompleter(null) : onFermer}>
+      {/* SECONDE ÉTAPE : le numéro. La rue est acquise, on ne redemande donc qu'une chose, et le
+          reste de l'écran disparaît — un champ seul sur un écran vide ne laisse aucun doute sur ce
+          qu'on attend. La flèche de l'en-tête revient à la liste plutôt que de tout fermer. */}
+      {aCompleter ? (
+        <div className="adresse-numero">
+          <p className="adresse-numero-rue">
+            {aCompleter.street}
+            <span className="adresse-sous">{`${aCompleter.postalCode} ${aCompleter.city}`.trim()}</span>
+          </p>
+          <div className="field">
+            <label htmlFor="adresse-numero-champ">{t('adresses.numberLabel')}</label>
+            <input
+              id="adresse-numero-champ"
+              value={numero}
+              onChange={(e) => setNumero(e.target.value)}
+              placeholder={t('adresses.numberPlaceholder')}
+              // inputMode et non type=number : un numéro belge peut contenir une lettre ou une barre
+              // (« 12A », « 30/2 »), qu'un champ numérique refuserait.
+              inputMode="text"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === 'Enter' && numero.trim()) enregistrer({ ...aCompleter, number: numero.trim() }); }}
+            />
+          </div>
+          <button
+            type="button"
+            className="btn-gold"
+            style={{ width: '100%', minHeight: 48 }}
+            disabled={!numero.trim() || occupe}
+            onClick={() => enregistrer({ ...aCompleter, number: numero.trim() })}
+          >
+            {t('adresses.numberSave')}
+          </button>
+        </div>
+      ) : (
+      <>
       <AddressSearch onSelect={ajouter} />
       <h3 className="adresses-titre">{t('adresses.saved')}</h3>
       {adresses === null && <p className="small">{t('adresses.loading')}</p>}
@@ -116,6 +173,8 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
           </button>
         </div>
       ))}
+      </>
+      )}
     </SousEcran>
   );
 }

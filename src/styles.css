@@ -3991,3 +3991,7 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 /* La rangée « Livrer à » est devenue un <button> (elle ouvre le carnet) : on neutralise ce que le
    navigateur lui applique d'office, pour qu'elle reste identique au lien qu'elle était. */
 button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font-size: inherit; cursor: pointer; }
+
+/* Seconde étape du carnet : le numéro, quand la suggestion ne portait que la rue. */
+.adresse-numero-rue { font-weight: 700; font-size: 17px; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 2px; }
+.adresse-numero-rue .adresse-sous { font-weight: 400; white-space: normal; }

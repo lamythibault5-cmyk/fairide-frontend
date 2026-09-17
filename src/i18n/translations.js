@@ -6083,6 +6083,10 @@ export const translations = {
       stage_annulee: 'Refusée / annulée'
     },
     adresses: {
+      numberTitle: "Numéro",
+      numberLabel: "Numéro de rue",
+      numberPlaceholder: "Ex. 12, 12A, 30/2",
+      numberSave: "Enregistrer cette adresse",
       title: "Adresses",
       saved: "Adresses enregistrées",
       empty: "Aucune adresse enregistrée. Cherche-la ci-dessus pour l'ajouter.",
@@ -12718,6 +12722,10 @@ export const translations = {
       stage_annulee: 'Refused / cancelled'
     },
     adresses: {
+      numberTitle: "Number",
+      numberLabel: "Street number",
+      numberPlaceholder: "E.g. 12, 12A, 30/2",
+      numberSave: "Save this address",
       title: "Addresses",
       saved: "Saved addresses",
       empty: "No saved address yet. Search above to add one.",
@@ -19351,6 +19359,10 @@ export const translations = {
       stage_annulee: 'Geweigerd / geannuleerd'
     },
     adresses: {
+      numberTitle: "Huisnummer",
+      numberLabel: "Huisnummer",
+      numberPlaceholder: "Bv. 12, 12A, 30/2",
+      numberSave: "Dit adres opslaan",
       title: "Adressen",
       saved: "Opgeslagen adressen",
       empty: "Nog geen adres opgeslagen. Zoek hierboven om er een toe te voegen.",
