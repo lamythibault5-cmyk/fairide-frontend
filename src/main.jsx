@@ -63,6 +63,24 @@ if (preferee && preferee !== 'fr' && PREFIXES[preferee]) {
   window.location.replace(`${PREFIXES[preferee]}${pathname === '/' ? '' : pathname}${search}${hash}`);
 }
 
+// Écran de chargement (index.html, #splash) : retiré une fois l'application montée. À la TOUTE PREMIÈRE
+// visite (mémorisée dans le navigateur), on laisse le logo finir de se dessiner (1 s depuis l'ouverture
+// de la page) ; ensuite — rechargements compris — il s'efface dès que l'application est prête, en un
+// fondu court : un rafraîchissement ne doit jamais paraître plus long qu'il ne l'est (fondateur,
+// 2026-09-17 : « permet un refresh smooth »). Si le système demande moins d'animations, on n'attend jamais.
+function retirerEcranChargement() {
+  const splash = document.getElementById('splash');
+  if (!splash) return;
+  let premiere = true;
+  try { premiere = !localStorage.getItem('fairide_splash_vu'); localStorage.setItem('fairide_splash_vu', '1'); } catch { /* sans stockage : on joue l'animation */ }
+  const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const attente = premiere && !reduit ? Math.max(0, 1000 - performance.now()) : 0;
+  setTimeout(() => { splash.classList.add('splash-fin'); setTimeout(() => splash.remove(), 240); }, attente);
+}
+// setTimeout et non requestAnimationFrame : dans un onglet ouvert en arrière-plan, rAF ne se déclenche
+// pas et l'écran resterait affiché jusqu'au premier passage au premier plan.
+setTimeout(retirerEcranChargement, 0);
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppErrorBoundary>
