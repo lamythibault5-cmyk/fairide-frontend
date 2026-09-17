@@ -182,7 +182,9 @@ a { color: inherit; }
 .hero {
   background: var(--iris);
   color: var(--cream);
-  padding: 14px 24px;
+  padding: 12px 24px;
+  /* Un filet blanc translucide en pied : la bannière se termine net, sans ombre (flat only). */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   position: sticky;
   top: 0;
   z-index: 40;
@@ -201,13 +203,13 @@ a { color: inherit; }
 @media (max-width: 640px) { .hero { padding: 10px 18px; } .hero-lean { padding: 6px 16px; } }
 /* Le halo doré flou du coin haut-droit a été retiré : « no shadows, no gradients, flat color
    only ». La bannière n'a plus qu'un aplat iris. */
-.hero-inner { max-width: 960px; margin: 0 auto; position: relative; z-index: 1; }
+.hero-inner { max-width: 1120px; margin: 0 auto; position: relative; z-index: 1; }
 /* La réserve de 108px (88px sous 480px) qui protégeait le filigrane a été supprimée en même
    temps que le filigrane lui-même sur cette branche — voir le commentaire dans Layout.jsx.
    C'est elle qui rendait la rangée intenable en français et en néerlandais : sur un écran de
    330px, elle en confisquait plus du quart avant même d'avoir placé un seul bouton. */
 
-.brand { display: flex; align-items: center; gap: 16px; text-decoration: none; }
+.brand { display: flex; align-items: center; gap: 14px; text-decoration: none; }
 /* Règles universelles (BrandMark est utilisé ailleurs que dans le header, ex. le mockup téléphone de
    AppComingSoonSection) — sans ça, un <svg> sans width/height explicite s'affiche à sa taille
    intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
@@ -216,10 +218,10 @@ a { color: inherit; }
 /* 24% du côté, exactement le rayon d'icône de la spec — et plus de liseré lime autour : sur
    la bannière iris, la tuile du logo est de la même couleur que le fond, seul le cadre lime
    se détache. C'est voulu : la marque flotte dans l'en-tête au lieu d'y être encadrée. */
-.brand .mark { border-radius: 24%; }
+.brand .mark { border-radius: 0; }
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-.brand .brand-name { display: block; font-weight: 700; font-size: 30px; color: var(--cream); line-height: 1; letter-spacing: -0.03em; }
-.brand-slogan { font-size: 14px; font-weight: 600; color: var(--gold); opacity: 0.9; letter-spacing: 0.01em; white-space: nowrap; }
+.brand .brand-name { display: block; font-weight: 800; font-size: 34px; color: var(--cream); line-height: 1; letter-spacing: -0.04em; }
+.brand-slogan { font-size: 13px; font-weight: 600; color: var(--gold); opacity: 0.95; letter-spacing: 0.01em; white-space: nowrap; }
 @media (max-width: 640px) { .brand .brand-name { font-size: 24px; } }
 /* Le mot « fairide » reste affiché à TOUTES les largeurs, à côté du vélo.
 
@@ -231,7 +233,7 @@ a { color: inherit; }
    C'est le SLOGAN qui saute en premier quand la place manque, puis le lien « Connexion » : le
    bouton d'inscription mène de toute façon à un écran qui propose les deux onglets. */
 @media (max-width: 640px) { .brand-slogan { display: none; } }
-@media (max-width: 520px) { .brand .brand-name { font-size: 20px; } .brand { gap: 10px; } }
+@media (max-width: 520px) { .brand .brand-name { font-size: 22px; } .brand { gap: 10px; } }
 
 /* Le filigrane « fairide » fixé en haut à droite a été supprimé le 3 septembre 2026.
 
@@ -267,8 +269,39 @@ a { color: inherit; }
 
    La place réservée au filigrane (voir .hero-inner, padding-right sous 960px) est prise en
    compte : c'est elle qui rendait la rangée si serrée dès la tablette. */
-.header-row { justify-content: flex-end; flex-wrap: nowrap; }
+.header-row { justify-content: flex-end; flex-wrap: nowrap; align-items: center; gap: 18px; }
 .header-row > .brand { margin-right: auto; min-width: 0; }
+/* Navigation dans la rangée : les deux marges automatiques (celle de la marque, celle de la nav) se
+   partagent l'espace libre, la nav se retrouve donc centrée entre la marque et les actions — le
+   bandeau à une ligne des sites modernes. Sous 760px elle occupe sa propre ligne sous la marque. */
+.header-row > .header-nav { margin: 0 auto; flex-shrink: 0; }
+.header-nav a { font-size: 14.5px; font-weight: 600; padding: 8px 14px; opacity: .82; }
+.header-nav a.active, .header-nav a:hover { opacity: 1; background: rgba(255, 255, 255, 0.12); }
+/* Téléphone et petite tablette : deux lignes nettes. Première ligne, la marque et Connexion/Inscription
+   (les actions) ; seconde, la navigation à gauche et les langues à droite. Le saut de ligne est un
+   pseudo-élément de pleine largeur (un élément flex comme un autre) placé entre les deux groupes
+   par `order` — la structure HTML ne change pas. */
+@media (max-width: 760px) {
+  .header-row { flex-wrap: wrap; row-gap: 6px; column-gap: 10px; }
+  .header-row::before { content: ''; flex-basis: 100%; height: 0; order: 2; }
+  .header-row > .brand { order: 0; }
+  .header-row > .header-auth, .header-row > .userbar { order: 1; }
+  .header-row > .header-nav { order: 3; margin: 0 auto 0 -8px; }
+  .header-row > .lang-switcher { order: 4; }
+  .header-nav a { font-size: 13.5px; padding: 6px 10px; }
+}
+/* Sous 400px (iPhone en portrait), la marque et le couple Connexion/Inscription doivent tenir sur la
+   même ligne : vélo 46px, mot 20px, lien sans marge intérieure — mesuré à 375px en français et en
+   néerlandais (« Registreren », le plus long). */
+@media (max-width: 400px) {
+  .header-nav a { font-size: 13px; padding: 6px 8px; }
+  .header-row > .header-nav { margin-left: -6px; }
+  .header-row { column-gap: 8px; }
+  .header-row .brand { gap: 8px; }
+  .header-row .brand .mark { width: 46px !important; height: 24px !important; }
+  .header-row .brand .brand-name { font-size: 20px; }
+  .header-row .header-auth-link { padding: 8px 2px; }
+}
 .header-row > .header-auth,
 .header-row > .lang-switcher,
 .header-row > .userbar { flex-shrink: 0; }
@@ -283,10 +316,10 @@ a { color: inherit; }
 }
 .role-nav a.active, .role-nav a:hover { opacity: 1; background: rgba(255,255,255,0.1); }
 
-.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); padding: 2px; }
+.lang-switcher { display: flex; gap: 2px; background: rgba(255,255,255,0.1); border-radius: var(--radius-pill); padding: 3px; }
 .lang-switcher button {
   background: transparent; border: none; color: var(--cream); opacity: .7;
-  font-size: 11px; font-weight: 700; padding: 5px 8px; border-radius: var(--radius-field);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .04em; padding: 6px 9px; border-radius: var(--radius-pill);
 }
 /* Blanc translucide et non lime : le lime de l'en-tête est déjà pris par le bouton « Inscription »,
    et la spec n'autorise qu'un accent appuyé par vue. */
@@ -406,13 +439,13 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 a.btn-primary:active, a.btn-gold:active, a.btn-teal:active, a.btn-outline:active { transform: scale(.97); }
 a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { filter: brightness(1.06); }
 
-.header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14px; opacity: 0.9; display: flex; align-items: center; white-space: nowrap; }
-.header-auth-link:hover { opacity: 1; }
+.header-auth-link { color: var(--cream); text-decoration: none; font-weight: 600; font-size: 14.5px; opacity: 0.9; display: flex; align-items: center; white-space: nowrap; padding: 8px 6px; border-radius: var(--radius-pill); }
+.header-auth-link:hover { opacity: 1; text-decoration: underline; text-underline-offset: 4px; }
 /* Bloc atomique (non wrappable) de la rangée principale du header (voir Layout.jsx) : tient à côté de
    la marque/langues en large, retombe seul à la ligne dès que la largeur manque plutôt que d'éclater
    Connexion et Inscription chacun sur leur propre ligne. */
-.header-auth { gap: 10px; flex-wrap: nowrap; }
-.header-register-btn { padding: 9px 18px; font-size: 13px; white-space: nowrap; }
+.header-auth { gap: 8px; flex-wrap: nowrap; }
+.header-register-btn { padding: 10px 20px; font-size: 14px; font-weight: 700; white-space: nowrap; border-radius: var(--radius-pill); }
 /* Marge de sécurité pour les langues à libellés longs. « Registreren » et « Inscription »
    sont d'un tiers plus larges que « Sign up » : sans ce resserrement, la rangée tient en
    anglais et déborde en néerlandais, ce qui est exactement le défaut qu'on vient de traiter.
@@ -421,7 +454,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    perd contre un style inline. */
 @media (max-width: 600px) {
   .header-row .lang-switcher button { padding: 5px 6px; }
-  .header-row .brand .mark { width: 36px !important; height: 36px !important; }
+  .header-row .brand .mark { width: 52px !important; height: 27px !important; }
 }
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }

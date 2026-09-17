@@ -189,7 +189,8 @@ export default function Layout() {
               de la largeur de quoi que ce soit. Voir .header-row dans styles.css. */}
           <div className="row header-row">
             <Link className="brand" to="/">
-              <BrandMark size={leanHeader ? 34 : 48} />
+              {/* Sans tuile : le vélo lime flotte sur l'iris, plus grand (78px) et net à toute densité (SVG). */}
+              <BrandMark size={leanHeader ? 44 : 78} tile={false} color="#C8F03C" />
               {!leanHeader && (
                 <div className="brand-text">
                   {/* <span> et non <h1> : la marque est présente sur toutes les pages, elle y
@@ -200,6 +201,45 @@ export default function Layout() {
                 </div>
               )}
             </Link>
+            {/* La navigation vit DANS la rangée (au centre, entre la marque et les actions) : un seul bandeau,
+                pas de seconde ligne. Sous 760px elle repasse sous la marque (voir .header-nav dans styles.css). */}
+            {/* Sans cette nav, aucun lien crawlable ne mène de l'accueil vers /restaurants :
+                l'autre <nav> ne s'affiche que pour un visiteur connecté, et un robot ne l'est
+                jamais. Les fiches de commerce sont publiques et indexables par intention, mais
+                restaient introuvables en pratique. C'est aussi le chemin qu'un visiteur veut :
+                regarder avant de créer un compte. */}
+            {!user && !leanHeader && (
+              <nav className="role-nav header-nav">
+                <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
+                <NavLink to="/aide" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.help')}</NavLink>
+              </nav>
+            )}
+            {user && (
+              <nav className="role-nav header-nav">
+                {/* Le compte admin ne voit jamais la nav client/restaurateur/livreur, seulement l'ERP —
+                    voir la même règle dans DashboardSidebar.jsx (isAdminAccount). */}
+                {!user.isAdmin && role === 'client' && (
+                  <>
+                    <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
+                    <NavLink to="/favorites" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.favorites')}</NavLink>
+                    <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.orders')}</NavLink>
+                  </>
+                )}
+                {!user.isAdmin && role === 'restaurant' && (
+                  <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.myBusiness')}</NavLink>
+                )}
+                {!user.isAdmin && role === 'driver' && (
+                  <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.deliveries')}</NavLink>
+                )}
+                {!user.isAdmin && (
+                  <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>
+                    {t('nav.account')}
+                    {nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
+                  </NavLink>
+                )}
+                {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
+              </nav>
+            )}
             {!leanHeader && user && (
               <div className="userbar" style={{ padding: 0 }}>
                 <Link to="/account" style={{ color: 'var(--cream)', textDecoration: 'none', marginRight: 10, fontWeight: 600 }}>
@@ -221,43 +261,6 @@ export default function Layout() {
             )}
             <LanguageSwitcher />
           </div>
-          {/* Sans cette nav, aucun lien crawlable ne mène de l'accueil vers /restaurants :
-              l'autre <nav> ne s'affiche que pour un visiteur connecté, et un robot ne l'est
-              jamais. Les fiches de commerce sont publiques et indexables par intention, mais
-              restaient introuvables en pratique. C'est aussi le chemin qu'un visiteur veut :
-              regarder avant de créer un compte. */}
-          {!user && !leanHeader && (
-            <nav className="role-nav">
-              <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
-              <NavLink to="/aide" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.help')}</NavLink>
-            </nav>
-          )}
-          {user && (
-            <nav className="role-nav">
-              {/* Le compte admin ne voit jamais la nav client/restaurateur/livreur, seulement l'ERP —
-                  voir la même règle dans DashboardSidebar.jsx (isAdminAccount). */}
-              {!user.isAdmin && role === 'client' && (
-                <>
-                  <NavLink to="/restaurants" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.restaurants')}</NavLink>
-                  <NavLink to="/favorites" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.favorites')}</NavLink>
-                  <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.orders')}</NavLink>
-                </>
-              )}
-              {!user.isAdmin && role === 'restaurant' && (
-                <NavLink to="/dashboard" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.myBusiness')}</NavLink>
-              )}
-              {!user.isAdmin && role === 'driver' && (
-                <NavLink to="/driver" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.deliveries')}</NavLink>
-              )}
-              {!user.isAdmin && (
-                <NavLink to="/account" className={({ isActive }) => (isActive ? 'active' : '')}>
-                  {t('nav.account')}
-                  {nonLus > 0 && <span className="nav-badge tone-warn" aria-label={t('inbox.rowSubUnread', { n: nonLus })}>{nonLus}</span>}
-                </NavLink>
-              )}
-              {user.isAdmin && <NavLink to="/admin" className={({ isActive }) => (isActive ? 'active' : '')}>{t('nav.admin')}</NavLink>}
-            </nav>
-          )}
         </div>
       </div>
       <div className={`wrap${fondVitrine ? ' wrap-fond' : ''}${fondDoux ? ' wrap-fond-doux' : ''}`} style={{ paddingTop: 24 }}>
