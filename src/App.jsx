@@ -97,6 +97,7 @@ const Privacy = lazyPage(() => import('./pages/legal/Privacy'));
 const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
+const GamesPage = lazyPage(() => import('./pages/GamesPage'));
 
 export default function App() {
   return (
@@ -160,6 +161,8 @@ export default function App() {
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        {/* Mini-jeux : rubrique de Mon compte. L'écran scindé avec la carte du livreur n'y apparaît que pour un client. */}
+        <Route path="/jeux" element={<ProtectedRoute><GamesPage /></ProtectedRoute>} />
         <Route path="/admin" element={<ProtectedRoute admin><AdminLayout /></ProtectedRoute>}>
           <Route index element={<AdminHomePage />} />
           <Route path="dashboard" element={<AdminDashboardPage />} />

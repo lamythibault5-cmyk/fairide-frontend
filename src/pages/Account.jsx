@@ -761,6 +761,8 @@ export default function Account() {
           <LigneCompte to="/aide?sujet=paiement" icone="carteBancaire" titre={t('accountUi.paymentMethods')} />
           <LigneCompte to="/aide?sujet=titres-restaurant" icone="ticket" titre={t('accountUi.mealVouchers')} sous={t('accountUi.mealVouchersSub')} />
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
+          {/* Les mini-jeux ont quitté « Mes commandes » pour cette rubrique, juste après l'histoire. */}
+          <LigneCompte to="/jeux" icone="manette" titre={t('accountUi.games')} sous={t('accountUi.gamesSub')} />
         </div>
       )}
 
@@ -1022,6 +1024,7 @@ export default function Account() {
         <LigneCompte icone="lien" titre={t('accountUi.share')} sous={t('accountUi.shareSub')} onClick={partagerFairide} />
         <LigneCompte to="/aide?sujet=bug" icone="bogue" titre={t('accountUi.reportBug')} sous={t('accountUi.reportBugSub')} />
         {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
+        {role !== 'client' && <LigneCompte to="/jeux" icone="manette" titre={t('accountUi.games')} />}
       </div>
 
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>

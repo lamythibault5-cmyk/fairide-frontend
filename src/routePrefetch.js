@@ -51,6 +51,7 @@ const CHARGEURS = {
   '/confidentialite': () => import('./pages/legal/Privacy'),
   '/aide': () => import('./pages/HelpPage'),
   '/notre-histoire': () => import('./pages/OurStory'),
+  '/jeux': () => import('./pages/GamesPage'),
 };
 
 const enCours = new Map();

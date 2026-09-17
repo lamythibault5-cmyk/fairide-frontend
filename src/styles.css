@@ -1114,12 +1114,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
 
 
-/* Le bouton qui mène aux jeux depuis le suivi d'une livraison : une proposition posée sous la
-   carte, pas un terrain de jeu imposé à côté d'elle. */
-/* Le bouton du jeu vit maintenant dans la barre de « Mes commandes » (voir .commandes-barre)
-   et non plus centre sous la carte de suivi : sa marge automatique des deux cotes le centrait,
-   ce qui annulait le margin-left: auto cense le pousser a droite. */
-.suivi-jouer { display: inline-flex; align-items: center; margin: 0; text-decoration: none; }
 
 .status-badge { font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
 .status-nouveau { background: rgba(217,45,60,0.12); color: var(--red); }
@@ -3668,45 +3662,29 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
 .jeu-indice { display: flex; align-items: flex-start; justify-content: center; gap: 7px; text-align: left; }
 .jeu-indice > svg { flex-shrink: 0; margin-top: 2px; }
 
-/* LE JEU DEROULE SOUS UNE COMMANDE (voir Orders.jsx).
-   Il vivait sur sa propre page : on y jouait bien, mais pour revoir ou en etait sa livraison il
-   fallait revenir en arriere, et la partie etait perdue. Ici il s'ouvre juste sous la commande
-   concernee — on remonte d'un coup de pouce pour relire son suivi, on redescend pour reprendre.
-   La hauteur est ferme et bornee : assez pour jouer, jamais assez pour que la commande sorte de
-   portee du pouce. */
-/* Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une, juste en dessous. En
-   fixant la hauteur du panneau, ce qui depassait — le podium, les boutons de l'ecran de depart —
-   sortait de la boite et se posait sur le contenu suivant. Le terrain borne, le panneau suit. */
-.commande-jeu {
+/* LA PAGE MINI-JEUX (/jeux, voir GamesPage.jsx), ouverte depuis Mon compte.
+   Le PANNEAU n'a pas de hauteur imposee : c'est le TERRAIN qui en a une. En fixant la hauteur du
+   panneau, ce qui depassait — le podium, les boutons de l'ecran de depart — sortait de la boite. */
+.jeux-page-terrain {
   display: flex; flex-direction: column;
   margin: 0 0 16px; padding: 14px;
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
-  animation: jeu-deroule .22s cubic-bezier(.22,.61,.36,1) both;
 }
-/* flex: none et une hauteur ferme : assez pour jouer, jamais assez pour que la commande juste
-   au-dessus sorte de portee du pouce. */
-.commande-jeu .jeu-cadre { flex: none; height: min(52svh, 420px); min-height: 300px; }
-@keyframes jeu-deroule { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-@media (prefers-reduced-motion: reduce) { .commande-jeu { animation: none; } }
-/* Le declencheur ouvert prend l'iris : il ferme, il ne propose plus. */
+.jeux-page-terrain .jeu-cadre { flex: none; height: min(62svh, 520px); min-height: 300px; }
+.jeux-page-intro { margin: -4px 0 14px; }
+.jeux-page-aide { margin: 4px 0 16px; text-align: center; }
+/* La livraison en route : le texte, le choix de la commande s'il y en a plusieurs, et le bouton
+   qui ouvre ou referme l'ecran scinde. */
+.jeux-page-livraison { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 14px; }
+.jeux-page-livraison-texte { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; flex: 1 1 220px; }
+.jeux-page-livraison > button { flex: none; }
+.jeux-page-choix { display: flex; gap: 6px; flex-wrap: wrap; flex-basis: 100%; }
 
 /* L'entete d'une carte de commande : le nom a gauche, le statut a droite. */
 .commande-entete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
 
-/* La barre de « Mes commandes » : les deux filtres a gauche, le bouton du jeu POUSSE tout a
-   droite par une marge automatique. Sur telephone la rangee se replie, et le bouton garde sa
-   place de dernier element. */
+/* La barre de « Mes commandes » : les deux filtres, qui se replient sur telephone. */
 .commandes-barre { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -6px 0 14px; }
-/* Le bouton « Jouer en attendant » vit sur la ligne du TITRE, pas dans la rangee des filtres.
-   A cote de « Toutes » et « Reservations », il ne tenait pas sur un telephone : 225px de filtres
-   plus 175px de bouton depassent les 400px d'un ecran courant, donc il passait a la ligne — et se
-   retrouvait sous les filtres au lieu d'etre en haut a droite. Le titre, lui, peut se resserrer.
-   S'il devait quand meme passer a la ligne sur un tres petit ecran, margin-left: auto le garde
-   colle a droite plutot que de le renvoyer a gauche. */
-.commandes-barre .suivi-jouer { flex: none; margin-left: auto; }
-/* Plus petit que les boutons d'action pleine taille : c'est une proposition posee dans une barre
-   de filtres, pas l'action principale de la page. */
-.suivi-jouer { min-height: 36px; padding: 7px 14px; font-size: 13px; gap: 7px; }
 
 /* Le tableau des sous-traitants, sur la politique de confidentialite.
    Aucune regle <table> n'existait dans cette feuille : les seuls tableaux du projet vivent dans
@@ -3734,17 +3712,6 @@ html.jeux-sur-page .panier-pilule { display: none !important; }
    titre flottant sans rapport declare avec ce qui suit.
    Meme rendu que `label` (ligne 349), pour que rien ne bouge a l'ecran. */
 .titre-groupe { font-size: 14px; font-weight: 500; color: var(--ink); display: block; margin-bottom: 6px; }
-
-/* Le libelle du bouton « Jouer en attendant » se raccourcit sur telephone.
-   A 400px de large, « Mes commandes » (194px) et le bouton entier (175px) demandent 381px dans un
-   conteneur qui en offre 368 : le bouton passait a la ligne pour treize pixels. Plutot que de
-   rogner la police jusqu'a l'illisible, le bouton dit simplement « Jouer » sous 520px — a cote
-   d'une manette, il ne manque rien a comprendre. */
-.jouer-court { display: none; }
-@media (max-width: 520px) {
-  .jouer-long { display: none; }
-  .jouer-court { display: inline; }
-}
 
 /* Les resultats d'une recherche sur la carte : une pastille par commerce, en bas de l'ecran.
    Posee AU-DESSUS de la barre de navigation flottante (qui vit a 16px du bas, hauteur ~56) pour ne

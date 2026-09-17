@@ -3798,12 +3798,17 @@ export const translations = {
     games: {
       title: 'Mini-jeux',
       pageTitle: 'Mini-jeux',
-      playWhileWaiting: 'Jouer en attendant',
-      playWhileWaitingShort: 'Jouer',
       whyTitle: 'Pourquoi des jeux ?',
       gotIt: 'Compris',
       why: 'Pourquoi des jeux ?',
-      choose: 'Choisir un mini-jeu'
+      choose: 'Choisir un mini-jeu',
+      pageIntro: 'Des mini-jeux pour patienter. Quand une commande est en livraison, joue en écran scindé en gardant un œil sur ton livreur.',
+      pageMetaDescription: 'Les mini-jeux Fairide : des petits jeux pour patienter, à côté de la carte de ton livreur.',
+      pageOnTheWay: 'Ta commande chez {name} est en route',
+      pageSplitOpen: 'Jouer avec la carte du livreur',
+      pageSplitClose: 'Quitter l\'écran scindé',
+      pageSplitHint: 'L\'écran scindé avec la carte du livreur apparaît ici dès qu\'une de tes commandes est en livraison.',
+      pagePickOrder: 'Quelle livraison suivre ?'
     },
     tracking: {
       enlarge: '⛶ Agrandir la carte et les jeux',
@@ -5020,6 +5025,8 @@ export const translations = {
       mealVouchers: 'Titres restaurant',
       mealVouchersSub: 'Monizze, Edenred, Sodexo',
       ourStory: 'Notre histoire',
+      games: 'Mini-jeux',
+      gamesSub: 'Pour patienter, et l\'écran scindé avec la carte de ton livreur',
       myBusiness: 'Mon commerce',
       subscription: 'Abonnement',
       servicesOffered: 'Services proposés',
@@ -10400,12 +10407,17 @@ export const translations = {
     games: {
       title: 'Mini-games',
       pageTitle: 'Mini-games',
-      playWhileWaiting: 'Play while you wait',
-      playWhileWaitingShort: 'Play',
       whyTitle: 'Why games?',
       gotIt: 'Got it',
       why: 'Why games?',
-      choose: 'Choose a mini-game'
+      choose: 'Choose a mini-game',
+      pageIntro: 'Mini-games to pass the time. While an order is being delivered, play in split screen and keep an eye on your courier.',
+      pageMetaDescription: 'Fairide mini-games: little games to pass the time, next to your courier\'s map.',
+      pageOnTheWay: 'Your order from {name} is on its way',
+      pageSplitOpen: 'Play with the courier\'s map',
+      pageSplitClose: 'Leave split screen',
+      pageSplitHint: 'Split screen with the courier\'s map shows up here as soon as one of your orders is out for delivery.',
+      pagePickOrder: 'Which delivery to follow?'
     },
     tracking: {
       enlarge: '⛶ Enlarge the map and games',
@@ -11617,6 +11629,8 @@ export const translations = {
       mealVouchers: 'Meal vouchers',
       mealVouchersSub: 'Monizze, Edenred, Sodexo',
       ourStory: 'Our story',
+      games: 'Mini-games',
+      gamesSub: 'To pass the time, and split screen with your courier\'s map',
       myBusiness: 'My business',
       subscription: 'Subscription',
       servicesOffered: 'Services offered',
@@ -16988,12 +17002,17 @@ export const translations = {
     games: {
       title: 'Minispelletjes',
       pageTitle: 'Minigames',
-      playWhileWaiting: 'Spelen tijdens het wachten',
-      playWhileWaitingShort: 'Spelen',
       whyTitle: 'Waarom spelletjes?',
       gotIt: 'Begrepen',
       why: 'Waarom spelletjes?',
-      choose: 'Kies een minispel'
+      choose: 'Kies een minispel',
+      pageIntro: 'Minispellen om de tijd te doden. Terwijl een bestelling onderweg is, speel je in gesplitst scherm en hou je je koerier in het oog.',
+      pageMetaDescription: 'De minispellen van Fairide: kleine spellen om de tijd te doden, naast de kaart van je koerier.',
+      pageOnTheWay: 'Je bestelling bij {name} is onderweg',
+      pageSplitOpen: 'Spelen met de kaart van de koerier',
+      pageSplitClose: 'Gesplitst scherm verlaten',
+      pageSplitHint: 'Het gesplitste scherm met de kaart van de koerier verschijnt hier zodra een van je bestellingen onderweg is.',
+      pagePickOrder: 'Welke levering volgen?'
     },
     tracking: {
       enlarge: '⛶ Kaart en spelletjes vergroten',
@@ -18205,6 +18224,8 @@ export const translations = {
       mealVouchers: 'Maaltijdcheques',
       mealVouchersSub: 'Monizze, Edenred, Sodexo',
       ourStory: 'Ons verhaal',
+      games: 'Minispellen',
+      gamesSub: 'Om de tijd te doden, en gesplitst scherm met de kaart van je koerier',
       myBusiness: 'Mijn zaak',
       subscription: 'Abonnement',
       servicesOffered: 'Aangeboden diensten',
