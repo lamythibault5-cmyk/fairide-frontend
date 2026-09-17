@@ -1269,7 +1269,14 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .stat-card.highlight { background: rgba(59,47,181,0.12); }
 .stat-card.highlight .num { color: var(--teal-deep); }
 
-.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--cream); padding: 13px 20px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; box-shadow: none; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 50; max-width: 90%; text-align: center; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--cream); padding: 13px 20px; border-radius: var(--radius-pill); font-size: 14px; font-weight: 600; box-shadow: none; opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 600; max-width: 90%; text-align: center; }
+/* z-index 600, et non 50 : le toast est le SEUL canal de retour de l'application, il ne doit
+   jamais passer derrière quoi que ce soit. À 50 il se glissait sous la fiche d'un plat et sous
+   les sous-écrans du paiement (z 300) — un message d'erreur envoyé depuis là était donc affiché
+   mais invisible, et l'utilisateur voyait son geste échouer sans la moindre explication
+   (signalé par le fondateur sur un numéro de rue inexistant, 2026-09-17). */
+/* Une erreur se dit en rouge d'état. Jamais en lime : c'est l'accent de la marque. */
+.toast-erreur { background: var(--red); color: #fff; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
@@ -4119,7 +4126,17 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .fiche-adresse-intitule { font-size: 12px; color: var(--ink-faint); }
 /* Une adresse longue se coupe, elle ne pousse pas « Modifier » hors de l'écran. */
 .fiche-adresse-valeur { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fiche-adresse-modifier { flex: 0 0 auto; font-size: 13px; font-weight: 600; color: var(--iris); }
+/* Le chevron a remplacé le mot « Modifier » (capture du fondateur) : deux bords tournés à 45°,
+   ce qui donne un trait net à toute taille et d'épaisseur constante — un caractère « ⌄ » varie
+   d'une police à l'autre et se centre mal. Le libellé de l'action vit dans l'aria-label du
+   bouton (RestaurantList.jsx) : il a quitté l'écran, pas le document. */
+.fiche-adresse-chevron {
+  flex: 0 0 auto; width: 9px; height: 9px; margin-right: 4px;
+  border-right: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink);
+  transform: rotate(45deg); transform-origin: center;
+  /* Remonté d'un cheveu : tourné, le carré paraît bas par rapport au texte. */
+  margin-top: -3px;
+}
 
 /* ── LE PAIEMENT EN RANGÉES ────────────────────────────────────────────────────────────────────
    Chaque rangée résume une décision déjà prise et s'ouvre pour la corriger : c'est la forme des
@@ -4181,3 +4198,6 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Seconde étape du carnet : le numéro, quand la suggestion ne portait que la rue. */
 .adresse-numero-rue { font-weight: 700; font-size: 17px; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 2px; }
 .adresse-numero-rue .adresse-sous { font-weight: 400; white-space: normal; }
+
+/* Message d'erreur d'un champ : sous le champ qu'il concerne, en rouge d'état. */
+.champ-erreur { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--red); }

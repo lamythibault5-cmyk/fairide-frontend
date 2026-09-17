@@ -29,6 +29,11 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
   // Suggestion retenue mais sans numéro : on reste sur l'écran et on demande le numéro.
   const [aCompleter, setACompleter] = useState(null);
   const [numero, setNumero] = useState('');
+  // L'erreur s'affiche DANS la feuille, à côté du champ. Un toast ne suffisait pas : il vit au bas de
+  // la page, derrière une feuille qui couvre l'écran — le message partait bien, mais on ne le voyait
+  // jamais. Et même visible, le bon endroit pour dire « ce numéro n'existe pas » est sous le champ
+  // qui le porte, pas une bulle qui disparaît au bout de cinq secondes.
+  const [erreur, setErreur] = useState('');
 
   useEffect(() => {
     api('/auth/me/addresses', { token })
@@ -51,7 +56,7 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
       onChoisie?.(r.address || a);
       onFermer();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setOccupe(false);
     }
@@ -73,7 +78,7 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
   // enregistrées, pas le milieu de la voie : c'est ce que le livreur verra sur sa carte.
   function ajouter(suggestion) {
     if (occupe) return;
-    if (!suggestion.number) { setACompleter(suggestion); setNumero(''); return; }
+    if (!suggestion.number) { setACompleter(suggestion); setNumero(''); setErreur(''); return; }
     enregistrer(suggestion);
   }
 
@@ -88,7 +93,8 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
       setACompleter(null);
       await choisir(creee);
     } catch (e) {
-      toast(e.message);
+      // Pendant la saisie du numéro, le message reste sous le champ ; ailleurs, le toast fait l'affaire.
+      if (aCompleter) setErreur(e.message); else toast(e.message, 'erreur');
       setOccupe(false);
     }
   }
@@ -99,7 +105,7 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
       await api(`/auth/me/addresses/${a.id}`, { method: 'DELETE', token });
       setAdresses((l) => (l || []).filter((x) => x.id !== a.id));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     }
   }
 
@@ -119,7 +125,9 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
             <input
               id="adresse-numero-champ"
               value={numero}
-              onChange={(e) => setNumero(e.target.value)}
+              onChange={(e) => { setNumero(e.target.value); setErreur(''); }}
+              aria-invalid={erreur ? 'true' : undefined}
+              aria-describedby={erreur ? 'adresse-numero-erreur' : undefined}
               placeholder={t('adresses.numberPlaceholder')}
               // inputMode et non type=number : un numéro belge peut contenir une lettre ou une barre
               // (« 12A », « 30/2 »), qu'un champ numérique refuserait.
@@ -128,6 +136,7 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
               onKeyDown={(e) => { if (e.key === 'Enter' && numero.trim()) enregistrer({ ...aCompleter, number: numero.trim() }); }}
             />
           </div>
+          {erreur && <p className="champ-erreur" id="adresse-numero-erreur" role="alert">{erreur}</p>}
           <button
             type="button"
             className="btn-gold"
