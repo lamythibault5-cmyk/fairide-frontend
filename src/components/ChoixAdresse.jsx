@@ -65,14 +65,12 @@ export default function ChoixAdresse({ onFermer, onChoisie }) {
   // retrouvait sans aucun moyen d'enregistrer une adresse pourtant juste.
   // On demande donc le numéro, puis on enregistre.
   //
-  // CE QUI EST VÉRIFIÉ, ET CE QUI NE L'EST PAS — mesuré, pas supposé. Le serveur géocode l'adresse
-  // complète et refuse une RUE qu'il ne connaît pas. Le NUMÉRO, lui, n'est pas vérifié : Nominatim
-  // rend exactement le même point pour « Avenue de Tervueren 204 » et pour « … 99999 », le centre de
-  // la voie, sans jamais renvoyer de numéro de maison. Demander le numéro n'affaiblit donc rien —
-  // il n'était déjà pas contrôlé — mais il ne faut pas croire l'adresse vérifiée jusqu'à la porte.
-  // Distinguer un vrai numéro d'un numéro inventé demanderait un géocodeur qui expose la précision
-  // du résultat (Google le fait, OpenStreetMap non) : c'est le seul endroit du parcours où Google
-  // apporterait vraiment quelque chose.
+  // LE NUMÉRO EST VÉRIFIÉ, LUI AUSSI. Le serveur ne se contente pas de reconnaître la rue : il
+  // demande le numéro à la base cartographique et refuse « Avenue Louise 99999 », tout en acceptant
+  // une rue que personne n'a encore numérotée dans OpenStreetMap — auquel cas refuser punirait le
+  // client pour une lacune de la carte. Voir verifierAdressePrecise (backend/geocode.js), qui porte
+  // les mesures. Quand le numéro est reconnu, ce sont les coordonnées de LA MAISON qui sont
+  // enregistrées, pas le milieu de la voie : c'est ce que le livreur verra sur sa carte.
   function ajouter(suggestion) {
     if (occupe) return;
     if (!suggestion.number) { setACompleter(suggestion); setNumero(''); return; }
