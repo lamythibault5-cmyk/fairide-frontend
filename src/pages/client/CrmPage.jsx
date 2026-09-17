@@ -4,7 +4,6 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import RetourCompte from '../../components/RetourCompte';
 
 import '../../crm.css';
 
@@ -48,7 +47,6 @@ export default function CrmPage() {
   if (etat && !etat.agent) {
     return (
       <div>
-        <RetourCompte />
         <h1 className="section-title" style={{ marginTop: 0 }}>{t('sales.title')}</h1>
         <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.notAgent')}</p></div>
       </div>
@@ -57,7 +55,6 @@ export default function CrmPage() {
 
   return (
     <div className="crm-page">
-      <RetourCompte />
       <div className="crm-entete">
         <div>
           <h1 className="section-title" style={{ margin: 0 }}>{t('sales.title')}</h1>
@@ -129,8 +126,9 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
   }
   return (
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={t('sales.addProspect')} onClick={onClose}>
-      <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={enregistrer}>
+      <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={enregistrer} noValidate>
         <h3 className="modal-titre">{t('sales.addProspect')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.formHint')}</p>
         <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} autoFocus /></div>
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 2 }}><label htmlFor="crm-adresse">{t('sales.fAddress')}</label><input id="crm-adresse" value={f.address} onChange={champ('address')} /></div>
@@ -303,7 +301,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
           </>
         )}
         {edition && (
-          <form className="crm-edition" onSubmit={async (e) => { e.preventDefault(); await patch(edition, t('sales.toastSaved')); setEdition(null); }}>
+          <form className="crm-edition" noValidate onSubmit={async (e) => { e.preventDefault(); await patch(edition, t('sales.toastSaved')); setEdition(null); }}>
             <h4 style={{ margin: '0 0 8px' }}>{t('sales.editInfo')}</h4>
             {[['name', 'fName'], ['address', 'fAddress'], ['commune', 'fCommune'], ['contactName', 'fContact'], ['phone', 'fPhone'], ['email', 'fEmail'], ['cuisine', 'fCuisine']].map(([k, cle]) => (
               <div className="field" key={k}><label htmlFor={`crm-ed-${k}`}>{t(`sales.${cle}`)}</label><input id={`crm-ed-${k}`} value={edition[k] || ''} onChange={(e) => setEdition((s) => ({ ...s, [k]: e.target.value }))} /></div>
