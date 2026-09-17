@@ -4126,7 +4126,17 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .fiche-adresse-intitule { font-size: 12px; color: var(--ink-faint); }
 /* Une adresse longue se coupe, elle ne pousse pas « Modifier » hors de l'écran. */
 .fiche-adresse-valeur { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fiche-adresse-modifier { flex: 0 0 auto; font-size: 13px; font-weight: 600; color: var(--iris); }
+/* Le chevron a remplacé le mot « Modifier » (capture du fondateur) : deux bords tournés à 45°,
+   ce qui donne un trait net à toute taille et d'épaisseur constante — un caractère « ⌄ » varie
+   d'une police à l'autre et se centre mal. Le libellé de l'action vit dans l'aria-label du
+   bouton (RestaurantList.jsx) : il a quitté l'écran, pas le document. */
+.fiche-adresse-chevron {
+  flex: 0 0 auto; width: 9px; height: 9px; margin-right: 4px;
+  border-right: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink);
+  transform: rotate(45deg); transform-origin: center;
+  /* Remonté d'un cheveu : tourné, le carré paraît bas par rapport au texte. */
+  margin-top: -3px;
+}
 
 /* ── LE PAIEMENT EN RANGÉES ────────────────────────────────────────────────────────────────────
    Chaque rangée résume une décision déjà prise et s'ouvre pour la corriger : c'est la forme des

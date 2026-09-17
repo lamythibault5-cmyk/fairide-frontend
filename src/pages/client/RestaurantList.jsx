@@ -323,9 +323,17 @@ export default function RestaurantList() {
           panier, et on découvrait à la fin où tout cela irait — l'adresse du compte, pas forcément
           celle du moment. C'est la place qu'elle occupe chez Uber Eats : en tête du fil, avant même
           de choisir un commerce, parce qu'elle détermine ce qui est pertinent.
-          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher. */}
+          Rien pour un visiteur non connecté : il n'a pas encore d'adresse à afficher.
+          aria-label sur le bouton : le mot « Modifier » a quitté l'écran au profit d'un chevron
+          (capture du fondateur, 2026-09-17), et un chevron seul ne dit rien à un lecteur d'écran —
+          le libellé porte donc l'action, et le chevron est marqué aria-hidden. */}
       {user && (
-        <button type="button" className="fiche-adresse" onClick={() => setChoixAdresse(true)}>
+        <button
+          type="button"
+          className="fiche-adresse"
+          onClick={() => setChoixAdresse(true)}
+          aria-label={t('restaurantMenu.changeAddress')}
+        >
           <Icone nom="maison" taille={18} />
           <span className="fiche-adresse-texte">
             <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
@@ -335,7 +343,9 @@ export default function RestaurantList() {
                 : t('restaurantMenu.noAddress')}
             </span>
           </span>
-          <span className="fiche-adresse-modifier">{t('restaurantMenu.changeAddress')}</span>
+          {/* Le chevron est dessiné en CSS (deux bords tournés) et non écrit en caractère : « ⌄ » ne
+              pèse pas le même trait d'une police à l'autre, et se retrouve souvent décentré. */}
+          <span className="fiche-adresse-chevron" aria-hidden="true" />
         </button>
       )}
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
