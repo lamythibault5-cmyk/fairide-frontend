@@ -3906,3 +3906,6 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 
 /* Le terminal Fairide dans le bloc des formules (OffreFormules.jsx) : un encart à part, sous « quand est-ce que je paie ». */
 .offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
+
+/* Inscription : « Créer mon compte » avec une étape incomplète — le rappel au-dessus des boutons (Auth.jsx). */
+.auth-incomplet { margin: 0 0 10px; padding: 10px 12px; border-radius: var(--radius-field); background: #FFF1F1; border: 1px solid #F3B4B4; color: #8A1C1C; font-size: 13px; line-height: 1.4; }

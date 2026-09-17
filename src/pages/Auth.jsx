@@ -251,6 +251,13 @@ export default function Auth() {
   }, [services, role]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // Le mot de passe est demandé deux fois à l'inscription (fondateur, 2026-09-17) : une faute de frappe dans un
+  // champ masqué enfermait la personne dehors dès sa première connexion.
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  // « Créer mon compte » avec une étape incomplète : on y ramène la personne ET on lui dit pourquoi, au-dessus du
+  // bouton — sinon elle se retrouvait sur une étape précédente sans explication. { step, n } ; effacé dès qu'on
+  // change d'étape.
+  const [incomplet, setIncomplet] = useState(null);
   /* Plus de champ "confirme ton mot de passe" : il ne protège de rien qu'un bouton "Afficher" ne
      protège mieux. Retaper un mot de passe à l'aveugle produit surtout la même faute deux fois,
      et c'est une question de plus à l'écran. Le voir suffit à le vérifier.
@@ -479,7 +486,8 @@ export default function Auth() {
       else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
-      // Plus de vérification de concordance : il n'y a plus de second champ à confronter.
+      if (!passwordConfirm) e.passwordConfirm = required;
+      else if (passwordConfirm !== password) e.passwordConfirm = t('auth.errPasswordMismatch');
     }
     return e;
   }
@@ -505,11 +513,16 @@ export default function Auth() {
   // Un double appui sur « Continuer » pendant la vérification de disponibilité (réseau lent) ne doit pas
   // faire sauter une étape : tant que la première demande n'est pas revenue, les suivantes sont ignorées.
   const verifEnCours = useRef(false);
+  // Le premier champ en faute est amené à l'écran : sur téléphone, l'erreur d'un champ du haut restait hors de vue.
+  function montrerPremiereErreur() {
+    setTimeout(() => document.querySelector('.input-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
+  }
   async function goNext() {
     if (verifEnCours.current) return;
+    setIncomplet(null);
     let e = validateStep(stepKey);
     setErrors(e);
-    if (Object.keys(e).length) return;
+    if (Object.keys(e).length) { montrerPremiereErreur(); return; }
     setVerifDispo(true); verifEnCours.current = true;
     try { e = await verifierDisponibilite(stepKey); } finally { setVerifDispo(false); verifEnCours.current = false; }
     setErrors(e);
@@ -517,7 +530,7 @@ export default function Auth() {
   }
 
   function goBack() {
-    setErrors({});
+    setErrors({}); setIncomplet(null);
     setStep((s) => Math.max(0, s - 1));
   }
 
@@ -601,7 +614,9 @@ export default function Auth() {
 
   async function submit(e) {
     e.preventDefault();
-    if (!(mode === 'register' && googleCredential) && (!email || !password)) { toast(t('auth.errEmailPassword')); return; }
+    // À l'inscription, ce sont les étapes qui valident (ci-dessous) : un e-mail ou un mot de passe manquant
+    // ramène à l'étape « compte » avec le champ en rouge, au lieu d'un simple message générique.
+    if (mode === 'login' && (!email || !password)) { toast(t('auth.errEmailPassword')); return; }
     setLoading(true);
     let reussi = false;
     try {
@@ -616,6 +631,10 @@ export default function Auth() {
           if (Object.keys(e).length > 0) {
             setStep(i);
             setErrors(e);
+            setIncomplet({ step: i, n: Object.keys(e).length });
+            const titres = { account: 'stepAccountTitle', identity: 'stepIdentityTitle', business: 'stepBusinessTitle', documents: 'stepDocsTitle', address: 'stepAddressTitle' };
+            toast(t('auth.checkIncomplete', { n: Object.keys(e).length, step: t(`auth.${titres[steps[i]]}`) }));
+            montrerPremiereErreur();
             setLoading(false);
             return;
           }
@@ -1192,6 +1211,12 @@ export default function Auth() {
                   {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste
                       au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>
+                <div className="field">
+                  <label htmlFor="auth-f-19">{t('auth.confirmPassword')}</label>
+                  <PasswordInput id="auth-f-19" value={passwordConfirm} onChange={(e) => setPasswordConfirm(e.target.value)}
+                    invalid={!!errors.passwordConfirm} autoComplete="new-password" />
+                  {fieldError('passwordConfirm')}
+                </div>
               </>
             )}
             {stepKey === 'account' && (referralOpen ? (
@@ -1205,6 +1230,9 @@ export default function Auth() {
               </button>
             ))}
 
+            {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
+              <p className="auth-incomplet" role="alert">⚠️ {t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
+            )}
             <div className="auth-step-nav">
               {step > 0 && (
                 <button type="button" className="btn-outline" onClick={goBack}>{t('auth.back')}</button>
