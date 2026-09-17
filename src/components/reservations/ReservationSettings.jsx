@@ -255,6 +255,8 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
         <p className="small" style={{ margin: '0 0 10px' }}>
           {t('resa.depositIntro1')} <b>{t('resa.depositIntro2')}</b> {t('resa.depositIntro3')}
         </p>
+        {/* Rien à configurer ici (fondateur, 2026-09-17) : l'acompte attend simplement que les paiements soient actifs. */}
+        {restaurant?.stripeConnectStatus !== 'active' && <p className="small" style={{ margin: '0 0 10px' }}>ℹ️ {t('resa.depositNeedsPayments')}</p>}
         <label className="row resa-regle" style={{ gap: 8, cursor: 'pointer' }}>
           <input type="checkbox" style={{ width: 'auto' }} checked={acompte} onChange={(e) => setAcompte(e.target.checked)} />
           <span><b>{t('resa.askDeposit')}</b></span>

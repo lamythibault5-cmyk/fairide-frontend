@@ -776,17 +776,33 @@ export default function Account() {
           <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
             {ouvertes.has('tickets') && <TicketHelp />}
           </LigneCompte>
+          {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
+          {restaurant.terminal && (
+            <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
+            {ouvertes.has('terminal') && (
+              <div className="small">
+                <p style={{ margin: '0 0 8px' }}>{t('accountUi.offre_terminalText')}</p>
+                <p style={{ margin: '0 0 8px' }}><b>{restaurant.terminal.eligibleOffert ? t('accountUi.terminalEligible') : t('accountUi.terminalNotEligible', { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })}</b></p>
+                {restaurant.terminal.deliveredAt && <p style={{ margin: '0 0 4px' }}>📦 {t('accountUi.terminalDelivered', { date: new Date(restaurant.terminal.deliveredAt).toLocaleDateString(locale) })}</p>}
+                {restaurant.terminal.returnedAt && <p style={{ margin: '0 0 4px' }}>↩️ {t('accountUi.terminalReturned', { date: new Date(restaurant.terminal.returnedAt).toLocaleDateString(locale) })}</p>}
+                {restaurant.terminal.refundedAt && <p style={{ margin: '0 0 4px' }}>💶 {t('accountUi.terminalRefunded', { date: new Date(restaurant.terminal.refundedAt).toLocaleDateString(locale) })}</p>}
+                <p style={{ margin: 0 }}>{t('accountUi.terminalHow')}</p>
+              </div>
+            )}
+            </LigneCompte>
+          )}
           <div id="section-contrat" />
           <LigneCompte icone="contrat" titre={t('restoContract.rowTitle')} sous={t('restoContract.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <div id="section-paiement">
-            <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' && !restaurant.reservationDepositEnabled ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
-          {/* Formule Réservation : l'abonnement n'est pas nécessaire tant que ni livraison ni emporter ne sont choisis. */}
+          {/* Version gratuite (plan « reservation » côté serveur : réservations, à emporter payé sur place) : aucun abonnement
+              à activer. Il n'est jamais activé d'office, même avec tous les services cochés : c'est le restaurateur qui le fait. */}
           <div id="section-abonnement">
           <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) ? t('accountUi.subNotNeeded') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
@@ -878,7 +894,7 @@ export default function Account() {
             )}
             {restaurant.subscriptionStatus === 'paused' && (
               <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : 'Reprendre l\'abonnement'}</button>
+                <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : t('accountUi.resumeSub')}</button>
                 {!confirmCancelSub && (
                   <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
                 )}
@@ -902,16 +918,17 @@ export default function Account() {
 
           <LigneCompte
             icone="cloche" titre={t('accountUi.servicesOffered')}
-            sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup'), offersDineIn && t('accountUi.reservation')].filter(Boolean).join(' · ') || 'Aucun service actif'}
+            sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup'), offersDineIn && t('accountUi.reservation')].filter(Boolean).join(' · ') || t('accountUi.noActiveService')}
             ouverte={ouvertes.has('services')} onClick={() => basculer('services')}
           >
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
-            {/* La formule suit les cases, avant même d'enregistrer : réservation seule = gratuit ; livraison ou
-                emporter = abonnement. Sans abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
+            {/* La version suit les cases, avant même d'enregistrer : réservation et à emporter payé sur place = gratuit ;
+                livraison ou à emporter payé en ligne = version complète (même règle que formules.js côté serveur). Sans
+                abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
             {(() => {
-              const complete = offersDelivery || offersPickup;
+              const complete = offersDelivery || (offersPickup && pickupPaymentMode !== 'on_site');
               const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>

@@ -1,13 +1,15 @@
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { datePremierPrelevement } from '../launch';
 
-// La promesse Fairide aux commerces, dite avec les mêmes mots partout (inscription, Mon compte) : la réservation de
-// table reste gratuite ; livraison et à emporter = 20 € HTVA par mois + 10 % HTVA des commandes payées en ligne,
-// premier mois offert ; rien n'est prélevé tant que le commerce n'a pas activé lui-même la formule complète.
+// La promesse Fairide aux commerces, dite avec les mêmes mots partout (inscription, Mon compte) — modèle du fondateur,
+// 2026-09-17 : VERSION GRATUITE = réservations de table + à emporter payé sur place (ni abonnement ni commission,
+// l'app seule suffit) ; VERSION COMPLÈTE = livraison et commandes payées en ligne, 20 € HTVA par mois (premier mois
+// offert) + 10 % HTVA sur ces commandes seulement, tout centralisé sur le TERMINAL FAIRIDE (offert aux 50 premiers,
+// puis caution de 80 €) ; rien n'est prélevé tant que le commerce n'a pas activé lui-même la version complète.
 // L'ambiguïté « quand est-ce que je commence à payer ? » fait hésiter devant un modèle gratuit → payant : la date
 // du premier prélèvement est donc donnée en clair, calculée comme côté serveur (voir launch.js).
 //
-// payant : livraison ou à emporter choisis. statut : statut de la formule complète (trialing, active…), finEssai :
+// payant : livraison ou à emporter payé en ligne choisis (l'à emporter payé UNIQUEMENT sur place reste gratuit). statut : statut de la formule complète (trialing, active…), finEssai :
 // date de fin du mois offert ou du prochain prélèvement. onActiver : bouton d'activation (Mon compte).
 export default function OffreFormules({ payant = false, statut = null, finEssai = null, onActiver = null, inscription = false }) {
   const { t } = useLanguage();
@@ -38,6 +40,12 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
               : t('accountUi.offre_when3', { date: fmt(datePremierPrelevement()) })}</li>
         </ol>
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
+      </div>
+      {/* Le terminal : ce que reçoit un commerce en version complète, et à quelles conditions. */}
+      <div className="offre-terminal">
+        <b>🖥️ {t('accountUi.offre_terminalTitle')}</b>
+        <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.offre_terminalText')}</p>
+        <p className="small" style={{ margin: '4px 0 0' }}><b>{t('accountUi.offre_terminalConditions')}</b></p>
       </div>
       {inscription && payant && <p className="small offre-note">✅ {t('accountUi.offre_signupComplete')}</p>}
       {onActiver && payant && !essai && !actif && (

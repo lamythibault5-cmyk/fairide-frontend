@@ -3903,3 +3903,6 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .jeu-score-val { min-width: 1.8em; padding: 1px 9px; border-radius: 999px; background: var(--jeu, var(--iris)); color: var(--jeu-texte, #fff); text-align: center; font-weight: 900; }
 .jeu--large .jeu-score-val { font-size: 17px; padding: 2px 12px; }
 .jeu-best { display: inline-flex; align-items: center; gap: 4px; }
+
+/* Le terminal Fairide dans le bloc des formules (OffreFormules.jsx) : un encart à part, sous « quand est-ce que je paie ». */
+.offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
