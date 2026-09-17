@@ -6080,6 +6080,7 @@ export const translations = {
       stage_annulee: 'Refusée / annulée'
     },
     checkout: {
+      headerTitle: 'Paiement',
       payOnSiteOnly: 'Ce commerce se paie sur place, au retrait',
       notAvailable: "Ce restaurant n'est plus disponible.",
       upsellTitle: 'Un dessert ou une boisson avec ça ?',
@@ -6203,6 +6204,10 @@ export const translations = {
       toPayOnSite: 'À payer sur place',
       confirmOnSite: 'Confirmer la commande (paiement sur place)',
       toastOnSiteConfirmed: 'Commande envoyée au commerce. Tu la paies sur place en venant la chercher.'
+    },
+    flux: {
+      close: 'Fermer',
+      back: 'Retour'
     },
     panier: {
       title: 'Ton panier',
@@ -12670,6 +12675,7 @@ export const translations = {
       stage_annulee: 'Refused / cancelled'
     },
     checkout: {
+      headerTitle: 'Checkout',
       payOnSiteOnly: 'This shop is paid on site, at collection',
       notAvailable: 'This restaurant is no longer available.',
       upsellTitle: 'Fancy a dessert or a drink with that?',
@@ -12793,6 +12799,10 @@ export const translations = {
       toPayOnSite: 'To pay on site',
       confirmOnSite: 'Confirm the order (pay on site)',
       toastOnSiteConfirmed: 'Order sent to the business. You pay on site when you collect it.'
+    },
+    flux: {
+      close: 'Close',
+      back: 'Back'
     },
     panier: {
       title: 'Your cart',
@@ -19258,6 +19268,7 @@ export const translations = {
       stage_annulee: 'Geweigerd / geannuleerd'
     },
     checkout: {
+      headerTitle: 'Afrekenen',
       payOnSiteOnly: 'Deze zaak betaal je ter plaatse, bij het ophalen',
       notAvailable: 'Dit restaurant is niet meer beschikbaar.',
       upsellTitle: 'Zin in een dessert of een drankje erbij?',
@@ -19381,6 +19392,10 @@ export const translations = {
       toPayOnSite: 'Ter plaatse te betalen',
       confirmOnSite: 'Bestelling bevestigen (ter plaatse betalen)',
       toastOnSiteConfirmed: 'Bestelling naar de zaak verstuurd. Je betaalt ter plaatse bij het ophalen.'
+    },
+    flux: {
+      close: 'Sluiten',
+      back: 'Terug'
     },
     panier: {
       title: 'Je winkelmandje',

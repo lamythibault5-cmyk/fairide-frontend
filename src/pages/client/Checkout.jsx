@@ -8,6 +8,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
+import EnteteFlux from '../../components/EnteteFlux';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture } from '../../launch';
@@ -290,7 +291,11 @@ export default function Checkout() {
 
   return (
     <div>
-      <Link to={`/restaurants/${restaurantId}`} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>&larr; {restaurant.name}</Link>
+      {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
+          d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
+          ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
+          plus bas, qui garde ce rôle. */}
+      <EnteteFlux vers="/panier" titre={t('checkout.headerTitle')} libelle={t('panier.title')} />
 
 
       {!pendingOrder && (

@@ -1970,6 +1970,39 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
      sinon les liens légaux finissent sous les boutons et deviennent incliquables. Mesuré : sans
      cette marge, le pied dépassait de 68px exactement. */
   .dashboard-footer-links { margin: 24px 16px 0; padding-bottom: calc(24px + 68px + env(safe-area-inset-bottom)); }
+  /* PARCOURS DE COMMANDE : les onglets s'effacent (voir estFluxCommande dans Layout.jsx).
+     Dès qu'on entre dans un commerce, on ne navigue plus, on fait quelque chose. Les onglets ne
+     proposaient plus que de partir, et ils recouvraient le total au moment de payer. La sortie
+     devient le bouton unique en haut à gauche (EnteteFlux.jsx), comme chez Uber Eats.
+     Règle limitée à cette requête média : au-dessus de 900px, la barre latérale est une colonne
+     qui ne recouvre rien et la grille compte dessus — elle reste. */
+  .dashboard-shell--flux .dashboard-sidebar { display: none; }
+  /* Les onglets partis, la réserve qu'ils imposaient au dernier bloc n'a plus lieu d'être. */
+  .dashboard-shell--flux .dashboard-footer-links { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
+}
+
+/* En-tête du parcours de commande : la seule sortie de ces pages.
+   Géométrie reprise de `button-floating` (DESIGN.md) — fond blanc, texte encre, forme pilule, ombre
+   légère — exprimée avec les jetons Fairide, comme l'avaient déjà fait les pastilles du bas. */
+.flux-entete { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-height: 44px; }
+.flux-bouton {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  /* 44px : le minimum tactile, celui que DESIGN.md relève aussi sur les pilules d'Uber. Les
+     anciens retours étaient des liens de texte de 18px de haut — on les manquait au pouce. */
+  width: 44px; height: 44px;
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius-pill);
+  text-decoration: none; line-height: 1;
+  /* Le chevron et la croix n'ont pas la même chasse optique : la croix est plus petite à taille
+     égale. Deux tailles pour qu'ils pèsent pareil à l'œil. */
+  font-size: 22px; font-weight: 500;
+}
+.flux-bouton--fermer { font-size: 26px; }
+.flux-bouton:hover { background: var(--cream-dim); }
+.flux-titre {
+  font-weight: 700; font-size: 17px; letter-spacing: -0.02em; color: var(--ink);
+  /* Un nom de commerce long ne pousse pas le bouton hors de l'écran : il se coupe, lui. */
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
 }
 
 /* La regle qui vivait ici est partie avec le probleme qu'elle reglait. Sous 520px, elle cachait

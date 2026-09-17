@@ -13,6 +13,7 @@ import { StarsDisplay } from '../../components/Stars';
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import OptionsPickerModal from '../../components/OptionsPickerModal';
 import MenuCategorySections from '../../components/MenuCategorySections';
+import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
@@ -242,7 +243,10 @@ export default function RestaurantMenu() {
   return (
     <div>
       <CategoryQuickNav categories={sectionsFiltrees} />
-      <Link to="/restaurants" className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10 }}>{t('restaurantMenu.backToRestaurants')}</Link>
+      {/* La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. Le lien de
+          texte qui vivait là faisait 18px de haut — on le manquait au pouce — et il disparaissait
+          sous les onglets du bas, qui s'effacent maintenant sur cette page (voir Layout.jsx). */}
+      <EnteteFlux vers="/restaurants" geste="fermer" libelle={t('restaurantMenu.backToRestaurants')} />
 
       {/* L'EN-TÊTE SORT DE LA CARTE.
           Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
