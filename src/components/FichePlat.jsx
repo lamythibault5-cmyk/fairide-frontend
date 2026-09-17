@@ -79,6 +79,9 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
 
   return createPortal(
     <div className="plat-feuille" role="dialog" aria-modal="true" aria-label={item.name} ref={racine} tabIndex={-1}>
+      {/* Le panneau : plein écran sur téléphone, encadré et centré au-dessus de la page sur
+          ordinateur (voir styles.css). Sans lui, la fiche s'étalait sur 1400px pour un plat. */}
+      <div className="plat-panneau">
       <div className="plat-defile">
         {/* La photo d'abord, en grand : c'est ce qu'on vient voir. Sans photo, pas de cadre vide —
             l'écran commence simplement au nom. */}
@@ -163,6 +166,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}
           {t('platSheet.add', { n: qty })} · {total.toFixed(2)}€
         </button>
+      </div>
       </div>
     </div>,
     document.body

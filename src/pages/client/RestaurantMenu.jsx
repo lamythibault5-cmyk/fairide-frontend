@@ -306,6 +306,27 @@ export default function RestaurantMenu() {
           </div>
         )}
 
+        {/* OÙ SERA LIVRÉE LA COMMANDE, dit ICI et non seulement au paiement.
+            L'adresse n'apparaissait qu'à la toute fin du parcours : on composait son panier sans
+            savoir où il irait, et on découvrait l'adresse — celle du compte, pas forcément celle du
+            moment — au moment de payer. C'est la confusion signalée par le fondateur (2026-09-17).
+            Affichée seulement en livraison : à emporter, c'est l'adresse du commerce qui compte, et
+            elle est déjà annoncée juste au-dessus. */}
+        {user && modeActif === 'delivery' && (
+          <Link to="/account" className="fiche-adresse">
+            <Icone nom="maison" taille={18} />
+            <span className="fiche-adresse-texte">
+              <span className="fiche-adresse-intitule">{t('restaurantMenu.deliverTo')}</span>
+              <span className="fiche-adresse-valeur">
+                {user.addressStreet && user.addressCity
+                  ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
+                  : t('restaurantMenu.noAddress')}
+              </span>
+            </span>
+            <span className="fiche-adresse-modifier">{t('restaurantMenu.changeAddress')}</span>
+          </Link>
+        )}
+
         {/* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
             forfaitaire côté client : le montant exact dépend de la distance et se calcule au
             serveur, exactement comme l'annonce déjà le paiement. Aucun délai d'arrivée n'y figure —

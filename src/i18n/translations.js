@@ -5940,6 +5940,9 @@ export const translations = {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      deliverTo: 'Livrer à',
+      noAddress: 'Ajoute ton adresse',
+      changeAddress: 'Modifier',
       backToRestaurants: '← Tous les restaurants',
       ratingReviews: '{rating} ({count} avis)',
       promoBanner: '🏷️ Des promos sont en cours sur certains plats, repère le badge rouge !',
@@ -12553,6 +12556,9 @@ export const translations = {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      deliverTo: 'Deliver to',
+      noAddress: 'Add your address',
+      changeAddress: 'Change',
       backToRestaurants: '← All restaurants',
       ratingReviews: '{rating} ({count} reviews)',
       promoBanner: '🏷️ Promotions are running on some dishes, look for the red badge!',
@@ -19164,6 +19170,9 @@ export const translations = {
       reviewsCount: '({count} beoordelingen)'
     },
     restaurantMenu: {
+      deliverTo: 'Bezorgen op',
+      noAddress: 'Voeg je adres toe',
+      changeAddress: 'Wijzigen',
       backToRestaurants: '← Alle restaurants',
       ratingReviews: '{rating} ({count} beoordelingen)',
       promoBanner: '🏷️ Er lopen promoties op bepaalde gerechten, let op het rode label!',
