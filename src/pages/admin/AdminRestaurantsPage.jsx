@@ -145,6 +145,21 @@ export default function AdminRestaurantsPage() {
     }
   }
 
+  // Terminal Fairide : chaque étape (remise, caution, retour, remboursement) passe par une confirmation, comme le
+  // sac des livreurs (AdminCouriersPage). Le serveur pose les dates et journalise.
+  async function setTerminal(id, status) {
+    try {
+      const r = await api(`/admin/restaurants/${id}/terminal`, { method: 'PATCH', token, body: { status } });
+      if (detail?.id === id) setDetail((prev) => ({ ...prev, terminal: r.terminal }));
+      setRestaurants((prev) => (prev || []).map((x) => (x.id === id ? { ...x, terminal: r.terminal } : x)));
+      toast(tr('adminRestos.terminalToast'));
+    } catch (e) { toast(e.message); }
+  }
+  function askTerminal(r, status, cle) {
+    const amount = Number(r.terminal?.depositAmount || 80).toFixed(0);
+    setConfirmAction({ title: tr(`adminRestos.${cle}`), message: tr(`adminRestos.${cle}Body`, { name: r.name, amount }), danger: status === 'conserve', run: () => setTerminal(r.id, status) });
+  }
+
   // Toute action qui change ce que voient les clients (publication, approbation) ou bloque un commerce
   // passe par une confirmation, comme partout dans l'ERP.
   function askSuspend(r) {
@@ -331,6 +346,7 @@ export default function AdminRestaurantsPage() {
           onApprove={() => askApprove(detail)}
           onToggleListing={() => askListing(detail)}
           onReactivate={() => askReactivate(detail)}
+          onTerminal={(status, cle) => askTerminal(detail, status, cle)}
           onDelete={() => askDelete(detail)}
           onChanged={refreshDetail}
           onToggleTest={() => { refreshDetail(); load(); }}
@@ -349,7 +365,7 @@ export default function AdminRestaurantsPage() {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -435,6 +451,19 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
           {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr(detail.plan === 'reservation' ? 'adminRestos.planReservation' : 'adminRestos.planComplete') })}</p>}
+          {detail.terminal && (
+            <div className="small" style={{ margin: '2px 0' }}>
+              <p style={{ margin: 0 }}>🖥️ {tr('adminRestos.terminalLine', { status: tr(`adminRestos.terminalStatus_${detail.terminal.status}`), amount: Number(detail.terminal.depositAmount || 80).toFixed(0), rank: detail.terminal.signupRank ? tr('adminRestos.terminalRank', { n: detail.terminal.signupRank }) : '' })}{detail.terminal.note ? ` · ${detail.terminal.note}` : ''}</p>
+              <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                {['none', 'rendu', 'rembourse', 'conserve'].includes(detail.terminal.status) && detail.terminal.eligibleOffert && <button className="btn-outline" onClick={() => onTerminal('offert', 'terminalOffer')}>{tr('adminRestos.terminalOffer')}</button>}
+                {['none', 'rendu', 'rembourse', 'conserve'].includes(detail.terminal.status) && !detail.terminal.eligibleOffert && <button className="btn-outline" onClick={() => onTerminal('caution_due', 'terminalDue')}>{tr('adminRestos.terminalDue')}</button>}
+                {detail.terminal.status === 'caution_due' && <button className="btn-outline" onClick={() => onTerminal('caution_versee', 'terminalPaid')}>{tr('adminRestos.terminalPaid')}</button>}
+                {['offert', 'caution_versee'].includes(detail.terminal.status) && <button className="btn-outline" onClick={() => onTerminal('rendu', 'terminalReturned')}>{tr('adminRestos.terminalReturned')}</button>}
+                {['offert', 'caution_versee'].includes(detail.terminal.status) && <button className="btn-danger-ghost" onClick={() => onTerminal('conserve', 'terminalKept')}>{tr('adminRestos.terminalKept')}</button>}
+                {detail.terminal.status === 'rendu' && <button className="btn-teal" onClick={() => onTerminal('rembourse', 'terminalRefunded')}>{tr('adminRestos.terminalRefunded')}</button>}
+              </div>
+            </div>
+          )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminCommon.registeredOnDate', { date: fmtDate(detail.createdAt) })}</p>
           <p className="small" style={{ margin: '6px 0 2px' }}>
             {estTest(detail) ? <>🧪 {tr('adminRestos.testLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
