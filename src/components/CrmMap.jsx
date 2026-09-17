@@ -7,6 +7,8 @@ import { escapeHtml } from '../escapeHtml';
 // Carte du CRM commerçants (pages/client/CrmPage.jsx) : mes commerces démarchés (pin coloré par étape), ceux des
 // autres commerciaux (petit point gris : on ne frappe pas deux fois à la même porte) et les zones proposées
 // (cercles ; salesZones.js côté serveur). Même bibliothèque et mêmes classes de pins que RestaurantsMap.
+// L'admin (pages/admin/AdminSalesPage.jsx) réutilise la carte pour TOUS les commerciaux : il passe ses propres
+// libellés (`legende`) et son propre texte d'infobulle de zone (`zoneTooltip`).
 const BRUSSELS_CENTER = [50.8420, 4.3700];
 // Couleur du pin selon l'étape : gris (à contacter), bleu (en cours), or (rendez-vous), iris (inscrit), vert (actif), rouge (refus).
 const COULEURS = { a_contacter: '#8A8A8A', contacte: '#3B7DD8', interesse: '#3B7DD8', rdv: '#F5B800', inscrit: '#3B2FB5', carte_en_ligne: '#3B2FB5', actif: '#0F8049', plus_tard: '#8A8A8A', refuse: '#C8243A' };
@@ -22,14 +24,21 @@ function pointAutre() {
   return L.divIcon({ className: 'map-pin-wrap', html: '<div class="crm-point-autre"></div>', iconSize: [14, 14], iconAnchor: [7, 7], popupAnchor: [0, -8] });
 }
 
-export default function CrmMap({ prospects, autres = [], zones = [], zoneActive = null, ouvert = null, stageIcones = {}, onOpen, onZone, height = 360 }) {
+// Distance à vol d'oiseau, en mètres — pour filtrer une liste sur le rayon d'une zone (CRM et admin).
+export function distanceM(lat1, lng1, lat2, lng2) {
+  const R = 6371000; const dLat = ((lat2 - lat1) * Math.PI) / 180; const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+export default function CrmMap({ prospects, autres = [], zones = [], zoneActive = null, ouvert = null, stageIcones = {}, onOpen, onZone, height = 360, legende = null, zoneTooltip = null }) {
   const { t } = useLanguage();
   const conteneur = useRef(null);
   const carte = useRef(null);
   const couches = useRef({ prospects: L.layerGroup(), autres: L.layerGroup(), zones: L.layerGroup() });
   const recadrer = useRef(null);
-  const rappels = useRef({ onOpen, onZone });
-  rappels.current = { onOpen, onZone };
+  const rappels = useRef({ onOpen, onZone, zoneTooltip });
+  rappels.current = { onOpen, onZone, zoneTooltip };
 
   useEffect(() => {
     if (!conteneur.current || carte.current) return undefined;
@@ -48,7 +57,8 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     for (const z of zones) {
       const actif = zoneActive === z.key;
       const cercle = L.circle([z.lat, z.lng], { radius: z.radius, color: actif ? '#3B2FB5' : '#F5B800', weight: actif ? 3 : 2, fillColor: actif ? '#3B2FB5' : '#F5B800', fillOpacity: actif ? 0.12 : 0.07 });
-      cercle.bindTooltip(`<b>${escapeHtml(z.name)}</b><br>${escapeHtml(t('sales.zoneMine', { n: z.mine }))} · ${escapeHtml(t('sales.zoneOthers', { n: z.others }))}`, { direction: 'top', sticky: true });
+      const texte = rappels.current.zoneTooltip ? rappels.current.zoneTooltip(z) : `${t('sales.zoneMine', { n: z.mine })} · ${t('sales.zoneOthers', { n: z.others })}`;
+      cercle.bindTooltip(`<b>${escapeHtml(z.name)}</b><br>${escapeHtml(texte)}`, { direction: 'top', sticky: true });
       cercle.on('click', () => rappels.current.onZone?.(actif ? null : z.key));
       couche.addLayer(cercle);
     }
@@ -61,7 +71,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     for (const p of prospects) {
       if (p.lat === null || p.lat === undefined || p.lng === null || p.lng === undefined) continue;
       const m = L.marker([p.lat, p.lng], { icon: pinProspect(p, stageIcones[p.stage], ouvert === p.id), zIndexOffset: ouvert === p.id ? 1000 : 0 });
-      m.bindTooltip(`<b>${escapeHtml(p.name)}</b>${p.commune ? `<br>${escapeHtml(p.commune)}` : ''}`, { direction: 'top', offset: [0, -30] });
+      m.bindTooltip(`<b>${escapeHtml(p.name)}</b>${p.commune ? `<br>${escapeHtml(p.commune)}` : ''}${p.agentName ? `<br>🧑‍💼 ${escapeHtml(p.agentName)}` : ''}`, { direction: 'top', offset: [0, -30] });
       m.on('click', () => rappels.current.onOpen?.(p.id));
       couche.addLayer(m); points.push([p.lat, p.lng]);
     }
@@ -92,8 +102,8 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     <div className="crm-carte-wrap">
       <div ref={conteneur} className="crm-carte-map" style={{ height }} aria-label={t('sales.mapTitle')} />
       <div className="crm-legende small">
-        <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {t('sales.mapLegendMine')}</span>
-        <span><i className="crm-leg-pin crm-leg-autre" /> {t('sales.mapLegendOthers')}</span>
+        <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {legende?.mine || t('sales.mapLegendMine')}</span>
+        {(legende ? legende.others : true) && <span><i className="crm-leg-pin crm-leg-autre" /> {legende?.others || t('sales.mapLegendOthers')}</span>}
         <span><i className="crm-leg-zone" /> {t('sales.mapLegendZones')}</span>
         <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
       </div>

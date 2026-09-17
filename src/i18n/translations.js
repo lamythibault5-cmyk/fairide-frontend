@@ -2099,7 +2099,11 @@ export const translations = {
       confirmRemoveTitle: 'Retirer l\'accès CRM ?',
       confirmRemoveText: '{name} ne verra plus la rubrique CRM commerçants. Ses commerces démarchés restent visibles ici.',
       toastAgentAdded: '{name} est maintenant commercial : sa rubrique CRM est ouverte.',
-      toastAgentRemoved: 'Accès retiré à {name}.'
+      toastAgentRemoved: 'Accès retiré à {name}.',
+      mapTitle: 'Carte des commerces démarchés',
+      mapIntro: 'Tous les commerciaux : un pin par commerce (couleur = étape, infobulle = qui le démarche) et les zones proposées avec leur total. Une zone choisie filtre le tableau.',
+      mapLegendAll: 'commerces démarchés',
+      zoneTotal: '{n} démarché(s)'
     },
     adminModules: {
       dashboard: 'Tableau de bord',
@@ -8961,7 +8965,11 @@ export const translations = {
       confirmRemoveTitle: 'Remove CRM access?',
       confirmRemoveText: '{name} will no longer see the Merchant CRM section. Their canvassed businesses stay visible here.',
       toastAgentAdded: '{name} is now a sales agent: their CRM section is open.',
-      toastAgentRemoved: 'Access removed for {name}.'
+      toastAgentRemoved: 'Access removed for {name}.',
+      mapTitle: 'Map of canvassed businesses',
+      mapIntro: 'All agents: one pin per business (colour = stage, tooltip = who canvasses it) and the suggested areas with their total. Picking an area filters the table.',
+      mapLegendAll: 'canvassed businesses',
+      zoneTotal: '{n} canvassed'
     },
     adminModules: {
       dashboard: 'Dashboard',
@@ -15799,7 +15807,11 @@ export const translations = {
       confirmRemoveTitle: 'CRM-toegang intrekken?',
       confirmRemoveText: '{name} ziet de rubriek CRM handelaars niet meer. Zijn benaderde zaken blijven hier zichtbaar.',
       toastAgentAdded: '{name} is nu commercieel medewerker: zijn CRM-rubriek staat open.',
-      toastAgentRemoved: 'Toegang ingetrokken voor {name}.'
+      toastAgentRemoved: 'Toegang ingetrokken voor {name}.',
+      mapTitle: 'Kaart van de benaderde zaken',
+      mapIntro: 'Alle medewerkers: één pin per zaak (kleur = fase, tooltip = wie ze benadert) en de voorgestelde zones met hun totaal. Een gekozen zone filtert de tabel.',
+      mapLegendAll: 'benaderde zaken',
+      zoneTotal: '{n} benaderd'
     },
     adminModules: {
       dashboard: 'Dashboard',

@@ -10,6 +10,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import useEtatPage from '../../hooks/useEtatPage';
+import CrmMap, { distanceM } from '../../components/CrmMap';
 import '../../crm.css';
 
 // Application « Sales » : les commerciaux (des comptes clients auxquels l'admin donne l'accès ici — pas de code à
@@ -148,13 +149,24 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   const [stage, setStage] = useEtatPage('etapeProspects', '');
   const [q, setQ] = useState('');
   const [ouvert, setOuvert] = useState(null);
+  // Carte de tous les commerciaux : zones (avec total et détail par commercial), zone choisie, carte repliée ou non.
+  const [zones, setZones] = useState([]);
+  const [zoneActive, setZoneActive] = useEtatPage('zoneProspects', null);
+  const [carteVisible, setCarteVisible] = useState(() => { try { return localStorage.getItem('admin_sales_carte') !== 'off'; } catch { return true; } });
+  const basculerCarte = () => setCarteVisible((v) => { try { localStorage.setItem('admin_sales_carte', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
   const { sort, toggle } = useTableSort('updatedAt', 'desc');
   const charger = useCallback(() => {
     setErreur(null);
     const params = new URLSearchParams(); if (stage) params.set('stage', stage); if (q.trim()) params.set('q', q.trim());
     api(`/admin/sales/prospects?${params.toString()}`, { token }).then(setRows).catch((e) => setErreur(e.message));
+    api('/admin/sales/zones', { token }).then(setZones).catch(() => {});
   }, [token, stage, q]);
   useEffect(charger, [charger]);
+  const zone = zones.find((z) => z.key === zoneActive) || null;
+  // Lignes affichées : filtre « en retard », puis rayon de la zone choisie (les commerces sans position restent, on ne sait pas où ils sont).
+  const lignesRetard = (rows || []).filter((p) => !retard || enRetard(p));
+  const lignes = lignesRetard.filter((p) => !zone || p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
+  const zoneTooltip = (z) => `${tr('adminSales.zoneTotal', { n: z.total })}${z.agents?.length ? ` · ${z.agents.map((a) => `${a.name} ${a.n}`).join(', ')}` : ''}`;
   const columns = [
     { key: 'name', label: tr('adminSales.colProspect'), get: (p) => <><b>{p.name}</b>{p.commune ? <><br /><span className="small">{p.commune}</span></> : null}</>, sortValue: (p) => p.name },
     { key: 'stage', label: tr('adminSales.colStage'), get: (p) => <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>, sortValue: (p) => STAGES.indexOf(p.stage) },
@@ -175,8 +187,34 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
         </div>
         <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}>⏰ {tr('adminSales.filterOverdue')}</button>
       </div>
+      <div className="card crm-carte-carte">
+        <div className="crm-carte-tete">
+          <div>
+            <b>{tr('adminSales.mapTitle')}</b>
+            <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminSales.mapIntro')}</p>
+          </div>
+          <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
+        </div>
+        {carteVisible && (
+          <>
+            <CrmMap prospects={lignesRetard} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} legende={{ mine: tr('adminSales.mapLegendAll'), others: null }} zoneTooltip={zoneTooltip} height={400} />
+            <div className="crm-zones">
+              <b className="crm-bloc-titre" style={{ marginTop: 10 }}>{tr('sales.zonesTitle')}</b>
+              <div className="role-pick crm-filtres">
+                <button type="button" className={`chip${!zoneActive ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{tr('sales.zoneAll')}</button>
+                {zones.map((z) => (
+                  <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${tr(`sales.zoneTag_${z.tag}`)}`}>
+                    🎯 {z.name}{z.total ? <span className="crm-zone-n">{z.total}</span> : null}
+                  </button>
+                ))}
+              </div>
+              {zone && <p className="small" style={{ margin: '8px 0 0' }}>🎯 <b>{zone.name}</b> · {zone.commune} · {tr(`sales.zoneTag_${zone.tag}`)} · {zoneTooltip(zone)}</p>}
+            </div>
+          </>
+        )}
+      </div>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
-      {rows && <AdminDataTable columns={columns} rows={retard ? rows.filter(enRetard) : rows} sort={sort} onSort={toggle} onRowClick={(p) => setOuvert(p.id)} emptyLabel={tr('adminSales.noProspects')} />}
+      {rows && <AdminDataTable columns={columns} rows={lignes} sort={sort} onSort={toggle} onRowClick={(p) => setOuvert(p.id)} emptyLabel={tr('adminSales.noProspects')} />}
       {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={stageLabel} toast={toast} onClose={() => setOuvert(null)} />}
     </div>
   );

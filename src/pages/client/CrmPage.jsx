@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import CrmMap from '../../components/CrmMap';
+import CrmMap, { distanceM } from '../../components/CrmMap';
 
 import '../../crm.css';
 
@@ -20,12 +20,6 @@ const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡',
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
 
 const vide = { name: '', address: '', commune: '', phone: '', contactName: '', email: '', cuisine: '', stage: 'a_contacter', notes: '', firstNote: '' };
-// Distance à vol d'oiseau, en mètres (pour « rester dans sa zone » : filtrer la liste sur la zone choisie).
-function distanceM(lat1, lng1, lat2, lng2) {
-  const R = 6371000; const dLat = ((lat2 - lat1) * Math.PI) / 180; const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
 // Position du téléphone (bouton « je suis devant le commerce »). Promesse → { lat, lng } ou erreur.
 function maPosition() {
   return new Promise((resolve, reject) => {
