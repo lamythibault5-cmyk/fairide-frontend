@@ -83,7 +83,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" data-police />
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" /></noscript>
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Le script Google Sign-In N'EST PLUS chargé ici. Posé dans ce <head>, il partait sur toutes les
+         pages et avant toute réponse à la bannière cookies, alors qu'il ne sert qu'à /login : Google
+         déposait ses traceurs sur l'accueil, sur une carte de restaurant, sur les pages légales. C'est
+         le défaut déjà corrigé pour Sentry (voir src/main.jsx) — le laisser ici vidait de son sens tout
+         le travail fait sur le consentement.
+         Il est désormais chargé à la demande par src/googleSignIn.js, depuis Auth.jsx seulement, au
+         moment de dessiner le bouton. Le raisonnement complet est en tête de ce fichier-là. -->
   </head>
   <body>
     <!-- Écran de chargement (fondateur, 2026-09-17) : plein écran iris avec le logo qui se dessine UNE fois
