@@ -2,6 +2,7 @@ import OffreFormules from '../components/OffreFormules';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
 import urlSure from '../urlSure';
+import { chargerGoogleSignIn } from '../googleSignIn';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -325,6 +326,11 @@ export default function Auth() {
   const [pendingChannel, setPendingChannel] = useState('email'); // 'sms' | 'email' : par où le code est parti
   const [pendingPhone, setPendingPhone] = useState('');
   const [code, setCode] = useState('');
+  // Double authentification : le champ n'apparaît qu'après un premier essai où le serveur a répondu
+  // TOTP_REQUIRED — donc seulement pour les comptes qui l'ont activée, et seulement une fois le mot de
+  // passe validé. Voir routes/auth.js pour la raison de cet ordre.
+  const [totpAttendu, setTotpAttendu] = useState(false);
+  const [totpCode, setTotpCode] = useState('');
   const [resending, setResending] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -653,22 +659,27 @@ export default function Auth() {
     return true;
   }
 
+  /* Le script Google n'est plus dans index.html : c'est CETTE page qui le demande, au moment d'en
+   * avoir besoin (voir src/googleSignIn.js pour le pourquoi). La boucle de sondage toutes les 200 ms
+   * qui attendait window.google disparaît avec lui — le chargeur rend une promesse, donc on sait
+   * exactement quand l'API est prête, sans réveiller le navigateur dix fois pour rien.
+   *
+   * Si le script ne se charge pas (bloqueur, réseau, Google injoignable), on ne dessine simplement
+   * pas le bouton : le formulaire e-mail/mot de passe juste à côté reste la voie normale, et afficher
+   * une erreur pour un moyen de connexion secondaire n'aiderait personne. */
   useEffect(() => {
     if (!GOOGLE_CLIENT_ID) return;
     let cancelled = false;
-    function tryInit() {
-      if (cancelled) return;
-      if (window.google?.accounts?.id && googleBtnRef.current) {
+    chargerGoogleSignIn()
+      .then((gsi) => {
+        if (cancelled || !googleBtnRef.current) return;
         googleBtnRef.current.innerHTML = '';
-        window.google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
-        window.google.accounts.id.renderButton(googleBtnRef.current, {
+        gsi.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleGoogleCredential });
+        gsi.renderButton(googleBtnRef.current, {
           theme: 'outline', size: 'large', width: 320, text: mode === 'register' ? 'signup_with' : 'signin_with'
         });
-      } else {
-        setTimeout(tryInit, 200);
-      }
-    }
-    tryInit();
+      })
+      .catch(() => { /* bouton Google absent, le reste de la page fonctionne */ });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, stepKey, googleCredential]);
@@ -741,7 +752,7 @@ export default function Auth() {
           await allerApresInscription(data.user);
         }
       } else {
-        const data = await login(email.trim(), password);
+        const data = await login(email.trim(), password, totpCode.trim() || undefined);
         reussi = true;
         toast(t('auth.welcome', { name: data.user.name }));
         await allerApresConnexion(data.user);
@@ -750,6 +761,14 @@ export default function Auth() {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
         setPendingEmail(email.trim());
         toast(t('auth.errEmailNotVerified'));
+      } else if (err.code === 'TOTP_REQUIRED') {
+        // Mot de passe bon, second facteur attendu : on ouvre le champ sans rien dire d'alarmant.
+        setTotpAttendu(true);
+      } else if (err.code === 'TOTP_INVALID' || err.code === 'TOTP_REPLAY') {
+        // Le champ reste ouvert, on vide la saisie : un code périmé se retape, il ne se corrige pas.
+        setTotpAttendu(true);
+        setTotpCode('');
+        toast(err.message);
       } else if (err.code === 'ACCOUNT_DELETED' || err.code === 'NO_ACCOUNT') {
         // Compte supprimé ou inexistant : on le dit, et on ouvre directement la création de compte (e-mail conservé).
         toast(t(err.code === 'ACCOUNT_DELETED' ? 'auth.errAccountDeleted' : 'auth.errNoAccount'));
@@ -1362,6 +1381,21 @@ export default function Auth() {
                 <label htmlFor="auth-f-18">{t('auth.password')}</label>
                 <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t('auth.password')} autoComplete="current-password" />
               </div>
+              {/* Second facteur : n'apparaît qu'après que le serveur l'a réclamé, donc jamais pour un
+                  compte qui ne l'a pas activé. inputMode numeric + autoComplete one-time-code : le
+                  téléphone ouvre le pavé numérique et propose le code copié. */}
+              {totpAttendu && (
+                <div className="field">
+                  <label htmlFor="auth-f-totp">{t('auth.totpLabel')}</label>
+                  <input
+                    id="auth-f-totp" type="text" inputMode="numeric" autoComplete="one-time-code"
+                    pattern="[0-9A-Za-z-]*" maxLength={11} autoFocus
+                    value={totpCode} onChange={(e) => setTotpCode(e.target.value)}
+                    placeholder={t('auth.totpPlaceholder')}
+                  />
+                  <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('auth.totpHelp')}</p>
+                </div>
+              )}
               <button type="button" className="btn-ghost" style={{ padding: '2px 0', marginBottom: 10, fontSize: 13 }} onClick={() => { setForgotEmail(email); setForgotMode(true); }}>
                 {t('auth.forgotPassword')}
               </button>

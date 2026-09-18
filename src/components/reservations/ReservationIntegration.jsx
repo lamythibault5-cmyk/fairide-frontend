@@ -6,6 +6,27 @@ import { qrSvgPath } from './qr';
 // Instagram, Facebook, site web (bouton ou iframe), QR code à imprimer. Aucune donnée serveur : tout
 // se déduit de l'identifiant du restaurant.
 
+/* L'IFRAME CI-DESSOUS NE MARCHAIT SUR AUCUN SITE DE RESTAURATEUR, et rien ne le disait.
+ *
+ * On proposait ce bout de code à coller sur SON site à lui, donc sur un autre domaine — alors que
+ * vercel.json envoyait `frame-ancestors 'self'` et `X-Frame-Options: SAMEORIGIN` sur toutes les pages.
+ * Le navigateur du visiteur refusait donc d'afficher le cadre, partout, systématiquement. La
+ * fonctionnalité était promise dans l'interface et cassée depuis le début.
+ *
+ * vercel.json a maintenant une règle dédiée à /reserver/* qui rejoue la même CSP avec
+ * `frame-ancestors https:`. Ce qui s'encadre se limite donc à la page de réservation — le reste du
+ * site (tableau de bord, paiement, admin) garde `'self'` et reste protégé du détournement de clic.
+ *
+ * X-Frame-Options a été retiré de l'en-tête global au passage : cet en-tête n'a pas de valeur « tous
+ * les domaines » à opposer à SAMEORIGIN, donc on ne peut pas le neutraliser page par page. Il est de
+ * toute façon remplacé par `frame-ancestors`, que tout navigateur sachant lire une CSP de niveau 2
+ * applique en priorité — c'est-à-dire tous ceux qui font tourner cette application. La protection
+ * n'est pas affaiblie, elle est portée par un seul en-tête au lieu de deux.
+ *
+ * Ce qui reste encadrable est une page de réservation : elle ne porte ni paiement, ni action
+ * irréversible, ni session administrateur. C'est le minimum de surface pour que la fonctionnalité
+ * existe vraiment. */
+
 const ORIGINE_PUBLIQUE = 'https://fairide.be';
 
 export default function ReservationIntegration({ restoId, restaurant, toast }) {

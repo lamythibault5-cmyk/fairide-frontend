@@ -7,3 +7,9 @@ dist/
 # Bancs d essai jetables (sources video de plusieurs centaines de Mo)
 public/_probe/
 .playwright-cli/
+
+# Outillage local (skills Claude Code et leurs medias, ~17 Mo) : rien a voir avec l application.
+# Sans ces lignes, ces dossiers restaient a vue dans git status et un git add -A les embarquait.
+.agents/
+brag-output/
+skills-lock.json
