@@ -20,7 +20,7 @@ export default function ResetPassword() {
   async function submit(e) {
     e.preventDefault();
     if (!token) { toast(t('resetPassword.toastInvalid')); return; }
-    if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
       toast(t('resetPassword.toastWeak'));
       return;
     }
