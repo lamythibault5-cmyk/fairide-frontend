@@ -48,11 +48,29 @@
          direction avait refermé en retirant Fraunces.
 
          Les deux familles tiennent dans une seule URL css2 (ordre alphabétique imposé par Google
-         Fonts), donc un seul aller-retour au lieu de deux. Le chargement ne bloque pas le rendu :
-         `media="print"` fait traiter la feuille comme hors écran, et `onload` la rebascule sur
-         `all` une fois arrivée ; le <noscript> couvre le cas sans JavaScript. Ce motif vient du lot
-         « Performance mobile » de main, qui avait sorti Space Grotesk de l'@import de styles.css —
-         Bricolage le rejoint plutôt que de rouvrir un second lien bloquant à côté.
+         Fonts), donc un seul aller-retour au lieu de deux.
+
+         PAS DE `media="print" onload="this.media='all'"` ICI, ET C'EST IMPORTANT. Ce motif — charger
+         la feuille comme hors écran puis la rebasculer une fois arrivée — est la façon habituelle de
+         ne pas bloquer le rendu, et il était en place. Il ne marche pas sur ce site : `onload` sur
+         une balise est un gestionnaire EN LIGNE, et notre Content-Security-Policy (vercel.json)
+         déclare `script-src 'self' …` sans `'unsafe-inline'`. Le navigateur bloque donc le
+         gestionnaire, la feuille reste en `media="print"`, et AUCUNE des deux polices ne s'applique.
+         Vérifié sur fairide.be : tout le site tombait sur la police système, pas seulement le mot
+         « fairide » — c'est simplement là qu'on l'a remarqué. Le <noscript> ne rattrapait rien, il
+         ne couvre que le cas où JavaScript est absent, pas celui où il est autorisé mais bridé.
+
+         Un lien ordinaire bloque donc le rendu le temps d'un aller-retour — mais un aller-retour
+         vers une origine déjà pré-connectée, lancé dès la première passe de l'analyseur. C'est très
+         loin des ~800 ms que le lot « Performance mobile » cherchait à supprimer : ceux-là venaient
+         d'un @import DANS styles.css, qui sérialisait deux téléchargements l'un après l'autre. Le
+         gain principal de ce lot est conservé, seul le gestionnaire en ligne disparaît. Et
+         `display=swap` garantit que le texte s'affiche tout de suite dans la police de repli.
+
+         Si le non-bloquant devient nécessaire, la sortie n'est PAS de rajouter `'unsafe-inline'` à
+         la CSP pour un swap de media : ce serait ouvrir tous les scripts en ligne du site pour ça.
+         Il faudrait faire la bascule depuis un fichier servi par nous, que `script-src 'self'`
+         autorise déjà.
 
          Une seule tranche d'axes pour Bricolage : graisses 700 à 800, taille optique (opsz) laissée
          variable, ce que demandent ses sept emplacements entre 17 et 34px. On a écarté
@@ -61,8 +79,7 @@
          repli, sans rien dans la console pour l'expliquer. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" /></noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" />
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
