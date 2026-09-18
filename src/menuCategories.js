@@ -90,8 +90,20 @@ export function boissonSubcategoryLabel(value, t) {
 
 // \b ne fonctionne pas de façon fiable autour des lettres accentuées en JS (ex: "café", "thé",
 // "saké" ne matchaient pas \bcafé\b) — on utilise donc des frontières explicites basées sur \p{L}.
+//
+// LA FRONTIÈRE GAUCHE CONSOMME UN CARACTÈRE, ET CE N'EST PAS UN DÉTAIL DE STYLE. Un lookbehind
+// `(?<![\p{L}])` dirait la même chose plus directement, et c'est ce qu'il y avait ici. Mais Safari
+// ne connaît le lookbehind qu'à partir de la version 16.4 : avant, `new RegExp` y lève une
+// SyntaxError. Or les deux constantes ci-dessous sont construites au CHARGEMENT du module, et ce
+// module est tiré par la page d'accueil (Landing.jsx en importe COMMUNES). L'exception interrompait
+// donc l'évaluation du bundle AVANT que main.jsx ne s'exécute : pas d'application du tout, et
+// l'écran de chargement restait affiché indéfiniment. Pas une page dégradée — un site qui ne démarre
+// pas, sur tout iPhone resté en iOS 15 ou 16.0-16.3. Constaté sur fairide.be le 2026-09-18.
+//
+// Consommer le caractère de gauche ne change rien au résultat ici : ces expressions ne servent qu'à
+// des `.test()`, jamais à relever une position ni à découper une chaîne.
 function wordRegex(words) {
-  return new RegExp(`(?<![\\p{L}])(?:${words.join('|')})(?![\\p{L}])`, 'iu');
+  return new RegExp(`(?:^|[^\\p{L}])(?:${words.join('|')})(?![\\p{L}])`, 'iu');
 }
 
 const NON_ALCOHOL_HINT_REGEX = /sans alcool/i;
