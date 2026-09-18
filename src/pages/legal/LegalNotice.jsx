@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 // Texte dans translations.js (espace `legalNotice`), en trois langues. Un paragraphe peut contenir des
 // sauts de ligne (\n) : l'éditeur du site se lit ligne par ligne.
-const SECTIONS = ['publisher', 'hosting', 'ip', 'liability'];
+const SECTIONS = ['publisher', 'hosting', 'ip', 'liability', 'contact'];
 
 export default function LegalNotice() {
   const { t } = useLanguage();
