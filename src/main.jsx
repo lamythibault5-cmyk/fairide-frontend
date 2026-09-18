@@ -16,6 +16,15 @@ import './styles.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 
+// POLICES : on rallume la feuille laissée en `media="print"` par index.html (voir le commentaire
+// détaillé là-bas). Deux contraintes se croisent et cette ligne est le seul point où elles tiennent
+// ensemble : la CSP interdit un `onload=` en ligne sur la balise, et une feuille ordinaire dans le
+// <head> bloquerait l'exécution de ce fichier-ci — donc le démarrage de l'application — le temps
+// d'un aller-retour vers Google Fonts. Ici, le code vient de notre origine (`script-src 'self'`) et
+// s'exécute une fois l'application chargée : la police ne peut plus retarder ni empêcher le
+// démarrage, elle se substitue à la police de repli quand elle arrive.
+for (const lien of document.querySelectorAll('link[data-police]')) lien.media = 'all';
+
 // Sentry ne démarre qu'APRÈS consentement explicite : il transmet l'adresse IP, les URL visitées et le
 // contexte utilisateur à un sous-traitant établi aux États-Unis. Le démarrer au chargement de la page,
 // comme c'était le cas, revenait à collecter avant la réponse du visiteur et rendait la bannière

@@ -60,17 +60,19 @@
          « fairide » — c'est simplement là qu'on l'a remarqué. Le <noscript> ne rattrapait rien, il
          ne couvre que le cas où JavaScript est absent, pas celui où il est autorisé mais bridé.
 
-         Un lien ordinaire bloque donc le rendu le temps d'un aller-retour — mais un aller-retour
-         vers une origine déjà pré-connectée, lancé dès la première passe de l'analyseur. C'est très
-         loin des ~800 ms que le lot « Performance mobile » cherchait à supprimer : ceux-là venaient
-         d'un @import DANS styles.css, qui sérialisait deux téléchargements l'un après l'autre. Le
-         gain principal de ce lot est conservé, seul le gestionnaire en ligne disparaît. Et
-         `display=swap` garantit que le texte s'affiche tout de suite dans la police de repli.
+         LA FEUILLE RESTE DONC EN `media="print"`, ET C'EST main.jsx QUI LA RALLUME. La bascule se
+         fait depuis un fichier servi par nous, que `script-src 'self'` autorise déjà — c'est la
+         seule partie du motif qui manquait.
 
-         Si le non-bloquant devient nécessaire, la sortie n'est PAS de rajouter `'unsafe-inline'` à
-         la CSP pour un swap de media : ce serait ouvrir tous les scripts en ligne du site pour ça.
-         Il faudrait faire la bascule depuis un fichier servi par nous, que `script-src 'self'`
-         autorise déjà.
+         Ne PAS la remettre en feuille ordinaire pour se passer de cette bascule : une feuille de
+         style dans le <head> bloque l'exécution de tout script qui la suit, et le script qui la
+         suit ici, c'est l'application entière. Le démarrage se retrouvait suspendu à une requête
+         vers un tiers — si fonts.googleapis.com est lent, coupé, ou bloqué par un filtre de contenu
+         (courant sur iOS), on reste indéfiniment sur l'écran de chargement. Essayé le 2026-09-18,
+         constaté aussitôt. Avec `media="print"`, la feuille ne bloque ni le rendu ni les scripts :
+         une police d'affichage ne doit jamais pouvoir empêcher le site de démarrer.
+
+         Et `display=swap` garantit que le texte s'affiche tout de suite dans la police de repli.
 
          Une seule tranche d'axes pour Bricolage : graisses 700 à 800, taille optique (opsz) laissée
          variable, ce que demandent ses sept emplacements entre 17 et 34px. On a écarté
@@ -79,7 +81,8 @@
          repli, sans rien dans la console pour l'expliquer. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" data-police />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" /></noscript>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
