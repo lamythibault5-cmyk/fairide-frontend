@@ -1708,6 +1708,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 }
 .landing-cta h2 { color: var(--cream); font-size: clamp(var(--t-display-md), 4vw, var(--t-display-xl)); margin: 0 0 12px; }
 .landing-cta p { color: rgba(255,255,255,0.82); font-size: 15.5px; margin: 0 0 22px; max-width: 52ch; }
+/* Bouton en contour sur l'aplat iris : texte et filet blancs (le noir par défaut de .btn-outline ne se lisait pas). */
+.landing-cta .btn-outline { color: var(--cream); border-color: rgba(255,255,255,0.7); text-decoration: none; display: inline-block; }
+.landing-cta .btn-outline:hover { border-color: #fff; background: rgba(255,255,255,0.1); filter: none; }
 @media (max-width: 640px) { .landing-cta { padding: 28px 20px; } }
 
 .site-footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 32px 0 20px; }
