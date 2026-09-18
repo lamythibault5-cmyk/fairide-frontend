@@ -14,7 +14,19 @@ Chaque point a été vérifié dans le code — rien ici n'est supposé.
 **Mis à jour le 16 septembre 2026 (soir)** : audit de sécurité des 17 catégories d'`AI-CHECKLIST.md`
 sur les deux dépôts — voir **§17**, et le rapport dans [security/AUDIT.md](security/AUDIT.md). Trois
 failles ouvraient la plateforme entière et étaient en production ; elles sont corrigées sur
-`hotfix/securite-critique` et `fix/securite`, **qui restent à fusionner**.
+`hotfix/securite-critique` et `fix/securite`.
+
+**Mis à jour le 18 septembre 2026** : ces trois branches sont **fusionnées dans `main`** des deux
+côtés — vérifié, zéro commit absent. La phrase qui disait qu'elles « restaient à fusionner » était
+donc devenue fausse, et elle aurait fait perdre du temps le jour de la mise en ligne, voire fait
+croire à un danger qui n'existe plus. Il n'y a plus rien à fusionner côté sécurité.
+
+Un second audit, le même jour, a couvert les cinq failles les plus fréquentes du code généré
+(injection, XSS, secrets en dur, authentification, IDOR) et la liste de contrôle avant déploiement :
+`npm audit` propre sur les deux dépôts, en-têtes de sécurité mesurés sur le serveur et non lus dans
+la configuration, requêtes toutes paramétrées, propriété vérifiée dans le `WHERE`. Deux failles
+trouvées et corrigées : une session qui survivait au changement de mot de passe, et un joker `LIKE`
+qui permettait de viser le dossier d'identité d'un autre livreur.
 
 **Légende :** 🔴 bloquant · 🟠 obligation légale · 🟡 fiabilité · ⚪️ qualité
 
@@ -25,15 +37,17 @@ failles ouvraient la plateforme entière et étaient en production ; elles sont 
 Tout le reste de ce document est du contexte. Voici la liste courte, et elle ne contient plus que
 des choses qui demandent **un compte, une clé, un appareil ou une décision** — rien qui s'écrive.
 
-0. 🔴 **SÉCURITÉ, avant tout le reste** (§17) — un audit complet a trouvé trois failles qui ouvraient
-   la plateforme entière, **en production**. La plus grave délivrait un jeton d'administrateur contre
-   une simple adresse e-mail. Dans l'ordre : fusionner `hotfix/securite-critique`, vérifier
-   `JWT_SECRET` sur Railway, puis changer ce secret, puis regarder les journaux.
+0. 🔴 **SÉCURITÉ** (§17) — les correctifs sont fusionnés, il ne reste que ce qui ne s'écrit pas :
+   **vérifier `JWT_SECRET` sur Railway, puis changer ce secret, puis regarder les journaux.** Le
+   changement de secret déconnecte tout le monde d'un coup, ce qui est justement le but après une
+   faille qui délivrait un jeton d'administrateur contre une simple adresse e-mail. (Depuis le
+   18 septembre, une réinitialisation de mot de passe ferme aussi les sessions du compte concerné,
+   sans toucher aux autres — voir `token_version`.)
 1. **Faire passer un commerce par les quatre conditions, puis une vraie commande** (§1)
 2. **Vérifier `STRIPE_SECRET_KEY`, `APP_URL`, `STRIPE_WEBHOOK_SECRET` sur Railway** (§2)
 3. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel, PUIS reconstruire** — avant le premier vrai
    commerce (§9). Les clés VAPID sont posées sur Railway depuis le 16 septembre ; reste à vérifier
-   une notification sur un vrai téléphone une fois les branches fusionnées (§6).
+   une notification sur un vrai téléphone (§6) — les branches sont fusionnées, plus rien n'attend.
 4. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4)
 5. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
 6. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)

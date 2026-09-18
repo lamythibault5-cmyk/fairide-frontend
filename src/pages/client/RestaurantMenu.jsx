@@ -1,5 +1,6 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { imgProps } from '../../images';
+import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -512,7 +513,7 @@ export default function RestaurantMenu() {
               <section className="fiche-infos-bloc">
                 <h4><Icone nom="globe" taille={16} />{t('restaurantMenu.websiteLabel')}</h4>
                 <p className="small">
-                  <a href={restaurant.website} target="_blank" rel="noreferrer">
+                  <a href={urlSure(restaurant.website)} target="_blank" rel="noreferrer">
                     {restaurant.website.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '')}
                   </a>
                 </p>

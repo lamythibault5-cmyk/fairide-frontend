@@ -1,6 +1,7 @@
 import OffreFormules from '../components/OffreFormules';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
+import urlSure from '../urlSure';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -1135,7 +1136,7 @@ export default function Auth() {
                   <p className="small" style={{ margin: '0 0 6px' }}>
                     {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
                     {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
-                      <>{' '}<a href={horairesSiteSource} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
+                      <>{' '}<a href={urlSure(horairesSiteSource)} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
                     )}
                   </p>
                   {horairesSiteEtat === 'rien' && !hoursDepuisWeb && (
@@ -1152,7 +1153,7 @@ export default function Auth() {
                     <b>🔎 {t('auth.verifyPrefillTitle')}</b>
                     <p className="small" style={{ margin: '4px 0 6px' }}>{t('auth.verifyPrefillIntro')}</p>
                     <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
-                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={siteTrouve} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
+                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={urlSure(siteTrouve)} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
                       {hoursDepuisWeb && <li>🕒 {t('auth.verifyPrefillHours')}</li>}
                       {typeDepuisSite && cuisine && <li>🍽️ {t('auth.verifyPrefillType', { type: cuisine })}</li>}
                     </ul>
