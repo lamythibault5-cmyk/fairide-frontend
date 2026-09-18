@@ -8,9 +8,10 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import { estCompteTest, TestBadge, fmtDate } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import TwoFactorSetup from '../../components/TwoFactorSetup';
 
-const SECTIONS = ['Tarification', 'Utilisateurs'];
-const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Avis": tr('adminSettings.section_reviews'), "Codes promo": tr('adminSettings.section_promos') });
+const SECTIONS = ['Tarification', 'Utilisateurs', 'Sécurité'];
+const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_pricing'), "Utilisateurs": tr('adminSettings.section_users'), "Sécurité": tr('adminSettings.section_security'), "Avis": tr('adminSettings.section_reviews'), "Codes promo": tr('adminSettings.section_promos') });
 
 const pricingFields = (tr) => [
   { key: 'commissionRate', label: tr('adminSettings.commissionLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.commissionHint') },
@@ -79,6 +80,11 @@ export default function AdminSettingsPage() {
       <div className="role-pick" style={{ marginBottom: 16 }}>
         {SECTIONS.map((s) => <div key={s} className={`chip${section === s ? ' active' : ''}`} onClick={() => setSection(s)}>{sectionLabels(tr)[s] || s}</div>)}
       </div>
+
+      {/* Sécurité : la double authentification du compte de l'équipe qui consulte la page. C'est un
+          réglage PERSONNEL, pas un réglage de plateforme — chacun active la sienne. Placé ici parce que
+          c'est la page que l'équipe ouvre pour ses propres paramètres. */}
+      {section === 'Sécurité' && <TwoFactorSetup />}
 
       {section === 'Tarification' && (
         !pricingForm ? <SkeletonCards count={1} /> : (

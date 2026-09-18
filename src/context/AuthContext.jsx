@@ -94,8 +94,11 @@ export function AuthProvider({ children }) {
     return () => setSessionExpiredHandler(null);
   }, [toast]);
 
-  async function login(email, password) {
-    const data = await api('/auth/login', { method: 'POST', body: { email, password } });
+  /* `totpCode` n'est envoyé qu'au second passage : le serveur répond d'abord 401 TOTP_REQUIRED, ce que
+   * Auth.jsx transforme en champ « code à 6 chiffres ». On ne le demande jamais d'avance — demander un
+   * code avant de savoir si le compte en a un dirait à un inconnu quels comptes sont administrateurs. */
+  async function login(email, password, totpCode) {
+    const data = await api('/auth/login', { method: 'POST', body: { email, password, ...(totpCode ? { totpCode } : {}) } });
     setSession(data);
     return data;
   }
