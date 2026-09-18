@@ -215,7 +215,7 @@ a { color: inherit; }
    intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
 .mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
 .mark svg { display: block; width: 100%; height: 100%; }
-/* Logo animé (BrandMark.jsx, Landing.jsx HeroFrame) : joué UNE fois au montage, puis le logo reste tel quel
+/* Logo animé (BrandMark.jsx, seul porteur de .mark-anime depuis que la bannière d'accueil a perdu sa signature) : joué UNE fois au montage, puis le logo reste tel quel
    (fill-mode forwards, aucune boucle). La séquence raconte le dessin dans l'ordre où on le lirait —
    le rebord se trace d'abord (0 → 0,42 s), le bol descend depuis ce rebord (0,26 s), puis les trois
    traits de vapeur partent vers l'arrière l'un après l'autre (0,46 / 0,58 / 0,70 s) : environ 1,1 s
@@ -1274,6 +1274,14 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .input-invalid { border-color: var(--red); }
 .input-invalid:focus { border-color: var(--red); box-shadow: var(--ring-erreur); }
 .field-error { margin: 5px 0 0; font-size: 12px; color: var(--red); }
+/* Pot de miel des formulaires publics : hors écran (jamais display:none, certains robots l'ignorent alors). */
+.hp-champ { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
+/* Cibles tactiles : au doigt (pointer: coarse), tout ce qui se presse fait au moins 44px de haut (WCAG 2.5.8). */
+@media (pointer: coarse) {
+  button:not(.crm-etoile):not(.record-drawer-close):not(.lang-switcher button), .chip, a.btn-gold, a.btn-teal, a.btn-outline, a.btn-primary, .role-nav a, .account-link-row, input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+  .lang-switcher button { min-height: 36px; }
+}
+.footer-lien-bouton { background: none; border: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
 /* Rangée « libellé + bouton Afficher » au-dessus du champ mot de passe. */
 .field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }

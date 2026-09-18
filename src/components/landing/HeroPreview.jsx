@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { imgProps } from '../../images';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { COMMUNES } from '../../menuCategories';
@@ -79,7 +80,7 @@ export default function HeroPreview({ restaurants }) {
         <div className="hero-preview-list">
           {choix.map((r) => (
             <div key={r.id} className="hero-preview-card">
-              <img className="hero-preview-img" src={r.coverImageUrl} alt="" loading="eager" />
+              <img className="hero-preview-img" {...imgProps(r.coverImageUrl, 56)} width="56" height="56" alt="" loading="eager" fetchPriority="high" decoding="async" />
               <div className="hero-preview-body">
                 <b>{r.name}</b>
                 <span className="hero-preview-meta">{r.cuisine} · {r.commune}</span>

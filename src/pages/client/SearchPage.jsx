@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { imgProps } from '../../images';
 import Icone from '../../components/Icone';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -61,7 +62,7 @@ export default function SearchPage() {
   const { t } = useLanguage();
   const { user, token } = useAuth();
   const navigate = useNavigate();
-  usePageMeta({ title: 'Recherche · Fairide', path: '/recherche' });
+  usePageMeta({ title: t('seo.searchTitle'), description: t('seo.searchDescription'), path: '/recherche', robots: 'noindex, follow' });
 
   const [requete, setRequete] = useState('');
   const [bio, setBio] = useState(false);
@@ -273,7 +274,7 @@ function Ligne({ to, state, image, icone, titre, sous }) {
   return (
     <Link to={to} state={state} className="account-link-row recherche-ligne">
       {image ? (
-        <img className="recherche-vignette" src={image} alt="" loading="lazy" />
+        <img className="recherche-vignette" {...imgProps(image, 96)} alt="" loading="lazy" decoding="async" />
       ) : (
         <span className="account-link-icon" aria-hidden="true">
           {typeof icone === 'string' ? <Icone nom={icone} taille={22} /> : icone}

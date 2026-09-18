@@ -123,11 +123,12 @@ const PAGES = [
       }
     ]
   },
-  { chemin: '/aide', titre: 'help.pageTitle', description: 'seo.homeDescription' },
-  { chemin: '/mentions-legales', titre: 'legalNotice.pageTitle' },
-  { chemin: '/confidentialite', titre: 'privacy.pageTitle' },
-  { chemin: '/cgv', titre: 'terms.pageTitle' },
-  { chemin: '/cookies', titre: 'cookiesPolicy.pageTitle' }
+  { chemin: '/aide', titre: 'help.pageTitle', description: 'seo.helpDescription' },
+  { chemin: '/login', titre: 'seo.loginTitle', description: 'seo.loginDescription' },
+  { chemin: '/mentions-legales', titre: 'legalNotice.pageTitle', description: 'seo.legalNoticeDescription' },
+  { chemin: '/confidentialite', titre: 'privacy.pageTitle', description: 'seo.privacyDescription' },
+  { chemin: '/cgv', titre: 'terms.pageTitle', description: 'seo.termsDescription' },
+  { chemin: '/cookies', titre: 'cookiesPolicy.pageTitle', description: 'seo.cookiesDescription' }
 ];
 
 // Remplace une balise si elle existe, l'ajoute avant </head> sinon. Le gabarit d'index.html ne les

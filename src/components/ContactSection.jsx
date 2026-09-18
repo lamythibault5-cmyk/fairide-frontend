@@ -1,4 +1,5 @@
 import { useState, useId } from 'react';
+import { emailValide, telephonePlausible } from '../validation';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -29,6 +30,7 @@ export default function ContactSection({ messageInitial = '' }) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [siteWeb, setSiteWeb] = useState(''); // pot de miel (voir routes/contact.js)
 
   async function submit(e) {
     e.preventDefault();
@@ -37,9 +39,11 @@ export default function ContactSection({ messageInitial = '' }) {
       setError(t('contact.errorRequired'));
       return;
     }
+    if (!emailValide(email)) { setError(t('contact.errorEmail')); return; }
+    if (phone.trim() && !telephonePlausible(phone)) { setError(t('contact.errorPhone')); return; }
     setSending(true);
     try {
-      await api('/contact', { method: 'POST', body: { role: senderRole, name: name.trim(), email: email.trim(), phone: phone.trim(), message: message.trim() } });
+      await api('/contact', { method: 'POST', body: { role: senderRole, name: name.trim(), email: email.trim(), phone: phone.trim(), message: message.trim(), website: siteWeb } });
       setSent(true);
       setSenderRole(''); setName(''); setEmail(''); setPhone(''); setMessage('');
     } catch (err) {
@@ -71,21 +75,26 @@ export default function ContactSection({ messageInitial = '' }) {
             </div>
             <div className="field">
               <label htmlFor={idsA11y + '-fullname'}>{t('contact.fullName')}</label>
-              <input id={idsA11y + '-fullname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} />
+              <input id={idsA11y + '-fullname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('contact.fullNamePlaceholder')} required maxLength={120} autoComplete="name" />
             </div>
             <div className="field">
               <label htmlFor={idsA11y + '-emaillabel'}>{t('contact.emailLabel')}</label>
-              <input id={idsA11y + '-emaillabel'} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('contact.emailPlaceholder')} />
+              <input id={idsA11y + '-emaillabel'} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('contact.emailPlaceholder')} required maxLength={200} autoComplete="email" inputMode="email" />
             </div>
             <div className="field">
               <label htmlFor={idsA11y + '-phone'}>{t('contact.phone')}</label>
-              <input id={idsA11y + '-phone'} value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} />
+              <input id={idsA11y + '-phone'} type="tel" inputMode="tel" autoComplete="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t('contact.phonePlaceholder')} maxLength={40} />
             </div>
             <div className="field">
               <label htmlFor={idsA11y + '-message'}>{t('contact.message')}</label>
-              <textarea id={idsA11y + '-message'} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} />
+              <textarea id={idsA11y + '-message'} rows={5} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('contact.messagePlaceholder')} required maxLength={4000} />
             </div>
-            {error && <p className="small" style={{ color: 'var(--red)', margin: '0 0 10px' }}>{error}</p>}
+            {/* Pot de miel : invisible et hors tabulation ; un robot le remplit, le serveur ignore alors l'envoi. */}
+            <div className="hp-champ" aria-hidden="true">
+              <label htmlFor={idsA11y + '-website'}>Site web</label>
+              <input id={idsA11y + '-website'} name="website" tabIndex={-1} autoComplete="off" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} />
+            </div>
+            {error && <p className="small" role="alert" style={{ color: 'var(--red)', margin: '0 0 10px' }}>{error}</p>}
             <button className="btn-gold" type="submit" disabled={sending} style={{ width: '100%' }}>
               {sending ? '...' : t('contact.send')}
             </button>

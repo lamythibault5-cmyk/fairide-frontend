@@ -1,4 +1,5 @@
 import { useState, useId } from 'react';
+import { imgProps } from '../images';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
@@ -267,7 +268,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       )}
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
       {resolveItemImage(item, sections) ? (
-        <img loading="lazy" src={resolveItemImage(item, sections)} alt={item.name} className="dish-thumb-lg" />
+        <img loading="lazy" decoding="async" {...imgProps(resolveItemImage(item, sections), 320, '(max-width: 640px) 50vw, 320px')} alt={item.name} className="dish-thumb-lg" />
       ) : (
         <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
       )}

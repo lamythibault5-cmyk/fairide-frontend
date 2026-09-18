@@ -17,7 +17,7 @@ export default function ReservationWizard() {
   const [restaurant, setRestaurant] = useState(null);
   const [introuvable, setIntrouvable] = useState(false);
 
-  usePageMeta({ title: restaurant ? t('resaWizard.pageTitle', { name: restaurant.name }) : t('resaWizard.title') });
+  usePageMeta({ title: restaurant ? t('resaWizard.pageTitle', { name: restaurant.name }) : t('resaWizard.title'), path: `/restaurants/${id}/reserver`, robots: 'noindex, follow' });
 
   useEffect(() => {
     api(`/restaurants/${id}`).then(setRestaurant).catch(() => setIntrouvable(true));

@@ -5979,11 +5979,22 @@ export const translations = {
          usePageMeta sans `title`). Il vivait en double dans usePageMeta.js et dans index.html ;
          il est ici pour que le pré-rendu, qui produit les trois langues, lise la même chaîne que
          l'application. */
-      defaultTitle: "Fairide · Livraison de repas et commerces locaux à Bruxelles, commission réduite",
-      homeDescription: "Commande chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 %, contre 22 à 32 % sur les grandes plateformes.",
-      listDescription: "Tous les restaurants, supermarchés, boulangeries et night shops livrés par Fairide dans les 19 communes de Bruxelles.",
+      defaultTitle: 'fairide.be · Livraison et commerces locaux à Bruxelles',
+      homeDescription: 'Sur fairide.be, commande, réserve une table ou emporte chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 % pour les commerçants.',
+      listDescription: 'Tous les restaurants, supermarchés, boulangeries et night shops de Bruxelles sur fairide.be : livraison à vélo, à emporter et réservation de table dans les 19 communes.',
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
-      restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande."
+      restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande.",
+      loginTitle: 'Connexion et inscription · fairide.be Bruxelles',
+      loginDescription: 'Crée ton compte client, inscris ton restaurant ou deviens livreur sur fairide.be, la plateforme bruxelloise de livraison à 10 % de commission.',
+      searchTitle: 'Recherche · fairide.be',
+      searchDescription: 'Cherche un restaurant, un commerce ou un plat à Bruxelles sur fairide.be.',
+      helpDescription: 'Aide et contact fairide.be : paiement, livraison, réservation de table, compte. Écris-nous, on répond vite depuis Bruxelles.',
+      legalNoticeDescription: 'Mentions légales de fairide.be : FAIRIDE SRL, BCE 1042.169.780, siège à Woluwe-Saint-Lambert (Bruxelles), hébergement, contact.',
+      termsDescription: 'Conditions générales d\'utilisation de fairide.be : commande en livraison, à emporter, réservation de table, paiement, annulation, droit belge.',
+      privacyDescription: 'Politique de confidentialité de fairide.be (RGPD) : données collectées, finalités, sous-traitants, durées de conservation, vos droits, contact.',
+      cookiesDescription: 'Politique des cookies de fairide.be : cookies strictement nécessaires, préférences, aucun traceur publicitaire, statistiques sans cookie.',
+      reserverDescription: 'Réserve une table chez {name} à {commune} en quelques secondes sur fairide.be, sans commission pour le restaurant.',
+      notFoundTitle: 'Page introuvable · fairide.be'
     },
     nav: {
       restaurants: 'Restaurants',
@@ -6022,7 +6033,8 @@ export const translations = {
       privacy: 'Confidentialité',
       terms: 'CGV',
       bottom: '© Fairide SRL, BCE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, contact@fairide.be',
-      cookies: 'Cookies'
+      cookies: 'Cookies',
+      manageCookies: 'Gérer mes cookies'
     },
     cookies: {
       text: "Fairide utilise des cookies techniques nécessaires au fonctionnement du site (connexion, panier). Avec ton accord uniquement, nous activons aussi un outil de rapport d'erreurs qui nous aide à corriger les pannes. Aucun tracking publicitaire.",
@@ -6709,7 +6721,9 @@ export const translations = {
       message: 'Message',
       messagePlaceholder: 'Décrivez votre demande...',
       send: 'Envoyer le message',
-      errorRequired: 'Merci de préciser qui tu es, ton nom, ton email et ton message.'
+      errorRequired: 'Merci de préciser qui tu es, ton nom, ton email et ton message.',
+      errorEmail: 'Cette adresse e-mail ne semble pas valide.',
+      errorPhone: 'Ce numéro de téléphone ne semble pas valide (ex. +32 470 00 00 00).'
     },
     orderResult: {
       successTitle: 'Merci pour ta commande !',
@@ -6775,6 +6789,8 @@ export const translations = {
       hidePassword: 'Masquer',
       errFieldRequired: 'Ce champ est requis.',
       errEmailInvalid: 'Cette adresse email ne semble pas valide.',
+      errPostalCode: 'Un code postal belge comporte 4 chiffres (ex. 1050).',
+      errCompanyNumber: 'Numéro d\'entreprise invalide : 10 chiffres (ex. 0123.456.789).',
       or: 'ou',
       email: 'Email',
       password: 'Mot de passe',
@@ -12875,11 +12891,22 @@ export const translations = {
       close: 'Close'
     },
     seo: {
-      defaultTitle: "Fairide · Meal delivery and local businesses in Brussels, reduced commission",
-      homeDescription: "Order from the restaurants and local shops in your Brussels neighbourhood. Commission capped at 10%, against 22 to 32% on the big platforms.",
-      listDescription: "Every restaurant, supermarket, bakery and night shop delivered by Fairide across the 19 communes of Brussels.",
+      defaultTitle: 'fairide.be · Delivery and local shops in Brussels',
+      homeDescription: 'On fairide.be, order, book a table or take away from the restaurants and shops of your Brussels neighbourhood. Commission capped at 10% for merchants.',
+      listDescription: 'Every restaurant, supermarket, bakery and night shop in Brussels on fairide.be: bike delivery, takeaway and table booking across the 19 communes.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
-      restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order."
+      restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order.",
+      loginTitle: 'Sign in and sign up · fairide.be Brussels',
+      loginDescription: 'Create your customer account, list your restaurant or become a courier on fairide.be, the Brussels delivery platform with a 10% commission.',
+      searchTitle: 'Search · fairide.be',
+      searchDescription: 'Search for a restaurant, a shop or a dish in Brussels on fairide.be.',
+      helpDescription: 'fairide.be help and contact: payment, delivery, table booking, account. Write to us, we answer quickly from Brussels.',
+      legalNoticeDescription: 'Legal notice of fairide.be: FAIRIDE SRL, BCE 1042.169.780, registered office in Woluwe-Saint-Lambert (Brussels), hosting, contact.',
+      termsDescription: 'Terms of use of fairide.be: delivery and takeaway orders, table booking, payment, cancellation, Belgian law.',
+      privacyDescription: 'fairide.be privacy policy (GDPR): data collected, purposes, processors, retention periods, your rights, contact.',
+      cookiesDescription: 'fairide.be cookie policy: strictly necessary cookies, preferences, no advertising trackers, cookieless statistics.',
+      reserverDescription: 'Book a table at {name} in {commune} in seconds on fairide.be, with no commission for the restaurant.',
+      notFoundTitle: 'Page not found · fairide.be'
     },
     nav: {
       restaurants: 'Restaurants',
@@ -12918,7 +12945,8 @@ export const translations = {
       privacy: 'Privacy',
       terms: 'Terms',
       bottom: '© Fairide SRL, CBE 1042.169.780, Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, contact@fairide.be',
-      cookies: 'Cookies'
+      cookies: 'Cookies',
+      manageCookies: 'Manage my cookies'
     },
     cookies: {
       text: 'Fairide uses technical cookies necessary for the site to work (login, cart). Only with your consent, we also enable an error-reporting tool that helps us fix breakages. No advertising tracking.',
@@ -13602,7 +13630,9 @@ export const translations = {
       message: 'Message',
       messagePlaceholder: 'Describe your request...',
       send: 'Send message',
-      errorRequired: 'Please tell us who you are, your name, email and message.'
+      errorRequired: 'Please tell us who you are, your name, email and message.',
+      errorEmail: 'That email address does not look valid.',
+      errorPhone: 'That phone number does not look valid (e.g. +32 470 00 00 00).'
     },
     orderResult: {
       successTitle: 'Thanks for your order!',
@@ -13668,6 +13698,8 @@ export const translations = {
       hidePassword: 'Hide',
       errFieldRequired: 'This field is required.',
       errEmailInvalid: 'That email address does not look valid.',
+      errPostalCode: 'A Belgian postal code has 4 digits (e.g. 1050).',
+      errCompanyNumber: 'Invalid company number: 10 digits (e.g. 0123.456.789).',
       or: 'or',
       email: 'Email',
       password: 'Password',
@@ -19766,11 +19798,22 @@ export const translations = {
       close: 'Sluiten'
     },
     seo: {
-      defaultTitle: "Fairide · Maaltijdbezorging en lokale zaken in Brussel, verlaagde commissie",
-      homeDescription: "Bestel bij de restaurants en handelszaken in jouw Brusselse buurt. Commissie beperkt tot 10 %, tegenover 22 tot 32 % bij de grote platformen.",
-      listDescription: "Alle restaurants, supermarkten, bakkerijen en nachtwinkels die Fairide levert in de 19 gemeenten van Brussel.",
+      defaultTitle: 'fairide.be · Bezorging en lokale zaken in Brussel',
+      homeDescription: 'Op fairide.be bestel je, reserveer je een tafel of haal je af bij de restaurants en zaken van je Brusselse buurt. Commissie beperkt tot 10% voor handelaars.',
+      listDescription: 'Alle restaurants, supermarkten, bakkerijen en nachtwinkels van Brussel op fairide.be: fietsbezorging, afhalen en tafelreservatie in de 19 gemeenten.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
-      restaurantDescription: "Bestel bij {name} in {commune} en laat het met de fiets leveren. Op Fairide houdt de zaak 90 % van je bestelling."
+      restaurantDescription: "Bestel bij {name} in {commune} en laat het met de fiets leveren. Op Fairide houdt de zaak 90 % van je bestelling.",
+      loginTitle: 'Inloggen en registreren · fairide.be Brussel',
+      loginDescription: 'Maak je klantaccount aan, registreer je restaurant of word koerier op fairide.be, het Brusselse bezorgplatform met 10% commissie.',
+      searchTitle: 'Zoeken · fairide.be',
+      searchDescription: 'Zoek een restaurant, een zaak of een gerecht in Brussel op fairide.be.',
+      helpDescription: 'Hulp en contact fairide.be: betaling, bezorging, tafelreservatie, account. Schrijf ons, we antwoorden snel vanuit Brussel.',
+      legalNoticeDescription: 'Wettelijke vermeldingen van fairide.be: FAIRIDE SRL, KBO 1042.169.780, zetel in Sint-Lambrechts-Woluwe (Brussel), hosting, contact.',
+      termsDescription: 'Gebruiksvoorwaarden van fairide.be: bestellen met bezorging of afhalen, tafelreservatie, betaling, annulering, Belgisch recht.',
+      privacyDescription: 'Privacybeleid van fairide.be (AVG): verzamelde gegevens, doeleinden, verwerkers, bewaartermijnen, je rechten, contact.',
+      cookiesDescription: 'Cookiebeleid van fairide.be: strikt noodzakelijke cookies, voorkeuren, geen advertentietrackers, statistieken zonder cookies.',
+      reserverDescription: 'Reserveer in enkele seconden een tafel bij {name} in {commune} op fairide.be, zonder commissie voor het restaurant.',
+      notFoundTitle: 'Pagina niet gevonden · fairide.be'
     },
     nav: {
       restaurants: 'Restaurants',
@@ -19809,7 +19852,8 @@ export const translations = {
       privacy: 'Privacy',
       terms: 'Voorwaarden',
       bottom: '© Fairide SRL, KBO 1042.169.780, Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, contact@fairide.be',
-      cookies: 'Cookies'
+      cookies: 'Cookies',
+      manageCookies: 'Mijn cookies beheren'
     },
     cookies: {
       text: 'Fairide gebruikt technische cookies die nodig zijn voor de werking van de site (login, winkelmandje). Alleen met jouw toestemming schakelen we ook een tool voor foutrapportage in die ons helpt storingen op te lossen. Geen advertentietracking.',
@@ -20493,7 +20537,9 @@ export const translations = {
       message: 'Bericht',
       messagePlaceholder: 'Beschrijf je vraag...',
       send: 'Bericht versturen',
-      errorRequired: 'Laat ons weten wie je bent, en vul je naam, e-mail en bericht in.'
+      errorRequired: 'Laat ons weten wie je bent, en vul je naam, e-mail en bericht in.',
+      errorEmail: 'Dit e-mailadres lijkt niet geldig.',
+      errorPhone: 'Dit telefoonnummer lijkt niet geldig (bv. +32 470 00 00 00).'
     },
     orderResult: {
       successTitle: 'Bedankt voor je bestelling!',
@@ -20559,6 +20605,8 @@ export const translations = {
       hidePassword: 'Verbergen',
       errFieldRequired: 'Dit veld is verplicht.',
       errEmailInvalid: 'Dit e-mailadres lijkt niet geldig.',
+      errPostalCode: 'Een Belgische postcode heeft 4 cijfers (bv. 1050).',
+      errCompanyNumber: 'Ongeldig ondernemingsnummer: 10 cijfers (bv. 0123.456.789).',
       or: 'of',
       email: 'E-mail',
       password: 'Wachtwoord',

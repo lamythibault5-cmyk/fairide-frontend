@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { imgProps } from '../../images';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import Reveal from '../Reveal';
@@ -51,7 +52,7 @@ export default function DiscoverSection({ restaurants }) {
         {cartes.map((r, i) => (
           <Reveal key={r.id} className="discover-tile discover-tile-static" delay={(i % 4) * 70} aria-hidden="true">
             <div className="discover-tile-img">
-              <img loading="lazy" src={r.coverImageUrl} alt={r.name} />
+              <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 400, '(max-width: 640px) 50vw, 400px')} alt={r.name} />
               <span className="discover-tile-cuisine">{r.cuisine}</span>
               {r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)}</span>}
             </div>

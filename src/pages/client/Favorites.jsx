@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { imgProps } from '../../images';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -40,7 +41,7 @@ export default function Favorites() {
       <div className="rest-grid">
         {!loading && restaurants.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
-            {r.coverImageUrl && <img loading="lazy" src={r.coverImageUrl} alt={r.name} className="cover-banner-sm" />}
+            {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 100vw, 480px')} alt={r.name} className="cover-banner-sm" />}
             <div className="pill-row">
               <span className="pill teal">{r.commune}</span>
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}

@@ -18,6 +18,9 @@ import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
+import usePageMeta from '../hooks/usePageMeta';
+import { suivre } from '../analytics';
+import { bceValide, codePostalValide } from '../validation';
 
 function roles(t) {
   return [
@@ -62,6 +65,10 @@ const BROUILLON_MAX_MS = 6 * 3600 * 1000; // au-delà, une inscription interromp
 
 export default function Auth() {
   const { t } = useLanguage();
+  // Page publique et indexée (voir robots.txt) : elle porte son propre titre et sa description.
+  usePageMeta({ title: t('seo.loginTitle'), description: t('seo.loginDescription'), path: '/login' });
+  // Pot de miel : un champ que personne ne voit ni ne remplit — sauf un robot (le serveur le lit aussi).
+  const [siteWeb, setSiteWeb] = useState('');
   const ROLES = roles(t);
   const [searchParams] = useSearchParams();
   const audience = searchParams.get('audience'); // 'client' | 'partner' | null
@@ -453,6 +460,7 @@ export default function Auth() {
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
         if (!bagOption) e.bagOption = t('auth.errBag');
         if (courierStatus === 'independent' && !companyNumber.trim()) e.companyNumber = required;
+        else if (companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = t('auth.errCompanyNumber');
       }
     }
     if (key === 'documents') {
@@ -474,6 +482,7 @@ export default function Auth() {
       if (!addressStreet.trim()) e.addressStreet = required;
       if (!addressNumber.trim()) e.addressNumber = required;
       if (!addressPostalCode.trim()) e.addressPostalCode = required;
+      else if (!codePostalValide(addressPostalCode)) e.addressPostalCode = t('auth.errPostalCode');
       if (!addressCity.trim()) e.addressCity = required;
       // Adresse non reconnue : on demande une confirmation plutôt que de bloquer.
       if (role === 'restaurant' && (recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) e.addressConfirm = t('auth.errAddressConfirm');
@@ -537,7 +546,7 @@ export default function Auth() {
   /* Erreur sous un champ. Le champ lui-même reçoit .input-invalid pour que le filet passe en
      rouge : la couleur seule ne suffirait pas (daltonisme), d'où le texte en plus. */
   function fieldError(name) {
-    return errors[name] ? <p className="field-error">{errors[name]}</p> : null;
+    return errors[name] ? <p className="field-error" role="alert">{errors[name]}</p> : null;
   }
 
   const googleBtnRef = useRef(null);
@@ -665,8 +674,11 @@ export default function Auth() {
             vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
             business: construireCommerce()
           } : {}),
-          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {})
+          ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {}),
+          website: siteWeb
         });
+        // Statistiques (sans donnée personnelle) : une inscription par type de compte.
+        suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
         if (data.needsVerification) {
           setPendingEmail(data.email);
           setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
@@ -1218,6 +1230,13 @@ export default function Auth() {
                   {fieldError('passwordConfirm')}
                 </div>
               </>
+            )}
+            {/* Pot de miel (voir siteWeb) : hors écran, hors tabulation, hors lecteur d'écran. */}
+            {stepKey === 'account' && (
+              <div className="hp-champ" aria-hidden="true">
+                <label htmlFor="auth-hp">Site web</label>
+                <input id="auth-hp" name="website" tabIndex={-1} autoComplete="off" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} />
+              </div>
             )}
             {stepKey === 'account' && (referralOpen ? (
               <div className="field">

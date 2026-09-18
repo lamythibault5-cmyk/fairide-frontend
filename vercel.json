@@ -1,7 +1,19 @@
 {
+  "redirects": [
+    { "source": "/cgu", "destination": "/cgv", "permanent": true },
+    { "source": "/:lang(nl|en)/cgu", "destination": "/:lang/cgv", "permanent": true },
+    { "source": "/terms", "destination": "/cgv", "permanent": true },
+    { "source": "/privacy", "destination": "/confidentialite", "permanent": true },
+    { "source": "/legal", "destination": "/mentions-legales", "permanent": true },
+    { "source": "/contact", "destination": "/aide", "permanent": true },
+    { "source": "/restaurateurs", "destination": "/login?audience=partner&role=restaurant", "permanent": false },
+    { "source": "/livreurs", "destination": "/login?audience=partner&role=driver", "permanent": false }
+  ],
   "rewrites": [
+    { "source": "/", "destination": "/index.html" },
+    { "source": "/:lang(nl|en)", "destination": "/index.html" },
     {
-      "source": "/((?!assets/).*)",
+      "source": "/:lang(nl|en)?/:page(login|reset-password|restaurants|reserver|recherche|mentions-legales|cgv|confidentialite|cookies|aide|notre-histoire|account|orders|map|panier|checkout|order-success|order-cancelled|invoices|favorites|dashboard|driver|admin|jeux|crm)/:rest*",
       "destination": "/index.html"
     }
   ],
@@ -15,36 +27,33 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
         { "key": "Permissions-Policy", "value": "geolocation=(self), camera=(self), microphone=(), payment=(), usb=(), magnetometer=()" },
         {
-          "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; script-src 'self' https://accounts.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com https://*.tile.openstreetmap.org https://lh3.googleusercontent.com; connect-src 'self' https://fairide-backend-production.up.railway.app https://router.project-osrm.org https://nominatim.openstreetmap.org https://*.ingest.sentry.io https://*.ingest.de.sentry.io; frame-src https://accounts.google.com; worker-src 'self'; manifest-src 'self'"
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'self'; form-action 'self'; upgrade-insecure-requests; script-src 'self' https://accounts.google.com https://www.gstatic.com https://plausible.io https://js.stripe.com; style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com https://res.cloudinary.com https://*.tile.openstreetmap.org https://tile.openstreetmap.org https://lh3.googleusercontent.com https://*.stripe.com; media-src 'self' https://res.cloudinary.com https://images.unsplash.com blob:; connect-src 'self' https://fairide-backend-production.up.railway.app https://router.project-osrm.org https://nominatim.openstreetmap.org https://photon.komoot.io https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://plausible.io https://api.stripe.com https://accounts.google.com; frame-src https://accounts.google.com https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com; worker-src 'self' blob:; manifest-src 'self'"
         }
       ]
     },
     {
       "source": "/assets/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(favicon.ico|favicon-32.png|apple-touch-icon.png|icons/.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=604800" }
       ]
     },
     {
       "source": "/index.html",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache"
-        }
+        { "key": "Cache-Control", "value": "no-cache" }
       ]
     },
     {
-      "source": "/(notre-histoire|aide|restaurants|cgv|confidentialite|cookies|mentions-legales)(/.*)?",
+      "source": "/(notre-histoire|aide|restaurants|cgv|confidentialite|cookies|mentions-legales|login)(/.*)?",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache"
-        }
+        { "key": "Cache-Control", "value": "no-cache" }
       ]
     }
   ]

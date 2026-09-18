@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import BrandMark from './BrandMark';
+import { resetConsent } from '../consent';
 
 export default function Footer() {
   const { t } = useLanguage();
@@ -37,6 +38,8 @@ export default function Footer() {
           <Link to="/confidentialite" className="small">{t('footer.privacy')}</Link>
           <Link to="/cgv" className="small">{t('footer.terms')}</Link>
           <Link to="/cookies" className="small">{t('footer.cookies')}</Link>
+          {/* Rouvre la bannière : le choix doit pouvoir être modifié aussi facilement qu'il a été fait. */}
+          <button type="button" className="small footer-lien-bouton" onClick={resetConsent}>{t('footer.manageCookies')}</button>
         </div>
       </div>
       <div className="footer-bottom small">{t('footer.bottom')}</div>
