@@ -350,15 +350,6 @@ a { color: inherit; }
   .header-row > .header-nav { margin-left: -6px; }
   .header-row { column-gap: 8px; }
   .header-row .brand { gap: 8px; }
-  .header-row .brand .mark { width: 30px !important; height: 30px !important; }
-  /* BrandMark décide seul de passer à la déclinaison simplifiée, mais il décide sur la taille qu'on
-     lui PASSE (34 ici, via Layout.jsx) — pas sur celle que ce media query lui impose ensuite. À 30px
-     les trois traits de vapeur se collent : on retire les deux plus pâles et on épaissit le
-     survivant, ce qui est exactement la simplification de la spec, appliquée là où le composant ne
-     peut pas la voir venir. */
-  .header-row .brand .bm-vapeur-2,
-  .header-row .brand .bm-vapeur-3 { display: none; }
-  .header-row .brand .bm-vapeur-1 { stroke-width: 8; }
   .header-row .brand .brand-name { font-size: 20px; }
   .header-row .header-auth-link { padding: 8px 2px; }
 }
@@ -515,6 +506,17 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    perd contre un style inline. */
 @media (max-width: 600px) {
   .header-row .lang-switcher button { padding: 5px 6px; }
+  /* LA taille de la marque sur téléphone, pour toutes les largeurs sous 600px.
+
+     Il y avait ici deux règles concurrentes, une par media query (36px sous 600, 30px sous 400), et
+     la seconde n'a jamais rien fait : même sélecteur, même !important, mais ce bloc-ci est plus bas
+     dans le fichier, donc il l'emportait à égalité. Le défaut est plus ancien que le nouveau logo —
+     le vélo s'affichait déjà à 52px là où on croyait l'avoir ramené à 46.
+
+     Le bloc sous 400px portait aussi une simplification du dessin : masquer les deux traits de
+     vapeur les plus pâles, parce qu'à 30px ils se collent. Raisonnement fait en pixels CSS, sur le
+     seul écran qui en compte trois physiques pour un — à l'arrivée la marque n'avait qu'un filet de
+     vapeur sur iPhone, là où elle en a trois partout ailleurs. Retiré. */
   .header-row .brand .mark { width: 36px !important; height: 36px !important; }
 }
 @media (max-width: 520px) {
@@ -1583,11 +1585,14 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   }
   .landing-partner-line a { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .landing-ouverture-court { margin-top: 18px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
-  /* La marque belge quitte le coin : sur un aplat qui va maintenant d'un bord à l'autre, elle
-     flottait seule en haut à droite, à hauteur du titre, sans rien pour l'ancrer. Décision prise
-     du temps du drapeau et reconduite telle quelle au passage à BelgianMark — le motif a changé,
-     pas la raison de le retirer ici. */
-  .be-mark { display: none; }
+  /* La marque belge reste visible sur téléphone, un peu plus petite.
+
+     Elle était masquée ici depuis le temps du drapeau : trois bandes qui flottaient en haut à droite
+     d'un aplat bord à bord, sans rien pour les ancrer. Ce n'est plus un drapeau générique mais la
+     marque elle-même, et c'est sur téléphone qu'elle a le moins d'autres occasions de se montrer —
+     la bannière y a déjà perdu sa signature. Elle se loge dans le blanc au-dessus du titre, que
+     .landing-hero-affiche centre verticalement sur le premier écran. */
+  .be-mark { width: 28px !important; height: 28px !important; top: 14px; right: 14px; }
 }
 
 /* Les trois chiffres vivent DANS la bannière, séparés par un filet blanc, au
