@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { imgProps } from '../images';
+import { imgProps, cacherImageCassee } from '../images';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -31,7 +31,7 @@ export default function PartnersMarquee() {
         >
           {items.map((r, i) => (
             <div key={`${r.id}-${i}`} className="trust-card" title={r.name}>
-              {r.coverImageUrl ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 160)} alt={r.name} /> : <span className="trust-card-fallback">{r.name.slice(0, 2).toUpperCase()}</span>}
+              {r.coverImageUrl ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 160)} alt={r.name} onError={cacherImageCassee} /> : <span className="trust-card-fallback">{r.name.slice(0, 2).toUpperCase()}</span>}
               <span>{r.name}</span>
             </div>
           ))}

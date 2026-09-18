@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useRef, useState } from 'react';
-import { imgProps } from '../../images';
+import { imgProps, cacherImageCassee } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -258,7 +258,7 @@ export default function RestaurantMenu() {
         {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
           <div className={`fiche-media${restaurant.coverImageUrl ? '' : ' sans-photo'}`}>
             {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" />}
-            {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" />}
+            {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />}
           </div>
         )}
         <div className="fiche-titre-ligne">
@@ -555,7 +555,7 @@ function DiscoverSection({ restaurants, t }) {
         className="discover-track"
         renderItem={(r, i, key) => (
           <Link key={key} to={`/restaurants/${r.id}`} className="discover-card">
-            {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 320)} alt={r.name} />}
+            {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 320)} alt={r.name} onError={cacherImageCassee} />}
             <div className="info">
               <b>{r.name}</b>
               <span className="small">{r.commune}</span>

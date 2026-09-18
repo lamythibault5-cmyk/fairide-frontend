@@ -26,3 +26,11 @@ export function imageSrcSet(url, largeurAffichee) {
 export function imgProps(url, largeurAffichee, sizes) {
   return { src: imageUrl(url, largeurAffichee * 2), srcSet: imageSrcSet(url, largeurAffichee), sizes: sizes || `${largeurAffichee}px` };
 }
+
+// Image qui ne charge pas (photo retirée d'Unsplash, lien mort) : on retire la balise plutôt que de laisser l'icône
+// cassée et le texte de remplacement au milieu de la carte — le fond (dégradé, couleur) reste, la fiche se lit.
+export function cacherImageCassee(e) {
+  const img = e.currentTarget; if (!img) return;
+  img.removeAttribute('srcset'); img.style.display = 'none'; img.setAttribute('aria-hidden', 'true');
+  img.closest('.card, .discover-tile, .hero-preview-card, .trust-card, .fiche-entete')?.classList.add('sans-image');
+}
