@@ -48,9 +48,17 @@ des choses qui demandent **un compte, une clé, un appareil ou une décision** �
 3. **Poser `VITE_STOCK_DISH_PHOTOS=off` sur Vercel, PUIS reconstruire** — avant le premier vrai
    commerce (§9). Les clés VAPID sont posées sur Railway depuis le 16 septembre ; reste à vérifier
    une notification sur un vrai téléphone (§6) — les branches sont fusionnées, plus rien n'attend.
-4. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4)
-5. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
-6. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)
+4. **Faire relire les pages légales** : il manque des engagements, pas du texte (§4), et au regard
+   du **règlement P2B**, qui s'applique dès le premier restaurant vendeur (§18.4)
+5. **Signer les accords de sous-traitance (DPA)** des huit prestataires qui traitent des données
+   personnelles — administratif, quelques minutes chacun (§18.2)
+6. **Essayer une restauration de sauvegarde** dans une base vide, avant le premier vrai commerce :
+   une sauvegarde jamais restaurée est une supposition (§18.3)
+7. **Trancher la promesse d'application mobile** affichée sur l'accueil (§14)
+8. **Automatiser la purge des données** aux durées que la politique annonce (§18.1) — le seul point
+   où le site promet une chose que le système ne fait pas. Pas bloquant le jour J, mais à ne pas
+   laisser traîner : c'est ce qu'un auditeur regarde en premier.
+9. Puis : Search Console et mesure d'audience (§11), traduction des dernières chaînes (§10)
 
 `schema.sql` ne figure plus dans cette liste : il s'applique tout seul au démarrage du serveur,
 donc déployer suffit (§13).
@@ -113,6 +121,11 @@ sur Stripe, sur l'attribution à un livreur, ni sur la livraison.
 ---
 
 ## 🔴 2. Configuration Stripe et Railway
+
+> **Région d'hébergement : EU West** — vérifié dans le tableau de bord Railway le 18 septembre 2026.
+> Base de données et backend sont donc dans l'Union européenne. Ce n'est pas qu'une case RGPD : ça
+> rend exacte la phrase « plateforme belge, données en Europe », et ça retire le sujet de la table
+> quand un commerçant ou un journaliste posera la question. À ne pas perdre lors d'une migration.
 
 **Relevé le 16 septembre 2026 sur `/api/health` en production** — le serveur expose lui-même quelles
 variables sont présentes (sans jamais révéler leur valeur) :
@@ -440,21 +453,24 @@ champs texte d'un commerce — le seul moment où la lettre d'origine existe enc
 
 ---
 
-## 🟡 16. La règle de mot de passe est incohérente
+## ✅ 16. La règle de mot de passe est incohérente — FAIT (18 septembre 2026)
 
-Découvert hors document, non corrigé : une règle de sécurité ne se change pas sans arbitrage.
+Les trois chemins divergeaient : `Ab12c` ouvrait un compte mais ne pouvait pas devenir le nouveau
+mot de passe, et `password` faisait l'inverse — un mot de passe accepté par un écran était refusé
+par l'autre, sans que rien ne l'explique.
 
-| Où | Règle |
-|---|---|
-| Inscription (`auth.js:194`) | ≥ 5 caractères, une majuscule, une minuscule |
-| Réinitialisation (`auth.js:392`) | ≥ 5 caractères, une majuscule, une minuscule |
-| Changement (`auth.js:800`) | ≥ 8 caractères, **aucune contrainte de casse** |
+**Règle unique retenue : au moins 8 caractères, une majuscule, une minuscule.** C'est le seuil que
+le changement depuis Mon compte exigeait déjà ; ce sont l'inscription et la réinitialisation qui
+étaient en dessous, à 5 — court pour un compte qui porte une adresse de domicile et un historique de
+commandes, et sous le minimum recommandé par le NIST.
 
-Donc `Ab12c` ouvre un compte mais ne peut pas devenir le nouveau mot de passe, et `password` fait
-l'inverse. Cinq caractères est par ailleurs court pour un compte qui porte une adresse de domicile
-et un historique de commandes.
+Appliquée aux **six** endroits, et non aux trois annoncés : les trois contrôles serveur, le contrôle
+client de Mon compte (qui ne regardait que la longueur, donc laissait partir une requête que le
+serveur refusait en 400), et les textes d'aide — qui annonçaient encore « au moins 5 caractères »
+dans les trois langues alors que le serveur en exigeait 8. Un mot de passe annoncé valide était
+refusé à l'envoi.
 
-- [ ] Choisir une règle unique et l'appliquer aux trois endroits
+- [x] Règle unique appliquée partout, serveur et client, messages compris
 
 ---
 
@@ -577,3 +593,88 @@ deux côtés, les générateurs de codes prévisibles (dont les bons cadeaux, re
 les limites manquantes sur les appels d'IA et sur les codes de solde, les litiges Stripe qui
 n'étaient pas traités, le webhook qui avalait ses erreurs, la fiche des commerces non publiés qui
 exposait leur identification légale, et `npm audit` ramené à zéro.
+
+---
+
+## 🟠 18. Conformité : l'écart entre ce qu'on promet et ce que la machine fait
+
+Ajouté le 18 septembre 2026, après un second audit (les cinq failles les plus fréquentes du code
+généré, la liste de contrôle avant déploiement, et un passage d'OWASP ZAP sur l'instance locale :
+0 High, 0 Medium, 0 Low).
+
+**Le code est en bon état.** Ce qui reste n'est presque pas du code : c'est l'écart entre ce que la
+politique de confidentialité promet et ce qu'un programme exécute réellement. C'est exactement ce
+qu'un auditeur, une banque ou un commerçant un peu regardant ira vérifier en premier.
+
+### 18.1 🟠 La purge des données n'est pas automatique
+
+`routes/adminCompliance.js` le dit en toutes lettres : « Rétention : volumes concernés par la
+politique de conservation (**informatif, aucune purge automatique ici**) ». L'écran admin **compte**
+les données périmées — tickets de plus de 3 ans, scores de plus d'un an, commandes de plus de 7 ans —
+il n'en supprime aucune.
+
+Or la politique promet : compte anonymisé **3 ans** après la dernière activité, journaux techniques
+**12 mois**, demandes au support **3 ans**, demandes RGPD **5 ans**. Personne n'exécute ces durées.
+C'est le seul point où le site promet une chose que le système ne fait pas.
+
+- [ ] Une tâche planifiée qui applique les durées annoncées, et qui **journalise ce qu'elle a
+      supprimé** (une purge silencieuse est impossible à prouver à un auditeur)
+- [ ] La faire tourner d'abord en mode « compte seulement », comparer avec l'écran Rétention, puis
+      l'activer
+
+### 18.2 🟠 Les accords de sous-traitance (DPA) ne sont pas signés
+
+La politique nomme **14 sous-traitants** (Stripe, Resend, Cloudinary, Sentry, Vercel, Railway,
+Anthropic, Twilio, Google, itsme, Nominatim, Photon, OSRM, Unsplash). Les nommer est l'obligation de
+transparence ; l'article 28 du RGPD demande en plus un **contrat écrit** avec chacun de ceux qui
+traitent des données personnelles pour votre compte.
+
+Ce n'est pas du code, c'est de l'administratif — la plupart se signent en ligne en quelques minutes.
+
+- [ ] Signer le DPA de Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio
+- [ ] Ranger les copies au même endroit, avec la date
+
+### 18.3 🟡 Sauvegardes : aucune trace dans le code
+
+Je n'ai trouvé **aucune politique de sauvegarde** dans les deux dépôts. Railway en propose, mais une
+sauvegarde dont la restauration n'a jamais été essayée n'est pas une sauvegarde : c'est une
+supposition. À faire avant le premier vrai commerce, pas après.
+
+- [ ] Vérifier ce que Railway sauvegarde, à quelle fréquence, et combien de temps il le garde
+- [ ] **Restaurer une copie dans une base vide et vérifier qu'elle démarre** — c'est possible depuis
+      le 18 septembre : le schéma sait enfin se créer de zéro en une passe (il en fallait deux avant,
+      voir le correctif `securite/cache-et-schema`)
+
+### 18.4 🟠 Règlement P2B : il s'applique dès le premier restaurant
+
+Le règlement (UE) 2019/1150 vise les **intermédiaires en ligne pour des professionnels** — ce que
+Fairide est, dès qu'un commerçant y vend. Il impose des conditions générales claires, un **préavis
+avant toute modification**, un **motif écrit** en cas de suspension ou de déréférencement d'un
+commerce, et un **système interne de traitement des plaintes**.
+
+`RestaurantContract` et les CGV en couvrent une partie. Ce n'est pas une obligation qu'on découvre
+au premier litige.
+
+- [ ] Faire relire les CGV commerçants au regard du P2B
+- [ ] Vérifier qu'une suspension de commerce (`PATCH /admin/restaurants/:id/status`) produit bien un
+      motif communiqué au commerçant, et pas seulement une ligne en base
+
+### 18.5 ⚪️ DSA et AI Act : exposition faible, à connaître quand même
+
+- **DSA** : Fairide est une plateforme en ligne. Sous 50 salariés et 10 M€ de chiffre d'affaires,
+  les obligations lourdes ne s'appliquent pas, mais le **point de contact** et le **mécanisme de
+  signalement** restent dus.
+- **AI Act** : l'IA ne sert qu'à lire une carte (photo, adresse, texte collé), traduire des plats et
+  lire un plan de salle. Ni haut risque, ni interdit — l'obligation est la transparence, et la
+  politique cite déjà Anthropic. Le risque réel est commercial, pas réglementaire : **une carte mal
+  lue affiche un mauvais prix**, d'où la relecture par le restaurateur, qui existe déjà.
+- **DAC7** : déjà construit (`/admin/couriers/export/dac7` et l'export 281.29). En avance.
+
+### 18.6 🔴 Rappel : ce qui reste de l'audit du 16 septembre
+
+- [ ] **Vérifier puis changer `JWT_SECRET` sur Railway.** Tant que ce secret n'a pas tourné, tout
+      jeton forgé à l'époque de la faille administrateur reste valable jusqu'à son expiration.
+      `ANCIEN_JWT_SECRET` existe pour faire la rotation sans déconnecter tout le monde d'un coup.
+- [ ] Valider la signature du jeton itsme via le JWKS (`ITSME_VERIFY_JWKS`), quand le contrat itsme
+      sera en place. Le jeton arrive par un appel serveur-à-serveur en TLS direct, ce qu'OIDC Core
+      §3.1.3.7 admet en remplacement — mais ce n'est pas une raison de s'en passer une fois possible.
