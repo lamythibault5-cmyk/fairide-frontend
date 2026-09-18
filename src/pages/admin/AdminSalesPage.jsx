@@ -16,7 +16,7 @@ import '../../crm.css';
 // Application « Sales » : les commerciaux (des comptes clients auxquels l'admin donne l'accès ici — pas de code à
 // distribuer) et tous les commerces démarchés avec leur étape et leur historique. Côté agent : pages/client/CrmPage.jsx.
 // Serveur : routes/adminSales.js.
-const TABS = ['agents', 'prospects'];
+const TABS = ['agents', 'prospects', 'doublons'];
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
 const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
@@ -46,6 +46,9 @@ export default function AdminSalesPage() {
           <div className="stat-card"><div className="num">{stats.newThisWeek}</div><div className="label">{tr('adminSales.statWeek')}</div></div>
           <div className="stat-card highlight"><div className="num">{(stats.byStage.inscrit || 0) + (stats.byStage.carte_en_ligne || 0) + (stats.byStage.actif || 0)}</div><div className="label">{tr('adminSales.statSigned')}</div></div>
           <div className={`stat-card${stats.overdue > 0 ? ' crm-retard' : ''}`}><div className="num">{stats.overdue}</div><div className="label">{tr('adminSales.statOverdue')}</div></div>
+          <div className="stat-card"><div className="num">{stats.dueToday ?? 0}</div><div className="label">{tr('adminSales.statToday')}</div></div>
+          <div className="stat-card"><div className="num">{stats.eventsThisWeek ?? 0}</div><div className="label">{tr('adminSales.statActions')}</div></div>
+          <button type="button" className={`stat-card${stats.duplicates > 0 ? ' crm-retard' : ''}`} style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit' }} onClick={() => setOnglet('doublons')}><div className="num">{stats.duplicates ?? 0}</div><div className="label">{tr('adminSales.statDuplicates')}</div></button>
         </div>
       )}
       <div className="role-pick" style={{ marginBottom: 14 }}>
@@ -53,6 +56,7 @@ export default function AdminSalesPage() {
       </div>
       {onglet === 'agents' && <AgentsTab {...commun} />}
       {onglet === 'prospects' && <ProspectsTab {...commun} retardInitial={searchParams.get('overdue') === '1'} />}
+      {onglet === 'doublons' && <DoublonsTab {...commun} />}
     </div>
   );
 }
@@ -102,6 +106,9 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
     { key: 'prospects', label: tr('adminSales.colProspects'), get: (a) => a.prospects, align: 'right', sum: true },
     { key: 'signed', label: tr('adminSales.colSigned'), get: (a) => a.signed, align: 'right', sum: true },
     { key: 'active', label: tr('adminSales.colActiveRestos'), get: (a) => a.active, align: 'right', sum: true },
+    { key: 'addedThisWeek', label: tr('adminSales.colWeekAdded'), get: (a) => a.addedThisWeek, align: 'right', sum: true },
+    { key: 'eventsThisWeek', label: tr('adminSales.colWeekActions'), get: (a) => a.eventsThisWeek, align: 'right', sum: true },
+    { key: 'overdue', label: tr('adminSales.colOverdue'), get: (a) => <span className={a.overdue ? 'crm-retard-texte' : ''}>{a.overdue}{a.dueToday ? ` (+${a.dueToday})` : ''}</span>, sortValue: (a) => a.overdue, align: 'right' },
     { key: 'lastActivity', label: tr('adminSales.colLastActivity'), get: (a) => fmt(a.lastActivity), sortValue: (a) => a.lastActivity || 0 },
     { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt },
     { key: 'actions', label: '', get: (a) => (
@@ -145,6 +152,17 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   // « En retard » = prochaine action dépassée, hors commerces actifs ou refusés (même règle que /admin/overview).
   const [retard, setRetard] = useState(retardInitial);
   const enRetard = (p) => p.nextActionAt && p.nextActionAt < Date.now() && !['actif', 'refuse'].includes(p.stage);
+  const [aujourdhui, setAujourdhui] = useState(false);
+  const finJournee = (() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); })();
+  const duJour = (p) => p.nextActionAt && p.nextActionAt <= finJournee && !['actif', 'refuse'].includes(p.stage);
+  // Export CSV de tout ce qui est affiché (tous commerciaux) — Excel l'ouvre tel quel, BOM pour les accents.
+  function exporterCsv(lignes) {
+    const col = ['name', 'commune', 'stage', 'agentName', 'rating', 'eventsCount', 'lastEventAt', 'nextActionAt', 'restaurantName'];
+    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const corps = [col.join(';'), ...lignes.map((p) => col.map((c) => cell(c === 'stage' ? tr(`sales.stage_${p[c]}`) : /At$/.test(c) && p[c] ? new Date(p[c]).toLocaleString() : p[c])).join(';'))];
+    const blob = new Blob(['\ufeff' + corps.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fairide-sales-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  }
   const [erreur, setErreur] = useState(null);
   const [stage, setStage] = useEtatPage('etapeProspects', '');
   const [q, setQ] = useState('');
@@ -164,7 +182,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   useEffect(charger, [charger]);
   const zone = zones.find((z) => z.key === zoneActive) || null;
   // Lignes affichées : filtre « en retard », puis rayon de la zone choisie (les commerces sans position restent, on ne sait pas où ils sont).
-  const lignesRetard = (rows || []).filter((p) => !retard || enRetard(p));
+  const lignesRetard = (rows || []).filter((p) => (!retard || enRetard(p)) && (!aujourdhui || duJour(p)));
   const lignes = lignesRetard.filter((p) => !zone || p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
   const zoneTooltip = (z) => `${tr('adminSales.zoneTotal', { n: z.total })}${z.agents?.length ? ` · ${z.agents.map((a) => `${a.name} ${a.n}`).join(', ')}` : ''}`;
   const columns = [
@@ -186,6 +204,8 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
           {STAGES.map((s) => <button key={s} type="button" className={`chip${stage === s ? ' active' : ''}`} onClick={() => setStage(s)}>{stageLabel(s)}</button>)}
         </div>
         <button type="button" className={`chip${retard ? ' active' : ''}`} aria-pressed={retard} onClick={() => setRetard((v) => !v)}>⏰ {tr('adminSales.filterOverdue')}</button>
+        <button type="button" className={`chip${aujourdhui ? ' active' : ''}`} aria-pressed={aujourdhui} onClick={() => setAujourdhui((v) => !v)}>📅 {tr('adminSales.filterToday')}</button>
+        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} disabled={!lignes.length} onClick={() => exporterCsv(lignes)}>⬇️ {tr('sales.exportCsv')}</button>
       </div>
       <div className="card crm-carte-carte">
         <div className="crm-carte-tete">
@@ -216,6 +236,38 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
       {rows && <AdminDataTable columns={columns} rows={lignes} sort={sort} onSort={toggle} onRowClick={(p) => setOuvert(p.id)} emptyLabel={tr('adminSales.noProspects')} />}
       {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={stageLabel} toast={toast} onClose={() => setOuvert(null)} />}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------- doublons
+// Le même commerce démarché par deux commerciaux ou plus : l'admin voit qui, à quelle étape, et tranche (il ouvre la
+// fiche de chacun ; supprimer l'un des deux se fait depuis le CRM du commercial concerné).
+function DoublonsTab({ token, tr, fmt, stageLabel }) {
+  const [groupes, setGroupes] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  const [ouvert, setOuvert] = useState(null);
+  const charger = useCallback(() => { setErreur(null); api('/admin/sales/duplicates', { token }).then(setGroupes).catch((e) => setErreur(e.message)); }, [token]);
+  useEffect(charger, [charger]);
+  return (
+    <div>
+      <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSales.dupIntro')}</p>
+      {erreur && <ErrorCard message={erreur} onRetry={charger} />}
+      {groupes && groupes.length === 0 && <div className="card"><p className="small" style={{ margin: 0 }}>{tr('adminSales.dupEmpty')}</p></div>}
+      {(groupes || []).map((g) => (
+        <div key={g.key} className="card" style={{ marginBottom: 10 }}>
+          <b>{g.name}</b> <span className="small">· {tr('adminSales.dupGroup', { n: g.items.length })}</span>
+          <div className="crm-liste" style={{ marginTop: 8 }}>
+            {g.items.map((p) => (
+              <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}`} style={{ marginBottom: 0 }} onClick={() => setOuvert(p.id)}>
+                <div className="crm-carte-tete"><b>🧑‍💼 {p.agentName}</b><span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span></div>
+                <div className="small crm-carte-ligne">{p.commune && <span>📍 {p.commune}</span>}<span>{fmt(p.updatedAt)}</span></div>
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+      {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={stageLabel} toast={() => {}} onClose={() => setOuvert(null)} />}
     </div>
   );
 }
