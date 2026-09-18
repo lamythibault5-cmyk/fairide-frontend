@@ -199,7 +199,9 @@ export default function Layout() {
   return (
     <>
       {/* Accueil : les visuels transparaissent dès l'arrivée, sous un en-tête iris plein qui fait cadre (fondateur,
-          2026-09-15 : un premier écran tout iris était « trop uniforme »). Ailleurs, révélés au défilement. */}
+          2026-09-15 : un premier écran tout iris était « trop uniforme »). Ailleurs, révélés au défilement.
+          Essai inverse le 2026-09-18 — aplat plein au repos, ouvert au défilement — abandonné : c'est bien
+          la transparence dès l'arrivée qui est voulue ici. */}
       {fondCuisine && <CuisineBackdrop key={fondVitrine && location.pathname === '/' ? 'accueil' : 'autre'} desLeDebut={fondVitrine && location.pathname === '/'} />}
       {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
@@ -213,14 +215,19 @@ export default function Layout() {
               de la largeur de quoi que ce soit. Voir .header-row dans styles.css. */}
           <div className="row header-row">
             <Link className="brand" to="/">
-              {/* Sans tuile : le vélo lime flotte sur l'iris, plus grand (78px) et net à toute densité (SVG). */}
-              <BrandMark size={leanHeader ? 44 : 78} tile={false} color="#C8F03C" />
+              {/* Sans tuile : le bol lime flotte sur l'iris, net à toute densité (SVG). 44px, ce
+                  n'est pas un chiffre rond mais le verrou de la spec : la marque fait 1,3 fois la
+                  hauteur d'ascendante du mot, soit 44px pour un « fairide » à 34px, et l'écart de
+                  14px (gap de .brand) vaut les 0,35 × corps demandés. L'ancien vélo montait à 78px
+                  parce qu'il était en paysage et ne pesait que 40px de haut ; le bol est carré, la
+                  même valeur en ferait une vignette deux fois plus grande que le mot. */}
+              <BrandMark size={leanHeader ? 34 : 44} tile={false} color="#C8F03C" />
               {!leanHeader && (
                 <div className="brand-text">
                   {/* <span> et non <h1> : la marque est présente sur toutes les pages, elle y
                       confisquait donc le titre de niveau 1. Le h1 appartient au contenu de la
                       page. Rendu inchangé, voir .brand-name dans styles.css. */}
-                  <span className="brand-name">fairide</span>
+                  <span className="brand-name wordmark">fairide</span>
                   <span className="brand-slogan">{t('common.slogan')}</span>
                 </div>
               )}

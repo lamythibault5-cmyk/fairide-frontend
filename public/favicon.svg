@@ -1,10 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
-  <!-- Déclinaison 24px : à cette taille les tubes du cadre se collent, on ne garde que les deux roues
-       et le tube supérieur — le vélo reste lisible (spec §4, « 24px fallback »). -->
-  <rect width="24" height="24" rx="6" fill="#3B2FB5"/>
-  <g fill="none" stroke="#C8F03C" stroke-width="2">
-    <circle cx="7.5" cy="16.5" r="2.5"/>
-    <circle cx="16.5" cy="16.5" r="2.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
+  <!-- Déclinaison ≤32px de la marque « Swept plume » (FairRide-logo-spec.md, §« Small-size /
+       favicon mark »). À cette taille les trois traits de vapeur se collent en une bavure : on n'en
+       garde qu'un, et les épaisseurs passent de 6/7 à 9 pour que le dessin survive au sous-pixel.
+       C'est la SEULE simplification approuvée par la spec — ne pas en inventer d'autres. -->
+  <rect width="96" height="96" rx="24" fill="#3B2FB5"/>
+  <g transform="translate(48 50) scale(0.84) translate(-48 -48)" fill="none">
+    <path d="M58 44 C52 26 30 20 12 24" stroke="#C8F03C" stroke-width="9" stroke-linecap="round"/>
+    <path d="M18 64 A32 32 0 0 0 82 64 Z" fill="#C8F03C"/>
+    <path d="M12 64 H88" stroke="#C8F03C" stroke-width="9" stroke-linecap="round"/>
   </g>
-  <rect x="7" y="7" width="10" height="2" rx="1" fill="#C8F03C"/>
 </svg>
