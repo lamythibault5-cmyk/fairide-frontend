@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
@@ -95,7 +95,6 @@ function steps(t) {
 }
 
 export default function Landing() {
-  const navigate = useNavigate();
   const { t } = useLanguage();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
@@ -148,10 +147,12 @@ export default function Landing() {
               majorité des visiteurs. Ils ne disparaissent pas pour autant — la ligne
               .landing-partner-line juste en dessous les remplace, et la rangée « Rejoindre »
               plus bas dans la page porte les trois portes d'entrée en entier. */}
+          {/* UN SEUL appel à l'action principal par page et par public (revue de lancement, 2026-09-18) : pour le
+              visiteur de l'accueil, c'est « Commander ». Les entrées commerçant et livreur ne sont plus des boutons
+              concurrents dans la bannière : la ligne juste en dessous, la rangée « Rejoindre » plus bas et le pied de
+              page les portent. Un lien (pas un bouton) : explorable par les robots, ouvrable dans un nouvel onglet. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <button className="btn-hero-ghost landing-cta-principal" onClick={() => navigate('/login?audience=client')}>{t('landing.orderNow')}</button>
-            <button className="btn-hero-ghost landing-cta-partenaire" onClick={() => navigate('/login?audience=partner&role=restaurant')}>🏪 {t('footer.addBusiness')}</button>
-            <button className="btn-hero-ghost landing-cta-partenaire" onClick={() => navigate('/login?audience=partner&role=driver')}>🛵 {t('footer.becomeDriver')}</button>
+            <Link to="/login?audience=client" className="btn-gold landing-cta-principal">{t('landing.orderNow')}</Link>
           </div>
           {/* `audience=partner` sans `role` : la page d'inscription propose alors les trois types de
               compte (voir Auth.jsx, la lecture de `audience` et `role`). Une ligne qui dit
@@ -290,7 +291,8 @@ export default function Landing() {
       <Reveal className="landing-cta">
         <h2>{t('landing.ctaTitle')}</h2>
         <p>{t('landing.ctaText')}</p>
-        <button className="btn-gold" onClick={() => navigate('/login')}>{t('landing.ctaButton')}</button>
+        {/* Second appel en bas de page : rétrogradé en contour, le lime reste réservé à « Commander » dans la bannière. */}
+        <Link to="/login" className="btn-outline">{t('landing.ctaButton')}</Link>
       </Reveal>
     </div>
   );

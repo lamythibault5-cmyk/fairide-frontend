@@ -5,7 +5,7 @@ import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Texte dans translations.js (espace `privacy`), en trois langues.
-const SECTIONS = ['collected', 'purpose', 'sharing', 'retention', 'rights', 'cookies'];
+const SECTIONS = ['controller', 'collected', 'purpose', 'sharing', 'transfers', 'retention', 'rights', 'cookies', 'security'];
 const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 
 // Les sous-traitants, dans l'ordre où ils interviennent : payer, être prévenu, se connecter, être
@@ -21,8 +21,10 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 const SOUS_TRAITANTS = [
   ['stripe', 'Stripe'],
   ['resend', 'Resend'],
+  ['twilio', 'Twilio'],
   ['google', 'Google'],
   ['nominatim', 'Nominatim (OpenStreetMap)'],
+  ['photon', 'Photon (Komoot)'],
   ['osrm', 'OSRM'],
   ['osmTiles', 'OpenStreetMap'],
   ['anthropic', 'Anthropic (Claude)'],
