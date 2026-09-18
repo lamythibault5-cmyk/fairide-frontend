@@ -34,6 +34,11 @@
     <!-- Pré-connexion à l'API : la poignée de main TLS se fait pendant que le code se charge, le premier
          appel (liste des commerces, session) part sans attendre. -->
     <link rel="preconnect" href="https://fairide-backend-production.up.railway.app" crossorigin />
+    <!-- Police : preconnect + feuille chargée sans bloquer le rendu (media=print puis all), avec repli sans JavaScript. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" /></noscript>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>
