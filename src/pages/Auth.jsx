@@ -398,6 +398,15 @@ export default function Auth() {
     await attendrePage(from === '/' ? espaceApresConnexion(user) : from);
     navigate(from);
   }
+  // Après une INSCRIPTION (compte créé, code vérifié), on arrive directement dans son espace — jamais sur la page de
+  // connexion ni sur l'accueil (fondateur, 2026-09-18) : client → Mon compte, commerce → tableau de bord, livreur →
+  // espace livreur (où l'attend la vérification d'identité). `replace` : le bouton Retour ne ramène pas au formulaire.
+  async function allerApresInscription(user) {
+    try { sessionStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
+    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : '/account';
+    await attendrePage(cible);
+    navigate(cible, { replace: true });
+  }
   // Intention forte de se connecter (champ touché, formulaire effleuré) : on précharge dès maintenant les
   // espaces commerce et livreur, pour que l'arrivée soit instantanée après la réponse du serveur.
   const prechargerEspaces = () => { prechargerPage('/dashboard'); prechargerPage('/driver'); };
@@ -727,6 +736,8 @@ export default function Auth() {
           toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
         } else if (data.token) {
           await televerserDocumentsLivreur(data.token);
+          toast(t('auth.welcome', { name: data.user.name }));
+          await allerApresInscription(data.user);
         }
       } else {
         const data = await login(email.trim(), password);
@@ -766,7 +777,7 @@ export default function Auth() {
       reussi = true;
       await televerserDocumentsLivreur(data.token);
       toast(t('auth.welcome', { name: data.user.name }));
-      await allerApresConnexion(data.user);
+      await allerApresInscription(data.user);
     } catch (err) {
       toast(err.message);
       reussi = false;

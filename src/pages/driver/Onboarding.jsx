@@ -199,17 +199,18 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
         </div>
       ) : (
         <div className="courier-providers">
+          <div className={`courier-provider courier-provider-itsme${prov.itsme ? '' : ' soon'}`}>
+            <b>📱 {t('courierOnboarding.provider_itsme')} <span className="pill" style={{ marginLeft: 6 }}>{t('courierOnboarding.itsmeRecommended')}</span></b>
+            <p className="small">{t('courierOnboarding.itsmeLastCheck')}</p>
+            <p className="small">{t('courierOnboarding.itsmeHelp')}</p>
+            {prov.itsme ? <button type="button" className="btn-gold" disabled={busy} onClick={() => demarrer('itsme')}>{t('courierOnboarding.identityStartItsme')}</button> : <span className="small courier-soon">🔒 {t('courierOnboarding.itsmeSoon')}</span>}
+          </div>
           <div className="courier-provider">
             <b>🪪 {t('courierOnboarding.provider_stripe_identity')}</b>
             <p className="small">{t('courierOnboarding.stripeIdentityHelp')}</p>
             <button type="button" className="btn-teal" disabled={busy || !prov.stripe_identity} onClick={() => demarrer('stripe_identity')}>{id.status === 'pending' && id.provider === 'stripe_identity' ? t('courierOnboarding.identityResume') : t('courierOnboarding.identityStart')}</button>
             {id.status === 'processing' && <p className="small">⏳ {t('courierOnboarding.identityProcessing')}</p>}
             {id.status === 'failed' && <p className="small" style={{ color: 'var(--red)' }}>{t('courierOnboarding.identityFailed')}</p>}
-          </div>
-          <div className={`courier-provider${prov.itsme ? '' : ' soon'}`}>
-            <b>📱 {t('courierOnboarding.provider_itsme')}</b>
-            <p className="small">{t('courierOnboarding.itsmeHelp')}</p>
-            {prov.itsme ? <button type="button" className="btn-teal" disabled={busy} onClick={() => demarrer('itsme')}>{t('courierOnboarding.identityStartItsme')}</button> : <span className="small courier-soon">🔒 {t('courierOnboarding.itsmeSoon')}</span>}
           </div>
           <div className="courier-provider">
             <b>📄 {t('courierOnboarding.provider_manual')}</b>

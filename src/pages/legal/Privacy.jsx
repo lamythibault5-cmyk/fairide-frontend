@@ -5,7 +5,7 @@ import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Texte dans translations.js (espace `privacy`), en trois langues.
-const SECTIONS = ['controller', 'collected', 'purpose', 'sharing', 'transfers', 'retention', 'rights', 'cookies', 'security'];
+const SECTIONS = ['controller', 'collected', 'mandatory', 'purpose', 'sharing', 'transfers', 'retention', 'rights', 'automated', 'others', 'cookies', 'security', 'changes'];
 const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 
 // Les sous-traitants, dans l'ordre où ils interviennent : payer, être prévenu, se connecter, être
@@ -20,6 +20,7 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 // trois langues.
 const SOUS_TRAITANTS = [
   ['stripe', 'Stripe'],
+  ['itsme', 'itsme (Belgian Mobile ID)'],
   ['resend', 'Resend'],
   ['twilio', 'Twilio'],
   ['google', 'Google'],
