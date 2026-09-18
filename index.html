@@ -117,6 +117,21 @@
         @keyframes bm-tracer { to { stroke-dashoffset: 0; } }
         @keyframes bm-bol { to { transform: scaleY(1); } }
         @keyframes splash-nom { to { opacity: 1; } }
+        /* PORTE DE SORTIE, EN CSS SEUL — parce que tout le reste du filet est en JavaScript.
+           L'écran est retiré par main.jsx, avec un plafond de 2,5 s ; lazyPage.js rattrape un
+           morceau de code manquant. Les deux supposent que le JavaScript s'exécute. S'il ne
+           s'exécute pas — script d'entrée absent après une mise en ligne alors qu'un onglet était
+           resté ouvert, coupure au mauvais moment, connexion trop lente, extension qui bloque —
+           il ne reste RIEN : l'animation tourne, puis se fige, et le visiteur n'a aucune indication
+           ni aucun moyen d'agir. C'est précisément ce qui a été signalé.
+           Ce message est en pur CSS : il apparaît au bout de 8 s même si pas une ligne de
+           JavaScript n'a tourné. Le lien est un <a href> ordinaire, donc cliquable sans JavaScript
+           lui aussi. Si l'application démarre normalement, l'écran est retiré bien avant et
+           personne ne le voit jamais. */
+        #splash .splash-secours { opacity: 0; animation: splash-secours 0s 8s forwards; text-align: center; max-width: 30ch; }
+        #splash .splash-secours p { margin: 0 0 10px; color: #fff; opacity: .85; font: 400 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+        #splash .splash-secours a { display: inline-block; background: #C8F03C; color: #14121F; text-decoration: none; font: 700 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 11px 18px; border-radius: 6px; }
+        @keyframes splash-secours { to { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) {
           /* Pas de `opacity: 1` sur la vapeur : la déclaration CSS écraserait l'attribut SVG et les
              trois traits perdraient leur dégradé 1 / 0,78 / 0,55. Le nom, lui, en a besoin. */
@@ -136,6 +151,13 @@
         </g>
       </svg>
       <span class="splash-nom wordmark">fairide</span>
+      <!-- Invisible pendant 8 s, puis affiché sans que rien n'ait à s'exécuter. `?r=` casse le cache
+           du navigateur ET celui des intermédiaires : un simple rechargement resservirait la page
+           périmée qui a justement causé le blocage. -->
+      <div class="splash-secours">
+        <p>Le chargement prend plus de temps que prévu.</p>
+        <a href="/?r=1" rel="nofollow">Recharger la page</a>
+      </div>
     </div>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
