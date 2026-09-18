@@ -1592,7 +1592,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
      marque elle-même, et c'est sur téléphone qu'elle a le moins d'autres occasions de se montrer —
      la bannière y a déjà perdu sa signature. Elle se loge dans le blanc au-dessus du titre, que
      .landing-hero-affiche centre verticalement sur le premier écran. */
-  .be-mark { width: 28px !important; height: 28px !important; top: 14px; right: 14px; }
+  .be-mark { width: 36px !important; height: 36px !important; top: 14px; right: 14px; }
 }
 
 /* Les trois chiffres vivent DANS la bannière, séparés par un filet blanc, au
