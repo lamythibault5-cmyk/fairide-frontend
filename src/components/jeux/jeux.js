@@ -25,7 +25,7 @@
 // moteur le fournit ; le français de jeux.js n'est que le repli. Les règles (regles + controles) sont
 // aussi traduites par le moteur, clé par clé : jeux.<key>_regles_0..3.
 
-import { aleatoire, choix, emoji, fondDegrade, IRIS, LIME } from './dessin';
+import { aleatoire, choix, emoji, fondDegrade, sacFairide, IRIS, LIME } from './dessin';
 import { creerRider } from './rider';
 
 const OR = '#FFD166';
@@ -52,6 +52,11 @@ function creerChute(api, cfg) {
   let w = api.w; let h = api.h;
   let objets = []; let depuisSpawn = 0; let joueurX = w / 2; let cibleX = w / 2; let rebond = 0; let vRebond = 0;
   let horloge = 0; let derniereArrivee = 0; let alerte = 0; let vJoueur = 0; let defile = 0; let vitesseDecor = 0.2;
+  // Bonus : aimant (FairCatch, les plats viennent au sac pendant AIMANT s), bouclier (FairSort, encaisse UN déchet),
+  // nitro (FairDodge, EXPRESS s d'invincibilité). Commande du client (FairCatch) : trois plats à attraper, +5.
+  let aimant = 0; let bouclier = false; let nitro = 0; let commande = null; let commandesLivrees = 0;
+  const AIMANT = 5; const EXPRESS = 3.2; const PRIME_COMMANDE = 5;
+  const nouvelleCommande = () => { const pool = [...PLATS].sort(() => Math.random() - 0.5); commande = { plats: pool.slice(0, 3).map((e) => ({ emoji: e, fait: false })), age: 0 }; };
   const SORTIE = 0.14; // durée de l'effacement d'un objet arrivé au sol
   // Plus grands qu'avant (plafond 36 → 54px) : « on voit rien » disait le fondateur. Bornés aussi par la
   // HAUTEUR, pour qu'un terrain large et bas (téléphone couché) garde le temps de voir l'objet tomber.
@@ -61,20 +66,23 @@ function creerChute(api, cfg) {
   const ySol = () => h - tailleObjet() * 0.3; // là où un objet « touche le sol » (le bandeau au bas du terrain)
 
   return {
-    reset() { objets = []; depuisSpawn = 0; joueurX = w / 2; cibleX = w / 2; rebond = 0; vRebond = 0; horloge = 0; derniereArrivee = 0; alerte = 0; vJoueur = 0; defile = 0; },
+    reset() { objets = []; depuisSpawn = 0; joueurX = w / 2; cibleX = w / 2; rebond = 0; vRebond = 0; horloge = 0; derniereArrivee = 0; alerte = 0; vJoueur = 0; defile = 0; aimant = 0; bouclier = false; nitro = 0; commande = null; commandesLivrees = 0; if (cfg.commandes) nouvelleCommande(); },
     redimensionner(nw, nh) {
       const kx = nw / w; const ky = nh / h; w = nw; h = nh;
       joueurX *= kx; cibleX *= kx; vJoueur *= kx;
       const t = tailleObjet();
       for (const o of objets) { o.x *= kx; o.y *= ky; o.depart *= ky; o.trajet *= ky; o.taille = t; }
     },
-    etat() { return { objets: objets.length, joueurX, alerte, yJoueur: yJoueur(), taille: tailleObjet(), liste: objets.filter((o) => !o.sortie).map((o) => ({ x: o.x, y: o.y, mauvais: !!o.mauvais, or: !!o.or })) }; },
+    etat() { return { objets: objets.length, joueurX, alerte, yJoueur: yJoueur(), taille: tailleObjet(), aimant, bouclier, nitro, commandesLivrees, commande: commande ? commande.plats.filter((p) => p.fait).length : -1, liste: objets.filter((o) => !o.sortie).map((o) => ({ x: o.x, y: o.y, mauvais: !!o.mauvais, or: !!o.or, bonus: o.bonus || null })) }; },
     update(dt, input) {
       const n = input.niveau;
       const t = tailleObjet(); const lj = largeurJoueur();
       const demiContact = t * (cfg.demiContact ?? 1.35) - 4;
       horloge += dt;
       if (alerte > 0) alerte = Math.max(0, alerte - dt);
+      if (aimant > 0) aimant = Math.max(0, aimant - dt);
+      if (nitro > 0) nitro = Math.max(0, nitro - dt);
+      if (commande) commande.age += dt;
       // Le joueur suit le pointeur avec un léger lissage : direct, ça vibre au pixel près ; trop lent,
       // on rate. 18 par seconde = un rattrapage en ~60 ms, imperceptible mais qui gomme le tremblement.
       if (input.x != null) cibleX = borner(input.x, lj / 2, w - lj / 2);
@@ -97,7 +105,9 @@ function creerChute(api, cfg) {
       depuisSpawn += dt;
       if (depuisSpawn >= cfg.intervalle(n)) {
         depuisSpawn = 0;
-        const o = cfg.nouvelObjet(n);
+        // Un bonus de temps en temps (jamais deux à l'écran, jamais pendant qu'un est actif), sinon l'objet du jeu.
+        const bonusPresent = objets.some((x) => x.bonus) || aimant > 0 || nitro > 0 || bouclier;
+        const o = cfg.bonus && !bonusPresent && Math.random() < 0.06 + n * 0.004 ? cfg.bonus(n) : cfg.nouvelObjet(n);
         let v = cfg.vitesse(n) * h * (o.vitesseFacteur || 1);
         // Équité : deux objets n'atteignent jamais le sol à moins de `ecart` s l'un de l'autre, quel que
         // soit le tirage des vitesses. Sans ça, un plat lent rattrapé par un plat rapide arrivaient
@@ -126,30 +136,58 @@ function creerChute(api, cfg) {
           o.y = o.depart + o.trajet * f;
         }
         o.phase += dt * 3; o.rot += o.spin * dt;
+        // Aimant (FairCatch) : les bons objets à portée glissent vers le sac.
+        if (aimant > 0 && !o.mauvais && !o.bonus && o.y > yJ - h * 0.55) o.x += (joueurX - o.x) * Math.min(1, dt * 4.5);
         const dx = Math.abs(o.x - joueurX); const dy = o.y - yJ;
         if (Math.abs(dy) < t * 0.6 && dx < demiContact) {
+          // Bonus attrapé : il s'active, +2, et un mot dans le terrain.
+          if (o.bonus) {
+            api.bonus?.(); api.enchainer?.(); api.marquer(2); vRebond = 7;
+            api.eclat?.(o.x, yJ - t * 0.4, OR, 16);
+            if (o.bonus === 'aimant') { aimant = AIMANT; api.effet?.(o.x, yJ - t * 0.9, `🧲 ${tx(api, 'jeux.fx_aimant', 'Aimant !')}`, OR); }
+            if (o.bonus === 'bouclier') { bouclier = true; api.effet?.(o.x, yJ - t * 0.9, `🛡️ ${tx(api, 'jeux.fx_bouclier', 'Bouclier !')}`, OR); }
+            if (o.bonus === 'nitro') { nitro = EXPRESS; api.effet?.(o.x, yJ - t * 0.9, `⚡ ${tx(api, 'jeux.fx_express', 'Express !')}`, OR); }
+            if (o.bonus === 'pourboire') { api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, `💶 +3`, OR); }
+            continue;
+          }
           const effet = cfg.toucher(o);
-          if (effet === 'perdu') return api.perdre();
+          if (effet === 'perdu') {
+            // Bouclier : il encaisse ce déchet et disparaît. Nitro : l'obstacle éclate, et compte comme évité.
+            if (bouclier) { bouclier = false; api.rompre?.(); api.secouer?.(0.5); api.effet?.(o.x, yJ - t * 0.9, `🛡️ ${tx(api, 'jeux.fx_encaisse', 'Encaissé !')}`, OR); api.eclat?.(o.x, yJ - t * 0.4, '#FFFFFF', 18); continue; }
+            if (nitro > 0) { api.enchainer?.(); api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, `⚡ +1`, LIME); api.eclat?.(o.x, yJ - t * 0.4, LIME, 12); continue; }
+            return api.perdre();
+          }
           if (effet === 'point') {
             const pts = o.points || 1;
+            api.enchainer?.();
             api.marquer(pts);
             api.effet?.(o.x, yJ - t * 0.9, `+${pts}`, o.or ? OR : undefined);
             api.eclat?.(o.x, yJ - t * 0.4, o.or ? OR : cfg.eclat || IRIS, o.or ? 14 : 7);
             vRebond = o.or ? 7 : 5;
+            // Commande du client (FairCatch) : ce plat en faisait-il partie ? Les trois réunis = commande livrée, +5.
+            if (commande) {
+              const p = commande.plats.find((x) => !x.fait && x.emoji === o.emoji);
+              if (p) { p.fait = true; if (commande.plats.every((x) => x.fait)) { commandesLivrees += 1; api.marquer(PRIME_COMMANDE); api.bonus?.(); api.effet?.(w / 2, h * 0.32, `🛍️ ${tx(api, 'jeux.fx_commande', 'Commande livrée !')} +${PRIME_COMMANDE}`, OR); api.eclat?.(w / 2, h * 0.3, OR, 24); nouvelleCommande(); } }
+            }
           }
           continue;
         }
         // L'objet vient de passer sous le joueur sans contact : esquivé (FairDodge), déchet évité (FairSort).
         if (!o.passe && dy >= t * 0.6) {
           o.passe = true;
-          const effet = cfg.passer?.(o, dx, demiContact, t);
-          if (effet === 'point') { api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, '+1'); }
-          if (effet === 'frole') { api.marquer(2); api.effet?.(o.x, yJ - t * 0.9, `${tx(api, 'jeux.fx_pfiou', 'Pfiou !')} +2`, ORANGE); api.eclat?.(o.x, yJ, ORANGE, 6); }
+          const effet = o.bonus ? null : cfg.passer?.(o, dx, demiContact, t); // un bonus manqué ne rapporte rien
+          if (effet === 'point') { api.enchainer?.(); api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, '+1'); }
+          if (effet === 'frole') { api.enchainer?.(); api.marquer(2); api.effet?.(o.x, yJ - t * 0.9, `${tx(api, 'jeux.fx_pfiou', 'Pfiou !')} +2`, ORANGE); api.eclat?.(o.x, yJ, ORANGE, 6); }
           if (effet === 'alerte') { alerte = 0.4; api.effet?.(o.x, yJ - t * 0.9, tx(api, 'jeux.fx_ouf', 'Ouf !'), ORANGE); }
+          // Un bon plat passé sous le sac sans être pris (FairSort, FairCatch avec bouclier…) casse la série.
+          if (!o.mauvais && !o.bonus && !cfg.route) api.rompre?.();
         }
         if (o.y > sol) {
           const effet = cfg.manquer(o);
-          if (effet === 'perdu') return api.perdre();
+          if (effet === 'perdu') {
+            if (bouclier) { bouclier = false; api.rompre?.(); api.secouer?.(0.5); api.effet?.(o.x, sol - t * 1.2, `🛡️ ${tx(api, 'jeux.fx_encaisse', 'Encaissé !')}`, OR); o.sortie = SORTIE; restants.push(o); continue; }
+            return api.perdre();
+          }
           if (effet === 'point') { api.marquer(1); api.effet?.(o.x, sol - t * 1.2, '+1'); }
           o.sortie = SORTIE;
         }
@@ -292,8 +330,14 @@ function creerChute(api, cfg) {
             ctx.restore();
           }
         }
-        jeton(ctx, o.x, o.y, rj, danger ? (cfg.badges ? 'dechet' : 'danger') : o.or ? 'or' : 'bon');
-        emoji(ctx, o.emoji, o.x, o.y, o.taille * 0.82 * (0.7 + 0.3 * s), Math.sin(o.phase) * o.balance + o.rot);
+        // Un bonus : jeton doré qui palpite avec un halo lime, quel que soit le jeu.
+        if (o.bonus) {
+          const gb = ctx.createRadialGradient(o.x, o.y, rj * 0.5, o.x, o.y, rj * 2);
+          gb.addColorStop(0, 'rgba(200,240,60,.35)'); gb.addColorStop(1, 'rgba(200,240,60,0)');
+          ctx.fillStyle = gb; ctx.beginPath(); ctx.arc(o.x, o.y, rj * 2, 0, Math.PI * 2); ctx.fill();
+        }
+        jeton(ctx, o.x, o.y, rj, o.bonus ? 'or' : danger ? (cfg.badges ? 'dechet' : 'danger') : o.or ? 'or' : 'bon');
+        emoji(ctx, o.emoji, o.x, o.y, o.taille * 0.82 * (0.7 + 0.3 * s), o.bonus ? Math.sin(o.phase * 2) * 0.2 : Math.sin(o.phase) * o.balance + o.rot);
         if (cfg.badges) badge(ctx, o.x + rj * 0.74, o.y - rj * 0.74, Math.max(7, rj * 0.36), !o.mauvais);
         if (o.or && !o.sortie) {
           // Plat doré : quatre étincelles qui tournent autour, on le repère avant même qu'il n'approche.
@@ -324,6 +368,35 @@ function creerChute(api, cfg) {
         ctx.strokeStyle = `rgba(255,169,77,${(alerte / 0.4 * 0.9).toFixed(3)})`; ctx.lineWidth = 6;
         ctx.strokeRect(3, 3, w - 6, h - 6);
       }
+      // Commande du client (FairCatch) : une petite fiche en haut à gauche, les trois plats attendus, cochés au fur et à mesure.
+      if (commande) {
+        const cx = 8; const cy = 8; const lc = t * 0.62; const hc = t * 0.78;
+        const pop = 1 + Math.max(0, 0.25 - commande.age) * 1.2;
+        ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop);
+        ctx.fillStyle = 'rgba(255,255,255,.92)';
+        rectArrondi(ctx, 0, 0, lc * 3 + 24, hc + 6, 10); ctx.fill();
+        ctx.strokeStyle = IRIS; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = IRIS; ctx.font = `800 ${Math.max(9, t * 0.2)}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(tx(api, 'jeux.fx_commandeTitre', 'Commande'), 8, 4);
+        commande.plats.forEach((p, i) => {
+          const px = 8 + i * lc + lc * 0.5 - 2; const py = hc * 0.62;
+          ctx.globalAlpha = p.fait ? 0.35 : 1;
+          emoji(ctx, p.emoji, px, py, t * 0.46);
+          ctx.globalAlpha = 1;
+          if (p.fait) badge(ctx, px + t * 0.17, py - t * 0.17, Math.max(5, t * 0.12), true);
+        });
+        ctx.restore();
+      }
+      // Nitro (FairDodge) : la route passe au vert et un chrono ⚡ s'affiche.
+      if (nitro > 0) {
+        ctx.fillStyle = `rgba(200,240,60,${(0.06 + Math.sin(horloge * 14) * 0.03).toFixed(3)})`; ctx.fillRect(0, 0, w, h);
+        ctx.fillStyle = LIME; ctx.font = `900 ${Math.max(12, t * 0.3)}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(`⚡ ${nitro.toFixed(1)}s`, 10, 10);
+      }
+      if (aimant > 0) {
+        ctx.fillStyle = OR; ctx.font = `900 ${Math.max(12, t * 0.3)}px system-ui, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'bottom';
+        ctx.fillText(`🧲 ${aimant.toFixed(1)}s`, w - 10, h - t * 0.7);
+      }
       // Le joueur penche légèrement dans le sens de son déplacement et rebondit quand il attrape.
       ctx.save();
       ctx.translate(joueurX, h - t * 0.55);
@@ -341,9 +414,25 @@ function creerChute(api, cfg) {
       // Socle lime sous le joueur : on le retrouve d'un coup d'œil, même au milieu des objets qui tombent.
       ctx.fillStyle = 'rgba(0,0,0,.28)';
       ctx.beginPath(); ctx.ellipse(0, t * 0.05, t * 0.95, t * 0.2, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = LIME; ctx.strokeStyle = '#14121F'; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(0, -t * 0.65, t * 0.86, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-      emoji(ctx, cfg.joueur, 0, -t * 0.65, t * 1.3, borner(vJoueur / (w * 2.2), -0.3, 0.3)); // penche selon sa vitesse réelle
+      // Auras des bonus actifs : lime tournante pour l'aimant, anneau blanc pour le bouclier, traînée verte pour la nitro.
+      if (aimant > 0 || bouclier || nitro > 0) {
+        ctx.save(); ctx.translate(0, -t * 0.65);
+        ctx.lineWidth = Math.max(3, t * 0.09); ctx.lineCap = 'round';
+        if (aimant > 0) { ctx.strokeStyle = 'rgba(255,209,102,.9)'; ctx.setLineDash([t * 0.3, t * 0.2]); ctx.lineDashOffset = -horloge * t * 1.2; ctx.beginPath(); ctx.arc(0, 0, t * 1.15, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]); }
+        if (bouclier) { ctx.strokeStyle = `rgba(255,255,255,${(0.7 + Math.sin(horloge * 5) * 0.25).toFixed(3)})`; ctx.beginPath(); ctx.arc(0, 0, t * 1.1, 0, Math.PI * 2); ctx.stroke(); }
+        if (nitro > 0) { ctx.strokeStyle = LIME; ctx.beginPath(); ctx.arc(0, 0, t * 1.12, 0, Math.PI * 2); ctx.stroke(); }
+        ctx.restore();
+      }
+      if (cfg.sac) {
+        // Le sac Fairide à la place du panier : socle lime, sac iris penché selon la vitesse.
+        ctx.fillStyle = LIME; ctx.strokeStyle = '#14121F'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(0, -t * 0.1, t * 1.05, t * 0.32, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        sacFairide(ctx, 0, -t * 0.72, t * 1.15, borner(vJoueur / (w * 2.2), -0.3, 0.3));
+      } else {
+        ctx.fillStyle = LIME; ctx.strokeStyle = '#14121F'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(0, -t * 0.65, t * 0.86, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        emoji(ctx, cfg.joueur, 0, -t * 0.65, t * 1.3, borner(vJoueur / (w * 2.2), -0.3, 0.3)); // penche selon sa vitesse réelle
+      }
       ctx.restore();
     }
   };
@@ -400,13 +489,15 @@ export const JEUX = [
     stockage: 'fairide_food_catch_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Perdu !',
     regles: [
       'But : des plats tombent du ciel, attrape-les tous dans ton panier avant qu’ils ne touchent le sol.',
-      'Score : +1 par plat attrapé, +3 pour un plat doré ✨. Tous les 10 points, niveau supérieur : ça tombe plus vite et plus souvent.',
+      'Score : +1 par plat attrapé, +3 pour un plat doré ✨, +5 quand tu complètes la commande du client affichée en haut. 5 prises d’affilée = points ×2, 10 = ×3. L’aimant 🧲 attire les plats pendant 5 s. Tous les 10 points, ça tombe plus vite.',
       'Fin de partie : un seul plat par terre et c’est fini. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Décor « marché » : auvent rayé d'où sortent les plats, guirlande, comptoir en bois (voir draw).
-      joueur: '🧺', ciel: ['#241C74', '#5F51EC'], demiContact: 1.35, decor: 'marche',
+      joueur: '🧺', ciel: ['#241C74', '#5F51EC'], demiContact: 1.35, decor: 'marche', sac: true, commandes: true,
+      // Bonus : l'aimant 🧲 — pendant 5 s les plats viennent d'eux-mêmes vers le sac.
+      bonus: () => ({ emoji: '🧲', bonus: 'aimant', vitesseFacteur: 0.9 }),
       // Un plat sur dix est doré : il vaut 3 et tombe un peu plus vite.
       nouvelObjet: () => (Math.random() < 0.1 ? { emoji: choix(PLATS), or: true, points: 3, vitesseFacteur: 1.2 } : { emoji: choix(PLATS) }),
       intervalle: (n) => Math.max(0.42, 0.96 - n * 0.072),
@@ -419,13 +510,15 @@ export const JEUX = [
     stockage: 'fairide_dodge_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Touché !',
     regles: [
       'But : tu livres en scooter et la route est semée d’obstacles (🚧 🪨 🕳️ 🔥 💥), faufile-toi sans rien toucher.',
-      'Score : +1 par obstacle évité, +1 de bonus « Pfiou ! » quand il te frôle. Tous les 10 points, la route accélère et les obstacles se rapprochent.',
+      'Score : +1 par obstacle évité, +2 « Pfiou ! » quand il te frôle, +3 par pourboire 💶 ramassé. 5 esquives d’affilée = points ×2, 10 = ×3. La nitro ⚡ te rend invincible 3 s : les obstacles éclatent. Tous les 10 points, la route accélère.',
       'Fin de partie : un seul choc et le scooter s’arrête. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Asphalte sombre (et non plus violet grisé) : les panneaux rouges et blancs des obstacles tranchent dessus.
       joueur: '🛵', ciel: ['#1E1D2B', '#3A3950'], eclat: ORANGE, route: true, tournoie: true,
+      // Bonus sur la route : la nitro ⚡ (3 s d'invincibilité « Express », les obstacles éclatent) ou un pourboire 💶 (+3).
+      bonus: () => (Math.random() < 0.55 ? { emoji: '⚡', bonus: 'nitro' } : { emoji: '💶', bonus: 'pourboire' }),
       // Contact « juste » (1 taille d'objet) : on ne perd pas sur un obstacle qui n'a fait qu'effleurer le dessin.
       demiContact: 1.02,
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
@@ -442,13 +535,15 @@ export const JEUX = [
     stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '⏱️ Trop lent !',
     regles: [
       'But : une cible 🎯 surgit quelque part sur le terrain, tape dessus avant que l’anneau autour ne se referme.',
-      'Score : +1 par cible touchée, +2 « Parfait ! » si tu tapes pendant que l’anneau est encore doré. Tous les 8 points, l’anneau se referme plus vite.',
+      'Score : +1 par cible touchée, +2 « Parfait ! » si tu tapes pendant que l’anneau est doré. 5 d’affilée = points ×2, 10 = ×3. Dès le niveau 2 la cible bouge ; toutes les 10 cibles, 3 s de Frénésie 🔥 où tout vaut Parfait. Tous les 8 points, l’anneau se referme plus vite.',
       'Fin de partie : l’anneau se referme (il passe au rouge) avant que tu n’aies touché la cible. Taper à côté ne coûte rien.'
     ],
     controles: 'Commandes : tape (ou clique) sur la cible. Clavier : Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let cible = null; let reste = 0; let fenetre = 1; let precedente = null;
       let horloge = 0; let touches = []; // ondes laissées par les cibles touchées (x, y, age, parfait, r)
+      let frenesie = 0; let touchees = 0; // frénésie : FRENESIE s pendant lesquelles l'anneau ne se referme pas, on tape à la volée
+      const FRENESIE = 3;
       // Plus grosse qu'avant (plafond 58 → 96px) : la cible doit sauter aux yeux dès qu'elle apparaît.
       const taille = () => Math.max(46, Math.min(96, Math.min(w, h) * 0.26));
       const PARFAIT = 0.62; // fraction de la fenêtre pendant laquelle l'anneau est doré (Parfait = +2)
@@ -462,25 +557,39 @@ export const JEUX = [
           x = aleatoire(t / 2 + 4, w - t / 2 - 4); y = aleatoire(t / 2 + 4, h - t / 2 - 4);
           if (!precedente || Math.hypot(x - precedente.x, y - precedente.y) >= t * 1.4) break;
         }
-        cible = { x, y, age: 0, ratee: false }; precedente = cible;
+        // Dès le niveau 2 la cible dérive (et rebondit sur les bords) : il faut la viser, pas seulement la voir.
+        const vit = n >= 2 ? Math.min(w, h) * (0.06 + n * 0.03) : 0; const dir = Math.random() * Math.PI * 2;
+        cible = { x, y, age: 0, ratee: false, vx: Math.cos(dir) * vit, vy: Math.sin(dir) * vit }; precedente = cible;
       };
       return {
-        reset() { cible = null; reste = 0; precedente = null; touches = []; },
+        reset() { cible = null; reste = 0; precedente = null; touches = []; frenesie = 0; touchees = 0; },
         redimensionner(nw, nh) {
           const kx = nw / w; const ky = nh / h; w = nw; h = nh;
           if (cible) { cible.x *= kx; cible.y *= ky; }
         },
-        etat() { return { cible: !!cible, x: cible?.x, y: cible?.y, reste, fenetre }; },
+        etat() { return { cible: !!cible, x: cible?.x, y: cible?.y, reste, fenetre, frenesie, touchees }; },
         update(dt, input) {
           if (!cible) nouvelleCible(input.niveau);
           const t = taille();
           horloge += dt;
           for (const o of touches) o.age += dt;
           touches = touches.filter((o) => o.age < 0.5);
+          if (frenesie > 0) frenesie = Math.max(0, frenesie - dt);
+          // Dérive de la cible, rebond sur les bords du terrain.
+          if (cible.vx || cible.vy) {
+            cible.x += cible.vx * dt; cible.y += cible.vy * dt;
+            if (cible.x < t / 2 + 4 || cible.x > w - t / 2 - 4) { cible.vx = -cible.vx; cible.x = borner(cible.x, t / 2 + 4, w - t / 2 - 4); }
+            if (cible.y < t / 2 + 4 || cible.y > h - t / 2 - 4) { cible.vy = -cible.vy; cible.y = borner(cible.y, t / 2 + 4, h - t / 2 - 4); }
+          }
           for (const tape of input.tapes) {
             if (Math.hypot(tape.x - cible.x, tape.y - cible.y) <= t * 0.62) {
-              const parfait = reste / fenetre >= PARFAIT;
+              const parfait = frenesie > 0 || reste / fenetre >= PARFAIT;
               touches.push({ x: cible.x, y: cible.y, age: 0, parfait, r: t * 0.5 });
+              if (frenesie <= 0) {
+                api.enchainer?.();
+                touchees += 1;
+                if (touchees % 10 === 0) { frenesie = FRENESIE; api.bonus?.(); api.effet?.(w / 2, h * 0.3, `🔥 ${tx(api, 'jeux.fx_frenesie', 'Frénésie !')}`, OR); }
+              }
               api.marquer(parfait ? 2 : 1);
               api.effet?.(cible.x, cible.y - t * 0.8, parfait ? `${tx(api, 'jeux.fx_parfait', 'Parfait !')} +2` : '+1', parfait ? OR : undefined);
               api.eclat?.(cible.x, cible.y, parfait ? OR : '#E8A33C', parfait ? 16 : 10);
@@ -490,7 +599,9 @@ export const JEUX = [
               return undefined;
             }
           }
-          reste -= dt; cible.age += dt;
+          // En frénésie l'anneau ne se referme pas : tape à la volée, chaque cible vaut « Parfait ».
+          if (frenesie <= 0) reste -= dt;
+          cible.age += dt;
           if (reste <= 0) { reste = 0; cible.ratee = true; return api.perdre(); }
           return undefined;
         },
@@ -516,6 +627,12 @@ export const JEUX = [
             ctx.strokeStyle = o.parfait ? `rgba(255,209,102,${(1 - k2).toFixed(3)})` : `rgba(200,240,60,${(1 - k2).toFixed(3)})`;
             ctx.lineWidth = 5 * (1 - k2) + 1;
             ctx.beginPath(); ctx.arc(o.x, o.y, o.r * (1 + k2 * 2.2), 0, Math.PI * 2); ctx.stroke();
+          }
+          // Frénésie : voile chaud qui pulse, chrono en haut.
+          if (frenesie > 0) {
+            ctx.fillStyle = `rgba(255,209,102,${(0.08 + Math.sin(horloge * 12) * 0.04).toFixed(3)})`; ctx.fillRect(0, 0, w, h);
+            ctx.fillStyle = OR; ctx.font = `900 ${api.large ? 16 : 13}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+            ctx.fillText(`🔥 ${frenesie.toFixed(1)}s`, 10, 10);
           }
           if (!cible) return;
           const t = taille(); const k = reste / fenetre;
@@ -567,13 +684,15 @@ export const JEUX = [
     stockage: 'fairide_sort_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '🤢 Mauvais choix !',
     regles: [
       'But : des plats tombent, mais aussi des déchets cerclés de rouge (🗑️ 🦠 💀 🧪). Attrape les plats, laisse tomber les déchets.',
-      'Score : +1 par plat attrapé, un plat raté ne coûte rien. Tous les 10 points, niveau supérieur : plus de déchets, et ça tombe plus vite.',
+      'Score : +1 par plat attrapé ; 5 d’affilée = points ×2, 10 = ×3 (un plat raté casse la série, sans coûter de point). Le bouclier 🛡️ encaisse un déchet à ta place. Tous les 10 points : plus de déchets, et ça tombe plus vite.',
       'Fin de partie : un seul déchet dans le panier. Le cadre clignote orange quand un déchet t’a frôlé : ouf ! Ton record compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Ciel vert profond (et non plus vert vif) : les jetons blancs cerclés de vert s'y fondaient.
-      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true,
+      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true, sac: true,
+      // Bonus : le bouclier 🛡️ — il encaisse UN déchet à ta place.
+      bonus: () => ({ emoji: '🛡️', bonus: 'bouclier', vitesseFacteur: 0.9 }),
       nouvelObjet: (n) => {
         const mauvais = Math.random() < Math.min(0.45, 0.22 + n * 0.03);
         return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
@@ -601,31 +720,33 @@ export const JEUX = [
     stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '💢 Dans le mur !',
     regles: [
       'But : ta flèche fonce vers le haut, des murs descendent avec chacun une seule ouverture, vise le passage.',
-      'Score : +1 par mur traversé. Le passage à viser est éclairé en vert et la pointe passe au vert quand tu es aligné. Tous les 8 points, les murs accélèrent et les ouvertures rétrécissent.',
+      'Score : +1 par mur traversé, +2 par anneau doré ⭕ enfilé entre deux murs. 5 murs d’affilée = points ×2, 10 = ×3. Le passage à viser est éclairé en vert. Tous les 8 points, les murs accélèrent et les ouvertures rétrécissent.',
       'Fin de partie : la pointe touche un mur. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, la flèche suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0; let traine = []; let dernierCentre = null; let impact = null;
       let vAx = 0; let defile = 0; let vDecor = 0;
+      let anneaux = []; let mursPoses = 0; // anneaux bonus (+2) semés entre deux murs, un sur trois
       const yFleche = () => h * 0.8;
       const longueur = () => Math.max(34, h * 0.09);
       const espacement = () => h * 0.42;
       const TRAINE = 0.3; // durée de vie d'un point de traînée
       return {
-        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = espacement(); inclinaison = 0; traine = []; dernierCentre = null; impact = null; vAx = 0; defile = 0; },
+        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = espacement(); inclinaison = 0; traine = []; dernierCentre = null; impact = null; vAx = 0; defile = 0; anneaux = []; mursPoses = 0; },
         redimensionner(nw, nh) {
           const kx = nw / w; const ky = nh / h; w = nw; h = nh;
           ax *= kx; cibleX *= kx; depuis *= ky;
           if (dernierCentre != null) dernierCentre *= kx;
           const ep = Math.max(10, h * 0.03);
           for (const m of murs) { m.x *= kx; m.largeur *= kx; m.y *= ky; m.ep = ep; }
+          for (const an of anneaux) { an.x *= kx; an.y *= ky; an.r = Math.max(14, Math.min(w, h) * 0.055); }
           for (const tr of traine) { tr.x *= kx; tr.y *= ky; }
         },
         etat() {
           let prochain = null;
           for (const m of murs) if (!m.compte && (!prochain || m.y > prochain.y)) prochain = m;
-          return { murs: murs.length, traine: traine.length, ax, passage: prochain ? prochain.x + prochain.largeur / 2 : null };
+          return { murs: murs.length, traine: traine.length, ax, anneaux: anneaux.length, passage: prochain ? prochain.x + prochain.largeur / 2 : null };
         },
         update(dt, input) {
           const n = input.niveau;
@@ -655,6 +776,9 @@ export const JEUX = [
             }
             dernierCentre = centre;
             murs.push({ y: -ep, x: centre - ouverture / 2, largeur: ouverture, ep, compte: false });
+            // Un anneau bonus un mur sur trois, à mi-chemin du suivant, décalé du passage : il faut faire un écart pour +2.
+            mursPoses += 1;
+            if (mursPoses % 3 === 0) { const r = Math.max(14, Math.min(w, h) * 0.055); const ecart = (Math.random() < 0.5 ? -1 : 1) * aleatoire(w * 0.12, w * 0.28); anneaux.push({ x: borner(centre + ecart, r + 6, w - r - 6), y: -ep - espacement() / 2, r, pris: false }); }
           }
           const yf = yFleche(); const L = longueur(); const pointe = yf - L * 0.6; const demi = 7;
           const restants = [];
@@ -665,10 +789,16 @@ export const JEUX = [
             const dansHauteur = m.y < yf + 4 && m.y + m.ep > pointe;
             const dansOuverture = ax - demi > m.x && ax + demi < m.x + m.largeur;
             if (dansHauteur && !dansOuverture) { impact = { x: ax, y: Math.max(pointe, m.y) }; return api.perdre(); }
-            if (!m.compte && m.y > yf) { m.compte = true; api.marquer(1); api.effet?.(ax, yf - h * 0.12, '+1'); api.eclat?.(ax, pointe, LIME, 5); }
+            if (!m.compte && m.y > yf) { m.compte = true; api.enchainer?.(); api.marquer(1); api.effet?.(ax, yf - h * 0.12, '+1'); api.eclat?.(ax, pointe, LIME, 5); }
             if (m.y < h + m.ep) restants.push(m);
           }
           murs = restants;
+          // Anneaux : la pointe qui passe dedans = +2 ; ceux qui sortent en bas disparaissent.
+          for (const an of anneaux) {
+            an.y += v * dt;
+            if (!an.pris && Math.abs(an.y - pointe) < v * dt + 4 && Math.abs(ax - an.x) < an.r * 0.85) { an.pris = true; api.enchainer?.(); api.bonus?.(); api.marquer(2); api.effet?.(an.x, an.y - h * 0.08, `⭕ ${tx(api, 'jeux.fx_anneau', 'Anneau')} +2`, OR); api.eclat?.(an.x, an.y, OR, 14); }
+          }
+          anneaux = anneaux.filter((an) => an.y < h + an.r * 2);
           // Traînée : les dernières positions de la flèche, qui descendent avec le décor et s'estompent.
           traine.push({ x: ax, y: yf + L * 0.45, reste: TRAINE });
           for (const tr of traine) { tr.reste -= dt; tr.y += v * dt; }
@@ -751,6 +881,16 @@ export const JEUX = [
             ctx.globalAlpha = 1;
           }
 
+          // Anneaux bonus : cercle doré épais, halo, et un point au centre — pris = onde qui s'ouvre.
+          for (const an of anneaux) {
+            if (an.pris) continue;
+            const gh = ctx.createRadialGradient(an.x, an.y, an.r * 0.4, an.x, an.y, an.r * 2.2);
+            gh.addColorStop(0, 'rgba(255,209,102,.30)'); gh.addColorStop(1, 'rgba(255,209,102,0)');
+            ctx.fillStyle = gh; ctx.beginPath(); ctx.arc(an.x, an.y, an.r * 2.2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = OR; ctx.lineWidth = Math.max(4, an.r * 0.3); ctx.beginPath(); ctx.arc(an.x, an.y, an.r, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = '#14121F'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(an.x, an.y, an.r + Math.max(2, an.r * 0.15), 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(an.x, an.y, Math.max(2, an.r * 0.12), 0, Math.PI * 2); ctx.fill();
+          }
           // Traînée : un ruban qui s'affine et pâlit derrière la flèche, de la couleur de la visée.
           if (traine.length > 1) {
             ctx.lineCap = 'round';

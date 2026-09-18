@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import Icone from '../Icone';
 import { useLanguage } from '../../context/LanguageContext';
 import { musique } from './musique';
+import { sfx } from './sfx';
 import { IconeJeu, styleJeu } from './IconeJeu';
 
 // Le moteur commun des mini-jeux : boucle, saisie, rendu, tableau de bord, règles, effets.
@@ -51,6 +52,7 @@ function LigneRegle({ texte }) {
 // Couche d'effets : mise à jour et dessin indépendants du jeu, par-dessus son rendu.
 function creerEffets() {
   let textes = []; let particules = []; let annonce = null; let flash = 0;
+  let secousse = 0; let combo = null; // secousse du terrain (fin de partie), pastille de combo (multiplicateur en cours)
   return {
     texte(x, y, texte, couleur = LIME) { textes.push({ x, y, texte, couleur, reste: 0.9, duree: 0.9 }); },
     eclat(x, y, couleur = IRIS, n = 8) {
@@ -62,6 +64,16 @@ function creerEffets() {
     // Annonce au centre du terrain (niveau franchi, compte à rebours) ; yk = hauteur relative.
     annoncer(texte, duree = 1.3, yk = 0.3, grand = false) { annonce = { texte, reste: duree, duree, yk, grand }; },
     flasher() { flash = 1; },
+    // Secousse : le terrain tremble un instant (chute, choc), en décalant tout le dessin.
+    secouer(force = 1) { secousse = Math.max(secousse, force); },
+    decalage() { if (secousse <= 0) return null; const a = secousse * 6; return { x: (Math.random() - 0.5) * a, y: (Math.random() - 0.5) * a }; },
+    // Pastille de combo en haut à droite : multiplicateur et longueur de la série. null = pas de combo.
+    combo(mult, serie) { combo = mult > 1 ? { mult, serie, age: combo && combo.mult === mult ? combo.age : 0 } : null; },
+    // Pluie de confettis (nouveau record) : des particules colorées qui tombent depuis le haut du terrain.
+    confettis(w) {
+      const COUL = [LIME, '#FF5C8A', '#FFD166', '#8C7CFF', '#FFFFFF'];
+      for (let i = 0; i < 46; i++) particules.push({ x: Math.random() * w, y: -10 - Math.random() * 40, vx: (Math.random() - 0.5) * 80, vy: 60 + Math.random() * 120, r: 2.5 + Math.random() * 3, couleur: COUL[i % COUL.length], reste: 1.6, duree: 1.6 });
+    },
     vider() { textes = []; particules = []; annonce = null; flash = 0; },
     update(dt) {
       for (const t of textes) { t.y -= 42 * dt; t.reste -= dt; }
@@ -70,6 +82,8 @@ function creerEffets() {
       particules = particules.filter((p) => p.reste > 0);
       if (annonce) { annonce.reste -= dt; if (annonce.reste <= 0) annonce = null; }
       if (flash > 0) flash = Math.max(0, flash - dt * 3);
+      if (secousse > 0) secousse = Math.max(0, secousse - dt * 4);
+      if (combo) combo.age += dt;
     },
     draw(ctx, w, h, large) {
       for (const p of particules) {
@@ -102,6 +116,20 @@ function creerEffets() {
         ctx.restore();
       }
       if (flash > 0) { ctx.fillStyle = `rgba(217,45,60,${(flash * 0.35).toFixed(3)})`; ctx.fillRect(0, 0, w, h); }
+      // Pastille de combo : « ×2 · 7 » en haut à droite, avec un petit rebond à chaque palier.
+      if (combo) {
+        const pop = 1 + Math.max(0, 0.25 - combo.age) * 1.6;
+        const px = large ? 15 : 12; const pad = large ? 10 : 8;
+        ctx.save(); ctx.translate(w - pad, pad); ctx.scale(pop, pop);
+        ctx.font = `900 ${px}px system-ui, sans-serif`; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        const texte = `🔥 ×${combo.mult} · ${combo.serie}`;
+        const larg = ctx.measureText(texte).width + 16;
+        ctx.fillStyle = 'rgba(20,18,31,.55)';
+        ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(-larg, -4, larg, px + 10, 999); else ctx.rect(-larg, -4, larg, px + 10); ctx.fill();
+        ctx.strokeStyle = LIME; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = LIME; ctx.fillText(texte, -8, 1);
+        ctx.restore();
+      }
     }
   };
 }
@@ -192,6 +220,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const instance = useRef(null);
   const effets = useRef(null);
   if (!effets.current) effets.current = creerEffets();
+  // Combos : `serie` = bonnes actions d'affilée (le jeu appelle api.enchainer / api.rompre) ; le multiplicateur vaut
+  // ×2 dès 5 d'affilée, ×3 dès 10 — annoncé, sonné, et appliqué à chaque point marqué. Le record est fêté une fois.
+  const serieRef = useRef(0); const recordFete = useRef(false); const dernierSon = useRef(0);
+  const multiplicateur = () => 1 + Math.min(2, Math.floor(serieRef.current / 5));
   const scoreRef = useRef(0);
   const meilleurRef = useRef(meilleur);
   const statusRef = useRef(status);
@@ -317,7 +349,10 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const ctx = preparerContexte(); if (!ctx || !instance.current) return;
     const { w, h } = tailleRef.current;
     ctx.clearRect(0, 0, w, h);
+    const d = effets.current.decalage();
+    if (d) { ctx.save(); ctx.translate(d.x, d.y); }
     instance.current.draw(ctx);
+    if (d) ctx.restore();
     effets.current.draw(ctx, w, h, large);
   }
 
@@ -331,13 +366,42 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         const avant = niveau();
         // Le score est poussé à React une fois par image (fin de pas()), pas à chaque point : un salto combo
         // pouvait marquer quatre fois dans la même image, donc quatre rendus du cadre en pleine partie.
-        scoreRef.current += n; scoreModifie.current = true;
+        // Le multiplicateur de combo s'applique ici, une fois pour tous les jeux.
+        const gain = n > 0 ? n * multiplicateur() : n;
+        scoreRef.current += gain; scoreModifie.current = true;
+        // Un son par point, au plus toutes les 60 ms (un salto combo marque plusieurs fois dans la même image).
+        const maintenant = performance.now();
+        if (gain > 0 && maintenant - dernierSon.current > 60) { dernierSon.current = maintenant; sfx.point(serieRef.current); }
+        // Record battu en cours de partie : fêté une fois — annonce, confettis, accord, vibration.
+        if (!recordFete.current && meilleurRef.current > 0 && scoreRef.current > meilleurRef.current) {
+          recordFete.current = true;
+          effets.current.annoncer(tRef.current('gameFrame.newRecordLine'), 1.4, 0.22);
+          effets.current.confettis(tailleRef.current.w); sfx.record();
+          try { navigator.vibrate?.(30); } catch { /* sans vibreur */ }
+        }
         // Palier franchi : une annonce dans le terrain, sans passer par React.
         if (niveau() > avant) effets.current.annoncer(tRef.current('gameFrame.levelUp', { n: niveau() + 1 }));
       },
+      // Une bonne action de plus dans la série : le combo monte (annonce et son aux paliers ×2 / ×3).
+      enchainer() {
+        const avant = multiplicateur();
+        serieRef.current += 1;
+        const apres = multiplicateur();
+        effets.current.combo(apres, serieRef.current);
+        if (apres > avant) { effets.current.annoncer(tRef.current('gameFrame.combo', { n: apres }), 1.1, 0.26); sfx.combo(); try { navigator.vibrate?.(15); } catch { /* sans vibreur */ } }
+        return apres;
+      },
+      // Série rompue (objet raté, déchet frôlé…) : le multiplicateur retombe à ×1.
+      rompre() { if (serieRef.current) { serieRef.current = 0; effets.current.combo(1, 0); } },
+      serie: () => serieRef.current,
+      multiplicateur,
+      // Bonus attrapé (aimant, nitro, bouclier…) : son dédié.
+      bonus() { sfx.bonus(); try { navigator.vibrate?.(12); } catch { /* sans vibreur */ } },
+      secouer(force) { effets.current.secouer(force); },
       perdre() {
         if (statusRef.current !== 'playing') return;
-        effets.current.flasher();
+        effets.current.flasher(); effets.current.secouer(1); effets.current.combo(1, 0); serieRef.current = 0;
+        sfx.perdu(); try { navigator.vibrate?.(60); } catch { /* sans vibreur */ }
         const record = scoreRef.current > meilleurRef.current;
         if (record) {
           meilleurRef.current = scoreRef.current; setMeilleur(scoreRef.current);
@@ -530,7 +594,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     setStatus('countdown');
   }
   // Le pseudo est demandé AVANT de jouer, plein écran compris (la fenêtre est rendue dans l'élément en plein écran).
-  function commencer() { if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
+  function commencer() { sfx.reveiller(); serieRef.current = 0; recordFete.current = false; effets.current.combo(1, 0); if (onStartRequest) onStartRequest(demarrer); else demarrer(); }
   // Écran scindé : on quitte d'abord le plein écran (sinon la carte resterait cachée derrière), puis la page
   // affiche le jeu et la carte ensemble.
   async function ecranScinde() {

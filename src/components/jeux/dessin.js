@@ -124,6 +124,34 @@ export function fondDegrade(ctx, w, h, haut, bas) {
   ctx.fillRect(0, 0, w, h);
 }
 
+// Le sac isotherme Fairide (iris, « f » lime, anses) : l'avatar des jeux « ça tombe » à la place du panier emoji —
+// c'est l'objet qui dit « Fairide » dans la rue. `taille` = hauteur du sac ; le repère est le centre du sac.
+export function sacFairide(ctx, x, y, taille, angle = 0) {
+  const l = taille * 1.1; const ht = taille; const r = taille * 0.16;
+  ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
+  // Anses
+  ctx.strokeStyle = '#2A2185'; ctx.lineWidth = Math.max(3, taille * 0.09); ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(0, -ht * 0.5, l * 0.28, Math.PI, 0); ctx.stroke();
+  // Corps
+  const g = ctx.createLinearGradient(-l / 2, 0, l / 2, 0);
+  g.addColorStop(0, '#4A3ED0'); g.addColorStop(1, '#3B2FB5');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(-l / 2, -ht / 2, l, ht, r);
+  else { ctx.moveTo(-l / 2 + r, -ht / 2); ctx.arcTo(l / 2, -ht / 2, l / 2, ht / 2, r); ctx.arcTo(l / 2, ht / 2, -l / 2, ht / 2, r); ctx.arcTo(-l / 2, ht / 2, -l / 2, -ht / 2, r); ctx.arcTo(-l / 2, -ht / 2, l / 2, -ht / 2, r); ctx.closePath(); }
+  ctx.fill();
+  ctx.strokeStyle = '#14121F'; ctx.lineWidth = Math.max(2, taille * 0.06); ctx.stroke();
+  // Rabat
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.fillRect(-l / 2, -ht / 2, l, ht * 0.22);
+  // « f » lime
+  ctx.fillStyle = LIME; ctx.font = `900 ${Math.round(taille * 0.62)}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('f', 0, ht * 0.1);
+  // Reflet
+  ctx.fillStyle = 'rgba(255,255,255,.14)';
+  ctx.beginPath(); ctx.ellipse(-l * 0.28, -ht * 0.1, l * 0.1, ht * 0.28, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
 export const IRIS = '#3B2FB5';
 export const LIME = '#C8F03C';
 export const INK = '#14121F';
