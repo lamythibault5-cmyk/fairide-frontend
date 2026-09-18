@@ -47,10 +47,17 @@ function roles(t) {
    responsable sont exigés par POST /register côté backend, on ne peut pas s'en passer. */
 // Le compte d'abord (adresse e-mail + mot de passe, ou Google) : avec Google, nom et e-mail sont connus et ne
 // sont plus redemandés aux étapes suivantes. Les autres étapes précisent qui on est et où on est.
+/* L'INSCRIPTION RESTAURATEUR SE FAIT UN SUJET PAR ECRAN.
+   « Ton commerce » tenait tout sur un seul ecran : recherche du commerce, cuisine, horaires, contacts,
+   raison sociale, representant, services et formule. Environ dix-huit champs a la suite, ou le
+   restaurateur ne voyait jamais la fin — et ou une erreur sur un champ du bas obligeait a remonter tout
+   l'ecran. Quatre ecrans le remplacent, dans l'ordre ou on y pense : on trouve son commerce, on decrit
+   ce qu'il est, on dit quand il est ouvert, puis ce qu'il propose.
+   Chacun valide ce qu'il porte, donc « Continuer » bloque au plus pres de la faute. */
 const STEP_KEYS = {
   client: ['account', 'identity', 'address'],
   driver: ['account', 'identity', 'documents', 'address'],
-  restaurant: ['account', 'identity', 'business', 'address']
+  restaurant: ['account', 'identity', 'business', 'details', 'hours', 'services', 'address']
 };
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
@@ -417,12 +424,21 @@ export default function Auth() {
     identity: { title: t('auth.stepIdentityTitle'), sub: t('auth.stepIdentitySub') },
     business: { title: t('auth.stepBusinessTitle'), sub: t('auth.stepBusinessSub') },
     documents: { title: t('auth.stepDocsTitle'), sub: t('auth.stepDocsSub') },
+    /* POUR UN RESTAURATEUR, CETTE ADRESSE EST CELLE DU COMMERCE.
+       L'écran s'annonçait « Ton adresse — celle du gérant, celle du commerce vient après ». C'était
+       faux sur les deux points : construireCommerce() envoie ces quatre champs tels quels comme
+       adresse du commerce, et rien ne vient après — il n'existe pas de second formulaire. D'où un
+       restaurateur qui saisissait son adresse personnelle, et un commerce placé chez lui sur la carte.
+       Le titre le dit donc explicitement pour ce rôle, et le sous-titre dit à quoi elle sert. */
     address: {
-      title: t('auth.stepAddressTitle'),
+      title: role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : t('auth.stepAddressTitle'),
       sub: role === 'client' ? t('auth.stepAddressSubClient')
         : role === 'driver' ? t('auth.stepAddressSubDriver')
         : t('auth.stepAddressSubRestaurant')
     },
+    details: { title: t('auth.stepDetailsTitle'), sub: t('auth.stepDetailsSub') },
+    hours: { title: t('auth.stepHoursTitle'), sub: t('auth.stepHoursSub') },
+    services: { title: t('auth.stepServicesTitle'), sub: t('auth.stepServicesSub') },
     account: { title: t('auth.stepAccountTitle'), sub: t('auth.stepAccountSubFirst') }
   }[stepKey];
 
@@ -467,15 +483,23 @@ export default function Auth() {
       if (!docRecto) e.docRecto = t('authDocs.errFront');
       if (!docVerso) e.docVerso = t('authDocs.errBack');
     }
-    if (key === 'business') {
+    // « business » ne valide rien : chercher son commerce est une AIDE de saisie, pas une obligation.
+    // Qui ne se trouve pas dans l'annuaire continue et remplit la suite à la main, comme avant.
+    if (key === 'details') {
+      if (!cuisine) e.cuisine = t('auth.errCuisine');
       if (!legalName.trim()) e.legalName = required;
       // Numéro d'entreprise et de TVA : demandés plus tard (Mon compte › Paiement), pas à l'inscription.
       if (!responsibleName.trim()) e.responsibleName = required;
-      if (!cuisine) e.cuisine = t('auth.errCuisine');
-      if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
-      if ((hoursDepuisWeb || typeDepuisSite || siteTrouve) && !infosVerifiees) e.infosVerifiees = t('auth.errVerifyPrefill');
       if (phoneSecondaryOuvert && phoneSecondary.trim() && phoneSecondary.trim().replace(/\D/g, '').length < 8) e.phoneSecondary = t('auth.errPhoneInvalid');
       if (emailSecondaryOuvert && emailSecondary.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailSecondary.trim())) e.emailSecondary = t('auth.errEmailSecondary');
+    }
+    if (key === 'hours') {
+      if (!horairesNonVides(hours)) e.hours = t('auth.errHours');
+      // La case « j'ai vérifié » vit ici : c'est le dernier écran qui montre du préremplissage, et elle
+      // récapitule les trois sources (site, horaires, type) d'un seul geste.
+      if ((hoursDepuisWeb || typeDepuisSite || siteTrouve) && !infosVerifiees) e.infosVerifiees = t('auth.errVerifyPrefill');
+    }
+    if (key === 'services') {
       if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
     }
     if (key === 'address') {
@@ -526,6 +550,24 @@ export default function Auth() {
   function montrerPremiereErreur() {
     setTimeout(() => document.querySelector('.input-invalid, .field-error')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 60);
   }
+  /* CHAQUE ÉCRAN COMMENCE EN HAUT.
+     Le changement d'étape ne remplace que le contenu du formulaire : la page, elle, garde la position
+     de défilement. On appuyait donc sur « Continuer » en bas d'un écran long — les horaires, les
+     services — et on arrivait au milieu du suivant, souvent sous son titre, sans rien pour dire qu'on
+     avait changé d'étape. C'est la carte entière qu'on ramène, et non le seul titre : les onglets et
+     le fil d'avancement font partie de ce qu'on doit revoir en arrivant.
+     Vaut aussi pour « Retour », qui souffrait du même défaut.
+     `behavior` suit prefers-reduced-motion, comme montrerPremiereErreur juste au-dessus. */
+  const premierRendu = useRef(true);
+  useEffect(() => {
+    if (premierRendu.current) { premierRendu.current = false; return; }
+    if (mode !== 'register') return;
+    const carte = document.querySelector('.auth-box');
+    if (!carte) return;
+    const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    carte.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
+  }, [step, mode]);
+
   async function goNext() {
     if (verifEnCours.current) return;
     setIncomplet(null);
@@ -641,7 +683,7 @@ export default function Auth() {
             setStep(i);
             setErrors(e);
             setIncomplet({ step: i, n: Object.keys(e).length });
-            const titres = { account: 'stepAccountTitle', identity: 'stepIdentityTitle', business: 'stepBusinessTitle', documents: 'stepDocsTitle', address: 'stepAddressTitle' };
+            const titres = { account: 'stepAccountTitle', identity: 'stepIdentityTitle', business: 'stepBusinessTitle', details: 'stepDetailsTitle', hours: 'stepHoursTitle', services: 'stepServicesTitle', documents: 'stepDocsTitle', address: 'stepAddressTitle' };
             toast(t('auth.checkIncomplete', { n: Object.keys(e).length, step: t(`auth.${titres[steps[i]]}`) }));
             montrerPremiereErreur();
             setLoading(false);
@@ -1000,6 +1042,14 @@ export default function Auth() {
               <>
                 <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} initialFiche={commerceTrouve} />
                 {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
+              </>
+            )}
+
+            {/* ÉCRAN 2 — ce que le commerce EST : sa cuisine, sa raison sociale, son représentant, ses
+                contacts. Tout ce qui décrit, rien de ce qui s'organise (horaires) ni de ce qui se vend
+                (services). */}
+            {stepKey === 'details' && (
+              <>
                 <div className="field">
                   <label htmlFor="auth-f-cuisine">{t('auth.cuisineLabel')}</label>
                   <select id="auth-f-cuisine" className={errors.cuisine ? 'input-invalid' : undefined} value={cuisine} onChange={(e) => { setCuisine(e.target.value); setTypeDepuisSite(false); }}>
@@ -1012,39 +1062,6 @@ export default function Auth() {
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
-                <div className="field" role="group" aria-labelledby="auth-horaires-titre">
-                  <span className="titre-groupe" id="auth-horaires-titre">{t('auth.hoursTitle')}</span>
-                  <p className="small" style={{ margin: '0 0 6px' }}>
-                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
-                    {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
-                      <>{' '}<a href={horairesSiteSource} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
-                    )}
-                  </p>
-                  {horairesSiteEtat === 'rien' && !hoursDepuisWeb && (
-                    <p className="small" style={{ margin: '-2px 0 8px', opacity: 0.85 }}>
-                      {t('auth.hoursSiteNone')}{' '}
-                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => { horairesTouches.current = false; setRelireSite((n) => n + 1); }}>{t('auth.hoursSiteRetry')}</button>
-                    </p>
-                  )}
-                  <OpeningHoursEditor value={hours || {}} onChange={(h) => { horairesTouches.current = true; setHours(h); setHoursDepuisWeb(false); }} />
-                  {fieldError('hours')}
-                </div>
-                {(hoursDepuisWeb || typeDepuisSite || siteTrouve) && (
-                  <div className={`field verif-prefill${errors.infosVerifiees ? ' verif-prefill--erreur' : ''}`}>
-                    <b>🔎 {t('auth.verifyPrefillTitle')}</b>
-                    <p className="small" style={{ margin: '4px 0 6px' }}>{t('auth.verifyPrefillIntro')}</p>
-                    <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
-                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={siteTrouve} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
-                      {hoursDepuisWeb && <li>🕒 {t('auth.verifyPrefillHours')}</li>}
-                      {typeDepuisSite && cuisine && <li>🍽️ {t('auth.verifyPrefillType', { type: cuisine })}</li>}
-                    </ul>
-                    <label className="verif-prefill-case">
-                      <input type="checkbox" checked={infosVerifiees} onChange={(e) => setInfosVerifiees(e.target.checked)} />
-                      <span>{t('auth.verifyPrefillCheck')}</span>
-                    </label>
-                    {fieldError('infosVerifiees')}
-                  </div>
-                )}
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
                     (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
                 <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
@@ -1094,6 +1111,55 @@ export default function Auth() {
                   />
                   {fieldError('responsibleName')}
                 </div>
+              </>
+            )}
+
+            {/* ÉCRAN 3 — les horaires seuls. C'est le champ le plus long à remplir de toute
+                l'inscription (sept jours, deux services possibles par jour) : il mérite son écran, et
+                c'est ici que la case « j'ai vérifié le préremplissage » récapitule les trois sources. */}
+            {stepKey === 'hours' && (
+              <>
+                <div className="field" role="group" aria-labelledby="auth-horaires-titre">
+                  <span className="titre-groupe" id="auth-horaires-titre">{t('auth.hoursTitle')}</span>
+                  <p className="small" style={{ margin: '0 0 6px' }}>
+                    {hoursDepuisWeb ? `✅ ${t(horairesSiteEtat === 'trouve' ? 'auth.hoursFromSite' : horairesSiteEtat === 'trouveWeb' ? 'auth.hoursFromSearch' : 'auth.hoursFromWeb')}` : horairesSiteEtat === 'lecture' ? `⏳ ${t('auth.hoursReadingSite')}` : horairesSiteEtat === 'recherche' ? `⏳ ${t('auth.hoursSearching')}` : t('auth.hoursHelp')}
+                    {(horairesSiteEtat === 'trouve' || horairesSiteEtat === 'trouveWeb') && horairesSiteSource && (
+                      <>{' '}<a href={horairesSiteSource} target="_blank" rel="noreferrer">{t('auth.hoursSiteSource')}</a></>
+                    )}
+                  </p>
+                  {horairesSiteEtat === 'rien' && !hoursDepuisWeb && (
+                    <p className="small" style={{ margin: '-2px 0 8px', opacity: 0.85 }}>
+                      {t('auth.hoursSiteNone')}{' '}
+                      <button type="button" className="btn-link-plus" style={{ margin: 0 }} onClick={() => { horairesTouches.current = false; setRelireSite((n) => n + 1); }}>{t('auth.hoursSiteRetry')}</button>
+                    </p>
+                  )}
+                  <OpeningHoursEditor value={hours || {}} onChange={(h) => { horairesTouches.current = true; setHours(h); setHoursDepuisWeb(false); }} />
+                  {fieldError('hours')}
+                </div>
+                {(hoursDepuisWeb || typeDepuisSite || siteTrouve) && (
+                  <div className={`field verif-prefill${errors.infosVerifiees ? ' verif-prefill--erreur' : ''}`}>
+                    <b>🔎 {t('auth.verifyPrefillTitle')}</b>
+                    <p className="small" style={{ margin: '4px 0 6px' }}>{t('auth.verifyPrefillIntro')}</p>
+                    <ul className="small" style={{ margin: '0 0 8px', paddingLeft: 18 }}>
+                      {siteTrouve && <li>🌐 {t('auth.verifyPrefillWebsite')} <a href={siteTrouve} target="_blank" rel="noreferrer">{siteTrouve}</a></li>}
+                      {hoursDepuisWeb && <li>🕒 {t('auth.verifyPrefillHours')}</li>}
+                      {typeDepuisSite && cuisine && <li>🍽️ {t('auth.verifyPrefillType', { type: cuisine })}</li>}
+                    </ul>
+                    <label className="verif-prefill-case">
+                      <input type="checkbox" checked={infosVerifiees} onChange={(e) => setInfosVerifiees(e.target.checked)} />
+                      <span>{t('auth.verifyPrefillCheck')}</span>
+                    </label>
+                    {fieldError('infosVerifiees')}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ÉCRAN 4 — ce que le commerce VEND. Isolé parce que c'est le seul écran de
+                l'inscription qui engage de l'argent : le choix des services décide de la formule, et
+                OffreFormules affiche juste en dessous ce qui sera prélevé et à partir de quand. */}
+            {stepKey === 'services' && (
+              <>
                 <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
                   <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
