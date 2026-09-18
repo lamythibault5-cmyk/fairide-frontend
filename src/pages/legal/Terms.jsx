@@ -3,7 +3,7 @@ import Rich from '../../components/Rich';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Texte dans translations.js (espace `terms`), en trois langues : neuf articles numérotés.
-const ARTICLES = ['object', 'account', 'orders', 'balance', 'fees', 'cancellation', 'reviews', 'liability', 'law'];
+const ARTICLES = ['identity', 'object', 'services', 'account', 'orders', 'prices', 'cancellation', 'withdrawal', 'balance', 'fees', 'reviews', 'partners', 'liability', 'data', 'changes', 'law'];
 
 export default function Terms() {
   const { t } = useLanguage();
