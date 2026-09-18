@@ -19,6 +19,22 @@
 .crm-etape-refuse { border-left-color: #C8243A; }
 .crm-badge-plus_tard { background: #EEE; color: #555; }
 .crm-retard-texte { color: var(--red); font-weight: 700; }
+/* Trois vues (mes commerces / démarchés par d'autres / à faire). */
+.crm-segments { flex-wrap: wrap; margin-bottom: 10px; }
+.crm-segments .chip { flex: 0 0 auto; white-space: nowrap; }
+.crm-segments .crm-segment-alerte:not(.active) { border-color: var(--red); color: var(--red); }
+/* Cartes des autres commerciaux : lecture seule, un ton plus discret. */
+.crm-carte-autre { cursor: default; background: var(--cream-dim); }
+.crm-carte-autre:hover { transform: none; box-shadow: none; }
+.crm-agent { font-weight: 700; color: var(--iris); }
+/* Aujourd'hui : ce qui presse. */
+.crm-aujourdhui { border-left: 4px solid var(--red); margin-bottom: 14px; padding: 14px 16px; }
+.crm-aujourdhui-liste { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.crm-aujourdhui-item { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; width: 100%; text-align: left; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-field); padding: 8px 10px; font: inherit; color: inherit; cursor: pointer; }
+.crm-aujourdhui-item > span:first-child { font-size: 12px; font-weight: 700; }
+/* Alerte doublon sous le nom, dans le formulaire d'ajout. */
+.crm-doublons { margin: -6px 0 10px; padding: 8px 10px; border-radius: var(--radius-field); background: #FDF1C7; color: #6B4E00; font-size: 13px; }
+.crm-doublons p { margin: 2px 0; }
 
 .crm-fiche { max-width: 560px; width: 560px; }
 .crm-fiche-tete { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 12px; }

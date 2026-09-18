@@ -42,6 +42,9 @@ export default function CrmPage() {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(null); // id du prospect ouvert
   const [creation, setCreation] = useState(false);
+  // Vue : mes commerces, ceux des autres commerciaux (lecture seule, pour ne pas démarcher deux fois le même), ou ce
+  // qu'il me reste à faire (prochaines actions du jour et en retard).
+  const [vue, setVue] = useState('mine');
   // Carte : zones proposées (avec compteurs), commerces des autres commerciaux, zone choisie, carte repliée ou non.
   const [zones, setZones] = useState([]);
   const [autres, setAutres] = useState([]);
@@ -54,7 +57,7 @@ export default function CrmPage() {
     const params = new URLSearchParams(); if (filtre) params.set('stage', filtre); if (recherche.trim()) params.set('q', recherche.trim());
     api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message); });
     api('/sales/zones', { token }).then(setZones).catch(() => {});
-    api('/sales/map', { token }).then(setAutres).catch(() => {});
+    api('/sales/others', { token }).then(setAutres).catch(() => {});
   }, [token, filtre, recherche, toast]);
   useEffect(() => { charger(); }, [charger]);
   // Zone choisie : la liste ne montre que les commerces dans son rayon (ceux sans position restent visibles, on ne sait pas où ils sont).
@@ -64,6 +67,23 @@ export default function CrmPage() {
     return prospects.filter((p) => p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
   }, [prospects, zone]);
   const sansPosition = (prospects || []).filter((p) => p.lat === null || p.lat === undefined).length;
+  // À faire : prochaine action dépassée ou prévue aujourd'hui, hors commerces actifs ou refusés. En retard d'abord.
+  const finJournee = useMemo(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); }, []);
+  const aFaire = useMemo(() => (prospects || []).filter((p) => p.nextActionAt && p.nextActionAt <= finJournee && !['actif', 'refuse'].includes(p.stage)).sort((a, b) => a.nextActionAt - b.nextActionAt), [prospects, finJournee]);
+  // Les commerces des autres, filtrés comme les miens (recherche, étape, zone) — côté client, la liste est courte.
+  const autresAffiches = useMemo(() => {
+    const rq = recherche.trim().toLowerCase();
+    return autres.filter((a) => (!filtre || a.stage === filtre) && (!rq || `${a.name} ${a.commune} ${a.agentName}`.toLowerCase().includes(rq))
+      && (!zone || a.lat === null || a.lat === undefined || distanceM(zone.lat, zone.lng, a.lat, a.lng) <= zone.radius));
+  }, [autres, filtre, recherche, zone]);
+  // Export CSV de mes commerces (Excel/Numbers l'ouvrent tel quel ; BOM pour les accents).
+  function exporterCsv() {
+    const col = ['name', 'commune', 'address', 'contactName', 'phone', 'email', 'cuisine', 'stage', 'rating', 'nextActionAt', 'lastEventAt', 'feedback', 'notes'];
+    const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const lignes = [col.join(';'), ...(prospects || []).map((p) => col.map((c) => cell(c === 'stage' ? t(`sales.stage_${p[c]}`) : /At$/.test(c) && p[c] ? new Date(p[c]).toLocaleString(locale) : p[c])).join(';'))];
+    const blob = new Blob(['\ufeff' + lignes.join('\n')], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fairide-crm-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  }
 
   const fmtDate = (ms) => new Date(ms).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
   const stageLabel = (s) => `${STAGE_ICONES[s] || ''} ${t(`sales.stage_${s}`)}`;
@@ -84,8 +104,30 @@ export default function CrmPage() {
           <h1 className="section-title" style={{ margin: 0 }}>{t('sales.title')}</h1>
           <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.intro')}</p>
         </div>
-        <button type="button" className="btn-gold" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
+        <div className="row" style={{ gap: 8 }}>
+          <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}>⬇️ {t('sales.exportCsv')}</button>
+          <button type="button" className="btn-gold" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
+        </div>
       </div>
+
+      {/* Aujourd'hui : ce qui presse, tout en haut — en retard d'abord, puis ce qui est prévu ce jour. */}
+      {aFaire.length > 0 && (
+        <div className="card crm-aujourdhui">
+          <b>⏰ {t('sales.todayTitle', { n: aFaire.length })}</b>
+          <ul className="crm-aujourdhui-liste">
+            {aFaire.slice(0, 6).map((p) => (
+              <li key={p.id}>
+                <button type="button" className="crm-aujourdhui-item" onClick={() => setOuvert(p.id)}>
+                  <span className={p.nextActionAt < Date.now() ? 'crm-retard-texte' : ''}>{p.nextActionAt < Date.now() ? t('sales.todoOverdue') : t('sales.todoToday')} · {fmtDate(p.nextActionAt)}</span>
+                  <b>{p.name}</b>{p.commune ? <span className="small"> · {p.commune}</span> : null}
+                  <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {aFaire.length > 6 && <button type="button" className="btn-ghost" style={{ fontSize: 13, padding: '4px 0' }} onClick={() => setVue('todo')}>{t('sales.todoMore', { n: aFaire.length - 6 })}</button>}
+        </div>
+      )}
 
       {/* Carte : mes commerces, ceux des autres, et les zones où aller. Repliable (mémorisé) pour garder la liste sous la main. */}
       <div className="card crm-carte-carte">
@@ -98,7 +140,7 @@ export default function CrmPage() {
         </div>
         {carteVisible && (
           <>
-            <CrmMap prospects={prospects || []} autres={autres} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} />
+            <CrmMap prospects={prospects || []} autres={autres.filter((a) => a.lat !== null && a.lat !== undefined)} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} />
             {sansPosition > 0 && <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.noPosition', { n: sansPosition })}</p>}
             <div className="crm-zones">
               <b className="crm-bloc-titre" style={{ marginTop: 10 }}>{t('sales.zonesTitle')}</b>
@@ -123,8 +165,18 @@ export default function CrmPage() {
           <div className="stat-card"><div className="num">{(etat.stats.byStage.inscrit || 0) + (etat.stats.byStage.carte_en_ligne || 0) + (etat.stats.byStage.actif || 0)}</div><div className="label">{t('sales.statSigned')}</div></div>
           <div className="stat-card highlight"><div className="num">{etat.stats.byStage.actif || 0}</div><div className="label">{t('sales.statActive')}</div></div>
           <div className={`stat-card${etat.stats.overdue > 0 ? ' crm-retard' : ''}`}><div className="num">{etat.stats.overdue}</div><div className="label">{t('sales.statOverdue')}</div></div>
+          <div className="stat-card"><div className="num">{etat.stats.addedThisWeek ?? 0}</div><div className="label">{t('sales.weekAdded')}</div></div>
+          <div className="stat-card"><div className="num">{etat.stats.eventsThisWeek ?? 0}</div><div className="label">{t('sales.weekActions')}</div></div>
         </div>
       )}
+
+      {/* Trois vues : mes commerces, ceux des autres (pour ne pas frapper deux fois à la même porte), à faire. */}
+      <div className="role-pick crm-segments" role="tablist" aria-label={t('sales.title')}>
+        <button type="button" role="tab" aria-selected={vue === 'mine'} className={`chip${vue === 'mine' ? ' active' : ''}`} onClick={() => setVue('mine')}>{t('sales.viewMine')}{prospects ? ` · ${prospects.length}` : ''}</button>
+        <button type="button" role="tab" aria-selected={vue === 'others'} className={`chip${vue === 'others' ? ' active' : ''}`} onClick={() => setVue('others')}>{t('sales.viewOthers')}{autres.length ? ` · ${autres.length}` : ''}</button>
+        <button type="button" role="tab" aria-selected={vue === 'todo'} className={`chip${vue === 'todo' ? ' active' : ''}${aFaire.length ? ' crm-segment-alerte' : ''}`} onClick={() => setVue('todo')}>{t('sales.viewTodo')}{aFaire.length ? ` · ${aFaire.length}` : ''}</button>
+      </div>
+      {vue === 'others' && <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.othersIntro')}</p>}
 
       <div className="admin-control-panel">
         <div className="field" style={{ margin: 0, flex: '1 1 200px' }}>
@@ -136,12 +188,35 @@ export default function CrmPage() {
         </div>
       </div>
 
-      {prospects === null && <div className="small">{t('common.loading')}</div>}
-      {prospectsAffiches && prospectsAffiches.length === 0 && (
+      {/* Démarchés par d'autres : lecture seule — nom, commune, étape, qui s'en occupe, dernière action. */}
+      {vue === 'others' && (
+        <div className="crm-liste">
+          {autresAffiches.length === 0 && <div className="card" style={{ gridColumn: '1 / -1' }}><p className="small" style={{ margin: 0 }}>{autres.length ? t('sales.noneFiltered') : t('sales.othersEmpty')}</p></div>}
+          {autresAffiches.map((a) => (
+            <div key={a.id} className={`card crm-carte crm-carte-autre crm-etape-${a.stage}`}>
+              <div className="crm-carte-tete">
+                <b>{a.name}</b>
+                <span className={`crm-badge crm-badge-${a.stage}`}>{stageLabel(a.stage)}</span>
+              </div>
+              <div className="small crm-carte-ligne">
+                <span className="crm-agent">🧑‍💼 {t('sales.othersBy', { agent: a.agentName })}</span>
+                {a.commune && <span>📍 {a.commune}</span>}
+              </div>
+              <div className="small crm-carte-ligne">
+                {a.lastEventAt && <span>{t('sales.lastActivity', { date: fmtDate(a.lastEventAt) })}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {vue !== 'others' && prospects === null && <div className="small">{t('common.loading')}</div>}
+      {vue === 'mine' && prospectsAffiches && prospectsAffiches.length === 0 && (
         <div className="card"><p className="small" style={{ margin: 0 }}>{filtre || recherche || zone ? t('sales.noneFiltered') : t('sales.noneYet')}</p></div>
       )}
+      {vue === 'todo' && aFaire.length === 0 && <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.todayEmpty')}</p></div>}
       <div className="crm-liste">
-        {(prospectsAffiches || []).map((p) => (
+        {(vue === 'todo' ? aFaire : vue === 'mine' ? (prospectsAffiches || []) : []).map((p) => (
           <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}`} onClick={() => setOuvert(p.id)}>
             <div className="crm-carte-tete">
               <b>{p.name}</b>
@@ -170,6 +245,16 @@ export default function CrmPage() {
 // ----------------------------------------------------------------------------------------------- création
 function ProspectForm({ token, t, toast, onClose, onSaved }) {
   const [f, setF] = useState(vide);
+  // Doublons : dès trois lettres, on cherche le nom dans ma liste, chez les autres commerciaux et parmi les commerces
+  // inscrits sur Fairide. On prévient, on ne bloque pas — deux « Chez Momo » peuvent exister dans deux communes.
+  const [doublons, setDoublons] = useState(null);
+  useEffect(() => {
+    const nom = f.name.trim();
+    if (nom.length < 3) { setDoublons(null); return undefined; }
+    const id = setTimeout(() => { api(`/sales/lookup?q=${encodeURIComponent(nom)}`, { token }).then(setDoublons).catch(() => setDoublons(null)); }, 350);
+    return () => clearTimeout(id);
+  }, [f.name, token]);
+  const aDesDoublons = doublons && (doublons.mine.length || doublons.others.length || doublons.restaurants.length);
   const [envoi, setEnvoi] = useState(false);
   const [position, setPosition] = useState(null); // { lat, lng } posé avec « je suis devant »
   const [geoEnCours, setGeoEnCours] = useState(false);
@@ -192,6 +277,13 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
         <h3 className="modal-titre">{t('sales.addProspect')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.formHint')}</p>
         <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} autoFocus /></div>
+        {aDesDoublons ? (
+          <div className="crm-doublons" role="status">
+            {doublons.mine.map((d) => <p key={`m${d.id}`}>⚠️ {t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, agent: d.agentName, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.restaurants.map((d) => <p key={`r${d.id}`}>🏪 {t('sales.dupRestaurant', { name: d.name, commune: d.commune || '' })}</p>)}
+          </div>
+        ) : null}
         <div className="row" style={{ gap: 8 }}>
           <div className="field" style={{ flex: 2 }}><label htmlFor="crm-adresse">{t('sales.fAddress')}</label><input id="crm-adresse" value={f.address} onChange={champ('address')} /></div>
           <div className="field" style={{ flex: 1 }}><label htmlFor="crm-commune">{t('sales.fCommune')}</label><input id="crm-commune" value={f.commune} onChange={champ('commune')} /></div>
@@ -288,7 +380,8 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
                 <p className="small" style={{ margin: 0 }}>
                   {p.contactName && <>👤 {p.contactName}<br /></>}
                   {p.phone && <>📞 <a href={`tel:${p.phone}`}>{p.phone}</a><br /></>}
-                  {p.email && <>✉️ <a href={`mailto:${p.email}`}>{p.email}</a></>}
+                  {p.email && <>✉️ <a href={`mailto:${p.email}`}>{p.email}</a><br /></>}
+                  {(p.address || p.lat !== null) && <>🧭 <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(p.lat !== null && p.lat !== undefined ? `${p.lat},${p.lng}` : `${p.address} ${p.commune || ''} Bruxelles`)}`} target="_blank" rel="noopener noreferrer">{t('sales.route')}</a></>}
                   {!p.contactName && !p.phone && !p.email && <i>{t('sales.noContact')}</i>}
                 </p>
                 <button type="button" className="btn-ghost" style={{ padding: '4px 0', fontSize: 13 }} onClick={() => setEdition({ name: p.name, address: p.address, commune: p.commune, phone: p.phone, contactName: p.contactName, email: p.email, cuisine: p.cuisine, notes: p.notes })}>✏️ {t('sales.editInfo')}</button>
