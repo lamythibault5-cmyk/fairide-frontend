@@ -133,8 +133,14 @@ export function AuthProvider({ children }) {
   async function updateProfile(patch) {
     // logoutOn401: false — cet endpoint renvoie 401 pour un mot de passe ACTUEL incorrect, pas pour
     // une session invalide (voir api.js). L'erreur doit s'afficher dans le formulaire.
-    const user = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch, logoutOn401: false });
-    setSession((prev) => ({ ...prev, user }));
+    const reponse = await api('/auth/me', { method: 'PATCH', token: session.token, body: patch, logoutOn401: false });
+    // Changer son mot de passe ferme TOUTES les sessions du compte, côté serveur (token_version) : les
+    // autres appareils sont déconnectés, ce qui est le but. Celle-ci serait déconnectée avec, donc le
+    // serveur renvoie un jeton neuf dans ce cas précis — il faut le garder, sinon l'utilisateur est
+    // éjecté de l'écran où il vient de changer son mot de passe. Les autres champs (langue, adresse,
+    // IBAN…) répondent sans `token`, et rien ne change pour eux.
+    const { token: nouveauJeton, ...user } = reponse;
+    setSession((prev) => (nouveauJeton ? { ...prev, token: nouveauJeton, user } : { ...prev, user }));
     return user;
   }
 

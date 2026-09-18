@@ -492,7 +492,7 @@ export default function Auth() {
       if (!email.trim()) e.email = required;
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
       if (!password) e.password = required;
-      else if (password.length < 5 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+      else if (password.length < 8 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         e.password = t('auth.errPasswordStrength');
       }
       if (!passwordConfirm) e.passwordConfirm = required;
