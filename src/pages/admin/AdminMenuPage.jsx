@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../../api';
+import urlSure from '../../urlSure';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { SkeletonCards } from '../../components/Skeleton';
 import { useAuth } from '../../context/AuthContext';
@@ -74,7 +75,7 @@ export default function AdminMenuPage() {
               {d.taskId && <Link to={`/admin/tasks?id=${d.taskId}`} className="admin-record-link">→ {tr('adminMenu.seeTask')}</Link>}
             </div>
             <p className="small" style={{ margin: '8px 0 2px' }}><b>{tr('adminMenu.platform')}</b> : {d.platformLabel}</p>
-            {d.url && <p className="small" style={{ margin: '2px 0', overflowWrap: 'anywhere' }}><b>{tr('adminMenu.page')}</b> : <a href={d.url} target="_blank" rel="noreferrer">{d.url}</a></p>}
+            {d.url && <p className="small" style={{ margin: '2px 0', overflowWrap: 'anywhere' }}><b>{tr('adminMenu.page')}</b> : <a href={urlSure(d.url)} target="_blank" rel="noreferrer">{d.url}</a></p>}
             <p className="small" style={{ margin: '2px 0', whiteSpace: 'pre-wrap' }}><b>{tr('adminMenu.notes')}</b> : {d.notes || <i>{tr('adminMenu.noNotes')}</i>}</p>
             <div className="field" style={{ marginTop: 10 }}>
               <label htmlFor="admin-menu-note">{tr('adminMenu.noteLabel')}</label>
