@@ -6,7 +6,8 @@ import AFFICHE_HD from '../assets/cuisine-hd.jpg';
 import VIDEO_SD from '../assets/cuisine-sd.mp4';
 import AFFICHE_SD from '../assets/cuisine-sd.jpg';
 import VIDEO_PORTRAIT from '../assets/cuisine-portrait.mp4';
-import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.jpg';
+// WebP (33 ko) plutôt que JPEG (51 ko) pour l'affiche téléphone : c'est l'image que voit un mobile avant tout geste.
+import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.webp';
 
 /* Course de la révélation, en pixels de défilement : distance sur laquelle le fond passe de rien à
    tout. Ne s'applique pas à l'accueil, qui affiche le fond d'emblée (voir desLeDebut). Le commentaire
@@ -146,6 +147,10 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
   const calque = useRef(null);
   const [visible, setVisible] = useState(false); // sert seulement à lancer ou arrêter la vidéo
   const [chargerMedia, setChargerMedia] = useState(desLeDebut);
+  // Sur un écran étroit (téléphone), la VIDÉO (3 Mo en portrait) n'est demandée qu'au premier geste de défilement :
+  // avant, l'affiche suffit. Sans cela, l'accueil sur mobile téléchargeait la vidéo avant même le premier rendu
+  // (revue Lighthouse du 2026-09-18 : LCP 8 s). Sur ordinateur rien ne change.
+  const [interaction, setInteraction] = useState(false);
   useEffect(() => {
     let img = 0;
     // desLeDebut : fixé au montage (Layout remonte le composant par une clé quand on arrive sur l'accueil ou le quitte).
@@ -176,9 +181,10 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
     const court = setTimeout(() => { if (document.documentElement.scrollHeight <= window.innerHeight + 40) { pageCourte = true; calculer(); } }, 1200);
     // Intention de défiler : la molette tourne, un doigt se pose, une flèche est enfoncée. On monte la vidéo
     // à cet instant — elle a le temps d'arriver pendant le geste, et le fond est là au premier pixel.
-    const intention = () => setChargerMedia(true);
+    const intention = () => { setChargerMedia(true); setInteraction(true); };
     for (const e of ['wheel', 'touchstart', 'pointerdown', 'keydown']) window.addEventListener(e, intention, { passive: true, once: true });
-    const prechauffe = setTimeout(intention, 900);
+    // Préchauffage sans geste : sur ordinateur seulement — un téléphone attend un vrai geste.
+    const prechauffe = window.innerWidth >= 900 ? setTimeout(intention, 900) : null;
     return () => {
       window.removeEventListener('scroll', auDefilement); window.removeEventListener('resize', auDefilement);
       document.removeEventListener('visibilitychange', calculer);
@@ -226,7 +232,7 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
     <div className="cuisine-fond" aria-hidden="true">
       {/* Le montage et son voile fondent ensemble : à 0, il ne reste que l'aplat Fairide du conteneur. */}
       <div className="cuisine-fond-calque" ref={calque}>
-      {!chargerMedia ? null : source ? (
+      {!chargerMedia ? null : source && (interaction || window.innerWidth >= 900) ? (
         <video
           ref={video}
           className="cuisine-fond-media"

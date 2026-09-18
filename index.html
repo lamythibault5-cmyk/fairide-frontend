@@ -40,23 +40,29 @@
          appel (liste des commerces, session) part sans attendre. -->
     <link rel="preconnect" href="https://fairide-backend-production.up.railway.app" crossorigin />
 
-    <!-- Bricolage Grotesque — la police du SEUL mot « fairide » (voir .wordmark dans styles.css).
-         Tout le reste de l'interface est en Space Grotesk, importée depuis styles.css.
+    <!-- LES DEUX POLICES EN UNE SEULE REQUÊTE.
 
-         Pourquoi ici, dans le <head>, et non en @import comme Space Grotesk : styles.css est chargée
-         par main.jsx, donc par le graphe de modules JavaScript. L'écran de chargement ci-dessous,
-         lui, s'affiche à l'analyse du HTML, bien avant. Un @import arriverait trop tard pour lui et
-         le nom s'afficherait d'abord en Inter, puis sauterait en Bricolage sous les yeux du visiteur.
-         Le <link> part dès la première passe de l'analyseur, en parallèle du reste.
+         Space Grotesk porte toute l'interface. Bricolage Grotesque ne sert qu'au mot « fairide »
+         (voir .wordmark dans styles.css) : c'est une police de LOGOTYPE, pas une seconde police
+         d'interface — ne pas l'étendre aux titres, ce serait rouvrir le couple serif/sans que la
+         direction avait refermé en retirant Fraunces.
 
-         Une seule tranche d'axes : graisses 700 à 800, la taille optique (opsz) restant variable —
-         c'est exactement ce que les six occurrences du mot demandent, entre 17px et 34px. On a écarté
+         Les deux familles tiennent dans une seule URL css2 (ordre alphabétique imposé par Google
+         Fonts), donc un seul aller-retour au lieu de deux. Le chargement ne bloque pas le rendu :
+         `media="print"` fait traiter la feuille comme hors écran, et `onload` la rebascule sur
+         `all` une fois arrivée ; le <noscript> couvre le cas sans JavaScript. Ce motif vient du lot
+         « Performance mobile » de main, qui avait sorti Space Grotesk de l'@import de styles.css —
+         Bricolage le rejoint plutôt que de rouvrir un second lien bloquant à côté.
+
+         Une seule tranche d'axes pour Bricolage : graisses 700 à 800, taille optique (opsz) laissée
+         variable, ce que demandent ses sept emplacements entre 17 et 34px. On a écarté
          `&text=fairide`, qui aurait réduit le fichier à deux kilo-octets : le jour où quelqu'un pose
-         la classe .wordmark sur un autre mot, les glyphes manquants retomberaient en silence sur la
-         police de repli, sans rien dans la console pour l'expliquer. -->
+         .wordmark sur un autre mot, les glyphes manquants retomberaient en silence sur la police de
+         repli, sans rien dans la console pour l'expliquer. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" /></noscript>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
   </head>
   <body>

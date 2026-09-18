@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap');
+/* La police Space Grotesk est chargée depuis index.html (lien non bloquant + preconnect) : un @import ici bloquait le premier rendu de ~800 ms sur mobile. */
 
 /* ============================================================================
    Identité « The frame » — deux couleurs de marque, et rien d'autre :
@@ -383,7 +383,8 @@ a { color: inherit; }
 }
 /* Blanc translucide et non lime : le lime de l'en-tête est déjà pris par le bouton « Inscription »,
    et la spec n'autorise qu'un accent appuyé par vue. */
-.lang-switcher button.active { background: rgba(255,255,255,0.22); color: #fff; opacity: 1; }
+/* Actif : pastille blanche, texte iris (contraste 8:1) — le blanc translucide sur iris tombait à 4,4:1, sous le seuil AA. */
+.lang-switcher button.active { background: #fff; color: var(--iris); opacity: 1; }
 
 /* Carte : 16px de rayon, 24px de marge intérieure, 16px entre deux cartes (DESIGN.md § Cards).
    Uber pose ses cartes sans filet ni ombre, séparées par du seul blanc. On garde le filet 1px :
@@ -1700,7 +1701,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .site-footer { border-top: 1px solid var(--line); margin-top: 40px; padding: 32px 0 20px; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 24px; margin-bottom: 20px; }
 .footer-col { display: flex; flex-direction: column; gap: 8px; }
-.footer-col h4 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 2px; }
+.footer-col h3 { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); margin: 0 0 2px; }
 .footer-col a.small { color: var(--ink-soft); text-decoration: none; }
 .footer-col a.small:hover { color: var(--ink); text-decoration: underline; }
 .footer-bottom { text-align: center; border-top: 1px solid var(--line); padding-top: 16px; }

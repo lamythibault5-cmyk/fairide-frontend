@@ -17,7 +17,7 @@ export default function Footer() {
           <p className="small">{t('footer.belgian')}</p>
         </div>
         <div className="footer-col">
-          <h4>{t('footer.join')}</h4>
+          <h3>{t('footer.join')}</h3>
           {/* Vers la liste, pas vers /login : c'était le seul lien « Commander » du pied de
               page et il menait à un mur de connexion, ce qui coupait le visiteur comme le robot
               du catalogue. */}
@@ -33,7 +33,7 @@ export default function Footer() {
           <Link to="/aide" className="small">{t('nav.help')}</Link>
         </div>
         <div className="footer-col">
-          <h4>{t('footer.legalHeading')}</h4>
+          <h3>{t('footer.legalHeading')}</h3>
           <Link to="/mentions-legales" className="small">{t('footer.legalNotice')}</Link>
           <Link to="/confidentialite" className="small">{t('footer.privacy')}</Link>
           <Link to="/cgv" className="small">{t('footer.terms')}</Link>
