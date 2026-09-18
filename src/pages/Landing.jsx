@@ -53,14 +53,6 @@ function features(t) {
   ];
 }
 
-function steps(t) {
-  return [
-    { num: '1', title: t('landing.step1Title'), text: t('landing.step1Text') },
-    { num: '2', title: t('landing.step2Title'), text: t('landing.step2Text') },
-    { num: '3', title: t('landing.step3Title'), text: t('landing.step3Text') }
-  ];
-}
-
 export default function Landing() {
   const { t } = useLanguage();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
@@ -162,40 +154,18 @@ export default function Landing() {
             <p className="euro-legend">{t('landing.euroUsLegend')}</p>
           </div>
         </div>
-        {/* Exemple concret : un petit commerce, 5 commandes par jour à 20 €, 25 jours. Trois tuiles, une différence. */}
-        <div className="euro-example" aria-label={t('landing.euroExTitle')}>
-          <p className="euro-ex-title">{t('landing.euroExTitle')}</p>
-          <div className="euro-ex-grid">
-            <div className="euro-ex-card">
-              <span className="euro-ex-label">{t('landing.euroExVolumeLabel')}</span>
-              <b>2 500 €</b>
-              <span className="euro-ex-sub">{t('landing.euroExVolumeSub')}</span>
-            </div>
-            <div className="euro-ex-card them">
-              <span className="euro-ex-label">{t('landing.euroExThemLabel')}</span>
-              <b>550 à 800 €</b>
-              <span className="euro-ex-sub">{t('landing.euroExThemSub')}</span>
-            </div>
-            <div className="euro-ex-card us">
-              <span className="euro-ex-label">{t('landing.euroExUsLabel')}</span>
-              <b>250 €</b>
-              <span className="euro-ex-sub">{t('landing.euroExUsSub')}</span>
-            </div>
-          </div>
-          <p className="euro-ex-diff"><b>{t('landing.euroExDiffFigure')}</b> {t('landing.euroExDiffText')}</p>
-        </div>
-      </Reveal>
+        {/* RETIRÉS D'ICI (demande du fondateur) : le bloc « Exemple concret : un petit commerce »
+            — trois tuiles 2 500 € / 550 à 800 € / 250 € et la ligne « 300 à 550 € de plus dans la
+            caisse du commerçant » — qui se trouvait juste ici, et la section « Comment ça marche »
+            (les trois étapes) qui suivait le bloc euro. L'argument tient maintenant aux deux seules
+            barres ci-dessus.
 
-      <Reveal as="h2" className="section-title">{t('landing.howItWorks')}</Reveal>
-      <div className="steps-grid">
-        {steps(t).map((s, i) => (
-          <Reveal as="div" className="step-card" key={s.num} delay={i * 90}>
-            <div className="step-num">{s.num}</div>
-            <h3 style={{ fontSize: 17, margin: '0 0 6px' }}>{s.title}</h3>
-            <p className="small">{s.text}</p>
-          </Reveal>
-        ))}
-      </div>
+            Leur CSS (.euro-example, .euro-ex-*, .steps-grid, .step-card, .step-num) et leurs clés
+            (landing.euroEx*, landing.howItWorks, landing.step*) sont TOUJOURS EN PLACE dans
+            styles.css et translations.js : rien d'autre ne les utilise, mais les laisser rend le
+            retour en arrière possible en ne retouchant que ce fichier. Les supprimer pour de bon
+            est un nettoyage à part. */}
+      </Reveal>
 
       <Reveal as="h2" className="section-title">{t('landing.joinTitle')}</Reveal>
       <div className="join-grid">

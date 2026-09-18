@@ -1663,6 +1663,13 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .euro-ex-diff b { color: var(--lime); font-size: 20px; }
 @media (max-width: 640px) { .euro-block { padding: 24px 18px; } .euro-ex-grid { grid-template-columns: 1fr; } }
 
+/* « Rejoindre Fairide » suit désormais le bloc euro directement : la section « Comment ça marche »
+   qui les séparait a été retirée de Landing.jsx. Les deux marges s'additionnaient (36px sous le bloc
+   + 40px au-dessus du titre = 76px), ce qui laissait un trou là où il n'y a plus rien à séparer.
+   Réglé ici, sur l'adjacence précise, et non sur h2.section-title, qui découpe aussi une dizaine
+   d'autres pages où l'espacement est juste. */
+.euro-block + .section-title { margin-top: 12px; }
+
 /* Les trois portes d'entrée (client / commerce / livreur) étaient des photos
    Unsplash sous un voile dégradé — trois images génériques qui ne disaient rien
    de Fairide et qui, en aplats stricts, n'avaient plus leur place. Ce sont
