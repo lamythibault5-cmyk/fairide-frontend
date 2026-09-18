@@ -758,7 +758,7 @@ export default function Auth() {
         <div className="card">
           <div className="auth-brand">
             <BrandMark size={26} />
-            <span>fairide</span>
+            <span className="wordmark">fairide</span>
           </div>
           <h2 style={{ marginTop: 0 }}>{t('auth.forgotTitle')}</h2>
           {forgotSubmitted ? (
@@ -802,7 +802,7 @@ export default function Auth() {
         <div className="card">
           <div className="auth-brand">
             <BrandMark size={26} />
-            <span>fairide</span>
+            <span className="wordmark">fairide</span>
           </div>
           <h2 style={{ marginTop: 0 }}>{t(pendingChannel === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle')}</h2>
           <p className="small" style={{ marginBottom: 14 }}>
@@ -850,7 +850,7 @@ export default function Auth() {
       <div className="card">
         <div className="auth-brand">
           <BrandMark size={26} />
-          <span>fairide</span>
+          <span className="wordmark">fairide</span>
         </div>
         <div className="auth-tabs" role="tablist">
           <button type="button" role="tab" aria-selected={mode === 'login'} className={`chip${mode === 'login' ? ' active' : ''}`} onClick={() => setMode('login')}>{t('auth.login')}</button>

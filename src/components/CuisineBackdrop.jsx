@@ -8,6 +8,12 @@ import AFFICHE_SD from '../assets/cuisine-sd.jpg';
 import VIDEO_PORTRAIT from '../assets/cuisine-portrait.mp4';
 import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.jpg';
 
+/* Course de la révélation, en pixels de défilement : distance sur laquelle le fond passe de rien à
+   tout. Ne s'applique pas à l'accueil, qui affiche le fond d'emblée (voir desLeDebut). Le commentaire
+   au-dessus du composant disait « 140 px » quand la valeur était de 100 — d'où cette constante
+   nommée, pour qu'il n'y ait plus qu'un seul endroit où lire le chiffre. */
+const COURSE = 100;
+
 // Fond de cuisine plein écran pour la page d'accueil publique.
 //
 // UN MONTAGE, PAS UN PLAN. Douze séquences de 8 s enchaînées par fondus de 2,0 s : un cuisinier au
@@ -79,6 +85,15 @@ import AFFICHE_PORTRAIT from '../assets/cuisine-portrait.jpg';
 // quatre fois moins qu'une seule image de mouvement ordinaire (3,02). Compresser plus fort ne se
 // voit pas ici, parce que le voile détruit de toute façon le détail fin que la compression abîme.
 
+/* desLeDebut : le fond est monté ET affiché dès l'arrivée, sans attendre le moindre défilement.
+   C'est le cas de l'accueil, et le couplage des deux rôles dans un seul drapeau est VOULU — « visible
+   tout de suite » implique « chargé tout de suite ».
+
+   À savoir avant d'écrire quoi que ce soit d'animé sur la bannière d'accueil : ce drapeau épingle
+   --fond-revele à 1 en permanence sur cette page. Toute animation qui lirait cette variable depuis
+   styles.css y serait donc silencieusement neutralisée — elle marcherait partout ailleurs et nulle
+   part là où on l'a écrite. C'est exactement le piège dans lequel est tombée une tentative du
+   2026-09-18 d'ouvrir l'aplat au défilement. */
 export default function CuisineBackdrop({ desLeDebut = false }) {
   // La source n'est PAS choisie d'emblée, et la vidéo n'est pas seulement masquée en CSS : un
   // <video> masqué se télécharge quand même. `source` reste donc nulle tant que les conditions ne
@@ -119,8 +134,8 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
   }, [source]);
 
   // Révélation au défilement (demande du fondateur, 2026-09-13) : en haut de page on ne voit que l'aplat
-  // Fairide ; le montage apparaît dès les premiers pixels de défilement et s'installe en 140 px, soit moins
-  // d'un coup de molette. Une première version prenait 260 px et n'allait chercher la vidéo qu'au premier
+  // Fairide, plein et opaque ; le montage apparaît dès les premiers pixels de défilement et s'installe
+  // sur la course ci-dessous. Une première version prenait 260 px et n'allait chercher la vidéo qu'au premier
   // pixel de défilement : le temps qu'elle arrive et se décode, on avait déjà fini de défiler et le fond
   // apparaissait après coup. Ici elle est montée dès que le visiteur montre l'intention de défiler
   // (molette, doigt posé, flèche du clavier), donc avant qu'il en ait besoin, et invisible jusque-là.
@@ -138,9 +153,10 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
     const calculer = () => {
       img = 0;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
-      // Dès un mini défilement (demande du fondateur, 2026-09-15) : le fond commence à paraître au 2e pixel et
-      // s'installe en 100 px. --fond-revele sert aussi à la bannière d'accueil, qui s'éclaircit en même temps.
-      const o = pageCourte || desLeDebut ? 1 : Math.max(0, Math.min(1, (y - 2) / 100));
+      // Dès un mini défilement (demande du fondateur, 2026-09-15) : le fond commence à paraître au 2e pixel
+      // et s'installe en COURSE px. --fond-revele sert aussi à la bannière d'accueil, qui s'éclaircit en
+      // même temps — sauf sur l'accueil lui-même, où desLeDebut le fige à 1 (voir l'en-tête du fichier).
+      const o = pageCourte || desLeDebut ? 1 : Math.max(0, Math.min(1, (y - 2) / COURSE));
       if (calque.current) calque.current.style.opacity = String(o);
       document.documentElement.style.setProperty('--fond-revele', String(o));
       setVisible(o > 0.02);

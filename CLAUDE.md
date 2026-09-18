@@ -143,9 +143,16 @@ source spec and [mockups/landing-iris.html](mockups/landing-iris.html) for the r
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
 
-Fonts: **Space Grotesk** only (400/500/700), `@import` at the top of `styles.css`. Fraunces was
-removed — the personality now comes from scale and tracking, not from a serif/sans pair. Headings
-are `-0.02em`, the `fairide` wordmark is lowercase at `-0.03em`.
+Fonts: **Space Grotesk** for the whole interface (400/500/700), `@import` at the top of
+`styles.css`. Fraunces was removed — the personality comes from scale and tracking, not from a
+serif/sans pair. Headings are `-0.02em`.
+
+The one exception is the word `fairide` itself, which is set in **Bricolage Grotesque** (700–800,
+optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`. It is a *logotype* face, loaded
+from a `<link>` in [index.html](index.html) rather than the `@import`, because the splash screen
+paints before `styles.css` exists. Seven call sites carry the class; `.wordmark` sets the family and
+nothing else. **Don't extend it to headings** — that would re-open the two-font pairing the design
+direction closed when it dropped Fraunces.
 
 Buttons: `.btn-gold` (lime) is **the** decisive action of a screen — pay, confirm, sign in.
 `.btn-teal` (iris) is the ordinary primary action, and the default in dashboards. `.btn-outline`

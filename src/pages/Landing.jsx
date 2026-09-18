@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
@@ -6,45 +5,13 @@ import ContactSection from '../components/ContactSection';
 import PartnersMarquee from '../components/PartnersMarquee';
 import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
+import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
 import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
-
-/* Le cadre à l'échelle affiche, posé dans la bannière. Géométrie STRICTEMENT celle de la spec
-   §4 (roues r=12,5 aux centres x=15 et x=61, tube supérieur x=16 y=8 de 44×5, tube de selle
-   x=13 y=20 de 28×5 pivoté de 42° autour de (27; 22,5)), simplement sans tuile : sur un fond
-   déjà iris, la tuile ferait un carré dans un carré.
-
-   L'épaisseur de 5 n'est PAS un réglage esthétique, c'est ce qui fait tenir le dessin. Une
-   première version l'avait ramenée à 2,4 pour affiner le trait en grand format, sans toucher
-   aux coordonnées : le tube supérieur, dont le bord bas passait de y=13 à y=10,4, décollait du
-   sommet des roues (y=14) au lieu de l'effleurer, et l'extrémité haute du tube de selle ne
-   rejoignait plus le tube supérieur. Le vélo se lisait alors comme trois morceaux disjoints
-   avec une diagonale qui traversait la roue arrière. Ne pas amincir sans recalculer le tableau.
-
-   viewBox : le dessin occupe x[0;76] et y[8;44] une fois le trait compris — d'où "-3 5 82 42",
-   qui laisse exactement 3 unités de marge sur les quatre côtés. Rien n'est rogné, et la marque
-   est centrée dans son cadre plutôt que collée en bas. */
-function HeroFrame() {
-  return (
-    /* Se dessine une fois à l'arrivée, comme le logo de l'en-tête : mêmes classes bm-* (voir BrandMark.jsx). */
-    <svg className="landing-frame mark-anime" viewBox="-3 5 82 42" aria-hidden="true" shapeRendering="geometricPrecision">
-      <g fill="none" stroke="#C8F03C" strokeWidth="5" strokeLinecap="round">
-        <circle className="bm-roue" cx="15" cy="29" r="12.5" />
-        <circle className="bm-roue bm-roue-avant" cx="61" cy="29" r="12.5" />
-      </g>
-      <g fill="#C8F03C">
-        <rect className="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
-        <g transform="rotate(42 27 22.5)"><rect className="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
-        <circle className="bm-moyeu" cx="15" cy="29" r="2.4" />
-        <circle className="bm-moyeu" cx="61" cy="29" r="2.4" />
-      </g>
-    </svg>
-  );
-}
 
 /* Les trois portes d'entrée. Le parcours client passe en premier et en iris : c'est le seul des
    trois qu'on veut voir avant les autres, et la spec ne tolère qu'un bloc coloré par rangée. */
@@ -101,33 +68,25 @@ export default function Landing() {
   useJsonLd(organizationJsonLd(), 'ld-organization');
   // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
   const restaurants = useCommercesPublics();
-  // Quartiers déjà servis (Flagey, Jourdan, Parvis…) : les plus représentés parmi les commerces publiés.
-  const quartiers = useMemo(() => {
-    const compte = new Map();
-    (restaurants || []).forEach((r) => { if (r.neighborhood) compte.set(r.neighborhood, (compte.get(r.neighborhood) || 0) + 1); });
-    return [...compte.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10).map(([q]) => q);
-  }, [restaurants]);
 
   return (
     <div className="decor-page">
 
       <div className="landing-hero">
-        <div className="be-flag" title={t('landing.proudlyBelgian')}>
-          <span className="be-flag-stripe" style={{ background: '#000' }} />
-          <span className="be-flag-stripe" style={{ background: '#FAE042' }} />
-          <span className="be-flag-stripe" style={{ background: '#ED2939' }} />
-        </div>
+        {/* Ton sombre : le coin de la bannière est un aplat iris. Voir BelgianMark.jsx. */}
+        <BelgianMark size={34} ton="sombre" title={t('landing.proudlyBelgian')} />
 
         <div className="landing-hero-text">
           {/* L'AFFICHE : ce qu'on veut voir sans défiler, et rien d'autre. Ce groupe existe pour
               qu'une seule règle CSS puisse lui donner la hauteur du premier écran sur téléphone —
-              ce qui repousse mécaniquement sous la ligne de flottaison ce qui le suit (les gages
-              de confiance, les quartiers servis, l'aperçu des commerces, les chiffres). Sans lui,
-              ces blocs remontaient dans l'écran d'accueil et le premier contact avec le site
-              était un mur de texte. Sur écran large il ne fait rien : un <div> de plus dans une
-              colonne qui empile déjà ses enfants. */}
+              ce qui repousse mécaniquement sous la ligne de flottaison ce qui le suit (l'aperçu
+              des commerces, les chiffres). Sans lui, ces blocs remontaient dans l'écran d'accueil
+              et le premier contact avec le site était un mur de texte. Sur écran large il ne fait
+              rien : un <div> de plus dans une colonne qui empile déjà ses enfants.
+
+              Il portait aussi, jusqu'ici, la signature de marque, les trois gages de confiance et
+              la liste des quartiers déjà livrés — retirés à la demande du fondateur. */}
           <div className="landing-hero-affiche">
-          <div className="landing-hero-signature"><HeroFrame /><span className="pill hero">{t('landing.pill')}</span></div>
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
@@ -162,17 +121,6 @@ export default function Landing() {
           <p className="small landing-ouverture landing-ouverture-long">🗓️ {t('landing.ordersOpenNote')}</p>
           <p className="small landing-ouverture landing-ouverture-court">{t('landing.ordersOpenCourt')}</p>
           </div>
-          <ul className="landing-trust" aria-label={t('landing.trustLineAria')}>
-            <li>✓ {t('landing.trust1')}</li>
-            <li>✓ {t('landing.trust2')}</li>
-            <li>✓ {t('landing.trust3')}</li>
-          </ul>
-          {quartiers.length > 0 && (
-            <p className="landing-quartiers">
-              <span className="landing-quartiers-label">📍 {t('landing.quartiersLabel')}</span>
-              {quartiers.map((q) => <span key={q} className="landing-quartier">{q}</span>)}
-            </p>
-          )}
         </div>
         <HeroPreview restaurants={restaurants} />
 

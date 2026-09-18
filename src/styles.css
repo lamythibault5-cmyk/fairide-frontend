@@ -216,25 +216,58 @@ a { color: inherit; }
 .mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
 .mark svg { display: block; width: 100%; height: 100%; }
 /* Logo animé (BrandMark.jsx, Landing.jsx HeroFrame) : joué UNE fois au montage, puis le logo reste tel quel
-   (fill-mode forwards, aucune boucle). Séquence : roues tracées (0 → 0,5 s, l'avant décalée), tube supérieur
-   qui glisse depuis l'arrière (0,38 s), tube de selle (0,5 s), moyeux qui apparaissent (0,68 s) — environ 1 s en tout. Le tracé des
-   roues joue sur stroke-dashoffset : 2π·12,5 ≈ 78,6 unités de périmètre. */
-.mark-anime .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .5s cubic-bezier(.4, 0, .2, 1) forwards; }
-.mark-anime .bm-roue-avant { animation-delay: .08s; }
-.mark-anime .bm-tube { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: bm-tube .32s cubic-bezier(.2, .8, .2, 1) forwards; }
-.mark-anime .bm-tube-haut { animation-delay: .38s; }
-.mark-anime .bm-tube-selle { animation-delay: .5s; }
-.mark-anime .bm-moyeu { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: bm-pop .28s .68s cubic-bezier(.34, 1.56, .64, 1) forwards; }
-@keyframes bm-roue { to { stroke-dashoffset: 0; } }
-@keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
-@keyframes bm-pop { to { transform: scale(1); } }
+   (fill-mode forwards, aucune boucle). La séquence raconte le dessin dans l'ordre où on le lirait —
+   le rebord se trace d'abord (0 → 0,42 s), le bol descend depuis ce rebord (0,26 s), puis les trois
+   traits de vapeur partent vers l'arrière l'un après l'autre (0,46 / 0,58 / 0,70 s) : environ 1,1 s
+   en tout. La vapeur EN DERNIER, parce que c'est elle qui donne le mouvement : la marque se pose,
+   puis s'élance.
+
+   Le tracé joue sur stroke-dashoffset. Les chemins portent `pathLength="100"` (voir BrandMark.jsx),
+   donc une seule paire de valeurs suffit pour toutes les courbes — inutile de remesurer chacune.
+   Le bol, lui, est un remplissage et non un trait : il grandit en scaleY depuis le haut de sa
+   propre boîte, qui est exactement la corde du demi-disque, c'est-à-dire la ligne du rebord. */
+.mark-anime .bm-rebord { stroke-dasharray: 100; stroke-dashoffset: 100; animation: bm-tracer .42s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mark-anime .bm-bol { transform-box: fill-box; transform-origin: center top; transform: scaleY(0); animation: bm-bol .34s .26s cubic-bezier(.2, .8, .2, 1) forwards; }
+.mark-anime .bm-vapeur { stroke-dasharray: 100; stroke-dashoffset: 100; animation: bm-tracer .4s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mark-anime .bm-vapeur-1 { animation-delay: .46s; }
+.mark-anime .bm-vapeur-2 { animation-delay: .58s; }
+.mark-anime .bm-vapeur-3 { animation-delay: .7s; }
+@keyframes bm-tracer { to { stroke-dashoffset: 0; } }
+@keyframes bm-bol { to { transform: scaleY(1); } }
 @media (prefers-reduced-motion: reduce) {
-  .mark-anime .bm-roue, .mark-anime .bm-tube, .mark-anime .bm-moyeu { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+  /* Surtout PAS de `opacity: 1` dans cette remise à zéro : une déclaration CSS l'emporte sur
+     l'attribut de présentation SVG, et les trois traits de vapeur perdraient leur dégradé
+     d'opacité 1 / 0,78 / 0,55 — la marque se lirait comme trois traits pleins. */
+  .mark-anime .bm-rebord, .mark-anime .bm-bol, .mark-anime .bm-vapeur { animation: none; stroke-dashoffset: 0; transform: none; }
 }
 /* 24% du côté, exactement le rayon d'icône de la spec — et plus de liseré lime autour : sur
-   la bannière iris, la tuile du logo est de la même couleur que le fond, seul le cadre lime
+   la bannière iris, la tuile du logo est de la même couleur que le fond, seul le bol lime
    se détache. C'est voulu : la marque flotte dans l'en-tête au lieu d'y être encadrée. */
 .brand .mark { border-radius: 0; }
+
+/* LE MOT « fairide », ET RIEN D'AUTRE.
+
+   Bricolage Grotesque ne s'applique qu'au nom de la marque — six endroits, tous porteurs de cette
+   classe : l'en-tête (.brand-name), l'écran de chargement (#splash .splash-nom, dans index.html),
+   le pied de page, la barre latérale des tableaux de bord et les trois cartes d'authentification.
+   Le reste de l'interface — titres, boutons, corps de texte — reste en Space Grotesk. C'est une
+   police de LOGOTYPE, pas une seconde police d'interface : ne pas l'étendre aux titres sous
+   prétexte qu'elle a du caractère, ce serait rouvrir exactement le couple de polices que la
+   direction avait refermé en retirant Fraunces.
+
+   Cette classe ne pose QUE la famille. Corps, graisse, couleur et interlettrage restent définis
+   par chaque contexte, qui les avait déjà accordés à sa place : la classe se superpose aux règles
+   existantes sans les déranger.
+
+   `font-optical-sizing: auto` (c'est le défaut, on l'écrit pour mémoire) fait travailler l'axe opsz
+   de la police variable : le mot est plus ouvert à 17px dans une carte de connexion qu'à 34px dans
+   la bannière. C'est pour ça que le <link> d'index.html demande la plage 12..96 et non une taille
+   fixe. Le fichier n'est chargé qu'une fois, quelle que soit la taille d'affichage.
+
+   La police est déclarée dans le <head> d'index.html et non ici : l'écran de chargement s'affiche
+   avant que styles.css n'existe. Voir le commentaire là-bas. */
+.wordmark { font-family: 'Bricolage Grotesque', 'Space Grotesk', sans-serif; font-optical-sizing: auto; }
+
 .brand-text { display: flex; flex-direction: column; justify-content: center; gap: 2px; }
 .brand .brand-name { display: block; font-weight: 800; font-size: 34px; color: var(--cream); line-height: 1; letter-spacing: -0.04em; }
 .brand-slogan { font-size: 13px; font-weight: 600; color: var(--gold); opacity: 0.95; letter-spacing: 0.01em; white-space: nowrap; }
@@ -307,14 +340,25 @@ a { color: inherit; }
   .header-nav a { font-size: 13.5px; padding: 6px 10px; }
 }
 /* Sous 400px (iPhone en portrait), la marque et le couple Connexion/Inscription doivent tenir sur la
-   même ligne : vélo 46px, mot 20px, lien sans marge intérieure — mesuré à 375px en français et en
-   néerlandais (« Registreren », le plus long). */
+   même ligne : marque 30px, mot 20px, lien sans marge intérieure — mesuré à 375px en français et en
+   néerlandais (« Registreren », le plus long). La marque est carrée depuis le passage au bol : à
+   largeur égale elle prend plus de hauteur que le vélo, mais elle en rend aussi à la rangée, qui
+   était le point serré ici. On garde le rapport de la spec, 1,3 × les 20px du mot ≈ 26 — 30 parce
+   qu'à cette taille le mot compte pour la lisibilité et la marque pour la reconnaissance. */
 @media (max-width: 400px) {
   .header-nav a { font-size: 13px; padding: 6px 8px; }
   .header-row > .header-nav { margin-left: -6px; }
   .header-row { column-gap: 8px; }
   .header-row .brand { gap: 8px; }
-  .header-row .brand .mark { width: 46px !important; height: 24px !important; }
+  .header-row .brand .mark { width: 30px !important; height: 30px !important; }
+  /* BrandMark décide seul de passer à la déclinaison simplifiée, mais il décide sur la taille qu'on
+     lui PASSE (34 ici, via Layout.jsx) — pas sur celle que ce media query lui impose ensuite. À 30px
+     les trois traits de vapeur se collent : on retire les deux plus pâles et on épaissit le
+     survivant, ce qui est exactement la simplification de la spec, appliquée là où le composant ne
+     peut pas la voir venir. */
+  .header-row .brand .bm-vapeur-2,
+  .header-row .brand .bm-vapeur-3 { display: none; }
+  .header-row .brand .bm-vapeur-1 { stroke-width: 8; }
   .header-row .brand .brand-name { font-size: 20px; }
   .header-row .header-auth-link { padding: 8px 2px; }
 }
@@ -470,7 +514,7 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
    perd contre un style inline. */
 @media (max-width: 600px) {
   .header-row .lang-switcher button { padding: 5px 6px; }
-  .header-row .brand .mark { width: 52px !important; height: 27px !important; }
+  .header-row .brand .mark { width: 36px !important; height: 36px !important; }
 }
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
@@ -1334,13 +1378,21 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    page reste celle de la maquette en ligne.
 
    `overflow: hidden` est retiré : c'est lui qui empêchait ::before de sortir de la colonne de
-   960px pour aller au bord de l'écran. Il ne protégeait plus rien — le cadre du vélo qu'il
-   rognait autrefois est aujourd'hui une petite signature de 66px posée dans le flux
-   (.landing-hero-signature), et le drapeau belge tient dans la boîte.
+   960px pour aller au bord de l'écran. Il ne protégeait plus rien — le grand cadre qu'il rognait
+   autrefois a disparu de la bannière, et la marque belge du coin tient dans la boîte.
 
    Rayon à 0 : une carte arrondie a des coins, un champ bord à bord n'en a pas. */
 .landing-hero {
-  --fondu: 200px;
+  /* --fondu tient DEUX rôles à la fois, et c'est ce qui les garde d'accord : la hauteur de la bande
+     de fondu du masque (voir ::before) et le rembourrage bas de la bannière, qui réserve la place de
+     cette bande pour qu'aucun contenu ne tombe dedans. Un seul chiffre, donc jamais de décalage entre
+     les deux.
+
+     Ramené de 200px à 110px : à 200, le vide entre les trois chiffres et la rangée de cartes en
+     dessous atteignait 250px et se lisait comme un trou dans la page. 110px laisse un dégradé
+     largement assez long pour que le raccord sur la vidéo reste invisible — c'est la longueur du
+     dégradé qui compte, pas sa valeur absolue — et rend 90px à la mise en page. */
+  --fondu: 110px;
   position: relative;
   background: transparent; color: var(--cream);
   border-radius: 0;
@@ -1348,7 +1400,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   /* -24px : annule le paddingTop posé en ligne sur .wrap par Layout.jsx. Sans lui, une bande
      blanche de 24px sépare l'aplat de la bannière de l'en-tête, qui est iris lui aussi — et c'est
      précisément la couture qu'on cherche à faire disparaître. Valeur couplée à Layout.jsx. */
-  margin: -24px 0 20px;
+  margin: -24px 0 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 38%);
   grid-template-areas: "text preview" "stats stats";
@@ -1402,6 +1454,14 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   content: ''; position: absolute; z-index: -1;
   top: 0; bottom: 0; left: 50%; width: 100vw; transform: translateX(-50%);
   background: var(--iris);
+  /* La bande de fondu du bas est TOUJOURS là, à sa pleine hauteur, y compris en haut de page : c'est
+     elle qui évite que l'aplat se coupe net sur la vidéo.
+
+     Une version de cette règle (2026-09-18) faisait dépendre sa hauteur du défilement, pour que le
+     premier écran soit un bleu plein et parfaitement opaque. Revenu en arrière, à la demande du
+     fondateur : la transparence dès l'arrivée est justement ce qui plaisait. Ne pas la refaire sans
+     redemander — et si elle revient un jour, voir aussi CuisineBackdrop.jsx, où l'accueil épingle
+     --fond-revele à 1, ce qui neutralise silencieusement toute animation écrite ici. */
   --masque: linear-gradient(to bottom,
     #000 calc(100% - var(--fondu)),
     rgba(0,0,0,.82) calc(100% - var(--fondu) * .72),
@@ -1417,25 +1477,11 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 }
 @media (prefers-contrast: more) { .landing-hero::before { opacity: 1; } }
 .landing-hero .hero-preview { grid-area: preview; }
-/* Signature de marque : le cadre à l'échelle, en petit, posé sur la même ligne que l'accroche. */
-.landing-hero-signature { display: flex; align-items: center; gap: 14px; margin-bottom: 4px; }
-.landing-hero-signature .landing-frame { width: 66px; height: auto; flex: 0 0 auto; }
 .landing-hero-text { grid-area: text; }
 .landing-hero .stats-bar { grid-area: stats; }
 
-/* Le cadre à l'échelle affiche. Il tient ENTIER : le viewBox côté JSX laisse
-   3 unités de marge tout autour pour que le trait ne soit jamais rogné — la
-   première maquette coupait la roue avant. Retiré (et non juste masqué) sous
-   860px : display: none sur l'élément de grille laisse la colonne vide, c'est
-   la grille elle-même qui repasse à une seule colonne. */
-.landing-frame { grid-area: frame; width: 100%; height: auto; justify-self: end; }
-
-/* Sous 860px il n'y a plus la largeur pour deux colonnes : le cadre passe AU-DESSUS du
-   texte, en petit et aligné à gauche, au lieu d'être masqué. Une première version le
-   mettait en display: none — ce qui privait tout téléphone du geste signature de la
-   direction, alors que c'est justement sur mobile que la marque a le moins de place
-   pour s'exprimer par ailleurs. Réduit à 168px, il se lit comme une signature posée
-   au-dessus de l'accroche plutôt que comme un décor. */
+/* Sous 860px il n'y a plus la largeur pour deux colonnes : la bannière repasse sur une seule,
+   texte puis aperçu puis chiffres. */
 @media (max-width: 860px) {
   .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "stats"; }
   .landing-hero .hero-preview { margin-top: 26px; }
@@ -1445,15 +1491,18 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    garde sa bande, simplement plus courte : un écran de téléphone est deux fois moins haut, une
    bande de 200px y mangerait un sixième de la page. */
 @media (max-width: 640px) {
-  .landing-hero { --fondu: 140px; padding: 34px 20px var(--fondu); }
+  .landing-hero { --fondu: 80px; padding: 34px 20px var(--fondu); }
 }
 
-/* Le drapeau belge : trois bandes nettes, plus d'ombre portée. */
-.be-flag {
-  position: absolute; top: 18px; right: 18px; z-index: 3; width: 40px; height: 27px;
-  border-radius: var(--radius-pill); overflow: hidden; display: flex;
+/* La marque belge dans le coin de la bannière (BelgianMark.jsx), à la place des trois bandes du
+   drapeau. Carrée là où le drapeau était en paysage (40 × 27) : 34 de côté lui donne le même poids
+   visuel dans le coin. Plus de border-radius ni d'overflow — le SVG est détouré, il n'y a pas de
+   fond à rogner, et le dessin porte déjà ses extrémités rondes. */
+.be-mark {
+  position: absolute; top: 18px; right: 18px; z-index: 3;
+  display: inline-flex; flex-shrink: 0;
 }
-.be-flag-stripe { flex: 1; }
+.be-mark svg { display: block; width: 100%; height: 100%; }
 
 .landing-title {
   font-size: clamp(var(--t-display-lg), 5.4vw, var(--t-display-xxl)); line-height: 1.04;
@@ -1525,9 +1574,11 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   }
   .landing-partner-line a { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .landing-ouverture-court { margin-top: 18px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
-  /* Le drapeau belge quitte le coin : sur un aplat qui va maintenant d'un bord à l'autre, il
-     flottait seul en haut à droite, à hauteur du titre, sans rien pour l'ancrer. */
-  .be-flag { display: none; }
+  /* La marque belge quitte le coin : sur un aplat qui va maintenant d'un bord à l'autre, elle
+     flottait seule en haut à droite, à hauteur du titre, sans rien pour l'ancrer. Décision prise
+     du temps du drapeau et reconduite telle quelle au passage à BelgianMark — le motif a changé,
+     pas la raison de le retirer ici. */
+  .be-mark { display: none; }
 }
 
 /* Les trois chiffres vivent DANS la bannière, séparés par un filet blanc, au
@@ -1537,7 +1588,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .stats-bar {
   position: relative; z-index: 2;
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-  margin: 46px 0 0; padding: 22px 0 30px;
+  margin: 46px 0 0; padding: 22px 0 16px;
   border-top: 1px solid rgba(255,255,255,0.22);
 }
 .stats-bar-item { text-align: left; }
@@ -2852,8 +2903,13 @@ button.account-link-row:last-child { border-bottom: none; }
    cible de plus à traverser au clavier. */
 .auth-brand { display: flex; align-items: center; gap: 9px; margin: 0 0 16px; }
 .auth-brand .mark { border-radius: 24%; }
+/* Plus de font-family ici : c'est .wordmark qui la pose désormais (voir « LE MOT fairide » plus
+   haut). Il fallait la retirer et pas seulement la changer — `.auth-brand span` compte une classe
+   ET un élément, elle l'emportait donc sur `.wordmark`, qui n'a que sa classe, et le nom serait
+   resté en Space Grotesk dans les trois cartes d'authentification pendant qu'il changeait partout
+   ailleurs. Le reste (corps, graisse, couleur) est bien propre à ce contexte et y reste. */
 .auth-brand span {
-  font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 17px;
+  font-weight: 700; font-size: 17px;
   letter-spacing: -0.02em; color: var(--ink); line-height: 1;
 }
 
@@ -3459,12 +3515,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .discover-tile-reviews { color: var(--ink-soft); opacity: 0.8; }
 @media (max-width: 640px) { .discover-section { padding: 18px 14px 20px; border-radius: var(--radius); } .discover-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .discover-tile { border-radius: var(--radius); } .discover-tile-body { padding: 10px 11px 12px; } .discover-tile-body b { font-size: 14px; } .discover-tile-cuisine { font-size: 11px; padding: 3px 8px; left: 8px; bottom: 8px; } }
 
-/* Accueil : ligne de confiance sous les boutons de la bannière, compteur du panneau, bénéfices des portes d'entrée. */
-/* Quartiers déjà servis, sous la ligne de confiance du hero : des noms vrais, en petites étiquettes. */
-.landing-quartiers { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 14px 0 0; font-size: 12.5px; color: rgba(255,255,255,0.85); }
-.landing-quartiers-label { margin-right: 4px; color: rgba(255,255,255,0.7); }
-.landing-quartier { padding: 3px 9px; border-radius: var(--radius-pill); background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); font-weight: 600; letter-spacing: 0.01em; }
-.landing-trust { list-style: none; display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 16px 0 0; padding: 0; font-size: 12.5px; color: rgba(255,255,255,0.8); }
+/* Accueil : compteur du panneau d'aperçu, bénéfices des portes d'entrée. */
 .hero-preview-count { margin-left: auto; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--iris); }
 /* Téléphone : la phrase des pré-inscriptions passe sous le titre au lieu de s'écraser sur trois lignes à côté. */
 @media (max-width: 520px) { .hero-preview-head { flex-wrap: wrap; row-gap: 2px; } .hero-preview-count { margin-left: 0; flex-basis: 100%; } }

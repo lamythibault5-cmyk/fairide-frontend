@@ -21,7 +21,7 @@ function PhoneMockup() {
       <div className="app-soon-phone-screen">
         <div className="app-soon-phone-brand">
           <BrandMark size={22} />
-          <span>Fairide</span>
+          <span className="wordmark">Fairide</span>
         </div>
         <div className="app-soon-phone-search">{t('landing.mockSearchPlaceholder')}</div>
         <div className="app-soon-phone-chips">
