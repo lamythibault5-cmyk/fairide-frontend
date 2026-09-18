@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../api';
+import { suivre } from '../analytics';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 
@@ -180,6 +181,7 @@ export default function ReservationSteps({ restaurantId, restaurant, mode = 'cli
           partySize: couverts, reservationName: nom.trim(), reservationNote: note.trim(), reservationPhone: telephone.trim(), useBalance: false
         }
       });
+      suivre('reservation_table');
       if (order.reservationDepositStatus === 'pending' && order.reservationDepositAmount > 0) {
         const pay = await api(`/payments/deposit-checkout/${order.id}`, { method: 'POST', token });
         if (!pay.simulated) { window.location.href = pay.checkoutUrl; return; }

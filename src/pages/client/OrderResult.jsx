@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
+import { suivre } from '../../analytics';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -61,6 +62,9 @@ export default function OrderResult({ success }) {
         const order = orders.find((o) => o.id === orderId || String(o.id) === String(orderId));
         if (order?.paid) {
           setState('paid');
+          // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
+          suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : order.orderType === 'dine_in' ? 'reservation' : 'livraison' });
+          if (order.orderType === 'pickup') suivre('commande_emporter');
           // Paiement confirmé : la copie du panier mise de côté avant la redirection n'a plus lieu
           // d'être. (Le panier visible, lui, a déjà été vidé au départ — voir stashForPayment.)
           cartRef.current.discardStashed();

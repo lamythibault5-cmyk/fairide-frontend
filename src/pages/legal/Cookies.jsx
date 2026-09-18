@@ -9,7 +9,7 @@ const SECTIONS = ['what', 'technical', 'preferences', 'thirdParty', 'noTracking'
 
 export default function Cookies() {
   const { t } = useLanguage();
-  usePageMeta({ title: t('cookiesPolicy.pageTitle'), path: '/cookies' });
+  usePageMeta({ title: t('cookiesPolicy.pageTitle'), description: t('seo.cookiesDescription'), path: '/cookies' });
   return (
     <div className="card">
       <h2 style={{ marginTop: 0 }}>{t('cookiesPolicy.title')}</h2>

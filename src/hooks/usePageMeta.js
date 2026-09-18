@@ -86,7 +86,9 @@ function posePlanDeLangues(cheminApplicatif) {
   };
 }
 
-export default function usePageMeta({ title, description, path, image, type = 'website' }) {
+// `robots` : 'noindex' (ou 'noindex, follow') pour les pages qui ne doivent pas être indexées — page introuvable,
+// résultats de recherche, tunnel de réservation. Absent = indexable, sans balise.
+export default function usePageMeta({ title, description, path, image, type = 'website', robots }) {
   const { language } = useLanguage();
   useEffect(() => {
     const restorers = [];
@@ -130,8 +132,9 @@ export default function usePageMeta({ title, description, path, image, type = 'w
     push(setMeta('meta[name="twitter:image"]', finalImage, { name: 'twitter:image' }));
     push(setMeta('meta[property="og:type"]', type, { property: 'og:type' }));
     push(setMeta('meta[property="og:locale"]', OG_LOCALE[language] || 'fr_BE', { property: 'og:locale' }));
+    if (robots) push(setMeta('meta[name="robots"]', robots, { name: 'robots' }));
     push(posePlanDeLangues(path || '/'));
 
     return () => restorers.forEach((r) => r());
-  }, [title, description, path, image, type, language]);
+  }, [title, description, path, image, type, robots, language]);
 }

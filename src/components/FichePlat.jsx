@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { imgProps } from '../images';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -95,7 +96,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
             l'écran commence simplement au nom. */}
         {imageUrl && (
           <div className="plat-photo">
-            <img src={imageUrl} alt="" />
+            <img {...imgProps(imageUrl, 800, '(max-width: 640px) 100vw, 800px')} alt={item.name} decoding="async" />
           </div>
         )}
         {/* La croix flotte par-dessus la photo quand il y en a une, comme chez Uber. Elle reprend la

@@ -35,7 +35,7 @@ const SOUS_TRAITANTS = [
 
 export default function Privacy() {
   const { t } = useLanguage();
-  usePageMeta({ title: t('privacy.pageTitle'), path: '/confidentialite' });
+  usePageMeta({ title: t('privacy.pageTitle'), description: t('seo.privacyDescription'), path: '/confidentialite' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>

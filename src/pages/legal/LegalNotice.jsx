@@ -8,7 +8,7 @@ const SECTIONS = ['publisher', 'hosting', 'ip', 'liability'];
 
 export default function LegalNotice() {
   const { t } = useLanguage();
-  usePageMeta({ title: t('legalNotice.pageTitle'), path: '/mentions-legales' });
+  usePageMeta({ title: t('legalNotice.pageTitle'), description: t('seo.legalNoticeDescription'), path: '/mentions-legales' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { imgProps } from '../../images';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -26,7 +27,7 @@ export default function ReserverPage() {
   const [restaurant, setRestaurant] = useState(null);
   const [erreur, setErreur] = useState('');
 
-  usePageMeta({ title: restaurant ? t('reserver.pageTitle', { name: restaurant.name }) : t('reserver.title'), path: `/reserver/${id}` });
+  usePageMeta({ title: restaurant ? t('reserver.pageTitle', { name: restaurant.name }) : t('reserver.title'), description: restaurant ? t('seo.reserverDescription', { name: restaurant.name, commune: restaurant.commune || 'Bruxelles' }) : undefined, path: `/reserver/${id}` });
 
   useEffect(() => {
     let annule = false;
@@ -53,10 +54,10 @@ export default function ReserverPage() {
     <div className="resa-wizard" style={{ maxWidth: 640, margin: '0 auto' }}>
       {!embed && (
         <div className="card" style={{ padding: 0, overflow: 'hidden', marginBottom: 12 }}>
-          {restaurant.coverImageUrl && <img src={restaurant.coverImageUrl} alt="" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />}
+          {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 800, '(max-width: 640px) 100vw, 800px')} alt={restaurant.name} fetchPriority="high" decoding="async" style={{ width: '100%', height: 160, objectFit: 'cover', display: 'block' }} />}
           <div style={{ padding: '14px 16px' }}>
             <div className="row" style={{ gap: 10, alignItems: 'center' }}>
-              {restaurant.logoImageUrl && <img src={restaurant.logoImageUrl} alt="" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }} />}
+              {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 48)} width="48" height="48" alt="" decoding="async" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }} />}
               <div style={{ minWidth: 0 }}>
                 <h1 style={{ margin: 0, fontSize: 20 }}>{restaurant.name}</h1>
                 <span className="small">{restaurant.cuisine}{restaurant.commune ? ` · ${restaurant.commune}` : ''}</span>

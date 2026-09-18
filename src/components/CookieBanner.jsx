@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import { getConsent, setConsent } from '../consent';
+import { getConsent, setConsent, onConsentChange } from '../consent';
 
 // Bannière de consentement. Refuser doit être aussi simple qu'accepter (RGPD + directive ePrivacy) :
 // les deux boutons sont donc côte à côte, de même taille et de même poids visuel — pas un bouton doré
@@ -11,10 +11,15 @@ import { getConsent, setConsent } from '../consent';
 export default function CookieBanner() {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
+  const boite = useRef(null);
 
   useEffect(() => {
     if (!getConsent()) setVisible(true);
+    // « Gérer mes cookies » remet le choix à zéro : la bannière revient.
+    return onConsentChange((v) => { if (!v) setVisible(true); });
   }, []);
+  // Au clavier, le premier bouton est atteignable tout de suite, sans traverser toute la page.
+  useEffect(() => { if (visible) boite.current?.querySelector('button')?.focus(); }, [visible]);
 
   function choose(value) {
     setConsent(value);
@@ -25,6 +30,7 @@ export default function CookieBanner() {
 
   return (
     <div
+      ref={boite}
       role="dialog"
       aria-live="polite"
       aria-label={t('cookies.text')}

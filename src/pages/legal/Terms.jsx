@@ -7,7 +7,7 @@ const ARTICLES = ['object', 'account', 'orders', 'balance', 'fees', 'cancellatio
 
 export default function Terms() {
   const { t } = useLanguage();
-  usePageMeta({ title: t('terms.pageTitle'), path: '/cgv' });
+  usePageMeta({ title: t('terms.pageTitle'), description: t('seo.termsDescription'), path: '/cgv' });
   return (
     <div className="card">
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 13 }}>

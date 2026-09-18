@@ -30,7 +30,7 @@ export default function HelpPage() {
   const { user } = useAuth();
   const { t } = useLanguage();
   const sujet = SUJETS.includes(params.get('sujet')) ? params.get('sujet') : null;
-  usePageMeta({ title: t('help.pageTitle'), path: '/aide' });
+  usePageMeta({ title: t('help.pageTitle'), description: t('seo.helpDescription'), path: '/aide' });
 
   // Arrivée depuis « Moyens de paiement » ou « Titres restaurant » : on amène directement à la
   // bonne réponse. Le navigateur ne le fait pas seul, l'ancre étant rendue après la navigation.

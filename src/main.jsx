@@ -14,6 +14,7 @@ import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
 import { historiqueLangue } from './i18n/historiqueLangue';
 import './styles.css';
 import { rechargerSiNouveauCode } from './lazyPage';
+import { demarrerAnalytics } from './analytics';
 
 // Sentry ne démarre qu'APRÈS consentement explicite : il transmet l'adresse IP, les URL visitées et le
 // contexte utilisateur à un sous-traitant établi aux États-Unis. Le démarrer au chargement de la page,
@@ -29,6 +30,8 @@ function startSentryIfAllowed() {
 }
 
 startSentryIfAllowed();
+// Statistiques sans cookie (Plausible) : inactif tant que VITE_PLAUSIBLE_DOMAIN n'est pas défini.
+demarrerAnalytics();
 
 // Mise en ligne pendant qu'un onglet est ouvert : le code d'une section demandée n'existe plus sous son
 // ancien nom. Plutôt qu'une page vide, rechargement silencieux vers la nouvelle version (voir lazyPage.js).
