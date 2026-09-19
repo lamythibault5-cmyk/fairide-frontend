@@ -548,8 +548,10 @@ export const JEUX = [
       let horloge = 0; let touches = []; // ondes laissées par les cibles touchées (x, y, age, parfait, r)
       let frenesie = 0; let touchees = 0; // frénésie : FRENESIE s pendant lesquelles l'anneau ne se referme pas, on tape à la volée
       const FRENESIE = 3;
-      // Plus grosse qu'avant (plafond 58 → 96px) : la cible doit sauter aux yeux dès qu'elle apparaît.
-      const taille = () => Math.max(46, Math.min(96, Math.min(w, h) * 0.26));
+      // Cible bien visible sans manger le terrain : le fondateur l'a demandée un peu plus petite (2026-09-19, × 0,8),
+      // ses ondes et son viseur suivent puisque tout est exprimé en tailles de cible.
+      const ECHELLE = 0.8;
+      const taille = () => Math.max(38, Math.min(96, Math.min(w, h) * 0.26) * ECHELLE);
       const PARFAIT = 0.62; // fraction de la fenêtre pendant laquelle l'anneau est doré (Parfait = +2)
       const nouvelleCible = (n) => {
         const t = taille();
@@ -733,7 +735,12 @@ export const JEUX = [
       let vAx = 0; let defile = 0; let vDecor = 0;
       let anneaux = []; let mursPoses = 0; // anneaux bonus (+2) semés entre deux murs, un sur trois
       const yFleche = () => h * 0.8;
-      const longueur = () => Math.max(34, h * 0.09);
+      // Flèche, murs et anneaux un peu plus fins (fondateur, 2026-09-19, × 0,8) : le passage à viser reste le même,
+      // on voit simplement plus de piste. Les ouvertures (jouabilité) ne changent pas.
+      const ECHELLE = 0.8;
+      const longueur = () => Math.max(28, h * 0.09 * ECHELLE);
+      const epaisseurMur = () => Math.max(8, h * 0.03 * ECHELLE);
+      const rayonAnneau = () => Math.max(12, Math.min(w, h) * 0.055 * ECHELLE);
       const espacement = () => h * 0.42;
       const TRAINE = 0.3; // durée de vie d'un point de traînée
       return {
@@ -742,9 +749,9 @@ export const JEUX = [
           const kx = nw / w; const ky = nh / h; w = nw; h = nh;
           ax *= kx; cibleX *= kx; depuis *= ky;
           if (dernierCentre != null) dernierCentre *= kx;
-          const ep = Math.max(10, h * 0.03);
+          const ep = epaisseurMur();
           for (const m of murs) { m.x *= kx; m.largeur *= kx; m.y *= ky; m.ep = ep; }
-          for (const an of anneaux) { an.x *= kx; an.y *= ky; an.r = Math.max(14, Math.min(w, h) * 0.055); }
+          for (const an of anneaux) { an.x *= kx; an.y *= ky; an.r = rayonAnneau(); }
           for (const tr of traine) { tr.x *= kx; tr.y *= ky; }
         },
         etat() {
@@ -756,7 +763,7 @@ export const JEUX = [
           const n = input.niveau;
           const v = h * courbe(n, 0.38, 1.15, 7);
           const ouverture = w * courbe(n, 0.36, 0.15, 7);
-          const ep = Math.max(10, h * 0.03);
+          const ep = epaisseurMur();
           if (input.x != null) cibleX = borner(input.x, 10, w - 10);
           // Ressort presque critique (voir creerChute) : la flèche prend son virage et se stabilise sans vibrer.
           {
@@ -782,7 +789,7 @@ export const JEUX = [
             murs.push({ y: -ep, x: centre - ouverture / 2, largeur: ouverture, ep, compte: false });
             // Un anneau bonus un mur sur trois, à mi-chemin du suivant, décalé du passage : il faut faire un écart pour +2.
             mursPoses += 1;
-            if (mursPoses % 3 === 0) { const r = Math.max(14, Math.min(w, h) * 0.055); const ecart = (Math.random() < 0.5 ? -1 : 1) * aleatoire(w * 0.12, w * 0.28); anneaux.push({ x: borner(centre + ecart, r + 6, w - r - 6), y: -ep - espacement() / 2, r, pris: false }); }
+            if (mursPoses % 3 === 0) { const r = rayonAnneau(); const ecart = (Math.random() < 0.5 ? -1 : 1) * aleatoire(w * 0.12, w * 0.28); anneaux.push({ x: borner(centre + ecart, r + 6, w - r - 6), y: -ep - espacement() / 2, r, pris: false }); }
           }
           const yf = yFleche(); const L = longueur(); const pointe = yf - L * 0.6; const demi = 7;
           const restants = [];
