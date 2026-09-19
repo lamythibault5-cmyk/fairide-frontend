@@ -1034,6 +1034,7 @@ export default function Account() {
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
           </LigneCompte>
+          <LigneCompte to="/driver/earnings" icone="euro" titre={t('accountUi.earningsRow')} sous={t('accountUi.earningsRowSub')} />
           <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>

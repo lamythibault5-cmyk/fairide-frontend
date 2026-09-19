@@ -58,6 +58,7 @@ const DriverMapPage = lazyPage(() => import('./pages/driver/MapPage'));
 const DriverReviewsPage = lazyPage(() => import('./pages/driver/ReviewsPage'));
 const DriverTipsPage = lazyPage(() => import('./pages/driver/TipsPage'));
 const DriverInvoicesPage = lazyPage(() => import('./pages/driver/InvoicesPage'));
+const DriverEarningsPage = lazyPage(() => import('./pages/driver/EarningsPage'));
 const DriverOnboarding = lazyPage(() => import('./pages/driver/Onboarding'));
 
 // --- Console d'administration ---
@@ -161,6 +162,7 @@ export default function App() {
         <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
         <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
+        <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         {/* Mini-jeux : rubrique de Mon compte. L'écran scindé avec la carte du livreur n'y apparaît que pour un client. */}

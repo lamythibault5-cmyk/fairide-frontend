@@ -111,7 +111,8 @@ export default function Auth() {
   const [courierOptions, setCourierOptions] = useState(null);
   useEffect(() => {
     if (role !== 'driver' || courierOptions) return;
-    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student', 'p2p', 'independent'], p2pEnabled: false, vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
+    // Hors ligne : les deux statuts toujours ouverts ; l'économie collaborative n'apparaît que si le serveur l'active.
+    api('/couriers/options').then(setCourierOptions).catch(() => setCourierOptions({ statuses: ['student_independent', 'independent'], p2pEnabled: false, vehicles: ['velo', 'velo_electrique', 'scooter', 'voiture'], bikeMaxKm: 4, legal: {} }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
   const [vatNumber, setVatNumber] = useState('');
@@ -491,7 +492,8 @@ export default function Auth() {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
         if (!bagOption) e.bagOption = t('auth.errBag');
-        if (courierStatus === 'independent' && !companyNumber.trim()) e.companyNumber = required;
+        // Numéro d'entreprise : requis pour l'étudiant-indépendant comme pour l'indépendant (facturation mensuelle).
+        if (['student_independent', 'independent'].includes(courierStatus) && !companyNumber.trim()) e.companyNumber = required;
         else if (companyNumber.trim() && !bceValide(companyNumber)) e.companyNumber = t('auth.errCompanyNumber');
       }
     }
@@ -1007,14 +1009,16 @@ export default function Auth() {
                       <span className="titre-groupe" id="auth-statut-titre">{t('auth.courierStatusTitle')}</span>
                       <p className="small" style={{ margin: '0 0 8px' }}>{t('auth.courierStatusHelp')}</p>
                       <div className={`statut-choix${errors.courierStatus ? ' input-invalid' : ''}`} role="radiogroup" aria-labelledby="auth-statut-titre">
-                        {(courierOptions?.statuses || ['student', 'p2p', 'independent']).map((st) => {
+                        {/* Trois statuts : économie collaborative (verrouillée tant que le serveur ne l'active pas),
+                            étudiant-indépendant, indépendant. Libellés dédiés à l'inscription (auth.courierStatus_*). */}
+                        {(courierOptions?.statuses || ['student_independent', 'independent']).filter((st) => ['p2p', 'student_independent', 'independent'].includes(st)).map((st) => {
                           const ferme = st === 'p2p' && courierOptions && !courierOptions.p2pEnabled;
                           return (
                             <div key={st} role="radio" aria-checked={courierStatus === st} aria-disabled={ferme} tabIndex={ferme ? -1 : 0}
                               className={`statut-carte${courierStatus === st ? ' active' : ''}${ferme ? ' ferme' : ''}`}
                               onClick={() => { if (!ferme) setCourierStatus(st); }} onKeyDown={(e) => { if (!ferme && (e.key === 'Enter' || e.key === ' ')) setCourierStatus(st); }}>
-                              <b>{st === 'student' ? '🎓 ' : st === 'p2p' ? '🤝 ' : '🧾 '}{t(`courierOnboarding.status_${st}`)}</b>
-                              <span className="small">{t(`courierOnboarding.status_${st}_desc`)}</span>
+                              <b>{st === 'student_independent' ? '🎓 ' : st === 'p2p' ? '🤝 ' : '🧾 '}{t(`auth.courierStatus_${st}`)}</b>
+                              <span className="small">{t(`auth.courierStatus_${st}_desc`)}</span>
                               {ferme && <span className="pill" style={{ alignSelf: 'flex-start' }}>{t('auth.courierStatusP2pSoon')}</span>}
                             </div>
                           );
@@ -1022,7 +1026,7 @@ export default function Auth() {
                       </div>
                       {fieldError('courierStatus')}
                     </div>
-                    {courierStatus === 'independent' && (
+                    {['student_independent', 'independent'].includes(courierStatus) && (
                       <div className="field">
                         <label htmlFor="auth-f-19">{t('auth.companyNumberDriver')}</label>
                         <input id="auth-f-19" className={errors.companyNumber ? 'input-invalid' : undefined}

@@ -71,7 +71,8 @@ export default function PaiementLivreur({ user, deliveries }) {
                   <td>{o.restaurantName} → {o.commune || o.address}</td>
                   <td>{euro(o.deliveryFee)}</td>
                   <td>{pourboire(o) > 0 ? euro(pourboire(o)) : '-'}</td>
-                  <td><b>{euro(Number(o.deliveryFee || 0) + pourboire(o))}</b></td>
+                  {/* Net réellement versé quand le serveur joint le décompte (précompte de l'économie collaborative). */}
+                  <td><b>{euro(o.driverEarning?.net != null ? o.driverEarning.net : Number(o.deliveryFee || 0) + pourboire(o))}</b>{o.driverEarning?.withholding > 0 && <span className="small" style={{ opacity: 0.7 }}> (−{euro(o.driverEarning.withholding)})</span>}</td>
                 </tr>
               ))}
             </tbody>

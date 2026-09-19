@@ -230,6 +230,13 @@ export default function DriverDashboard() {
 
   const awaitingPickup = mine.filter((o) => ['preparation', 'pret'].includes(o.status));
   const active = mine.filter((o) => o.status === 'livraison');
+  // Courses livrées aujourd'hui : brut · retenue · net quand le serveur joint `driverEarning` à la
+  // commande (précompte de l'économie collaborative), sinon le tarif livreur tel quel.
+  const aujourdhui = new Date().toDateString();
+  const livreesAujourdhui = mine.filter((o) => o.status === 'livre' && new Date(o.deliveredAt || o.updatedAt || o.createdAt).toDateString() === aujourdhui);
+  const ligneGain = (o) => (o.driverEarning && o.driverEarning.gross != null
+    ? t('dashDriver.earningLine', { gross: Number(o.driverEarning.gross).toFixed(2), withholding: Number(o.driverEarning.withholding ?? 0).toFixed(2), net: Number(o.driverEarning.net ?? (o.driverEarning.gross - (o.driverEarning.withholding || 0))).toFixed(2) })
+    : t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) }));
 
   return (
     <div>
@@ -245,6 +252,7 @@ export default function DriverDashboard() {
           </LigneCompte>
         )}
         <LigneCompte to="/driver/onboarding" icone="dossier" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
+        <LigneCompte to="/driver/earnings" icone="euro" titre={t('dashDriver.earningsLink')} sous={t('dashDriver.earningsSub')} />
         {/* Plus de rangée « En attente de validation » ici : dès que le compte n'est pas validé,
             le corps de la page est REMPLACÉ par une carte qui dit la même chose, avec la même
             horloge et davantage de détail (voir plus bas, dashDriver.waitingTitle). Le livreur
@@ -398,6 +406,19 @@ export default function DriverDashboard() {
           </div>
         </div>
       ))}
+
+      {livreesAujourdhui.length > 0 && (<>
+        <h2 className="section-title">{t('dashDriver.deliveredToday')}</h2>
+        {livreesAujourdhui.map((o) => (
+          <div className="card" key={o.id}>
+            <div className="row" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+              <span><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}</span>
+              <span className="small">{ligneGain(o)}</span>
+            </div>
+          </div>
+        ))}
+        <p className="small" style={{ margin: '-4px 0 12px' }}><Link to="/driver/earnings">{t('dashDriver.earningsLink')} →</Link></p>
+      </>)}
       </>)}
     </div>
   );

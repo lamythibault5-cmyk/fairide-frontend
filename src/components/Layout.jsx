@@ -23,7 +23,7 @@ const DASHBOARD_PATHS = ['/restaurants', '/recherche', '/favorites', '/orders', 
 // toute la navigation pour revenir d où l on vient. /account n y figure pas : c est la destination.
 const SOUS_SECTIONS_COMPTE = ['/invoices', '/crm',
   '/dashboard/reservations', '/dashboard/tables', '/dashboard/promotions', '/dashboard/invoices', '/dashboard/guide', '/dashboard/reviews',
-  '/driver/reviews', '/driver/invoices'];
+  '/driver/reviews', '/driver/invoices', '/driver/earnings'];
 function estSousSectionCompte(pathname) {
   return SOUS_SECTIONS_COMPTE.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }

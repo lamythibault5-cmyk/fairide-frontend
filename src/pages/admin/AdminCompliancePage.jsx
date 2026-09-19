@@ -468,28 +468,30 @@ function ExportsTab() {
                     <th>{tr('adminCommon.year')}</th>
                     <th>{tr('adminCompliance.thP2pMax')}</th>
                     <th>{tr('adminCompliance.thP2pWithholding')}</th>
-                    <th>{tr('adminCompliance.thStudentHours')}</th>
-                    <th>{tr('adminCompliance.thStudentSolidarity')}</th>
-                    <th>{tr('adminCompliance.thStudentOrdinary')}</th>
+                    <th>{tr('adminCompliance.thAlertLevels')}</th>
+                    <th>{tr('adminCompliance.thStudentIndependent')}</th>
                     <th>{tr('adminCompliance.thParentsCeiling')}</th>
-                    <th>{tr('adminCompliance.thMinAge')}</th>
+                    <th>{tr('adminCompliance.thAdultMinAge')}</th>
                     <th>{tr('adminCompliance.thFranchise')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.thresholds.map((t) => (
-                    <tr key={t.year}>
-                      <td><b>{t.year}</b></td>
-                      <td>{eur(t.p2pMaxGross)}</td>
-                      <td>{pct(t.p2pWithholdingRate)}</td>
-                      <td>{t.studentMaxHours} h</td>
-                      <td>{pct(t.studentSolidarityRate)} / {pct(t.studentSolidarityEmployerRate)}</td>
-                      <td>{pct(t.studentOrdinaryRate)} / {pct(t.studentOrdinaryEmployerRate)}</td>
-                      <td>{eur(t.studentParentsCeiling)}</td>
-                      <td>{t.studentMinAge}</td>
-                      <td>{eur(t.franchiseMaxTurnover)}</td>
-                    </tr>
-                  ))}
+                  {/* Configuration fiscale par année (mêmes champs que `legal` côté livreur) ; « — » si une valeur manque. */}
+                  {data.thresholds.map((t) => {
+                    const v = (x, f) => (x == null ? '—' : f(x));
+                    return (
+                      <tr key={t.year}>
+                        <td><b>{t.year}</b></td>
+                        <td>{v(t.p2pAnnualCeilingGross, eur)}</td>
+                        <td>{v(t.p2pWithholdingRate, pct)}</td>
+                        <td>{Array.isArray(t.p2pAlertLevels) && t.p2pAlertLevels.length ? t.p2pAlertLevels.map((n) => `${n} %`).join(' · ') : '—'}</td>
+                        <td>{v(t.studentIndependentExemption, eur)} / {v(t.studentIndependentCeiling, eur)}</td>
+                        <td>{v(t.studentParentsCeiling, eur)}</td>
+                        <td>{t.adultMinAge ?? '—'}</td>
+                        <td>{v(t.franchiseMaxTurnover, eur)}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
