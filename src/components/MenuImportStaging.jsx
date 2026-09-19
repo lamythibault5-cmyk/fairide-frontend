@@ -8,8 +8,20 @@ import { useLanguage } from '../context/LanguageContext';
 // puis tous les plats fusionnés partent dans la liste de relecture (MenuImportReview) via onDone(items).
 const MAX_DOCS = 25; // une carte complète tient rarement sur plus de 25 pages ou photos
 const CONCURRENCE = 2; // deux documents lus en parallèle : une carte de 25 pages reste sous les ~20 min
-const SECONDES_PAR_DOC = [45, 100]; // fourchette observée par document (Claude lit un PDF ou une photo)
-const BEAUCOUP_DE_PLATS = 45; // au-delà, on invite à vérifier qu'il ne manque rien sur cette page
+const SECONDES_PAR_DOC = [45, 120]; // fourchette observée par document (Claude lit un PDF ou une photo)
+// Depuis le 2026-09-19 le serveur lit sans limite de longueur (réponse longue + reprise automatique) : ce seuil
+// n'est plus qu'une invitation à relire une page très dense, pas un signe de coupure.
+const BEAUCOUP_DE_PLATS = 120;
+// Formats acceptés côté serveur (menuImport.js) : PDF, photos (HEIC compris), Word, Excel, texte.
+const ACCEPT = 'application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.docx,.xlsx,.txt,.csv,.md,.tsv';
+function iconeFichier(f) {
+  const ext = (f.name || '').toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] || '';
+  if (f.type === 'application/pdf' || ext === 'pdf') return '📄';
+  if (ext === 'docx') return '📝';
+  if (ext === 'xlsx' || ext === 'csv' || ext === 'tsv') return '📊';
+  if (ext === 'txt' || ext === 'md') return '📃';
+  return '🖼️';
+}
 
 function tailleLisible(o) { return o > 1024 * 1024 ? `${(o / 1024 / 1024).toFixed(1)} Mo` : `${Math.max(1, Math.round(o / 1024))} Ko`; }
 
@@ -95,7 +107,7 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
   const est = estimation(fichiers.length);
   return (
     <div className="menu-staging">
-      <input ref={entree} type="file" multiple accept="application/pdf,image/*" style={{ display: 'none' }} onChange={ajouter} />
+      <input ref={entree} type="file" multiple accept={ACCEPT} style={{ display: 'none' }} onChange={ajouter} />
       {etat === 'attente' && (
         <>
           <p className="small" style={{ margin: '0 0 8px' }}><b>1.</b> {t('menuPage.stagingStep1')}</p>
@@ -103,7 +115,7 @@ export default function MenuImportStaging({ restoId, token, onDone, onBusy, disa
             <ul className="menu-staging-list">
               {fichiers.map((f, i) => (
                 <li key={`${f.name}-${f.size}`}>
-                  <span className="menu-staging-icon" aria-hidden="true">{f.type === 'application/pdf' ? '📄' : '🖼️'}</span>
+                  <span className="menu-staging-icon" aria-hidden="true">{iconeFichier(f)}</span>
                   <span className="menu-staging-name">{f.name} <span className="small">({tailleLisible(f.size)})</span></span>
                   <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => retirer(i)} aria-label={t('menuPage.stagingRemove')}>✕</button>
                 </li>
