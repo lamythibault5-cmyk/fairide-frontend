@@ -5,6 +5,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useLanguage } from '../../../context/LanguageContext';
 import ConfirmDialog from '../../../components/ConfirmDialog';
+import useAutoRefresh from '../../../hooks/useAutoRefresh';
 import RecordDrawer, { DrawerRow } from '../../../components/admin/RecordDrawer';
 import { ErrorCard } from '../../../components/admin/AdminListTools';
 import { fmtDateTime, downloadCsv } from '../adminUtils';
@@ -27,11 +28,11 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
 
   const charger = useCallback(() => api(`/admin/marketing/campaigns/${id}`, { token }).then((r) => { setC(r); setErreur(null); }).catch((e) => setErreur(e.message)), [id, token]);
   useEffect(() => { charger(); }, [charger]);
-  useEffect(() => {
-    if (c?.status !== 'sending') return undefined;
-    const t = setInterval(charger, 4000);
-    return () => clearInterval(t);
-  }, [c?.status, charger]);
+  /* Pendant l'envoi, on suit les compteurs en direct. Les 4 secondes ne changent pas — c'est ce qui
+     fait qu'on voit la campagne avancer — mais useAutoRefresh s'arrête quand l'onglet passe en
+     arrière-plan : un envoi dure parfois longtemps, et personne n'a besoin qu'on interroge l'API
+     quinze fois par minute devant un onglet que plus personne ne regarde. */
+  useAutoRefresh(charger, c?.status === 'sending' ? 4000 : 0);
 
   async function action(chemin, body, message) {
     setBusy(true);

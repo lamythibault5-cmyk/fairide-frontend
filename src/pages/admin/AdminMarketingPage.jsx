@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import useAutoRefresh from '../../hooks/useAutoRefresh';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { ErrorCard, ResultCount } from '../../components/admin/AdminListTools';
@@ -54,13 +55,12 @@ export default function AdminMarketingPage() {
   useEffect(() => { chargerListe(); }, [chargerListe]);
   useEffect(() => { api('/admin/marketing/templates', { token }).then((r) => setTemplates(Array.isArray(r) ? r : [])).catch(() => setTemplates([])); }, [token]);
 
-  // Pendant un envoi, la liste se rafraîchit toute seule pour suivre les compteurs.
+  /* Pendant un envoi, la liste se rafraîchit toute seule pour suivre les compteurs. Deux appels par
+     tour, toutes les 5 secondes : justifié devant l'écran, gaspillé dès qu'on change d'onglet.
+     useAutoRefresh suspend le cycle tant que l'onglet n'est pas visible. */
   const enCours = useMemo(() => (liste || []).some((c) => c.status === 'sending'), [liste]);
-  useEffect(() => {
-    if (!enCours) return undefined;
-    const t = setInterval(() => { chargerListe(true); chargerStats(); }, 5000);
-    return () => clearInterval(t);
-  }, [enCours, chargerListe, chargerStats]);
+  const rafraichir = useCallback(() => { chargerListe(true); chargerStats(); }, [chargerListe, chargerStats]);
+  useAutoRefresh(rafraichir, enCours ? 5000 : 0);
 
   function toutRecharger() { chargerStats(); chargerListe(true); }
 

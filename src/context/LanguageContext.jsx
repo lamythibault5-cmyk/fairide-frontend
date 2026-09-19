@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { translations, SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE } from '../i18n/translations';
 import { changerLangue, ecouterLangue } from '../i18n/historiqueLangue';
 
@@ -63,8 +63,20 @@ export function LanguageProvider({ children, initial = DEFAULT_LANGUAGE }) {
   localeCourante = locale;
   langueCourante = language;
 
+  /* Objet mémoïsé, et ce n'est pas de la coquetterie : LanguageProvider est le fournisseur le PLUS
+     EXTERNE (voir main.jsx). Un objet neuf à chaque rendu faisait repasser pour « changée » une
+     valeur identique, et tout ce qui appelle useLanguage() — c'est-à-dire la moitié de l'application
+     — se rendait à nouveau, y compris quand seule une couche interne avait bougé.
+     `setLanguage` et `t` sont déjà des useCallback, donc la dépendance se réduit à ce qui change
+     vraiment : la langue. C'est ce qui rend cette mémoïsation sûre ici, là où elle ne le serait pas
+     dans un fournisseur dont les fonctions sont recréées à chaque passage. */
+  const value = useMemo(
+    () => ({ language, locale, setLanguage, t, languages: SUPPORTED_LANGUAGES }),
+    [language, locale, setLanguage, t]
+  );
+
   return (
-    <LanguageContext.Provider value={{ language, locale, setLanguage, t, languages: SUPPORTED_LANGUAGES }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

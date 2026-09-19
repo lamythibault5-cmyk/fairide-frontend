@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import { useLanguage, getLocale } from '../../../context/LanguageContext';
 
 // Briques partagées par les onglets de l'application Logistique : chargement (réutilise celles du groupe
@@ -17,14 +16,13 @@ export function minutesDepuis(ts) {
   return Math.max(0, Math.round((Date.now() - ts) / 60000));
 }
 
-// Relance `reload` toutes les `ms` millisecondes tant que l'onglet du navigateur est visible (inutile
-// de bombarder l'API depuis un onglet en arrière-plan).
-export function useAutoRefresh(reload, ms) {
-  useEffect(() => {
-    const id = setInterval(() => { if (document.visibilityState === 'visible') reload(); }, ms);
-    return () => clearInterval(id);
-  }, [reload, ms]);
-}
+/* Relance `reload` tant que l'onglet est visible. Le hook est remonté dans hooks/useAutoRefresh.js —
+   il ne servait qu'ici alors que les écrans de marketing en avaient le même besoin (voir l'en-tête de
+   ce fichier-là). Ré-exporté sous le même nom : FleetTab et LiveTab n'ont rien à changer.
+   La version remontée garde `reload` dans une ref, ce qui corrige un défaut discret de celle-ci : une
+   fonction recréée à chaque rendu relançait l'intervalle, donc le compte à rebours repartait de zéro
+   et l'appel pouvait ne jamais partir. */
+export { default as useAutoRefresh } from '../../../hooks/useAutoRefresh';
 
 // « Données à jour à HH:MM » + bouton Actualiser.
 export function Freshness({ at, onRefresh, loading }) {
