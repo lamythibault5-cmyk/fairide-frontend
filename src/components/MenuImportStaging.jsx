@@ -13,7 +13,7 @@ const SECONDES_PAR_DOC = [45, 120]; // fourchette observée par document (Claude
 // n'est plus qu'une invitation à relire une page très dense, pas un signe de coupure.
 const BEAUCOUP_DE_PLATS = 120;
 // Formats acceptés côté serveur (menuImport.js) : PDF, photos (HEIC compris), Word, Excel, texte.
-const ACCEPT = 'application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.docx,.xlsx,.txt,.csv,.md,.tsv';
+const ACCEPT = 'application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif,.docx,.xlsx,.txt,.csv,.md,.tsv,.json';
 function iconeFichier(f) {
   const ext = (f.name || '').toLowerCase().match(/\.([a-z0-9]+)$/)?.[1] || '';
   if (f.type === 'application/pdf' || ext === 'pdf') return '📄';
