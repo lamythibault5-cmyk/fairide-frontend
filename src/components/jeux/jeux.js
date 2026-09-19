@@ -25,7 +25,7 @@
 // moteur le fournit ; le français de jeux.js n'est que le repli. Les règles (regles + controles) sont
 // aussi traduites par le moteur, clé par clé : jeux.<key>_regles_0..3.
 
-import { aleatoire, choix, emoji, fondDegrade, sacFairide, IRIS, LIME } from './dessin';
+import { aleatoire, choix, courbe, emoji, fondDegrade, sacFairide, IRIS, LIME } from './dessin';
 import { creerRider } from './rider';
 
 const OR = '#FFD166';
@@ -60,7 +60,7 @@ function creerChute(api, cfg) {
   const SORTIE = 0.14; // durée de l'effacement d'un objet arrivé au sol
   // Plus grands qu'avant (plafond 36 → 54px) : « on voit rien » disait le fondateur. Bornés aussi par la
   // HAUTEUR, pour qu'un terrain large et bas (téléphone couché) garde le temps de voir l'objet tomber.
-  const tailleObjet = () => Math.max(24, Math.min(54, Math.min(w * 0.17, h * 0.15)));
+  const tailleObjet = () => Math.max(24, Math.min(64, Math.min(w * 0.17, h * 0.15)));
   const largeurJoueur = () => tailleObjet() * 1.7;
   const yJoueur = () => h - tailleObjet() * 1.3;
   const ySol = () => h - tailleObjet() * 0.3; // là où un objet « touche le sol » (le bandeau au bas du terrain)
@@ -89,7 +89,7 @@ function creerChute(api, cfg) {
       // Ressort presque critique plutôt qu'un rattrapage exponentiel : le panier accélère, file et se pose sans
       // à-coup quand le doigt s'arrête — un vrai objet avec une masse, toujours aussi réactif (≈ 0,06 s de retard).
       {
-        const raideur = 1400; const amorti = 2 * Math.sqrt(raideur) * 0.95;
+        const raideur = 2200; const amorti = 2 * Math.sqrt(raideur) * 0.95;
         const sous = Math.max(1, Math.ceil(dt / (1 / 120)));
         for (let i = 0; i < sous; i++) {
           const d = dt / sous;
@@ -486,10 +486,10 @@ const MAUVAIS = ['🗑️', '🦠', '💀', '🧪'];
 export const JEUX = [
   {
     key: 'catch', label: 'FairCatch', sub: 'Attrape les plats', emoji: '🧺',
-    stockage: 'fairide_food_catch_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Perdu !',
+    stockage: 'fairide_food_catch_best', pointsParNiveau: 10, maxNiveau: 20, perdu: '💥 Perdu !',
     regles: [
       'But : des plats tombent du ciel, attrape-les tous dans ton panier avant qu’ils ne touchent le sol.',
-      'Score : +1 par plat attrapé, +3 pour un plat doré ✨, +5 quand tu complètes la commande du client affichée en haut. 5 prises d’affilée = points ×2, 10 = ×3. L’aimant 🧲 attire les plats pendant 5 s. Tous les 10 points, ça tombe plus vite.',
+      'Score : +1 par plat attrapé, +3 pour un plat doré ✨, +5 quand tu complètes la commande du client affichée en haut. 5 prises d’affilée = points ×2, 10 = ×3. L’aimant 🧲 attire les plats pendant 5 s. À chaque niveau (paliers de plus en plus longs), ça tombe un peu plus vite.',
       'Fin de partie : un seul plat par terre et c’est fini. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
@@ -500,17 +500,17 @@ export const JEUX = [
       bonus: () => ({ emoji: '🧲', bonus: 'aimant', vitesseFacteur: 0.9 }),
       // Un plat sur dix est doré : il vaut 3 et tombe un peu plus vite.
       nouvelObjet: () => (Math.random() < 0.1 ? { emoji: choix(PLATS), or: true, points: 3, vitesseFacteur: 1.2 } : { emoji: choix(PLATS) }),
-      intervalle: (n) => Math.max(0.42, 0.96 - n * 0.072),
-      vitesse: (n) => aleatoire(0.128 + n * 0.0224, 0.269 + n * 0.035),
+      intervalle: (n) => courbe(n, 0.96, 0.30, 6),
+      vitesse: (n) => aleatoire(courbe(n, 0.128, 0.44, 7), courbe(n, 0.269, 0.70, 7)),
       toucher: () => 'point', manquer: () => 'perdu'
     })
   },
   {
     key: 'dodge', label: 'FairDodge', sub: 'Évite les obstacles', emoji: '🚧',
-    stockage: 'fairide_dodge_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '💥 Touché !',
+    stockage: 'fairide_dodge_best', pointsParNiveau: 10, maxNiveau: 20, perdu: '💥 Touché !',
     regles: [
       'But : tu livres en scooter et la route est semée d’obstacles (🚧 🪨 🕳️ 🔥 💥), faufile-toi sans rien toucher.',
-      'Score : +1 par obstacle évité, +2 « Pfiou ! » quand il te frôle, +3 par pourboire 💶 ramassé. 5 esquives d’affilée = points ×2, 10 = ×3. La nitro ⚡ te rend invincible 3 s : les obstacles éclatent. Tous les 10 points, la route accélère.',
+      'Score : +1 par obstacle évité, +2 « Pfiou ! » quand il te frôle, +3 par pourboire 💶 ramassé. 5 esquives d’affilée = points ×2, 10 = ×3. La nitro ⚡ te rend invincible 3 s : les obstacles éclatent. À chaque niveau (paliers de plus en plus longs), la route accélère un peu.',
       'Fin de partie : un seul choc et le scooter s’arrête. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
@@ -522,8 +522,8 @@ export const JEUX = [
       // Contact « juste » (1 taille d'objet) : on ne perd pas sur un obstacle qui n'a fait qu'effleurer le dessin.
       demiContact: 1.02,
       nouvelObjet: () => ({ emoji: choix(OBSTACLES) }),
-      intervalle: (n) => Math.max(0.54, 1.2 - n * 0.078),
-      vitesse: (n) => aleatoire(0.115 + n * 0.019, 0.231 + n * 0.032),
+      intervalle: (n) => courbe(n, 1.2, 0.40, 6),
+      vitesse: (n) => aleatoire(courbe(n, 0.115, 0.36, 7), courbe(n, 0.231, 0.56, 7)),
       toucher: () => 'perdu', manquer: () => null,
       // Le point tombe au moment où l'obstacle passe le scooter, pas quand il sort de l'écran : le retour
       // est immédiat. À moins d'un tiers d'objet du contact, c'est un frôlement : « Pfiou ! », +2.
@@ -532,10 +532,10 @@ export const JEUX = [
   },
   {
     key: 'reaction', label: 'FairFlash', sub: 'Réflexes rapides', emoji: '🎯',
-    stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '⏱️ Trop lent !',
+    stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 20, perdu: '⏱️ Trop lent !',
     regles: [
       'But : une cible 🎯 surgit quelque part sur le terrain, tape dessus avant que l’anneau autour ne se referme.',
-      'Score : +1 par cible touchée, +2 « Parfait ! » si tu tapes pendant que l’anneau est doré. 5 d’affilée = points ×2, 10 = ×3. Dès le niveau 2 la cible bouge ; toutes les 10 cibles, 3 s de Frénésie 🔥 où tout vaut Parfait. Tous les 8 points, l’anneau se referme plus vite.',
+      'Score : +1 par cible touchée, +2 « Parfait ! » si tu tapes pendant que l’anneau est doré. 5 d’affilée = points ×2, 10 = ×3. Dès le niveau 2 la cible bouge ; toutes les 10 cibles, 3 s de Frénésie 🔥 où tout vaut Parfait. À chaque niveau (paliers de plus en plus longs), l’anneau se referme un peu plus vite.',
       'Fin de partie : l’anneau se referme (il passe au rouge) avant que tu n’aies touché la cible. Taper à côté ne coûte rien.'
     ],
     controles: 'Commandes : tape (ou clique) sur la cible. Clavier : Échap ou P pour la pause.',
@@ -549,7 +549,7 @@ export const JEUX = [
       const PARFAIT = 0.62; // fraction de la fenêtre pendant laquelle l'anneau est doré (Parfait = +2)
       const nouvelleCible = (n) => {
         const t = taille();
-        fenetre = Math.max(0.55, 1.5 - n * 0.12);
+        fenetre = courbe(n, 1.5, 0.38, 6);
         reste = fenetre;
         // Jamais sous le doigt : au moins 1,4 taille de la cible précédente (8 tirages, puis on garde le dernier).
         let x = w / 2; let y = h / 2;
@@ -558,7 +558,7 @@ export const JEUX = [
           if (!precedente || Math.hypot(x - precedente.x, y - precedente.y) >= t * 1.4) break;
         }
         // Dès le niveau 2 la cible dérive (et rebondit sur les bords) : il faut la viser, pas seulement la voir.
-        const vit = n >= 2 ? Math.min(w, h) * (0.06 + n * 0.03) : 0; const dir = Math.random() * Math.PI * 2;
+        const vit = n >= 2 ? Math.min(w, h) * courbe(n - 2, 0.1, 0.36, 7) : 0; const dir = Math.random() * Math.PI * 2;
         cible = { x, y, age: 0, ratee: false, vx: Math.cos(dir) * vit, vy: Math.sin(dir) * vit }; precedente = cible;
       };
       return {
@@ -681,10 +681,10 @@ export const JEUX = [
   },
   {
     key: 'sort', label: 'FairSort', sub: 'Trie les bons plats', emoji: '🗑️',
-    stockage: 'fairide_sort_best', pointsParNiveau: 10, maxNiveau: 8, perdu: '🤢 Mauvais choix !',
+    stockage: 'fairide_sort_best', pointsParNiveau: 10, maxNiveau: 20, perdu: '🤢 Mauvais choix !',
     regles: [
       'But : des plats tombent, mais aussi des déchets cerclés de rouge (🗑️ 🦠 💀 🧪). Attrape les plats, laisse tomber les déchets.',
-      'Score : +1 par plat attrapé ; 5 d’affilée = points ×2, 10 = ×3 (un plat raté casse la série, sans coûter de point). Le bouclier 🛡️ encaisse un déchet à ta place. Tous les 10 points : plus de déchets, et ça tombe plus vite.',
+      'Score : +1 par plat attrapé ; 5 d’affilée = points ×2, 10 = ×3 (un plat raté casse la série, sans coûter de point). Le bouclier 🛡️ encaisse un déchet à ta place. À chaque niveau (paliers de plus en plus longs) : un peu plus de déchets, un peu plus vite.',
       'Fin de partie : un seul déchet dans le panier. Le cadre clignote orange quand un déchet t’a frôlé : ouf ! Ton record compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
@@ -694,11 +694,11 @@ export const JEUX = [
       // Bonus : le bouclier 🛡️ — il encaisse UN déchet à ta place.
       bonus: () => ({ emoji: '🛡️', bonus: 'bouclier', vitesseFacteur: 0.9 }),
       nouvelObjet: (n) => {
-        const mauvais = Math.random() < Math.min(0.45, 0.22 + n * 0.03);
+        const mauvais = Math.random() < courbe(n, 0.22, 0.5, 7);
         return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
       },
-      intervalle: (n) => Math.max(0.48, 1.02 - n * 0.066),
-      vitesse: (n) => aleatoire(0.128 + n * 0.019, 0.256 + n * 0.032),
+      intervalle: (n) => courbe(n, 1.02, 0.34, 6),
+      vitesse: (n) => aleatoire(courbe(n, 0.128, 0.40, 7), courbe(n, 0.256, 0.62, 7)),
       toucher: (o) => (o.mauvais ? 'perdu' : 'point'), manquer: () => null,
       // Un déchet passé à moins d'un tiers d'objet du panier : alerte orange, sans point ni pénalité.
       passer: (o, dx, demi, t) => (o.mauvais && dx < demi + t * 0.35 ? 'alerte' : null)
@@ -706,7 +706,7 @@ export const JEUX = [
   },
   {
     key: 'rider', label: 'FairRider', sub: 'Saltos, sauts, loopings, lettres', emoji: '🚴',
-    stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '🤕 Chute !',
+    stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 12, paysage: true, perdu: '🤕 Chute !',
     regles: [
       'But : maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Double tap (ou double clic) pour sauter par-dessus les obstacles de la route. Tremplins, crêtes, trous et falaises te font décoller, et les loopings se bouclent tout seuls si tu arrives assez vite.',
       'Lettres : un mot lié à Fairide (7 lettres au plus) est affiché en haut, et chaque mot complété en révèle un plus long. Ses lettres sont sur la route ou en l’air — il faut parfois sauter pour les cueillir. Attrape-les toutes : tous les points gagnés pendant ce mot sont doublés, puis le mot suivant apparaît. Une lettre ratée revient plus loin.',
@@ -717,10 +717,10 @@ export const JEUX = [
   },
   {
     key: 'arrow', label: 'FairArrow', sub: 'Vise les passages', emoji: '🏹',
-    stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 8, perdu: '💢 Dans le mur !',
+    stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 20, perdu: '💢 Dans le mur !',
     regles: [
       'But : ta flèche fonce vers le haut, des murs descendent avec chacun une seule ouverture, vise le passage.',
-      'Score : +1 par mur traversé, +2 par anneau doré ⭕ enfilé entre deux murs. 5 murs d’affilée = points ×2, 10 = ×3. Le passage à viser est éclairé en vert. Tous les 8 points, les murs accélèrent et les ouvertures rétrécissent.',
+      'Score : +1 par mur traversé, +2 par anneau doré ⭕ enfilé entre deux murs. 5 murs d’affilée = points ×2, 10 = ×3. Le passage à viser est éclairé en vert. À chaque niveau (paliers de plus en plus longs), les murs accélèrent et les ouvertures rétrécissent un peu.',
       'Fin de partie : la pointe touche un mur. Ton record est gardé et compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, la flèche suit. Clavier : flèches ← →, Échap ou P pour la pause.',
@@ -750,13 +750,13 @@ export const JEUX = [
         },
         update(dt, input) {
           const n = input.niveau;
-          const v = h * (0.38 + n * 0.05);
-          const ouverture = Math.max(w * 0.2, w * (0.36 - n * 0.02));
+          const v = h * courbe(n, 0.38, 1.15, 7);
+          const ouverture = w * courbe(n, 0.36, 0.15, 7);
           const ep = Math.max(10, h * 0.03);
           if (input.x != null) cibleX = borner(input.x, 10, w - 10);
           // Ressort presque critique (voir creerChute) : la flèche prend son virage et se stabilise sans vibrer.
           {
-            const raideur = 1200; const amorti = 2 * Math.sqrt(raideur) * 0.95;
+            const raideur = 1900; const amorti = 2 * Math.sqrt(raideur) * 0.95;
             const sous = Math.max(1, Math.ceil(dt / (1 / 120)));
             for (let i = 0; i < sous; i++) { const d = dt / sous; vAx += ((cibleX - ax) * raideur - vAx * amorti) * d; ax += vAx * d; }
             ax = borner(ax, 10, w - 10);

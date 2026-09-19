@@ -152,6 +152,11 @@ export function sacFairide(ctx, x, y, taille, angle = 0) {
   ctx.restore();
 }
 
+// Difficulté en crescendo : part de `debut` au niveau 0 et tend vers `fin` sans jamais la dépasser (`k` niveaux
+// pour parcourir 63 % du chemin). Les premiers niveaux changent doucement, les derniers serrent la vis — et il
+// existe une vraie limite : un score infini n'est plus possible, sans que le jeu devienne injuste d'un coup.
+export const courbe = (n, debut, fin, k = 6) => fin + (debut - fin) * Math.exp(-Math.max(0, n) / k);
+
 export const IRIS = '#3B2FB5';
 export const LIME = '#C8F03C';
 export const INK = '#14121F';

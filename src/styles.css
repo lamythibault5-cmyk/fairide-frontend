@@ -3670,9 +3670,27 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
    prenait la largeur de son canvas au lieu de celle de l'écran : en plein écran sur un téléphone couché, le
    terrain restait un timbre-poste au milieu, et la carte de démarrage débordait par-dessus les boutons. */
 .jeu--plein .jeu-cadre { flex: 1; min-height: 0; width: auto; align-self: stretch; border-radius: 14px; }
+/* Jeux « ça tombe » en plein écran sur un écran large (PC, tablette couchée) : le terrain garde un format portrait
+   et se centre, au lieu de s'étirer sur toute la largeur — les objets tombaient sur un terrain immense et minuscule
+   en hauteur, impossible à couvrir du regard. FairRider (paysage) garde toute la largeur. */
+.jeu--plein.jeu--portrait .jeu-cadre { align-self: center; width: 100%; max-width: calc((100dvh - 96px) * 0.9); }
+.jeu--plein.jeu--portrait .jeu-hud, .jeu--plein.jeu--portrait .jeu-progress, .jeu--plein.jeu--portrait .jeu-indice { max-width: calc((100dvh - 96px) * 0.9); align-self: center; width: 100%; }
+/* Réglage de sensibilité (écran tactile) : une ligne de trois pastilles sous les boutons de la carte de départ. */
+.jeu-sens { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: center; margin-top: 2px; }
+.jeu-sens-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); margin-right: 4px; }
+.jeu-sens-btn { border: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 999px; cursor: pointer; }
+.jeu-sens-btn.active { background: var(--lime); border-color: var(--lime); color: var(--ink); }
+.jeu--plein .jeu-sens-label { font-size: 13px; }
+.jeu--plein .jeu-sens-btn { font-size: 13px; padding: 6px 14px; }
 .jeu--plein .jeu-canvas { width: 100% !important; height: 100% !important; }
 .jeu--plein .jeu-indice { margin: 2px 0 6px; }
 html.jeu-plein-actif, html.jeu-plein-actif body { overflow: hidden; overscroll-behavior: none; }
+/* Plein écran de secours (iPhone) : `.page-fade` garde son animation d'entrée appliquée (fill-mode both) et, pour
+   le navigateur, un élément animé en opacité forme un contexte d'empilement — le calque fixe du jeu (z 300) restait
+   COINCÉ DEDANS, sous la bannière collante (z 40) : l'en-tête restait visible par-dessus le jeu. On retire
+   l'animation le temps du plein écran, et on masque la bannière et la barre du bas par sécurité. */
+html.jeu-plein-actif .page-fade { animation: none; }
+html.jeu-plein-actif .hero, html.jeu-plein-actif .nav-mobile, html.jeu-plein-actif .mobile-nav { visibility: hidden; }
 /* Astuce discrète quand le téléphone est tenu à la verticale : on n'impose rien, on suggère. */
 .jeu-rotation {
   align-self: center; margin-top: 6px; padding: 6px 12px; border: 0; border-radius: var(--radius-pill);
@@ -3893,6 +3911,9 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
   background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
 }
 .jeux-page-terrain .jeu-cadre { flex: none; height: min(62svh, 520px); min-height: 300px; }
+/* En plein écran, la hauteur fixe de la page /jeux ne doit plus s'appliquer : le terrain prend toute la hauteur
+   (sinon il s'arrêtait à 62 % de l'écran, un bandeau vide en dessous). Trois classes pour l'emporter sur la règle ci-dessus. */
+.jeux-page-terrain .jeu--plein .jeu-cadre { flex: 1 1 auto; height: auto; min-height: 0; }
 .jeux-page-intro { margin: -4px 0 14px; }
 .jeux-page-aide { margin: 4px 0 16px; text-align: center; }
 /* La livraison en route : le texte, le choix de la commande s'il y en a plusieurs, et le bouton

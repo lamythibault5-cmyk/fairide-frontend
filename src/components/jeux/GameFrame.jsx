@@ -23,7 +23,13 @@ import { IconeJeu, styleJeu } from './IconeJeu';
 const DT_MAX = 0.05; // au-delà (onglet réveillé, saccade), on avance d'un pas plafonné plutôt que de sauter
 const COMPTE_PRET = 0.7; // « Prêt ? » puis « Go ! » : une seconde en tout, assez pour poser le doigt
 const COMPTE_TOTAL = 1.1;
-const VITESSE_CLAVIER = 1.3; // flèches ← → : largeurs de terrain par seconde
+const VITESSE_CLAVIER = 1.3; // flèches ← → : largeurs de terrain par seconde (× le gain de sensibilité)
+// Sensibilité tactile : au doigt, le joueur ne saute pas sous le doigt (qui le cacherait), il SUIT le mouvement du
+// doigt depuis là où il est, amplifié par un gain — un petit geste du pouce traverse le terrain. Réglable.
+const SENS_KEY = 'fairide_game_sens';
+const GAINS = { douce: 1.15, normale: 1.6, vive: 2.1 };
+const lireSens = () => { try { const v = localStorage.getItem(SENS_KEY); return GAINS[v] ? v : 'normale'; } catch { return 'normale'; } };
+const tactileProbable = () => { try { return window.matchMedia('(pointer: coarse)').matches; } catch { return false; } };
 const IRIS = '#3B2FB5'; const LIME = '#C8F03C';
 // Une ligne de règles = une icône + son texte ; le libellé avant le premier « : » est mis en gras.
 const ICONES_REGLES = ['cible', 'etoile', 'interdit', 'manette'];
@@ -238,7 +244,18 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   statusRef.current = status;
   tailleRef.current = taille;
 
-  const niveau = () => Math.min(jeu.maxNiveau, Math.floor(scoreRef.current / jeu.pointsParNiveau));
+  // Paliers de plus en plus longs : le niveau k demande pointsParNiveau × k × (1 + 0,06 (k − 1)) points en tout
+  // (10, 21, 34, 48, 63, 80, 99, 119… pour 10 points de base). Avec les combos qui multiplient les points, un palier
+  // fixe filait trop vite ; et la difficulté continue de monter jusqu'à maxNiveau (20), donc pas de score infini.
+  const seuil = (k) => Math.round(jeu.pointsParNiveau * k * (1 + 0.06 * (k - 1)));
+  const niveau = () => { let k = 0; while (k < jeu.maxNiveau && scoreRef.current >= seuil(k + 1)) k++; return k; };
+  // « Grand » = terrain large OU plein écran : textes du terrain, pastilles et indices à la taille au-dessus.
+  const grandRef = useRef(large); grandRef.current = large || plein;
+  const [sens, setSens] = useState(lireSens);
+  const sensRef = useRef(sens); sensRef.current = sens;
+  const [tactile] = useState(tactileProbable);
+  const ancre = useRef(null); // glissé tactile en cours : { doigt: x du doigt au départ, base: x du joueur au départ }
+  function changerSens(v) { setSens(v); try { localStorage.setItem(SENS_KEY, v); } catch { /* stockage indisponible */ } }
 
   // Taille : imposée par les props, ou celle du conteneur quand on remplit l'espace — `fill` demandé par le
   // parent, ou plein écran, où le terrain doit prendre tout l'écran quelles que soient les props reçues.
@@ -320,7 +337,8 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   }, [plein]);
   // Téléphone tenu à la verticale : on le signale une fois, sans rien imposer — le terrain marche dans les deux sens.
   useEffect(() => {
-    if (!plein || !surTelephone()) { setAstuceRotation(false); return undefined; }
+    // Seul FairRider (défilement horizontal) gagne à être joué couché ; les jeux « ça tombe » sont faits pour le portrait.
+    if (!plein || !surTelephone() || !jeu.paysage) { setAstuceRotation(false); return undefined; }
     const verifier = () => setAstuceRotation(window.innerHeight > window.innerWidth * 1.2);
     verifier();
     window.addEventListener('resize', verifier);
@@ -353,7 +371,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     if (d) { ctx.save(); ctx.translate(d.x, d.y); }
     instance.current.draw(ctx);
     if (d) ctx.restore();
-    effets.current.draw(ctx, w, h, large);
+    effets.current.draw(ctx, w, h, grandRef.current);
   }
 
   // L'instance du jeu : créée une fois par définition, informée des changements de taille.
@@ -361,7 +379,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const api = {
       get w() { return tailleRef.current.w; },
       get h() { return tailleRef.current.h; },
-      large,
+      get large() { return grandRef.current; },
       marquer(n = 1) {
         const avant = niveau();
         // Le score est poussé à React une fois par image (fin de pas()), pas à chaque point : un salto combo
@@ -459,7 +477,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       // Flèches ← → : un pointeur virtuel qui glisse à vitesse constante (les jeux ne voient qu'un x).
       if (inp.gauche !== inp.droite) {
         const { w, h } = tailleRef.current;
-        inp.x = Math.max(0, Math.min(w, (inp.x ?? w / 2) + (inp.droite ? 1 : -1) * w * VITESSE_CLAVIER * dt));
+        inp.x = Math.max(0, Math.min(w, (inp.x ?? w / 2) + (inp.droite ? 1 : -1) * w * VITESSE_CLAVIER * (GAINS[sensRef.current] / GAINS.normale) * dt));
         if (inp.y == null) inp.y = h / 2;
       }
       instance.current.update(dt, { x: inp.x, y: inp.y, enfonce: inp.enfonce, tapes: inp.tapes, sauts: inp.sauts || 0, niveau: niveau() });
@@ -565,10 +583,17 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     const a = document.activeElement;
     if (a && a !== document.body && /^(BUTTON|INPUT|TEXTAREA|SELECT|A)$/.test(a.tagName)) a.blur();
   }
+  // Doigt : glissé relatif (voir GAINS). Souris / stylet : position absolue, le joueur est sous le curseur.
+  function poserPointeur(e, p) {
+    const w = tailleRef.current.w;
+    if (e.pointerType === 'touch') { ancre.current = { doigt: p.x, base: input.current.x ?? w / 2, id: e.pointerId }; if (input.current.x == null) input.current.x = w / 2; }
+    else { ancre.current = null; input.current.x = p.x; }
+    input.current.y = p.y; input.current.enfonce = true;
+    input.current.tapes.push(p); // les tapes restent à l'endroit touché (FairFlash vise une cible)
+  }
   function surPointeurBas(e) {
     libererFocus();
-    const p = coord(e); input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
-    input.current.tapes.push(p);
+    poserPointeur(e, coord(e));
     try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché : sans capture, le glissé marche quand même */ }
   }
   function surPointeurBasRacine(e) {
@@ -578,13 +603,22 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     if (!r) return;
     libererFocus();
     const p = { x: Math.max(0, Math.min(r.width, e.clientX - r.left)), y: Math.max(0, Math.min(r.height, e.clientY - r.top)) };
-    input.current.x = p.x; input.current.y = p.y; input.current.enfonce = true;
-    input.current.tapes.push(p);
+    poserPointeur(e, p);
     // La capture renvoie le relâchement au canvas, qui remet « enfoncé » à faux, où que le doigt se lève.
     try { canvas.current.setPointerCapture?.(e.pointerId); } catch { /* pointeur déjà relâché */ }
   }
-  function surPointeurMouv(e) { const p = coord(e); input.current.x = p.x; input.current.y = p.y; }
-  function surPointeurHaut() { input.current.enfonce = false; }
+  function surPointeurMouv(e) {
+    const p = coord(e); const a = ancre.current;
+    if (a && e.pointerType === 'touch') {
+      const w = tailleRef.current.w;
+      input.current.x = Math.max(0, Math.min(w, a.base + (p.x - a.doigt) * GAINS[sensRef.current]));
+      // Le doigt a atteint le bord du terrain alors que le joueur n'y est pas : on ré-ancre, pour que le retour
+      // réponde tout de suite au lieu d'attendre que le doigt refasse le chemin inverse dans le vide.
+      if ((input.current.x <= 0 && p.x < a.doigt) || (input.current.x >= w && p.x > a.doigt)) { a.doigt = p.x; a.base = input.current.x; }
+    } else input.current.x = p.x;
+    input.current.y = p.y;
+  }
+  function surPointeurHaut() { input.current.enfonce = false; ancre.current = null; }
 
   function demarrer() {
     scoreRef.current = 0; setScore(0); setNouveauRecord(false);
@@ -626,7 +660,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   const progression = niv >= jeu.maxNiveau ? 1 : (score % jeu.pointsParNiveau) / jeu.pointsParNiveau;
   const lignesRegles = [...jeu.regles.map((r, i) => tJeu(t, jeu, `regles_${i}`, r)), tJeu(t, jeu, 'regles_3', jeu.controles)];
   return (
-    <div ref={racine} onPointerDown={surPointeurBasRacine} style={styleJeu(jeu.key)} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}`}>
+    <div ref={racine} onPointerDown={surPointeurBasRacine} style={styleJeu(jeu.key)} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}${plein && !jeu.paysage ? ' jeu--portrait' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best" title={t('gameFrame.bestTitle')}><Icone nom="etoile" taille={14} />{meilleur}</span>
         <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>{score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
@@ -661,7 +695,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       <div className="jeu-progress" aria-hidden="true"><div style={{ width: `${Math.round(progression * 100)}%` }} /></div>
       {/* En grand (plein écran), la commande du jeu reste sous les yeux : on n'a pas à rouvrir les règles pour
           se souvenir s'il faut glisser, taper ou maintenir. */}
-      {large && <p className="jeu-indice"><Icone nom="manette" taille={14} /><span>{tJeu(t, jeu, 'regles_3', jeu.controles)}</span></p>}
+      {(large || plein) && <p className="jeu-indice"><Icone nom="manette" taille={14} /><span>{tJeu(t, jeu, 'regles_3', jeu.controles)}</span></p>}
 
       {/* En `fill`, c'est le cadre (et non tout le bloc, qui contient aussi le tableau de bord et les
           boutons) qui est mesuré : le canvas doit remplir exactement la place laissée au terrain. */}
@@ -694,6 +728,15 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
                   {menuMusique && menuPistes}
                 </span>
               </div>
+              {/* Sensibilité du glissé : sur écran tactile seulement (à la souris, le joueur est sous le curseur). */}
+              {tactile && jeu.key !== 'rider' && (
+                <div className="jeu-sens" role="group" aria-label={t('gameFrame.sensitivity')} title={t('gameFrame.sensHint')}>
+                  <span className="jeu-sens-label">{t('gameFrame.sensitivity')}</span>
+                  {Object.keys(GAINS).map((v) => (
+                    <button key={v} type="button" className={`jeu-sens-btn${sens === v ? ' active' : ''}`} aria-pressed={sens === v} onClick={() => changerSens(v)}>{t(`gameFrame.sens_${v}`)}</button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
