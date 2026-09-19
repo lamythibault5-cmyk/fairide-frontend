@@ -15,7 +15,18 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../src') + path.sep;
-const { translations } = await import(pathToFileURL(path.join(ROOT, 'i18n/translations.js')).href);
+/* Les trois tables vivent maintenant dans un fichier chacune, et translations.js ne charge que le
+   français au démarrage (voir son en-tête). Ici on veut justement les trois : on appelle donc le
+   chargeur pour chaque langue avant de comparer. Sans ça, ce contrôle ne comparerait plus que le
+   français à lui-même et passerait au vert quoi qu'il arrive — le pire des résultats pour un
+   garde-fou. */
+const modTraductions = await import(pathToFileURL(path.join(ROOT, 'i18n/translations.js')).href);
+const { translations, SUPPORTED_LANGUAGES: LANGUES, chargerLangue } = modTraductions;
+await Promise.all(LANGUES.map((l) => chargerLangue(l)));
+if (Object.keys(translations).length !== LANGUES.length) {
+  console.error(`✗ i18n : ${Object.keys(translations).length} table(s) chargée(s) sur ${LANGUES.length} attendues.`);
+  process.exit(1);
+}
 let erreurs = 0;
 
 function aplatir(o, prefixe = '', out = new Set()) {
