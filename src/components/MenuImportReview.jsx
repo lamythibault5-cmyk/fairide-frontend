@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { categoryEmoji, suggestItemImages } from '../menuCategories';
+import { categoryEmoji, suggestItemImages, imageSurePourPlat, imageDeSectionSuggeree } from '../menuCategories';
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
 import OptionsEditor, { nettoyerOptionsClient } from './OptionsEditor';
@@ -86,10 +86,10 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       options: Array.isArray(it.options) ? it.options : [],
       key: i,
       included: true,
-      // Jamais de photo auto-assignée sur un plat importé d'un document — même en cas de correspondance
-      // exacte, mieux vaut laisser le restaurateur choisir lui-même (voir GalleryPickerModal plus bas, qui
-      // propose sa galerie déjà en ligne + quelques suggestions) que de remplir silencieusement le menu.
-      imageUrl: ''
+      // Photo du catalogue seulement quand elle est sûre (nom exact ou un seul mot-clé reconnu) ; sinon rien,
+      // et c'est l'image de la section (voir imagesSections plus bas) qui habille le plat. Le restaurateur
+      // peut toujours changer chaque photo depuis la vignette (fondateur, 2026-09-19).
+      imageUrl: imageSurePourPlat(it) || ''
     }));
   });
   // Par défaut on ajoute aux plats existants — remplacer est une action destructive (supprime tout le
@@ -99,10 +99,19 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
   const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [appliedPercent, setAppliedPercent] = useState(() => loadDraft(restoId)?.appliedPercent || 0);
+  // Image représentative par section (Dürüms → un dürüm, Kapsalon → un kapsalon…), posée sur la section à
+  // l'ajout : tous les plats de la section sans photo propre l'affichent. Désactivable section par section.
+  const [imagesSections, setImagesSections] = useState(() => {
+    const draft = loadDraft(restoId);
+    if (draft?.imagesSections) return draft.imagesSections;
+    const parSection = {};
+    for (const it of initialItems) { const cat = (it.category || 'plat').trim(); (parSection[cat] = parSection[cat] || []).push(it); }
+    return Object.fromEntries(Object.entries(parSection).map(([nom, plats]) => [nom, imageDeSectionSuggeree(nom, plats) || '']));
+  });
 
   useEffect(() => {
-    sessionStorage.setItem(draftKeyFor(restoId), JSON.stringify({ items, mode, appliedPercent }));
-  }, [items, mode, restoId, appliedPercent]);
+    sessionStorage.setItem(draftKeyFor(restoId), JSON.stringify({ items, mode, appliedPercent, imagesSections }));
+  }, [items, mode, restoId, appliedPercent, imagesSections]);
 
   // Applique un pourcentage à tous les prix, toujours à partir du prix d'origine (priceOriginal) : on peut
   // changer d'avis, et 0 remet les prix du document.
@@ -140,7 +149,8 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
       .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl, options: nettoyerOptionsClient(it.options) }))
       .filter((it) => it.name && Number.isFinite(it.price) && it.price > 0);
     discardDraft();
-    onSubmit(toSubmit, mode === 'replace');
+    const sectionImages = Object.fromEntries(Object.entries(imagesSections).filter(([, url]) => url));
+    onSubmit(toSubmit, mode === 'replace', sectionImages);
   }
 
   function cancel() {
@@ -171,7 +181,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
           items: g.choices.map((c, ci) => ({ id: `draft-${it.key}-g${gi}-c${ci}`, name: c.name, priceDelta: c.priceDelta }))
         }))
       })),
-      sections: orderedCategories.map((name, i) => ({ id: `draft-sec-${i}`, name }))
+      sections: orderedCategories.map((name, i) => ({ id: `draft-sec-${i}`, name, imageUrl: imagesSections[name] || '' }))
     };
     return (
       <div>
@@ -234,6 +244,23 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
           {t('menuImport.the')} <b>section</b> {t('menuImport.sectionExplain')} <b>sous-section</b> {t('menuImport.subsectionExplain')} <b>{t('menuImport.exSauces')}</b> ou <b>{t('menuImport.exCrudites')}</b> {t('menuImport.inMains')} <b>{t('menuImport.exHot')}</b> / <b>{t('menuImport.exCold')}</b> / <b>{t('menuImport.exAlcohol')}</b> {t('menuImport.inDrinks')}
         </p>
       </div>
+      {Object.keys(imagesSections).length > 0 && (
+        <div className="card" style={{ marginBottom: 8, padding: 12 }}>
+          <b>{t('menuImport.sectionImagesTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 8px' }}>{t('menuImport.sectionImagesIntro')}</p>
+          <div className="row" style={{ gap: 10, flexWrap: 'wrap' }}>
+            {Object.entries(imagesSections).map(([nom, url]) => (
+              <div key={nom} className="row" style={{ gap: 6, alignItems: 'center' }}>
+                {url ? <img loading="lazy" src={url} alt="" className="dish-thumb" /> : <span className="dish-thumb-empty">{categoryEmoji(nom)}</span>}
+                <span className="small"><b>{nom}</b></span>
+                <button type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setImagesSections((prev) => ({ ...prev, [nom]: prev[nom] ? '' : (imageDeSectionSuggeree(nom, items.filter((it) => (it.category || 'plat').trim() === nom)) || '') }))}>
+                  {url ? t('menuImport.sectionImageOff') : t('menuImport.sectionImageOn')}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
       {items.map((it) => (
         <div key={it.key} className="card" style={{ marginBottom: 8, opacity: it.included ? 1 : 0.5, padding: 12 }}>
           <div className="row" style={{ gap: 8, alignItems: 'flex-start' }}>

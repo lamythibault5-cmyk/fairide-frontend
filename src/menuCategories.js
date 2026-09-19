@@ -3905,3 +3905,74 @@ export function galleryForSection(cuisine, sectionName, max = 30) {
   if (kind === 'entree' || kind === 'plat' || urls.length === 0) galleryForCuisine(cuisine).forEach(ajouter);
   return urls.slice(0, max);
 }
+
+// ---------------------------------------------------------------------------------------------------
+// Images à l'import d'une carte (fondateur, 2026-09-19) : « une image par plat quand on est sûr, sinon
+// l'image de la section ». Deux aides :
+//  - imageSurePourPlat(item) : la photo du catalogue seulement quand elle est sans ambiguïté — nom exact
+//    connu, ou UN seul mot-clé reconnu ("Dürüm hamburger" en reconnaît deux : on s'abstient, la section
+//    prendra le relais). Rien (null) sinon.
+//  - imageDeSectionSuggeree(nom, plats) : la photo représentative d'une section — alias par nom de section
+//    (Dürüms → kebab, Kapsalon → frites cheddar, Bicky → bicky…), sinon la photo la plus fréquente parmi
+//    ses plats reconnus, sinon la photo de sa catégorie. Posée sur restaurant_sections.image_url par
+//    POST /:id/menu/bulk { sectionImages } ; resolveItemImage() l'applique aux plats sans photo.
+// ---------------------------------------------------------------------------------------------------
+const normaliserNom = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' ').trim();
+function entreesMotsCles(nom) {
+  const n = normaliserNom(nom);
+  const trouvees = [];
+  for (const entry of KEYWORD_IMAGES) {
+    const k = entry.keywords.find((mot) => n.includes(normaliserNom(mot)));
+    if (k) trouvees.push({ mot: normaliserNom(k), image: entry.images ? entry.images[0] : entry.image });
+  }
+  return trouvees;
+}
+function imageDuMotCle(mot) {
+  const m = normaliserNom(mot);
+  const entry = KEYWORD_IMAGES.find((e) => e.keywords.some((k) => normaliserNom(k) === m));
+  return entry ? (entry.images ? entry.images[0] : entry.image) : null;
+}
+export function imageSurePourPlat(item) {
+  if (!STOCK_DISH_PHOTOS_ENABLED) return null;
+  const exacte = defaultItemImageOrNull(item);
+  if (exacte) return exacte;
+  const trouvees = entreesMotsCles(item?.name);
+  const images = [...new Set(trouvees.map((t) => t.image))];
+  // Un seul mot-clé reconnu, assez long pour ne pas être un hasard : on y croit.
+  if (images.length === 1 && trouvees.some((t) => t.mot.length >= 5)) return images[0];
+  return null;
+}
+const ALIAS_SECTION = [
+  [/\bd(u|ü)r(u|ü)ms?\b|\bkebabs?\b|\bshawarma|\bwraps?\b|pitas?\b|pittas?\b|gyros|pains? turcs?|\bpide\b|\bmenus?\b/, 'durum'],
+  [/kapsalon/, 'frites cheddar'],
+  [/mitraillettes?|sandwichs?|sandwiches|baguettes?/, 'sandwich'],
+  [/paninis?/, 'panini'],
+  [/tacos?/, 'tacos'],
+  [/bicky|burgers?|hamburgers?|smash/, 'bicky'],
+  [/assiettes?|grillades?|mixed grill|mezz?e/, 'mixed grill'],
+  [/couscous|tajines?|tagines?/, 'mezze'],
+  [/enfants?|kids?/, 'nuggets'],
+  [/simples?|snacks?|fritures?|croquettes?/, 'fricadelle'],
+  [/frites?|fries/, 'frite'],
+  [/pizzas?/, 'pizza'],
+  [/p(a|â)tes|pasta/, 'pasta'],
+  [/sushis?|makis?/, 'sushi'],
+  [/salades?/, 'salade'],
+  [/soupes?/, 'soupe'],
+  [/sauces?/, 'sauce frites']
+];
+export function imageDeSectionSuggeree(nomSection, plats = []) {
+  if (!STOCK_DISH_PHOTOS_ENABLED) return null;
+  const n = normaliserNom(nomSection);
+  for (const [re, mot] of ALIAS_SECTION) {
+    if (!re.test(n)) continue;
+    const viaMot = imageDuMotCle(mot) || defaultItemImageOrNull({ name: mot });
+    if (viaMot) return viaMot;
+  }
+  // Sinon : la photo la plus fréquente parmi les plats reconnus sans ambiguïté.
+  const compte = new Map();
+  for (const p of plats) { const img = imageSurePourPlat(p); if (img) compte.set(img, (compte.get(img) || 0) + 1); }
+  const meilleure = [...compte.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (meilleure) return meilleure[0];
+  return categoryImage(nomSection);
+}

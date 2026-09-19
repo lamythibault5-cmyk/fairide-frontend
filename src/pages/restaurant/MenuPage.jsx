@@ -563,11 +563,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     } catch (e) { toast(e.message); } finally { setAjusting(false); }
   }
 
-  async function submitImportedItems(items, replaceExisting) {
+  async function submitImportedItems(items, replaceExisting, sectionImages = {}) {
     if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
     setSubmittingImport(true);
     try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting } });
+      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting, sectionImages } });
       setImportedItems(null); setImportReport(null);
       loadDashboard(restoId);
       toast(replaceExisting ? t('menuPage.toastMenuReplaced', { n: items.length }) : t('menuPage.toastImportedAdded', { n: items.length }));
