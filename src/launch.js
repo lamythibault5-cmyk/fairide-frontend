@@ -8,8 +8,13 @@ export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
 export const OUVERTURE_RESERVATIONS = new Date('2026-10-10T00:00:00+02:00');
 export const OUVERTURE_EMPORTER = new Date('2026-10-10T00:00:00+02:00');
 export const OUVERTURE_LIVRAISON = new Date('2026-10-20T00:00:00+02:00');
-// Premières commandes en ligne possibles (à emporter).
-export const OUVERTURE_COMMANDES = OUVERTURE_EMPORTER;
+// Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, le 20 octobre 2026 (fondateur, 2026-09-19).
+// Avant cette date, l'à emporter n'est possible que payé sur place. Miroir de FAIRIDE_ONLINE_PAYMENT_OPEN_AT.
+export const OUVERTURE_PAIEMENT_EN_LIGNE = new Date('2026-10-20T00:00:00+02:00');
+export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAIEMENT_EN_LIGNE.getTime() || !!user?.isAdmin; }
+export function dateOuverturePaiementEnLigne(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENT_EN_LIGNE, locale); }
+// Premières commandes payées en ligne : c'est cette date qui fait courir le mois offert de l'abonnement.
+export const OUVERTURE_COMMANDES = OUVERTURE_PAIEMENT_EN_LIGNE;
 const OUVERTURES = { dine_in: OUVERTURE_RESERVATIONS, pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
 
 function formater(date, locale) {
@@ -53,7 +58,7 @@ export function dateOuvertureAbonnement(locale = 'fr-BE') {
 }
 
 // Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
-// court à partir de l'ouverture des commandes (10 octobre 2026), ou de l'activation si elle est postérieure. Miroir
+// court à partir de l'ouverture des commandes payées en ligne (20 octobre 2026), ou de l'activation si elle est postérieure. Miroir
 // exact de routes/restaurants.js (subscription_data.trial_end) : la date annoncée est celle que Stripe appliquera.
 export const MOIS_OFFERT_JOURS = 30;
 export function datePremierPrelevement(activation = new Date()) {

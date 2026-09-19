@@ -14,7 +14,7 @@ import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { serviceOuvert, dateOuverture } from '../../launch';
+import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiementEnLigne } from '../../launch';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -155,7 +155,11 @@ export default function Checkout() {
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
-  const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && paiementSurPlace));
+  // Avant le 20 octobre, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
+  // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
+  const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
+  const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
+  const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
@@ -412,14 +416,14 @@ export default function Checkout() {
                 <span className="field-intitule">{t('checkout.payWhen')}</span>
                 <ChoixPastilles
                   libelle={t('checkout.payWhen')}
-                  valeur={paiementSurPlace ? 'sur_place' : 'en_ligne'}
-                  onChange={(v) => setPaiementSurPlace(v === 'sur_place')}
+                  valeur={paiementSurPlace || enLigneFerme ? 'sur_place' : 'en_ligne'}
+                  onChange={(v) => { if (!(enLigneFerme && v === 'en_ligne')) setPaiementSurPlace(v === 'sur_place'); }}
                   options={[
-                    { value: 'en_ligne', label: t('checkout.payOnline'), icone: <Icone nom="carteBancaire" taille={16} /> },
+                    { value: 'en_ligne', label: enLigneFerme ? t('checkout.payOnlineFrom', { date: dateOuverturePaiementEnLigne(getLocale()) }) : t('checkout.payOnline'), icone: <Icone nom="carteBancaire" taille={16} /> },
                     { value: 'sur_place', label: t('checkout.payOnSite'), icone: <Icone nom="billet" taille={16} /> }
                   ]}
                 />
-                {paiementSurPlace && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>}
+                {(paiementSurPlace || enLigneFerme) && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>}
               </div>
             )}
             {fulfillmentType === 'dine_in' && (
@@ -583,12 +587,14 @@ export default function Checkout() {
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
             <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
-            {serviceOuvert(fulfillmentType, user) ? (
+            {serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
               </button>
             ) : (
-              <span className="small" style={{ fontWeight: 600 }}><Icone nom="reservations" taille={14} /> {fulfillmentType === 'dine_in'
+              <span className="small" style={{ fontWeight: 600 }}><Icone nom="reservations" taille={14} /> {paiementBloque
+                ? t('checkout.onlinePaymentOpenSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })
+                : fulfillmentType === 'dine_in'
                 ? t('checkout.reservationsOpenSoon', { date: dateOuverture('dine_in', getLocale()) })
                 : fulfillmentType === 'delivery'
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })

@@ -4,6 +4,7 @@ import AccountsTable from '../../components/admin/AccountsTable';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
+import DeletionRequestsPanel from '../../components/admin/DeletionRequestsPanel';
 import useAdminRole from '../../hooks/useAdminRole';
 import { money } from './adminUtils';
 import { ADMIN_GROUPS, ADMIN_MODULES, attentionItems, moduleAllowed, moduleBadge } from './adminModules';
@@ -75,6 +76,7 @@ export default function AdminHomePage() {
         )}
         {overview && <AccountsTable accounts={overview.accounts} />}
       </section>
+      <DeletionRequestsPanel onHandled={refresh} />
 
       {ADMIN_GROUPS.map((groupe) => {
         const mods = ADMIN_MODULES.filter((m) => m.group === groupe && moduleAllowed(m, role));

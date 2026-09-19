@@ -105,6 +105,7 @@ export function attentionItems(o) {
     { key: 'incidentsRefunds', count: n(o.incidents?.refundsToday), to: '/admin/orders?refunded=1', tone: 'info' },
     { key: 'reviewsLow', count: n(o.reviews?.low), to: '/admin/reviews?low=1', tone: 'warn' },
     { key: 'reservationsPending', count: n(o.reservations?.pending), to: '/admin/orders?type=dine_in&status=nouveau', tone: 'warn' },
+    { key: 'deletionRequests', count: n(o.deletions?.pending), to: '/admin#suppressions', tone: 'warn' },
     { key: 'supportOpen', count: n(o.support?.open), to: '/admin/support', tone: 'info' },
     { key: 'tasksDueSoon', count: n(o.tasks?.dueSoon), to: '/admin/tasks?due=due_soon', tone: 'info' }
   ];
