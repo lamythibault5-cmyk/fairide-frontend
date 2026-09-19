@@ -3684,7 +3684,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Conditions générales (CGU/CGV) · fairide.be',
-      draftWarning: 'Version du 1er octobre 2026. Ces conditions remplacent toute version antérieure.',
+      draftWarning: 'Version du 6 octobre 2026. Ces conditions remplacent toute version antérieure.',
       title: 'Conditions générales d\'utilisation et de vente',
       identityTitle: 'Qui sommes-nous',
       identity: 'Le site fairide.be et l\'application Fairide (« la plateforme ») sont exploités par FAIRIDE SRL, société à responsabilité limitée de droit belge, BCE 1042.169.780, TVA BE 1042.169.780, RPM Bruxelles, siège social Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgique), contact@fairide.be. En créant un compte ou en passant une commande, vous acceptez les présentes conditions. Elles s\'appliquent aux clients ; les commerces partenaires et les livreurs sont en outre liés par leur propre contrat (voir l\'article « Commerces partenaires et livreurs »).',
@@ -3722,7 +3722,7 @@ export const translations = {
     cookiesPolicy: {
       pageTitle: 'Politique des cookies · Fairide',
       title: 'Politique des cookies',
-      updated: 'Dernière mise à jour : 1er octobre 2026.',
+      updated: 'Dernière mise à jour : 6 octobre 2026.',
       whatTitle: 'Qu\'est-ce qu\'un cookie ?',
       what: 'Un cookie est un petit fichier déposé par un site dans votre navigateur. Fairide utilise aussi le « stockage local » du navigateur (localStorage et sessionStorage), qui joue le même rôle : retenir des informations d\'une page à l\'autre. Cette politique couvre les deux. Elle s\'applique au site fairide.be et à l\'application Fairide installée depuis le navigateur.',
       technicalTitle: 'Cookies et stockages strictement nécessaires',
@@ -3744,7 +3744,7 @@ export const translations = {
     },
     privacy: {
       pageTitle: 'Politique de confidentialité · fairide.be',
-      draftWarning: 'Version du 1er octobre 2026.',
+      draftWarning: 'Version du 6 octobre 2026.',
       title: 'Politique de confidentialité',
       controllerTitle: 'Responsable du traitement',
       controller: 'FAIRIDE SRL, société à responsabilité limitée de droit belge, BCE 1042.169.780, TVA BE 1042.169.780, RPM Bruxelles, siège social Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgique), contact@fairide.be. Pour toute question sur vos données ou pour exercer vos droits : contact@fairide.be (ou le formulaire en bas de cette page). Fairide n\'a pas désigné de délégué à la protection des données, sa taille ne l\'y obligeant pas.',
@@ -3807,7 +3807,7 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Mentions légales · fairide.be',
-      draftWarning: 'Version du 1er octobre 2026.',
+      draftWarning: 'Version du 6 octobre 2026.',
       title: 'Mentions légales',
       publisherTitle: 'Éditeur du site',
       publisher: 'FAIRIDE SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 · TVA : BE 1042.169.780 · RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nReprésentant légal et directeur de la publication : Thibault Lamy, administrateur\nE-mail : contact@fairide.be · Téléphone : +32 491 97 99 80',
@@ -10732,7 +10732,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Terms of use and sale · fairide.be',
-      draftWarning: 'Version of 1 October 2026. These terms replace any earlier version.',
+      draftWarning: 'Version of 6 October 2026. These terms replace any earlier version.',
       title: 'Terms of use and sale',
       identityTitle: 'Who we are',
       identity: 'The fairide.be website and the Fairide application ("the platform") are operated by FAIRIDE SRL, a private limited company under Belgian law, CBE 1042.169.780, VAT BE 1042.169.780, RLE Brussels, registered office Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgium), contact@fairide.be. By creating an account or placing an order you accept these terms. They apply to customers; partner businesses and couriers are also bound by their own contract (see "Partner businesses and couriers").',
@@ -10770,7 +10770,7 @@ export const translations = {
     cookiesPolicy: {
       pageTitle: 'Cookie policy · Fairide',
       title: 'Cookie policy',
-      updated: 'Last updated: 1 October 2026.',
+      updated: 'Last updated: 6 October 2026.',
       whatTitle: 'What is a cookie?',
       what: 'A cookie is a small file placed by a website in your browser. Fairide also uses the browser\'s “local storage” (localStorage and sessionStorage), which plays the same role: remembering information from one page to the next. This policy covers both. It applies to the fairide.be website and to the Fairide app installed from the browser.',
       technicalTitle: 'Strictly necessary cookies and storage',
@@ -10792,7 +10792,7 @@ export const translations = {
     },
     privacy: {
       pageTitle: 'Privacy policy · fairide.be',
-      draftWarning: 'Version of 1 October 2026.',
+      draftWarning: 'Version of 6 October 2026.',
       title: 'Privacy policy',
       controllerTitle: 'Data controller',
       controller: 'FAIRIDE SRL, a private limited company under Belgian law, CBE 1042.169.780, VAT BE 1042.169.780, RLE Brussels, registered office Avenue du Castel 30, 1200 Woluwe-Saint-Lambert (Belgium), contact@fairide.be. For any question about your data or to exercise your rights: contact@fairide.be (or the form at the bottom of this page). Fairide has not appointed a data protection officer, as its size does not require one.',
@@ -10855,7 +10855,7 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Legal notice · fairide.be',
-      draftWarning: 'Version of 1 October 2026.',
+      draftWarning: 'Version of 6 October 2026.',
       title: 'Legal notice',
       publisherTitle: 'Site publisher',
       publisher: 'FAIRIDE SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 · VAT: BE 1042.169.780 · RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nLegal representative and publishing director: Thibault Lamy, director\nE-mail: contact@fairide.be · Phone: +32 491 97 99 80',
@@ -17756,7 +17756,7 @@ export const translations = {
     },
     terms: {
       pageTitle: 'Algemene voorwaarden (gebruik en verkoop) · fairide.be',
-      draftWarning: 'Versie van 1 oktober 2026. Deze voorwaarden vervangen elke eerdere versie.',
+      draftWarning: 'Versie van 6 oktober 2026. Deze voorwaarden vervangen elke eerdere versie.',
       title: 'Algemene gebruiks- en verkoopsvoorwaarden',
       identityTitle: 'Wie zijn wij',
       identity: 'De website fairide.be en de applicatie Fairide (« het platform ») worden uitgebaat door FAIRIDE SRL (BV), besloten vennootschap naar Belgisch recht, KBO 1042.169.780, btw BE 1042.169.780, RPR Brussel, maatschappelijke zetel Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe (België), contact@fairide.be. Door een account aan te maken of een bestelling te plaatsen aanvaard je deze voorwaarden. Ze gelden voor klanten; partnerzaken en koeriers zijn daarnaast gebonden door hun eigen contract (zie « Partnerzaken en koeriers »).',
@@ -17794,7 +17794,7 @@ export const translations = {
     cookiesPolicy: {
       pageTitle: 'Cookiebeleid · Fairide',
       title: 'Cookiebeleid',
-      updated: 'Laatste update: 1 oktober 2026.',
+      updated: 'Laatste update: 6 oktober 2026.',
       whatTitle: 'Wat is een cookie?',
       what: 'Een cookie is een klein bestand dat een website in je browser plaatst. Fairide gebruikt ook de “lokale opslag” van de browser (localStorage en sessionStorage), die dezelfde rol speelt: informatie onthouden van pagina tot pagina. Dit beleid dekt beide. Het geldt voor de website fairide.be en voor de Fairide-app die vanuit de browser wordt geïnstalleerd.',
       technicalTitle: 'Strikt noodzakelijke cookies en opslag',
@@ -17816,7 +17816,7 @@ export const translations = {
     },
     privacy: {
       pageTitle: 'Privacybeleid · fairide.be',
-      draftWarning: 'Versie van 1 oktober 2026.',
+      draftWarning: 'Versie van 6 oktober 2026.',
       title: 'Privacybeleid',
       controllerTitle: 'Verwerkingsverantwoordelijke',
       controller: 'FAIRIDE SRL (BV), besloten vennootschap naar Belgisch recht, KBO 1042.169.780, btw BE 1042.169.780, RPR Brussel, maatschappelijke zetel Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe (België), contact@fairide.be. Voor elke vraag over je gegevens of om je rechten uit te oefenen: contact@fairide.be (of het formulier onderaan deze pagina). Fairide heeft geen functionaris voor gegevensbescherming aangesteld; zijn omvang verplicht daar niet toe.',
@@ -17879,7 +17879,7 @@ export const translations = {
     },
     legalNotice: {
       pageTitle: 'Wettelijke vermeldingen · fairide.be',
-      draftWarning: 'Versie van 1 oktober 2026.',
+      draftWarning: 'Versie van 6 oktober 2026.',
       title: 'Wettelijke vermeldingen',
       publisherTitle: 'Uitgever van de site',
       publisher: 'FAIRIDE SRL\nBesloten vennootschap (BV) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 · btw: BE 1042.169.780 · RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nWettelijk vertegenwoordiger en verantwoordelijke uitgever: Thibault Lamy, bestuurder\nE-mail: contact@fairide.be · Telefoon: +32 491 97 99 80',
