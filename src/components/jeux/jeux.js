@@ -44,6 +44,7 @@ const tx = (api, cle, defaut) => { const v = api.t?.(cle); return v && v !== cle
 //   nouvelObjet(n)                — { emoji, points?, or?, mauvais?, vitesseFacteur? }
 //   intervalle(n), vitesse(n)     — cadence de spawn (s) et vitesse (fraction de h par s) au niveau n
 //   demiContact                   — demi-largeur de contact, en tailles d'objet (1,35 = généreux, 1 = juste)
+//   echelle?                      — facteur sur la taille des objets et de tout le terrain (1 = plein, 0,78 = plus aéré)
 //   toucher(o) / manquer(o)       — 'point' | 'perdu' | null quand l'objet touche le joueur / le sol
 //   passer?(o, dx, demi, t)       — l'objet vient de passer sous le joueur sans contact : 'point' | 'frole' | 'alerte' | null
 // }
@@ -58,9 +59,11 @@ function creerChute(api, cfg) {
   const AIMANT = 5; const EXPRESS = 3.2; const PRIME_COMMANDE = 5;
   const nouvelleCommande = () => { const pool = [...PLATS].sort(() => Math.random() - 0.5); commande = { plats: pool.slice(0, 3).map((e) => ({ emoji: e, fait: false })), age: 0 }; };
   const SORTIE = 0.14; // durée de l'effacement d'un objet arrivé au sol
-  // Plus grands qu'avant (plafond 36 → 54px) : « on voit rien » disait le fondateur. Bornés aussi par la
-  // HAUTEUR, pour qu'un terrain large et bas (téléphone couché) garde le temps de voir l'objet tomber.
-  const tailleObjet = () => Math.max(24, Math.min(64, Math.min(w * 0.17, h * 0.15)));
+  // Bornés aussi par la HAUTEUR, pour qu'un terrain large et bas (téléphone couché) garde le temps de voir
+  // l'objet tomber. cfg.echelle réduit tout le terrain d'un jeu (objets, joueur, décor, ombres, jetons — tout
+  // est exprimé en tailles d'objet) : le fondateur trouvait FairCatch et FairDodge trop chargés (2026-09-19),
+  // on voit désormais plus de terrain et les objets arrivent de plus loin.
+  const tailleObjet = () => Math.max(22, Math.min(64, Math.min(w * 0.17, h * 0.15)) * (cfg.echelle ?? 1));
   const largeurJoueur = () => tailleObjet() * 1.7;
   const yJoueur = () => h - tailleObjet() * 1.3;
   const ySol = () => h - tailleObjet() * 0.3; // là où un objet « touche le sol » (le bandeau au bas du terrain)
@@ -370,20 +373,21 @@ function creerChute(api, cfg) {
       }
       // Commande du client (FairCatch) : une petite fiche en haut à gauche, les trois plats attendus, cochés au fur et à mesure.
       if (commande) {
-        const cx = 8; const cy = 8; const lc = t * 0.62; const hc = t * 0.78;
+        // Cartouche du HUD : il garde sa taille pleine, hors du facteur cfg.echelle qui aère le terrain.
+        const th = t / (cfg.echelle ?? 1); const cx = 8; const cy = 8; const lc = th * 0.62; const hc = th * 0.78;
         const pop = 1 + Math.max(0, 0.25 - commande.age) * 1.2;
         ctx.save(); ctx.translate(cx, cy); ctx.scale(pop, pop);
         ctx.fillStyle = 'rgba(255,255,255,.92)';
         rectArrondi(ctx, 0, 0, lc * 3 + 24, hc + 6, 10); ctx.fill();
         ctx.strokeStyle = IRIS; ctx.lineWidth = 2; ctx.stroke();
-        ctx.fillStyle = IRIS; ctx.font = `800 ${Math.max(9, t * 0.2)}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillStyle = IRIS; ctx.font = `800 ${Math.max(9, th * 0.2)}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         ctx.fillText(tx(api, 'jeux.fx_commandeTitre', 'Commande'), 8, 4);
         commande.plats.forEach((p, i) => {
           const px = 8 + i * lc + lc * 0.5 - 2; const py = hc * 0.62;
           ctx.globalAlpha = p.fait ? 0.35 : 1;
-          emoji(ctx, p.emoji, px, py, t * 0.46);
+          emoji(ctx, p.emoji, px, py, th * 0.46);
           ctx.globalAlpha = 1;
-          if (p.fait) badge(ctx, px + t * 0.17, py - t * 0.17, Math.max(5, t * 0.12), true);
+          if (p.fait) badge(ctx, px + th * 0.17, py - th * 0.17, Math.max(5, th * 0.12), true);
         });
         ctx.restore();
       }
@@ -495,7 +499,7 @@ export const JEUX = [
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Décor « marché » : auvent rayé d'où sortent les plats, guirlande, comptoir en bois (voir draw).
-      joueur: '🧺', ciel: ['#241C74', '#5F51EC'], demiContact: 1.35, decor: 'marche', sac: true, commandes: true,
+      joueur: '🧺', ciel: ['#241C74', '#5F51EC'], demiContact: 1.35, decor: 'marche', sac: true, commandes: true, echelle: 0.78,
       // Bonus : l'aimant 🧲 — pendant 5 s les plats viennent d'eux-mêmes vers le sac.
       bonus: () => ({ emoji: '🧲', bonus: 'aimant', vitesseFacteur: 0.9 }),
       // Un plat sur dix est doré : il vaut 3 et tombe un peu plus vite.
@@ -516,7 +520,7 @@ export const JEUX = [
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Asphalte sombre (et non plus violet grisé) : les panneaux rouges et blancs des obstacles tranchent dessus.
-      joueur: '🛵', ciel: ['#1E1D2B', '#3A3950'], eclat: ORANGE, route: true, tournoie: true,
+      joueur: '🛵', ciel: ['#1E1D2B', '#3A3950'], eclat: ORANGE, route: true, tournoie: true, echelle: 0.78,
       // Bonus sur la route : la nitro ⚡ (3 s d'invincibilité « Express », les obstacles éclatent) ou un pourboire 💶 (+3).
       bonus: () => (Math.random() < 0.55 ? { emoji: '⚡', bonus: 'nitro' } : { emoji: '💶', bonus: 'pourboire' }),
       // Contact « juste » (1 taille d'objet) : on ne perd pas sur un obstacle qui n'a fait qu'effleurer le dessin.
@@ -690,7 +694,7 @@ export const JEUX = [
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
       // Ciel vert profond (et non plus vert vif) : les jetons blancs cerclés de vert s'y fondaient.
-      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true, sac: true,
+      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true, sac: true, echelle: 0.88,
       // Bonus : le bouclier 🛡️ — il encaisse UN déchet à ta place.
       bonus: () => ({ emoji: '🛡️', bonus: 'bouclier', vitesseFacteur: 0.9 }),
       nouvelObjet: (n) => {
