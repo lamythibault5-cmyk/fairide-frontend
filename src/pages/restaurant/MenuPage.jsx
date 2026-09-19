@@ -257,9 +257,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
   async function createOptionGroup(payload) {
     try {
-      await api(`/restaurants/${restoId}/option-groups`, { method: 'POST', token, body: payload });
+      const groupe = await api(`/restaurants/${restoId}/option-groups`, { method: 'POST', token, body: payload });
       await loadDashboard(restoId);
       toast(t('menuPage.toastGroupCreated'));
+      return groupe;
     } catch (e) {
       toast(e.message);
       throw e;
@@ -841,7 +842,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                       {items.map((item) => (
                         <MenuItemRow
                           key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                          allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                          allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups} onCreateOptionGroup={createOptionGroup}
                           sections={restaurant.sections || []} reorderMode restoId={restoId} cuisine={restaurant.cuisine}
                           existingSubsections={sectionSubsections}
                         />
@@ -855,7 +856,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                           {group.items.map((item) => (
                             <MenuItemRow
                               key={item.id} item={item} onSave={saveMenuItem} onDelete={deleteMenuItem}
-                              allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups}
+                              allOptionGroups={restaurant.optionGroups || []} onSetOptionGroups={saveMenuItemOptionGroups} onCreateOptionGroup={createOptionGroup}
                               sections={restaurant.sections || []} reorderMode={false} restoId={restoId} cuisine={restaurant.cuisine}
                               selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
                               existingSubsections={sectionSubsections}

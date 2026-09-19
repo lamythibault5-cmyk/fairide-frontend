@@ -1,11 +1,12 @@
 import { useState, useId } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { MODELES_GROUPES, groupeDepuisModele } from './OptionsEditor';
 
 function emptyItem() {
   return { name: '', priceDelta: '0' };
 }
 
-function OptionGroupForm({ initial, onSave, onCancel, saving }) {
+export function OptionGroupForm({ initial, onSave, onCancel, saving }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -30,6 +31,13 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
     setItems((prev) => prev.filter((_, i) => i !== idx));
   }
 
+  // Un modèle remplit tout d'un coup (nom, type, obligation, choix) : le restaurateur ajuste ensuite.
+  function appliquerModele(m) {
+    const g = groupeDepuisModele(m, t);
+    setName(g.name); setType(g.type); setRequired(g.required); setMaxSelections(g.maxSelections ? String(g.maxSelections) : '');
+    setItems(g.choices.map((c) => ({ name: c.name, priceDelta: String(c.priceDelta) })));
+  }
+
   function save() {
     const cleanItems = items
       .filter((it) => it.name.trim())
@@ -41,6 +49,14 @@ function OptionGroupForm({ initial, onSave, onCancel, saving }) {
 
   return (
     <div className="card" style={{ marginBottom: 10 }}>
+      {!initial && (
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+          <span className="small">{t('menuOptions.addFromTemplate')}</span>
+          {MODELES_GROUPES.map((m) => (
+            <button key={m.cle} type="button" className="chip" onClick={() => appliquerModele(m)}>{t(`menuOptions.tpl_${m.cle}`)}</button>
+          ))}
+        </div>
+      )}
       <div className="field"><label htmlFor={idsA11y + '-groupname'}>{t('optionGroups.groupName')}</label><input id={idsA11y + '-groupname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('optionGroups.phGroupName')} /></div>
       <div className="field">
         <label htmlFor={idsA11y + '-type'}>{t('optionGroups.type')}</label>

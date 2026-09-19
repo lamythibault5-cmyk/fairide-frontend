@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { categoryEmoji, suggestItemImages } from '../menuCategories';
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
+import OptionsEditor, { nettoyerOptionsClient } from './OptionsEditor';
 import { useLanguage } from '../context/LanguageContext';
 
 // Arrondi commerçant : au 0,10 €, jamais sous 0,50 €.
@@ -81,6 +82,8 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
     return initialItems.map((it, i) => ({
       ...it,
       subsection: it.subsection || '',
+      // Choix du client lus dans le document (menus à composer, « au choix », suppléments) : relus ici.
+      options: Array.isArray(it.options) ? it.options : [],
       key: i,
       included: true,
       // Jamais de photo auto-assignée sur un plat importé d'un document — même en cas de correspondance
@@ -134,7 +137,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
     setConfirmOpen(false);
     const toSubmit = items
       .filter((it) => it.included)
-      .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl }))
+      .map((it) => ({ name: it.name.trim(), price: parseFloat(it.price), category: it.category.trim() || 'plat', subsection: it.subsection.trim(), desc: it.desc.trim(), imageUrl: it.imageUrl, options: nettoyerOptionsClient(it.options) }))
       .filter((it) => it.name && Number.isFinite(it.price) && it.price > 0);
     discardDraft();
     onSubmit(toSubmit, mode === 'replace');
@@ -162,7 +165,11 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         subsection: it.subsection,
         imageUrl: it.imageUrl,
         available: true,
-        optionGroups: []
+        // Aperçu client fidèle : la fiche du plat (FichePlat) propose les choix comme après publication.
+        optionGroups: nettoyerOptionsClient(it.options).map((g, gi) => ({
+          id: `draft-${it.key}-g${gi}`, name: g.name, type: g.type, required: g.required, maxSelections: g.maxSelections,
+          items: g.choices.map((c, ci) => ({ id: `draft-${it.key}-g${gi}-c${ci}`, name: c.name, priceDelta: c.priceDelta }))
+        }))
       })),
       sections: orderedCategories.map((name, i) => ({ id: `draft-sec-${i}`, name }))
     };
@@ -253,6 +260,7 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
                 <input style={{ flex: 1 }} value={it.subsection} onChange={(e) => updateField(it.key, 'subsection', e.target.value)} placeholder={t('menuImport.phSubsectionShort')} />
               </div>
               <input value={it.desc} onChange={(e) => updateField(it.key, 'desc', e.target.value)} placeholder={t('menuImport.phDescription')} />
+              <OptionsEditor options={it.options || []} onChange={(o) => updateField(it.key, 'options', o)} />
             </div>
             <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', marginTop: 4 }} onClick={() => removeRow(it.key)} title={t('menuImport.removeLine')}>🗑️</button>
           </div>

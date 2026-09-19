@@ -4,13 +4,14 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { CATEGORIES, categoryEmoji, categoryLabel, categoryKind, resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
+import { OptionGroupForm } from './OptionGroupManager';
 import GalleryPickerModal from './GalleryPickerModal';
 import { galleryForSection } from '../menuCategories';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -44,6 +45,21 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     });
   }
 
+  // Nouveau groupe de choix créé depuis la fiche : il est attaché au plat dès sa création (coché), sans
+  // passer par la carte « Groupes d'options » en bas de page.
+  const [creatingGroup, setCreatingGroup] = useState(false);
+  const [savingGroup, setSavingGroup] = useState(false);
+  async function createGroupHere(payload) {
+    if (!onCreateOptionGroup) return;
+    setSavingGroup(true);
+    try {
+      const g = await onCreateOptionGroup(payload);
+      if (g?.id) setGroupIds((prev) => new Set([...prev, g.id]));
+      setCreatingGroup(false);
+    } finally {
+      setSavingGroup(false);
+    }
+  }
   const [togglingAvailable, setTogglingAvailable] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -203,15 +219,19 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             </label>
           </div>
         )}
-        {allOptionGroups.length > 0 && (
+        {(allOptionGroups.length > 0 || onCreateOptionGroup) && (
           <div className="field">
             <span className="titre-groupe">{t('menuItem.optionGroups')}</span>
             {allOptionGroups.map((g) => (
               <label key={g.id} className="row" style={{ gap: 8, marginBottom: 4, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={groupIds.has(g.id)} onChange={() => toggleGroup(g.id)} />
-                <span className="small">{g.name}</span>
+                <span className="small">{g.name} <span style={{ opacity: 0.7 }}>({g.items.map((o) => o.name).slice(0, 5).join(', ')}{g.items.length > 5 ? '…' : ''})</span></span>
               </label>
             ))}
+            {onCreateOptionGroup && !creatingGroup && (
+              <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 13, marginTop: 4 }} onClick={() => setCreatingGroup(true)}>{t('menuOptions.newGroupForDish')}</button>
+            )}
+            {creatingGroup && <OptionGroupForm saving={savingGroup} onSave={createGroupHere} onCancel={() => setCreatingGroup(false)} />}
           </div>
         )}
 
