@@ -114,7 +114,7 @@ export default function Checkout() {
       navigate(`/restaurants/${restaurantId}`);
       return;
     }
-    // Livraison pas encore ouverte (avant le 15 octobre) : l'à emporter est proposé d'abord.
+    // Livraison pas encore ouverte (avant le 20 octobre) : l'à emporter est proposé d'abord.
     if (!restaurant.offersDelivery || (!serviceOuvert('delivery', user) && restaurant.offersPickup)) setFulfillmentType('pickup');
   }, [restaurant]);
 

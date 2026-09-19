@@ -372,7 +372,7 @@ export default function RestaurantMenu() {
           </div>
         )}
 
-        {/* Avant le 5 octobre : réservations et à emporter à venir ; du 5 au 15 : seule la livraison attend. */}
+        {/* Avant le 10 octobre : réservations et à emporter à venir ; du 10 au 20 : seule la livraison attend. */}
         {(!commandesOuvertes(user) || (restaurant.offersDelivery && !livraisonOuverte(user))) && (
           <div className="ouverture-bandeau" role="status">
             {commandesOuvertes(user)

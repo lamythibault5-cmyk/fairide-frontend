@@ -1,13 +1,13 @@
 // Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js et routes/restaurants.js).
-// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 1er octobre 2026 ; réservations
-// de table et commandes à emporter à partir du 5 octobre ; livraison (livreurs) à partir du 15 octobre. Tout le reste
+// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 6 octobre 2026 ; réservations
+// de table et commandes à emporter à partir du 10 octobre ; livraison (livreurs) à partir du 20 octobre. Tout le reste
 // est visible et utilisable avant. Les administrateurs passent (essais). L'application native (App Store / Google
-// Play) arrive le 1er octobre 2026.
-export const CAMPAGNE_RESEAUX = new Date('2026-10-01T00:00:00+02:00');
-export const APP_STORES = new Date('2026-10-01T00:00:00+02:00');
-export const OUVERTURE_RESERVATIONS = new Date('2026-10-05T00:00:00+02:00');
-export const OUVERTURE_EMPORTER = new Date('2026-10-05T00:00:00+02:00');
-export const OUVERTURE_LIVRAISON = new Date('2026-10-15T00:00:00+02:00');
+// Play) arrive le 6 octobre 2026.
+export const CAMPAGNE_RESEAUX = new Date('2026-10-06T00:00:00+02:00');
+export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
+export const OUVERTURE_RESERVATIONS = new Date('2026-10-10T00:00:00+02:00');
+export const OUVERTURE_EMPORTER = new Date('2026-10-10T00:00:00+02:00');
+export const OUVERTURE_LIVRAISON = new Date('2026-10-20T00:00:00+02:00');
 // Premières commandes en ligne possibles (à emporter).
 export const OUVERTURE_COMMANDES = OUVERTURE_EMPORTER;
 const OUVERTURES = { dine_in: OUVERTURE_RESERVATIONS, pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
@@ -34,15 +34,15 @@ export function dateOuvertureLivraison(locale = 'fr-BE') { return dateOuverture(
 
 // Activation des paiements (Stripe Connect), commerces et livreurs. Cette date vivait en double, écrite
 // en dur dans PaiementRestaurant.jsx ET PaiementLivreur.jsx, hors de ce calendrier — d'où une
-// trentaine de phrases qui annonçaient « fin septembre » sans que rien ne les relie à la date
+// trentaine de phrases qui annonçaient « début octobre » sans que rien ne les relie à la date
 // réellement appliquée. Une seule origine, ici, comme pour toutes les autres dates.
-export const OUVERTURE_PAIEMENTS = new Date('2026-09-30T00:00:00+02:00');
+export const OUVERTURE_PAIEMENTS = new Date('2026-10-05T00:00:00+02:00');
 export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.getTime(); }
 export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
 
-// Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 1er octobre 2026, avec l'application,
-// pour être prêt à l'ouverture des commandes le 5. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
-export const OUVERTURE_ABONNEMENT = new Date('2026-10-01T00:00:00+02:00');
+// Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 6 octobre 2026, avec l'application,
+// pour être prêt à l'ouverture des commandes le 10. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
+export const OUVERTURE_ABONNEMENT = new Date('2026-10-06T00:00:00+02:00');
 export function abonnementOuvert() {
   return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
 }
@@ -53,7 +53,7 @@ export function dateOuvertureAbonnement(locale = 'fr-BE') {
 }
 
 // Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
-// court à partir de l'ouverture des commandes (5 octobre 2026), ou de l'activation si elle est postérieure. Miroir
+// court à partir de l'ouverture des commandes (10 octobre 2026), ou de l'activation si elle est postérieure. Miroir
 // exact de routes/restaurants.js (subscription_data.trial_end) : la date annoncée est celle que Stripe appliquera.
 export const MOIS_OFFERT_JOURS = 30;
 export function datePremierPrelevement(activation = new Date()) {

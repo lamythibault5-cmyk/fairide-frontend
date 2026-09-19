@@ -860,7 +860,7 @@ export default function Account() {
               </p>
             )}
 
-            {/* Aucun abonnement à activer avant la sortie de l'application (1er octobre 2026) : le bouton
+            {/* Aucun abonnement à activer avant la sortie de l'application (6 octobre 2026) : le bouton
                 d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
                 la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
             {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && !abonnementOuvert() && (
@@ -885,7 +885,7 @@ export default function Account() {
                 <p className="small" style={{ margin: '4px 0 0' }}>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedText' : 'accountUi.subPendingApprovalText')}</p>
               </div>
             )}
-            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 1er octobre, formule complète pas encore abonnée (contrat accepté). */}
+            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 6 octobre, formule complète pas encore abonnée (contrat accepté). */}
             {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>

@@ -90,7 +90,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
                 {t('menuPage.readyStepPayments')} {!o.paymentsReady && <Link to="/account?ouvrir=paiement">{t('menuPage.readyGoPayments')}</Link>}
               </Etape>
             )}
-            {/* Avant le 1er octobre, l'abonnement ne s'active NULLE PART : ni ici, ni dans Mon compte
+            {/* Avant le 6 octobre, l'abonnement ne s'active NULLE PART : ni ici, ni dans Mon compte
                 (le bouton n'y est rendu qu'une fois la date passée), ni côté serveur, qui le refuse.
                 Annoncer « Activer la formule complète » avec un lien envoyait donc le restaurateur
                 vers un écran où il n'y avait rien à faire. Tant que la date n'est pas là, l'étape dit

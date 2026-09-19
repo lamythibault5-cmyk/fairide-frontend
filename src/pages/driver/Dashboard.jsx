@@ -262,7 +262,7 @@ export default function DriverDashboard() {
                 {connecting ? '...' : t('dashDriver.complete')}
               </button>
             ) : (
-              // Activation fermée jusqu'à fin septembre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
+              // Activation fermée jusqu'à début octobre 2026 : l'explication complète (et Stripe) est dans Mon compte › Paiement.
               <Link to="/account" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashDriver.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
             )}
           />

@@ -578,7 +578,7 @@ export default function DashboardLayout() {
                   {connecting ? '...' : t('dashResto.complete')}
                 </button>
               ) : (
-                // Activation fermée jusqu'à fin septembre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
+                // Activation fermée jusqu'à début octobre 2026 : le détail (et Stripe expliqué) est dans Mon compte › Paiement.
                 <Link to="/account?ouvrir=paiement&retour=/dashboard" className="btn-outline" style={{ padding: '8px 12px', fontSize: 13, display: 'inline-block' }}>{t('dashResto.paymentsSoonBtn', { date: dateOuverturePaiements(getLocale()) })}</Link>
               )}
             />

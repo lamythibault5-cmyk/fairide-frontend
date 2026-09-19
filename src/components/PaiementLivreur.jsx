@@ -4,7 +4,7 @@ import { paiementsOuverts, dateOuverturePaiements } from '../launch';
 
 // Sous-section « Paiement » de Mon compte (livreur) : comment il est payé (frais de livraison à 100 % et
 // pourboires, sans commission), l'autofacturation mensuelle liée à son statut d'indépendant, ce qu'est
-// Stripe, l'activation des paiements (fermée jusqu'à fin septembre 2026) et le reçu de chaque course
+// Stripe, l'activation des paiements (fermée jusqu'à début octobre 2026) et le reçu de chaque course
 // livrée. Même promesse que côté restaurateur : Fairide ne collecte aucune donnée bancaire.
 
 const euro = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
