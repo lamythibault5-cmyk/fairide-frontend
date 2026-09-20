@@ -3,7 +3,9 @@ import { categoryEmoji, suggestItemImages, imageSurePourPlat, imageDeSectionSugg
 import GalleryPickerModal from './GalleryPickerModal';
 import RestaurantPreview from './RestaurantPreview';
 import OptionsEditor, { nettoyerOptionsClient } from './OptionsEditor';
+import PlatformPhotosImport from './PlatformPhotosImport';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 
 // Arrondi commerçant : au 0,10 €, jamais sous 0,50 €.
 export function prixAjuste(prix, percent) {
@@ -76,6 +78,7 @@ function loadDraft(restoId) {
 // ligne peut être décochée, exactement comme pour un template de démarrage classique.
 export default function MenuImportReview({ items: initialItems, existingItemCount, restoId, restaurant, onSubmit, onCancel, submitting }) {
   const { t } = useLanguage();
+  const { token } = useAuth();
   const [items, setItems] = useState(() => {
     const draft = loadDraft(restoId);
     if (draft?.items) return draft.items;
@@ -98,6 +101,9 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
   const [pickerKey, setPickerKey] = useState(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Photos reprises de la page Uber Eats / Deliveroo / Takeaway du commerce, posées sur les lignes relues
+  // (voir PlatformPhotosImport en mode « review ») — les images de section (imagesSections) restent gérées ici.
+  const [photosOpen, setPhotosOpen] = useState(false);
   const [appliedPercent, setAppliedPercent] = useState(() => loadDraft(restoId)?.appliedPercent || 0);
   // Image représentative par section (Dürüms → un dürüm, Kapsalon → un kapsalon…), posée sur la section à
   // l'ajout : tous les plats de la section sans photo propre l'affichent. Désactivable section par section.
@@ -125,6 +131,13 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
 
   function discardDraft() {
     sessionStorage.removeItem(draftKeyFor(restoId));
+  }
+
+  // Photos reconnues sur la page de la plateforme : posées sur les lignes désignées (clé de relecture), même
+  // par-dessus une photo du catalogue — la vraie photo du plat vaut mieux qu'une image générique.
+  function poserPhotosPlateforme(assignments) {
+    const parCle = new Map(assignments.map((a) => [String(a.key), a.imageUrl]));
+    setItems((prev) => prev.map((it) => (parCle.has(String(it.key)) ? { ...it, imageUrl: parCle.get(String(it.key)) } : it)));
   }
 
   function updateField(key, field, value) {
@@ -243,6 +256,21 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         <p className="small" style={{ margin: '10px 0 0' }}>
           {t('menuImport.the')} <b>section</b> {t('menuImport.sectionExplain')} <b>sous-section</b> {t('menuImport.subsectionExplain')} <b>{t('menuImport.exSauces')}</b> ou <b>{t('menuImport.exCrudites')}</b> {t('menuImport.inMains')} <b>{t('menuImport.exHot')}</b> / <b>{t('menuImport.exCold')}</b> / <b>{t('menuImport.exAlcohol')}</b> {t('menuImport.inDrinks')}
         </p>
+      </div>
+      <div className="card" style={{ marginBottom: 8, padding: 12 }}>
+        {!photosOpen ? (
+          <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" className="btn-outline" onClick={() => setPhotosOpen(true)}>{t('platformPhotos.reviewButton')}</button>
+            <span className="small">{t('platformPhotos.reviewHint')}</span>
+          </div>
+        ) : (
+          <>
+            <b>{t('platformPhotos.title')}</b>
+            <div style={{ marginTop: 6 }}>
+              <PlatformPhotosImport restoId={restoId} token={token} mode="review" items={items} onMatched={poserPhotosPlateforme} onClose={() => setPhotosOpen(false)} />
+            </div>
+          </>
+        )}
       </div>
       {Object.keys(imagesSections).length > 0 && (
         <div className="card" style={{ marginBottom: 8, padding: 12 }}>

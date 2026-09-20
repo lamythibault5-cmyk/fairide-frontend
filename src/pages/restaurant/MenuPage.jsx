@@ -20,6 +20,7 @@ import { galleryForSection } from '../../menuCategories';
 import MenuImportStaging, { MenuImportReport } from '../../components/MenuImportStaging';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import MenuImportReview from '../../components/MenuImportReview';
+import PlatformPhotosImport from '../../components/PlatformPhotosImport';
 import MenuDrafts from '../../components/MenuDrafts';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -88,6 +89,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [autresMethodes, setAutresMethodes] = useState(false);
   const autresVisibles = modeAdmin || autresMethodes;
   const [importingText, setImportingText] = useState(false);
+  // Photos reprises d'une page Uber Eats / Deliveroo / Takeaway (PlatformPhotosImport) : carte repliée par
+  // défaut une fois la carte créée, ouverte d'un clic — l'analyse ne coûte rien mais demande un fichier.
+  const [photosOuvertes, setPhotosOuvertes] = useState(false);
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
   // n'est active) plutôt qu'un mode global sur tout le menu — plus simple à suivre quand le menu a
@@ -648,8 +652,15 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </div>
         )}
         {autresVisibles && !importedItems && (
+          <div className="methode">
+            <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.methodPhotosTitle')}</h4></div>
+            <p className="small methode-sous">{t('menuPage.methodPhotosSub')}</p>
+            <PlatformPhotosImport restoId={restoId} token={token} items={restaurant.menu} sections={restaurant.sections || []} onApplied={() => loadDashboard(restoId)} />
+          </div>
+        )}
+        {autresVisibles && !importedItems && (
           <div className="menu-import-web methode">
-            <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.method3Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(4)}</span><h4>{t('menuPage.method3Title')}</h4></div>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
             <div className="menu-import-web-row">
               <input ref={importUrlRef} id="menu-import-url" type="url" inputMode="url" value={importUrl} onChange={(e) => setImportUrl(e.target.value)}
@@ -672,7 +683,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         )}
         {autresVisibles && !importedItems && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(4)}</span><h4>{t('menuPage.method4Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(5)}</span><h4>{t('menuPage.method4Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method4Sub')}</p>
             <div className="menu-import-text">
               {!importTextOpen ? (
@@ -695,7 +706,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         )}
         {autresVisibles && !importedItems && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(5)}</span><h4>{t('menuPage.method5Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.method5Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               {restaurant.menu.length === 0 && <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}</button>}
@@ -705,7 +716,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         )}
         {autresVisibles && !importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
           <div className="methode methode-un-clic">
-            <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
+            <div className="methode-tete"><span className="methode-num">{num(7)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
             <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <button type="button" className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
@@ -1023,6 +1034,24 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             <h2 className="menu-etape-titre">{t('menuPage.stepMore')}</h2>
             <p className="small" style={{ margin: 0 }}>{t('menuPage.stepMoreHelp')}</p>
           </div>
+        </div>
+      )}
+      {restaurant.menu.length > 0 && (
+        <div className="card" id="menu-photos-plateforme">
+          <div className="row" style={{ gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('platformPhotos.title')}</h3>
+              {!photosOuvertes && <p className="small" style={{ margin: 0 }}>{t('menuPage.methodPhotosSub')}</p>}
+            </div>
+            <button type="button" className="btn-outline" style={{ flexShrink: 0, padding: '6px 12px', fontSize: 13 }} onClick={() => setPhotosOuvertes((o) => !o)} aria-expanded={photosOuvertes} aria-controls="menu-photos-plateforme-corps">
+              {photosOuvertes ? t('menuPage.photosCardHide') : t('menuPage.photosCardShow')}
+            </button>
+          </div>
+          {photosOuvertes && (
+            <div id="menu-photos-plateforme-corps" style={{ marginTop: 10 }}>
+              <PlatformPhotosImport restoId={restoId} token={token} items={restaurant.menu} sections={restaurant.sections || []} onApplied={() => loadDashboard(restoId)} />
+            </div>
+          )}
         </div>
       )}
       {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
