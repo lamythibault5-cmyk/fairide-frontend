@@ -110,7 +110,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         <div className="field"><label htmlFor={idsA11y + '-price'}>{t('menuItem.price')}</label><input id={idsA11y + '-price'} type="number" step="0.5" value={price} onChange={(e) => setPrice(e.target.value)} /></div>
 
         {/* Traductions : repliées par défaut, et volontairement placées APRÈS le prix. Le
-            restaurateur n'a rien à y faire dans le cas normal — Claude les remplit quand il clique
+            restaurateur n'a rien à y faire dans le cas normal — elles se remplissent quand il clique
             sur « Traduire ma carte ». Elles ne sont là que pour qu'il puisse corriger un nom mal
             rendu, ce qui reste rare mais doit rester possible : sans ce recours, une traduction
             ratée serait définitive. Une correction enregistrée ici n'est plus jamais réécrite. */}

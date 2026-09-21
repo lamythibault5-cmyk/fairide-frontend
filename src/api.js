@@ -46,10 +46,10 @@ function handleResponse(res, data, hadToken, logoutOn401) {
   if (data.code) error.code = data.code;
   if (data.field) error.field = data.field;
   /* Le corps complet est attaché à l'erreur. Certaines routes répondent en erreur ET renvoient
-     quelque chose d'exploitable : /floor-plan/analyze rend un 422 avec `proposals`, où chaque photo
-     porte la raison de son échec. Sans ça, l'appelant devrait refaire son fetch à la main pour y
-     accéder — c'est exactement ce qu'il faisait, et c'est pour ça qu'il échappait au traitement
-     centralisé du 401. */
+     quelque chose d'exploitable — l'exemple d'origine était /floor-plan/analyze, qui rendait un 422
+     avec le détail par photo ; elle a disparu, le besoin non. Sans ça, l'appelant devrait refaire
+     son fetch à la main pour y accéder, ce qu'il faisait, et c'est pour ça qu'il échappait au
+     traitement centralisé du 401. */
   error.data = data;
   throw error;
 }

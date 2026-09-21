@@ -12,7 +12,7 @@ export const CATEGORIES = [
 // telle quelle, pas comme une clé i18n cassée (menuCategories.category.Nos spécialités).
 // Libellé d'une section telle que renvoyée par l'API ({ name, translations: { en, nl } }) dans la
 // langue affichée : les 4 sections par défaut passent par les clés i18n, une section personnalisée
-// (« Nos burgers ») par la traduction produite avec la carte (POST /menu/translate, voir
+// (« Nos burgers ») par la traduction enregistrée pour la section (voir
 // restaurant_sections.translations côté backend), à défaut par son nom d'origine.
 export function sectionLabel(section, language, t) {
   if (!section) return '';
@@ -3814,7 +3814,7 @@ const ITEM_IMAGE_OVERRIDES = {
 // ITEM_IMAGE_OVERRIDES (construit à partir des noms exacts des templates officiels) — jamais de
 // correspondance approximative par mot-clé (l'ancienne fonction defaultItemImage, supprimée, faisait ça
 // via KEYWORD_IMAGES et a été la source de nombreux bugs de photo mal assortie sur des plats
-// personnalisés/importés, voir menuImport.js/MenuImportReview) dont le nom ne fait QUE ressembler à un
+// personnalisés ou importés) dont le nom ne fait QUE ressembler à un
 // plat du catalogue. Les plats des templates officiels gardent leur vraie photo (nom exactement
 // identique) ; tout le reste affiche un espace vide plutôt qu'une photo trompeuse, à remplir
 // manuellement par le restaurateur.

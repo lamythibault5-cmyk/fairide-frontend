@@ -13,9 +13,11 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 //
 // LA LISTE VIENT DU CODE, PAS D'UN SOUVENIR. Elle a été établie en relisant les appels réellement
 // émis — geocode.js pour Nominatim, DeliveryTrackingMap.jsx pour OSRM et les fonds de carte,
-// menuImport.js et menuTranslate.js pour Anthropic, cloudinary.js, main.jsx pour Sentry. La
-// politique n'en citait que trois (Stripe, Resend, Google) ; cinq recevaient des données
-// personnelles sans être déclarés nulle part. Ajouter un service ici quand on en branche un.
+// cloudinary.js, main.jsx pour Sentry. La politique n'en citait que trois (Stripe, Resend, Google) ;
+// cinq recevaient des données personnelles sans être déclarés nulle part. Ajouter un service ici
+// quand on en branche un — et l'EN RETIRER quand on le débranche : Anthropic (Claude) y figurait
+// pour l'import et la traduction des cartes, supprimés le 2026-09-21. Plus rien ne lui est envoyé,
+// donc l'y laisser aurait fait mentir une liste dont tout l'intérêt est d'être exacte.
 // Les noms sont des noms propres : ils ne se traduisent pas, seule la description est dans les
 // trois langues.
 const SOUS_TRAITANTS = [
@@ -28,7 +30,6 @@ const SOUS_TRAITANTS = [
   ['photon', 'Photon (Komoot)'],
   ['osrm', 'OSRM'],
   ['osmTiles', 'OpenStreetMap'],
-  ['anthropic', 'Anthropic (Claude)'],
   ['cloudinary', 'Cloudinary'],
   ['sentry', 'Sentry'],
   ['vercel', 'Vercel'],
