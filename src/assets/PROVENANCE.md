@@ -5,7 +5,7 @@ directement chez Pixabay et Pexels : ça fonctionnait, mais la page d'accueil au
 le jour où l'un des deux aurait bloqué le lien direct — Pexels le fait déjà pour ses vidéos, dont
 le téléchargement passe par `pexels.com/download/video/<id>/` et non par un lien vers le fichier.
 
-## `cuisine.mp4` et ses déclinaisons (72 s)
+## `cuisine-hd.mp4` et ses déclinaisons (72 s)
 
 Quatre définitions du même montage, choisies selon la largeur et l'orientation de l'écran (voir le
 tableau en fin de fichier et CuisineBackdrop.jsx). La vidéo n'est jamais servie en mouvement réduit ni
@@ -85,15 +85,19 @@ première et sa dernière image tombent donc toutes deux sur le même instant du
   entourent. Lu à 1×, sans ralenti.
 - **Coût de la compression** : à CRF 35 contre CRF 31, l'écart vaut 1,57 en brut et **0,71 une fois
   le voile appliqué** — quatre fois moins qu'une seule image de mouvement (3,02), pour une douzaine
-  de mégaoctets économisés à chaque visite. C'est ce qui rend la 4K servable à tout le monde.
+  de mégaoctets économisés à chaque visite. Ce relevé a servi à justifier la 4K ; il démontre en
+  réalité l'inverse, et c'est ce raisonnement poussé au bout qui a conduit à la retirer le
+  2026-09-21 (voir la section en fin de fichier). Si le voile efface l'écart entre deux CRF, il
+  efface a fortiori l'écart entre 4K et 1080p.
 
-## `cuisine.jpg` (73 Ko)
+## `cuisine-hd.jpg` (91 Ko) et les autres affiches
 
 - Image extraite du montage lui-même (t = 5 s), donc rigoureusement raccord : aucun saut entre
   l'affiche et le premier instant de lecture.
-- `ffmpeg -ss 5 -i cuisine.mp4 -frames:v 1 -vf scale=1600:-2 -q:v 4 cuisine.jpg`
-- **Rôle** : affiche de la vidéo sur grand écran, et SEUL visuel de fond sur téléphone, en mouvement
+- `ffmpeg -ss 5 -i cuisine-hd.mp4 -frames:v 1 -q:v 4 cuisine-hd.jpg` (idem `-sd`, `-portrait`)
+- **Rôle** : affiche de la vidéo sur ordinateur, et SEUL visuel de fond sur téléphone, en mouvement
   réduit et en économiseur de données — aucune vidéo n'y est téléchargée.
+- `cuisine.jpg` (249 Ko, affiche du 4K) a été supprimée avec la variante qu'elle servait.
 
 ## Si l'on remplace ces fichiers
 
@@ -128,25 +132,51 @@ ils vivent dans `public/_probe/` (ignoré par git) sur le poste de montage, et s
     # maître : concaténation sans réencodage
     printf "file 'raccord12.mp4'\nfile 'milieu12.mp4'\n" > liste.txt
     ffmpeg -f concat -safe 0 -i liste.txt -c copy master.mp4
-    ENC="-an -c:v libx264 -preset slow -tune film -pix_fmt yuv420p -movflags +faststart"
-    # cuisine.mp4 — 3840×2160, écrans de 1400 px et plus
-    ffmpeg -i master.mp4 -vf fps=25 $ENC -crf 31 cuisine.mp4
-    # cuisine-hd.mp4 — 1920×1080, de 900 à 1400 px
-    ffmpeg -i master.mp4 -vf "scale=1920:1080,fps=25" $ENC -crf 27 cuisine-hd.mp4
+    ENC="-an -c:v libx264 -profile:v high -preset medium -pix_fmt yuv420p -movflags +faststart -g 120"
+    # cuisine-hd.mp4 — 1920×1080, tout écran de 900 px et plus
+    ffmpeg -i master.mp4 -r 24 -vf "scale=1920:-2:flags=lanczos" $ENC -crf 32 cuisine-hd.mp4
     # cuisine-sd.mp4 — 1600×900, moins de 900 px en paysage
-    ffmpeg -i master.mp4 -vf "scale=1600:900,fps=25" $ENC -crf 30 cuisine-sd.mp4
+    ffmpeg -i master.mp4 -r 24 -vf "scale=1600:-2:flags=lanczos" $ENC -crf 32 cuisine-sd.mp4
     # cuisine-portrait.mp4 — 810×1440, moins de 900 px en portrait (recadrage central du 16:9)
-    ffmpeg -i master.mp4 -vf "crop=1215:2160:(iw-1215)/2:0,scale=810:1440,fps=25" $ENC -crf 30 cuisine-portrait.mp4
+    ffmpeg -i master.mp4 -vf "crop=1215:2160:(iw-1215)/2:0,scale=810:1440,fps=25" -an -c:v libx264 \
+      -preset slow -tune film -pix_fmt yuv420p -movflags +faststart -crf 30 cuisine-portrait.mp4
     # affiches (image à 5 s de chaque fichier)
-    ffmpeg -ss 5 -i cuisine.mp4 -frames:v 1 -q:v 4 cuisine.jpg   # idem -hd, -sd, -portrait
+    ffmpeg -ss 5 -i cuisine-hd.mp4 -frames:v 1 -q:v 4 cuisine-hd.jpg   # idem -sd, -portrait
 
-Poids obtenus (72 s, 25 im/s, sans son) :
+Poids obtenus (72 s, sans son) :
 
-| Fichier | Définition | Servi à | CRF | Poids |
-|---|---|---|---|---|
-| cuisine.mp4 | 3840 × 2160 | 1400 px et plus | 31 | 56,6 Mo |
-| cuisine-hd.mp4 | 1920 × 1080 | 900 à 1400 px | 27 | 17,6 Mo |
-| cuisine-sd.mp4 | 1600 × 900 | moins de 900 px, paysage | 30 | 8,9 Mo |
-| cuisine-portrait.mp4 | 810 × 1440 | moins de 900 px, portrait | 30 | 8,2 Mo |
+| Fichier | Définition | Servi à | CRF | ips | Poids |
+|---|---|---|---|---|---|
+| cuisine-hd.mp4 | 1920 × 1080 | 900 px et plus | 32 | 24 | 10,2 Mo |
+| cuisine-sd.mp4 | 1600 × 900 | moins de 900 px, paysage | 32 | 24 | 7,2 Mo |
+| cuisine-portrait.mp4 | 810 × 1440 | moins de 900 px, portrait | 30 | 25 | 7,8 Mo |
 
 À refaire à chaque remplacement du montage.
+
+## Pourquoi la variante 4K a disparu (2026-09-21)
+
+`cuisine.mp4` (3840 × 2160, 6285 kb/s, **53,9 Mo**) était servi à tout écran de 1400 px ou plus,
+c'est-à-dire à la majorité des ordinateurs. Son affiche `cuisine.jpg` (249 Ko) partait avec.
+
+Ce fond est recouvert d'un voile blanc à 48 % (`.cuisine-fond-voile`, 58 % sous 900 px), passé au
+filtre `saturate(1.35) contrast(1.1)`, et placé **derrière** le contenu de la page. À ce régime la 4K
+ne se voit pas : une comparaison image par image entre la source et un ré-encodage 1080p, voile
+compris, ne montre aucune différence perceptible. On payait 54 Mo pour une finesse invisible.
+
+Le palier « 1400 px et plus » a donc été retiré du composant plutôt que simplement allégé : une fois
+la 4K écartée, il aurait servi la même définition que le palier d'en dessous — deux fichiers pour un
+seul besoin.
+
+| | avant | après |
+|---|---|---|
+| plus gros téléchargement | 53,9 Mo | **10,2 Mo** |
+| total des vidéos du dépôt | 87,1 Mo | **25,2 Mo** |
+
+HD et SD ont été régénérés **depuis la source 4K**, jamais depuis leurs propres versions compressées :
+ré-encoder un fichier déjà compressé empile deux générations de perte pour un gain moindre (16,8 →
+10,4 Mo depuis la version compressée, contre 10,2 Mo depuis la source, et en meilleure qualité).
+La variante portrait n'a pas été retouchée : c'est un recadrage, pas une mise à l'échelle, et la
+régénérer depuis la source paysage demanderait de refaire le crop pour gagner 1 Mo.
+
+Si un jour un écran très large justifie mieux, la réponse n'est pas de revenir à la 4K mais un 1440p
+ré-encodé (≈ 15 Mo) — et il faudra d'abord vérifier que la différence se voit à travers le voile.

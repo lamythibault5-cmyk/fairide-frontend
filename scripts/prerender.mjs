@@ -34,7 +34,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadEnv } from 'vite';
 
-import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from '../src/i18n/translations.js';
+import { translations, DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES, chargerLangue } from '../src/i18n/translations.js';
 import { cheminLocalise, HREFLANG } from '../src/i18n/routing.js';
 import {
   SITE_URL, organizationJsonLd, restaurantJsonLd, restaurantListJsonLd, breadcrumbJsonLd, faqJsonLd
@@ -240,6 +240,18 @@ ${urls}
 }
 
 async function principal() {
+  /* Le pré-rendu écrit une page par langue : il lui faut donc les TROIS tables, alors que
+     translations.js n'embarque plus que le français au démarrage (voir son en-tête). On les charge
+     ici, une fois, avant tout le reste. Sans ça les pages /nl et /en seraient écrites avec les textes
+     français — une régression SEO silencieuse, exactement ce que l'adressage par langue existe pour
+     éviter. */
+  await Promise.all(SUPPORTED_LANGUAGES.map((l) => chargerLangue(l)));
+  const manquantes = SUPPORTED_LANGUAGES.filter((l) => !translations[l]);
+  if (manquantes.length) {
+    console.error(`[prerender] tables de traduction manquantes : ${manquantes.join(', ')}`);
+    process.exit(1);
+  }
+
   const gabaritChemin = path.join(DIST, 'index.html');
   if (!existsSync(gabaritChemin)) {
     console.error('[prerender] dist/index.html est absent : lancer `vite build` avant.');
