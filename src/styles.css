@@ -4103,6 +4103,22 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 
 /* Le terminal Fairide dans le bloc des formules (OffreFormules.jsx) : un encart à part, sous « quand est-ce que je paie ». */
 .offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
+/* Le terminal Fairide expliqué (components/TerminalFairide.jsx) : image + « c'est quoi », étapes, conditions. */
+.terminal-haut { display: flex; gap: 14px; align-items: center; }
+.terminal-illu { width: 200px; max-width: 45%; flex-shrink: 0; height: auto; }
+.terminal-compact .terminal-illu { width: 160px; }
+.terminal-titre { font-size: 15px; }
+.terminal-etapes { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 3px; }
+.terminal-conditions { margin-top: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
+.terminal-cond-offert { border-color: #F5B800; background: #FFFBEA; }
+.terminal-cond-caution { background: #F7F7F7; }
+@media (max-width: 560px) { .terminal-haut { flex-direction: column; align-items: flex-start; } .terminal-illu, .terminal-compact .terminal-illu { width: 100%; max-width: 260px; } }
+/* « Fairide crée ma carte » : trois blocs numérotés, fichiers joints, ce qui se passe ensuite. */
+.concierge-bloc { padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: var(--radius-field); background: #fff; }
+.concierge-sources .chip { flex: 0 0 auto; white-space: nowrap; }
+.concierge-fichiers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
+.concierge-fichiers li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px dashed var(--line); border-radius: 8px; font-size: 13px; overflow-wrap: anywhere; }
+.concierge-ensuite { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
 
 /* Inscription : « Créer mon compte » avec une étape incomplète — le rappel au-dessus des boutons (Auth.jsx). */
 .auth-incomplet { margin: 0 0 10px; padding: 10px 12px; border-radius: var(--radius-field); background: #FFF1F1; border: 1px solid #F3B4B4; color: #8A1C1C; font-size: 13px; line-height: 1.4; }

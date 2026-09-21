@@ -1,5 +1,6 @@
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { datePremierPrelevement } from '../launch';
+import TerminalFairide from './TerminalFairide';
 
 // La promesse Fairide aux commerces, dite avec les mêmes mots partout (inscription, Mon compte) — modèle du fondateur,
 // 2026-09-17 : VERSION GRATUITE = réservations de table + à emporter payé sur place (ni abonnement ni commission,
@@ -41,12 +42,9 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
         </ol>
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
       </div>
-      {/* Le terminal : ce que reçoit un commerce en version complète, et à quelles conditions. */}
-      <div className="offre-terminal">
-        <b>🖥️ {t('accountUi.offre_terminalTitle')}</b>
-        <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.offre_terminalText')}</p>
-        <p className="small" style={{ margin: '4px 0 0' }}><b>{t('accountUi.offre_terminalConditions')}</b></p>
-      </div>
+      {/* Le terminal : ce que c'est (image), comment ça marche, et à quelles conditions (offert aux 50 premiers avant le
+          5 octobre, puis caution). */}
+      <div className="offre-terminal"><TerminalFairide compact /></div>
       {inscription && payant && <p className="small offre-note">✅ {t('accountUi.offre_signupComplete')}</p>}
       {onActiver && payant && !essai && !actif && (
         <button type="button" className="btn-gold" style={{ marginTop: 10 }} onClick={onActiver}>{t('accountUi.offre_activateBtn')}</button>

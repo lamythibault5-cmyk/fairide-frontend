@@ -21,6 +21,7 @@ import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
 import { abonnementOuvert, datePremierPrelevement } from '../launch';
 import OffreFormules from '../components/OffreFormules';
+import TerminalFairide from '../components/TerminalFairide';
 import MyGuestReviews from '../components/MyGuestReviews';
 import { StarsDisplay } from '../components/Stars';
 
@@ -792,16 +793,7 @@ export default function Account() {
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
-            {ouvertes.has('terminal') && (
-              <div className="small">
-                <p style={{ margin: '0 0 8px' }}>{t('accountUi.offre_terminalText')}</p>
-                <p style={{ margin: '0 0 8px' }}><b>{restaurant.terminal.eligibleOffert ? t('accountUi.terminalEligible') : t('accountUi.terminalNotEligible', { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })}</b></p>
-                {restaurant.terminal.deliveredAt && <p style={{ margin: '0 0 4px' }}>📦 {t('accountUi.terminalDelivered', { date: new Date(restaurant.terminal.deliveredAt).toLocaleDateString(locale) })}</p>}
-                {restaurant.terminal.returnedAt && <p style={{ margin: '0 0 4px' }}>↩️ {t('accountUi.terminalReturned', { date: new Date(restaurant.terminal.returnedAt).toLocaleDateString(locale) })}</p>}
-                {restaurant.terminal.refundedAt && <p style={{ margin: '0 0 4px' }}>💶 {t('accountUi.terminalRefunded', { date: new Date(restaurant.terminal.refundedAt).toLocaleDateString(locale) })}</p>}
-                <p style={{ margin: 0 }}>{t('accountUi.terminalHow')}</p>
-              </div>
-            )}
+            {ouvertes.has('terminal') && <TerminalFairide terminal={restaurant.terminal} />}
             </LigneCompte>
           )}
           <div id="section-contrat" />

@@ -86,8 +86,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // Les cinq méthodes « je m'en occupe moi-même » sont repliées par défaut : seule la demande à
   // Fairide occupe le premier écran (voir le commentaire au-dessus du bloc). En console admin il n'y
   // a pas de demande à Fairide — l'équipe EST Fairide — donc rien à replier.
-  const [autresMethodes, setAutresMethodes] = useState(false);
-  const autresVisibles = modeAdmin || autresMethodes;
+  // Côté restaurateur (fondateur, 2026-09-21) : UNE seule option — « Fairide crée ma carte ». Les méthodes d'import
+  // (photos/PDF lus par l'IA, lien, texte collé, modèles, brouillons, remise à zéro, photos de plateforme) restent
+  // disponibles à l'équipe en console admin, qui fait le travail. Le restaurateur garde la modification manuelle de
+  // sa carte (étape 2), la traduction et le geste sur les prix (étape 3).
+  const autresVisibles = modeAdmin;
   const [importingText, setImportingText] = useState(false);
   // Photos reprises d'une page Uber Eats / Deliveroo / Takeaway (PlatformPhotosImport) : carte repliée par
   // défaut une fois la carte créée, ouverte d'un clic — l'analyse ne coûte rien mais demande un fichier.
@@ -608,7 +611,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         </div>
         {!carteVide && (
           <button type="button" className="btn-outline" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={() => setMethodesOuvertes((o) => !o)}>
-            {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.showMethods')}
+            {methodesOuvertes ? t('menuPage.hideMethods') : t(modeAdmin ? 'menuPage.showMethods' : 'menuPage.askFairideAgain')}
           </button>
         )}
       </div>
@@ -625,22 +628,14 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             Rien n'est retiré : les cinq autres méthodes sont intactes, à un clic. */}
         {!importedItems && !modeAdmin && (
           <div className="methode" id="menu-concierge">
-            <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommended')}</span></div>
+            <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommendedFree')}</span></div>
             <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
             <MenuConciergeRequest restoId={restoId} urlSuggeree={importUrl} />
           </div>
         )}
 
-        {/* En console admin il n'y a pas de méthode « Fairide s'en occupe » — l'équipe EST Fairide :
-            rien à replier, les méthodes d'import sont le sujet de la page. */}
-        {!importedItems && !modeAdmin && (
-          <div className="methode methode-bascule">
-            <button type="button" className="btn-outline" onClick={() => setAutresMethodes((o) => !o)} aria-expanded={autresMethodes}>
-              {autresMethodes ? t('menuPage.otherMethodsHide') : t('menuPage.otherMethodsShow')}
-            </button>
-            {!autresMethodes && <p className="small methode-sous" style={{ margin: '8px 0 0' }}>{t('menuPage.otherMethodsHint')}</p>}
-          </div>
-        )}
+        {/* En console admin il n'y a pas de méthode « Fairide crée ma carte » — l'équipe EST Fairide : les méthodes
+            d'import sont le sujet de la page. Côté restaurateur, elles n'apparaissent plus. */}
 
         {autresVisibles && !importedItems && (
           <div className="methode">
@@ -740,7 +735,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       </div>
       )}
 
-      {restaurant.menu.length === 0 && !startChoiceMade && (
+      {modeAdmin && restaurant.menu.length === 0 && !startChoiceMade && (
         <div className="card" id="menu-demarrage" style={{ border: '2px solid var(--teal)' }}>
           <h3 style={{ margin: '0 0 6px', fontSize: 16 }}>{t('menuPage.quickStartTitle')}</h3>
           <p className="small" style={{ margin: '0 0 12px' }}>
@@ -1036,7 +1031,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </div>
         </div>
       )}
-      {restaurant.menu.length > 0 && (
+      {modeAdmin && restaurant.menu.length > 0 && (
         <div className="card" id="menu-photos-plateforme">
           <div className="row" style={{ gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -1068,9 +1063,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </button>
         </div>
       )}
-      <MenuDrafts restoId={restoId} token={token} menuCount={restaurant.menu.length} onPublished={() => loadDashboard(restoId)} />
+      {modeAdmin && <MenuDrafts restoId={restoId} token={token} menuCount={restaurant.menu.length} onPublished={() => loadDashboard(restoId)} />}
 
-      {restaurant.menu.length > 0 && (
+      {modeAdmin && restaurant.menu.length > 0 && (
         <div className="card" id="menu-reset">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.resetTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.resetIntro')}</p>
