@@ -11,14 +11,17 @@ import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
 import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
-import { IconLocal, IconFair } from '../components/landing/FeatureIcons';
+import Icone from '../components/Icone';
 
 /* Les trois portes d'entrée. Le parcours client passe en premier et en iris : c'est le seul des
-   trois qu'on veut voir avant les autres, et la spec ne tolère qu'un bloc coloré par rangée. */
+   trois qu'on veut voir avant les autres, et la spec ne tolère qu'un bloc coloré par rangée.
+   `icon` est un NOM du jeu maison (Icone.jsx), plus un emoji : voir l'en-tête de ce fichier-là,
+   qui explique pourquoi l'application les a tous remplacés. L'accueil était le dernier endroit
+   qui y avait échappé. */
 function joinCards(t) {
   return [
     {
-      key: 'client', icon: '🛍️',
+      key: 'client', icon: 'sac',
       eyebrow: t('landing.joinClientRole'),
       title: t('landing.joinClientTitle'),
       points: [t('landing.joinClientP1'), t('landing.joinClientP2')],
@@ -27,7 +30,7 @@ function joinCards(t) {
       iris: true
     },
     {
-      key: 'restaurant', icon: '🏪',
+      key: 'restaurant', icon: 'commerce',
       eyebrow: t('landing.joinRestaurantRole'),
       title: t('landing.joinRestaurantTitle'),
       points: [t('landing.joinRestaurantP1'), t('landing.joinRestaurantP2')],
@@ -35,7 +38,7 @@ function joinCards(t) {
       to: '/login?audience=partner&role=restaurant'
     },
     {
-      key: 'driver', icon: '🛵',
+      key: 'driver', icon: 'scooter',
       eyebrow: t('landing.joinDriverRole'),
       title: t('landing.joinDriverTitle'),
       points: [t('landing.joinDriverP1'), t('landing.joinDriverP2')],
@@ -52,8 +55,8 @@ function joinCards(t) {
 // c'est un moyen, pas une raison de commander ici (demande du fondateur, 2026-09-21).
 function features(t) {
   return [
-    { icon: <IconLocal />, title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
-    { icon: <IconFair />, title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
+    { icon: 'commerce', title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
+    { icon: 'balance', title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
   ];
 }
 
@@ -101,7 +104,7 @@ export default function Landing() {
               concurrents dans la bannière : la ligne juste en dessous, la rangée « Rejoindre » plus bas et le pied de
               page les portent. Un lien (pas un bouton) : explorable par les robots, ouvrable dans un nouvel onglet. */}
           <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <Link to="/login?audience=client" className="btn-gold landing-cta-principal">{t('landing.orderNow')}</Link>
+            <Link to="/login?audience=client" className="btn-gold landing-cta-principal"><Icone nom="sac" taille={18} /> {t('landing.orderNow')}</Link>
           </div>
           {/* `audience=partner` sans `role` : la page d'inscription propose alors les trois types de
               compte (voir Auth.jsx, la lecture de `audience` et `role`). Une ligne qui dit
@@ -109,8 +112,8 @@ export default function Landing() {
           <p className="landing-partner-line">
             {t('landing.partnerQuestion')} <Link to="/login?audience=partner">{t('landing.partnerLink')}</Link>
           </p>
-          <p className="small landing-ouverture landing-ouverture-long">🗓️ {t('landing.ordersOpenNote')}</p>
-          <p className="small landing-ouverture landing-ouverture-court">{t('landing.ordersOpenCourt')}</p>
+          <p className="small landing-ouverture landing-ouverture-long"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenNote')}</p>
+          <p className="small landing-ouverture landing-ouverture-court"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenCourt')}</p>
           </div>
         </div>
         <HeroPreview restaurants={restaurants} />
@@ -123,7 +126,7 @@ export default function Landing() {
       <div className="feature-grid">
         {features(t).map((f, i) => (
           <Reveal className="card feature-card" key={f.title} delay={i * 90}>
-            <span className="feature-icon feature-icon-svg">{f.icon}</span>
+            <span className="feature-icon feature-icon-svg"><Icone nom={f.icon} taille={30} /></span>
             <h3>{f.title}</h3>
             <p>{f.text}</p>
           </Reveal>
@@ -181,11 +184,11 @@ export default function Landing() {
             className={c.iris ? 'join-card join-card-iris' : 'join-card'}
           >
             <div>
-              <span className="join-eyebrow">{c.icon} {c.eyebrow}</span>
+              <span className="join-eyebrow"><Icone nom={c.icon} taille={16} /> {c.eyebrow}</span>
               <h3>{c.title}</h3>
               <ul className="join-points">{c.points.map((pt) => <li key={pt}>{pt}</li>)}</ul>
             </div>
-            <span className="join-link">{c.link}</span>
+            <span className="join-link"><Icone nom={c.icon} taille={16} /> {c.link}</span>
           </Reveal>
         ))}
       </div>

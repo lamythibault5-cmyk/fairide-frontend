@@ -6603,7 +6603,6 @@ export default {
       backHome: "Retour à l'accueil"
     },
     landing: {
-      pill: "📍 Local d'abord",
       /* « Paie ton repas, pas la plateforme » traînait à la fin du sous-titre, derrière trente mots
          qui décrivaient le fonctionnement du service. Elle passe en titre : c'est la seule phrase
          de la page qui dise le positionnement entier en cinq mots, et elle se retient.
@@ -6619,11 +6618,11 @@ export default {
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
          courte. Le texte long reste servi dès 641px, il n'est pas perdu.
          `subCourt` a disparu : l'accroche est désormais la même sur téléphone et sur ordinateur. */
-      ordersOpenCourt: '🗓️ Réservations et à emporter dès le 10 octobre',
+      ordersOpenCourt: 'Réservations et à emporter dès le 10 octobre',
       partnerQuestion: 'Commerce ou livreur ?',
       partnerLink: 'Rejoindre Fairide',
-      orderNow: '🛍️ Commander maintenant',
-      becomePartner: '🏪 Devenir partenaire',
+      orderNow: 'Commander maintenant',
+      becomePartner: 'Devenir partenaire',
       featureLocalTitle: '100% commerces locaux',
       featureLocalText: 'Restaurants, supermarchés, night shops, boulangeries… découvrir et soutenir les commerces du quartier, accessibles à tous.',
       featureFairTitle: 'Juste pour tout le monde',
@@ -6637,11 +6636,11 @@ export default {
       step3Text: 'Suivi de la commande en temps réel, jusqu\'à la porte.',
       joinTitle: 'Rejoindre Fairide',
       joinClientTitle: 'Commande chez les commerces de ton quartier',
-      joinClientLink: '🛍️ Commander maintenant',
+      joinClientLink: 'Commander maintenant',
       joinRestaurantTitle: 'Vends tes plats sans te faire dévorer par les commissions',
-      joinRestaurantLink: '🏪 Ajouter mon commerce',
+      joinRestaurantLink: 'Ajouter mon commerce',
       joinDriverTitle: 'Roule et sois payé plus justement à chaque course',
-      joinDriverLink: '🛵 Devenir livreur',
+      joinDriverLink: 'Devenir livreur',
       communesTitle: 'Communes desservies à Bruxelles',
       trustTitle: 'Ils nous font confiance',
       appSoonBadge: 'Bientôt disponible',

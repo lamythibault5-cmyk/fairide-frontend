@@ -2,6 +2,7 @@ import { useState, useId } from 'react';
 import { emailValide, telephonePlausible } from '../validation';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
+import Icone from './Icone';
 
 // `messageInitial` sert au centre d'aide : quand on arrive par « Signaler un bug », le message est
 // déjà amorcé avec ce qu'il faut nous dire. Une trame vaut mieux qu'un champ vide — c'est elle qui
@@ -12,9 +13,11 @@ export default function ContactSection({ messageInitial = '' }) {
   const idsA11y = useId();
   const { t } = useLanguage();
   const INFO_CARDS = [
-    { icon: '✉️', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
-    { icon: '📍', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
-    { icon: '📞', title: t('contact.phoneLabel'), lines: ['+32 491 97 99 80'] }
+    // Noms du jeu maison (Icone.jsx), plus des emojis : le ✉️ et le 📞 se rendaient avec la police
+    // du systeme, donc bleus et bombes sur Windows, plats ailleurs, a cote d'une interface au trait.
+    { icon: 'courrier', title: t('contact.emailLabel'), lines: ['contact@fairide.be'] },
+    { icon: 'position', title: t('contact.locationLabel'), lines: [t('contact.locationValue')] },
+    { icon: 'telephone', title: t('contact.phoneLabel'), lines: ['+32 491 97 99 80'] }
   ];
   const ROLES = [
     { value: 'client', label: t('contact.roleClient') },
@@ -104,7 +107,7 @@ export default function ContactSection({ messageInitial = '' }) {
       <div className="contact-info-col">
         {INFO_CARDS.map((c) => (
           <div className="card contact-info-card" key={c.title}>
-            <div className="contact-info-icon">{c.icon}</div>
+            <div className="contact-info-icon"><Icone nom={c.icon} taille={22} /></div>
             <div>
               <b>{c.title}</b>
               {c.lines.map((l) => <p className="small" key={l} style={{ margin: '2px 0 0' }}>{l}</p>)}

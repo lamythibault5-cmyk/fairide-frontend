@@ -1729,8 +1729,13 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 }
 .join-card:hover { border-color: var(--iris); }
 .join-card h3 { font-size: 20px; margin: 0; line-height: 1.15; }
-.join-card .join-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: block; margin-bottom: 12px; }
-.join-card .join-link { font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; }
+/* inline-flex, et non plus `block` : ces deux lignes portent maintenant une icône du jeu maison
+   devant leur texte (voir Landing.jsx). Un <svg> en flux normal s'assoit sur la ligne de base et
+   dépasse en dessous ; l'alignement par flex le centre sur la hauteur du texte sans avoir à
+   deviner un `vertical-align` qui changerait avec la taille de police. Le `gap` remplace l'espace
+   qui suivait l'emoji. Même traitement pour les autres icônes en ligne de l'accueil, plus bas. */
+.join-card .join-eyebrow { font-size: 11px; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint); display: flex; align-items: center; gap: 7px; margin-bottom: 12px; }
+.join-card .join-link { font-size: 14px; font-weight: 500; color: var(--iris); text-decoration: none; display: inline-flex; align-items: center; gap: 7px; }
 .join-card.join-card-iris { background: var(--iris); border-color: var(--iris); color: var(--cream); }
 .join-card.join-card-iris:hover { background: var(--iris-deep); border-color: var(--iris-deep); }
 .join-card.join-card-iris .join-eyebrow { color: var(--lime); }
@@ -1846,7 +1851,10 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .contact-grid { display: grid; grid-template-columns: 3fr 2fr; gap: 16px; align-items: start; margin-bottom: 36px; }
 .contact-info-col { display: flex; flex-direction: column; gap: 14px; }
 .contact-info-card { display: flex; gap: 12px; align-items: center; margin-bottom: 0; }
-.contact-info-icon { font-size: 20px; background: var(--cream-dim); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* Iris, comme les tuiles d'icône des cartes d'arguments : la pastille tenait un emoji, qui
+   imposait sa propre couleur ; un tracé prend celle du texte, autant qu'elle soit celle de la
+   marque. `font-size` ne sert plus à rien ici mais ne coûte rien non plus. */
+.contact-info-icon { font-size: 20px; color: var(--iris); background: var(--cream-dim); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 @media (max-width: 720px) { .contact-grid { grid-template-columns: 1fr; } }
 
 /* MOUVEMENT RÉDUIT : UNE SEULE RÈGLE, POSÉE UNE FOIS POUR TOUTES.
@@ -3720,7 +3728,14 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
    le texte en encre sombre (prévue pour les fonds clairs) : sur le violet, ça ne se lisait pas. Blanc
    presque plein et un cran plus grand que .small — c'est une information de calendrier, elle doit se
    lire du premier coup. */
+/* La ligne des dates tient sur plusieurs lignes : pas d'inline-flex ici, qui centrerait l'icône
+   sur le bloc entier et la ferait flotter au milieu du paragraphe. L'icône reste dans le flux, au
+   début de la première ligne, remontée d'un cinquième de cadratin pour s'asseoir sur l'œil du
+   texte plutôt que sur sa ligne de base. */
 .landing-ouverture { margin: 12px 0 0; color: #fff; opacity: 1; font-size: 13.5px; line-height: 1.55; font-weight: 600; }
+.landing-ouverture svg, .discover-tile-meta svg { vertical-align: -0.2em; }
+/* Les boutons sont déjà des boîtes d'une seule ligne : le centrage par flex y est sans danger. */
+.landing-cta-principal, .discover-info-btn { display: inline-flex; align-items: center; gap: 8px; }
 
 /* Tuile d'information en fin de vitrine « Découvre » : occupe les cellules restantes de la dernière rangée
    (ou une rangée entière si la précédente est complète). Aplat iris, comme la bannière. */
