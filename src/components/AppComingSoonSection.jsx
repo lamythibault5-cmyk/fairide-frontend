@@ -25,7 +25,13 @@ function PhoneMockup() {
         </div>
         <div className="app-soon-phone-search">{t('landing.mockSearchPlaceholder')}</div>
         <div className="app-soon-phone-chips">
-          {['🍕', '🍔', '🍣', '🥗', '🧋'].map((e, i) => <span key={i}>{e}</span>)}
+          {/* Cinq pastilles vides, plus la rangee d'emojis de nourriture qui vivait ici. Le reste
+              de cette maquette est deja abstrait - les fiches en dessous sont des rectangles de
+              couleur et des traits gris - et cinq emojis en couleur au milieu etaient la seule
+              chose figurative de l'ecran, ce qui les faisait lire comme le sujet du dessin.
+              Les vider plutot que supprimer la rangee : la barre de categories existe dans la
+              vraie application, une maquette sans elle ne lui ressemblerait plus. */}
+          {[0, 1, 2, 3, 4].map((i) => <span key={i} />)}
         </div>
         <div className="app-soon-phone-cards">
           <div className="app-soon-phone-card">
@@ -47,7 +53,7 @@ export default function AppComingSoonSection() {
   return (
     <div className="app-soon">
       <div className="app-soon-text">
-        <span className="pill hero app-soon-badge">🚀 {t('landing.appSoonBadge')}</span>
+        <span className="pill hero app-soon-badge">{t('landing.appSoonBadge')}</span>
         <h2 className="app-soon-title">{t('landing.appSoonTitle')}</h2>
         <p className="app-soon-sub">{t('landing.appSoonSub')}</p>
         <div className="app-soon-badges">

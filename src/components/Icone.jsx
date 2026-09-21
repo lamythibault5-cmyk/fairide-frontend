@@ -104,7 +104,13 @@ const TRACES = {
   // L'explication repliée derrière une bulle d'aide.
   ampoule: <><path d="M9.5 18h5" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.5 10.9V15h7v-1.1A6 6 0 0 0 12 3Z" /></>,
   // Le but d'un jeu, dans sa fiche de règles.
-  cible: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.4" /></>
+  cible: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.4" /></>,
+  // « Juste pour tout le monde », sur l'accueil. Le dessin vient de l'ancien IconFair de
+  // landing/FeatureIcons.jsx, ramené à la grille de 24 et au trait de 1,8 — il vivait sur une
+  // grille de 48 avec un trait de 2,4, et posé à côté d'une icône de la barre du bas la différence
+  // d'épaisseur se voyait. Les plateaux sont des triangles pointe en haut : à 20px, deux vraies
+  // coupes suspendues se refermaient en deux taches.
+  balance: <><path d="M12 4v17" /><path d="M4 8.5h16" /><path d="m4 8.5-2.2 6h4.4Z" /><path d="m20 8.5-2.2 6h4.4Z" /><path d="M8 21h8" /><circle cx="12" cy="4" r="1.2" /></>
 };
 
 export default function Icone({ nom, taille = 20, className }) {

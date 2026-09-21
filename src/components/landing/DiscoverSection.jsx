@@ -3,6 +3,7 @@ import { imgProps, cacherImageCassee } from '../../images';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import Reveal from '../Reveal';
+import Icone from '../Icone';
 
 // « Découvre les commerces » : une vraie vitrine avec photos, filtrable par type de cuisine, avant de
 // demander quoi que ce soit au visiteur. Public : chaque carte mène à la fiche du commerce, consultable
@@ -58,7 +59,7 @@ export default function DiscoverSection({ restaurants }) {
             </div>
             <div className="discover-tile-body">
               <b>{r.name}</b>
-              <span className="discover-tile-meta">📍 {r.neighborhood ? `${r.neighborhood} · ` : ''}{r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
+              <span className="discover-tile-meta"><Icone nom="position" taille={14} /> {r.neighborhood ? `${r.neighborhood} · ` : ''}{r.commune}{r.reviewCount > 0 ? <span className="discover-tile-reviews"> · {r.reviewCount} {t('landing.discoverReviews')}</span> : null}</span>
             </div>
           </Reveal>
         ))}
@@ -73,7 +74,7 @@ export default function DiscoverSection({ restaurants }) {
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
-            <Link to="/login?audience=partner&role=restaurant" className="btn-hero-ghost discover-info-btn">🏪 {t('landing.discoverInfoJoin')}</Link>
+            <Link to="/login?audience=partner&role=restaurant" className="btn-hero-ghost discover-info-btn"><Icone nom="commerce" taille={16} /> {t('landing.discoverInfoJoin')}</Link>
           </div>
         </Reveal>
       </div>

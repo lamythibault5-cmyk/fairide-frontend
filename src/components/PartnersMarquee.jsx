@@ -23,7 +23,7 @@ export default function PartnersMarquee() {
 
   return (
     <div style={{ marginBottom: 18 }}>
-      <h2 className="section-title" style={{ textAlign: 'center' }}>🤝 {t('landing.trustTitle')}</h2>
+      <h2 className="section-title" style={{ textAlign: 'center' }}>{t('landing.trustTitle')}</h2>
       <div className="trust-marquee">
         <div
           className={`trust-track${canLoop ? ' animate' : ''}`}
