@@ -1,5 +1,11 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+/* `unstable_HistoryRouter` porte bien son nom : c'est une API que React Router ne garantit pas entre
+   deux versions mineures. Elle est indispensable ici — c'est elle qui permet de changer de langue
+   sans recharger la page (voir i18n/historiqueLangue.js) — mais la dépendance est donc épinglée à
+   une version exacte dans package.json, sans accent circonflexe. Un `npm install` qui ramènerait
+   7.19 pourrait retirer cet export et casser TOUT le routage d'un coup, à la première mise en ligne
+   suivante, sans que rien dans le code n'ait changé. */
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
 import App from './App.jsx';
