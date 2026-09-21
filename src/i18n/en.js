@@ -6509,7 +6509,7 @@ export default {
     },
     seo: {
       defaultTitle: 'fairide.be · Delivery and local shops in Brussels',
-      homeDescription: 'On fairide.be, order, book a table or take away from the restaurants and shops of your Brussels neighbourhood. Commission capped at 10% for merchants.',
+      homeDescription: 'Restaurants and shops in Brussels: order, book or take away with Fairide, the Belgian alternative. 10% commission instead of 22 to 32%.',
       listDescription: 'Every restaurant, supermarket, bakery and night shop in Brussels on fairide.be: bike delivery, takeaway and table booking across the 19 communes.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order.",
@@ -6579,11 +6579,10 @@ export default {
     },
     landing: {
       pill: '📍 Local first',
-      title1: 'The neighbourhood\'s businesses,',
-      title2: 'delivered to the door.',
-      sub: 'Fairide connects restaurants, supermarkets and local businesses with fairly paid couriers, without the excessive commission of the big platforms. Pay your meal, not the platform.',
+      title1: 'Pay for your meal,',
+      title2: 'not the platform.',
+      sub: 'The Belgian alternative to Uber Eats and Deliveroo. 10% commission instead of 22 to 32%: the restaurant keeps more, the courier keeps 100% of the delivery fee, and the money stays here.',
       /* Short forms, phone only — see the fr block for the reasoning. */
-      subCourt: 'Commission capped at 10%, against 22 to 32% elsewhere.',
       ordersOpenCourt: '🗓️ Reservations and takeaway from 10 October',
       partnerQuestion: 'A business or a courier?',
       partnerLink: 'Join Fairide',

@@ -1601,8 +1601,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    RIEN DE TOUT CECI NE S'APPLIQUE AU-DESSUS DE 640px : la version large reste celle en ligne.
    --------------------------------------------------------------------------- */
 
-/* Les variantes courtes n'existent que sur téléphone (voir Landing.jsx). */
-.landing-sub-court, .landing-ouverture-court, .landing-partner-line { display: none; }
+/* Les variantes courtes n'existent que sur téléphone (voir Landing.jsx). L'accroche n'en fait plus
+   partie : elle est la même partout depuis le 2026-09-21. */
+.landing-ouverture-court, .landing-partner-line { display: none; }
 
 @media (max-width: 640px) {
   /* L'affiche occupe le premier écran, et c'est ce qui repousse le reste dessous.
@@ -1615,8 +1616,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
     min-height: calc(100svh - 190px);
     display: flex; flex-direction: column; justify-content: center;
   }
-  .landing-sub-long, .landing-ouverture-long, .landing-cta-partenaire { display: none; }
-  .landing-sub-court { display: block; }
+  .landing-ouverture-long, .landing-cta-partenaire { display: none; }
   .landing-ouverture-court { display: block; }
   /* Le titre perd deux points de graisse optique : à 32px sur trois lignes il occupait le tiers
      de l'écran. La casse et l'interlettrage ne bougent pas — c'est la même voix, moins fort. */

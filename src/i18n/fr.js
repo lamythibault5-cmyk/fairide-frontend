@@ -6528,7 +6528,13 @@ export default {
          il est ici pour que le pré-rendu, qui produit les trois langues, lise la même chaîne que
          l'application. */
       defaultTitle: 'fairide.be · Livraison et commerces locaux à Bruxelles',
-      homeDescription: 'Sur fairide.be, commande, réserve une table ou emporte chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 % pour les commerçants.',
+      /* Aligné sur l'accroche de la page (landing.title1/2 et landing.sub) : la description disait
+         encore « les commerces de ton quartier » quand le titre dit « Paie ton repas, pas la
+         plateforme ». Les mots que l'on cherche (restaurants, commerces, Bruxelles, commande,
+         réserve, emporte) restent en tête ; le positionnement suit. Uber Eats et Deliveroo ne sont
+         pas nommés dans une balise meta — voir le commentaire dans index.html. ~145 caractères,
+         au-delà de ~155 Google tronque. */
+      homeDescription: "Restaurants et commerces de Bruxelles : commande, réserve ou emporte avec Fairide, l'alternative belge. 10 % de commission au lieu de 22 à 32 %.",
       listDescription: 'Tous les restaurants, supermarchés, boulangeries et night shops de Bruxelles sur fairide.be : livraison à vélo, à emporter et réservation de table dans les 19 communes.',
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
       restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande.",
@@ -6598,14 +6604,21 @@ export default {
     },
     landing: {
       pill: "📍 Local d'abord",
-      title1: 'Les commerces du quartier,',
-      title2: 'livrés à domicile.',
-      sub: 'Fairide connecte restaurants, supermarchés et commerces locaux à des livreurs justement rémunérés, sans la commission excessive des grandes plateformes. Paie ton repas, pas la plateforme.',
-      /* Les quatre clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
+      /* « Paie ton repas, pas la plateforme » traînait à la fin du sous-titre, derrière trente mots
+         qui décrivaient le fonctionnement du service. Elle passe en titre : c'est la seule phrase
+         de la page qui dise le positionnement entier en cinq mots, et elle se retient.
+         Ce qu'elle remplace — « Les commerces du quartier, livrés à domicile » — décrivait ce que
+         font aussi Uber Eats et Deliveroo. Ce n'est pas ce qui distingue Fairide (fondateur,
+         2026-09-21) : la commission, la part du livreur et le fait que l'argent reste en Belgique,
+         si. Le sous-titre porte maintenant ces trois-là, dans cet ordre. */
+      title1: 'Paie ton repas,',
+      title2: 'pas la plateforme.',
+      sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici.",
+      /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
          ne coupe pas une phrase au milieu d'un mot pour gagner de la place, on en écrit une plus
-         courte. Le texte long reste servi dès 641px, il n'est pas perdu. */
-      subCourt: 'Commission plafonnée à 10 %, contre 22 à 32 % ailleurs.',
+         courte. Le texte long reste servi dès 641px, il n'est pas perdu.
+         `subCourt` a disparu : l'accroche est désormais la même sur téléphone et sur ordinateur. */
       ordersOpenCourt: '🗓️ Réservations et à emporter dès le 10 octobre',
       partnerQuestion: 'Commerce ou livreur ?',
       partnerLink: 'Rejoindre Fairide',
