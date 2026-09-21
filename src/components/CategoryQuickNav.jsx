@@ -11,9 +11,21 @@ import { sectionLabel } from '../menuCategories';
 // posés par MenuCategorySections. `categories` attend des objets { id, name } (une section de
 // restaurant.sections).
 
-// Doit dépasser la hauteur réelle de la barre (~56px) : une section n'est considérée "active" qu'une
-// fois son titre passé sous la barre, pas simplement entré quelque part dans le haut de l'écran.
-const ACTIVE_THRESHOLD_PX = 70;
+// Une section n'est "active" qu'une fois son titre passé SOUS la barre, pas simplement entré
+// quelque part dans le haut de l'écran.
+//
+// C'ÉTAIT UN NOMBRE EN DUR, et il a été faux deux fois. D'abord parce que le commentaire annonçait
+// 140px quand la constante valait 100 ; puis le 2026-09-21, quand le bandeau du parcours (croix,
+// nom, recherche) est devenu collant au-dessus de cette barre et l'a poussée de 56px vers le bas —
+// le seuil de 70 désignait alors un point situé au-dessus de la barre elle-même, et la section
+// s'allumait avant d'être atteinte.
+// On mesure donc le bas réel de la barre à chaque calcul. Elle est collante : la valeur est stable
+// une fois la page défilée, et elle suit toute seule un changement de hauteur — police plus grande,
+// traduction plus longue, bandeau modifié. Plus aucun chiffre à tenir à jour.
+// Le repli de 70 ne sert qu'à l'instant où le composant se mesure avant d'être posé.
+const SEUIL_REPLI_PX = 70;
+// De quoi le titre ne colle pas au bord inférieur de la barre au moment où il bascule.
+const MARGE_SEUIL_PX = 8;
 
 export default function CategoryQuickNav({ categories }) {
   const { t, language } = useLanguage();
@@ -21,6 +33,7 @@ export default function CategoryQuickNav({ categories }) {
   const categoriesRef = useRef(categories);
   categoriesRef.current = categories;
   const buttonRefs = useRef(new Map());
+  const barreRef = useRef(null);
 
   useEffect(() => {
     // Scroll-spy par position plutôt que par IntersectionObserver : la section active est la DERNIÈRE
@@ -32,11 +45,13 @@ export default function CategoryQuickNav({ categories }) {
     let ticking = false;
     function computeActive() {
       ticking = false;
+      const bas = barreRef.current?.getBoundingClientRect().bottom;
+      const seuil = (bas > 0 ? bas : SEUIL_REPLI_PX) + MARGE_SEUIL_PX;
       let current = categoriesRef.current[0]?.id;
       for (const c of categoriesRef.current) {
         const el = document.getElementById(`menu-cat-${c.id}`);
         if (!el) continue;
-        if (el.getBoundingClientRect().top <= ACTIVE_THRESHOLD_PX) {
+        if (el.getBoundingClientRect().top <= seuil) {
           current = c.id;
         } else {
           break;
@@ -76,7 +91,7 @@ export default function CategoryQuickNav({ categories }) {
   if (categories.length < 2) return null;
 
   return (
-    <div className="category-quicknav">
+    <div className="category-quicknav" ref={barreRef}>
       <div className="category-quicknav-sections">
         {categories.map((c) => (
           <button

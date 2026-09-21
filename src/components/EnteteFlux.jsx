@@ -26,7 +26,20 @@ import { useLanguage } from '../context/LanguageContext';
 // légère) exprimé avec les jetons Fairide — c'est déjà ce qu'avaient fait les pastilles du bas.
 // `onRetour` plutôt que `vers` : le paiement recule d'une ÉTAPE, pas d'une adresse. Le geste reste
 // exactement le même à l'écran — c'est ce qui compte — mais il ne change pas de page.
-export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '', libelle = '' }) {
+// IL EST COLLANT DEPUIS LE 2026-09-21. Il ne l'était pas, et sur téléphone le geste de sortie
+// partait donc vers le haut au premier défilement : arrivé au milieu de la carte d'un commerce, il
+// n'y avait plus AUCUN moyen de revenir en arrière — les onglets du bas s'effacent sur ces pages
+// (Layout.jsx, .dashboard-shell--flux) précisément parce que ce bouton est censé être la sortie.
+// Un bouton qui est la seule sortie et qui disparaît au défilement n'est pas une sortie.
+// Le défaut valait pour les trois pages qui montent ce composant — fiche, panier, paiement — et se
+// règle pour les trois d'un coup, ici.
+//
+// `titreEstompe` et `actions` servent la fiche d'un commerce, qui en fait un vrai bandeau à la
+// manière d'Uber Eats : croix à gauche, nom du commerce au milieu, recherche à droite. Le nom y
+// est rendu en permanence — jamais monté puis démonté — mais estompé tant que le grand titre de la
+// page est encore à l'écran : l'afficher deux fois à dix pixels d'écart est du bruit, et le faire
+// APPARAÎTRE ferait sauter la largeur du bandeau à chaque passage. On ne bouge que l'opacité.
+export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '', libelle = '', titreEstompe = false, actions = null }) {
   const { t } = useLanguage();
   const fermer = geste === 'fermer';
   // Le libellé accessible dit où l'on va, pas ce que le bouton dessine : « Fermer » tout court ne
@@ -50,7 +63,14 @@ export default function EnteteFlux({ vers, onRetour, geste = 'retour', titre = '
           {glyphe}
         </Link>
       )}
-      {titre && <span className="flux-titre">{titre}</span>}
+      {/* aria-hidden quand il est estompé : le nom est alors déjà annoncé par le <h1> de la page,
+          et un lecteur d'écran lirait deux fois le même commerce à la suite. */}
+      {titre && (
+        <span className={`flux-titre${titreEstompe ? ' flux-titre--estompe' : ''}`} aria-hidden={titreEstompe || undefined}>
+          {titre}
+        </span>
+      )}
+      {actions && <div className="flux-actions">{actions}</div>}
     </div>
   );
 }

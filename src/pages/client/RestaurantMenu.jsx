@@ -53,6 +53,15 @@ export default function RestaurantMenu() {
   // Recherche dans la carte. Une carte de supermarché compte plusieurs centaines de lignes ;
   // la seule façon d'y trouver un article était de faire défiler.
   const [requete, setRequete] = useState('');
+  // La recherche vit maintenant DANS le bandeau collant, repliée derrière une loupe : le champ
+  // occupait une ligne entière sous l'en-tête et partait au défilement comme le reste, alors que
+  // c'est précisément en descendant dans une longue carte qu'on se met à chercher.
+  const [rechercheOuverte, setRechercheOuverte] = useState(false);
+  const champRechercheRef = useRef(null);
+  // Le grand titre est-il encore à l'écran ? Tant qu'il l'est, le bandeau n'affiche pas le nom —
+  // voir `titreEstompe` dans EnteteFlux.jsx.
+  const titreRef = useRef(null);
+  const [grandTitreVisible, setGrandTitreVisible] = useState(true);
   const { token, user } = useAuth();
   const [pickerItem, setPickerItem] = useState(null);
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
@@ -86,6 +95,23 @@ export default function RestaurantMenu() {
     const clock = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(clock);
   }, []);
+  // Le nom passe dans le bandeau quand le grand titre sort de l'écran. IntersectionObserver et non
+  // un écouteur de défilement : on n'a besoin que d'un booléen qui change deux fois par visite, pas
+  // d'une mesure à chaque image. Le seuil de 0 suffit — dès que le titre a entièrement quitté le
+  // haut, le bandeau prend le relais. Le garde `restaurant` est indispensable : avant le
+  // chargement, la page ne rend qu'un squelette et titreRef est vide.
+  useEffect(() => {
+    const el = titreRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return undefined;
+    const obs = new IntersectionObserver(([e]) => setGrandTitreVisible(e.isIntersecting), { threshold: 0 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [restaurant]);
+  // Ouvrir la loupe donne le clavier tout de suite : un champ qui apparaît et qu'il faut ensuite
+  // toucher pour écrire dedans demande deux gestes là où on en attend un.
+  useEffect(() => {
+    if (rechercheOuverte) champRechercheRef.current?.focus();
+  }, [rechercheOuverte]);
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
   const isRefreshRef = useRef(sessionStorage.getItem('fairide_last_restaurant_viewed') === id);
@@ -209,7 +235,7 @@ export default function RestaurantMenu() {
         setFavoriteIds((prev) => new Set(prev).add(id));
       }
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setFavoriteBusy(false);
     }
@@ -282,11 +308,54 @@ export default function RestaurantMenu() {
 
   return (
     <div>
+      {/* LE BANDEAU D'ABORD, LES SECTIONS DESSOUS. C'était l'inverse : la barre des sections était
+          rendue en premier et collée à `top: 0`, la croix venait après et ne collait à rien. En
+          descendant dans la carte, on gardait donc la table des matières et on perdait la sortie —
+          alors que les onglets du bas s'effacent sur cette page justement parce que cette croix est
+          censée être la seule sortie (voir Layout.jsx et EnteteFlux.jsx).
+          Les deux sont maintenant collants et EMPILÉS : le bandeau à `top: 0`, les sections juste
+          dessous à la hauteur du bandeau (--h-bandeau dans styles.css). C'est la disposition
+          d'Uber Eats, et celle que le fondateur décrit : croix, nom, recherche, puis les sections.
+
+          La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. Le lien de
+          texte qui vivait là faisait 18px de haut — on le manquait au pouce. */}
+      <EnteteFlux
+        vers="/restaurants"
+        geste="fermer"
+        libelle={t('restaurantMenu.backToRestaurants')}
+        titre={restaurant.name}
+        titreEstompe={grandTitreVisible || rechercheOuverte}
+        actions={restaurant.menu.length > 8 ? (
+          rechercheOuverte ? (
+            <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => e.preventDefault()}>
+              <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
+              <input
+                ref={champRechercheRef}
+                type="search" value={requete} onChange={(e) => setRequete(e.target.value)}
+                placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
+              />
+              {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait
+                  une carte amputée sans rien à l'écran pour dire pourquoi. */}
+              <button
+                type="button" className="recherche-effacer"
+                onClick={() => { setRequete(''); setRechercheOuverte(false); }}
+                aria-label={t('restaurantMenu.clearSearch')}
+              >
+                <Icone nom="interdit" taille={16} />
+              </button>
+            </form>
+          ) : (
+            <button
+              type="button" className="flux-bouton"
+              onClick={() => setRechercheOuverte(true)}
+              aria-label={t('restaurantMenu.searchDish')} title={t('restaurantMenu.searchDish')}
+            >
+              <Icone nom="recherche" taille={20} />
+            </button>
+          )
+        ) : null}
+      />
       <CategoryQuickNav categories={sectionsFiltrees} />
-      {/* La croix, et non une flèche : d'ici on SORT du parcours pour revenir à la liste. Le lien de
-          texte qui vivait là faisait 18px de haut — on le manquait au pouce — et il disparaissait
-          sous les onglets du bas, qui s'effacent maintenant sur cette page (voir Layout.jsx). */}
-      <EnteteFlux vers="/restaurants" geste="fermer" libelle={t('restaurantMenu.backToRestaurants')} />
 
       {/* L'EN-TÊTE SORT DE LA CARTE.
           Tout ce bloc vivait dans un <div className="card"> : un rectangle blanc cerné d'un filet,
@@ -304,7 +373,7 @@ export default function RestaurantMenu() {
         <div className="fiche-titre-ligne">
           {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
               référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}
-          <h1 className="fiche-nom">
+          <h1 className="fiche-nom" ref={titreRef}>
             <span>{restaurant.name}</span>
             {restaurant.certified && <CertifiedBadge size={20} />}
           </h1>
@@ -438,24 +507,11 @@ export default function RestaurantMenu() {
         </div>
       )}
 
-      {/* RECHERCHE DANS LA CARTE, comme le « Search in McDonald's® » de la capture. Sans elle, le
-          seul moyen de trouver un article dans la carte d'un supermarché était de faire défiler.
-          Même habillage que la recherche du site (.recherche-champ), pour ne pas inventer un
-          second type de champ de recherche. */}
-      {restaurant.menu.length > 8 && (
-        <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => e.preventDefault()}>
-          <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
-          <input
-            type="search" value={requete} onChange={(e) => setRequete(e.target.value)}
-            placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
-          />
-          {requete && (
-            <button type="button" className="recherche-effacer" onClick={() => setRequete('')} aria-label={t('restaurantMenu.clearSearch')}>
-              <Icone nom="interdit" taille={16} />
-            </button>
-          )}
-        </form>
-      )}
+      {/* LA RECHERCHE DANS LA CARTE A DÉMÉNAGÉ dans le bandeau collant, derrière la loupe (voir
+          plus haut). Elle occupait ici une ligne entière et partait au défilement comme le reste —
+          or c'est en descendant dans une longue carte qu'on se met à chercher, pas en arrivant.
+          Le seuil de 8 plats et l'habillage (.recherche-champ, celui de la recherche du site) ne
+          changent pas ; seul l'endroit change. */}
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
