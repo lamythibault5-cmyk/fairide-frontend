@@ -36,6 +36,11 @@ export default function EditPage() {
   const [editLegalName, setEditLegalName] = useState('');
   const [editCompanyNumber, setEditCompanyNumber] = useState('');
   const [editVatNumber, setEditVatNumber] = useState('');
+  // Conformité alimentaire (voir conformiteCommerce.js côté serveur). L'engagement de vérification
+  // d'âge ne se décoche pas : le serveur l'horodate une fois et ne le retire qu'avec la vente d'alcool.
+  const [editAfscaNumber, setEditAfscaNumber] = useState('');
+  const [editSellsAlcohol, setEditSellsAlcohol] = useState(false);
+  const [editAlcoholAck, setEditAlcoholAck] = useState(false);
   const [editResponsibleName, setEditResponsibleName] = useState('');
   const [editPhone, setEditPhone] = useState('');
   const [editWebsite, setEditWebsite] = useState('');
@@ -110,6 +115,9 @@ export default function EditPage() {
     setEditLegalName(restaurant.legalName || '');
     setEditCompanyNumber(restaurant.companyNumber || '');
     setEditVatNumber(restaurant.vatNumber || '');
+    setEditAfscaNumber(restaurant.afscaNumber || '');
+    setEditSellsAlcohol(!!restaurant.sellsAlcohol);
+    setEditAlcoholAck(!!restaurant.alcoholAgeAckAt);
     setEditResponsibleName(restaurant.responsibleName || '');
     setEditPhone(restaurant.phone || '');
     setEditWebsite(restaurant.website || '');
@@ -152,7 +160,9 @@ export default function EditPage() {
         method: 'PATCH', token,
         body: {
           name: editName.trim(),
-          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(), phone: editPhone.trim(), website: editWebsite.trim(),
+          legalName: editLegalName.trim(), companyNumber: editCompanyNumber.trim(), vatNumber: editVatNumber.trim(), responsibleName: editResponsibleName.trim(),
+          afscaNumber: editAfscaNumber.trim(), sellsAlcohol: editSellsAlcohol, alcoholAgeAck: editAlcoholAck,
+          phone: editPhone.trim(), website: editWebsite.trim(),
           phoneSecondary: phone2Ouvert ? editPhoneSecondary.trim() : '', email: editEmail.trim(), emailSecondary: email2Ouvert ? editEmailSecondary.trim() : '',
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
@@ -389,6 +399,33 @@ export default function EditPage() {
           </div>
         </div>
         <div className="field"><label htmlFor={idsA11y + '-manager'}>{t('editResto.manager')}</label><input id={idsA11y + '-manager'} value={editResponsibleName} onChange={(e) => setEditResponsibleName(e.target.value)} placeholder={t('editResto.phManager')} /></div>
+
+        {/* Conformité alimentaire. Le contrat de partenariat fait déjà déclarer au commerce qu'il
+            respecte la réglementation AFSCA et les règles de vente d'alcool ; ces champs sont ce qui
+            permet de le vérifier plutôt que de le croire. Le numéro AFSCA est celui de l'unité
+            d'établissement — la cuisine qui prépare, pas la société qui l'exploite. */}
+        <div className="divider" />
+        <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('editResto.foodTitle')}</h4>
+        <div className="field">
+          <label htmlFor={idsA11y + '-afsca'}>{t('editResto.afscaNumber')}</label>
+          <input id={idsA11y + '-afsca'} value={editAfscaNumber} onChange={(e) => setEditAfscaNumber(e.target.value)} placeholder="2123.456.789" inputMode="numeric" />
+          <span className="small">{t('editResto.afscaHelp')}</span>
+        </div>
+        <div className="field">
+          <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+            <input type="checkbox" checked={editSellsAlcohol} onChange={(e) => setEditSellsAlcohol(e.target.checked)} style={{ marginTop: 3 }} />
+            <span>{t('editResto.sellsAlcohol')}</span>
+          </label>
+        </div>
+        {editSellsAlcohol && (
+          <div className="field" style={{ paddingLeft: 24 }}>
+            <label style={{ display: 'flex', gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
+              <input type="checkbox" checked={editAlcoholAck} onChange={(e) => setEditAlcoholAck(e.target.checked)} style={{ marginTop: 3 }} />
+              <span>{t('editResto.alcoholAgeAck')}</span>
+            </label>
+            <span className="small">{t('editResto.alcoholHelp')}</span>
+          </div>
+        )}
         <div className="field">
           <label htmlFor="edit-tel">{t('editResto.phone')}</label>
           <PhoneInput id="edit-tel" value={editPhone} onChange={setEditPhone} autoComplete="off" />

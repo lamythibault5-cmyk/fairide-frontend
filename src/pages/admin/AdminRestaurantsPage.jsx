@@ -12,6 +12,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
@@ -89,6 +90,8 @@ export default function AdminRestaurantsPage() {
   const [detail, setDetail] = useState(null);
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  // Validation refusée pour non-conformité : { id, conformite } tant que l'équipe n'a pas tranché.
+  const [derogation, setDerogation] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
@@ -133,15 +136,24 @@ export default function AdminRestaurantsPage() {
     } catch (e) { toast(e.message); }
   }
 
-  async function setStatus(id, status) {
+  /* Validation d'un commerce : le serveur refuse désormais en 409 si des exigences réglementaires
+     bloquantes manquent (AFSCA, RC exploitation, licence alcool, BCE valide — voir
+     conformiteCommerce.js). Le refus n'est pas définitif : il ouvre un dialogue qui montre CE qui
+     manque et demande un motif pour passer outre, motif journalisé sur la fiche.
+     On n'empêche pas l'équipe de valider — on l'empêche de valider sans savoir. */
+  async function setStatus(id, status, { force = false, reason = '' } = {}) {
     try {
-      await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status } });
+      await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status, ...(force ? { force: true, reason } : {}) } });
       setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'approved' ? tr('adminRestos.toastApproved') : status === 'blocked' ? tr('adminRestos.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
       chargerStats();
     } catch (e) {
+      if (e.code === 'CONFORMITE_INCOMPLETE' && e.data?.conformite) {
+        setDerogation({ id, conformite: e.data.conformite });
+        return;
+      }
       toast(e.message);
     }
   }
@@ -362,6 +374,99 @@ export default function AdminRestaurantsPage() {
         onConfirm={runConfirmed}
         onCancel={() => setConfirmAction(null)}
       />
+      {/* Dérogation : s'ouvre quand le serveur a refusé la validation faute de conformité. Liste
+          d'abord ce qui manque, puis demande le motif — dans cet ordre, pour qu'on ne tape pas un
+          motif sans avoir lu ce à quoi on déroge. */}
+      <ReasonDialog
+        open={!!derogation}
+        title={tr('adminRestos.conformiteBlocTitle')}
+        message={tr('adminRestos.conformiteBlocBody')}
+        label={tr('adminRestos.conformiteMotif')}
+        placeholder={tr('adminRestos.conformiteMotifPh')}
+        confirmLabel={tr('adminRestos.conformiteForcer')}
+        danger
+        multiline
+        loading={busy}
+        onConfirm={async (motif) => {
+          const d = derogation;
+          setDerogation(null);
+          await setStatus(d.id, 'approved', { force: true, reason: motif });
+        }}
+        onCancel={() => setDerogation(null)}
+      >
+        <ul className="small" style={{ margin: '0 0 12px', paddingLeft: 18 }}>
+          {(derogation?.conformite?.anomalies || []).filter((a) => a.niveau === 'bloquant').map((a) => (
+            <li key={a.cle} style={{ marginBottom: 6 }}>
+              <b>{a.label}</b><br />
+              <span style={{ opacity: 0.75 }}>{a.action}</span>
+            </li>
+          ))}
+        </ul>
+      </ReasonDialog>
+    </div>
+  );
+}
+
+// Panneau de conformité réglementaire d'un commerce, en tête de sa fiche.
+//
+// Placé AVANT les chiffres d'activité : un commerce qui n'a pas le droit de vendre de la nourriture
+// est une information qui prime sur son panier moyen. Les relevés faits par l'équipe (code NACE,
+// Food Hygiene Rating) se saisissent ici même — ils viennent de registres publics qu'on va lire, et
+// un écran qui affiche le manque sans permettre de le combler renvoie la tâche à plus tard.
+function ConformitePanel({ detail, onChanged }) {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const toast = useToast();
+  const idsA11y = useId();
+  const [nace, setNace] = useState(detail.naceCode || '');
+  const [score, setScore] = useState(detail.hygieneRating || '');
+  const [busy, setBusy] = useState(false);
+  const c = detail.conformite;
+  if (!c) return null;
+
+  async function enregistrer() {
+    setBusy(true);
+    try {
+      await api(`/admin/restaurants/${detail.id}/conformite`, { method: 'PATCH', token, body: { naceCode: nace, hygieneRating: score } });
+      toast(tr('adminRestos.conformiteSaved'));
+      onChanged?.();
+    } catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
+
+  return (
+    <div className="card" style={{ margin: '0 0 14px', borderColor: c.conforme ? 'var(--line)' : 'var(--red)' }}>
+      <h4 style={{ margin: '0 0 8px', color: c.conforme ? 'inherit' : 'var(--red)' }}>
+        {c.conforme ? tr('adminRestos.conformiteOk') : tr('adminRestos.conformiteKo', { n: c.bloquantes })}
+      </h4>
+      {detail.complianceOverride && (
+        <p className="small" style={{ color: 'var(--gold-deep)', marginTop: 0 }}>
+          {tr('adminRestos.conformiteOverride', { email: detail.complianceOverride.by, date: fmtDate(detail.complianceOverride.at) })} — {detail.complianceOverride.reason}
+        </p>
+      )}
+      {c.anomalies.length > 0 && (
+        <ul className="small" style={{ paddingLeft: 18, marginTop: 0 }}>
+          {c.anomalies.map((a) => (
+            <li key={a.cle} style={{ marginBottom: 5, color: a.niveau === 'bloquant' ? 'var(--red)' : 'inherit' }}>
+              <b>{a.label}</b> <span style={{ opacity: 0.75 }}>— {a.action}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 10 }}>
+        <div className="field" style={{ margin: 0, flex: '1 1 140px' }}>
+          <label htmlFor={`${idsA11y}-nace`}>{tr('adminRestos.naceCode')}</label>
+          <input id={`${idsA11y}-nace`} value={nace} onChange={(e) => setNace(e.target.value)} placeholder="56.101" />
+        </div>
+        <div className="field" style={{ margin: 0, flex: '1 1 140px' }}>
+          <label htmlFor={`${idsA11y}-score`}>{tr('adminRestos.hygieneRating')}</label>
+          <select id={`${idsA11y}-score`} value={score} onChange={(e) => setScore(e.target.value)}>
+            <option value="">{tr('adminRestos.hygieneNotChecked')}</option>
+            {['A', 'B', 'C', 'D'].map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        </div>
+        <button className="btn-outline" onClick={enregistrer} disabled={busy}>{busy ? '...' : tr('adminCommon.save')}</button>
+      </div>
+      <p className="small" style={{ opacity: 0.7, marginTop: 8, marginBottom: 0 }}>{tr('adminRestos.conformiteReleveHint')}</p>
     </div>
   );
 }
@@ -439,6 +544,9 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       {!detail && <div className="small">{tr('adminCommon.loading')}</div>}
       {detail && onglet === 'apercu' && !editing && (
         <>
+          {/* Avant les coordonnées et les chiffres : un commerce qui n'a pas le droit de vendre de la
+              nourriture prime sur son panier moyen. */}
+          <ConformitePanel detail={detail} onChanged={onChanged} />
           <ContactCommerce r={detail} tr={tr} fiche />
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.ownerEmailLine', { name: detail.responsibleName || '-', email: detail.email, phone: '' })}</p>
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.legalLine', { legal: detail.legalName || '-', n: detail.companyNumber || '-', vat: detail.vatNumber || '-' })}</p>
