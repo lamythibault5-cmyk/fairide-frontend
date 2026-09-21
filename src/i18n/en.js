@@ -6509,7 +6509,7 @@ export default {
     },
     seo: {
       defaultTitle: 'fairide.be · Delivery and local shops in Brussels',
-      homeDescription: 'On fairide.be, order, book a table or take away from the restaurants and shops of your Brussels neighbourhood. Commission capped at 10% for merchants.',
+      homeDescription: 'Restaurants and shops in Brussels: order, book or take away with Fairide, the Belgian alternative. 10% commission instead of 22 to 32%.',
       listDescription: 'Every restaurant, supermarket, bakery and night shop in Brussels on fairide.be: bike delivery, takeaway and table booking across the 19 communes.',
       restaurantTitle: "{name}, {cuisine} in {commune} · Fairide",
       restaurantDescription: "Order from {name} in {commune} and have it delivered by bike. On Fairide the shop keeps 90% of your order.",

@@ -6528,7 +6528,13 @@ export default {
          il est ici pour que le pré-rendu, qui produit les trois langues, lise la même chaîne que
          l'application. */
       defaultTitle: 'fairide.be · Livraison et commerces locaux à Bruxelles',
-      homeDescription: 'Sur fairide.be, commande, réserve une table ou emporte chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 % pour les commerçants.',
+      /* Aligné sur l'accroche de la page (landing.title1/2 et landing.sub) : la description disait
+         encore « les commerces de ton quartier » quand le titre dit « Paie ton repas, pas la
+         plateforme ». Les mots que l'on cherche (restaurants, commerces, Bruxelles, commande,
+         réserve, emporte) restent en tête ; le positionnement suit. Uber Eats et Deliveroo ne sont
+         pas nommés dans une balise meta — voir le commentaire dans index.html. ~145 caractères,
+         au-delà de ~155 Google tronque. */
+      homeDescription: "Restaurants et commerces de Bruxelles : commande, réserve ou emporte avec Fairide, l'alternative belge. 10 % de commission au lieu de 22 à 32 %.",
       listDescription: 'Tous les restaurants, supermarchés, boulangeries et night shops de Bruxelles sur fairide.be : livraison à vélo, à emporter et réservation de table dans les 19 communes.',
       restaurantTitle: "{name}, {cuisine} à {commune} · Fairide",
       restaurantDescription: "Commande chez {name} à {commune} et fais-toi livrer à vélo. Sur Fairide, le commerce garde 90 % de ta commande.",

@@ -17,23 +17,35 @@
     <meta name="theme-color" content="#3B2FB5" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>fairide.be · Livraison et commerces locaux à Bruxelles</title>
-    <meta name="description" content="Sur fairide.be, commande, réserve une table ou emporte chez les restaurants et commerces de ton quartier à Bruxelles. Commission plafonnée à 10 % pour les commerçants." />
+    <!-- Aligné sur l'accroche de la page (voir landing.title1/2 et landing.sub dans i18n/fr.js) : le
+         titre de la page disait « Paie ton repas, pas la plateforme » et la description parlait encore
+         des commerces du quartier — deux positionnements différents sur la même adresse.
+         Uber Eats et Deliveroo ne sont PAS nommés ici, alors qu'ils le sont dans le corps de la page :
+         citer la marque d'un concurrent dans une balise meta relève de l'usage de marque en métadonnée,
+         qui a sa propre jurisprudence, distincte de la publicité comparative en clair sur la page. Le
+         gain de clarté serait nul — personne ne lit une meta, elle est lue par un moteur.
+         Longueur tenue sous ~155 caractères, au-delà Google tronque. -->
+    <meta name="description" content="Restaurants et commerces de Bruxelles : commande, réserve ou emporte avec Fairide, l'alternative belge. 10 % de commission au lieu de 22 à 32 %." />
     <link rel="canonical" href="https://fairide.be/" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Fairide" />
     <meta property="og:locale" content="fr_BE" />
     <meta property="og:url" content="https://fairide.be/" />
-    <meta property="og:title" content="Fairide · Pay the meal, not the platform." />
-    <meta property="og:description" content="Les commerces du quartier, livrés à domicile. Commission plafonnée à 10% pour soutenir les restaurants et livreurs locaux de Bruxelles." />
+    <!-- Le titre partagé était en anglais sur un site dont la langue par défaut est le français et
+         dont og:locale annonce fr_BE. Il reprend maintenant, mot pour mot, le titre de la page. -->
+    <meta property="og:title" content="Fairide · Paie ton repas, pas la plateforme." />
+    <meta property="og:description" content="L'alternative belge : 10 % de commission au lieu de 22 à 32 %, le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici." />
     <meta property="og:image" content="https://fairide.be/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Fairide, paie ta commande, pas la plateforme." />
+    <!-- ATTENTION : og-image.png porte l'ancienne accroche en dur dans le visuel. Ce texte de
+         remplacement décrit ce que l'image DIRA une fois refaite, pas ce qu'elle dit aujourd'hui. -->
+    <meta property="og:image:alt" content="Fairide : paie ton repas, pas la plateforme." />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Fairide · Pay the meal, not the platform." />
-    <meta name="twitter:description" content="Les commerces du quartier, livrés à domicile. Commission plafonnée à 10% à Bruxelles." />
+    <meta name="twitter:title" content="Fairide · Paie ton repas, pas la plateforme." />
+    <meta name="twitter:description" content="L'alternative belge à Bruxelles : 10 % de commission au lieu de 22 à 32 %, et l'argent reste ici." />
     <meta name="twitter:image" content="https://fairide.be/og-image.png" />
 
     <!-- Pré-connexion à l'API : la poignée de main TLS se fait pendant que le code se charge, le premier
