@@ -9,10 +9,12 @@ import CrmMap, { distanceM } from '../../components/CrmMap';
 
 import '../../crm.css';
 
-// CRM des commerciaux (« sales ») : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
+// Page « Sales » des commerciaux : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
 // commerces qu'elle démarche, et où ils en sont — étape, visites, appels, notes datées, avis du restaurateur,
-// prochaine action. Un compte client sans cet accès n'a pas cette page (le serveur répond 403 NOT_SALES_AGENT,
-// et Mon compte n'affiche pas le lien). Serveur : routes/adminSales.js (/sales/…).
+// prochaine action — et suit sa rémunération (20 € inscription, 40 € premier mois payé, 50 € fidélité à 7 mois) et
+// l'équipe (les autres commerciaux par leur PRÉNOM seulement, avec leurs inscrits et leurs gains). Un compte client
+// sans cet accès n'a pas cette page (le serveur répond 403 NOT_SALES_AGENT, et Mon compte n'affiche pas le lien).
+// Serveur : routes/adminSales.js (/sales/…).
 
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
 const KINDS = ['visite', 'appel', 'message', 'note'];
@@ -31,7 +33,7 @@ function maPosition() {
 const versLocal = (ms) => { if (!ms) return ''; const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
 const maintenantLocal = () => versLocal(Date.now());
 
-export default function CrmPage() {
+export default function SalesPage() {
   const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -49,6 +51,9 @@ export default function CrmPage() {
   const [zones, setZones] = useState([]);
   const [autres, setAutres] = useState([]);
   const [zoneActive, setZoneActive] = useState(null);
+  // Équipe (prénoms, inscrits, gains) et mes primes.
+  const [equipe, setEquipe] = useState([]);
+  const [primes, setPrimes] = useState(null);
   const [carteVisible, setCarteVisible] = useState(() => { try { return localStorage.getItem('crm_carte') !== 'off'; } catch { return true; } });
   const basculerCarte = () => setCarteVisible((v) => { try { localStorage.setItem('crm_carte', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
 
@@ -58,6 +63,8 @@ export default function CrmPage() {
     api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message); });
     api('/sales/zones', { token }).then(setZones).catch(() => {});
     api('/sales/others', { token }).then(setAutres).catch(() => {});
+    api('/sales/team', { token }).then(setEquipe).catch(() => {});
+    api('/sales/commissions', { token }).then((r) => setPrimes(r.commissions)).catch(() => {});
   }, [token, filtre, recherche, toast]);
   useEffect(() => { charger(); }, [charger]);
   // Zone choisie : la liste ne montre que les commerces dans son rayon (ceux sans position restent visibles, on ne sait pas où ils sont).
@@ -82,10 +89,12 @@ export default function CrmPage() {
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const lignes = [col.join(';'), ...(prospects || []).map((p) => col.map((c) => cell(c === 'stage' ? t(`sales.stage_${p[c]}`) : /At$/.test(c) && p[c] ? new Date(p[c]).toLocaleString(locale) : p[c])).join(';'))];
     const blob = new Blob(['\ufeff' + lignes.join('\n')], { type: 'text/csv;charset=utf-8' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fairide-crm-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `fairide-sales-${new Date().toISOString().slice(0, 10)}.csv`; a.click(); URL.revokeObjectURL(a.href);
   }
 
   const fmtDate = (ms) => new Date(ms).toLocaleString(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  const fmtJour = (ms) => new Date(ms).toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric' });
+  const euros = (n) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   const stageLabel = (s) => `${STAGE_ICONES[s] || ''} ${t(`sales.stage_${s}`)}`;
 
   if (etat && !etat.agent) {
@@ -169,6 +178,10 @@ export default function CrmPage() {
           <div className="stat-card"><div className="num">{etat.stats.eventsThisWeek ?? 0}</div><div className="label">{t('sales.weekActions')}</div></div>
         </div>
       )}
+
+      {/* Rémunération (barème + mes primes) et l'équipe (prénoms, inscrits, gains) : ce qui motive. */}
+      <RemunerationCard etat={etat} primes={primes} t={t} euros={euros} fmtDate={fmtJour} />
+      <EquipeCard equipe={equipe} t={t} euros={euros} />
 
       {/* Trois vues : mes commerces, ceux des autres (pour ne pas frapper deux fois à la même porte), à faire. */}
       <div className="role-pick crm-segments" role="tablist" aria-label={t('sales.title')}>
@@ -409,6 +422,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
             {/* Lier au commerce inscrit sur Fairide, pour voir s'il est validé et en ligne. */}
             <div className="crm-bloc">
               <b className="crm-bloc-titre">{t('sales.linkTitle')}</b>
+              {!p.restaurantId && <p className="small" style={{ margin: '0 0 6px' }}>💶 {t('sales.linkHint')}</p>}
               {p.restaurantId ? (
                 <p className="small" style={{ margin: 0 }}>🏪 {p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>
               ) : (
@@ -483,6 +497,77 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
       </div>
     </div>,
     document.body
+  );
+}
+
+// ----------------------------------------------------------------------------------------------- équipe
+// Les commerciaux, par leur PRÉNOM seulement (le serveur n'envoie rien d'autre) : commerces démarchés, inscrits et
+// gains. Pour voir que d'autres bossent et que ça rapporte — et se situer. Classement par gains.
+function EquipeCard({ equipe, t, euros }) {
+  if (!equipe.length) return null;
+  const total = equipe.reduce((s, x) => s + (x.earned || 0), 0);
+  const inscrits = equipe.reduce((s, x) => s + (x.signed || 0), 0);
+  return (
+    <div className="card crm-equipe">
+      <b>🏆 {t('sales.teamTitle')}</b>
+      <p className="small" style={{ margin: '2px 0 8px' }}>{t('sales.teamIntro', { n: equipe.length, signed: inscrits, total: euros(total) })}</p>
+      <ol className="crm-equipe-liste">
+        {equipe.map((x, i) => (
+          <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
+            <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
+            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed, prospects: x.prospects })}</span></span>
+            <span className="crm-equipe-gain"><b>{euros(x.earned)}</b>{x.upcoming ? <><br /><span className="small">+ {euros(x.upcoming)} {t('sales.teamUpcoming')}</span></> : null}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------------------------- rémunération
+// Le barème (20 € à l'inscription, 40 € au premier mois payé, 50 € sept mois plus tard s'il est toujours abonné) et
+// mes primes, commerce par commerce. Les primes sont créées par le serveur (lien au commerce inscrit, abonnement).
+function RemunerationCard({ etat, primes, t, euros, fmtDate }) {
+  const [ouvert, setOuvert] = useState(false);
+  const rules = etat?.rules || { signup: 20, first_month: 40, retention: 50, retentionMonths: 7 };
+  const g = etat?.earnings || { earned: 0, paid: 0, scheduled: 0, total: 0 };
+  const quand = (c) => {
+    if (c.status === 'scheduled' && c.dueAt) return t('sales.payDue', { date: fmtDate(c.dueAt) });
+    if (c.status === 'paid' && c.paidAt) return t('sales.payPaidOn', { date: fmtDate(c.paidAt) });
+    if (c.earnedAt) return t('sales.payEarnedOn', { date: fmtDate(c.earnedAt) });
+    return '';
+  };
+  return (
+    <div className="card crm-remu">
+      <div className="crm-carte-tete">
+        <div>
+          <b>💶 {t('sales.payTitle')}</b>
+          <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.payIntro')}</p>
+        </div>
+        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={() => setOuvert((v) => !v)}>{ouvert ? t('sales.payHide') : t('sales.payShow')}</button>
+      </div>
+      <div className="crm-bareme">
+        <div><b>{euros(rules.signup)}</b><span className="small">{t('sales.ruleSignup')}</span></div>
+        <div><b>{euros(rules.first_month)}</b><span className="small">{t('sales.ruleFirstMonth')}</span></div>
+        <div><b>{euros(rules.retention)}</b><span className="small">{t('sales.ruleRetention', { months: rules.retentionMonths })}</span></div>
+      </div>
+      <div className="stat-grid crm-stats" style={{ marginTop: 10, marginBottom: 0 }}>
+        <div className="stat-card highlight"><div className="num">{euros(g.total)}</div><div className="label">{t('sales.payTotal')}</div></div>
+        <div className="stat-card"><div className="num">{euros(g.earned)}</div><div className="label">{t('sales.payEarned')}</div></div>
+        <div className="stat-card"><div className="num">{euros(g.paid)}</div><div className="label">{t('sales.payPaid')}</div></div>
+        <div className="stat-card"><div className="num">{euros(g.scheduled)}</div><div className="label">{t('sales.payScheduled')}</div></div>
+      </div>
+      {ouvert && (primes === null ? <div className="small" style={{ marginTop: 10 }}>{t('common.loading')}</div> : primes.length === 0 ? <p className="small" style={{ margin: '10px 0 0' }}>{t('sales.payEmpty')}</p> : (
+        <ul className="crm-primes">
+          {primes.map((c) => (
+            <li key={c.id}>
+              <span><b>{c.restaurantName || c.prospectName || '—'}</b><br /><span className="small">{t(`sales.commission_${c.kind}`)}{quand(c) ? ` · ${quand(c)}` : ''}</span></span>
+              <span className={`crm-prime crm-prime-${c.status}`}>{euros(c.amount)} · {t(`sales.payStatus_${c.status}`)}</span>
+            </li>
+          ))}
+        </ul>
+      ))}
+    </div>
   );
 }
 

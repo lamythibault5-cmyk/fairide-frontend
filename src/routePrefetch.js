@@ -52,7 +52,7 @@ const CHARGEURS = {
   '/aide': () => import('./pages/HelpPage'),
   '/notre-histoire': () => import('./pages/OurStory'),
   '/jeux': () => import('./pages/GamesPage'),
-  '/crm': () => import('./pages/client/CrmPage'),
+  '/sales': () => import('./pages/client/SalesPage'),
   '/admin/sales': () => import('./pages/admin/AdminSalesPage'),
 };
 

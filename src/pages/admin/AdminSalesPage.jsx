@@ -14,9 +14,10 @@ import CrmMap, { distanceM } from '../../components/CrmMap';
 import '../../crm.css';
 
 // Application « Sales » : les commerciaux (des comptes clients auxquels l'admin donne l'accès ici — pas de code à
-// distribuer) et tous les commerces démarchés avec leur étape et leur historique. Côté agent : pages/client/CrmPage.jsx.
+// distribuer), tous les commerces démarchés avec leur étape et leur historique, et les rémunérations (primes 20/40/50 €).
+// Côté agent : pages/client/SalesPage.jsx.
 // Serveur : routes/adminSales.js.
-const TABS = ['agents', 'prospects', 'doublons'];
+const TABS = ['agents', 'prospects', 'commissions', 'doublons'];
 const STAGES = ['a_contacter', 'contacte', 'interesse', 'rdv', 'inscrit', 'carte_en_ligne', 'actif', 'plus_tard', 'refuse'];
 const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
@@ -48,6 +49,7 @@ export default function AdminSalesPage() {
           <div className={`stat-card${stats.overdue > 0 ? ' crm-retard' : ''}`}><div className="num">{stats.overdue}</div><div className="label">{tr('adminSales.statOverdue')}</div></div>
           <div className="stat-card"><div className="num">{stats.dueToday ?? 0}</div><div className="label">{tr('adminSales.statToday')}</div></div>
           <div className="stat-card"><div className="num">{stats.eventsThisWeek ?? 0}</div><div className="label">{tr('adminSales.statActions')}</div></div>
+          <button type="button" className={`stat-card${stats.commissions?.earned?.amount > 0 ? ' highlight' : ''}`} style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit' }} onClick={() => setOnglet('commissions')}><div className="num">{new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(stats.commissions?.earned?.amount || 0)}</div><div className="label">{tr('adminSales.statToPay')}</div></button>
           <button type="button" className={`stat-card${stats.duplicates > 0 ? ' crm-retard' : ''}`} style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit' }} onClick={() => setOnglet('doublons')}><div className="num">{stats.duplicates ?? 0}</div><div className="label">{tr('adminSales.statDuplicates')}</div></button>
         </div>
       )}
@@ -56,6 +58,7 @@ export default function AdminSalesPage() {
       </div>
       {onglet === 'agents' && <AgentsTab {...commun} />}
       {onglet === 'prospects' && <ProspectsTab {...commun} retardInitial={searchParams.get('overdue') === '1'} />}
+      {onglet === 'commissions' && <CommissionsTab {...commun} stats={stats} />}
       {onglet === 'doublons' && <DoublonsTab {...commun} />}
     </div>
   );
@@ -63,9 +66,10 @@ export default function AdminSalesPage() {
 
 // ---------------------------------------------------------------------------------------------- commerciaux
 // L'admin choisit ici quels comptes clients deviennent commerciaux : il cherche le compte (nom ou e-mail), clique
-// « Donner l'accès », et la rubrique « CRM commerçants » apparaît dans le Mon compte de cette personne. « Retirer
+// « Donner l'accès », et la rubrique « Sales » apparaît dans le Mon compte de cette personne. « Retirer
 // l'accès » sur la ligne la referme ; ses commerces démarchés restent visibles dans l'onglet suivant.
 function AgentsTab({ token, tr, fmt, toast, onChanged }) {
+  const euros = (n) => new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   const [agents, setAgents] = useState(null);
   const [erreur, setErreur] = useState(null);
   const [q, setQ] = useState('');
@@ -101,11 +105,13 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
   }
 
   const columns = [
-    { key: 'name', label: tr('adminSales.colAgent'), get: (a) => <><b>{a.name}</b><br /><span className="small">{a.email}{a.phone ? ` · ${a.phone}` : ''}</span></>, sortValue: (a) => a.name },
+    { key: 'name', label: tr('adminSales.colAgent'), get: (a) => <><b>{a.name}</b>{a.isDemo ? <span className="pill" style={{ marginLeft: 6 }} title={tr('adminSales.demoHelp')}>{tr('adminSales.demoBadge')}</span> : null}<br /><span className="small">{a.email}{a.phone ? ` · ${a.phone}` : ''}</span></>, sortValue: (a) => a.name },
     { key: 'label', label: tr('adminSales.colLabel'), get: (a) => a.label || '-', sortValue: (a) => a.label },
     { key: 'prospects', label: tr('adminSales.colProspects'), get: (a) => a.prospects, align: 'right', sum: true },
     { key: 'signed', label: tr('adminSales.colSigned'), get: (a) => a.signed, align: 'right', sum: true },
     { key: 'active', label: tr('adminSales.colActiveRestos'), get: (a) => a.active, align: 'right', sum: true },
+    { key: 'earned', label: tr('adminSales.colEarned'), get: (a) => <span className={a.earned ? 'crm-prime crm-prime-earned' : ''}>{euros(a.earned)}</span>, sortValue: (a) => a.earned, align: 'right' },
+    { key: 'paid', label: tr('adminSales.colPaid'), get: (a) => euros(a.paid), sortValue: (a) => a.paid, align: 'right' },
     { key: 'addedThisWeek', label: tr('adminSales.colWeekAdded'), get: (a) => a.addedThisWeek, align: 'right', sum: true },
     { key: 'eventsThisWeek', label: tr('adminSales.colWeekActions'), get: (a) => a.eventsThisWeek, align: 'right', sum: true },
     { key: 'overdue', label: tr('adminSales.colOverdue'), get: (a) => <span className={a.overdue ? 'crm-retard-texte' : ''}>{a.overdue}{a.dueToday ? ` (+${a.dueToday})` : ''}</span>, sortValue: (a) => a.overdue, align: 'right' },
@@ -272,9 +278,72 @@ function DoublonsTab({ token, tr, fmt, stageLabel }) {
   );
 }
 
+// ---------------------------------------------------------------------------------------------- rémunérations
+// Les primes des commerciaux (20 € inscription, 40 € premier mois payé, 50 € fidélité à 7 mois), créées par le serveur
+// au lien prospect ↔ commerce inscrit et au rapprochement quotidien avec l'abonnement. L'admin marque « payée » quand
+// le virement est fait, peut annuler, et ajoute à la main une prime hors circuit (abonnement réglé sur facture).
+const COMMISSION_STATUSES = ['earned', 'scheduled', 'paid', 'cancelled'];
+function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
+  const [rows, setRows] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  const [statut, setStatut] = useEtatPage('statutPrimes', 'earned');
+  const [ouvert, setOuvert] = useState(null);
+  const { sort, toggle } = useTableSort('date', 'desc');
+  const locale = getLocale();
+  const euros = (n) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+  const charger = useCallback(() => { setErreur(null); api(`/admin/sales/commissions${statut ? `?status=${statut}` : ''}`, { token }).then(setRows).catch((e) => setErreur(e.message)); }, [token, statut]);
+  useEffect(charger, [charger]);
+  async function changer(c, status) {
+    try { await api(`/admin/sales/commissions/${c.id}`, { method: 'PATCH', token, body: { status } }); toast(tr(`adminSales.toastCom_${status}`)); charger(); onChanged(); } catch (err) { toast(err.message); }
+  }
+  async function rapprocher() {
+    try { const r = await api('/admin/sales/reconcile', { method: 'POST', token }); toast(tr('adminSales.toastReconciled', { n: r.earned })); charger(); onChanged(); } catch (err) { toast(err.message); }
+  }
+  const dateDe = (c) => c.paidAt || c.earnedAt || c.dueAt || c.createdAt;
+  const columns = [
+    { key: 'agent', label: tr('adminSales.colAgent'), get: (c) => <><b>{c.agentName}</b><br /><span className="small">{c.agentEmail}</span></>, sortValue: (c) => c.agentName },
+    { key: 'commerce', label: tr('adminSales.colProspect'), get: (c) => c.restaurantName || c.prospectName || '-', sortValue: (c) => c.restaurantName || c.prospectName || '' },
+    { key: 'kind', label: tr('adminSales.colKind'), get: (c) => tr(`sales.commission_${c.kind}`), sortValue: (c) => c.kind },
+    { key: 'amount', label: tr('adminSales.colAmount'), get: (c) => euros(c.amount), sortValue: (c) => c.amount, align: 'right' },
+    { key: 'status', label: tr('adminSales.colStatus'), get: (c) => <span className={`crm-prime crm-prime-${c.status}`}>{tr(`sales.payStatus_${c.status}`)}</span>, sortValue: (c) => COMMISSION_STATUSES.indexOf(c.status) },
+    { key: 'date', label: tr('adminSales.colDate'), get: (c) => <>{fmt(dateDe(c))}{c.note ? <><br /><span className="small">{c.note}</span></> : null}</>, sortValue: (c) => dateDe(c) || 0 },
+    { key: 'actions', label: '', get: (c) => (
+      <span className="row" style={{ gap: 6, justifyContent: 'flex-end' }}>
+        {c.status === 'earned' && <button type="button" className="btn-teal" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'paid'); }}>{tr('adminSales.comMarkPaid')}</button>}
+        {c.status === 'paid' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comUnpay')}</button>}
+        {c.status !== 'cancelled' && c.status !== 'paid' && <button type="button" className="btn-danger-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'cancelled'); }}>{tr('adminSales.comCancel')}</button>}
+        {c.status === 'cancelled' && <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={(e) => { e.stopPropagation(); changer(c, 'earned'); }}>{tr('adminSales.comRestore')}</button>}
+      </span>
+    ) }
+  ];
+  const totalAffiche = (rows || []).reduce((s, c) => s + c.amount, 0);
+  return (
+    <div>
+      <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSales.comIntro', { signup: euros(stats?.rules?.signup ?? 20), first: euros(stats?.rules?.first_month ?? 40), retention: euros(stats?.rules?.retention ?? 50), months: stats?.rules?.retentionMonths ?? 7 })}</p>
+      <div className="admin-control-panel">
+        <div className="role-pick" style={{ flexWrap: 'wrap' }}>
+          <button type="button" className={`chip${statut === '' ? ' active' : ''}`} onClick={() => setStatut('')}>{tr('adminSales.comAll')}</button>
+          {COMMISSION_STATUSES.map((s) => <button key={s} type="button" className={`chip${statut === s ? ' active' : ''}`} onClick={() => setStatut(s)}>{tr(`sales.payStatus_${s}`)}{stats?.commissions?.[s]?.n ? ` · ${stats.commissions[s].n}` : ''}</button>)}
+        </div>
+        <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} onClick={rapprocher}>🔄 {tr('adminSales.comReconcile')}</button>
+      </div>
+      {rows && rows.length > 0 && <p className="small" style={{ margin: '0 0 8px' }}>{tr('adminSales.comShownTotal', { n: rows.length, total: euros(totalAffiche) })}</p>}
+      {erreur && <ErrorCard message={erreur} onRetry={charger} />}
+      {rows && <AdminDataTable columns={columns} rows={rows} sort={sort} onSort={toggle} onRowClick={(c) => c.prospectId && setOuvert(c.prospectId)} emptyLabel={tr('adminSales.comEmpty')} />}
+      {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={(s) => `${STAGE_ICONES[s] || ''} ${tr(`sales.stage_${s}`)}`} toast={toast} onClose={() => { setOuvert(null); charger(); }} />}
+    </div>
+  );
+}
+
 function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
   const [p, setP] = useState(null);
-  useEffect(() => { api(`/admin/sales/prospects/${id}`, { token }).then(setP).catch((e) => { toast(e.message); onClose(); }); }, [id, token, toast, onClose]);
+  const [primes, setPrimes] = useState([]);
+  const euros = (n) => new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
+  const chargerPrimes = useCallback(() => { api('/admin/sales/commissions', { token }).then((rows) => setPrimes(rows.filter((c) => c.prospectId === id))).catch(() => {}); }, [token, id]);
+  useEffect(() => { api(`/admin/sales/prospects/${id}`, { token }).then(setP).catch((e) => { toast(e.message); onClose(); }); chargerPrimes(); }, [id, token, toast, onClose, chargerPrimes]);
+  async function ajouterPrime(kind) {
+    try { const r = await api('/admin/sales/commissions', { method: 'POST', token, body: { prospectId: id, kind } }); toast(tr(r.deja ? 'adminSales.comAlready' : 'adminSales.comAdded')); chargerPrimes(); } catch (e) { toast(e.message); }
+  }
   return (
     <RecordDrawer title={p?.name || '…'} subtitle={p ? `${tr('adminSales.colAgent')} : ${p.agentName} · ${p.agentEmail}` : ''} badge={p ? stageLabel(p.stage) : null} onClose={onClose} width={620}>
       {p && (
@@ -286,6 +355,13 @@ function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
           <DrawerRow label={tr('sales.nextActionTitle')} value={fmt(p.nextActionAt)} />
           <DrawerRow label={tr('adminSales.colLinked')} value={p.restaurantName ? `${p.restaurantName} · ${tr(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)}` : '-'} />
           {p.notes && <DrawerRow label={tr('sales.notesTitle')} value={<span style={{ whiteSpace: 'pre-wrap' }}>{p.notes}</span>} />}
+          <h4 style={{ margin: '14px 0 6px' }}>{tr('adminSales.comForProspect')}</h4>
+          {primes.length === 0 ? <p className="small" style={{ margin: '0 0 6px' }}>{tr('adminSales.comEmpty')}</p> : (
+            <ul className="crm-primes" style={{ marginTop: 0 }}>
+              {primes.map((c) => <li key={c.id}><span>{tr(`sales.commission_${c.kind}`)}<br /><span className="small">{fmt(c.paidAt || c.earnedAt || c.dueAt)}</span></span><span className={`crm-prime crm-prime-${c.status}`}>{euros(c.amount)} · {tr(`sales.payStatus_${c.status}`)}</span></li>)}
+            </ul>
+          )}
+          <p className="small" style={{ margin: '0 0 4px' }}>{tr('adminSales.comAddManual')}{['signup', 'first_month', 'retention'].filter((k) => !primes.some((c) => c.kind === k)).map((k) => <button key={k} type="button" className="btn-ghost" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => ajouterPrime(k)}>+ {tr(`sales.commission_${k}`)}</button>)}</p>
           <h4 style={{ margin: '14px 0 6px' }}>{tr('sales.historyTitle')}</h4>
           {p.events.length === 0 ? <p className="small">{tr('sales.noEvents')}</p> : (
             <ol className="crm-historique">

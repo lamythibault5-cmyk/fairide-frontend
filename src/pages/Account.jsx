@@ -187,7 +187,7 @@ export default function Account() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
-  // Commercial Fairide ? (accès donné par l'admin dans Admin › Sales) : décide si la rubrique CRM apparaît. Clients seulement.
+  // Commercial Fairide ? (accès donné par l'admin dans Admin › Sales) : décide si la rubrique Sales apparaît. Clients seulement.
   const [salesEtat, setSalesEtat] = useState(null);
   useEffect(() => {
     if (role !== 'client') return;
@@ -771,10 +771,10 @@ export default function Account() {
           <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />
           {/* Les mini-jeux ont quitté « Mes commandes » pour cette rubrique, juste après l'histoire. */}
           <LigneCompte to="/jeux" icone="manette" titre={t('accountUi.games')} sous={t('accountUi.gamesSub')} />
-          {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique CRM n'apparaît que si l'admin a donné l'accès à ce compte
-              (Admin › Sales). Rien d'autre n'est affiché — un compte client ordinaire ne voit jamais le CRM. */}
+          {/* Commerciaux Fairide (routes/adminSales.js) : la rubrique Sales n'apparaît que si l'admin a donné l'accès à ce compte
+              (Admin › Sales). Rien d'autre n'est affiché — un compte client ordinaire ne voit jamais cette page. */}
           {salesEtat?.agent && (
-            <LigneCompte to="/crm" icone="stats" titre={t('accountUi.salesCrmRow')} sous={t('accountUi.salesCrmSub', { n: salesEtat.stats?.total ?? 0 })} />
+            <LigneCompte to="/sales" icone="stats" titre={t('accountUi.salesCrmRow')} sous={t('accountUi.salesCrmSub', { n: salesEtat.stats?.total ?? 0 })} />
           )}
         </div>
       )}
