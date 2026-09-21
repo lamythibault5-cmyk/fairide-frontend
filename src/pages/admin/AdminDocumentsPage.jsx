@@ -19,6 +19,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
+import urlSure from '../../urlSure';
 
 const PAGE_SIZE = 25;
 const TARGET_TYPES_WITH_PICKER = { restaurant: '/admin/restaurants', driver: '/admin/drivers', client: '/admin/clients' };
@@ -362,7 +363,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       title={d?.title || '…'}
       subtitle={d ? `${DOCUMENT_TYPE_LABELS[d.documentType]} · ${DOCUMENT_TARGET_TYPE_LABELS[d.targetType]} ${d.targetName || ''}` : ''}
       badge={d ? <span className="pill" style={{ color: DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.color }}>{DOCUMENT_VERIFICATION_LABELS[d.verificationStatus]?.label}</span> : null}
-      actions={d ? <a href={d.fileUrl} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
+      actions={d ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" className="btn-outline" style={{ padding: '6px 12px', fontSize: 12, textDecoration: 'none' }}>{tr('adminDocs.viewFile')}</a> : null}
       onClose={onClose} width={560}
     >
       {erreur && <ErrorCard message={erreur} onRetry={load} />}

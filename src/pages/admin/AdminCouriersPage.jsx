@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { api, API_BASE } from '../../api';
+import { api, apiDownload } from '../../api';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort, sortRows } from '../../components/admin/AdminDataTable';
 import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
@@ -15,6 +15,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
 import useEtatPage from '../../hooks/useEtatPage';
+import urlSure from '../../urlSure';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
 // validation, pièces, identité, gains (brut / précompte / net par année et trimestre), contrats, journal ;
@@ -29,12 +30,10 @@ const couleurCycle = (s) => (s === 'approved' ? 'var(--teal-deep)' : ['rejected'
 // Le plafond ne concerne que l'économie collaborative : les autres statuts n'en ont pas.
 const pctPlafond = (r) => (r.statusType === 'p2p' && r.situation && r.situation.type === 'income' ? Math.round(Number(r.situation.pct || 0) * 100) : null);
 
-async function telecharger(path, token, filename) {
-  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) { const data = await res.json().catch(() => ({})); throw new Error(data.error || 'Téléchargement impossible.'); }
-  const blob = await res.blob(); const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
-}
+// apiDownload et non un fetch à la main : c'est ce qui branche ces exports (précompte, DAC7) sur le
+// traitement centralisé du 401. Une session expirée renvoie désormais vers la connexion au lieu
+// d'afficher « Téléchargement impossible » sur une page devenue inerte.
+const telecharger = (path, token, filename) => apiDownload(path, { token, filename });
 
 export default function AdminCouriersPage() {
   const { t: tr } = useLanguage();
@@ -234,7 +233,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {['student_independent', 'independent'].includes(c.statusType) && !entreprise.companyVerified && <button className="btn-outline" style={{ marginTop: 6 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.markCompanyOk'), run: () => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { companyVerified: true } }), tr('adminCouriers.toastCompanyOk')) })}>{tr('adminCouriers.markCompanyOk')}</button>}
           <div className="divider" />
           <h4 className="drawer-section-title">{tr('adminCouriers.secContracts', { n: contracts.length })}</h4>
-          {contracts.map((k) => <div key={k.id} className="small">✍️ {statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={k.pdfUrl} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
+          {contracts.map((k) => <div key={k.id} className="small">✍️ {statut(k.contractType)} {k.version}, {new Date(k.signedAt).toLocaleString(getLocale())}, {k.typedName}, <code>{(k.documentHash || '').slice(0, 12)}…</code>{k.pdfUrl && <>-<a href={urlSure(k.pdfUrl)} target="_blank" rel="noreferrer">PDF</a></>}</div>)}
           {contracts.length === 0 && <p className="small">-</p>}
         </>
       )}
@@ -244,7 +243,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {documents.length === 0 && <p className="small">-</p>}
           {documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
-              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
+              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={urlSure(x.fileUrl)} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
               {!x.verifiedAt && (
                 <span className="row" style={{ gap: 4 }}>
                   <button className="btn-outline" style={{ padding: '2px 10px', fontSize: 12 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.acceptDoc', { doc: tr(`courierOnboarding.doc_${x.docType}`) }), run: () => agir(() => api(`/admin/couriers/${id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } })) })}>✓ {tr('adminCouriers.accept')}</button>

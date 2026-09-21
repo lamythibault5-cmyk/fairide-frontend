@@ -22,6 +22,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import KanbanBoard, { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import useEtatPage from '../../hooks/useEtatPage';
+import urlSure from '../../urlSure';
 
 const PAGE_SIZE = 25;
 const MODES = (tr) => [{ key: 'list', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }, { key: 'kanban', icon: '▦', label: tr('adminKanban.kanban') }];
@@ -506,7 +507,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
           {t.attachments.length === 0 && <div className="small" style={{ opacity: 0.6 }}>{tr('adminSupport.noAttachments')}</div>}
           {t.attachments.map((a) => (
             <div key={a.id} className="row" style={{ justifyContent: 'space-between', padding: '3px 0' }}>
-              <a href={a.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {a.filename}</a>
+              <a href={urlSure(a.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {a.filename}</a>
               <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => setConfirm({ title: tr('adminSupport.confirmDeleteAttachment', { name: a.filename }), danger: true, run: () => removeAttachment(a.id) })}>{tr('adminCommon.delete')}</button>
             </div>
           ))}

@@ -45,6 +45,12 @@ function handleResponse(res, data, hadToken, logoutOn401) {
   const error = new ApiError(data.error || 'Une erreur est survenue.', res.status);
   if (data.code) error.code = data.code;
   if (data.field) error.field = data.field;
+  /* Le corps complet est attaché à l'erreur. Certaines routes répondent en erreur ET renvoient
+     quelque chose d'exploitable : /floor-plan/analyze rend un 422 avec `proposals`, où chaque photo
+     porte la raison de son échec. Sans ça, l'appelant devrait refaire son fetch à la main pour y
+     accéder — c'est exactement ce qu'il faisait, et c'est pour ça qu'il échappait au traitement
+     centralisé du 401. */
+  error.data = data;
   throw error;
 }
 
@@ -79,19 +85,47 @@ export function totalDepuisEntetes(headers, data) {
 // repartirait donc en 401. On récupère donc le binaire par fetch, puis on déclenche l'enregistrement
 // depuis un blob local. L'URL d'objet est révoquée juste après, sinon le blob resterait en mémoire
 // pour toute la durée de vie de l'onglet.
-export async function apiDownload(path, { token, filename }) {
+/* `method`, `body` et `rendreBlob` ont été ajoutés pour que cette fonction couvre TOUS les appels qui
+ * récupèrent autre chose que du JSON. Cinq endroits appelaient `fetch` directement — analyse d'un
+ * plan de salle, export d'agenda, deux aides au téléchargement côté admin, téléchargement de
+ * factures — et chacun redéveloppait sa gestion d'erreur. Aucun ne passait par le traitement
+ * centralisé du 401, donc une session expirée y produisait « Téléchargement impossible » au lieu de
+ * renvoyer vers la connexion : l'utilisateur recliquait, sans comprendre, jusqu'à abandonner.
+ *
+ * `rendreBlob: true` rend le blob à l'appelant au lieu de déclencher l'enregistrement — c'est ce dont
+ * a besoin l'analyse de plan de salle, qui exploite la réponse au lieu de la donner à l'utilisateur. */
+export async function apiDownload(path, { token, filename, method = 'GET', body, rendreBlob = false } = {}) {
   let res;
   try {
-    res = await fetch(API_BASE + path, { headers: token ? { Authorization: 'Bearer ' + token } : {} });
+    const headers = token ? { Authorization: 'Bearer ' + token } : {};
+    // FormData : pas de Content-Type manuel, le navigateur doit poser lui-même sa frontière
+    // (même raison que dans apiUpload plus bas).
+    const estFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    if (body && !estFormData) headers['Content-Type'] = 'application/json';
+    res = await fetch(API_BASE + path, {
+      method,
+      headers,
+      body: body ? (estFormData ? body : JSON.stringify(body)) : undefined
+    });
   } catch {
     throw new Error("Impossible de joindre le serveur Fairide. Réessaie dans un instant.");
   }
   if (!res.ok) {
     // Les erreurs de ces routes restent en JSON même quand le succès est un PDF.
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || 'Téléchargement impossible.');
+    /* Session expirée : même traitement que dans api(). Sans cela, un téléchargement lancé après
+       l'expiration affichait une erreur générique et laissait l'utilisateur sur une page dont plus
+       rien ne fonctionnait, sans jamais le renvoyer vers /login. */
+    if (res.status === 401 && token) {
+      const error = new ApiError(data.code === 'ACCOUNT_DELETED' ? data.error : 'Ta session a expiré. Reconnecte-toi pour continuer.', 401);
+      error.code = data.code;
+      if (onSessionExpired) onSessionExpired(data.code);
+      throw error;
+    }
+    throw new ApiError(data.error || 'Téléchargement impossible.', res.status);
   }
   const blob = await res.blob();
+  if (rendreBlob) return blob;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;

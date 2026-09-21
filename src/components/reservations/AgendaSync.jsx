@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import urlSure from '../../urlSure';
 
 // SYNCHRONISER AVEC SON AGENDA — les réservations Fairide dans l'agenda que le restaurateur regarde déjà
 // (Google Agenda, Apple Calendrier sur iPhone et Mac, Outlook), par un lien d'abonnement iCal privé.
@@ -38,16 +39,16 @@ export default function AgendaSync({ restoId, token, toast }) {
       ) : (
         <>
           <div className="agenda-sync-boutons">
-            <a className="agenda-sync-btn" href={flux.google} target="_blank" rel="noopener noreferrer">
+            <a className="agenda-sync-btn" href={urlSure(flux.google)} target="_blank" rel="noopener noreferrer">
               <b>Google Agenda</b><span>{t('resa.calGoogleSub')}</span>
             </a>
-            <a className="agenda-sync-btn" href={flux.webcal}>
+            <a className="agenda-sync-btn" href={urlSure(flux.webcal)}>
               <b>{t('resa.calApple')}</b><span>{t('resa.calAppleSub')}</span>
             </a>
-            <a className="agenda-sync-btn" href={flux.outlook} target="_blank" rel="noopener noreferrer">
+            <a className="agenda-sync-btn" href={urlSure(flux.outlook)} target="_blank" rel="noopener noreferrer">
               <b>Outlook.com</b><span>{t('resa.calOutlookSub')}</span>
             </a>
-            <a className="agenda-sync-btn" href={flux.outlook365} target="_blank" rel="noopener noreferrer">
+            <a className="agenda-sync-btn" href={urlSure(flux.outlook365)} target="_blank" rel="noopener noreferrer">
               <b>Microsoft 365</b><span>{t('resa.calOutlook365Sub')}</span>
             </a>
           </div>

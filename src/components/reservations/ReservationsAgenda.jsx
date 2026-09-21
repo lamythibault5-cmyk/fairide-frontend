@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { API_BASE, api } from '../../api';
+import { api, apiDownload } from '../../api';
 import ReservationSteps from '../ReservationSteps';
 import FloorPlan, { AREA_ICONS, areaLabel } from '../FloorPlan';
 import { useLanguage } from '../../context/LanguageContext';
@@ -125,12 +125,11 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
 
   async function exporterCsv() {
     try {
-      const res = await fetch(`${API_BASE}/restaurants/${restoId}/reservations/export?date=${date}`, { headers: { Authorization: `Bearer ${token}` } });
-      if (!res.ok) throw new Error(t('resa.exportFailed'));
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `reservations-${date}.csv`; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      // apiDownload : une session expirée renvoie vers la connexion au lieu d'afficher « export
+      // impossible » sur une page dont plus rien ne fonctionne.
+      await apiDownload(`/restaurants/${restoId}/reservations/export?date=${date}`, {
+        token, filename: `reservations-${date}.csv`
+      });
     } catch (e) { toast(e.message); }
   }
 

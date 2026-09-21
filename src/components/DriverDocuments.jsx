@@ -4,6 +4,7 @@ import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import urlSure from '../urlSure';
 
 // « Mes documents » dans Mon compte (livreur) : la pièce d'identité recto / verso déposée à l'inscription
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
@@ -51,7 +52,7 @@ export default function DriverDocuments() {
     return (
       <div className={`doc-slot${d ? ' rempli' : ''}`}>
         <div className="doc-slot-body" style={{ cursor: 'default' }}>
-          {d ? (estImage(d.fileUrl) ? <a href={d.fileUrl} target="_blank" rel="noreferrer"><img className="doc-slot-img" src={d.fileUrl} alt="" /></a> : <a className="doc-slot-vide" href={d.fileUrl} target="_blank" rel="noreferrer" aria-label={t('courierOnboarding.docView')}>📄</a>) : <span className="doc-slot-vide" aria-hidden="true">📷</span>}
+          {d ? (estImage(d.fileUrl) ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer"><img className="doc-slot-img" src={d.fileUrl} alt="" /></a> : <a className="doc-slot-vide" href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" aria-label={t('courierOnboarding.docView')}>📄</a>) : <span className="doc-slot-vide" aria-hidden="true">📷</span>}
           <span className="doc-slot-texte">
             <b>{side === 'recto' ? t('authDocs.front') : t('authDocs.back')}</b>
             {d ? <span className={etat(d).cls} style={{ alignSelf: 'flex-start' }}>{etat(d).ic} {etat(d).txt}</span> : <span className="small">{t('driverDocs.missing')}</span>}
@@ -97,7 +98,7 @@ export default function DriverDocuments() {
         </div>
         {etudiant.map((d) => (
           <div key={d.id} className="small" style={{ marginTop: 4 }}>
-            {etat(d).ic} <a href={d.fileUrl} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a> · {new Date(d.createdAt).toLocaleDateString(getLocale())}
+            {etat(d).ic} <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a> · {new Date(d.createdAt).toLocaleDateString(getLocale())}
             {!d.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} disabled={busy} onClick={() => supprimer(d.id)}>{t('courierOnboarding.docDelete')}</button>}
           </div>
         ))}
@@ -108,7 +109,7 @@ export default function DriverDocuments() {
           <b>{t('driverDocs.others')}</b>
           {autres.map((d) => (
             <div key={d.id} className="small" style={{ marginTop: 4 }}>
-              {etat(d).ic} <a href={d.fileUrl} target="_blank" rel="noreferrer">{t(`courierOnboarding.doc_${d.docType}`)}</a>{d.side ? ` (${d.side === 'recto' ? t('authDocs.front') : t('authDocs.back')})` : ''} · {new Date(d.createdAt).toLocaleDateString(getLocale())}
+              {etat(d).ic} <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer">{t(`courierOnboarding.doc_${d.docType}`)}</a>{d.side ? ` (${d.side === 'recto' ? t('authDocs.front') : t('authDocs.back')})` : ''} · {new Date(d.createdAt).toLocaleDateString(getLocale())}
             </div>
           ))}
         </div>

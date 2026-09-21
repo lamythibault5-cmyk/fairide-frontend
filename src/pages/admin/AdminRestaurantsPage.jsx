@@ -20,6 +20,7 @@ import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import urlSure from '../../urlSure';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
@@ -585,7 +586,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
           {documents && documents.map((doc) => (
             <div key={doc.id} className="drawer-row">
-              <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+              <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
               <span className="small">
                 {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                 {DOCUMENT_TYPE_LABELS[doc.documentType]}
