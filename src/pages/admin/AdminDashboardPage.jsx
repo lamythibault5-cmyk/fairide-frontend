@@ -48,7 +48,7 @@ export default function AdminDashboardPage() {
     if (manuel) setRefreshing(true);
     api(`/admin/dashboard?${params.toString()}`, { token })
       .then((d) => { setData(d); setErreur(null); setChargeA(new Date()); })
-      .catch((e) => { setErreur(e.message); if (data) toast(e.message); })
+      .catch((e) => { setErreur(e.message); if (data) toast(e.message, 'erreur'); })
       .finally(() => setRefreshing(false));
   }
 

@@ -34,7 +34,7 @@ export default function EarningsPage() {
   useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch(() => setDossier({})); }, [token]);
   useEffect(() => {
     setGains(null);
-    api(`/couriers/me/earnings?year=${annee}`, { token }).then(setGains).catch((e) => { toast(e.message); setGains({ year: annee, totals: {}, byMonth: [], lines: [], ceiling: null }); });
+    api(`/couriers/me/earnings?year=${annee}`, { token }).then(setGains).catch((e) => { toast(e.message, 'erreur'); setGains({ year: annee, totals: {}, byMonth: [], lines: [], ceiling: null }); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, annee]);
 

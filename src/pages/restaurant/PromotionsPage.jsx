@@ -32,7 +32,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
       await api(`/restaurants/${restoId}/promotions/fairide`, { method: 'PUT', token, body: value === null ? { off: true } : { mode, value } });
       await loadDashboard(restoId); onChanged?.();
       toast(value === null ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
-    } catch (e) { toast(e.message); } finally { setBusy(''); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(''); }
   }
   async function reglerLivraison(value) {
     setBusy('livraison');
@@ -40,7 +40,7 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
       await api(`/restaurants/${restoId}/delivery-discount`, { method: 'PATCH', token, body: { freeDelivery: false, deliveryFeeDiscount: value, freeDeliveryMinOrder: null } });
       await loadDashboard(restoId);
       toast(value === 0 ? t('promosPage.fairideRemoved') : t('promosPage.fairideSaved'));
-    } catch (e) { toast(e.message); } finally { setBusy(''); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(''); }
   }
 
   return (
@@ -122,7 +122,7 @@ export default function PromotionsPage() {
   const [deletingId, setDeletingId] = useState(null);
 
   function loadPromos() {
-    api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => toast(e.message));
+    api(`/restaurants/${restoId}/promotions/mine`, { token }).then(setPromos).catch((e) => toast(e.message, 'erreur'));
   }
 
   useEffect(() => {
@@ -149,7 +149,7 @@ export default function PromotionsPage() {
       loadPromos();
       toast(t('promosPage.toastCreated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -161,7 +161,7 @@ export default function PromotionsPage() {
       await api(`/promotions/${promo.id}`, { method: 'PATCH', token, body: { active: !promo.active } });
       loadPromos();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setTogglingId(null);
     }
@@ -174,7 +174,7 @@ export default function PromotionsPage() {
       loadPromos();
       toast(t('promosPage.toastDeleted'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setDeletingId(null);
     }

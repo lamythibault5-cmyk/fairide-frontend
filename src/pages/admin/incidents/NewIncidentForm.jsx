@@ -54,7 +54,7 @@ export default function NewIncidentForm({ onCreated, onCancel, presetOrderId = '
       const inc = await api('/admin/incidents', { method: 'POST', token, body: { orderId, type: form.type, responsibility: form.responsibility, priority: form.priority, amount: form.amount === '' ? null : Number(form.amount), description: form.description.trim() } });
       toast(tr('adminIncidents.toastCreated'));
       onCreated(inc);
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return (

@@ -141,7 +141,7 @@ export default function Checkout() {
         setDispo(d);
         setScheduleTime((h) => (h && d.creneaux?.some((c) => c.heure === h && c.disponible) ? h : ''));
       })
-      .catch((e) => { if (!annule) { setDispo(null); toast(e.message); } })
+      .catch((e) => { if (!annule) { setDispo(null); toast(e.message, 'erreur'); } })
       .finally(() => { if (!annule) setDispoChargement(false); });
     return () => { annule = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -262,7 +262,7 @@ export default function Checkout() {
       setDeliveryConfirmed(false);
       setPendingOrder(order);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
     }
@@ -299,7 +299,7 @@ export default function Checkout() {
         window.location.href = pay.checkoutUrl;
       }
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setPaying(false);
     }
   }
@@ -312,7 +312,7 @@ export default function Checkout() {
       setPendingOrder(null);
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCancelling(false);
     }
@@ -664,7 +664,7 @@ export default function Checkout() {
                   onClick={async () => {
                     setGiftCheck('loading');
                     try { setGiftCheck(await api(`/restaurants/${restaurantId}/gift-vouchers/check?code=${encodeURIComponent(giftCode.trim())}`, { token })); }
-                    catch (e) { setGiftCheck(null); toast(e.message); }
+                    catch (e) { setGiftCheck(null); toast(e.message, 'erreur'); }
                   }}>{giftCheck === 'loading' ? '…' : t('checkout.giftVoucherCheck')}</button>
               </div>
               {giftCheck && giftCheck !== 'loading' && (

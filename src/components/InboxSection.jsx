@@ -61,7 +61,7 @@ export default function InboxSection() {
       });
       refresh();
     } catch (e) {
-      toast(e.message); setVue('list');
+      toast(e.message, 'erreur'); setVue('list');
     } finally {
       setChargementFil(false);
     }
@@ -78,7 +78,7 @@ export default function InboxSection() {
       if (payload.body) setReponse('');
       toast(t(payload.reaction ? 'inbox.reacted' : 'inbox.sent'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setEnvoi(false);
     }
@@ -96,7 +96,7 @@ export default function InboxSection() {
       setCourant({ thread: r.thread, messages: [r.message] });
       setVue('thread');
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setEnvoi(false);
     }

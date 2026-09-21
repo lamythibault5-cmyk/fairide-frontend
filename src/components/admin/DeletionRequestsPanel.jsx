@@ -26,7 +26,7 @@ export default function DeletionRequestsPanel({ onHandled }) {
       await api(`/admin/deletion-requests/${id}`, { method: 'PATCH', token, body: { outcome } });
       toast(t(outcome === 'transmis' ? 'adminHome.deletionMarkedSent' : 'adminHome.deletionMarkedDropped'));
       await charger(); onHandled?.();
-    } catch (e) { toast(e.message); } finally { setBusy(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(null); }
   }
 
   const enAttente = (rows || []).filter((r) => r.pending);

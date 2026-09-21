@@ -31,7 +31,7 @@ export default function AdminMenuPage() {
 
   useEffect(() => {
     charger();
-    api(`/admin/restaurants/${id}`, { token }).then((d) => { setFiche(d); setNote(d.concierge?.adminNote || ''); }).catch((e) => toast(e.message));
+    api(`/admin/restaurants/${id}`, { token }).then((d) => { setFiche(d); setNote(d.concierge?.adminNote || ''); }).catch((e) => toast(e.message, 'erreur'));
   }, [id, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function traiter(status) {
@@ -42,7 +42,7 @@ export default function AdminMenuPage() {
       const r = await api(`/admin/restaurants/${id}/menu/concierge/${fiche.concierge.id}`, { method: 'PATCH', token, body });
       setFiche((f) => ({ ...f, concierge: r.request }));
       toast(status === 'terminee' ? tr('adminMenu.toastDone') : tr('adminMenu.toastUpdated'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   const d = fiche?.concierge;

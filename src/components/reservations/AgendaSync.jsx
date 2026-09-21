@@ -21,7 +21,7 @@ export default function AgendaSync({ restoId, token, toast }) {
 
   async function appeler(chemin, options) {
     setOccupe(true);
-    try { setFlux(await api(`/restaurants/${restoId}/calendar-feed${chemin}`, { token, ...options })); setConfirmer(''); return true; } catch (e) { toast(e.message); return false; } finally { setOccupe(false); }
+    try { setFlux(await api(`/restaurants/${restoId}/calendar-feed${chemin}`, { token, ...options })); setConfirmer(''); return true; } catch (e) { toast(e.message, 'erreur'); return false; } finally { setOccupe(false); }
   }
   async function copier() {
     try { await navigator.clipboard.writeText(flux.url); setCopie(true); setTimeout(() => setCopie(false), 2000); } catch { toast(t('resa.copyFailed')); }

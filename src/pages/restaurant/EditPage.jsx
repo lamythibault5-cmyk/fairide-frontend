@@ -172,7 +172,7 @@ export default function EditPage() {
       await loadDashboard(restoId);
       toast(t('editResto.toastUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSavingResto(false);
     }
@@ -193,7 +193,7 @@ export default function EditPage() {
       setNewClosureReason('');
       toast(t('editResto.toastClosureAdded'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setAddingClosure(false);
     }
@@ -205,7 +205,7 @@ export default function EditPage() {
       await api(`/restaurants/${restoId}/closures/${closureId}`, { method: 'DELETE', token });
       await loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setDeletingClosureId(null);
     }
@@ -245,7 +245,7 @@ export default function EditPage() {
       setCuisineCodeSent(true);
       toast(t('editResto.toastCodeSent'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSendingCuisineCode(false);
     }
@@ -272,7 +272,7 @@ export default function EditPage() {
       setReplaceMenuChoice('keep');
       toast(t('editResto.toastTypeUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setChangingCuisine(false);
     }
@@ -285,7 +285,7 @@ export default function EditPage() {
       setDeleteCodeSent(true);
       toast(t('editResto.toastCodeSent'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSendingDeleteCode(false);
     }
@@ -299,7 +299,7 @@ export default function EditPage() {
       toast(t('editResto.toastDeleted'));
       window.location.href = '/dashboard';
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setDeleting(false);
     }
   }
@@ -313,7 +313,7 @@ export default function EditPage() {
       setDriverEmailInput('');
       toast(t('editResto.toastDriverLinked', { name: driver.name }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setLinkingDriver(false);
     }
@@ -326,7 +326,7 @@ export default function EditPage() {
       await loadDashboard(restoId);
       toast(t('editResto.toastDriverRemoved'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setUnlinkingDriverId(null);
     }
@@ -339,7 +339,7 @@ export default function EditPage() {
       await loadDashboard(restoId);
       toast(mode === 'own' ? t('editResto.toastInternalOn') : t('editResto.toastBackToPool'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSwitchingMode(false);
     }
@@ -371,7 +371,7 @@ export default function EditPage() {
       await loadDashboard(restoId);
       toast(t('editResto.toastOfferUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSavingDeliveryOffer(false);
     }

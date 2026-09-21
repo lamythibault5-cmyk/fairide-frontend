@@ -19,7 +19,7 @@ export default function PeppolSettings({ endpoint }) {
   const [ouvert, setOuvert] = useState(false);
 
   useEffect(() => {
-    api(endpoint, { token }).then((d) => { setData(d); setPeppolId(d.peppolId || ''); }).catch((e) => { toast(e.message); setData({ error: true }); });
+    api(endpoint, { token }).then((d) => { setData(d); setPeppolId(d.peppolId || ''); }).catch((e) => { toast(e.message, 'erreur'); setData({ error: true }); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
@@ -30,7 +30,7 @@ export default function PeppolSettings({ endpoint }) {
       setData(d); setPeppolId(d.peppolId || '');
       toast(t('peppol.toastSaved'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }

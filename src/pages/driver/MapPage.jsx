@@ -43,7 +43,7 @@ export default function MapPage() {
 
   useEffect(() => {
     function load() {
-      api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message));
+      api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message, 'erreur'));
     }
     load();
     const interval = setInterval(load, 15000);

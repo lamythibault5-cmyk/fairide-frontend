@@ -22,7 +22,7 @@ export default function InvoicesPage() {
   const [month, setMonth] = useState(currentMonthValue());
 
   useEffect(() => {
-    api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message));
+    api('/orders/mine/deliveries', { token }).then(setOrders).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

@@ -85,7 +85,7 @@ function OverviewTab({ detail, tr, onDeleted, onClose, token, toast }) {
       await api(`/admin/incidents/${detail.id}`, { method: 'DELETE', token });
       toast(tr('adminIncidents.toastDeleted'));
       setConfirmDelete(false); onDeleted?.(); onClose?.();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return (
@@ -165,7 +165,7 @@ function HandlingTab({ detail, tr, token, toast, onSaved }) {
       toast(message || tr('adminIncidents.toastSaved'));
       onSaved(next);
       return true;
-    } catch (e) { toast(e.message); return false; } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
   }
 
   function enregistrer() {
@@ -272,7 +272,7 @@ function RefundTab({ detail, tr, token, toast, onDone }) {
       await api(`/admin/incidents/${detail.id}/refund`, { method: 'POST', token, body: { amount: montant, responsibility, reason: reason.trim() } });
       toast(tr('adminIncidents.toastRefunded', { amount: money(montant) }));
       setConfirm(false); onDone();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return (
@@ -345,7 +345,7 @@ function TicketTab({ detail, tr, token, toast, onDone }) {
       const r = await api(`/admin/incidents/${detail.id}/ticket`, { method: 'POST', token, body });
       toast(tr('adminIncidents.toastTicketLinked', { n: r.ticketNumber || '' }));
       onDone();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   if (detail.ticket) {

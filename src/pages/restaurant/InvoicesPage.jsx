@@ -42,7 +42,7 @@ export default function InvoicesPage() {
     setLoading(true);
     api(`/restaurants/${restoId}/commission-invoice?month=${month}`, { token })
       .then(setInvoice)
-      .catch((e) => toast(e.message))
+      .catch((e) => toast(e.message, 'erreur'))
       .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month, restoId]);
@@ -53,7 +53,7 @@ export default function InvoicesPage() {
       const r = await api(`/restaurants/${restoId}/subscription/portal`, { method: 'POST', token });
       window.location.href = r.url;
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setOpeningPortal(false);
     }
   }
@@ -65,7 +65,7 @@ export default function InvoicesPage() {
       setInvoice((prev) => ({ ...prev, ...r }));
       toast(t('invoicesResto.toastIssued', { number: r.invoiceNumber }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setGenerating(false);
     }

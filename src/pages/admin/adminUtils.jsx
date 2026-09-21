@@ -26,7 +26,7 @@ export function estCompteTest(u) {
 export function TestToggleButton({ userId, isTest, token, api, toast, onChanged, tr, small = false }) {
   return (
     <button type="button" className="btn-ghost" style={small ? { padding: '6px 10px', fontSize: 12 } : undefined}
-      onClick={async () => { try { await api(`/admin/users/${userId}/test`, { method: 'PATCH', token, body: { isTest: !isTest } }); toast(tr(isTest ? 'adminCommon.markedReal' : 'adminCommon.markedTest')); onChanged?.(); } catch (e) { toast(e.message); } }}>
+      onClick={async () => { try { await api(`/admin/users/${userId}/test`, { method: 'PATCH', token, body: { isTest: !isTest } }); toast(tr(isTest ? 'adminCommon.markedReal' : 'adminCommon.markedTest')); onChanged?.(); } catch (e) { toast(e.message, 'erreur'); } }}>
       {isTest ? tr('adminCommon.markReal') : tr('adminCommon.markTest')}
     </button>
   );

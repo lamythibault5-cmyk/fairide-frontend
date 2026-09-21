@@ -55,7 +55,7 @@ export default function ExpensesTab({ token, toast, periodKey, searchParams, go 
       if (kind === 'delete') await api(`/admin/accounting/expenses/${expense.id}`, { method: 'DELETE', token });
       toast(kind === 'post' ? tr('adminAccounting.toastExpensePosted') : kind === 'pay' ? tr('adminAccounting.toastExpensePaid') : tr('adminAccounting.toastExpenseDeleted'));
       state.reload();
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   function exportCsv() {
@@ -171,7 +171,7 @@ function ExpenseForm({ expense, token, toast, onClose, onSaved }) {
       else await api(`/admin/accounting/expenses/${expense.id}`, { method: 'PATCH', token, body });
       toast(isNew ? tr('adminAccounting.toastExpenseCreated') : tr('adminAccounting.toastExpenseSaved'));
       onSaved();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return createPortal(

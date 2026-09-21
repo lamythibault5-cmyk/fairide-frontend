@@ -70,7 +70,7 @@ export default function AdminPromotionsPage() {
       setForm({ code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '' });
       setOuvert(false);
       toast(tr('adminSettings.toastCodeCreated', { code: created.code }));
-    } catch (e) { toast(e.message); } finally { setCreation(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setCreation(false); }
   }
 
   async function patch(p, body) {
@@ -88,7 +88,7 @@ export default function AdminPromotionsPage() {
   async function runConfirmed() {
     if (!confirm) return;
     setBusy(true);
-    try { await confirm.run(); } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    try { await confirm.run(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   function exportCsv() {
@@ -223,7 +223,7 @@ function PromoDrawer({ p, onClose, onPatch, onToggle, onDelete, libelleType, eta
       if (form.expiresAt || p.expiresAt) body.expiresAt = form.expiresAt || null;
       await onPatch(body);
       toast(tr('adminPromos.toastUpdated'));
-    } catch (e) { toast(e.message); } finally { setSaving(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }
 
   return createPortal(

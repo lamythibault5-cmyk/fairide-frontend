@@ -73,7 +73,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
       setResultat({ platform: r.platform, products: r.products, matches, unmatched });
       setSectionsExclues(new Set());
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setAnalysant(false);
     }
@@ -125,7 +125,7 @@ export default function PlatformPhotosImport({ restoId, token, items = [], secti
       onApplied?.(r);
       recommencer();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setAppliquant(false);
     }

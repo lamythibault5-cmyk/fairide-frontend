@@ -87,7 +87,7 @@ export default function AdminReviewsPage() {
       setReviews((prev) => prev.filter((r) => r.id !== aSupprimer.id));
       setTotal((t) => Math.max(0, t - 1));
       toast(tr('adminSettings.toastReviewDeleted'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); setASupprimer(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setASupprimer(null); }
   }
 
   function exportCsv() {

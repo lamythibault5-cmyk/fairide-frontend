@@ -54,7 +54,7 @@ function CoordonneesLegales({ restaurant, onSaved }) {
     try {
       await api(`/restaurants/${restaurant.id}`, { method: 'PATCH', token, body: { legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: vatNumber.trim() } });
       toast(t('paiementResto.legalSaved')); setEdition(false); onSaved?.();
-    } catch (e) { toast(e.message); } finally { setSaving(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }
   return (
     <div className="paiement-encart" style={{ marginBottom: 12 }}>

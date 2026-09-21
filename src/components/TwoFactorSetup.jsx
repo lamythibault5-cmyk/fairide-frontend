@@ -42,7 +42,7 @@ export default function TwoFactorSetup() {
     try {
       const d = await api('/auth/totp/setup', { method: 'POST', token });
       setSecret(d.secret); setOtpauthUrl(d.otpauthUrl); setCode(''); setEtape('preparation');
-    } catch (e) { toast(e.message); } finally { setOccupe(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   async function activer(e) {
@@ -55,7 +55,7 @@ export default function TwoFactorSetup() {
       // Le secret ne doit pas traîner en mémoire une fois l'enrôlement fini.
       setSecret(''); setOtpauthUrl(''); setCode('');
       await refreshUser?.();
-    } catch (e) { toast(e.message); } finally { setOccupe(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   async function retirer(e) {
@@ -69,7 +69,7 @@ export default function TwoFactorSetup() {
       setMotDePasse(''); setCode(''); setEtape('repos');
       toast(t('twofa.removed'));
       await refreshUser?.();
-    } catch (e) { toast(e.message); } finally { setOccupe(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   function copierCodes() {

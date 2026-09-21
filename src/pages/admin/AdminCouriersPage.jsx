@@ -163,7 +163,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [motifDialog, setMotifDialog] = useState(null); // { title, message, label, danger, confirmLabel, required, run(reason) }
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message); } finally { setBusy(false); } }
+  async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
   const statut = (x) => (x && STATUTS.includes(x) ? tr(`courierOnboarding.status_${x}`) : x || '-');
   const c = d?.courier; const s = d?.situation;
   const documents = d?.documents ?? []; const events = d?.events ?? []; const contracts = d?.contracts ?? []; const missing = d?.missing ?? [];
@@ -365,13 +365,13 @@ function Parametres({ tr, token, toast }) {
   const existe = !!lignes?.find((x) => Number(x.year) === Number(annee));
   async function sauver() {
     setBusy(true);
-    try { await api(`/admin/fiscal-config/${annee}`, { method: 'PUT', token, body: versApi(f) }); toast(tr('adminCouriers.toastThresholdsSaved')); const l = await api('/admin/fiscal-config', { token }); setLignes(Array.isArray(l) ? l : (l?.rows ?? [])); } catch (e) { toast(e.message); } finally { setBusy(false); }
+    try { await api(`/admin/fiscal-config/${annee}`, { method: 'PUT', token, body: versApi(f) }); toast(tr('adminCouriers.toastThresholdsSaved')); const l = await api('/admin/fiscal-config', { token }); setLignes(Array.isArray(l) ? l : (l?.rows ?? [])); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   function preparerSuivante() {
     const source = lignes.find((x) => Number(x.year) === derniere);
     setAnnee(derniere + 1); setF(versFormulaire(source ?? null)); toast(tr('adminCouriers.toastYearCreated', { year: derniere + 1 }));
   }
-  async function basculerP2p() { setBusy(true); try { setFlags(await api('/admin/flags', { method: 'PATCH', token, body: { p2p_enabled: !flags.p2p_enabled } })); } catch (e) { toast(e.message); } finally { setBusy(false); setConfirmP2p(false); } }
+  async function basculerP2p() { setBusy(true); try { setFlags(await api('/admin/flags', { method: 'PATCH', token, body: { p2p_enabled: !flags.p2p_enabled } })); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirmP2p(false); } }
   if (erreur) return <ErrorCard message={erreur} onRetry={charger} />;
   if (!lignes || !flags) return <SkeletonCards count={2} />;
   const p2pActif = !!(flags.p2p_enabled ?? flags.p2pEnabled);
@@ -419,7 +419,7 @@ function Precompte({ tr, token, toast }) {
   const [d, setD] = useState(null); const [erreur, setErreur] = useState(null);
   const charger = () => { setErreur(null); setD(null); api(`/admin/couriers/withholding?year=${annee}&month=${mois}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(charger, [annee, mois]); // eslint-disable-line react-hooks/exhaustive-deps
-  const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message));
+  const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
   const parLivreur = d?.byCourier ?? [];
   const mm = String(mois).padStart(2, '0');
   return (
@@ -456,7 +456,7 @@ function Exports({ tr, token, toast }) {
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
   const [annee, setAnnee] = useState(new Date().getFullYear()); const [trim, setTrim] = useState('');
-  const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message));
+  const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
   return (
     <div className="card">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📤 {tr('adminCouriers.exportsTitle')}</h3>

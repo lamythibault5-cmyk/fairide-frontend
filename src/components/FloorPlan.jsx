@@ -168,7 +168,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       setTables?.((liste) => (liste || []).map((x) => (x.id === maj.id ? { ...x, ...maj } : x)));
       setOccVersion((v) => v + 1);
       return maj;
-    } catch (e) { toast(e.message); return null; }
+    } catch (e) { toast(e.message, 'erreur'); return null; }
   }
 
   const choisie = affichees.find((tb) => tb.id === selection) || null;
@@ -312,7 +312,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       const r = await api(`/restaurants/${restoId}/tables/bulk-layout`, { method: 'POST', token, body: { tables: liste, rooms } });
       setTables(r.tables); setSalles(r.rooms); setModifs({}); setModifsSalles({});
       toast(t('floorPlan.toastPlanSaved'));
-    } catch (e) { toast(e.message); } finally { setEnregistrement(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnregistrement(false); }
   }
   async function ajouterTable(salle) {
     setEnCours('ajout');
@@ -326,7 +326,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       });
       setTables((l) => [...(l || []), tb]);
       setSelEl(null); setSelection(tb.id);
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function dupliquer(tb) {
     setEnCours('dup');
@@ -342,7 +342,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       });
       setTables((l) => [...(l || []), copie]);
       setSelection(copie.id);
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   // Confirmations via ConfirmDialog et non window.confirm : les dialogues natifs sont supprimés ou
   // muets dans une PWA installée et dans les webviews — le contexte d'usage d'une tablette de salle.
@@ -355,7 +355,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       if (r.desactivee) { setTables((l) => l.map((x) => (x.id === tb.id ? r.table : x))); toast(t('floorPlan.toastDisabled')); }
       else { setTables((l) => l.filter((x) => x.id !== tb.id)); setSelection(null); toast(t('floorPlan.toastDeleted')); }
       setModifs((m) => { const s = { ...m }; delete s[tb.id]; return s; });
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function modifierTable(tb, champs) {
     setEnCours('patch');
@@ -372,7 +372,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       }
       toast(t('floorPlan.toastTableSaved'));
       return true;
-    } catch (e) { toast(e.message); return false; } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); return false; } finally { setEnCours(null); }
   }
   async function numeroter() {
     if (!confirmation || confirmation.type !== 'num') { setConfirmation({ type: 'num' }); return; }
@@ -382,7 +382,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       const maj = await api(`/restaurants/${restoId}/tables/auto-number`, { method: 'POST', token });
       setTables(maj);
       toast(t('floorPlan.toastNumbered'));
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
 
   // ---- Salles -----------------------------------------------------------------------------------------------
@@ -394,14 +394,14 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       setSalles((l) => [...(l || []), s]);
       setNouvelleSalle(null);
       toast(t('floorPlan.toastRoomCreated', { name: s.name }));
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function patcherSalle(salle, body) {
     try {
       const s = await api(`/restaurants/${restoId}/rooms/${salle.id}`, { method: 'PATCH', token, body });
       setSalles((l) => l.map((x) => (x.id === s.id ? s : x)));
       if (body.kind) setTables((l) => l.map((tb) => (tb.roomId === s.id ? { ...tb, area: s.kind } : tb)));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
   function renommerSalle() {
     const r = renommage;
@@ -422,7 +422,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       setSalles((l) => l.filter((x) => x.id !== salle.id));
       setModifsSalles((m) => { const s = { ...m }; delete s[salle.id]; return s; });
       if (selEl?.roomId === salle.id) setSelEl(null);
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   function ajouterElement(salle, type) {
     const [lm, pm] = ELEMENT_TAILLES_M[type];

@@ -48,7 +48,7 @@ export default function ReservationMessageDialog({ r, restoId, token, toast, res
       setHistorique((h) => ({ ...(h || { smsAvailable: false }), messages: [res, ...((h && h.messages) || [])] }));
       onSent?.(res);
       setModele('libre'); setTexte('');
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   return createPortal(

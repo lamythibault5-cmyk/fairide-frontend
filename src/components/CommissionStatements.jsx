@@ -51,7 +51,7 @@ export default function CommissionStatements() {
     setChargement(true);
     api(requete, { token })
       .then((d) => { setData(d); setOuverts(new Set(d.groups.slice(0, 1).map((g) => g.key))); })
-      .catch((e) => { toast(e.message); setData({ groups: [], totals: { count: 0, sales: 0, commissionHt: 0, vat: 0, ttc: 0, avgRate: 0 } }); })
+      .catch((e) => { toast(e.message, 'erreur'); setData({ groups: [], totals: { count: 0, sales: 0, commissionHt: 0, vat: 0, ttc: 0, avgRate: 0 } }); })
       .finally(() => setChargement(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [requete]);
@@ -59,7 +59,7 @@ export default function CommissionStatements() {
   async function exporter(format) {
     if (!requete) return;
     setTelechargement(format);
-    try { await apiDownload(`${requete}&format=${format}`, { token, filename: `releve-fairide-${periode.from}_${periode.to}.${format}` }); } catch (e) { toast(e.message); } finally { setTelechargement(null); }
+    try { await apiDownload(`${requete}&format=${format}`, { token, filename: `releve-fairide-${periode.from}_${periode.to}.${format}` }); } catch (e) { toast(e.message, 'erreur'); } finally { setTelechargement(null); }
   }
 
   function basculer(key) { setOuverts((s) => { const n = new Set(s); if (n.has(key)) n.delete(key); else n.add(key); return n; }); }

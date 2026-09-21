@@ -34,7 +34,7 @@ export default function PlanModeles({ restoId, token, toast, salles, tables, cib
       onApplique(r);
       toast(t('floorPlan.tplApplied'));
       onFermer();
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   return (

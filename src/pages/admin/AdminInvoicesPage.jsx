@@ -33,15 +33,15 @@ function peppolPill(status, tr) {
 function PeppolStatusCard({ token, toast, tr }) {
   const [etat, setEtat] = useState(null);
   const [busy, setBusy] = useState(false);
-  function load() { api('/admin/peppol/status', { token }).then(setEtat).catch((e) => toast(e.message)); }
+  function load() { api('/admin/peppol/status', { token }).then(setEtat).catch((e) => toast(e.message, 'erreur')); }
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
   async function process() {
     setBusy(true);
-    try { const r = await api('/admin/peppol/process', { method: 'POST', token }); toast(tr('adminInvoices.peppolProcessed', { sent: r.envoyes || 0, errors: r.erreurs || 0, skipped: r.ignores || 0 })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
+    try { const r = await api('/admin/peppol/process', { method: 'POST', token }); toast(tr('adminInvoices.peppolProcessed', { sent: r.envoyes || 0, errors: r.erreurs || 0, skipped: r.ignores || 0 })); load(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   async function test() {
     setBusy(true);
-    try { const r = await api('/admin/peppol/test', { method: 'POST', token }); toast(tr('adminInvoices.peppolTestOk', { num: r.numero, id: r.recipient })); load(); } catch (e) { toast(e.message); } finally { setBusy(false); }
+    try { const r = await api('/admin/peppol/test', { method: 'POST', token }); toast(tr('adminInvoices.peppolTestOk', { num: r.numero, id: r.recipient })); load(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   if (!etat) return <SkeletonCards count={1} />;
   const c = etat.counts?.commission || {};
@@ -212,7 +212,7 @@ function AgedTab({ token, toast }) {
       if (kind === 'remind') { await api(`/admin/invoices/${inv.id}/reminder`, { method: 'POST', token }); toast(tr('adminInvoices.toastReminderSent')); }
       else { await api(`/admin/invoices/${inv.id}/mark-paid`, { method: 'POST', token, body: {} }); toast(tr('adminInvoices.toastMarkedPaid')); }
       state.reload();
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   function exportCsv() {
@@ -282,7 +282,7 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
   const [month, setMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => { api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api('/admin/restaurants', { token }).then(setRestaurants).catch((e) => toast(e.message, 'erreur')); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function generate() {
     if (!restaurantId) { toast(tr('adminCommon.toastChooseRestaurant')); return; }
@@ -292,7 +292,7 @@ function GenerateInvoiceModal({ onClose, onGenerated }) {
       toast(tr('adminInvoices.toastGenerated', { n: inv.invoiceNumber }));
       onGenerated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setGenerating(false);
     }
@@ -335,7 +335,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
   const [showCreditNoteForm, setShowCreditNoteForm] = useState(false);
 
   function load() {
-    api(`/admin/invoices/${id}`, { token }).then(setInv).catch((e) => toast(e.message));
+    api(`/admin/invoices/${id}`, { token }).then(setInv).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -346,7 +346,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
       toast(tr('adminCommon.toastStatusUpdated'));
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
     }
@@ -359,7 +359,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
       toast(tr('adminInvoices.toastSent'));
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
     }
@@ -372,7 +372,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
       toast(tr('adminInvoices.peppolResult', { status: (peppolLabels(tr)[r.status] || {}).texte || r.status }));
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
     }
@@ -382,7 +382,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     try {
       await downloadPdf(`/admin/invoices/${id}/pdf`, token, `${inv.invoiceNumber}.pdf`);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -390,7 +390,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
     try {
       await downloadPdf(`/admin/invoices/${id}/ubl`, token, `${inv.invoiceNumber}.xml`);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -403,7 +403,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
       setShowCreditNoteForm(false); setCreditNoteReason('');
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
       setConfirmAction(null);
@@ -461,8 +461,8 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
                     <div className="row" style={{ gap: 8 }}>
                       <span className="small" style={{ color: 'var(--red)' }}>-{money(cn.totalTtc)}</span>
                       {peppolPill(cn.peppolStatus, tr)}
-                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message))}>PDF</button>
-                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/ubl`, token, `${cn.creditNoteNumber}.xml`).catch((e) => toast(e.message))}>UBL</button>
+                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/pdf`, token, `${cn.creditNoteNumber}.pdf`).catch((e) => toast(e.message, 'erreur'))}>PDF</button>
+                      <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} onClick={() => downloadPdf(`/admin/credit-notes/${cn.id}/ubl`, token, `${cn.creditNoteNumber}.xml`).catch((e) => toast(e.message, 'erreur'))}>UBL</button>
                       <button className="btn-ghost" style={{ padding: '2px 8px', fontSize: 11 }} disabled={busy} onClick={() => sendPeppol('credit-notes', cn.id)}>Peppol</button>
                     </div>
                   </div>
@@ -526,7 +526,7 @@ function DriverStatementsTab({ token, toast }) {
     const params = new URLSearchParams();
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
-    api(`/admin/driver-statements?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message));
+    api(`/admin/driver-statements?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(load, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -534,7 +534,7 @@ function DriverStatementsTab({ token, toast }) {
     try {
       await downloadPdf(`/admin/driver-statements/${st.id}/pdf`, token, `${st.statementNumber}.pdf`);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -583,7 +583,7 @@ function GenerateStatementModal({ onClose, onGenerated }) {
   const [month, setMonth] = useState(() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; });
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message, 'erreur')); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function generate() {
     if (!driverId) { toast(tr('adminCommon.toastChooseDriver')); return; }
@@ -593,7 +593,7 @@ function GenerateStatementModal({ onClose, onGenerated }) {
       toast(tr('adminInvoices.toastStatementGenerated', { n: st.statementNumber }));
       onGenerated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setGenerating(false);
     }
@@ -638,7 +638,7 @@ function SelfBillingTab({ token, toast }) {
     const params = new URLSearchParams();
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
-    api(`/admin/self-billing-invoices?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message));
+    api(`/admin/self-billing-invoices?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(load, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -646,18 +646,18 @@ function SelfBillingTab({ token, toast }) {
     try {
       await downloadPdf(`/admin/self-billing-invoices/${inv.id}/pdf`, token, `${inv.invoiceNumber}.pdf`);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
   async function downloadInvoiceUbl(inv) {
-    try { await downloadPdf(`/admin/self-billing-invoices/${inv.id}/ubl`, token, `${inv.invoiceNumber}.xml`); } catch (e) { toast(e.message); }
+    try { await downloadPdf(`/admin/self-billing-invoices/${inv.id}/ubl`, token, `${inv.invoiceNumber}.xml`); } catch (e) { toast(e.message, 'erreur'); }
   }
   async function sendPeppol(inv) {
     try {
       const r = await api(`/admin/self-billing-invoices/${inv.id}/peppol`, { method: 'POST', token });
       toast(tr('adminInvoices.peppolResult', { status: (peppolLabels(tr)[r.status] || {}).texte || r.status }));
       load();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   async function sendEmail(inv) {
@@ -665,7 +665,7 @@ function SelfBillingTab({ token, toast }) {
       await api(`/admin/self-billing-invoices/${inv.id}/send`, { method: 'POST', token });
       toast(tr('adminInvoices.toastSelfBillingSent'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -722,7 +722,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
   const [savingStatus, setSavingStatus] = useState(false);
   const [generating, setGenerating] = useState(false);
 
-  useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message)); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api('/admin/drivers', { token }).then(setDrivers).catch((e) => toast(e.message, 'erreur')); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!driverId) { setDriver(null); return; }
@@ -730,7 +730,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
       setDriver(d);
       setVatStatus(d.vatStatus || '');
       setVatNumber(d.vatNumber || '');
-    }).catch((e) => toast(e.message));
+    }).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [driverId]);
 
@@ -746,7 +746,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
       setDriver((d) => ({ ...d, ...updated }));
       toast(tr('adminInvoices.toastRegimeSaved'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSavingStatus(false);
     }
@@ -759,7 +759,7 @@ function GenerateSelfBillingModal({ onClose, onGenerated }) {
       toast(tr('adminInvoices.toastSelfBillingGenerated', { n: inv.invoiceNumber }));
       onGenerated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setGenerating(false);
     }

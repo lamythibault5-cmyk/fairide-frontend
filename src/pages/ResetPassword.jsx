@@ -33,7 +33,7 @@ export default function ResetPassword() {
       await resetPassword(token, password);
       setDone(true);
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setLoading(false);
     }

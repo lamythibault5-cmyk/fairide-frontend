@@ -262,7 +262,7 @@ function JournalTab({ token, toast, dateFrom, dateTo, searchParams, go }) {
     try {
       const params = new URLSearchParams({ format: 'csv', period: 'custom', from: dateFrom.slice(0, 10), to: dateTo.slice(0, 10) });
       await downloadPdf(`/admin/accounting/export?${params.toString()}`, token, `export-comptable-${Date.now()}.csv`);
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   const columns = [
@@ -348,7 +348,7 @@ function EntryGroupDrawer({ group, token, toast, onClose, onChanged }) {
       await Promise.all(lines.map((l) => api(`/admin/accounting/entries/${l.id}/status`, { method: 'PATCH', token, body: { status: next } })));
       toast(tr('adminCommon.toastStatusUpdated'));
       onChanged();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   async function reverse() {
     setBusy(true);
@@ -356,7 +356,7 @@ function EntryGroupDrawer({ group, token, toast, onClose, onChanged }) {
       await api(`/admin/accounting/entries/group/${encodeURIComponent(group.key)}/reverse`, { method: 'POST', token, body: { entryDate: todayIso() } });
       toast(tr('adminAccounting.toastReversed'));
       onChanged();
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
   async function remove() {
     setBusy(true);
@@ -364,7 +364,7 @@ function EntryGroupDrawer({ group, token, toast, onClose, onChanged }) {
       await api(`/admin/accounting/entries/group/${encodeURIComponent(group.key)}`, { method: 'DELETE', token });
       toast(tr('adminAccounting.toastDeleted'));
       onChanged();
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   return createPortal(
@@ -441,7 +441,7 @@ function NewEntryDrawer({ token, toast, onClose, onCreated }) {
       } });
       toast(tr('adminAccounting.toastEntryCreated'));
       onCreated();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   const sorted = sortAccounts(accounts.data);

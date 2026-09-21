@@ -56,7 +56,7 @@ export default function AdminTasksPage() {
   const [bulkEmail, setBulkEmail] = useState('');
 
   function loadOverview() {
-    api('/admin/tasks/overview', { token }).then(setOverview).catch((e) => toast(e.message));
+    api('/admin/tasks/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(loadOverview, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id') || searchParams.get('new')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; delete next.new; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ export default function AdminTasksPage() {
       await api(`/admin/tasks/${t.id}/status`, { method: 'PATCH', token, body: { status: 'fait' } });
       refreshAll();
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     }
   }
 
@@ -100,7 +100,7 @@ export default function AdminTasksPage() {
       const r = await api('/admin/tasks/bulk', { method: 'POST', token, body });
       toast(tr('adminCommon.bulkDone', { n: r?.updated ?? sel.count }));
       sel.clear(); refreshAll();
-    } catch (e) { toast(e.message); } finally { setBulkBusy(false); setBulk(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBulkBusy(false); setBulk(null); }
   }
 
   function exportCsv() {
@@ -185,7 +185,7 @@ export default function AdminTasksPage() {
           items={data.rows}
           columnOf={(t) => t.status}
           onOpen={(t) => setSelectedId(t.id)}
-          onMove={async (t, st) => { try { await api(`/admin/tasks/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); refreshAll(); } catch (err) { toast(err.message); } }}
+          onMove={async (t, st) => { try { await api(`/admin/tasks/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); refreshAll(); } catch (err) { toast(err.message, 'erreur'); } }}
           emptyLabel={tr('adminKanban.empty')}
           renderCard={(t) => (
             <>
@@ -253,7 +253,7 @@ function CreateTaskModal({ onClose, onCreated }) {
       toast(tr('adminCommon.toastTaskCreated'));
       onCreated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -318,7 +318,7 @@ function TaskDrawer({ id, onClose, onChanged }) {
       setEditing(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -329,12 +329,12 @@ function TaskDrawer({ id, onClose, onChanged }) {
       await api(`/admin/tasks/${id}/status`, { method: 'PATCH', token, body: { status } });
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
   async function assign(email) {
-    try { await api(`/admin/tasks/${id}`, { method: 'PATCH', token, body: { assignedToEmail: email || null } }); load(); onChanged(); } catch (e) { toast(e.message); }
+    try { await api(`/admin/tasks/${id}`, { method: 'PATCH', token, body: { assignedToEmail: email || null } }); load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); }
   }
 
   async function remove() {
@@ -345,7 +345,7 @@ function TaskDrawer({ id, onClose, onChanged }) {
       onChanged();
       onClose();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false); setConfirmDelete(false);
     }

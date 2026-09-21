@@ -169,7 +169,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       setSelectSectionId(null);
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBulkDeleting(false);
       setConfirmBusy(false);
@@ -189,7 +189,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await api(`/restaurants/${restoId}/menu/reorder`, { method: 'PATCH', token, body: { category: section.name, itemIds: newIds } });
       await loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setLocalOrder((prev) => ({ ...prev, [section.id]: undefined }));
     }
   }
@@ -203,7 +203,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       loadDashboard(restoId);
       toast(t('menuPage.toastDishAdded'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -218,7 +218,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       if (r.translated === 0) toast(t('menuPage.toastAlreadyTranslated'));
       else toast(t('menuPage.toastTranslated', { n: r.translated }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setTranslating(false);
     }
@@ -238,7 +238,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastDishUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -248,7 +248,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await api(`/restaurants/${restoId}/menu/${itemId}`, { method: 'DELETE', token });
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -257,7 +257,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await api(`/restaurants/${restoId}/menu/${itemId}/option-groups`, { method: 'PATCH', token, body: { groupIds } });
       await loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -269,7 +269,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       toast(t('menuPage.toastGroupCreated'));
       return groupe;
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -280,7 +280,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastGroupUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -291,7 +291,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastGroupDeleted'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -301,7 +301,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastSectionCreated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -312,7 +312,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastSectionRenamed'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       throw e;
     }
   }
@@ -333,7 +333,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         setApplySelectedIds(new Set(sectionItems.map((i) => i.id)));
       }
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSectionGalleryFor(null);
     }
@@ -350,7 +350,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       toast(t('menuPage.toastPhotoApplied', { n: res.count }));
       setSectionApplyPanel(null);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setApplyingImage(false);
     }
@@ -414,7 +414,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       toast(t('menuPage.toastSectionDeleted'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirmBusy(false);
       setConfirm(null);
@@ -430,7 +430,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       loadDashboard(restoId);
       toast(t('menuPage.toastDishesAdded', { n: items.length }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setAddingTemplate(false);
     }
@@ -456,7 +456,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       setMethodesOuvertes(true);
       toast(t('menuPage.resetDone', { n: r.deleted }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirmBusy(false); setResetting(false); setConfirm(null);
     }
@@ -477,7 +477,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       loadDashboard(restoId);
       toast(t('menuPage.toastDishesAddedEdit', { n: items.length }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setApplyingStarter(false);
     }
@@ -521,7 +521,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       setImportedItems(r.items);
       try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ }
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
       // Plateforme qui bloque la lecture : on ouvre tout de suite le plan B (copier-coller), sans rien redemander.
       if (/bloque|blocks|blokkeert|403|429/i.test(err.message || '')) { try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ } ouvrirCollage(); }
     } finally {
@@ -539,7 +539,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       setImportedItems(r.items);
       setImportText(''); setImportTextOpen(false);
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setImportingText(false);
     }
@@ -567,7 +567,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       await loadDashboard(restoId);
       setAjustConfirm(false); setAjustPct('');
       toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }));
-    } catch (e) { toast(e.message); } finally { setAjusting(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
   }
 
   async function submitImportedItems(items, replaceExisting, sectionImages = {}) {
@@ -579,7 +579,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       loadDashboard(restoId);
       toast(replaceExisting ? t('menuPage.toastMenuReplaced', { n: items.length }) : t('menuPage.toastImportedAdded', { n: items.length }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSubmittingImport(false);
     }
@@ -594,7 +594,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       loadDashboard(restoId);
       toast(t('menuPage.toastProductsAdded', { n: items.length }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
     }

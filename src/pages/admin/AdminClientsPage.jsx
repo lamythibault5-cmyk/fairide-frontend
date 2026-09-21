@@ -60,7 +60,7 @@ export default function AdminClientsPage() {
     setOnglet('apercu');
     setSelected(c);
     setDetail(null);
-    api(`/admin/clients/${c.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    api(`/admin/clients/${c.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   async function setStatus(id, status) {
@@ -71,7 +71,7 @@ export default function AdminClientsPage() {
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'blocked' ? tr('adminClients.toastSuspended') : tr('adminClients.toastReactivated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -85,7 +85,7 @@ export default function AdminClientsPage() {
     toast(tr('adminClients.toastDeleted', { n: r.deletedOrders || 0 }));
   }
   function askDelete(c) {
-    setConfirmAction({ title: tr('adminClients.confirmDelete', { name: c.name }), message: tr('adminClients.deleteBody', { email: c.email }), danger: true, run: () => deleteClient(c).catch((e) => toast(e.message)) });
+    setConfirmAction({ title: tr('adminClients.confirmDelete', { name: c.name }), message: tr('adminClients.deleteBody', { email: c.email }), danger: true, run: () => deleteClient(c).catch((e) => toast(e.message, 'erreur')) });
   }
   function askReactivate(c) {
     setConfirmAction({ title: tr('adminClients.confirmReactivate', { name: c.name }), run: () => setStatus(c.id, 'approved') });
@@ -111,11 +111,11 @@ export default function AdminClientsPage() {
       toast(tr('adminClients.toastBalanceAdjusted', { balance: money(r.balance) }));
       refreshDetail();
       setSolde(null);
-    } catch (e) { toast(e.message); } finally { setSoldeBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setSoldeBusy(false); }
   }
 
   function refreshDetail() {
-    if (selected) api(`/admin/clients/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    if (selected) api(`/admin/clients/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   function exportCsv() {

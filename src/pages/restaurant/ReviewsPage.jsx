@@ -31,7 +31,7 @@ export default function ReviewsPage() {
       setEditingId(null);
       await loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }

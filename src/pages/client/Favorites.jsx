@@ -22,7 +22,7 @@ export default function Favorites() {
     // Un restaurateur en mode aperçu n'a pas de vrais favoris (403 côté API) — liste vide silencieuse
     // plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => { if (!isPreviewingRestaurant) toast(e.message); }).finally(() => setLoading(false));
+    api('/restaurants/favorites/mine', { token }).then(setRestaurants).catch((e) => { if (!isPreviewingRestaurant) toast(e.message, 'erreur'); }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

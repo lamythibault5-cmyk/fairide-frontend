@@ -137,7 +137,7 @@ export function VatTab({ token, toast, periodKey }) {
 
   async function downloadXml() {
     setBusy(true);
-    try { await downloadPdf(`/admin/accounting/vat-summary/xml?${periodKey}`, token, `declaration-tva-${Date.now()}.xml`); } catch (e) { toast(e.message); } finally { setBusy(false); }
+    try { await downloadPdf(`/admin/accounting/vat-summary/xml?${periodKey}`, token, `declaration-tva-${Date.now()}.xml`); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   function exportCsv() {
     const g = summary.data?.grids;
