@@ -752,7 +752,12 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   position: sticky; top: var(--h-bandeau); z-index: 40;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
   gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
-  background: linear-gradient(to bottom, var(--cream) 78%, rgba(255,255,255,0));
+  /* Fond PLEIN, plus un dégradé qui s'éteignait sur ses 22 derniers pour cent. Cette bande
+     transparente laissait la photo du plat en cours de défilement remonter sous les pilules —
+     c'est le « flou » signalé par le fondateur, avec le backdrop-filter des pilules elles-mêmes.
+     Un dégradé était de toute façon exclu par la spec : les fonds sont blancs ou iris, sans
+     dégradé ni halo (CLAUDE.md). */
+  background: var(--cream);
 }
 /* Conteneur du défilement horizontal des sections (Entrées/Plats/Desserts...) — occupe toute la barre :
    le panier vit désormais uniquement dans FloatingCart (bulle en bas à gauche), plus ici. */
@@ -768,9 +773,15 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    de la navigation, et la navigation porte l'iris comme partout ailleurs.
    Le poids descend de 700 à 500 : DESIGN.md interdit de monter les libellés de contrôle à 700. */
 .category-quicknav button {
-  flex: 0 0 auto; background: rgba(255,255,255,0.95); border: 1px solid var(--line); color: var(--ink);
+  /* Blanc opaque, et plus de backdrop-filter : la pilule était à 95 % d'opacité AVEC un flou
+     derrière, donc ce qui défilait dessous s'y voyait, brouillé. Sur une carte de plats, ce qui
+     défile dessous est une photo de nourriture — d'où l'aplat orangé trouble derrière les
+     libellés. Un fond opaque suffit, et il coûte moins cher : un backdrop-filter force la
+     composition d'un calque à chaque image, sur un élément collant qu'on repeint à tout
+     défilement. */
+  flex: 0 0 auto; background: #fff; border: 1px solid var(--line); color: var(--ink);
   font-size: 14px; font-weight: 500; padding: 9px 16px; border-radius: var(--radius-pill);
-  white-space: nowrap; box-shadow: none; backdrop-filter: blur(3px);
+  white-space: nowrap; box-shadow: none;
   transition: transform .18s ease, background .18s ease, color .18s ease, box-shadow .18s ease;
   min-height: 38px; display: flex; align-items: center;
 }
