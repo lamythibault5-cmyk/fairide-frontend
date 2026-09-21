@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { API_BASE, api } from '../api';
+import { api, apiUpload } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import PlanApercu, { AREAS, AREA_ICONS, areaLabel } from './PlanApercu';
 
@@ -62,12 +62,28 @@ export default function PlanPhotoAssistant({ restoId, token, toast, salles, tabl
     if (!photos.length) return;
     setEtape('analyse');
     try {
-      const fd = new FormData();
-      for (const p of photos) fd.append('photos', await reduire(p.fichier));
-      fd.append('names', JSON.stringify(photos.map((p) => p.nom || '')));
-      const res = await fetch(`${API_BASE}/restaurants/${restoId}/floor-plan/analyze`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok && !data.proposals) throw new Error(data.error || t('floorPlan.aiError'));
+      /* apiUpload plutôt qu'un fetch à la main : cette route répond du JSON, pas un fichier, donc
+         c'est apiUpload et non apiDownload qui convient. Le gain est le même — le traitement
+         centralisé du 401 renvoie vers la connexion au lieu d'afficher « l'analyse a échoué » à
+         quelqu'un dont la session a simplement expiré pendant qu'il choisissait ses photos.
+         `fields` porte la liste des noms ; `files` prend les photos sous le même nom de champ que
+         celui attendu par la route. */
+      let data;
+      try {
+        data = await apiUpload(`/restaurants/${restoId}/floor-plan/analyze`, {
+          token,
+          fieldName: 'photos',
+          files: await Promise.all(photos.map((p) => reduire(p.fichier))),
+          fields: { names: JSON.stringify(photos.map((p) => p.nom || '')) }
+        });
+      } catch (err) {
+        /* La route répond 422 AVEC des propositions quand aucune photo n'a pu être lue : chacune y
+           porte la raison de son échec, et l'écran les affiche une par une. Ce cas n'est donc pas
+           une erreur à remonter telle quelle — on reprend le corps attaché à l'erreur (voir api.js).
+           Toute autre erreur, 401 compris, continue de remonter normalement. */
+        if (!err?.data?.proposals) throw err;
+        data = err.data;
+      }
       // Première proposition : dans la salle ciblée, ou dans une salle encore vide ; les suivantes, de nouvelles salles.
       const salleVide = salles.find((x) => !(tables || []).some((tb) => tb.roomId === x.id) && !(x.elements || []).length);
       const liste = (data.proposals || []).map((p, i) => ({

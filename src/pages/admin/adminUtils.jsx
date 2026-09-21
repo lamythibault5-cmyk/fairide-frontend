@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { API_BASE } from '../../api';
+import { apiDownload } from '../../api';
 import { getLanguage, getLocale } from '../../context/LanguageContext';
 
 // Un compte de test se reconnaît au même motif que le contournement de vérification à l'inscription
@@ -303,20 +303,11 @@ export function useDebouncedValue(value, delayMs = 300) {
 // pattern d'authentification par blob que ClientInvoicesPage.jsx (download Stripe en masse), mais ici un
 // PDF unique par appel plutôt qu'un zip.
 export async function downloadPdf(path, token, filename) {
-  const res = await fetch(`${API_BASE}${path}`, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || { fr: 'Échec du téléchargement.', en: 'Download failed.', nl: 'Downloaden mislukt.' }[getLanguage()]);
-  }
-  const blob = await res.blob();
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  // Passe par apiDownload : c'est ce qui branche ce téléchargement sur le traitement centralisé du
+  // 401. Avant, une session expirée donnait « Échec du téléchargement » et laissait l'administrateur
+  // recliquer indéfiniment sur une page dont plus rien ne marchait, sans jamais le renvoyer vers la
+  // connexion.
+  return apiDownload(path, { token, filename });
 }
 
 export function downloadCsv(filename, rows, columns) {

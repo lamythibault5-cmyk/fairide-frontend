@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { api, API_BASE } from '../../api';
+import { api, apiDownload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import urlSure from '../../urlSure';
 
 // Liste les commandes payées avec un lien vers leur facture Stripe (générée automatiquement au
 // paiement, voir invoice_creation dans routes/payments.js) — rien à générer/héberger nous-mêmes.
@@ -61,24 +62,11 @@ export default function InvoicesPage() {
     if (selected.size === 0) { toast(t('invoicesClient.toastSelectOne')); return; }
     setDownloading(true);
     try {
-      const res = await fetch(`${API_BASE}/orders/invoices/download`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ orderIds: [...selected] })
+      // apiDownload gère désormais POST + corps JSON, et surtout le 401 : un client dont la session a
+      // expiré est renvoyé vers la connexion au lieu de voir « téléchargement impossible ».
+      await apiDownload('/orders/invoices/download', {
+        token, method: 'POST', body: { orderIds: [...selected] }, filename: 'factures-fairide.zip'
       });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || t('invoicesClient.downloadFailed'));
-      }
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'factures-fairide.zip';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
     } catch (e) {
       toast(e.message);
     } finally {
@@ -131,7 +119,7 @@ export default function InvoicesPage() {
                 <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {o.total.toFixed(2)}€</span>
               </div>
               {o.invoiceUrl ? (
-                <a className="btn-ghost" href={o.invoiceUrl} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
+                <a className="btn-ghost" href={urlSure(o.invoiceUrl)} target="_blank" rel="noopener noreferrer">{t('invoicesClient.viewInvoice')}</a>
               ) : (
                 <span className="small" style={{ opacity: 0.6 }}>{t('invoicesClient.unavailable')}</span>
               )}

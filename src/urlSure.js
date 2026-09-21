@@ -15,7 +15,14 @@
  * Renvoie undefined plutôt qu'une chaîne vide quand l'adresse est refusée : un href absent rend un
  * <a> non cliquable, là où href="" rechargerait la page courante.
  */
-const SCHEMAS_AUTORISES = ['http:', 'https:', 'mailto:', 'tel:'];
+/* `webcal:` fait partie de la liste, et ce n'est pas une largesse. C'est le schéma d'abonnement à un
+   calendrier (AgendaSync.jsx : le restaurateur ajoute ses réservations dans Apple Calendar ou
+   Outlook). Le système d'exploitation le remet à une application de calendrier, il n'exécute rien
+   dans la page — au même titre que `mailto:` ou `tel:`, déjà acceptés ici.
+   Il a fallu le constater avant d'appliquer ce contrôle aux liens d'agenda : sans lui, les quatre
+   boutons d'abonnement seraient devenus non cliquables, et la fonctionnalité aurait disparu
+   silencieusement en croyant la sécuriser. */
+const SCHEMAS_AUTORISES = ['http:', 'https:', 'mailto:', 'tel:', 'webcal:'];
 
 export default function urlSure(brut) {
   const s = String(brut || '').trim();

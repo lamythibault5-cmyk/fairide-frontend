@@ -8,6 +8,7 @@ import { dateOuverturePaiements } from '../../launch';
 import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import CourierUsageBar, { niveauxAlerte, libelleNiveaux, euroPlafond } from '../../components/CourierUsageBar';
+import urlSure from '../../urlSure';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
 // indépendant), identité vérifiée (Stripe Identity aujourd'hui, itsme/eID dès le contrat itsme, ou dépôt
@@ -433,7 +434,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
               <p className="small" style={{ margin: '2px 0 0' }}>{t(`courierOnboarding.doc_${type}_help`)}</p>
               {docsDe(type).map((x) => (
                 <div key={x.id} className="small" style={{ marginTop: 4 }}>
-                  {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={x.fileUrl} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a>
+                  {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={urlSure(x.fileUrl)} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a>
                   {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
                   {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
                   {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}

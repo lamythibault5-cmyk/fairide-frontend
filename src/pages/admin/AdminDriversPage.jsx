@@ -20,6 +20,7 @@ import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, NatureChips, natureOk, ProfilLine } from './adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import urlSure from '../../urlSure';
 
 const activityLabels = (tr) => ({
   disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
@@ -343,7 +344,7 @@ export default function AdminDriversPage() {
               {documents && documents.length === 0 && <div className="small">{tr('adminCommon.noDocuments')}</div>}
               {documents && documents.map((doc) => (
                 <div key={doc.id} className="drawer-row">
-                  <a href={doc.fileUrl} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
+                  <a href={urlSure(doc.fileUrl)} target="_blank" rel="noreferrer" className="small">📎 {doc.title}</a>
                   <span className="small">
                     {doc.expiryState && <span style={{ color: DOCUMENT_EXPIRY_LABELS[doc.expiryState].color, marginRight: 6 }}>{DOCUMENT_EXPIRY_LABELS[doc.expiryState].label}</span>}
                     {DOCUMENT_TYPE_LABELS[doc.documentType]}
