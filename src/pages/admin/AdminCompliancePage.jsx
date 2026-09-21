@@ -19,7 +19,11 @@ import useEtatPage from '../../hooks/useEtatPage';
 // mois), export / suppression des données d'un compte, suivi des versions de contrats des partenaires,
 // exports fiscaux (DAC7, 281.29) et politique de rétention. Backend : routes/adminCompliance.js.
 const PAGE_SIZE = 25;
-const TABS = ['requests', 'contracts', 'exports', 'retention'];
+// « registre » = registre des activités de traitement (art. 30 RGPD), à ne pas confondre avec
+// l'onglet « requests », qui est le registre des DEMANDES. Le premier liste ce que Fairide traite,
+// le second ce qu'on lui demande. « dossier » = les pièces de Fairide elle-même (statuts, UBO, AIPD,
+// avis juridique), que le module Documents ne savait pas ranger faute de cible 'fairide'.
+const TABS = ['requests', 'contracts', 'registre', 'dossier', 'exports', 'retention'];
 const TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 const STATUSES = ['received', 'in_progress', 'done', 'rejected'];
 const CHANNELS = ['email', 'form', 'phone', 'other'];
@@ -47,6 +51,8 @@ export default function AdminCompliancePage() {
       </div>
       {onglet === 'requests' && <RequestsTab refreshKey={refreshKey} />}
       {onglet === 'contracts' && <ContractsTab />}
+      {onglet === 'registre' && <RegistreTab />}
+      {onglet === 'dossier' && <DossierTab />}
       {onglet === 'exports' && <ExportsTab />}
       {onglet === 'retention' && <RetentionTab />}
       {showCreate && <CreateRequestModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
@@ -506,6 +512,215 @@ function ExportsTab() {
 // ---------------------------------------------------------------------------------------------------------
 // Onglet « Rétention » : volumes concernés par la politique de conservation, et la politique elle-même.
 // ---------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------------------------
+// Onglet « Registre des traitements » (art. 30 RGPD)
+//
+// Le registre est ASSEMBLÉ côté serveur depuis le code (registreTraitements.js) et depuis la politique
+// de rétention réellement appliquée, pas saisi à la main : un registre tapé dans un document se
+// désynchronise de la plateforme dès la semaine suivante. Cet écran ne fait donc que l'afficher et
+// permettre de le sortir en Markdown — le document qu'on remet le jour d'un contrôle, parce qu'un
+// écran d'administration ne se remet pas.
+// ---------------------------------------------------------------------------------------------------------
+function RegistreTab() {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const toast = useToast();
+  const [data, setData] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [ouvert, setOuvert] = useState(null);
+
+  function load() { setData(null); setErreur(null); api('/admin/compliance/registre', { token }).then(setData).catch((e) => setErreur(e.message)); }
+  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function telecharger() {
+    setBusy(true);
+    try { await downloadPdf('/admin/compliance/registre.md', token, `registre-traitements-${new Date().toISOString().slice(0, 10)}.md`); }
+    catch (e) { toast(e.message); } finally { setBusy(false); }
+  }
+
+  return (
+    <div>
+      {erreur && <ErrorCard message={erreur} onRetry={load} />}
+      {!data && !erreur && <SkeletonCards count={3} />}
+      {data && (
+        <>
+          <div className="card" style={{ marginTop: 0 }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <div style={{ flex: '1 1 320px' }}>
+                <h3 style={{ marginTop: 0, marginBottom: 4 }}>{tr('adminCompliance.registreTitle')}</h3>
+                <p className="small" style={{ opacity: 0.75, margin: 0 }}>
+                  {data.responsable.nom} — {data.responsable.adresse} — BCE {data.responsable.bce}
+                </p>
+              </div>
+              <button className="btn-teal" onClick={telecharger} disabled={busy}>{busy ? '...' : tr('adminCompliance.registreDownload')}</button>
+            </div>
+            <p className="small" style={{ opacity: 0.7, marginTop: 10, marginBottom: 0 }}>{data.avertissement}</p>
+          </div>
+
+          {/* L'AIPD en premier : c'est la seule obligation de cet écran qui soit à la fois certaine,
+              absente, et sanctionnable en elle-même. La reléguer sous les onze traitements reviendrait
+              à la faire lire en dernier. */}
+          {data.aipd?.obligatoire && (
+            <div className="card" style={{ borderColor: 'var(--red)' }}>
+              <h3 style={{ marginTop: 0, color: 'var(--red)' }}>{tr('adminCompliance.aipdRequired')}</h3>
+              <p className="small" style={{ marginTop: 0 }}>{data.aipd.seuil}</p>
+              <ul className="small" style={{ marginBottom: 0 }}>
+                {data.aipd.criteres.map((c) => <li key={c.traitement}><b>{c.traitement}</b> — {c.motif}</li>)}
+              </ul>
+            </div>
+          )}
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>{tr('adminCompliance.registreTraitements')} ({data.traitements.length})</h3>
+            <div className="table-scroll">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{tr('adminCompliance.regCol_nom')}</th>
+                    <th scope="col">{tr('adminCompliance.regCol_base')}</th>
+                    <th scope="col">{tr('adminCompliance.regCol_duree')}</th>
+                    <th scope="col">{tr('adminCompliance.regCol_horsUe')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.traitements.map((t) => (
+                    <tr key={t.cle} style={{ cursor: 'pointer' }} onClick={() => setOuvert(t)}>
+                      <td>
+                        <b>{t.nom}</b>
+                        {t.aipdRequise && <span className="chip" style={{ marginLeft: 6, background: 'var(--red)', color: '#fff' }}>AIPD</span>}
+                        {t.art9 && <span className="chip" style={{ marginLeft: 6 }}>art. 9</span>}
+                      </td>
+                      <td className="small">{t.base}</td>
+                      <td className="small">{t.dureeConservation}</td>
+                      <td>{t.transfertHorsUe ? tr('adminCompliance.yes') : tr('adminCompliance.no')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>{tr('adminCompliance.registreSubprocessors')}</h3>
+            <div className="table-scroll">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{tr('adminCompliance.subCol_nom')}</th>
+                    <th scope="col">{tr('adminCompliance.subCol_role')}</th>
+                    <th scope="col">{tr('adminCompliance.subCol_zone')}</th>
+                    <th scope="col">{tr('adminCompliance.subCol_dpa')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.sousTraitants.map((s) => (
+                    <tr key={s.cle}>
+                      <th scope="row">{s.nom}</th>
+                      <td className="small">{s.role}</td>
+                      <td className="small">{s.zone}{s.mecanisme ? ` — ${s.mecanisme}` : ''}</td>
+                      <td>{s.dpa
+                        ? <span style={{ color: '#2e7d32' }}>{tr('adminCompliance.dpaSigned')}</span>
+                        : <span style={{ color: 'var(--gold-deep)' }}>{tr('adminCompliance.dpaTodo')}</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <h3 style={{ marginTop: 0 }}>{tr('adminCompliance.registreTodo')} ({data.aCompleter.length})</h3>
+            <ul className="small" style={{ marginBottom: 0 }}>
+              {data.aCompleter.map((a) => <li key={a}>{a}</li>)}
+            </ul>
+          </div>
+
+          {ouvert && (
+            <RecordDrawer title={ouvert.nom} onClose={() => setOuvert(null)}>
+              <DrawerRow label={tr('adminCompliance.regCol_finalite')} value={ouvert.finalite} />
+              <DrawerRow label={tr('adminCompliance.regCol_base')} value={ouvert.base} />
+              {ouvert.art9 && <DrawerRow label={tr('adminCompliance.regCol_art9')} value={ouvert.art9} />}
+              <DrawerRow label={tr('adminCompliance.regCol_personnes')} value={ouvert.personnes.join(', ')} />
+              <DrawerRow label={tr('adminCompliance.regCol_donnees')} value={ouvert.donnees.join(' ; ')} />
+              <DrawerRow label={tr('adminCompliance.regCol_destinataires')} value={ouvert.destinataires.length ? ouvert.destinataires.join(', ') : '—'} />
+              <DrawerRow label={tr('adminCompliance.regCol_duree')} value={ouvert.dureeConservation} />
+              <DrawerRow label={tr('adminCompliance.regCol_securite')} value={ouvert.securite.join(' ; ')} />
+              {ouvert.aipdRequise && <DrawerRow label="AIPD" value={ouvert.aipdMotif} />}
+            </RecordDrawer>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------------
+// Onglet « Dossier audit-ready » — les pièces de Fairide elle-même.
+//
+// Rapproche une checklist fixe (DOSSIER_AUDIT, backend) des documents réellement déposés sous la cible
+// 'fairide'. L'intérêt est moins de lister ce qu'on a que de rendre visible ce qu'on n'a pas, tant
+// qu'il est encore facile à obtenir : une pièce déposée le jour où elle est produite coûte quelques
+// minutes, reconstituée deux ans plus tard elle coûte une mission.
+// ---------------------------------------------------------------------------------------------------------
+const SOURCE_LABELS = { guichet: 'Guichet d\'entreprises', interne: 'À produire en interne', avocat: 'Avocat', assureur: 'Assureur', spf: 'SPF Finances' };
+
+function DossierTab() {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const [data, setData] = useState(null);
+  const [erreur, setErreur] = useState(null);
+
+  function load() { setData(null); setErreur(null); api('/admin/compliance/dossier', { token }).then(setData).catch((e) => setErreur(e.message)); }
+  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div>
+      {erreur && <ErrorCard message={erreur} onRetry={load} />}
+      {!data && !erreur && <SkeletonCards count={2} />}
+      {data && (
+        <div className="card" style={{ marginTop: 0 }}>
+          <h3 style={{ marginTop: 0 }}>
+            {tr('adminCompliance.dossierTitle')}{' '}
+            <span style={{ color: data.pret ? '#2e7d32' : 'var(--gold-deep)' }}>{data.completes}/{data.total}</span>
+          </h3>
+          {data.note && <p className="small" style={{ opacity: 0.8, marginTop: 0 }}>{data.note}</p>}
+          <div className="table-scroll">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th scope="col">{tr('adminCompliance.dosCol_piece')}</th>
+                  <th scope="col">{tr('adminCompliance.dosCol_source')}</th>
+                  <th scope="col">{tr('adminCompliance.dosCol_etat')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.pieces.map((p) => (
+                  <tr key={p.cle}>
+                    <th scope="row">
+                      {p.label}
+                      {!p.obligatoire && <span className="chip" style={{ marginLeft: 6 }}>{tr('adminCompliance.dosOptional')}</span>}
+                    </th>
+                    <td className="small">{SOURCE_LABELS[p.source] || p.source}</td>
+                    <td>
+                      {p.present && <span style={{ color: '#2e7d32' }}>✓ {p.deposeLe ? fmtDate(p.deposeLe) : ''}</span>}
+                      {!p.present && p.perime && <span style={{ color: 'var(--red)' }}>{tr('adminCompliance.dosExpired')}</span>}
+                      {!p.present && !p.perime && (
+                        <span style={{ color: p.obligatoire ? 'var(--red)' : 'var(--ink-faint)' }}>{tr('adminCompliance.dosMissing')}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="small" style={{ opacity: 0.7, marginTop: 10, marginBottom: 0 }}>{tr('adminCompliance.dossierHint')}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RetentionTab() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -516,6 +731,9 @@ function RetentionTab() {
   useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lignes = data ? [
+    // En tête : c'est la donnée la plus sensible du système et la seule réellement purgée en continu.
+    // Elle manquait à ce tableau, qui listait tout sauf elle.
+    { key: 'positionsLivreurs', n: data.positionsLivreurs ?? 0 },
     { key: 'deletedAccounts', n: data.deletedAccounts },
     { key: 'anonymisedAccounts', n: data.anonymisedAccounts },
     { key: 'ticketsOlderThan3y', n: data.ticketsOlderThan3y },
