@@ -218,12 +218,16 @@ export default function MenuImportReview({ items: initialItems, existingItemCoun
         <div className="field" style={{ marginBottom: 14 }}>
           <span className="titre-groupe" id="import-existants-titre">{t('menuImport.whatAboutExisting', { n: existingItemCount })}</span>
           <div className="role-pick" style={{ marginBottom: 0 }} role="group" aria-labelledby="import-existants-titre">
-            <div className={`chip${mode === 'append' ? ' active' : ''}`} onClick={() => setMode('append')}>
+            {/* Des <button>, pas des <div onClick> : ces deux pastilles décident si la carte
+                existante est CONSERVÉE ou REMPLACÉE, et elles n'étaient atteignables qu'à la
+                souris. Le rendu ne bouge pas — `.role-pick .chip` fixe déjà fond, bordure,
+                rayon, taille et graisse, et l'emporte sur la règle de base de `button`. */}
+            <button type="button" aria-pressed={mode === 'append'} className={`chip${mode === 'append' ? ' active' : ''}`} onClick={() => setMode('append')}>
               {t('menuImport.keepAndAdd')}
-            </div>
-            <div className={`chip${mode === 'replace' ? ' active' : ''}`} onClick={() => setMode('replace')}>
+            </button>
+            <button type="button" aria-pressed={mode === 'replace'} className={`chip${mode === 'replace' ? ' active' : ''}`} onClick={() => setMode('replace')}>
               {t('menuImport.replaceWithDoc')}
-            </div>
+            </button>
           </div>
           {mode === 'replace' && (
             <p className="small" style={{ color: 'var(--red)', margin: '8px 0 0' }}>
