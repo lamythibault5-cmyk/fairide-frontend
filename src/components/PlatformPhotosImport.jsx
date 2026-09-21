@@ -13,7 +13,7 @@ import { useToast } from '../context/ToastContext';
 //  - « menu » (défaut) : les plats sont ceux de la carte en base (items = restaurant.menu). L'appariement
 //    revient avec parse, et « Appliquer » écrit les photos via /platform-images/apply (réhébergées sur
 //    Cloudinary côté serveur), plus les images de section proposées.
-//  - « review » : les plats sont ceux d'une relecture d'import (MenuImportReview), pas encore en base.
+//  - « review » : les plats ne sont pas encore en base (relecture avant écriture).
 //    parse lit la page, /platform-images/match apparie sur des clés arbitraires, et onMatched(assignments)
 //    rend les photos au parent qui les pose sur ses lignes — rien n'est écrit ici.
 const ACCEPT = '.html,.htm,.mhtml,.mht,.txt,text/html,multipart/related';

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext, Link } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
@@ -17,9 +17,7 @@ import OptionGroupManager from '../../components/OptionGroupManager';
 import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
-import MenuImportStaging, { MenuImportReport } from '../../components/MenuImportStaging';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
-import MenuImportReview from '../../components/MenuImportReview';
 import PlatformPhotosImport from '../../components/PlatformPhotosImport';
 import MenuDrafts from '../../components/MenuDrafts';
 import MenuReadiness from '../../components/MenuReadiness';
@@ -60,24 +58,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const [addingClassicDesserts, setAddingClassicDesserts] = useState(false);
   const [addItemGalleryOpen, setAddItemGalleryOpen] = useState(false);
 
-  const [importing, setImporting] = useState(false);
-  // Non-null dès qu'un brouillon d'import existe pour ce resto (voir MenuImportReview, qui sauvegarde son
-  // état en continu dans sessionStorage) — rouvre directement l'écran de relecture au lieu du bouton
-  // "+ Choisir un fichier" si le restaurateur avait rafraîchi la page en pleine relecture. Le contenu
-  // exact (plats édités, mode remplacer/ajouter) est relu par MenuImportReview lui-même ; ce tableau vide
-  // sert juste de déclencheur de rendu ici.
-  const [importedItems, setImportedItems] = useState(() => (sessionStorage.getItem(`fairide_menu_import_draft_${restoId}`) ? [] : null));
-  // Bilan page par page du dernier import de documents (✅ / ⚠️ trop de plats / ❌ illisible), gardé
-  // visible au-dessus de la relecture pour que le restaurateur sache quelles pages re-photographier.
-  const [importReport, setImportReport] = useState(null);
-  const [submittingImport, setSubmittingImport] = useState(false);
-  // Import depuis le web : site du restaurant, Uber Eats, Deliveroo, Takeaway. L'adresse relevée à
-  // l'inscription (fairide_menu_source_url) est proposée d'office.
-  const [importUrl, setImportUrl] = useState(() => { try { return localStorage.getItem('fairide_menu_source_url') || ''; } catch { return ''; } });
-  const [importingUrl, setImportingUrl] = useState(false);
-  const importUrlRef = useRef(null);
-  const [importText, setImportText] = useState('');
-  const [importTextOpen, setImportTextOpen] = useState(false);
+  // Adresse du site du commerce, relevée à son inscription (DashboardLayout.jsx l'y dépose). Elle sert
+  // à proposer d'office la page de référence dans la demande « Fairide s'en occupe ». Lue seulement :
+  // plus rien ne l'écrit depuis cette page, l'import par lien ayant disparu.
+  const importUrl = (() => { try { return localStorage.getItem('fairide_menu_source_url') || ''; } catch { return ''; } })();
   // Une fois la carte créée, les méthodes de création se replient : la page commence par ce qui compte
   // (la carte telle qu'elle est en ligne) et les outils de modification. Un clic les rouvre pour ajouter des plats.
   const [methodesOuvertes, setMethodesOuvertes] = useState(false);
@@ -91,7 +75,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // disponibles à l'équipe en console admin, qui fait le travail. Le restaurateur garde la modification manuelle de
   // sa carte (étape 2), la traduction et le geste sur les prix (étape 3).
   const autresVisibles = modeAdmin;
-  const [importingText, setImportingText] = useState(false);
   // Photos reprises d'une page Uber Eats / Deliveroo / Takeaway (PlatformPhotosImport) : carte repliée par
   // défaut une fois la carte créée, ouverte d'un clic — l'analyse ne coûte rien mais demande un fichier.
   const [photosOuvertes, setPhotosOuvertes] = useState(false);
@@ -483,72 +466,12 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
-  // Copier-coller guidé : les plateformes (Uber Eats, Deliveroo, Takeaway) bloquent la lecture automatique par lien,
-  // mais le restaurateur, lui, a accès à sa page. On l'ouvre pour lui dans un nouvel onglet, il sélectionne tout,
-  // copie, revient et colle : l'agent IA reconstruit la carte depuis le texte (import-text).
-  const tactile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
-  function urlDeMaPage() {
-    const saisie = importUrl.trim();
-    if (saisie) return /^https?:\/\//i.test(saisie) ? saisie : `https://${saisie}`;
-    try { return localStorage.getItem('fairide_menu_source_url') || restaurant?.website || ''; } catch { return restaurant?.website || ''; }
-  }
-  function ouvrirMaPage() {
-    const url = urlDeMaPage();
-    if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
-    if (!importUrl.trim()) setImportUrl(url);
-    window.open(url, '_blank', 'noopener');
-  }
-  function ouvrirCollage() {
-    setImportTextOpen(true);
-    setTimeout(() => { const el = document.getElementById('menu-import-textarea'); el?.scrollIntoView({ behavior: 'smooth', block: 'center' }); el?.focus(); }, 80);
-  }
-  async function collerDepuisPressePapiers() {
-    try {
-      const texte = await navigator.clipboard.readText();
-      if (!texte || texte.trim().length < 40) { toast(t('menuPage.toastClipboardEmpty')); return; }
-      setImportText(texte);
-      toast(t('menuPage.toastPasted', { n: texte.length }));
-    } catch { toast(t('menuPage.toastClipboardDenied')); }
-  }
-
-  async function handleImportUrl() {
-    const url = importUrl.trim();
-    if (!url) { toast(t('menuPage.toastUrlRequired')); importUrlRef.current?.focus(); return; }
-    setImportingUrl(true);
-    setImportedItems(null);
-    try {
-      const r = await api(`/restaurants/${restoId}/menu/import-url`, { method: 'POST', token, body: { url } });
-      setImportedItems(r.items);
-      try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ }
-    } catch (err) {
-      toast(err.message, 'erreur');
-      // Plateforme qui bloque la lecture : on ouvre tout de suite le plan B (copier-coller), sans rien redemander.
-      if (/bloque|blocks|blokkeert|403|429/i.test(err.message || '')) { try { localStorage.setItem('fairide_menu_source_url', url); } catch { /* rien */ } ouvrirCollage(); }
-    } finally {
-      setImportingUrl(false);
-    }
-  }
-
-  async function handleImportText() {
-    const text = importText.trim();
-    if (text.length < 40) { toast(t('menuPage.toastTextTooShort')); return; }
-    setImportingText(true);
-    setImportedItems(null);
-    try {
-      const r = await api(`/restaurants/${restoId}/menu/import-text`, { method: 'POST', token, body: { text } });
-      setImportedItems(r.items);
-      setImportText(''); setImportTextOpen(false);
-    } catch (err) {
-      toast(err.message, 'erreur');
-    } finally {
-      setImportingText(false);
-    }
-  }
-
-  function allerALImportWeb() {
-    setStartChoiceMade(true);
-    setTimeout(() => { importUrlRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); importUrlRef.current?.focus(); }, 50);
-  }
+  // LE COPIER-COLLER GUIDÉ ET LES DEUX IMPORTS PAR IA ONT ÉTÉ RETIRÉS (2026-09-21).
+  // Ils visaient les pages Uber Eats / Deliveroo / Takeaway. Mesuré depuis : Uber Eats et Takeaway
+  // répondent 403 à toute lecture par un serveur, donc l'import par lien échouait sur les deux
+  // sources les plus fréquentes, et le copier-coller de secours demandait au restaurateur six
+  // gestes pour un résultat incertain. Les cartes se montent maintenant en interne — voir
+  // docs/importer-une-carte.md et scripts/importer-carte.js côté backend.
   function allerAuConcierge() {
     setStartChoiceMade(true);
     setTimeout(() => { document.getElementById('menu-concierge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
@@ -568,21 +491,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       setAjustConfirm(false); setAjustPct('');
       toast(t('menuPage.adjustDone', { n: r.updated, p: `${percent > 0 ? '+' : ''}${percent} %` }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setAjusting(false); }
-  }
-
-  async function submitImportedItems(items, replaceExisting, sectionImages = {}) {
-    if (!items.length) { toast(t('menuPage.toastPickOne')); return; }
-    setSubmittingImport(true);
-    try {
-      await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items, replaceExisting, sectionImages } });
-      setImportedItems(null); setImportReport(null);
-      loadDashboard(restoId);
-      toast(replaceExisting ? t('menuPage.toastMenuReplaced', { n: items.length }) : t('menuPage.toastImportedAdded', { n: items.length }));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setSubmittingImport(false);
-    }
   }
 
   async function addClassics(list, category, setBusy) {
@@ -626,7 +534,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             de travailler. Celle qui ne lui coûte rien occupe donc seule le premier écran, et les
             autres attendent derrière « Je préfère faire ma carte moi-même ».
             Rien n'est retiré : les cinq autres méthodes sont intactes, à un clic. */}
-        {!importedItems && !modeAdmin && (
+        {!modeAdmin && (
           <div className="methode" id="menu-concierge">
             <div className="methode-tete"><h4>{t('menuPage.method1Title')}</h4><span className="pill gold">{t('menuPage.recommendedFree')}</span></div>
             <p className="small methode-sous">{t('menuPage.method1Sub')}</p>
@@ -637,69 +545,14 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         {/* En console admin il n'y a pas de méthode « Fairide crée ma carte » — l'équipe EST Fairide : les méthodes
             d'import sont le sujet de la page. Côté restaurateur, elles n'apparaissent plus. */}
 
-        {autresVisibles && !importedItems && (
-          <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(2)}</span><h4>{t('menuPage.method2Title')}</h4></div>
-            <p className="small methode-sous">{t('menuPage.method2Sub')}</p>
-            <MenuImportStaging restoId={restoId} token={token} disabled={importingUrl || importingText}
-              onBusy={setImporting}
-              onDone={(items, bilans) => { setImportReport(bilans); setImportedItems(items); }} />
-          </div>
-        )}
-        {autresVisibles && !importedItems && (
+        {autresVisibles && (
           <div className="methode">
             <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.methodPhotosTitle')}</h4></div>
             <p className="small methode-sous">{t('menuPage.methodPhotosSub')}</p>
             <PlatformPhotosImport restoId={restoId} token={token} items={restaurant.menu} sections={restaurant.sections || []} onApplied={() => loadDashboard(restoId)} />
           </div>
         )}
-        {autresVisibles && !importedItems && (
-          <div className="menu-import-web methode">
-            <div className="methode-tete"><span className="methode-num">{num(4)}</span><h4>{t('menuPage.method3Title')}</h4></div>
-            <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importUrlIntro')}</p>
-            <div className="menu-import-web-row">
-              <input ref={importUrlRef} id="menu-import-url" type="url" inputMode="url" value={importUrl} onChange={(e) => setImportUrl(e.target.value)}
-                placeholder={t('menuPage.importUrlPlaceholder')} disabled={importingUrl} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleImportUrl(); } }} />
-              <button type="button" className="btn-teal" disabled={importingUrl || importing} onClick={handleImportUrl}>
-                {importingUrl ? t('menuPage.importUrlReading') : t('menuPage.importUrlButton')}
-              </button>
-            </div>
-            <p className="small" style={{ margin: '6px 0 0', opacity: 0.8 }}>{t('menuPage.importUrlHint')}</p>
-            <div className="copier-coller">
-              <b>📋 {t('menuPage.copyPasteTitle')}</b>
-              <p className="small" style={{ margin: '4px 0 8px' }}>{t('menuPage.copyPasteIntro')}</p>
-              <ol className="copier-coller-etapes">
-                <li>{t('menuPage.copyPasteStep1')} <button type="button" className="btn-outline" style={{ padding: '4px 10px', fontSize: 13, marginLeft: 6 }} onClick={ouvrirMaPage}>{t('menuPage.openMyPage')} ↗</button></li>
-                <li>{tactile ? t('menuPage.copyPasteStep2Mobile') : t('menuPage.copyPasteStep2Desktop')}</li>
-                <li>{t('menuPage.copyPasteStep3')} <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 13, marginLeft: 6 }} onClick={ouvrirCollage}>{t('menuPage.copyPasteGo')}</button></li>
-              </ol>
-            </div>
-          </div>
-        )}
-        {autresVisibles && !importedItems && (
-          <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(5)}</span><h4>{t('menuPage.method4Title')}</h4></div>
-            <p className="small methode-sous">{t('menuPage.method4Sub')}</p>
-            <div className="menu-import-text">
-              {!importTextOpen ? (
-                <button type="button" className="btn-outline" onClick={() => setImportTextOpen(true)}>{t('menuPage.importTextOpen2')}</button>
-              ) : (
-                <>
-                  <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.importTextIntro')}</p>
-                  <textarea id="menu-import-textarea" rows={8} value={importText} onChange={(e) => setImportText(e.target.value)} placeholder={t('menuPage.importTextPlaceholder')} disabled={importingText} style={{ width: '100%' }} />
-                  <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
-                    {typeof navigator !== 'undefined' && navigator.clipboard?.readText && (
-                      <button type="button" className="btn-outline" disabled={importingText} onClick={collerDepuisPressePapiers}>📋 {t('menuPage.pasteFromClipboard')}</button>
-                    )}
-                    <button type="button" className="btn-teal" disabled={importingText} onClick={handleImportText}>{importingText ? t('menuPage.importUrlReading') : t('menuPage.importTextButton')}</button>
-                    <button type="button" className="btn-ghost" disabled={importingText} onClick={() => { setImportTextOpen(false); setImportText(''); }}>{t('menuPage.cancel')}</button>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-        {autresVisibles && !importedItems && (
+        {autresVisibles && (
           <div className="methode">
             <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.method5Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
@@ -709,7 +562,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           </div>
         )}
-        {autresVisibles && !importedItems && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
+        {autresVisibles && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
           <div className="methode methode-un-clic">
             <div className="methode-tete"><span className="methode-num">{num(7)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
             <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
@@ -720,18 +573,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </div>
         )}
 
-        {importedItems && importReport && <MenuImportReport bilans={importReport} />}
-        {importedItems && (
-          <MenuImportReview
-            items={importedItems}
-            existingItemCount={restaurant.menu.length}
-            restoId={restoId}
-            restaurant={restaurant}
-            submitting={submittingImport}
-            onSubmit={submitImportedItems}
-            onCancel={() => { setImportedItems(null); setImportReport(null); }}
-          />
-        )}
       </div>
       )}
 
@@ -744,7 +585,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <button className="btn-gold" onClick={allerAuConcierge}>{t('menuPage.quickStartConcierge')}</button>
-              <button className="btn-teal" onClick={allerALImportWeb}>{t('menuPage.quickStartFromWeb')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
                 {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
               </button>

@@ -5,7 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 // sauce, boisson, dessert), un « au choix », des suppléments payants. Forme manipulée, la même que celle
 // envoyée à POST /:id/menu/bulk et gardée dans les brouillons :
 //   [{ name, type: 'single'|'multiple', required, maxSelections: n|null, choices: [{ name, priceDelta }] }]
-// Utilisé à la relecture d'un import (MenuImportReview) ; les modèles servent aussi à l'éditeur de groupes
+// Les modèles servent à l'éditeur de groupes
 // (OptionGroupManager) et à la fiche d'un plat (MenuItemRow) pour partir d'un groupe déjà rempli.
 
 // Modèles de groupes, prêts à ajuster. Les libellés et les choix viennent des traductions
