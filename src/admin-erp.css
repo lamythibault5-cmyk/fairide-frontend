@@ -3,12 +3,9 @@
    (.admin-control-panel, .kanban, .record-drawer, .stat-card…) vivent dans styles.css. */
 
 /* Carte d'erreur : chargement raté d'une liste, ou page qui a planté (AdminErrorBoundary). */
-.admin-error-card { border: 1px solid var(--red); background: rgba(217,45,60,0.05); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
-.admin-error-card .admin-error-icon { font-size: 26px; line-height: 1; }
-.admin-error-card .admin-error-body { flex: 1 1 260px; min-width: 0; }
-.admin-error-card h3 { margin: 0 0 4px; font-size: 15px; color: var(--red); }
-.admin-error-card p { margin: 0 0 10px; }
-.admin-error-card pre { margin: 0 0 10px; font-size: 11px; color: var(--ink-faint); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
+/* La carte d'erreur est partie dans styles.css : cette feuille n'est chargée que par AdminLayout,
+   et le composant sert désormais aussi au tableau de bord livreur, où elle serait arrivée nue.
+   Les deux noms de classes y sont traités, donc AdminErrorBoundary garde le sien. */
 
 /* Barre d'actions groupées : apparaît sous les filtres dès qu'une ligne est cochée. */
 .admin-selection-bar { position: sticky; top: 8px; z-index: 5; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 8px 12px; margin-bottom: 12px; background: rgba(59,47,181,0.08); border: 1px solid var(--iris); border-radius: var(--radius-chip); }

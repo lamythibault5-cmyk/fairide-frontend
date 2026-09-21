@@ -5502,6 +5502,7 @@ export default {
       toCollectOnSite: 'Ter plaatse te innen'
     },
     dashDriver: {
+      loadError: 'Je ritten konden niet worden geladen.',
       today: 'Vandaag',
       available: 'Beschikbaar',
       toPickUp: 'Op te halen',

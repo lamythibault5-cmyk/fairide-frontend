@@ -5514,6 +5514,7 @@ export default {
       toCollectOnSite: 'À encaisser sur place'
     },
     dashDriver: {
+      loadError: 'Impossible de charger tes courses.',
       today: 'Aujourd\'hui',
       available: 'Disponibles',
       toPickUp: 'À récupérer',

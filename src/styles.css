@@ -1238,6 +1238,18 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-titre { font-size: 19px; }
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
+/* CARTE D'ERREUR DE CHARGEMENT (components/ErrorCard.jsx).
+   Déplacée depuis admin-erp.css, qui n'est chargée que par AdminLayout : le composant sert
+   maintenant au livreur et au restaurateur, où ces règles n'existaient pas — il y serait arrivé
+   sans bordure, sans fond et sans espacement. Les deux noms de classes sont traités le temps
+   qu'AdminErrorBoundary garde les siens. Un état d'échec est la seule chose de l'interface qui a
+   le droit d'être rouge sans être un bouton : c'est une couleur de statut, pas de marque. */
+.error-card, .admin-error-card { border: 1px solid var(--red); background: rgba(217,45,60,0.05); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.error-card .error-card-icone, .admin-error-card .admin-error-icon { font-size: 26px; line-height: 1; }
+.error-card .error-card-corps, .admin-error-card .admin-error-body { flex: 1 1 260px; min-width: 0; }
+.error-card h3, .admin-error-card h3 { margin: 0 0 4px; font-size: 15px; color: var(--red); }
+.error-card p, .admin-error-card p { margin: 0 0 10px; }
+.error-card pre, .admin-error-card pre { margin: 0 0 10px; font-size: 11px; color: var(--ink-faint); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
 /* Classe DISTINCTE de .etat-vide-action, qui est posée sur le lien lui-même : y mettre display:flex
    aurait transformé ce lien en bloc et étiré le bouton sur toute la largeur des écrans vides du
    panier, des commandes, des favoris et des factures. Ici c'est une enveloppe, pas un bouton.

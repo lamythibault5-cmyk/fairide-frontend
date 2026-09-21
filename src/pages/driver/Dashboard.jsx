@@ -4,6 +4,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
@@ -28,6 +29,9 @@ export default function DriverDashboard() {
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [erreur, setErreur] = useState(null);
+  // Un ref et non un state : sa valeur est lue dans load(), qui n'est pas re-créée à chaque rendu.
+  const chargeReussieRef = useRef(false);
   const [codeInputs, setCodeInputs] = useState({});
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
@@ -86,8 +90,20 @@ export default function DriverDashboard() {
       ]);
       setAvailable(availableData);
       setMine(mineData);
+      setErreur(null);
+      chargeReussieRef.current = true;
     } catch (e) {
-      toast(e.message);
+      /* UN ÉCHEC NE DOIT PAS SE LIRE COMME « AUCUNE COURSE ».
+         Jusqu'ici l'échec ne posait qu'un toast : `loading` passait à false, la page s'affichait
+         avec des listes vides et le livreur lisait « aucune commande disponible ». C'est un
+         mensonge coûteux — il est payé à la course, et rien ne lui disait de réessayer.
+
+         L'écran d'erreur ne remplace la page QUE tant qu'aucun chargement n'a réussi. Ensuite on
+         garde les données déjà affichées et le toast suffit : la page se recharge toute seule
+         toutes les 15 secondes, et sur un réseau qui clignote (un livreur est en mouvement, c'est
+         le cas normal) la faire basculer en écran d'erreur lui retirerait ses courses des mains. */
+      setErreur(e);
+      if (chargeReussieRef.current) toast(e.message);
     } finally {
       setLoading(false);
     }
@@ -227,6 +243,10 @@ export default function DriverDashboard() {
   }, [available, mine, sharingLocation, lastPositionAt, user?.locationSharingEnabled, setRightSlot]);
 
   if (loading) return <SkeletonCards count={3} />;
+  // Voir load() : seulement tant que rien n'a jamais chargé, sinon on garderait les courses en main.
+  if (erreur && !chargeReussieRef.current) {
+    return <ErrorCard titre={t('dashDriver.loadError')} message={erreur.message} onRetry={() => { setLoading(true); load(); }} />;
+  }
 
   const awaitingPickup = mine.filter((o) => ['preparation', 'pret'].includes(o.status));
   const active = mine.filter((o) => o.status === 'livraison');

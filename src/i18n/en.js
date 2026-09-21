@@ -5502,6 +5502,7 @@ export default {
       toCollectOnSite: 'To collect on site'
     },
     dashDriver: {
+      loadError: 'Your deliveries could not be loaded.',
       today: 'Today',
       available: 'Available',
       toPickUp: 'To pick up',
