@@ -44,8 +44,8 @@ export default function SalesPage() {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(null); // id du prospect ouvert
   const [creation, setCreation] = useState(false);
-  // Vue : mes commerces, ceux des autres commerciaux (lecture seule, pour ne pas démarcher deux fois le même), ou ce
-  // qu'il me reste à faire (prochaines actions du jour et en retard).
+  // Vue : mes commerces, les zones (à faire, à moi, prises par d'autres — fondateur, 21/09 : « pas besoin des noms des
+  // commerces des autres, plutôt les zones »), ou ce qu'il me reste à faire (prochaines actions du jour et en retard).
   const [vue, setVue] = useState('mine');
   // Carte : zones proposées (avec compteurs), commerces des autres commerciaux, zone choisie, carte repliée ou non.
   const [zones, setZones] = useState([]);
@@ -62,7 +62,7 @@ export default function SalesPage() {
     const params = new URLSearchParams(); if (filtre) params.set('stage', filtre); if (recherche.trim()) params.set('q', recherche.trim());
     api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message); });
     api('/sales/zones', { token }).then(setZones).catch(() => {});
-    api('/sales/others', { token }).then(setAutres).catch(() => {});
+    api('/sales/map', { token }).then(setAutres).catch(() => {}); // points gris des autres, sans nom de commerce
     api('/sales/team', { token }).then(setEquipe).catch(() => {});
     api('/sales/commissions', { token }).then((r) => setPrimes(r.commissions)).catch(() => {});
   }, [token, filtre, recherche, toast]);
@@ -77,12 +77,16 @@ export default function SalesPage() {
   // À faire : prochaine action dépassée ou prévue aujourd'hui, hors commerces actifs ou refusés. En retard d'abord.
   const finJournee = useMemo(() => { const d = new Date(); d.setHours(23, 59, 59, 999); return d.getTime(); }, []);
   const aFaire = useMemo(() => (prospects || []).filter((p) => p.nextActionAt && p.nextActionAt <= finJournee && !['actif', 'refuse'].includes(p.stage)).sort((a, b) => a.nextActionAt - b.nextActionAt), [prospects, finJournee]);
-  // Les commerces des autres, filtrés comme les miens (recherche, étape, zone) — côté client, la liste est courte.
-  const autresAffiches = useMemo(() => {
-    const rq = recherche.trim().toLowerCase();
-    return autres.filter((a) => (!filtre || a.stage === filtre) && (!rq || `${a.name} ${a.commune} ${a.agentName}`.toLowerCase().includes(rq))
-      && (!zone || a.lat === null || a.lat === undefined || distanceM(zone.lat, zone.lng, a.lat, a.lng) <= zone.radius));
-  }, [autres, filtre, recherche, zone]);
+  // Zones : je prends / je laisse (une zone = un commercial ; le serveur refuse une zone déjà prise, avec le prénom).
+  const [zoneBusy, setZoneBusy] = useState(false);
+  async function prendreZone(key) {
+    setZoneBusy(true);
+    try { await api(`/sales/zones/${key}/claim`, { method: 'POST', token }); toast(t('sales.toastZoneTaken')); charger(); } catch (e) { toast(e.message); } finally { setZoneBusy(false); }
+  }
+  async function laisserZone(key) {
+    setZoneBusy(true);
+    try { await api(`/sales/zones/${key}/claim`, { method: 'DELETE', token }); toast(t('sales.toastZoneLeft')); charger(); } catch (e) { toast(e.message); } finally { setZoneBusy(false); }
+  }
   // Export CSV de mes commerces (Excel/Numbers l'ouvrent tel quel ; BOM pour les accents).
   function exporterCsv() {
     const col = ['name', 'commune', 'address', 'contactName', 'phone', 'email', 'cuisine', 'stage', 'rating', 'nextActionAt', 'lastEventAt', 'feedback', 'notes'];
@@ -149,7 +153,7 @@ export default function SalesPage() {
         </div>
         {carteVisible && (
           <>
-            <CrmMap prospects={prospects || []} autres={autres.filter((a) => a.lat !== null && a.lat !== undefined)} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} />
+            <CrmMap prospects={prospects || []} autres={autres} zones={zones} zoneActive={zoneActive} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} onZone={setZoneActive} />
             {sansPosition > 0 && <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.noPosition', { n: sansPosition })}</p>}
             <div className="crm-zones">
               <b className="crm-bloc-titre" style={{ marginTop: 10 }}>{t('sales.zonesTitle')}</b>
@@ -158,7 +162,7 @@ export default function SalesPage() {
                 <button type="button" className={`chip${zoneActive === null ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{t('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${t(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
+                    🎯 {z.name}{z.claimedBy ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : z.claimedBy}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
                   </button>
                 ))}
               </div>
@@ -179,6 +183,9 @@ export default function SalesPage() {
         </div>
       )}
 
+      {/* Démarchage : le flyer à toujours avoir sur soi, le pitch, les techniques, la posture Fairide, et quoi faire quand c'est non. */}
+      <GuideCard t={t} />
+
       {/* Rémunération (barème + mes primes) et l'équipe (prénoms, inscrits, gains) : ce qui motive. */}
       <RemunerationCard etat={etat} primes={primes} t={t} euros={euros} fmtDate={fmtJour} />
       <EquipeCard equipe={equipe} t={t} euros={euros} />
@@ -186,11 +193,12 @@ export default function SalesPage() {
       {/* Trois vues : mes commerces, ceux des autres (pour ne pas frapper deux fois à la même porte), à faire. */}
       <div className="role-pick crm-segments" role="tablist" aria-label={t('sales.title')}>
         <button type="button" role="tab" aria-selected={vue === 'mine'} className={`chip${vue === 'mine' ? ' active' : ''}`} onClick={() => setVue('mine')}>{t('sales.viewMine')}{prospects ? ` · ${prospects.length}` : ''}</button>
-        <button type="button" role="tab" aria-selected={vue === 'others'} className={`chip${vue === 'others' ? ' active' : ''}`} onClick={() => setVue('others')}>{t('sales.viewOthers')}{autres.length ? ` · ${autres.length}` : ''}</button>
+        <button type="button" role="tab" aria-selected={vue === 'zones'} className={`chip${vue === 'zones' ? ' active' : ''}`} onClick={() => setVue('zones')}>{t('sales.viewZones')}{zones.length ? ` · ${zones.filter((z) => z.status === 'todo').length} ${t('sales.viewZonesTodo')}` : ''}</button>
         <button type="button" role="tab" aria-selected={vue === 'todo'} className={`chip${vue === 'todo' ? ' active' : ''}${aFaire.length ? ' crm-segment-alerte' : ''}`} onClick={() => setVue('todo')}>{t('sales.viewTodo')}{aFaire.length ? ` · ${aFaire.length}` : ''}</button>
       </div>
-      {vue === 'others' && <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.othersIntro')}</p>}
+      {vue === 'zones' && <ZonesView zones={zones} t={t} busy={zoneBusy} onFocus={(k) => { setZoneActive(k); setCarteVisible(true); document.querySelector('.crm-carte-carte')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }} onClaim={prendreZone} onRelease={laisserZone} />}
 
+      {vue !== 'zones' && (
       <div className="admin-control-panel">
         <div className="field" style={{ margin: 0, flex: '1 1 200px' }}>
           <input type="search" value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder={t('sales.searchPlaceholder')} aria-label={t('sales.searchPlaceholder')} />
@@ -200,30 +208,9 @@ export default function SalesPage() {
           {STAGES.map((s) => <button key={s} type="button" className={`chip${filtre === s ? ' active' : ''}`} onClick={() => setFiltre(s)}>{stageLabel(s)}{etat?.stats?.byStage?.[s] ? ` · ${etat.stats.byStage[s]}` : ''}</button>)}
         </div>
       </div>
-
-      {/* Démarchés par d'autres : lecture seule — nom, commune, étape, qui s'en occupe, dernière action. */}
-      {vue === 'others' && (
-        <div className="crm-liste">
-          {autresAffiches.length === 0 && <div className="card" style={{ gridColumn: '1 / -1' }}><p className="small" style={{ margin: 0 }}>{autres.length ? t('sales.noneFiltered') : t('sales.othersEmpty')}</p></div>}
-          {autresAffiches.map((a) => (
-            <div key={a.id} className={`card crm-carte crm-carte-autre crm-etape-${a.stage}`}>
-              <div className="crm-carte-tete">
-                <b>{a.name}</b>
-                <span className={`crm-badge crm-badge-${a.stage}`}>{stageLabel(a.stage)}</span>
-              </div>
-              <div className="small crm-carte-ligne">
-                <span className="crm-agent">🧑‍💼 {t('sales.othersBy', { agent: a.agentName })}</span>
-                {a.commune && <span>📍 {a.commune}</span>}
-              </div>
-              <div className="small crm-carte-ligne">
-                {a.lastEventAt && <span>{t('sales.lastActivity', { date: fmtDate(a.lastEventAt) })}</span>}
-              </div>
-            </div>
-          ))}
-        </div>
       )}
 
-      {vue !== 'others' && prospects === null && <div className="small">{t('common.loading')}</div>}
+      {vue !== 'zones' && prospects === null && <div className="small">{t('common.loading')}</div>}
       {vue === 'mine' && prospectsAffiches && prospectsAffiches.length === 0 && (
         <div className="card"><p className="small" style={{ margin: 0 }}>{filtre || recherche || zone ? t('sales.noneFiltered') : t('sales.noneYet')}</p></div>
       )}
@@ -497,6 +484,94 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
       </div>
     </div>,
     document.body
+  );
+}
+
+// ----------------------------------------------------------------------------------------------- démarchage
+// Le guide du commercial (fondateur, 2026-09-21) : le flyer Fairide qu'il doit toujours avoir avec lui et laisser au
+// restaurateur, le pitch, les techniques de vente, et la règle d'or — on représente Fairide : si c'est non, on reste
+// pro, on laisse le flyer, on souhaite une bonne journée et on repasse la semaine d'après. Repliable (mémorisé).
+const FLYER_URL = '/docs/flyer-fairide.pdf';
+function GuideCard({ t }) {
+  const [ouvert, setOuvert] = useState(() => { try { return localStorage.getItem('sales_guide') !== 'off'; } catch { return true; } });
+  const basculer = () => setOuvert((v) => { try { localStorage.setItem('sales_guide', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
+  const liste = (cle, n) => Array.from({ length: n }, (_, i) => <li key={i}>{t(`sales.${cle}${i + 1}`)}</li>);
+  return (
+    <div className="card crm-guide">
+      <div className="crm-carte-tete">
+        <div>
+          <b>🗣️ {t('sales.guideTitle')}</b>
+          <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.guideIntro')}</p>
+        </div>
+        <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 13 }} onClick={basculer}>{ouvert ? t('sales.guideHide') : t('sales.guideShow')}</button>
+      </div>
+      <div className="crm-flyer">
+        <div>
+          <b>📄 {t('sales.flyerTitle')}</b>
+          <p className="small" style={{ margin: '2px 0 0' }}>{t('sales.flyerText')}</p>
+        </div>
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+          <a className="btn-gold" href={FLYER_URL} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>{t('sales.flyerOpen')}</a>
+          <a className="btn-outline" href={FLYER_URL} download="flyer-fairide.pdf" style={{ textDecoration: 'none' }}>⬇️ {t('sales.flyerDownload')}</a>
+        </div>
+      </div>
+      {ouvert && (
+        <div className="crm-guide-corps">
+          <div className="crm-guide-bloc crm-guide-regle">
+            <b>⭐ {t('sales.guideRepTitle')}</b>
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.guideRepText')}</p>
+          </div>
+          <div className="crm-guide-bloc">
+            <b>🎒 {t('sales.guideBeforeTitle')}</b>
+            <ul className="small">{liste('guideBefore', 4)}</ul>
+          </div>
+          <div className="crm-guide-bloc">
+            <b>⏱️ {t('sales.guidePitchTitle')}</b>
+            <p className="small crm-guide-pitch">{t('sales.guidePitchText')}</p>
+            <ul className="small">{liste('guidePitch', 4)}</ul>
+          </div>
+          <div className="crm-guide-bloc">
+            <b>🤝 {t('sales.guideTechTitle')}</b>
+            <ul className="small">{liste('guideTech', 6)}</ul>
+          </div>
+          <div className="crm-guide-bloc crm-guide-non">
+            <b>🙂 {t('sales.guideNoTitle')}</b>
+            <ul className="small">{liste('guideNo', 5)}</ul>
+          </div>
+          <div className="crm-guide-bloc">
+            <b>✅ {t('sales.guideYesTitle')}</b>
+            <ul className="small">{liste('guideYes', 4)}</ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ----------------------------------------------------------------------------------------------- zones
+// Les zones à démarcher, réparties entre commerciaux : les miennes, celles à faire (personne dessus, les moins
+// démarchées d'abord), celles prises par d'autres (prénom). Un clic sur le nom cadre la carte sur la zone.
+function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
+  const mine = zones.filter((z) => z.status === 'mine');
+  const todo = zones.filter((z) => z.status === 'todo').sort((a, b) => (a.mine + a.others) - (b.mine + b.others));
+  const taken = zones.filter((z) => z.status === 'taken');
+  const ligne = (z, action) => (
+    <li key={z.key} className={`crm-zone-ligne crm-zone-${z.status}`}>
+      <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}>🎯 <b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
+      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenBy', { agent: z.claimedBy })}` : ''}</span>
+      {action}
+    </li>
+  );
+  return (
+    <div className="crm-zones-vue">
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('sales.zonesViewIntro')}</p>
+      <b className="crm-bloc-titre">🙋 {t('sales.zoneMineGroup')} · {mine.length}</b>
+      {mine.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneMineEmpty')}</p> : <ul className="crm-zone-liste">{mine.map((z) => ligne(z, <button type="button" className="btn-ghost" style={{ fontSize: 13 }} disabled={busy} onClick={() => onRelease(z.key)}>{t('sales.zoneLeave')}</button>))}</ul>}
+      <b className="crm-bloc-titre">📍 {t('sales.zoneTodoGroup')} · {todo.length}</b>
+      {todo.length === 0 ? <p className="small" style={{ margin: '4px 0 12px' }}>{t('sales.zoneTodoEmpty')}</p> : <ul className="crm-zone-liste">{todo.map((z) => ligne(z, <button type="button" className="btn-teal" style={{ fontSize: 13, padding: '6px 12px' }} disabled={busy} onClick={() => onClaim(z.key)}>{t('sales.zoneTake')}</button>))}</ul>}
+      <b className="crm-bloc-titre">🧑‍💼 {t('sales.zoneTakenGroup')} · {taken.length}</b>
+      {taken.length === 0 ? <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.zoneTakenEmpty')}</p> : <ul className="crm-zone-liste">{taken.map((z) => ligne(z, null))}</ul>}
+    </div>
   );
 }
 

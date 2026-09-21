@@ -190,7 +190,13 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   // Lignes affichées : filtre « en retard », puis rayon de la zone choisie (les commerces sans position restent, on ne sait pas où ils sont).
   const lignesRetard = (rows || []).filter((p) => (!retard || enRetard(p)) && (!aujourdhui || duJour(p)));
   const lignes = lignesRetard.filter((p) => !zone || p.lat === null || p.lat === undefined || distanceM(zone.lat, zone.lng, p.lat, p.lng) <= zone.radius);
-  const zoneTooltip = (z) => `${tr('adminSales.zoneTotal', { n: z.total })}${z.agents?.length ? ` · ${z.agents.map((a) => `${a.name} ${a.n}`).join(', ')}` : ''}`;
+  const zoneTooltip = (z) => `${tr('adminSales.zoneTotal', { n: z.total })}${z.claimedBy ? ` · ${tr('adminSales.zoneClaimedBy', { name: z.claimedBy.firstName })}` : ''}${z.agents?.length ? ` · ${z.agents.map((a) => `${a.name} ${a.n}`).join(', ')}` : ''}`;
+  // Attribution d'une zone à un commercial (ou libération) depuis la zone choisie.
+  const [agentsListe, setAgentsListe] = useState([]);
+  useEffect(() => { api('/admin/sales/agents', { token }).then(setAgentsListe).catch(() => {}); }, [token]);
+  async function attribuerZone(key, userId) {
+    try { await api(`/admin/sales/zones/${key}`, { method: 'PUT', token, body: { userId: userId || null } }); toast(tr(userId ? 'adminSales.toastZoneAssigned' : 'adminSales.toastZoneFreed')); charger(); } catch (e) { toast(e.message); }
+  }
   const columns = [
     { key: 'name', label: tr('adminSales.colProspect'), get: (p) => <><b>{p.name}</b>{p.commune ? <><br /><span className="small">{p.commune}</span></> : null}</>, sortValue: (p) => p.name },
     { key: 'stage', label: tr('adminSales.colStage'), get: (p) => <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>, sortValue: (p) => STAGES.indexOf(p.stage) },
@@ -230,11 +236,20 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
                 <button type="button" className={`chip${!zoneActive ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{tr('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${tr(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.total ? <span className="crm-zone-n">{z.total}</span> : null}
+                    🎯 {z.name}{z.claimedBy ? <span className="crm-zone-qui">{z.claimedBy.firstName}</span> : null}{z.total ? <span className="crm-zone-n">{z.total}</span> : null}
                   </button>
                 ))}
               </div>
               {zone && <p className="small" style={{ margin: '8px 0 0' }}>🎯 <b>{zone.name}</b> · {zone.commune} · {tr(`sales.zoneTag_${zone.tag}`)} · {zoneTooltip(zone)}</p>}
+              {zone && (
+                <div className="row" style={{ gap: 8, alignItems: 'center', marginTop: 6, flexWrap: 'wrap' }}>
+                  <label htmlFor="zone-agent" className="small">{tr('adminSales.zoneAssignLabel')}</label>
+                  <select id="zone-agent" value={zone.claimedBy?.userId || ''} onChange={(e) => attribuerZone(zone.key, e.target.value)} style={{ maxWidth: 280 }}>
+                    <option value="">{tr('adminSales.zoneFree')}</option>
+                    {agentsListe.map((ag) => <option key={ag.userId} value={ag.userId}>{ag.name}{ag.isDemo ? ` (${tr('adminSales.demoBadge')})` : ''}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
           </>
         )}

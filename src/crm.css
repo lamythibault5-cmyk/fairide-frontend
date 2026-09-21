@@ -104,6 +104,31 @@ textarea { font: inherit; }
 .crm-equipe-liste li:first-child .crm-equipe-rang { background: #F5B800; color: #fff; }
 .crm-equipe-gain { text-align: right; white-space: nowrap; }
 
+/* Démarchage : flyer en évidence, guide en blocs. */
+.crm-guide { margin-bottom: 14px; }
+.crm-flyer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border: 1px solid #F5B800; border-radius: var(--radius-field); background: #FFFBEA; }
+.crm-guide-corps { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; margin-top: 10px; }
+.crm-guide-bloc { padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: #fff; }
+.crm-guide-bloc ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.crm-guide-regle { grid-column: 1 / -1; border-color: var(--iris); background: #F4F2FF; }
+.crm-guide-non { border-color: #E3F5E8; background: #F6FCF7; }
+.crm-guide-pitch { margin: 6px 0 0; padding: 8px 10px; border-left: 3px solid var(--iris); background: #FAFAFA; font-style: italic; }
+
+/* Zones : qui a pris la zone (sur les chips), et la vue « Zones » (à moi / à faire / prises). */
+.crm-zone-qui { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: #F5B800; color: #1F1F24; font-size: 11px; line-height: 18px; font-weight: 700; }
+.crm-zone-moi { background: var(--iris); color: #fff; }
+.chip.active .crm-zone-qui { background: #fff; color: #1F1F24; }
+.crm-zones-vue .crm-bloc-titre { display: block; margin: 6px 0 4px; }
+.crm-zone-liste { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+.crm-zone-ligne { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.crm-zone-ligne .crm-zone-info { grid-column: 1; }
+.crm-zone-ligne > button:last-child:not(.crm-zone-nom) { grid-column: 2; grid-row: 1 / span 2; }
+.crm-zone-nom { background: none; border: 0; padding: 0; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.crm-zone-nom:hover b { text-decoration: underline; }
+.crm-zone-mine { border-color: var(--iris); background: #F4F2FF; }
+.crm-zone-todo { border-style: dashed; }
+.crm-zone-taken { opacity: .8; }
+
 /* Admin › Sales : agents, prospects, rémunérations. */
 .sales-resultats { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
 .sales-resultats li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; }
