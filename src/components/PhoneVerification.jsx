@@ -28,7 +28,7 @@ export default function PhoneVerification() {
       if (r.alreadyVerified) { await refreshUser(); return; }
       setCanal(r.canal || 'email'); setEtape('envoye');
       toast(r.canal === 'sms' ? t('accountUi.phoneCodeSentSms', { phone: user.phone }) : t('accountUi.phoneCodeSentEmail', { email: user.email }));
-    } catch (e) { toast(e.message); } finally { setOccupe(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   async function confirmer() {
@@ -39,7 +39,7 @@ export default function PhoneVerification() {
       await refreshUser();
       toast(t('accountUi.phoneVerifiedToast'));
       setEtape('repos'); setCode('');
-    } catch (e) { toast(e.message); } finally { setOccupe(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(false); }
   }
 
   return (

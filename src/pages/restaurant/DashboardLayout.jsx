@@ -199,7 +199,7 @@ export default function DashboardLayout() {
           }
         } catch { /* rien */ }
       }
-    }).catch((e) => toast(e.message));
+    }).catch((e) => toast(e.message, 'erreur'));
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast(t('dashResto.toastPaymentsValidating'));
       window.history.replaceState({}, '', '/dashboard');
@@ -254,7 +254,7 @@ export default function DashboardLayout() {
         setErreurChargement({ message: e.message, n: tentatives.current });
         if (tentatives.current < 2) { tentatives.current += 1; setTimeout(() => loadDashboard(id), 2500 * tentatives.current); }
       } else {
-        toast(e.message);
+        toast(e.message, 'erreur');
       }
     }
   }
@@ -368,7 +368,7 @@ export default function DashboardLayout() {
         toast(t('dashResto.toastCreated'));
       }
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -380,7 +380,7 @@ export default function DashboardLayout() {
     } catch (e) {
       // Numéros d'entreprise / TVA manquants : on emmène vers la sous-section Paiement qui les demande.
       if (e.code === 'LEGAL_INFO_REQUIRED' || /LEGAL_INFO_REQUIRED|numéro d'entreprise/i.test(e.message || '')) { toast(t('dashResto.toastLegalFirst')); navigate('/account?ouvrir=paiement&retour=/dashboard'); }
-      else toast(e.message);
+      else toast(e.message, 'erreur');
       setConnecting(false);
     }
   }

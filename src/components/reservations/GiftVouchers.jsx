@@ -94,7 +94,7 @@ function CreationBon({ restoId, token, toast, onDone }) {
       const v = await api(`/restaurants/${restoId}/gift-vouchers`, { method: 'POST', token, body: { ...f, amount: Number(f.amount), expiresAt: f.expiresAt || null } });
       toast(v.emailSent ? t('resa.gvCreatedSent', { email: f.buyerEmail }) : t('resa.gvCreated'));
       onDone(v);
-    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   return (
@@ -155,7 +155,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
 
   useEffect(() => {
     let annule = false;
-    api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { token }).then((d) => { if (!annule) setDetail(d); }).catch((e) => toast(e.message));
+    api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { token }).then((d) => { if (!annule) setDetail(d); }).catch((e) => toast(e.message, 'erreur'));
     return () => { annule = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bon.id]);
@@ -166,17 +166,17 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
       const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/redeem`, { method: 'POST', token, body: { amount: Number(montant), note } });
       setDetail(maj); onChange(maj); setMontant(''); setNote('');
       toast(t('resa.gvRedeemed', { amount: euros(Number(montant)) }));
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function changerStatut(status) {
     setEnCours('statut');
     try { const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { method: 'PATCH', token, body: { status } }); setDetail((d) => ({ ...(d || bon), ...maj })); onChange(maj); toast(status === 'cancelled' ? t('resa.gvCancelled') : t('resa.gvReactivated')); }
-    catch (e) { toast(e.message); } finally { setEnCours(null); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function envoyer() {
     setEnCours('email');
     try { await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/send`, { method: 'POST', token, body: { email } }); toast(t('resa.gvEmailSent', { email })); }
-    catch (e) { toast(e.message); } finally { setEnCours(null); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   function imprimer() {
     const zone = document.getElementById(`bon-print-${bon.id}`);

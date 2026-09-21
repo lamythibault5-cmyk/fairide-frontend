@@ -70,7 +70,7 @@ export default function CampaignForm({ initial, templates, onSaved, onCancel }) 
         ? await api(`/admin/marketing/campaigns/${initial.id}`, { method: 'PATCH', token, body })
         : await api('/admin/marketing/campaigns', { method: 'POST', token, body });
       onSaved(r, !!initial?.id);
-    } catch (e) { toast(e.message); } finally { setSaving(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }
 
   const sujetApercu = personnaliser(form.subject);

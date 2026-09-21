@@ -79,6 +79,15 @@
      cartes de plats sont devenues des ellipses, les photos des cercles. L'alias revient donc à
      un petit rayon de contenant, et la pilule se demande explicitement, là où c'en est une. */
   --radius-chip: var(--radius-field); /* alias historique : petits contenants, vignettes, tuiles */
+  /* Hauteur du bandeau collant du parcours (.flux-entete) : 44px de bouton plus 2 × 6px de
+     rembourrage. Elle vit ici et non sur .flux-entete parce que la barre des sections de la carte
+     s'y accroche pour se poser juste dessous, et qu'elle en est la SŒUR, pas la descendante — une
+     variable CSS descend, elle ne traverse pas latéralement. Un seul endroit où lire le chiffre. */
+  --h-bandeau: 56px;
+  /* Hauteur de la barre des sections de la carte (.category-quicknav) : 8 + 10 de rembourrage et
+     une pilule de 36. Elle sert aux ancres des sections, qui doivent atterrir SOUS les deux
+     barres et non derrière elles. */
+  --h-sections: 54px;
   /* Le rayon intermédiaire d'Uber (rounded.lg). Il manquait : onze règles l'écrivaient en dur à
      12px, et une quinzaine d'autres tâtonnaient autour (9, 10, 11, 14) faute d'un cran entre le
      petit contenant à 8 et la carte à 16. Ce cran existe maintenant. */
@@ -713,14 +722,18 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   background: var(--cream-dim); font-size: 20px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
 }
-.category-header { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; scroll-margin-top: 14px; }
+.category-header { display: flex; align-items: center; gap: 8px; margin: 12px 0 4px; scroll-margin-top: calc(var(--h-bandeau) + var(--h-sections) + 8px); }
 .category-header img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--cream-dim); flex-shrink: 0; }
 .category-header span { font-weight: 700; text-transform: uppercase; letter-spacing: .03em; font-size: 12px; color: var(--ink); }
 
 .sub-category-header { margin: 4px 0 8px; padding-left: 2px; border-left: 3px solid var(--iris); }
 .sub-category-header span { font-weight: 600; font-size: 12.5px; color: var(--ink-soft); padding-left: 8px; }
 
-[id^="menu-cat-"] { scroll-margin-top: 14px; }
+/* 14px suffisait quand rien ne collait au-dessus. Depuis, la barre des sections colle en haut (et
+   depuis le 2026-09-21 le bandeau du parcours colle au-dessus d'elle) : cliquer « Desserts »
+   amenait le titre de la section à zéro, c'est-à-dire DERRIÈRE les barres. La réserve vaut
+   maintenant la pile entière, plus 8px pour que le titre ne touche pas la barre. */
+[id^="menu-cat-"] { scroll-margin-top: calc(var(--h-bandeau) + var(--h-sections) + 8px); }
 
 /* Barre horizontale collée en haut (sticky), pas flottante au milieu de l'écran : la version
    précédente ("position: fixed; top: 50%") se plaçait à mi-hauteur du VIEWPORT quelle que soit la
@@ -729,8 +742,14 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    carrément deux plats de la grille menu, capture d'écran à l'appui). Une barre sticky en haut de page
    pousse le contenu au lieu de flotter par-dessus : elle ne peut plus jamais chevaucher quoi que ce
    soit, quel que soit l'écran ou la position de scroll. */
+/* `top: var(--h-bandeau)` et non plus 0 : le bandeau du parcours (croix, nom, recherche) est
+   devenu collant lui aussi et occupe le haut. Les deux se disputaient sinon la même ligne — et
+   c'est cette barre-ci qui gagnait, puisqu'elle est rendue en premier. Empilés, ils donnent la
+   disposition d'Uber Eats : le geste de sortie au-dessus, la table des matières en dessous.
+   Le seuil de section active de CategoryQuickNav.jsx était un nombre en dur calé sur la hauteur
+   de cette barre seule ; il mesure maintenant son bas réel, et suit donc ce décalage tout seul. */
 .category-quicknav {
-  position: sticky; top: 0; z-index: 40;
+  position: sticky; top: var(--h-bandeau); z-index: 40;
   display: flex; flex-direction: row; align-items: center; justify-content: flex-start;
   gap: 6px; padding: 8px 2px 10px; margin: 0 0 8px;
   background: linear-gradient(to bottom, var(--cream) 78%, rgba(255,255,255,0));
@@ -2238,7 +2257,35 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* En-tête du parcours de commande : la seule sortie de ces pages.
    Géométrie reprise de `button-floating` (DESIGN.md) — fond blanc, texte encre, forme pilule, ombre
    légère — exprimée avec les jetons Fairide, comme l'avaient déjà fait les pastilles du bas. */
-.flux-entete { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-height: 44px; }
+/* LE BANDEAU DU PARCOURS EST COLLANT. Il ne l'était pas : sur téléphone, la croix — la SEULE
+   sortie de ces pages, puisque les onglets du bas s'y effacent — partait vers le haut au premier
+   défilement. Signalé par le fondateur le 2026-09-21 sur la fiche d'un commerce, mais le défaut
+   valait aussi pour le panier et le paiement, qui montent le même composant.
+
+   --h-bandeau est la hauteur qu'il occupe : 44px de bouton plus son rembourrage. La barre des
+   sections de la carte s'y accroche (.category-quicknav) pour se poser JUSTE DESSOUS au lieu de
+   partager la même ligne — c'est ce qui les empile comme chez Uber Eats.
+
+   Un fond opaque est indispensable : sans lui, le contenu de la page défilerait visiblement à
+   travers le bandeau. La couleur est celle de la page, pas du blanc, pour que le raccord ne se
+   voie pas.
+
+   z-index 42 : au-dessus de la barre des sections (40), qui doit passer dessous quand elle
+   s'arrête contre lui. Comme elle, il se pose par-dessus l'en-tête iris du site (z 40) sur la
+   fiche vue par un visiteur non connecté — c'est déjà ce que faisait la barre des sections, et
+   cet en-tête se rétracte de lui-même au défilement (voir useEnteteDefilement). */
+.flux-entete {
+  position: sticky; top: 0; z-index: 42;
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px; min-height: 44px;
+  padding: 6px 0; background: var(--cream);
+}
+/* Les actions poussées contre le bord droit : la croix reste à gauche, le nom prend le milieu. */
+.flux-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; }
+/* Le champ de recherche déplié mange toute la place disponible du bandeau. */
+.flux-actions .fiche-recherche { margin-bottom: 0; width: min(260px, 58vw); }
+/* Estompé, pas démonté : voir EnteteFlux.jsx. La largeur ne bouge donc jamais. */
+.flux-titre--estompe { opacity: 0; pointer-events: none; }
+.flux-titre { transition: opacity .18s ease; }
 .flux-bouton {
   flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
   /* 44px : le minimum tactile, celui que DESIGN.md relève aussi sur les pilules d'Uber. Les

@@ -57,7 +57,7 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
       const maj = await requete();
       if (maj) onMaj(maj);
       onRecharger();
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   const ordre = (chemin, body) => api(`/orders/${r.id}/${chemin}`, { method: 'PATCH', token, body });
   const champ = (body) => api(`/restaurants/${restoId}/reservations/${r.id}`, { method: 'PATCH', token, body });
@@ -71,7 +71,7 @@ export default function ReservationRow({ r, tables, ouverte, onToggle, token, to
       const g = await api(`/restaurants/${restoId}/guests`, { method: 'PUT', token, body: { key, name: r.reservationName, note: fiche.note, tags: fiche.tags } });
       onMaj({ id: r.id, guestNote: g.note, guestTags: g.tags, guestKey: g.key });
       toast(t('resa.guestSaved'));
-    } catch (e) { toast(e.message); } finally { setEnCours(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   const basculerTag = (tag) => setFiche((f) => ({ ...f, tags: f.tags.includes(tag) ? f.tags.filter((x) => x !== tag) : [...f.tags, tag] }));
   const ajouterTagLibre = () => { const v = tagLibre.trim().toLowerCase().slice(0, 30); if (v && !fiche.tags.includes(v)) setFiche((f) => ({ ...f, tags: [...f.tags, v] })); setTagLibre(''); };

@@ -82,7 +82,7 @@ export default function AdminDriversPage() {
     setOnglet('apercu');
     setSelected(d);
     setDetail(null);
-    api(`/admin/drivers/${d.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    api(`/admin/drivers/${d.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
     loadDocuments(d.id);
   }
 
@@ -94,7 +94,7 @@ export default function AdminDriversPage() {
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
       toast(status === 'approved' ? tr('adminDrivers.toastApproved') : status === 'blocked' ? tr('adminDrivers.toastSuspended') : tr('adminCommon.toastStatusUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -115,7 +115,7 @@ export default function AdminDriversPage() {
     toast(tr('adminDrivers.toastDeleted', { n: r.detachedDeliveries ?? r.orders ?? 0 }));
   }
   function askDelete(d) {
-    setConfirmAction({ title: tr('adminDrivers.confirmDelete', { name: d.name }), message: tr('adminDrivers.deleteBody', { email: d.email || '' }), danger: true, run: () => deleteDriver(d).catch((e) => toast(e.message)) });
+    setConfirmAction({ title: tr('adminDrivers.confirmDelete', { name: d.name }), message: tr('adminDrivers.deleteBody', { email: d.email || '' }), danger: true, run: () => deleteDriver(d).catch((e) => toast(e.message, 'erreur')) });
   }
   async function runConfirmed() {
     if (!confirmAction) return;
@@ -124,7 +124,7 @@ export default function AdminDriversPage() {
   }
 
   function refreshDetail() {
-    if (selected) api(`/admin/drivers/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    if (selected) api(`/admin/drivers/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   function exportCsv() {

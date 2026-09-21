@@ -105,7 +105,7 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
       const maj = await api(`/restaurants/${restoId}/tables/${id}`, { method: 'PATCH', token, body: champs });
       setTables((l) => l.map((x) => (x.id === id ? maj : x)));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
       // Valeur refusée (numéro déjà pris…) : on remet ce que le serveur connaît.
       api(`/restaurants/${restoId}/tables`, { token }).then(setTables).catch(() => {});
     } finally { setEnCours(null); }
@@ -121,7 +121,7 @@ function PlanDeSalle({ token, toast, restaurant, restoId, tables, setTables }) {
         setTables((l) => l.filter((x) => x.id !== id));
         toast(t('resa.toastTableDeleted'));
       }
-    } catch (err) { toast(err.message); } finally { setEnCours(null); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setEnCours(null); }
   }
   const local = (id, champs) => setTables((l) => l.map((x) => (x.id === id ? { ...x, ...champs } : x)));
 

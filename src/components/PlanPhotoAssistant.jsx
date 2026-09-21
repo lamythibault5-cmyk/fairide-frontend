@@ -117,7 +117,7 @@ export default function PlanPhotoAssistant({ restoId, token, toast, salles, tabl
       onApplique(r);
       toast(t('floorPlan.aiApplied', { n: aCreer.reduce((a, p) => a + p.tables.length, 0) }));
       onFermer();
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   const messages = [t('floorPlan.aiStep1'), t('floorPlan.aiStep2'), t('floorPlan.aiStep3')];

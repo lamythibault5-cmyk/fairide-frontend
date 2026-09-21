@@ -108,7 +108,7 @@ export default function ReservationSteps({ restaurantId, restaurant, mode = 'cli
     const a = `${mois.annee}-${String(mois.mois + 1).padStart(2, '0')}-${String(new Date(mois.annee, mois.mois + 1, 0).getDate()).padStart(2, '0')}`;
     api(`/restaurants/${restaurantId}/availability-days?from=${de}&to=${a}&partySize=${couvertsRequete}&duration=${resto ? duree : ''}`)
       .then((d) => { if (!annule) setJours(d); })
-      .catch((e) => { if (!annule) { setJours({ jours: [] }); toast(e.message); } });
+      .catch((e) => { if (!annule) { setJours({ jours: [] }); toast(e.message, 'erreur'); } });
     return () => { annule = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId, mois.annee, mois.mois, couvertsRequete, resto ? duree : 0]);
@@ -123,7 +123,7 @@ export default function ReservationSteps({ restaurantId, restaurant, mode = 'cli
         setDispo(d);
         setCreneau((c) => (c && (c.libre || d.creneaux?.some((x) => x.debut === c.debut && (resto || x.disponible))) ? c : null));
       })
-      .catch((e) => { if (!annule) { setDispo({ creneaux: [] }); toast(e.message); } });
+      .catch((e) => { if (!annule) { setDispo({ creneaux: [] }); toast(e.message, 'erreur'); } });
     return () => { annule = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId, date, couvertsRequete, resto ? duree : 0]);
@@ -191,7 +191,7 @@ export default function ReservationSteps({ restaurantId, restaurant, mode = 'cli
       }
       onDone?.(order);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setEnvoi(false);
     }

@@ -167,7 +167,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
       const next = await api(`/admin/compliance/requests/${r.id}`, { method: 'PATCH', token, body });
       appliquer(next);
       toast(message || tr('adminCommon.toastStatusUpdated'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); setRejet(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); setRejet(false); }
   }
 
   async function accuser() {
@@ -176,7 +176,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
       const res = await api(`/admin/compliance/requests/${r.id}/acknowledge`, { method: 'POST', token });
       if (res.request) appliquer(res.request);
       toast(res.sent ? tr('adminCompliance.toastAckSent') : tr('adminCompliance.toastAckNotSent'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   async function exporter() {
@@ -185,7 +185,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
       await downloadPdf(`/admin/compliance/requests/${r.id}/export`, token, `donnees-${r.id}.json`);
       toast(tr('adminCompliance.toastExported'));
       onChanged(null);
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   async function supprimerCompte() {
@@ -194,7 +194,7 @@ function RequestDrawer({ initial, onClose, onChanged }) {
       const res = await api(`/admin/compliance/requests/${r.id}/delete`, { method: 'POST', token });
       if (res.request) appliquer(res.request);
       toast(tr('adminCompliance.toastAccountDeleted'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   const tabs = [{ key: 'overview', label: tr('adminCommon.tabOverview') }, { key: 'process', label: tr('adminCompliance.tabProcess') }];
@@ -288,7 +288,7 @@ function CreateRequestModal({ onClose, onCreated }) {
       await api('/admin/compliance/requests', { method: 'POST', token, body: form });
       toast(tr('adminCompliance.toastCreated'));
       onCreated();
-    } catch (e) { toast(e.message); } finally { setSaving(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setSaving(false); }
   }
 
   return createPortal(
@@ -343,7 +343,7 @@ function ContractsTab() {
     try {
       const r = await api('/admin/compliance/contracts/remind', { method: 'POST', token, body: { target: remind } });
       toast(tr('adminCompliance.toastReminded', { n: r.notified }));
-    } catch (e) { toast(e.message); } finally { setBusy(false); setRemind(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setRemind(null); }
   }
 
   const outdatedCouriers = data ? data.outdated.filter((o) => o.kind === 'courier').length : 0;
@@ -430,7 +430,7 @@ function ExportsTab() {
       if (item.params.includes('quarter') && quarter) params.set('quarter', quarter);
       const nom = `${item.filename.replace('{year}', year)}`.replace('.csv', quarter && item.params.includes('quarter') ? `-T${quarter}.csv` : '.csv');
       await downloadPdf(`${item.path}?${params.toString()}`, token, nom);
-    } catch (e) { toast(e.message); } finally { setBusy(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(null); }
   }
 
   const pct = (n) => `${(Number(n) * 100).toFixed(2).replace('.', ',')} %`;
@@ -536,7 +536,7 @@ function RegistreTab() {
   async function telecharger() {
     setBusy(true);
     try { await downloadPdf('/admin/compliance/registre.md', token, `registre-traitements-${new Date().toISOString().slice(0, 10)}.md`); }
-    catch (e) { toast(e.message); } finally { setBusy(false); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return (

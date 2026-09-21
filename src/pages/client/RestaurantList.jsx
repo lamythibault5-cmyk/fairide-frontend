@@ -176,7 +176,7 @@ export default function RestaurantList() {
   const toast = useToast();
 
   useEffect(() => {
-    api('/restaurants').then(setRestaurants).catch((e) => toast(e.message)).finally(() => setLoading(false));
+    api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
@@ -203,7 +203,7 @@ export default function RestaurantList() {
         setFavoriteIds((prev) => new Set(prev).add(id));
       }
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     }
   }
 

@@ -97,11 +97,11 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
     try {
       await api('/admin/sales/agents', { method: 'POST', token, body: { userId: u.id, label } });
       toast(tr('adminSales.toastAgentAdded', { name: u.name })); setQ(''); setResultats(null); setLabel(''); charger(); onChanged();
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(err.message, 'erreur'); }
   }
   async function retirer() {
     const a = aRetirer; setARetirer(null);
-    try { await api(`/admin/sales/agents/${a.userId}`, { method: 'DELETE', token }); toast(tr('adminSales.toastAgentRemoved', { name: a.name })); charger(); onChanged(); } catch (err) { toast(err.message); }
+    try { await api(`/admin/sales/agents/${a.userId}`, { method: 'DELETE', token }); toast(tr('adminSales.toastAgentRemoved', { name: a.name })); charger(); onChanged(); } catch (err) { toast(err.message, 'erreur'); }
   }
 
   const columns = [
@@ -195,7 +195,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
   const [agentsListe, setAgentsListe] = useState([]);
   useEffect(() => { api('/admin/sales/agents', { token }).then(setAgentsListe).catch(() => {}); }, [token]);
   async function attribuerZone(key, userId) {
-    try { await api(`/admin/sales/zones/${key}`, { method: 'PUT', token, body: { userId: userId || null } }); toast(tr(userId ? 'adminSales.toastZoneAssigned' : 'adminSales.toastZoneFreed')); charger(); } catch (e) { toast(e.message); }
+    try { await api(`/admin/sales/zones/${key}`, { method: 'PUT', token, body: { userId: userId || null } }); toast(tr(userId ? 'adminSales.toastZoneAssigned' : 'adminSales.toastZoneFreed')); charger(); } catch (e) { toast(e.message, 'erreur'); }
   }
   const columns = [
     { key: 'name', label: tr('adminSales.colProspect'), get: (p) => <><b>{p.name}</b>{p.commune ? <><br /><span className="small">{p.commune}</span></> : null}</>, sortValue: (p) => p.name },
@@ -309,10 +309,10 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
   const charger = useCallback(() => { setErreur(null); api(`/admin/sales/commissions${statut ? `?status=${statut}` : ''}`, { token }).then(setRows).catch((e) => setErreur(e.message)); }, [token, statut]);
   useEffect(charger, [charger]);
   async function changer(c, status) {
-    try { await api(`/admin/sales/commissions/${c.id}`, { method: 'PATCH', token, body: { status } }); toast(tr(`adminSales.toastCom_${status}`)); charger(); onChanged(); } catch (err) { toast(err.message); }
+    try { await api(`/admin/sales/commissions/${c.id}`, { method: 'PATCH', token, body: { status } }); toast(tr(`adminSales.toastCom_${status}`)); charger(); onChanged(); } catch (err) { toast(err.message, 'erreur'); }
   }
   async function rapprocher() {
-    try { const r = await api('/admin/sales/reconcile', { method: 'POST', token }); toast(tr('adminSales.toastReconciled', { n: r.earned })); charger(); onChanged(); } catch (err) { toast(err.message); }
+    try { const r = await api('/admin/sales/reconcile', { method: 'POST', token }); toast(tr('adminSales.toastReconciled', { n: r.earned })); charger(); onChanged(); } catch (err) { toast(err.message, 'erreur'); }
   }
   const dateDe = (c) => c.paidAt || c.earnedAt || c.dueAt || c.createdAt;
   const columns = [
@@ -355,9 +355,9 @@ function ProspectDrawer({ id, token, tr, fmt, stageLabel, toast, onClose }) {
   const [primes, setPrimes] = useState([]);
   const euros = (n) => new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   const chargerPrimes = useCallback(() => { api('/admin/sales/commissions', { token }).then((rows) => setPrimes(rows.filter((c) => c.prospectId === id))).catch(() => {}); }, [token, id]);
-  useEffect(() => { api(`/admin/sales/prospects/${id}`, { token }).then(setP).catch((e) => { toast(e.message); onClose(); }); chargerPrimes(); }, [id, token, toast, onClose, chargerPrimes]);
+  useEffect(() => { api(`/admin/sales/prospects/${id}`, { token }).then(setP).catch((e) => { toast(e.message, 'erreur'); onClose(); }); chargerPrimes(); }, [id, token, toast, onClose, chargerPrimes]);
   async function ajouterPrime(kind) {
-    try { const r = await api('/admin/sales/commissions', { method: 'POST', token, body: { prospectId: id, kind } }); toast(tr(r.deja ? 'adminSales.comAlready' : 'adminSales.comAdded')); chargerPrimes(); } catch (e) { toast(e.message); }
+    try { const r = await api('/admin/sales/commissions', { method: 'POST', token, body: { prospectId: id, kind } }); toast(tr(r.deja ? 'adminSales.comAlready' : 'adminSales.comAdded')); chargerPrimes(); } catch (e) { toast(e.message, 'erreur'); }
   }
   return (
     <RecordDrawer title={p?.name || '…'} subtitle={p ? `${tr('adminSales.colAgent')} : ${p.agentName} · ${p.agentEmail}` : ''} badge={p ? stageLabel(p.stage) : null} onClose={onClose} width={620}>

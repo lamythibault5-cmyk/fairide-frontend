@@ -49,7 +49,7 @@ function ReviewForm({ order, token, toast, onDone, t }) {
       toast(t('review.toastThanks'));
       onDone();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -116,7 +116,7 @@ export default function Orders() {
     // Un restaurateur en mode aperçu n'a pas de vraies commandes client (403 côté API) — liste vide
     // silencieuse plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    api('/orders/mine', { token }).then(setOrders).catch((e) => { if (!isPreviewingRestaurant) toast(e.message); }).finally(() => setLoading(false));
+    api('/orders/mine', { token }).then(setOrders).catch((e) => { if (!isPreviewingRestaurant) toast(e.message, 'erreur'); }).finally(() => setLoading(false));
     const interval = setInterval(() => {
       api('/orders/mine', { token }).then(setOrders).catch(() => {});
     }, 15000);
@@ -135,7 +135,7 @@ export default function Orders() {
       setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
       toast(t('orders.toastCancelled'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCancellingId(null);
     }
@@ -154,7 +154,7 @@ export default function Orders() {
         window.location.href = pay.checkoutUrl;
       }
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCancellingId(null);
     }

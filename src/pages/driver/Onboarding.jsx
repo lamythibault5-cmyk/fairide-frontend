@@ -63,7 +63,7 @@ export default function Onboarding() {
         if (params.get('identity') === 'retour') { r = await api('/couriers/me/identity/refresh', { method: 'POST', token }); setD(r); params.delete('identity'); setParams(params, { replace: true }); }
         if (params.get('identity') === 'ok') { toast(t('courierOnboarding.identityOk')); params.delete('identity'); setParams(params, { replace: true }); }
         if (params.get('identity') === 'erreur') { toast(t('courierOnboarding.identityFailed')); params.delete('identity'); setParams(params, { replace: true }); }
-      } catch (e) { toast(e.message); }
+      } catch (e) { toast(e.message, 'erreur'); }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -79,7 +79,7 @@ export default function Onboarding() {
 
   async function action(fn, ok) {
     setBusy(true);
-    try { const r = await fn(); if (r && r.courier) setD(r); else await charger(); if (ok) toast(ok); return true; } catch (e) { toast(e.message); return false; } finally { setBusy(false); }
+    try { const r = await fn(); if (r && r.courier) setD(r); else await charger(); if (ok) toast(ok); return true; } catch (e) { toast(e.message, 'erreur'); return false; } finally { setBusy(false); }
   }
 
   if (!d) return <SkeletonCards count={3} />;

@@ -88,7 +88,7 @@ export default function AdminSupportPage() {
 
   useEffect(() => {
     setStats(null);
-    api(`/admin/support/stats?${periodParams.toString()}`, { token }).then(setStats).catch((e) => toast(e.message));
+    api(`/admin/support/stats?${periodParams.toString()}`, { token }).then(setStats).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodType, month, year]);
 
@@ -137,7 +137,7 @@ export default function AdminSupportPage() {
       const r = await api('/admin/support/tickets/bulk', { method: 'POST', token, body });
       toast(tr('adminCommon.bulkDone', { n: r?.updated ?? sel.count }));
       sel.clear(); load();
-    } catch (e) { toast(e.message); } finally { setBulkBusy(false); setBulk(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBulkBusy(false); setBulk(null); }
   }
 
   const colonnes = [
@@ -244,7 +244,7 @@ export default function AdminSupportPage() {
           items={lignes}
           columnOf={(t) => t.status}
           onOpen={(t) => setSelectedId(t.id)}
-          onMove={async (t, st) => { try { await api(`/admin/support/tickets/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); load(); } catch (err) { toast(err.message); } }}
+          onMove={async (t, st) => { try { await api(`/admin/support/tickets/${t.id}/status`, { method: 'PATCH', token, body: { status: st } }); load(); } catch (err) { toast(err.message, 'erreur'); } }}
           emptyLabel={tr('adminKanban.empty')}
           renderCard={(t) => (
             <>
@@ -301,7 +301,7 @@ function CreateTicketModal({ onClose, onCreated }) {
       toast(tr('adminSupport.toastCreated', { n: t.ticketNumber }));
       onCreated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -389,14 +389,14 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       setEditing(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
   }
 
   async function assign(email) {
-    try { await api(`/admin/support/tickets/${id}`, { method: 'PATCH', token, body: { assignedToEmail: email || null } }); load(); onChanged(); } catch (e) { toast(e.message); }
+    try { await api(`/admin/support/tickets/${id}`, { method: 'PATCH', token, body: { assignedToEmail: email || null } }); load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); }
   }
 
   async function changeStatus(status) {
@@ -405,7 +405,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       await api(`/admin/support/tickets/${id}/status`, { method: 'PATCH', token, body: { status } });
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -415,7 +415,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       setShowResolve(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -425,7 +425,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       setShowEscalate(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -434,7 +434,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       await api(`/admin/support/tickets/${id}/escalate`, { method: 'PATCH', token, body: { escalated: false } });
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -447,7 +447,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       setReplyText('');
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSending(false);
     }
@@ -461,7 +461,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       await apiUpload(`/admin/support/tickets/${id}/attachments`, { file, token, fieldName: 'file' });
       load();
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setUploading(false);
       e.target.value = '';
@@ -473,7 +473,7 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
       await api(`/admin/support/tickets/${id}/attachments/${attachmentId}`, { method: 'DELETE', token });
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -623,7 +623,7 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
       setTitle(''); setBody('');
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -636,7 +636,7 @@ function CannedRepliesManager({ cannedReplies, onChanged, onClose }) {
       await api(`/admin/support/canned-replies/${aSupprimer.id}`, { method: 'DELETE', token });
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally { setBusy(false); setASupprimer(null); }
   }
 

@@ -145,7 +145,7 @@ function ThreadDrawer({ id, token, tr, toast, onClose, onChanged }) {
       setReponse('');
       toast(tr('adminMessages.replySent'));
       onChanged?.();
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   async function basculerStatut() {
@@ -155,7 +155,7 @@ function ThreadDrawer({ id, token, tr, toast, onClose, onChanged }) {
       setData((d) => ({ ...d, thread: { ...d.thread, status } }));
       toast(tr(status === 'closed' ? 'adminMessages.closedToast' : 'adminMessages.reopenedToast'));
       onChanged?.();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   const th = data?.thread;
@@ -329,7 +329,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
       }
       setSubject(''); setBody(''); setRoles([]); setCommunes([]); setUsers([]); setNotifyByEmail(false);
       onSent?.(r);
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); setConfirm(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); setConfirm(false); }
   }
 
   // Un seul compte précis passe par le message direct : l'aperçu (qui exclut les comptes de test)

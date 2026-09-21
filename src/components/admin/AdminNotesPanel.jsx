@@ -24,7 +24,7 @@ export default function AdminNotesPanel({ targetType, targetId, notes, onAdded, 
       setText(''); setChannel('');
       onAdded(note);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }

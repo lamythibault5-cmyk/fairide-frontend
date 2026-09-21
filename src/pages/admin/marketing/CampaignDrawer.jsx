@@ -42,13 +42,13 @@ export default function CampaignDrawer({ id, onClose, onChanged, onEdit }) {
       await charger();
       onChanged?.(r);
       return r;
-    } catch (e) { toast(e.message); return null; } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); return null; } finally { setBusy(false); }
   }
 
   async function runConfirmed() {
     if (!confirm) return;
     setBusy(true);
-    try { await confirm.run(); } catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    try { await confirm.run(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   function demanderEnvoi() {

@@ -73,7 +73,7 @@ export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'bt
       const frag = btoa(encodeURIComponent(JSON.stringify({ token: d.token, user: d.user })));
       const w = window.open(`/dashboard#agir=${frag}`, '_blank');
       if (!w) toast(tr('adminRestos.manageBlocked'));
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   return <button type="button" className={className} style={style} disabled={busy} onClick={ouvrir} title={tr('adminRestos.manageHelp')}>{busy ? '…' : `🛠️ ${tr('adminRestos.manage')}`}</button>;
 }
@@ -121,8 +121,8 @@ export default function AdminRestaurantsPage() {
     setSelected(r);
     setDetail(null);
     setOrders(null);
-    api(`/admin/restaurants/${r.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
-    api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then((res) => setOrders(res.rows)).catch((e) => toast(e.message));
+    api(`/admin/restaurants/${r.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
+    api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then((res) => setOrders(res.rows)).catch((e) => toast(e.message, 'erreur'));
   }
 
   async function setListing(id, publicListed) {
@@ -133,7 +133,7 @@ export default function AdminRestaurantsPage() {
       if (detail?.id === id) setDetail((prev) => ({ ...prev, publicListed }));
       toast(publicListed ? tr('adminRestos.publishedToast') : tr('adminRestos.unpublishedToast'));
       chargerStats();
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   /* Validation d'un commerce : le serveur refuse désormais en 409 si des exigences réglementaires
@@ -154,7 +154,7 @@ export default function AdminRestaurantsPage() {
         setDerogation({ id, conformite: e.data.conformite });
         return;
       }
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -166,7 +166,7 @@ export default function AdminRestaurantsPage() {
       if (detail?.id === id) setDetail((prev) => ({ ...prev, terminal: r.terminal }));
       setRestaurants((prev) => (prev || []).map((x) => (x.id === id ? { ...x, terminal: r.terminal } : x)));
       toast(tr('adminRestos.terminalToast'));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
   function askTerminal(r, status, cle) {
     const amount = Number(r.terminal?.depositAmount || 80).toFixed(0);
@@ -195,7 +195,7 @@ export default function AdminRestaurantsPage() {
     toast(res.ownerDeleted ? tr('adminRestos.toastDeletedWithOwner', { n: res.deletedOrders, email: res.ownerEmail || '' }) : tr('adminRestos.toastDeleted', { n: res.deletedOrders }));
   }
   function askDelete(r) {
-    setConfirmAction({ title: tr('adminRestos.confirmDelete', { name: r.name }), message: tr('adminRestos.deleteBody', { email: r.ownerEmail || '' }), danger: true, run: () => deleteRestaurant(r).catch((e) => toast(e.message)) });
+    setConfirmAction({ title: tr('adminRestos.confirmDelete', { name: r.name }), message: tr('adminRestos.deleteBody', { email: r.ownerEmail || '' }), danger: true, run: () => deleteRestaurant(r).catch((e) => toast(e.message, 'erreur')) });
   }
 
   async function runConfirmed() {
@@ -205,7 +205,7 @@ export default function AdminRestaurantsPage() {
   }
 
   function refreshDetail() {
-    if (selected) api(`/admin/restaurants/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    if (selected) api(`/admin/restaurants/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   function exportCsv() {
@@ -430,7 +430,7 @@ function ConformitePanel({ detail, onChanged }) {
       await api(`/admin/restaurants/${detail.id}/conformite`, { method: 'PATCH', token, body: { naceCode: nace, hygieneRating: score } });
       toast(tr('adminRestos.conformiteSaved'));
       onChanged?.();
-    } catch (e) { toast(e.message); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
 
   return (
@@ -519,7 +519,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
       setEditing(false);
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }

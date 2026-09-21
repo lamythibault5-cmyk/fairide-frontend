@@ -58,9 +58,9 @@ export default function SalesPage() {
   const basculerCarte = () => setCarteVisible((v) => { try { localStorage.setItem('crm_carte', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
 
   const charger = useCallback(() => {
-    api('/sales/me', { token }).then(setEtat).catch((e) => toast(e.message));
+    api('/sales/me', { token }).then(setEtat).catch((e) => toast(e.message, 'erreur'));
     const params = new URLSearchParams(); if (filtre) params.set('stage', filtre); if (recherche.trim()) params.set('q', recherche.trim());
-    api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message); });
+    api(`/sales/prospects?${params.toString()}`, { token }).then((r) => setProspects(r.prospects)).catch((e) => { if (e.code === 'NOT_SALES_AGENT') setEtat({ agent: false }); else toast(e.message, 'erreur'); });
     api('/sales/zones', { token }).then(setZones).catch(() => {});
     api('/sales/map', { token }).then(setAutres).catch(() => {}); // points gris des autres, sans nom de commerce
     api('/sales/team', { token }).then(setEquipe).catch(() => {});
@@ -81,11 +81,11 @@ export default function SalesPage() {
   const [zoneBusy, setZoneBusy] = useState(false);
   async function prendreZone(key) {
     setZoneBusy(true);
-    try { await api(`/sales/zones/${key}/claim`, { method: 'POST', token }); toast(t('sales.toastZoneTaken')); charger(); } catch (e) { toast(e.message); } finally { setZoneBusy(false); }
+    try { await api(`/sales/zones/${key}/claim`, { method: 'POST', token }); toast(t('sales.toastZoneTaken')); charger(); } catch (e) { toast(e.message, 'erreur'); } finally { setZoneBusy(false); }
   }
   async function laisserZone(key) {
     setZoneBusy(true);
-    try { await api(`/sales/zones/${key}/claim`, { method: 'DELETE', token }); toast(t('sales.toastZoneLeft')); charger(); } catch (e) { toast(e.message); } finally { setZoneBusy(false); }
+    try { await api(`/sales/zones/${key}/claim`, { method: 'DELETE', token }); toast(t('sales.toastZoneLeft')); charger(); } catch (e) { toast(e.message, 'erreur'); } finally { setZoneBusy(false); }
   }
   // Export CSV de mes commerces (Excel/Numbers l'ouvrent tel quel ; BOM pour les accents).
   function exporterCsv() {
@@ -261,13 +261,13 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   async function prendrePosition() {
     setGeoEnCours(true);
-    try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError')); } finally { setGeoEnCours(false); }
+    try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError'), 'erreur'); } finally { setGeoEnCours(false); }
   }
   async function enregistrer(e) {
     e.preventDefault();
-    if (!f.name.trim()) { toast(t('sales.errName')); return; }
+    if (!f.name.trim()) { toast(t('sales.errName'), 'erreur'); return; }
     setEnvoi(true);
-    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: position ? { ...f, ...position } : f })); toast(t('sales.toastCreated')); } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+    try { onSaved(await api('/sales/prospects', { method: 'POST', token, body: position ? { ...f, ...position } : f })); toast(t('sales.toastCreated')); } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
   // Portail : la page connectée anime son contenu (page-fade), ce qui crée un contexte d'empilement — rendu dans
   // la page, le volet passait SOUS la barre de navigation du bas. Même remède que ConfirmDialog.
@@ -323,25 +323,25 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
   const [envoi, setEnvoi] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [lien, setLien] = useState({ q: '', resultats: [] });
-  const charger = useCallback(() => api(`/sales/prospects/${id}`, { token }).then(setP).catch((e) => toast(e.message)), [id, token, toast]);
+  const charger = useCallback(() => api(`/sales/prospects/${id}`, { token }).then(setP).catch((e) => toast(e.message, 'erreur')), [id, token, toast]);
   useEffect(() => { charger(); }, [charger]);
   const fmt = (ms) => new Date(ms).toLocaleString(locale, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   async function patch(body, message) {
     setEnvoi(true);
-    try { const r = await api(`/sales/prospects/${id}`, { method: 'PATCH', token, body }); setP((s) => ({ ...s, ...r })); if (message) toast(message); await charger(); } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    try { const r = await api(`/sales/prospects/${id}`, { method: 'PATCH', token, body }); setP((s) => ({ ...s, ...r })); if (message) toast(message); await charger(); } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
   async function ajouterEvenement(e) {
     e.preventDefault();
-    if (!ev.note.trim() && ev.kind === 'note') { toast(t('sales.errNote')); return; }
+    if (!ev.note.trim() && ev.kind === 'note') { toast(t('sales.errNote'), 'erreur'); return; }
     setEnvoi(true);
     try {
       await api(`/sales/prospects/${id}/events`, { method: 'POST', token, body: { kind: ev.kind, at: new Date(ev.at).toISOString(), stage: ev.stage || null, note: ev.note } });
       setEv({ kind: 'visite', at: maintenantLocal(), stage: '', note: '' }); toast(t('sales.toastEvent')); await charger();
-    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
   async function supprimerEvenement(eid) {
-    try { await api(`/sales/prospects/${id}/events/${eid}`, { method: 'DELETE', token }); await charger(); } catch (e) { toast(e.message); }
+    try { await api(`/sales/prospects/${id}/events/${eid}`, { method: 'DELETE', token }); await charger(); } catch (e) { toast(e.message, 'erreur'); }
   }
   async function chercherResto(q) {
     setLien((s) => ({ ...s, q }));
@@ -351,7 +351,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 
   const evenements = useMemo(() => p?.events || [], [p]);
   async function poserPosition() {
-    try { await patch(await maPosition(), t('sales.positionSet')); } catch (e) { if (e?.message === 'geo') toast(t('sales.positionError')); }
+    try { await patch(await maPosition(), t('sales.positionSet')); } catch (e) { if (e?.message === 'geo') toast(t('sales.positionError'), 'erreur'); }
   }
   return createPortal(
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={p?.name || ''} onClick={onClose}>
@@ -464,7 +464,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 
             <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
               <span className="small">{t('sales.createdOn', { date: fmt(p.createdAt) })}</span>
-              <button type="button" className="btn-danger-ghost" onClick={() => setConfirm({ title: t('sales.confirmDelete', { name: p.name }), danger: true, run: async () => { try { await api(`/sales/prospects/${id}`, { method: 'DELETE', token }); toast(t('sales.toastDeleted')); onDeleted(); } catch (e) { toast(e.message); } } })}>{t('sales.deleteProspect')}</button>
+              <button type="button" className="btn-danger-ghost" onClick={() => setConfirm({ title: t('sales.confirmDelete', { name: p.name }), danger: true, run: async () => { try { await api(`/sales/prospects/${id}`, { method: 'DELETE', token }); toast(t('sales.toastDeleted')); onDeleted(); } catch (e) { toast(e.message, 'erreur'); } } })}>{t('sales.deleteProspect')}</button>
             </div>
           </>
         )}

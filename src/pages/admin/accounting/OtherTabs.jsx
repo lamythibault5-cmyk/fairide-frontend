@@ -111,12 +111,12 @@ export function ClosingTab({ token, toast, period }) {
   async function lock(month) {
     setBusy(true);
     try { await api('/admin/accounting/periods/lock', { method: 'POST', token, body: { year, month } }); toast(tr('adminAccounting.toastLocked')); state.reload(); }
-    catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
   async function unlock(month, reason) {
     setBusy(true);
     try { await api('/admin/accounting/periods/unlock', { method: 'POST', token, body: { year, month, reason } }); toast(tr('adminAccounting.toastUnlocked')); state.reload(); }
-    catch (e) { toast(e.message); } finally { setBusy(false); setConfirm(null); }
+    catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirm(null); }
   }
 
   const list = Array.isArray(state.data) ? state.data : state.data?.months || state.data?.items || [];
@@ -184,10 +184,10 @@ export function ChartOfAccountsTab({ token, toast }) {
       setNewCode(''); setNewName('');
       toast(tr('adminAccounting.toastAccountCreated'));
       state.reload();
-    } catch (e) { toast(e.message); } finally { setCreating(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setCreating(false); }
   }
   async function toggleActive(a) {
-    try { await api(`/admin/accounting/accounts/${a.id}`, { method: 'PATCH', token, body: { active: !a.active } }); state.reload(); } catch (e) { toast(e.message); }
+    try { await api(`/admin/accounting/accounts/${a.id}`, { method: 'PATCH', token, body: { active: !a.active } }); state.reload(); } catch (e) { toast(e.message, 'erreur'); }
   }
 
   return (

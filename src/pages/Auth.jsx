@@ -634,7 +634,7 @@ export default function Auth() {
         setMode('register');
         toast(t('auth.googleNewAccount'));
       } else {
-        toast(err.message);
+        toast(err.message, 'erreur');
       }
     } finally {
       // Connexion réussie : le bouton reste en « Chargement… » jusqu'au changement de page.
@@ -689,7 +689,7 @@ export default function Auth() {
     e.preventDefault();
     // À l'inscription, ce sont les étapes qui valident (ci-dessous) : un e-mail ou un mot de passe manquant
     // ramène à l'étape « compte » avec le champ en rouge, au lieu d'un simple message générique.
-    if (mode === 'login' && (!email || !password)) { toast(t('auth.errEmailPassword')); return; }
+    if (mode === 'login' && (!email || !password)) { toast(t('auth.errEmailPassword'), 'erreur'); return; }
     setLoading(true);
     let reussi = false;
     try {
@@ -760,7 +760,7 @@ export default function Auth() {
     } catch (err) {
       if (err.message === 'EMAIL_NOT_VERIFIED') {
         setPendingEmail(email.trim());
-        toast(t('auth.errEmailNotVerified'));
+        toast(t('auth.errEmailNotVerified'), 'erreur');
       } else if (err.code === 'TOTP_REQUIRED') {
         // Mot de passe bon, second facteur attendu : on ouvre le champ sans rien dire d'alarmant.
         setTotpAttendu(true);
@@ -768,7 +768,7 @@ export default function Auth() {
         // Le champ reste ouvert, on vide la saisie : un code périmé se retape, il ne se corrige pas.
         setTotpAttendu(true);
         setTotpCode('');
-        toast(err.message);
+        toast(err.message, 'erreur');
       } else if (err.code === 'ACCOUNT_DELETED' || err.code === 'NO_ACCOUNT') {
         // Compte supprimé ou inexistant : on le dit, et on ouvre directement la création de compte (e-mail conservé).
         toast(t(err.code === 'ACCOUNT_DELETED' ? 'auth.errAccountDeleted' : 'auth.errNoAccount'));
@@ -780,7 +780,7 @@ export default function Auth() {
         if (i >= 0) setStep(i);
         toast(message);
       } else {
-        toast(err.message);
+        toast(err.message, 'erreur');
       }
     } finally {
       if (!reussi) setLoading(false);
@@ -789,7 +789,7 @@ export default function Auth() {
 
   async function submitCode(e) {
     e.preventDefault();
-    if (!code.trim()) { toast(t('auth.errCodeRequired')); return; }
+    if (!code.trim()) { toast(t('auth.errCodeRequired'), 'erreur'); return; }
     setLoading(true);
     let reussi = false;
     try {
@@ -799,7 +799,7 @@ export default function Auth() {
       toast(t('auth.welcome', { name: data.user.name }));
       await allerApresInscription(data.user);
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
       reussi = false;
     } finally {
       if (!reussi) setLoading(false);
@@ -808,13 +808,13 @@ export default function Auth() {
 
   async function submitForgotPassword(e) {
     e.preventDefault();
-    if (!forgotEmail.trim()) { toast(t('auth.errEmailRequired')); return; }
+    if (!forgotEmail.trim()) { toast(t('auth.errEmailRequired'), 'erreur'); return; }
     setForgotLoading(true);
     try {
       await forgotPassword(forgotEmail.trim());
       setForgotSubmitted(true);
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setForgotLoading(false);
     }
@@ -826,7 +826,7 @@ export default function Auth() {
       await resendCode(pendingEmail);
       toast(t('auth.newCodeSent'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setResending(false);
     }

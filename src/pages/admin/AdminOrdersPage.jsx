@@ -124,7 +124,7 @@ export default function AdminOrdersPage() {
   useEffect(() => {
     const id = searchParams.get('id');
     if (!id) return;
-    api(`/admin/orders/${id}`, { token }).then((d) => { setSelected({ id, restaurantName: d.restaurantName, status: d.status, restaurantId: d.restaurantId }); setDetail(d); }).catch((e) => toast(e.message));
+    api(`/admin/orders/${id}`, { token }).then((d) => { setSelected({ id, restaurantName: d.restaurantName, status: d.status, restaurantId: d.restaurantId }); setDetail(d); }).catch((e) => toast(e.message, 'erreur'));
     const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -141,11 +141,11 @@ export default function AdminOrdersPage() {
   function openOrder(o) {
     setSelected(o);
     setDetail(null);
-    api(`/admin/orders/${o.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    api(`/admin/orders/${o.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   function refreshDetail() {
-    if (selected) api(`/admin/orders/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message));
+    if (selected) api(`/admin/orders/${selected.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
   // Export CSV de TOUT le jeu filtré (GET /admin/orders?export=1, jusqu'à 5000 lignes), pas seulement
@@ -160,12 +160,12 @@ export default function AdminOrdersPage() {
       const lignes = r.rows || [];
       downloadCsv(`commandes-${Date.now()}.csv`, lignes, colonnesCsv(tr));
       toast(tr('adminOrders.toastExported', { n: lignes.length }));
-    } catch (e) { toast(e.message); } finally { setExporting(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setExporting(false); }
   }
 
   function loadDrivers() {
     if (drivers) return;
-    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message));
+    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message, 'erreur'));
   }
 
   // Actions groupées : annulation ou réaffectation d'un livreur, commande par commande (le serveur n'a
@@ -303,7 +303,7 @@ export default function AdminOrdersPage() {
         danger={kanbanMove?.status === 'annule'}
         onConfirm={async () => {
           try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
-          catch (e) { toast(e.message); } finally { setKanbanMove(null); }
+          catch (e) { toast(e.message, 'erreur'); } finally { setKanbanMove(null); }
         }}
         onCancel={() => setKanbanMove(null)}
       />
@@ -360,7 +360,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
 
   function loadDrivers() {
     if (drivers) return;
-    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message));
+    api('/admin/drivers?limit=500&sort=name', { token }).then((l) => setDrivers(Array.isArray(l) ? l : [])).catch((e) => toast(e.message, 'erreur'));
   }
 
   async function runConfirmed() {
@@ -371,7 +371,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       toast(confirmAction.successMessage || tr('adminCommon.doneToast'));
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false);
       setConfirmAction(null);

@@ -30,7 +30,7 @@ export default function CreateTicketButton({ linkType, linkId, label }) {
       toast(tr('adminSupport.toastCreated', { n: t.ticketNumber }));
       setOpen(false); setSubject(''); setMessage('');
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCreating(false);
     }

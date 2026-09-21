@@ -77,7 +77,7 @@ export default function AdminCrmPage() {
     params.set('period', periodType);
     if (periodType === 'month') params.set('month', month);
     else params.set('year', year);
-    api(`/admin/crm/stats?${params.toString()}`, { token }).then(setStats).catch((e) => toast(e.message));
+    api(`/admin/crm/stats?${params.toString()}`, { token }).then(setStats).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [periodType, month, year]);
 
@@ -91,7 +91,7 @@ export default function AdminCrmPage() {
       await api(`/admin/crm/prospects/${prospect.id}/stage`, { method: 'PATCH', token, body: { stage: nouvelleEtape } });
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -101,7 +101,7 @@ export default function AdminCrmPage() {
       setPendingLoss(null);
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -288,7 +288,7 @@ function CreateProspectModal({ onClose, onCreated }) {
       toast(tr('adminCrm.toastCreated'));
       onCreated();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -351,7 +351,7 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
       setEditing(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -359,12 +359,12 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
 
   async function changeStage(stage) {
     if (stage === 'perdu') { onLoss(p); return; }
-    try { await api(`/admin/crm/prospects/${id}/stage`, { method: 'PATCH', token, body: { stage } }); load(); onChanged(); } catch (e) { toast(e.message); }
+    try { await api(`/admin/crm/prospects/${id}/stage`, { method: 'PATCH', token, body: { stage } }); load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); }
   }
 
   function openConvert() {
     setShowConvert(true);
-    if (!restaurants) api('/admin/restaurants?limit=1000&sort=name', { token }).then((l) => setRestaurants(Array.isArray(l) ? l : [])).catch((e) => toast(e.message));
+    if (!restaurants) api('/admin/restaurants?limit=1000&sort=name', { token }).then((l) => setRestaurants(Array.isArray(l) ? l : [])).catch((e) => toast(e.message, 'erreur'));
   }
 
   async function convert() {
@@ -376,7 +376,7 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
       setShowConvert(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConverting(false);
     }
@@ -388,7 +388,7 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
       await api(`/admin/crm/prospects/${id}`, { method: 'DELETE', token });
       toast(tr('adminCrm.toastDeleted'));
       onDeleted();
-    } catch (e) { toast(e.message); } finally { setDeleting(false); setConfirmDelete(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setDeleting(false); setConfirmDelete(false); }
   }
 
   return createPortal(

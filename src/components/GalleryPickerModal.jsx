@@ -25,7 +25,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
   const fileInputRef = useRef(null);
 
   function loadGallery() {
-    api(`/restaurants/${restoId}/gallery/mine`, { token }).then(setImages).catch((e) => toast(e.message));
+    api(`/restaurants/${restoId}/gallery/mine`, { token }).then(setImages).catch((e) => toast(e.message, 'erreur'));
   }
 
   useEffect(() => {
@@ -42,7 +42,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
       await apiUpload(`/restaurants/${restoId}/gallery`, { file, token });
       loadGallery();
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setUploading(false);
     }
@@ -62,7 +62,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
     try {
       await api(`/restaurants/${restoId}/gallery/from-url`, { method: 'POST', token, body: { imageUrl: currentImageUrl } });
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setKeeping(false);
     }
@@ -79,7 +79,7 @@ export default function GalleryPickerModal({ restoId, currentImageUrl, onSelect,
       await api(`/restaurants/${restoId}/gallery/${imageId}`, { method: 'DELETE', token });
       setImages((prev) => prev.filter((img) => img.id !== imageId));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setDeletingId(null);
     }

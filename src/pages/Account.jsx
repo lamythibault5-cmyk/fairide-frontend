@@ -184,7 +184,7 @@ export default function Account() {
     ]).then(([deliveries, reviews]) => {
       setDriverDeliveries(deliveries);
       setDriverReviews(reviews);
-    }).catch((e) => toast(e.message));
+    }).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
@@ -209,7 +209,7 @@ export default function Account() {
         // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
         api(`/restaurants/${list[0].id}`).then(setRestaurant).catch(() => {});
       }
-    }).catch((e) => toast(e.message));
+    }).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(() => {
     if (role !== 'restaurant') return;
@@ -236,7 +236,7 @@ export default function Account() {
 
   function refreshRestaurant() {
     if (!restoId) return;
-    api(`/restaurants/${restoId}`).then(setRestaurant).catch((e) => toast(e.message));
+    api(`/restaurants/${restoId}`).then(setRestaurant).catch((e) => toast(e.message, 'erreur'));
   }
 
   // N'initialise les cases à cocher qu'une fois par restaurant, pas à chaque refreshRestaurant() (ex.
@@ -263,7 +263,7 @@ export default function Account() {
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setSavingServices(false);
     }
@@ -281,7 +281,7 @@ export default function Account() {
       const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token, body: { promoCode: promoCodeInput.trim() || undefined } });
       window.location.href = r.checkoutUrl;
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setSubscribing(false);
     }
   }
@@ -293,7 +293,7 @@ export default function Account() {
       refreshRestaurant();
       toast(t('accountUi.toastSubPaused'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setPausingSub(false);
     }
@@ -306,7 +306,7 @@ export default function Account() {
       refreshRestaurant();
       toast(t('accountUi.toastSubResumed'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setResumingSub(false);
     }
@@ -320,7 +320,7 @@ export default function Account() {
       setConfirmCancelSub(false);
       toast(t('accountUi.toastSubCanceled'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCancelingSub(false);
     }
@@ -349,7 +349,7 @@ export default function Account() {
       setRedeemCode('');
       await refreshUser();
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setRedeeming(false);
     }
@@ -367,7 +367,7 @@ export default function Account() {
       setGeneratedCodes((prev) => [{ code: result.code, amount: Number(result.amount), used: false, createdAt: new Date().toISOString() }, ...(prev || [])]);
       await refreshUser();
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setConverting(false);
     }
@@ -382,7 +382,7 @@ export default function Account() {
       toast(next ? t('account.toastGeoOn') : t('account.toastGeoOff'));
     } catch (err) {
       setLocationSharingEnabled(!next);
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setSavingLocationSharing(false);
     }
@@ -400,7 +400,7 @@ export default function Account() {
       });
       toast(t('account.toastInfoUpdated'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setSavingInfo(false);
     }
@@ -413,7 +413,7 @@ export default function Account() {
       setDeleteCodeSent(true);
       toast(t('account.toastDeleteCodeSent'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setSendingCode(false);
     }
@@ -426,7 +426,7 @@ export default function Account() {
       const result = await deleteAccount({ code: deleteCode, reason: deleteReason, comment: deleteComment.trim() });
       toast(result.anonymized ? t('account.toastAccountDeletedAnon') : t('account.toastAccountDeleted'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
       setDeleting(false);
     }
   }
@@ -437,7 +437,7 @@ export default function Account() {
     // Même règle que le serveur (routes/auth.js) : longueur ET casse. Ne contrôler que la longueur
     // ici laissait passer un mot de passe que l'enregistrement refusait ensuite en 400.
     if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) { toast(t('account.toastPasswordTooShort')); return; }
-    if (newPasswordConfirm !== newPassword) { toast(t('auth.errPasswordMismatch')); return; }
+    if (newPasswordConfirm !== newPassword) { toast(t('auth.errPasswordMismatch'), 'erreur'); return; }
     setSavingPassword(true);
     try {
       await updateProfile({ currentPassword, newPassword });
@@ -445,7 +445,7 @@ export default function Account() {
       setNewPassword(''); setNewPasswordConfirm('');
       toast(t('account.toastPasswordChanged'));
     } catch (err) {
-      toast(err.message);
+      toast(err.message, 'erreur');
     } finally {
       setSavingPassword(false);
     }
@@ -1089,7 +1089,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       setCodeSent(true);
       toast(t('accountUi.toastCodeSent'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSending(false);
     }
@@ -1103,7 +1103,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
       toast(t('accountUi.toastFieldUpdated', { label }));
       cancel();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirming(false);
     }

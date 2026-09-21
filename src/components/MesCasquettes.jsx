@@ -47,7 +47,7 @@ export default function MesCasquettes() {
       try { await refreshUser(); } catch { /* la liste locale suffit */ }
       toast(t('casquettes.ajoutee', { role: t(`casquettes.nom_${cible}`) }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setOccupe('');
       setConfirmation(null);

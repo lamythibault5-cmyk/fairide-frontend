@@ -21,7 +21,7 @@ export default function DriverDocuments() {
   const [busy, setBusy] = useState(false);
   const entrees = useRef({});
 
-  useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch((e) => toast(e.message)); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch((e) => toast(e.message, 'erreur')); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* Les pièces sont désormais en livraison restreinte : le serveur ne rend plus leur adresse
      Cloudinary, il produit à la demande une adresse signée de quelques minutes (voir
@@ -41,11 +41,11 @@ export default function DriverDocuments() {
     try {
       const r = await apiUpload('/couriers/me/documents', { file: f, token, fieldName: 'file', fields: { docType, ...(side ? { side } : {}) } });
       setDossier(r); toast(t('driverDocs.uploaded'));
-    } catch (err) { toast(err.message); } finally { setBusy(false); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
   }
   async function supprimer(id) {
     setBusy(true);
-    try { setDossier(await api(`/couriers/me/documents/${id}`, { method: 'DELETE', token })); } catch (err) { toast(err.message); } finally { setBusy(false); }
+    try { setDossier(await api(`/couriers/me/documents/${id}`, { method: 'DELETE', token })); } catch (err) { toast(err.message, 'erreur'); } finally { setBusy(false); }
   }
 
   if (!dossier) return <p className="small">{t('accountUi.loading')}</p>;

@@ -146,7 +146,7 @@ function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, 
       await recharger();
       if (c.membre.email === moiMin) refreshRole();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setOccupe(false);
     }
@@ -156,7 +156,7 @@ function MembresTab({ membres, erreur, recharger, monRole, isOwner, moi, token, 
     try {
       const r = await api(`/admin/team/members/${encodeURIComponent(m.email)}/resend`, { method: 'POST', token });
       toast(r.emailSent ? tr('adminTeam.toastResent', { email: m.email }) : tr('adminTeam.toastResentNoMail'));
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   // Un admin ne touche pas aux propriétaires ; personne ne touche aux fondateurs ni ne se retire soi-même.

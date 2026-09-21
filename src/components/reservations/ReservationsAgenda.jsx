@@ -68,7 +68,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
     setRechercheEnCours(true);
     minuterie.current = setTimeout(() => {
       api(`/restaurants/${restoId}/reservations/search?q=${encodeURIComponent(q)}`, { token })
-        .then(setResultats).catch((e) => { setResultats([]); toast(e.message); }).finally(() => setRechercheEnCours(false));
+        .then(setResultats).catch((e) => { setResultats([]); toast(e.message, 'erreur'); }).finally(() => setRechercheEnCours(false));
     }, 300);
     return () => clearTimeout(minuterie.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,7 +130,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
       await apiDownload(`/restaurants/${restoId}/reservations/export?date=${date}`, {
         token, filename: `reservations-${date}.csv`
       });
-    } catch (e) { toast(e.message); }
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   const ligneProps = { tables: tables || [], token, toast, restoId, restaurant, onMaj: majReservation, onRecharger: recharger };
@@ -203,7 +203,7 @@ export default function ReservationsAgenda({ token, toast, restoId, tables, setT
                   toast(t('resa.toastTableAssigned', { n: tb.number ?? tb.name }));
                   setPlacer(null);
                   recharger();
-                } catch (e) { toast(e.message); }
+                } catch (e) { toast(e.message, 'erreur'); }
               }
             }} />
         </div>

@@ -109,7 +109,7 @@ export default function ReservationSettings({ token, toast, restaurant, restoId,
       modifieRef.current = false; setModifie(false);
       loadDashboard?.(restoId);
       toast(t('resa.toastSettingsSaved'));
-    } catch (err) { toast(err.message); } finally { setEnregistre(false); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setEnregistre(false); }
   }
 
   const tablesAvecAcompte = (tables || []).filter((tb) => tb.active && tb.depositAmount !== null);
@@ -347,14 +347,14 @@ function Blocages({ restoId, token, toast }) {
       setBlocs((l) => [...(l || []), b].sort((x, y) => (x.date + (x.startTime || '')).localeCompare(y.date + (y.startTime || ''))));
       setF((s) => ({ ...s, raison: '' }));
       toast(t('resa.blockAdded'));
-    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+    } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
   async function supprimer(id) {
     try {
       await api(`/restaurants/${restoId}/reservation-blocks/${id}`, { method: 'DELETE', token });
       setBlocs((l) => (l || []).filter((b) => b.id !== id));
       toast(t('resa.blockRemoved'));
-    } catch (err) { toast(err.message); }
+    } catch (err) { toast(err.message, 'erreur'); }
   }
   const raccourcis = [[t('resa.blockTonight'), () => setF((s) => ({ ...s, date: isoDuJour(new Date()), mode: 'plage', debut: '17:00', fin: '23:59' }))],
     [t('resa.blockToday'), () => setF((s) => ({ ...s, date: isoDuJour(new Date()), mode: 'jour' }))],

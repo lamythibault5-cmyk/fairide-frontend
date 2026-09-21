@@ -45,7 +45,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
       await onConfirmed?.();
       toast(t('menuPage.handoverConfirmed'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirmation(false);
     }

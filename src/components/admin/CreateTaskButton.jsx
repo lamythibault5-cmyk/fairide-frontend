@@ -33,7 +33,7 @@ export default function CreateTaskButton({ targetType, targetId, label }) {
       toast(tr('adminCommon.toastTaskCreated'));
       setOpen(false); setTitle(''); setDueAt(''); setAssignedToEmail('');
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCreating(false);
     }

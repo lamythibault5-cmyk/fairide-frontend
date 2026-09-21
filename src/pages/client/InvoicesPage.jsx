@@ -38,7 +38,7 @@ export default function InvoicesPage() {
     // repli sur une liste vide plutôt qu'un message d'erreur trompeur ou un chargement bloqué à vie.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
     api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch((e) => {
-      if (!isPreviewingRestaurant) toast(e.message);
+      if (!isPreviewingRestaurant) toast(e.message, 'erreur');
       setOrders([]);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -68,7 +68,7 @@ export default function InvoicesPage() {
         token, method: 'POST', body: { orderIds: [...selected] }, filename: 'factures-fairide.zip'
       });
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setDownloading(false);
     }

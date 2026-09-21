@@ -49,9 +49,9 @@ export default function AdminSettingsPage() {
   const [usersOverview, setUsersOverview] = useState(null);
   useEffect(() => {
     if (section === 'Tarification' && pricing === null) {
-      api('/admin/settings', { token }).then((p) => { setPricing(p); setPricingForm(toDisplayForm(p)); }).catch((e) => toast(e.message));
+      api('/admin/settings', { token }).then((p) => { setPricing(p); setPricingForm(toDisplayForm(p)); }).catch((e) => toast(e.message, 'erreur'));
     }
-    if (section === 'Utilisateurs' && usersOverview === null) api('/admin/users/overview', { token }).then(setUsersOverview).catch((e) => toast(e.message));
+    if (section === 'Utilisateurs' && usersOverview === null) api('/admin/users/overview', { token }).then(setUsersOverview).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [section]);
 
@@ -67,7 +67,7 @@ export default function AdminSettingsPage() {
       setPricingForm(toDisplayForm(updated));
       toast(tr('adminSettings.toastPricingUpdated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSavingPricing(false);
       setConfirmSave(false);

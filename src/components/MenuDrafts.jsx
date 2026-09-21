@@ -70,7 +70,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       ouvrir(cree.id);
       toast(t('menuPage.draftsCreated'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setCreation(false);
     }
@@ -84,7 +84,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       setModifie(false);
       setEnregistre(false);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -109,7 +109,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       await charger();
       toast(t('menuPage.draftsSaved'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setEnregistre(false);
     }
@@ -135,7 +135,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       onPublished?.();
       toast(t('menuPage.draftsPublishDone', { n: r.published }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setPublieEnCours(false);
     }
@@ -150,7 +150,7 @@ export default function MenuDrafts({ restoId, token, menuCount = 0, onPublished 
       await charger();
       toast(t('menuPage.draftsDeleted'));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 

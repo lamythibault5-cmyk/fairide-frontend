@@ -53,7 +53,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
       toast(t('invoiceArchive.emailSent', { to: r.to || '' }));
       setData((d) => ({ ...d, invoices: d.invoices.map((x) => (x.id === inv.id ? { ...x, emailedAt: new Date().toISOString(), status: x.status === 'emise' ? 'envoyee' : x.status } : x)) }));
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setMailId(null);
     }
@@ -62,7 +62,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
   useEffect(() => {
     api(endpoint, { token })
       .then(setData)
-      .catch((e) => { toast(e.message); setData({ invoices: [] }); });
+      .catch((e) => { toast(e.message, 'erreur'); setData({ invoices: [] }); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [endpoint]);
 
@@ -72,7 +72,7 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
       if (format === 'ubl' && ublPath) await apiDownload(ublPath(inv), { token, filename: `${inv.invoiceNumber}.xml` });
       else await apiDownload(pdfPath(inv), { token, filename: `${inv.invoiceNumber}.pdf` });
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusyId(null);
     }

@@ -47,7 +47,7 @@ export default function DriverDashboard() {
       await api('/auth/me', { method: 'PATCH', token, body: { driverPaused: !user?.driverPaused } });
       await refreshUser();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setTogglingPause(false);
     }
@@ -70,7 +70,7 @@ export default function DriverDashboard() {
       const r = await api('/auth/me/connect/onboard', { method: 'POST', token });
       window.location.href = r.url;
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
       setConnecting(false);
     }
   }
@@ -103,7 +103,7 @@ export default function DriverDashboard() {
          toutes les 15 secondes, et sur un réseau qui clignote (un livreur est en mouvement, c'est
          le cas normal) la faire basculer en écran d'erreur lui retirerait ses courses des mains. */
       setErreur(e);
-      if (chargeReussieRef.current) toast(e.message);
+      if (chargeReussieRef.current) toast(e.message, 'erreur');
     } finally {
       setLoading(false);
     }
@@ -202,7 +202,7 @@ export default function DriverDashboard() {
 
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
-    catch (e) { toast(e.message); }
+    catch (e) { toast(e.message, 'erreur'); }
   }
 
   async function deliver(id) {
@@ -214,7 +214,7 @@ export default function DriverDashboard() {
       toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 

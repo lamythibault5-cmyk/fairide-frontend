@@ -64,7 +64,7 @@ export default function AdminAutomationsPage() {
       toast(totalCreated > 0 ? tr('adminAutomations.toastCreated', { n: totalCreated }) : tr('adminAutomations.toastNothingNew'));
       load();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setRunning(false); setConfirmRunAll(false);
     }
@@ -133,7 +133,7 @@ function RuleCard({ rule, onChanged, onShowLog }) {
       toast(rule.enabled ? tr('adminAutomations.toastDisabled') : tr('adminAutomations.toastEnabled'));
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally { setBusy(false); setConfirm(null); }
   }
 
@@ -144,7 +144,7 @@ function RuleCard({ rule, onChanged, onShowLog }) {
       toast(tr('adminAutomations.toastSaved'));
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -160,7 +160,7 @@ function RuleCard({ rule, onChanged, onShowLog }) {
       toast(tr('adminAutomations.toastTested', { created: r.created ?? 0, matched: r.matched ?? 0 }));
       onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally { setBusy(false); setConfirm(null); }
   }
 

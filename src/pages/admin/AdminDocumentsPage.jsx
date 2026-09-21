@@ -55,7 +55,7 @@ export default function AdminDocumentsPage() {
   const [bulkBusy, setBulkBusy] = useState(false);
 
   function loadOverview() {
-    api('/admin/documents/overview', { token }).then(setOverview).catch((e) => toast(e.message));
+    api('/admin/documents/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
   useEffect(loadOverview, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -85,7 +85,7 @@ export default function AdminDocumentsPage() {
       const r = await api('/admin/documents/bulk-verify', { method: 'POST', token, body: { ids: sel.ids, verification: bulk, reason: reason || undefined } });
       toast(tr('adminCommon.bulkDone', { n: r?.updated ?? sel.count }));
       sel.clear(); refreshAll();
-    } catch (e) { toast(e.message); } finally { setBulkBusy(false); setBulk(null); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBulkBusy(false); setBulk(null); }
   }
 
   function exportCsv() {
@@ -211,7 +211,7 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
     setTargetId('');
     const path = TARGET_TYPES_WITH_PICKER[targetType];
     if (!path) return;
-    api(`${path}?limit=1000&sort=name`, { token }).then((l) => setEntities(Array.isArray(l) ? l : (l?.rows || []))).catch((e) => toast(e.message));
+    api(`${path}?limit=1000&sort=name`, { token }).then((l) => setEntities(Array.isArray(l) ? l : (l?.rows || []))).catch((e) => toast(e.message, 'erreur'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [targetType]);
 
@@ -228,7 +228,7 @@ function UploadDocumentModal({ onClose, onUploaded, presetTargetType, presetTarg
       toast(tr('adminDocs.toastAdded'));
       onUploaded();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setUploading(false);
     }
@@ -319,7 +319,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       setEditing(false);
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setSaving(false);
     }
@@ -335,7 +335,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       toast(tr('adminCommon.toastStatusUpdated'));
       load(); onChanged();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally { setBusy(false); setConfirm(null); setRejet(false); }
   }
   function askVerification(status) {
@@ -352,7 +352,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
       onChanged();
       onClose();
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setBusy(false); setConfirm(null);
     }

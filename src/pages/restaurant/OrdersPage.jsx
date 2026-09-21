@@ -135,7 +135,7 @@ export default function OrdersPage() {
       await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token });
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     }
   }
 
@@ -149,7 +149,7 @@ export default function OrdersPage() {
       setSelectedOrder(null);
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setClotureEnCours(false);
     }
@@ -165,7 +165,7 @@ export default function OrdersPage() {
       toast(t('ordersResto.toastPickupConfirmed'));
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirmingPickup(null);
     }
@@ -181,7 +181,7 @@ export default function OrdersPage() {
       toast(t('ordersResto.toastTakeawayDone'));
       loadDashboard(restoId);
     } catch (e) {
-      toast(e.message);
+      toast(e.message, 'erreur');
     } finally {
       setConfirmingPickup(null);
     }

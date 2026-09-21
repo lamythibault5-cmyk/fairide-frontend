@@ -31,7 +31,7 @@ export default function GuestReliability({ restoId, reservationId, token, toast,
     try {
       const r = await api(`/restaurants/${restoId}/reservations/${reservationId}/guest-review`, { method: 'PUT', token, body: { rating: note, comment: commentaire } });
       onMaj(r); setEdition(false); toast(t('resa.rateSaved'));
-    } catch (e) { toast(e.message); } finally { setEnvoi(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); }
   }
 
   return (
