@@ -3424,6 +3424,12 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .doc-slot-body { display: flex; align-items: center; gap: 10px; flex: 1 1 auto; min-width: 0; cursor: pointer; }
 .doc-slot-img { width: 64px; height: 44px; object-fit: cover; border-radius: var(--radius-field); flex: 0 0 auto; background: var(--cream-dim); }
 .doc-slot-vide { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 44px; border-radius: var(--radius-field); background: var(--cream-dim); font-size: 22px; flex: 0 0 auto; text-decoration: none; }
+/* Les pièces d'identité ne s'ouvrent plus par un <a href> : leur adresse est produite à la demande,
+   signée et valable quelques minutes (voir src/ouvrirDocument.js). Ce sont donc des <button>, qu'on
+   habille comme les liens et les vignettes qu'ils remplacent — rien ne change à l'œil. */
+button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
+.doc-slot-lien { padding: 0; border: 0; background: none; cursor: pointer; display: inline-flex; flex: 0 0 auto; }
+.lien-bouton { padding: 0; border: 0; background: none; cursor: pointer; font: inherit; color: var(--iris); text-decoration: underline; }
 .doc-slot-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 13px; }
 .doc-slot-texte .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .doc-slot-retirer { position: absolute; top: 4px; right: 4px; padding: 2px 6px; font-size: 12px; }

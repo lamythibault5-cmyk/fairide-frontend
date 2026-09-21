@@ -1604,6 +1604,7 @@ export default {
       doc_profile_photo: 'Profielfoto',
       doc_profile_photo_help: 'Een duidelijke foto van je gezicht, getoond aan de klant die op zijn bestelling wacht.',
       docView: 'Bekijken',
+      docUnavailable: 'Dit document is momenteel niet beschikbaar.',
       docExpires: 'vervalt op {date}',
       docDelete: 'Verwijderen',
       docUpload: 'Opladen',

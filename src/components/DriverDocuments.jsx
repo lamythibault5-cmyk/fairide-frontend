@@ -4,7 +4,7 @@ import { api, apiUpload } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import urlSure from '../urlSure';
+import ouvrirDocument from '../ouvrirDocument';
 
 // « Mes documents » dans Mon compte (livreur) : la pièce d'identité recto / verso déposée à l'inscription
 // (voir IdentityDocsPicker.jsx), l'attestation étudiant, et les autres pièces du dossier coursier, avec leur
@@ -22,6 +22,18 @@ export default function DriverDocuments() {
   const entrees = useRef({});
 
   useEffect(() => { api('/couriers/me', { token }).then(setDossier).catch((e) => toast(e.message)); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Les pièces sont désormais en livraison restreinte : le serveur ne rend plus leur adresse
+     Cloudinary, il produit à la demande une adresse signée de quelques minutes (voir
+     src/ouvrirDocument.js). `d.prive` distingue les pièces déjà migrées de celles d'avant, qui
+     restent servies directement le temps que le script de migration passe. */
+  const ouvrir = (d) => ouvrirDocument({
+    url: d.prive ? null : d.fileUrl,
+    lien: `/couriers/me/documents/${d.id}/lien`,
+    token,
+    toast,
+    messageErreur: t('courierOnboarding.docUnavailable')
+  });
 
   async function deposer(docType, side, e) {
     const f = e.target.files?.[0]; e.target.value = ''; if (!f) return;
@@ -52,7 +64,13 @@ export default function DriverDocuments() {
     return (
       <div className={`doc-slot${d ? ' rempli' : ''}`}>
         <div className="doc-slot-body" style={{ cursor: 'default' }}>
-          {d ? (estImage(d.fileUrl) ? <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer"><img className="doc-slot-img" src={d.fileUrl} alt="" /></a> : <a className="doc-slot-vide" href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer" aria-label={t('courierOnboarding.docView')}>📄</a>) : <span className="doc-slot-vide" aria-hidden="true">📷</span>}
+          {d ? (
+            /* Vignette : une pièce privée n'a plus d'adresse affichable en <img>, on montre donc
+               l'icône document. Le clic passe par ouvrir(), qui va chercher une adresse signée. */
+            !d.prive && estImage(d.fileUrl)
+              ? <button type="button" className="doc-slot-lien" onClick={() => ouvrir(d)} aria-label={t('courierOnboarding.docView')}><img className="doc-slot-img" src={d.fileUrl} alt="" /></button>
+              : <button type="button" className="doc-slot-vide" onClick={() => ouvrir(d)} aria-label={t('courierOnboarding.docView')}>📄</button>
+          ) : <span className="doc-slot-vide" aria-hidden="true">📷</span>}
           <span className="doc-slot-texte">
             <b>{side === 'recto' ? t('authDocs.front') : t('authDocs.back')}</b>
             {d ? <span className={etat(d).cls} style={{ alignSelf: 'flex-start' }}>{etat(d).ic} {etat(d).txt}</span> : <span className="small">{t('driverDocs.missing')}</span>}
@@ -98,7 +116,7 @@ export default function DriverDocuments() {
         </div>
         {etudiant.map((d) => (
           <div key={d.id} className="small" style={{ marginTop: 4 }}>
-            {etat(d).ic} <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer">{t('courierOnboarding.docView')}</a> · {new Date(d.createdAt).toLocaleDateString(getLocale())}
+            {etat(d).ic} <button type="button" className="lien-bouton" onClick={() => ouvrir(d)}>{t('courierOnboarding.docView')}</button> · {new Date(d.createdAt).toLocaleDateString(getLocale())}
             {!d.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} disabled={busy} onClick={() => supprimer(d.id)}>{t('courierOnboarding.docDelete')}</button>}
           </div>
         ))}
@@ -109,7 +127,7 @@ export default function DriverDocuments() {
           <b>{t('driverDocs.others')}</b>
           {autres.map((d) => (
             <div key={d.id} className="small" style={{ marginTop: 4 }}>
-              {etat(d).ic} <a href={urlSure(d.fileUrl)} target="_blank" rel="noreferrer">{t(`courierOnboarding.doc_${d.docType}`)}</a>{d.side ? ` (${d.side === 'recto' ? t('authDocs.front') : t('authDocs.back')})` : ''} · {new Date(d.createdAt).toLocaleDateString(getLocale())}
+              {etat(d).ic} <button type="button" className="lien-bouton" onClick={() => ouvrir(d)}>{t(`courierOnboarding.doc_${d.docType}`)}</button>{d.side ? ` (${d.side === 'recto' ? t('authDocs.front') : t('authDocs.back')})` : ''} · {new Date(d.createdAt).toLocaleDateString(getLocale())}
             </div>
           ))}
         </div>

@@ -16,6 +16,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadge, NatureChips, natureOk, filterBySearch, downloadCsv } from './adminUtils';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
+import ouvrirDocument from '../../ouvrirDocument';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
 // validation, pièces, identité, gains (brut / précompte / net par année et trimestre), contrats, journal ;
@@ -243,7 +244,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           {documents.length === 0 && <p className="small">-</p>}
           {documents.map((x) => (
             <div key={x.id} className="row" style={{ justifyContent: 'space-between', gap: 8, padding: '3px 0', flexWrap: 'wrap' }}>
-              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <a href={urlSure(x.fileUrl)} target="_blank" rel="noreferrer">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</a>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
+              <span className="small">{x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${selection.id}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') })}>{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}</button>{x.expiresAt ? ` · ${tr('courierOnboarding.docExpires', { date: fmt(x.expiresAt) })}` : ''}{x.rejectedReason ? ` · ${x.rejectedReason}` : ''}</span>
               {!x.verifiedAt && (
                 <span className="row" style={{ gap: 4 }}>
                   <button className="btn-outline" style={{ padding: '2px 10px', fontSize: 12 }} disabled={busy} onClick={() => setConfirm({ title: tr('adminCouriers.acceptDoc', { doc: tr(`courierOnboarding.doc_${x.docType}`) }), run: () => agir(() => api(`/admin/couriers/${id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } })) })}>✓ {tr('adminCouriers.accept')}</button>

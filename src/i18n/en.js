@@ -1604,6 +1604,7 @@ export default {
       doc_profile_photo: 'Profile photo',
       doc_profile_photo_help: 'A clear photo of your face, shown to the customer waiting for their order.',
       docView: 'View',
+      docUnavailable: 'This document is not available right now.',
       docExpires: 'expires on {date}',
       docDelete: 'Delete',
       docUpload: 'Upload',
