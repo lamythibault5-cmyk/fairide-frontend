@@ -11,7 +11,7 @@ import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
 import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
-import { IconLocal, IconBike, IconFair } from '../components/landing/FeatureIcons';
+import { IconLocal, IconFair } from '../components/landing/FeatureIcons';
 
 /* Les trois portes d'entrée. Le parcours client passe en premier et en iris : c'est le seul des
    trois qu'on veut voir avant les autres, et la spec ne tolère qu'un bloc coloré par rangée. */
@@ -45,10 +45,14 @@ function joinCards(t) {
   ];
 }
 
+// DEUX arguments, plus trois. Ils occupent désormais la place que se partageaient les chiffres
+// (« 10 % · 19 · 100 % ») et trois cartes étroites : les chiffres disaient la même chose que les
+// cartes, en moins clair — « 19 » ne veut rien dire sans la phrase qui suit, et « 10 % » est déjà
+// l'argument de la carte « Juste pour tout le monde ». La livraison en deux-roues part avec eux :
+// c'est un moyen, pas une raison de commander ici (demande du fondateur, 2026-09-21).
 function features(t) {
   return [
     { icon: <IconLocal />, title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') },
-    { icon: <IconBike />, title: t('landing.featureBikeTitle'), text: t('landing.featureBikeText') },
     { icon: <IconFair />, title: t('landing.featureFairTitle'), text: t('landing.featureFairText') }
   ];
 }
@@ -109,20 +113,18 @@ export default function Landing() {
           </div>
         </div>
         <HeroPreview restaurants={restaurants} />
-
-        <div className="stats-bar">
-          <div className="stats-bar-item"><b>10 %</b><span>{t('landing.statCommission')}</span></div>
-          <div className="stats-bar-item"><b>19</b><span>{t('landing.statCommunes')}</span></div>
-          <div className="stats-bar-item"><b>100 %</b><span>{t('landing.statLocal')}</span></div>
-        </div>
+        {/* La bande de chiffres qui fermait la bannière — « 10 % · 19 · 100 % », sous un filet
+            blanc — est partie avec sa ligne (demande du fondateur, 2026-09-21). Les deux cartes
+            ci-dessous prennent sa place et disent la même chose en toutes lettres. La grille de la
+            bannière n'a donc plus que deux zones : voir grid-template-areas dans styles.css. */}
       </div>
 
       <div className="feature-grid">
         {features(t).map((f, i) => (
           <Reveal className="card feature-card" key={f.title} delay={i * 90}>
             <span className="feature-icon feature-icon-svg">{f.icon}</span>
-            <h3 style={{ fontSize: 19, margin: '0 0 8px' }}>{f.title}</h3>
-            <p className="small" style={{ lineHeight: 1.5 }}>{f.text}</p>
+            <h3>{f.title}</h3>
+            <p>{f.text}</p>
           </Reveal>
         ))}
       </div>
