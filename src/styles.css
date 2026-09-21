@@ -1476,7 +1476,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   margin: -24px 0 12px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(300px, 38%);
-  grid-template-areas: "text preview" "stats stats";
+  grid-template-areas: "text preview";
   align-items: center;
   align-content: center;
   column-gap: 36px;
@@ -1551,12 +1551,11 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 @media (prefers-contrast: more) { .landing-hero::before { opacity: 1; } }
 .landing-hero .hero-preview { grid-area: preview; }
 .landing-hero-text { grid-area: text; }
-.landing-hero .stats-bar { grid-area: stats; }
 
 /* Sous 860px il n'y a plus la largeur pour deux colonnes : la bannière repasse sur une seule,
-   texte puis aperçu puis chiffres. */
+   texte puis aperçu. */
 @media (max-width: 860px) {
-  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "stats"; }
+  .landing-hero { grid-template-columns: 1fr; grid-template-areas: "text" "preview"; }
   .landing-hero .hero-preview { margin-top: 26px; }
 }
 /* Le rembourrage du bas valait 0 : la bande de fondu n'existerait donc pas sur téléphone et
@@ -1657,27 +1656,10 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .be-mark { width: 56px !important; height: 56px !important; top: 14px; right: 14px; }
 }
 
-/* Les trois chiffres vivent DANS la bannière, séparés par un filet blanc, au
-   lieu de flotter en carte blanche à cheval dessous (l'ancienne .stats-bar en
-   margin-top négatif). Un bloc de moins, et le lime peut enfin servir : sur
-   l'iris, il passe le contraste. */
-.stats-bar {
-  position: relative; z-index: 2;
-  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
-  margin: 46px 0 0; padding: 22px 0 16px;
-  border-top: 1px solid rgba(255,255,255,0.22);
-}
-.stats-bar-item { text-align: left; }
-.stats-bar-item b {
-  display: block; font-size: 32px; font-weight: 700;
-  color: var(--lime); line-height: 1; font-variant-numeric: tabular-nums;
-}
-.stats-bar-item span { display: block; margin-top: 7px; font-size: 12.5px; color: rgba(255,255,255,0.78); font-weight: 400; line-height: 1.35; }
-@media (max-width: 640px) {
-  .stats-bar { grid-template-columns: 1fr; gap: 0; margin-top: 30px; padding-bottom: 6px; }
-  .stats-bar-item { padding: 14px 0; border-bottom: 1px solid rgba(255,255,255,0.16); }
-  .stats-bar-item:last-child { border-bottom: none; }
-}
+/* Ici vivaient les trois chiffres de la bannière (.stats-bar : « 10 % · 19 · 100 % » en lime, sous
+   un filet blanc). Retirés le 2026-09-21 à la demande du fondateur, avec leur filet. Ce qu'ils
+   disaient, les deux cartes d'arguments le disent en toutes lettres juste dessous — et un chiffre
+   seul ne se lit pas : « 19 » n'existait que grâce à la ligne qui le suivait. */
 
 /* ---------------------------------------------------------------------------
    « Où va ton euro » — le moment de bascule de la page.
@@ -1788,9 +1770,23 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    avec la bannière, et sans pastille ronde de fond derrière l'emoji — un aplat
    gris clair en cercle est précisément le détail « template » dont la direction
    se débarrasse. L'emoji est posé nu, à la taille où il se lit. */
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-bottom: 20px; }
-.feature-card { text-align: left; }
+/* DEUX cartes, et elles reprennent la place que tenaient trois cartes étroites PLUS la bande de
+   chiffres de la bannière (voir .stats-bar, retirée). D'où le `minmax(340px, 1fr)` : à 230px, deux
+   cartes seules se retrouvaient posées côte à côte dans une grille taillée pour trois, chacune
+   large mais au texte réglé pour une colonne étroite — un titre de 19px et un corps de 13px perdus
+   au milieu d'un bloc de 560px. La taille du texte monte avec le bloc, sinon on n'a pas agrandi la
+   carte, on a juste écarté ses bords. Sous 740px (deux cartes ne tiennent plus côte à côte) la
+   grille retombe d'elle-même sur une colonne, et les valeurs reviennent à l'échelle du téléphone. */
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 20px; margin-bottom: 24px; }
+.feature-card { text-align: left; padding: 32px; }
+.feature-card h3 { font-size: 23px; margin: 0 0 10px; }
+.feature-card p { font-size: 15px; line-height: 1.55; color: var(--ink-soft); margin: 0; }
 .feature-icon { font-size: 28px; line-height: 1; margin-bottom: 14px; display: block; }
+@media (max-width: 740px) {
+  .feature-card { padding: 24px; }
+  .feature-card h3 { font-size: 20px; }
+  .feature-card p { font-size: 14px; }
+}
 
 /* « La course » : les trois étapes sont montées sur un cadre de vélo. Les
    numéros vivent dans des roues (cercles à filet iris de 5px, exactement le
@@ -3604,7 +3600,10 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 .hero-preview-lines span:last-child { width: 45%; }
 
 /* Icônes vectorielles des arguments (components/landing/FeatureIcons.jsx). */
-.feature-icon-svg { color: var(--iris); display: inline-flex; width: 48px; height: 48px; align-items: center; justify-content: center; border-radius: var(--radius-card-sm); background: rgba(59,47,181,0.08); margin-bottom: 14px; }
+/* 58px, et non plus 48 : la tuile suit la carte, qui a doublé de largeur (voir .feature-card). Le
+   SVG qu'elle contient garde sa taille propre, fixée dans FeatureIcons.jsx — c'est le cadre qui
+   respire, pas le trait, qui s'épaissirait à l'agrandissement. */
+.feature-icon-svg { color: var(--iris); display: inline-flex; width: 58px; height: 58px; align-items: center; justify-content: center; border-radius: var(--radius-card-sm); background: rgba(59,47,181,0.08); margin-bottom: 16px; }
 
 /* Vitrine « Découvre les commerces » (components/landing/DiscoverSection.jsx). */
 /* Vitrine « Découvre » (components/landing/DiscoverSection.jsx) : un panneau crème posé sur la page, des cartes
