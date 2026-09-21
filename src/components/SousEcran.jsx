@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
+import useDialogue from '../hooks/useDialogue';
 
 // Un sous-écran du paiement : l'adresse, les options de remise.
 //
@@ -19,7 +20,8 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
   const { t } = useLanguage();
   const racine = useRef(null);
 
-  /* LE FOCUS SE POSE UNE SEULE FOIS, AU MONTAGE. Et c'est tout l'objet de ces deux effets séparés.
+  /* LE FOCUS SE POSE UNE SEULE FOIS, AU MONTAGE — la règle est maintenant tenue par le hook, mais
+   * elle est née ici et la raison mérite de rester écrite à l'endroit où le défaut s'est vu.
    *
    * Avant, un seul effet faisait le tout, avec `onFermer` en dépendance. Or l'appelant écrit
    * `onFermer={() => setX(null)}` : une NOUVELLE fonction à chaque rendu. L'effet rejouait donc à
@@ -27,21 +29,10 @@ export default function SousEcran({ titre, onFermer, children, pied = null }) {
    * vers le dialogue. Symptôme à l'écran : on tapait un caractère, puis il fallait recliquer dans le
    * champ pour le suivant — signalé par le fondateur sur le numéro de rue (2026-09-17).
    *
-   * Le verrou du défilement et le focus appartiennent au montage : dépendances vides. */
-  useEffect(() => {
-    const avant = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    racine.current?.focus();
-    return () => { document.body.style.overflow = avant; };
-  }, []);
-
-  // L'écoute d'Échap, elle, doit suivre `onFermer` — mais elle ne touche pas au focus, donc la
-  // rejouer ne dérange personne.
-  useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onFermer(); };
-    document.addEventListener('keydown', surTouche);
-    return () => document.removeEventListener('keydown', surTouche);
-  }, [onFermer]);
+   * useDialogue garde cette séparation (voir son en-tête) et ajoute le piège à focus et le retour du
+   * focus au bouton d'ouverture. Ce sous-écran contient des champs de saisie : c'est précisément
+   * celui où un effet mal découpé se verrait le plus vite. */
+  useDialogue(racine, onFermer);
 
   return createPortal(
     <div className="plat-feuille" role="dialog" aria-modal="true" aria-label={titre} ref={racine} tabIndex={-1}>

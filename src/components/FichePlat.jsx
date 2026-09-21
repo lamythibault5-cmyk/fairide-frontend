@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { imgProps } from '../images';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
+import useDialogue from '../hooks/useDialogue';
 
 // LA FICHE D'UN PLAT. Jusqu'ici, un plat n'avait aucun écran à lui.
 //
@@ -35,24 +36,12 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   const [qty, setQty] = useState(1);
   const racine = useRef(null);
 
-  // Échap ferme, et le fond de page ne défile plus derrière la feuille — même geste que la vue
-  // agrandie du suivi (TrackingWithGames.jsx), pour que la fermeture s'apprenne une seule fois.
-  // Deux effets séparés, pour la même raison que dans SousEcran.jsx : `onCancel` est une nouvelle
-  // fonction à chaque rendu, donc un effet unique qui en dépend rejouerait `focus()` à chaque frappe
-  // et volerait le focus des champs. Ici la fiche n'a pas encore de champ de saisie, mais le défaut
-  // est le même et il apparaîtrait au premier ajouté.
-  useEffect(() => {
-    const avant = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    racine.current?.focus();
-    return () => { document.body.style.overflow = avant; };
-  }, []);
-
-  useEffect(() => {
-    const surTouche = (e) => { if (e.key === 'Escape') onCancel(); };
-    document.addEventListener('keydown', surTouche);
-    return () => document.removeEventListener('keydown', surTouche);
-  }, [onCancel]);
+  // Échap ferme, le fond de page ne défile plus derrière la feuille — même geste que la vue agrandie
+  // du suivi (TrackingWithGames.jsx), pour que la fermeture s'apprenne une seule fois. Le hook ajoute
+  // ce qui manquait : le focus reste DANS la feuille tant qu'elle est ouverte, et revient au plat
+  // qu'on venait d'ouvrir quand elle se ferme. La séparation en effets distincts — dont la raison
+  // était notée ici — est reprise telle quelle dans le hook.
+  useDialogue(racine, onCancel);
 
   function choisirUnique(groupId, optionId) {
     setSelections((prev) => ({ ...prev, [groupId]: new Set([optionId]) }));
