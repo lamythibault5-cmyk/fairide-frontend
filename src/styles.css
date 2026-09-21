@@ -1953,6 +1953,35 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 }
 @media (min-width: 700px) { .map-detail-card { left: 16px; right: auto; bottom: 16px; width: 340px; } }
 
+/* LA FICHE PASSAIT SOUS LA BARRE D'ONGLETS, ses deux boutons avec elle (signalé par le fondateur,
+   2026-09-21 : « je ne peux pas cliquer sur Voir le restaurant ni Retour à la carte »).
+   Elle a pourtant z-index 500 contre 50 pour la barre — et ce n'est PAS ce qui se compare.
+   .carte-plein-ecran est `position: fixed` avec `z-index: 1`, donc elle ouvre un contexte
+   d'empilement : le 500 de la fiche ne vaut qu'entre frères à l'intérieur de la carte, et vers le
+   dehors la page entière pèse 1. La barre, à 50, passe devant tout ce qu'elle contient.
+   Monter .carte-plein-ecran au-dessus de 50 réglerait l'empilement et casserait la page : la
+   barre disparaîtrait sous la carte, or c'est le seul moyen d'en sortir (voir son commentaire).
+   On supprime donc le RECOUVREMENT au lieu de disputer l'empilement — la fiche remonte au-dessus
+   de la bande des pastilles, et plus rien ne se superpose. Les pastilles restent cliquables, ce
+   qu'un simple « la fiche par-dessus » leur aurait retiré.
+   80px : les pastilles font 56px de haut et flottent à 12px du bas, soit une bande qui monte à
+   68px ; 12px de plus pour ne pas les frôler. env() vient en supplément, comme pour elles.
+   Sous 900px seulement : au-delà, la barre est une colonne à gauche et ne prend rien en bas.
+
+   Règles portées par .carte-plein-ecran et non par .map-detail-card seule : la même fiche sert la
+   carte intégrée de 180px de la page d'un commerce (RestaurantMenu.jsx). Elle ne peut pas s'y
+   ouvrir aujourd'hui — en mode `singleMarker`, le clic sur le marqueur n'est pas branché
+   (RestaurantsMap.jsx) — mais une remontée de 80px dans un conteneur de 180 la ferait sortir par
+   le haut le jour où il le serait. */
+@media (max-width: 900px) {
+  .carte-plein-ecran .map-detail-card { bottom: calc(80px + env(safe-area-inset-bottom)); }
+  /* Et plus petite : la fiche mange maintenant 80px de plus en bas, sur un écran qu'on est venu
+     voir pour la carte. La photo perd un tiers de sa hauteur et le corps un peu de respiration —
+     c'est tout ce qui se retire, le contenu reste entier. */
+  .carte-plein-ecran .map-detail-cover { height: 92px; }
+  .carte-plein-ecran .map-detail-body { padding: 11px 12px 12px; }
+}
+
 /* Coquille "app connectée" (client/livreur/restaurateur) : barre latérale + colonne centrale +
    colonne de droite optionnelle. Remplace la nav du haut (.hero/.role-nav) sur les pages
    authentifiées seulement — les pages publiques gardent .hero tel quel (voir Layout.jsx). */
