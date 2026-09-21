@@ -443,9 +443,38 @@ label { font-size: 14px; font-weight: 500; color: var(--ink); display: block; ma
    de 14 à 16 déplaçait les colonnes des tableaux admin. 15px donne le gain de lisibilité sans
    casser les mises en page denses ; .btn-lg ci-dessous porte la vraie taille d'Uber là où l'action
    est décisive. Le poids reste 500 : Uber interdit explicitement de monter les libellés à 700. */
-button { font-family: inherit; font-weight: 500; font-size: 15px; cursor: pointer; border: none; border-radius: var(--radius-pill); padding: 12px 20px; transition: transform .1s, filter .1s; }
+button { font-family: inherit; font-weight: 500; font-size: 15px; cursor: pointer; border: none; border-radius: var(--radius-pill); padding: 12px 20px; transition: transform .1s, filter .1s, background .15s ease; }
+button:hover:not(:disabled) { filter: brightness(1.06); }
 button:active { transform: scale(.97); }
 button:disabled { opacity: .5; cursor: not-allowed; }
+
+/* L'ANNEAU DE MISE AU POINT — la pièce qui manquait.
+   Mesuré avant de toucher quoi que ce soit : quatre règles :focus-visible dans 4342 lignes, et
+   TROIS d'entre elles retiraient l'anneau au lieu d'en poser un. Aucune classe .btn-* n'en avait.
+   Comme `button` pose `border: none` et un rayon de pilule, le contour par défaut du navigateur
+   est à peine visible dessus — un visiteur au clavier traversait donc l'application sans jamais
+   savoir où il se trouvait, y compris dans le tunnel de commande.
+
+   DESIGN.md (Uber) ne documente que le repos et l'appui — il est muet sur la mise au point.
+   La règle vient d'Apple, qui en fait un élément de système au même titre que l'appui :
+   « Focus state: 2px solid outline ». On garde la couleur de marque plutôt que son bleu.
+
+   :focus-visible et non :focus — le navigateur ne l'active qu'à la navigation clavier, donc
+   un clic souris ne laisse pas d'anneau derrière lui. Les champs de saisie gardent leur propre
+   traitement (fond blanc + arête iris, plus haut) : il vaut aussi à la souris, où il dit « on
+   écrit ici », ce qu'un anneau clavier ne dirait pas. */
+a:focus-visible, button:focus-visible, summary:focus-visible, label:focus-visible,
+[role="button"]:focus-visible, [role="tab"]:focus-visible, [role="radio"]:focus-visible, [role="checkbox"]:focus-visible,
+.chip:focus-visible, .cuisine-chip:focus-visible, .rest-card:focus-visible, .order-card-clickable:focus-visible {
+  outline: 2px solid var(--iris);
+  outline-offset: 2px;
+}
+/* Sur fond iris, un anneau iris est invisible. Même geste, encre inversée — c'est la règle que
+   DESIGN.md pose déjà pour les liens (`link-on-dark`) et Apple pour la sienne (`text-link-on-dark`). */
+.hero :focus-visible, .cart-bar :focus-visible, .join-card-iris :focus-visible,
+.btn-hero-ghost:focus-visible, .dashboard-nav-link.active:focus-visible {
+  outline-color: #fff;
+}
 
 /* RÉACTIVITÉ AU TOUCHER, tous appareils.
    - touch-action: manipulation retire l'attente « double-tape pour zoomer » : le navigateur n'a plus à
@@ -560,7 +589,10 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   min-height: 44px;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
 }
-.btn-lg { min-height: 56px; }
+/* .btn-lg — la vraie échelle d'Uber (18px / ~56px), réservée à l'action décisive d'un écran :
+   payer, confirmer, s'inscrire. C'est le bouton qu'on veut voir de loin sur un téléphone.
+   Sa hauteur et sa taille de texte étaient écrites dans deux règles séparées par 22 lignes. */
+.btn-lg { min-height: 56px; font-size: 18px; padding: 16px 24px; }
 
 .btn-primary { background: var(--ink); color: var(--cream); }
 .btn-gold { background: var(--lime); color: var(--ink); border: 1px solid #A9CE2A; }
@@ -572,17 +604,12 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .btn-danger-ghost { background: transparent; color: var(--red); padding: 6px 10px; font-size: 12px; text-decoration: underline; }
 .btn-block { width: 100%; }
 
-/* Deux ajouts repris de DESIGN.md, à poser surface par surface au fil de la reprise.
-
-   .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »).
-   Elle remplace avantageusement un .btn-outline dans une carte : un aplat gris pèse moins qu'un
-   trait, et une carte qui porte quatre boutons cernés ressemble à un formulaire administratif.
-
-   .btn-lg — la vraie échelle d'Uber (18px), réservée à l'action décisive d'un écran : payer,
-   confirmer, s'inscrire. C'est le bouton qu'on veut voir de loin sur un téléphone. */
+/* .btn-subtle — la pilule grise des actions de troisième rang (« En savoir plus », « Modifier »),
+   reprise de DESIGN.md, à poser surface par surface au fil de la reprise. Elle remplace
+   avantageusement un .btn-outline dans une carte : un aplat gris pèse moins qu'un trait, et une
+   carte qui porte quatre boutons cernés ressemble à un formulaire administratif. */
 .btn-subtle { background: var(--surface-soft); color: var(--ink); }
-.btn-subtle:hover:not(:disabled) { background: #E2E2E2; }
-.btn-lg { font-size: 18px; padding: 16px 24px; }
+.btn-subtle:hover:not(:disabled) { background: var(--line); }
 
 .rest-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
 /* LES RANGÉES SE RAPPROCHENT (fondateur, 2026-09-17 : « rapproche les restaurants entre eux »).
@@ -1157,7 +1184,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 /* Au-delà d'une dizaine d'options — des créneaux horaires, des dates — la rangée défile au lieu
    de s'empiler sur dix lignes et de repousser le bouton hors de l'écran. */
 .choix-pastilles-defile { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
-.choix-pastilles .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.choix-pastilles .cuisine-chip:disabled { opacity: .5; cursor: not-allowed; }
 .choix-pastille-note { font-size: var(--t-caption); font-weight: 500; opacity: .75; }
 
 /* Les cartes d'un choix unique (mode de récupération au paiement) : icône, libellé, et l'option
@@ -1211,6 +1238,25 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-titre { font-size: 19px; }
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
+/* CARTE D'ERREUR DE CHARGEMENT (components/ErrorCard.jsx).
+   Déplacée depuis admin-erp.css, qui n'est chargée que par AdminLayout : le composant sert
+   maintenant au livreur et au restaurateur, où ces règles n'existaient pas — il y serait arrivé
+   sans bordure, sans fond et sans espacement. Les deux noms de classes sont traités le temps
+   qu'AdminErrorBoundary garde les siens. Un état d'échec est la seule chose de l'interface qui a
+   le droit d'être rouge sans être un bouton : c'est une couleur de statut, pas de marque. */
+.error-card, .admin-error-card { border: 1px solid var(--red); background: rgba(217,45,60,0.05); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 14px; display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap; }
+.error-card .error-card-icone, .admin-error-card .admin-error-icon { font-size: 26px; line-height: 1; }
+.error-card .error-card-corps, .admin-error-card .admin-error-body { flex: 1 1 260px; min-width: 0; }
+.error-card h3, .admin-error-card h3 { margin: 0 0 4px; font-size: 15px; color: var(--red); }
+.error-card p, .admin-error-card p { margin: 0 0 10px; }
+.error-card pre, .admin-error-card pre { margin: 0 0 10px; font-size: 11px; color: var(--ink-faint); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 90px; overflow: auto; }
+/* Classe DISTINCTE de .etat-vide-action, qui est posée sur le lien lui-même : y mettre display:flex
+   aurait transformé ce lien en bloc et étiré le bouton sur toute la largeur des écrans vides du
+   panier, des commandes, des favoris et des factures. Ici c'est une enveloppe, pas un bouton.
+   Une seule action reste la règle ; l'écran d'échec en porte deux (refaire, ou partir) parce qu'un
+   « Réessayer » seul devient un cul-de-sac quand l'échec est définitif. D'où flex-wrap : côte à côte
+   quand ça tient, l'un sous l'autre sur un téléphone, jamais collés. */
+.etat-vide-actions { margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 
 
 
@@ -1337,6 +1383,22 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* Une erreur se dit en rouge d'état. Jamais en lime : c'est l'accent de la marque. */
 .toast-erreur { background: var(--red); color: #fff; }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* LE MESSAGE PASSE AU-DESSUS DU MOBILIER FLOTTANT.
+   Relevé au pixel : sous 900px les onglets ronds occupent de 12 à 68px du bas, et le message se
+   posait à 24px — c'est-à-dire DERRIÈRE eux. Le toast est le seul canal de retour de
+   l'application (« votre adresse est incomplète », « plat ajouté ») : il était partiellement
+   masqué par la navigation sur le seul appareil où la plupart des commandes se passent.
+
+   Deux hauteurs, parce qu'il y a deux meubles : les onglets seuls, puis la pilule du panier qui
+   se pose déjà à 80px par-dessus eux. Le second sélecteur vient après le premier et l'emporte à
+   égalité de spécificité quand les deux sont là.
+
+   Le tunnel de commande est exclu : il masque les onglets (.dashboard-shell--flux), donc le bas
+   de l'écran y est libre et le message peut rester à sa place habituelle. */
+@media (max-width: 900px) {
+  body:has(.dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar) .toast { bottom: calc(84px + env(safe-area-inset-bottom)); }
+  body:has(.panier-pilule) .toast { bottom: calc(140px + env(safe-area-inset-bottom)); }
+}
 
 .center-page { min-height: 60vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 40px 20px; }
 
@@ -1791,6 +1853,30 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .contact-info-icon { font-size: 20px; background: var(--cream-dim); width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 @media (max-width: 720px) { .contact-grid { grid-template-columns: 1fr; } }
 
+/* MOUVEMENT RÉDUIT : UNE SEULE RÈGLE, POSÉE UNE FOIS POUR TOUTES.
+   Il y avait six blocs (prefers-reduced-motion) dans le fichier, chacun nommant à la main les
+   sélecteurs qu'il connaissait. Une liste écrite à la main vieillit mal : au relevé, elle avait
+   laissé passer `popIn` sur CHAQUE carte de restaurant, `fadeInUp` sur la barre de panier,
+   `heart-pop`, `drawer-in`, et surtout les trois animations INFINIES — le miroitement des
+   squelettes de chargement, le point de l'accueil et le bandeau « À découvrir ». Pour qui a coché
+   la case au niveau du système parce que le mouvement lui donne la nausée ou déclenche une crise,
+   une animation qui ne s'arrête jamais est précisément celle qu'il ne fallait pas manquer.
+
+   Une durée quasi nulle plutôt que `animation: none` : les animations posées avec `both`/`forwards`
+   (page-fade, cart-bar, rest-card) portent leur état final dans la dernière image. Les supprimer
+   les figerait sur la PREMIÈRE — donc invisibles. Ici elles sautent à l'arrivée, instantanément.
+
+   Les blocs particuliers qui suivent restent : ils font autre chose que couper le mouvement
+   (la marque animée, par exemple, doit reposer ses traits sans écraser leur dégradé d'opacité). */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes shimmer { 0% { background-position: -200px 0; } 100% { background-position: 200px 0; } }
@@ -1810,9 +1896,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* Plus d'effet de survol sur les cartes de contenu : le soulèvement + ombre d'avant n'a plus de sens en aplats, et un filet iris qui s'allume sous chaque bloc statique serait du bruit. Les cartes réellement cliquables (.rest-card, .join-card, .menu-item-card) gardent le leur, défini plus haut. */
 .rest-card { animation: popIn .3s ease both; }
 
-button { transition: transform .1s, filter .1s, background .15s ease; }
-button:hover:not(:disabled) { filter: brightness(1.06); }
-
+/* Le repos, le survol et l'appui des boutons sont définis une seule fois, avec le reste de leur
+   grammaire (§ « TOUS LES BOUTONS SONT DES PILULES »). Il y avait ici un second `button { transition }`
+   et son survol, 1367 lignes plus bas que le premier : deux endroits à corriger pour un seul geste. */
 
 .toast { transition: opacity .25s cubic-bezier(.2,.8,.2,1), transform .25s cubic-bezier(.2,.8,.2,1); }
 
@@ -1995,7 +2081,7 @@ button:hover:not(:disabled) { filter: brightness(1.06); }
   padding: 10px; box-shadow: var(--shadow-2);
 }
 .carte-panneau .cuisine-chip { box-shadow: none; }
-.carte-panneau .cuisine-chip:disabled { opacity: .45; cursor: not-allowed; }
+.carte-panneau .cuisine-chip:disabled { opacity: .5; cursor: not-allowed; }
 .carte-ligne-etat { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .carte-reinit {
   background: rgba(255,255,255,0.92); color: var(--iris); border: 1px solid var(--line);
@@ -3040,7 +3126,7 @@ button.account-link-row:last-child { border-bottom: none; }
 .resa-cal-head { display: flex; align-items: center; justify-content: space-between; background: var(--ink); color: var(--cream); border-radius: var(--radius-card-sm); padding: 8px 6px; margin-bottom: 8px; }
 .resa-cal-head b { text-transform: capitalize; font-size: 15px; }
 .resa-cal-head button { background: transparent; border: none; color: var(--lime); font-size: 22px; line-height: 1; width: 36px; height: 32px; padding: 0; }
-.resa-cal-head button:disabled { opacity: 0.35; }
+.resa-cal-head button:disabled { opacity: .5; }
 .resa-cal-days { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 12px; font-weight: 700; color: var(--ink-soft); margin-bottom: 4px; text-transform: capitalize; }
 .resa-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .resa-cal-day { aspect-ratio: 1; border-radius: 50%; border: 2px solid transparent; font-weight: 700; font-size: 14px; padding: 0; background: var(--cream-dim); color: var(--ink-faint); }
@@ -3316,7 +3402,9 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
 .business-search-row #business-search-filter { flex: 1 1 auto; min-width: 0; }
 .business-zone-list { margin: 0; padding: 4px; list-style: none; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .business-zone-list li button { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left; background: none; border: 0; padding: 8px 10px; border-radius: var(--radius-field); cursor: pointer; color: inherit; font: inherit; }
-.business-zone-list li button:hover, .business-zone-list li button:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
+/* Le fond teinté marque le survol ; il ne remplace pas l'anneau au clavier, qui reste la seule
+   chose qui dise « c'est ici que je suis » à qui ne voit pas le pointeur. */
+.business-zone-list li button:hover, .business-zone-list li button:focus-visible { background: rgba(59,47,181,0.08); }
 .business-zone-emoji { flex: 0 0 auto; font-size: 18px; line-height: 1.2; }
 .business-zone-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
 .business-zone-text .small { overflow-wrap: anywhere; }
@@ -3356,7 +3444,7 @@ button.recherche-pastille { font: inherit; cursor: pointer; }
    clic était perdu — d'où un œil qui « ne marche pas toujours ». Zone de toucher de 40 px de large. */
 .password-eye { position: absolute; right: 2px; top: 0; bottom: 0; margin: auto 0; height: 40px; min-width: 40px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0 6px; cursor: pointer; color: var(--ink-soft); line-height: 1; border-radius: 8px; touch-action: manipulation; }
 .password-eye:active, .password-eye:hover:active { transform: none; filter: none; background: rgba(59,47,181,0.12); }
-.password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); outline: none; }
+.password-eye:hover, .password-eye:focus-visible { background: rgba(59,47,181,0.08); }
 
 /* Parcours livreur (Onboarding.jsx) et back-office coursiers. */
 .courier-state { border-left: 4px solid var(--line); }
@@ -4195,7 +4283,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
   background: #fff; color: var(--ink); border: 1px solid var(--line);
   font-size: 20px; line-height: 1; cursor: pointer;
 }
-.plat-quantite button:disabled { opacity: 0.4; cursor: default; }
+.plat-quantite button:disabled { opacity: .5; cursor: default; }
 .plat-quantite span { min-width: 28px; text-align: center; font-weight: 700; font-size: 17px; }
 .plat-ajouter { min-height: 48px; }
 .plat-bloque { flex: 1 0 100%; order: -1; margin: 0 0 4px; font-size: 13px; color: var(--red); }
@@ -4315,7 +4403,7 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
   min-height: 60px; padding: 10px 8px; text-align: left;
   background: none; border: 0; font-family: inherit; color: var(--ink); cursor: pointer;
 }
-.adresse-choisir:disabled { opacity: 0.6; cursor: default; }
+.adresse-choisir:disabled { opacity: .5; cursor: default; }
 .adresse-texte { display: flex; flex-direction: column; min-width: 0; gap: 2px; }
 /* Une adresse longue se coupe plutôt que de pousser la croix de suppression hors de l'écran. */
 .adresse-nom { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

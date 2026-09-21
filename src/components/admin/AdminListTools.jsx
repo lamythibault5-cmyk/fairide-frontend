@@ -6,19 +6,10 @@ import { useLanguage } from '../../context/LanguageContext';
 // compteur de résultats et état d'erreur se présentent partout de la même façon.
 
 // --- État d'erreur d'une liste (chargement raté) : message + « Réessayer ». -------------------------
-export function ErrorCard({ message, onRetry }) {
-  const { t: tr } = useLanguage();
-  return (
-    <div className="admin-error-card" role="alert">
-      <span className="admin-error-icon" aria-hidden="true">⚠️</span>
-      <div className="admin-error-body">
-        <h3>{tr('adminCommon.loadError')}</h3>
-        {message && <p className="small">{message}</p>}
-        {onRetry && <button type="button" className="btn-outline" onClick={onRetry}>{tr('adminCommon.retry')}</button>}
-      </div>
-    </div>
-  );
-}
+// Le composant est remonté dans components/ : rien en lui n'était propre à l'administration, et le
+// tableau de bord livreur n'avait aucun état d'erreur faute de pouvoir l'atteindre. Ré-exporté ici
+// pour que les vingt-trois écrans qui l'importent de ce fichier continuent de marcher tels quels.
+export { default as ErrorCard } from '../ErrorCard';
 
 // --- Pagination par pages (Précédent / Page x sur y (n) / Suivant). --------------------------------
 export function Pager({ page, pageSize, total, onPage }) {

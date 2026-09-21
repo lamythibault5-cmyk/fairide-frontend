@@ -5514,6 +5514,7 @@ export default {
       toCollectOnSite: 'À encaisser sur place'
     },
     dashDriver: {
+      loadError: 'Impossible de charger tes courses.',
       today: 'Aujourd\'hui',
       available: 'Disponibles',
       toPickUp: 'À récupérer',
@@ -6753,6 +6754,9 @@ export default {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',
+      loadError: 'La fiche de ce commerce n\'a pas pu être chargée.',
+      retry: 'Réessayer',
       deliverTo: 'Livrer à',
       noAddress: 'Ajoute ton adresse',
       changeAddress: 'Modifier',

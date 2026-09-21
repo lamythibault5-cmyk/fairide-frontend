@@ -5502,6 +5502,7 @@ export default {
       toCollectOnSite: 'To collect on site'
     },
     dashDriver: {
+      loadError: 'Your deliveries could not be loaded.',
       today: 'Today',
       available: 'Available',
       toPickUp: 'To pick up',
@@ -6731,6 +6732,9 @@ export default {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      notFound: 'This business does not exist, or is no longer on Fairide.',
+      loadError: 'This page could not be loaded.',
+      retry: 'Try again',
       deliverTo: 'Deliver to',
       noAddress: 'Add your address',
       changeAddress: 'Change',

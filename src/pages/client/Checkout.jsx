@@ -655,8 +655,11 @@ export default function Checkout() {
             <details style={{ marginTop: 10 }} open={!!giftCode}>
               <summary className="small" style={{ cursor: 'pointer' }}><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherSummary')}</summary>
               <div className="row" style={{ gap: 8, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Un seul aria-label : il y en avait deux sur ce champ, et c'est le second qui
+                    l'emportait en silence — le champ s'annoncait donc « Bon cadeau », le nom de la
+                    section repliable juste au-dessus, au lieu de dire quoi y saisir. */}
                 <input aria-label={t('checkout.giftVoucherPh')} value={giftCode} placeholder={t('checkout.giftVoucherPh')} maxLength={20} style={{ flex: '1 1 160px', textTransform: 'uppercase' }}
-                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} aria-label={t('checkout.giftVoucherSummary')} />
+                  onChange={(e) => { setGiftCode(e.target.value.toUpperCase()); setGiftCheck(null); }} />
                 <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={giftCode.trim().length < 6 || giftCheck === 'loading'}
                   onClick={async () => {
                     setGiftCheck('loading');

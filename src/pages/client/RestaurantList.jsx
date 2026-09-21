@@ -350,20 +350,28 @@ export default function RestaurantList() {
         </button>
       )}
       {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
+      {/* Les pastilles sont des <button>, pas des <div onClick>. C'était le seul endroit du dépôt
+          où une .cuisine-chip n'en était pas un — partout ailleurs (MapPage, ChoixPastilles) elle
+          porte déjà type="button" et aria-pressed. Un <div> ne reçoit pas le focus : ces pastilles
+          étaient injoignables au clavier, alors que filtrer par type de cuisine est le premier
+          geste d'un client sur cette page. L'anneau de mise au point posé avec la grammaire des
+          boutons ne pouvait donc jamais s'y afficher. */}
       <div className="cuisine-scroll">
         <AutoScrollRow
           items={cuisineOptions}
           keyFor={(opt) => opt.value}
           className="cuisine-track"
           renderItem={(opt, i, key) => (
-            <div
+            <button
               key={key}
+              type="button"
               className={`cuisine-chip${chipActive(opt) ? ' active' : ''}`}
+              aria-pressed={chipActive(opt)}
               onClick={() => surChip(opt)}
             >
               <span className="emoji">{opt.emoji}</span>
               <span>{opt.label}</span>
-            </div>
+            </button>
           )}
         />
       </div>

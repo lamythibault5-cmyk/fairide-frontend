@@ -9,6 +9,8 @@ import Icone from '../../components/Icone';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import EtatVide from '../../components/EtatVide';
+import Modale from '../../components/Modale';
 import { StarsDisplay } from '../../components/Stars';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
@@ -33,6 +35,9 @@ import { resolveItemImage } from '../../menuCategories';
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  const [erreur, setErreur] = useState(null);
+  // Incrémenté par « Réessayer » : il suffit qu'il change pour que l'effet de chargement reparte.
+  const [essai, setEssai] = useState(0);
   const [reviews, setReviews] = useState(null);
   const [discover, setDiscover] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState(new Set());
@@ -97,7 +102,14 @@ export default function RestaurantMenu() {
       sessionStorage.removeItem(`fairide_scroll_${id}`);
     }
     sessionStorage.setItem('fairide_last_restaurant_viewed', id);
-    api(`/restaurants/${id}`).then(setRestaurant).catch((e) => toast(e.message));
+    /* L'ÉCHEC A UN ÉCRAN, il n'a plus qu'un message qui s'efface.
+       La fiche ne se chargeait que dans un sens : en cas d'échec, `restaurant` restait à null,
+       le rendu retombait sur les squelettes de chargement (voir plus bas) et n'en sortait
+       jamais. Le seul signe était un toast disparu au bout de cinq secondes — après quoi la
+       page miroitait indéfiniment, sans rien à toucher. Sur une page PUBLIQUE, indexée, qui est
+       souvent la première de Fairide qu'un client voit. */
+    setErreur(null);
+    api(`/restaurants/${id}`).then(setRestaurant).catch(setErreur);
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — inutile pour un visiteur anonyme.
@@ -105,7 +117,7 @@ export default function RestaurantMenu() {
       api('/restaurants/favorites/ids', { token }).then((ids) => setFavoriteIds(new Set(ids))).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, essai]);
 
   // Sauvegarde en continu la position de scroll pour pouvoir la restaurer après un rafraîchissement,
   // puisque le contenu (menu, avis...) se charge de façon asynchrone et décale la hauteur de la page.
@@ -147,6 +159,34 @@ export default function RestaurantMenu() {
     }
   }, [restaurant, id]);
 
+  /* Deux échecs distincts, deux sorties distinctes : une fiche retirée ne se recharge pas, donc
+     proposer « Réessayer » dessus serait une fausse piste — on renvoie vers la liste. Tout le
+     reste (réseau coupé, serveur en panne) est temporaire et mérite un vrai bouton.
+
+     L'échec temporaire garde AUSSI le retour vers la liste, en second rang. Vérifié contre le
+     serveur : une adresse dont l'identifiant n'est pas un UUID valide ne répond pas 404 mais 500,
+     et celui-là ne guérira jamais — « Réessayer » seul y serait un cul-de-sac. Le bouton reste
+     l'action principale (la plupart des échecs sont bien passagers), la sortie est dessous. */
+  if (erreur) {
+    const introuvable = erreur.status === 404;
+    return (
+      <EtatVide
+        icone={introuvable ? 'recherche' : 'bogue'}
+        titre={introuvable ? t('restaurantMenu.notFound') : t('restaurantMenu.loadError')}
+        actionVers={introuvable ? '/restaurants' : undefined}
+        actionTexte={introuvable ? t('restaurantMenu.backToRestaurants') : undefined}
+      >
+        {!introuvable && (
+          <>
+            <button type="button" className="btn-teal" onClick={() => setEssai((n) => n + 1)}>
+              {t('restaurantMenu.retry')}
+            </button>
+            <Link to="/restaurants" className="btn-outline">{t('restaurantMenu.backToRestaurants')}</Link>
+          </>
+        )}
+      </EtatVide>
+    );
+  }
   if (!restaurant) return <SkeletonCards count={3} />;
 
   const isFavorite = favoriteIds.has(id);
@@ -477,9 +517,7 @@ export default function RestaurantMenu() {
           entre le titre et le premier plat. Aucune de ces informations n'est perdue — elles sont
           simplement à un toucher, au lieu d'être devant le plat qu'on venait voir. */}
       {infosOuvertes && (
-        <div className="modal-overlay" onClick={() => setInfosOuvertes(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titre">{t('restaurantMenu.infoTitle')}</h3>
+        <Modale titre={t('restaurantMenu.infoTitle')} onFermer={() => setInfosOuvertes(false)}>
 
             {restaurant.hours && (
               <section className="fiche-infos-bloc">
@@ -520,26 +558,26 @@ export default function RestaurantMenu() {
               </section>
             )}
 
-            <div className="modal-pied">
-              <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
-            </div>
+          <div className="modal-pied">
+            <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
           </div>
-        </div>
+        </Modale>
       )}
 
+      {/* Le titre garde sa taille propre (16px) plutôt que .modal-titre : c'est une question posée,
+          pas l'en-tête d'un panneau d'informations. D'où `ariaLabel` — sans lui, la fenêtre
+          s'annoncerait « dialogue » et rien de plus. */}
       {conflictItem && (
-        <div className="modal-overlay" onClick={() => setConflictItem(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
-            <p className="small" style={{ margin: '0 0 16px' }}>
-              {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
-            </p>
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
-              <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
-            </div>
+        <Modale ariaLabel={t('floatingCart.conflictTitle')} onFermer={() => setConflictItem(null)}>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 16px' }}>
+            {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
+          </p>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
+            <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
           </div>
-        </div>
+        </Modale>
       )}
     </div>
   );

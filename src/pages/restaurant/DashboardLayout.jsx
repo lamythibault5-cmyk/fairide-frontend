@@ -8,6 +8,7 @@ import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
+import ErrorCard from '../../components/ErrorCard';
 import { StarsDisplay } from '../../components/Stars';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
@@ -591,13 +592,17 @@ export default function DashboardLayout() {
       {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
 
       {!restaurant && myRestos.length > 0 && !surCarte && (
+        /* La carte d'échec est celle de components/ErrorCard.jsx, commune aux quatre espaces :
+           elle était écrite à la main ici, avec un émoji 📡 que le reste de l'interface a abandonné
+           (voir l'en-tête de Icone.jsx). Le seuil de deux tentatives ne bouge pas : un échec isolé
+           se rattrape tout seul au rechargement suivant, et basculer en écran d'erreur dès le
+           premier ferait clignoter le tableau de bord d'un restaurateur en plein service. */
         erreurChargement && erreurChargement.n >= 2 ? (
-          <div className="card" style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, marginBottom: 6 }}>📡</div>
-            <b>{t('dashResto.loadFailedTitle')}</b>
-            <p className="small" style={{ margin: '6px auto 12px', maxWidth: 420 }}>{erreurChargement.message}</p>
-            <button type="button" className="btn-teal" onClick={() => { tentatives.current = 0; setErreurChargement(null); loadDashboard(restoId); }}>{t('dashResto.loadRetry')}</button>
-          </div>
+          <ErrorCard
+            titre={t('dashResto.loadFailedTitle')}
+            message={erreurChargement.message}
+            onRetry={() => { tentatives.current = 0; setErreurChargement(null); loadDashboard(restoId); }}
+          />
         ) : <SkeletonCards count={3} />
       )}
       {(restaurant || (surCarte && myRestos.length === 0)) && (
