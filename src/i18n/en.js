@@ -6731,6 +6731,9 @@ export default {
       reviewsCount: '({count} reviews)'
     },
     restaurantMenu: {
+      notFound: 'This business does not exist, or is no longer on Fairide.',
+      loadError: 'This page could not be loaded.',
+      retry: 'Try again',
       deliverTo: 'Deliver to',
       noAddress: 'Add your address',
       changeAddress: 'Change',

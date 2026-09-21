@@ -6753,6 +6753,9 @@ export default {
       reviewsCount: '({count} avis)'
     },
     restaurantMenu: {
+      notFound: 'Ce commerce n\'existe pas ou n\'est plus sur Fairide.',
+      loadError: 'La fiche de ce commerce n\'a pas pu être chargée.',
+      retry: 'Réessayer',
       deliverTo: 'Livrer à',
       noAddress: 'Ajoute ton adresse',
       changeAddress: 'Modifier',

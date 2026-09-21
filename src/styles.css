@@ -1238,6 +1238,13 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .etat-vide-titre { font-size: 19px; }
 .etat-vide-texte { margin: 2px 0 0; max-width: 34ch; color: var(--ink-soft); font-size: 14px; line-height: 1.45; }
 .etat-vide-action { margin-top: 18px; text-decoration: none; }
+/* Classe DISTINCTE de .etat-vide-action, qui est posée sur le lien lui-même : y mettre display:flex
+   aurait transformé ce lien en bloc et étiré le bouton sur toute la largeur des écrans vides du
+   panier, des commandes, des favoris et des factures. Ici c'est une enveloppe, pas un bouton.
+   Une seule action reste la règle ; l'écran d'échec en porte deux (refaire, ou partir) parce qu'un
+   « Réessayer » seul devient un cul-de-sac quand l'échec est définitif. D'où flex-wrap : côte à côte
+   quand ça tient, l'un sous l'autre sur un téléphone, jamais collés. */
+.etat-vide-actions { margin-top: 18px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
 
 
 

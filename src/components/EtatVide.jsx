@@ -11,7 +11,10 @@ import Icone from './Icone';
 //
 // C'est la forme des écrans vides de l'application dont le fondateur a fourni les captures, et elle
 // tient en quatre éléments — pas d'illustration à dessiner, pas d'image à charger.
-export default function EtatVide({ icone, titre, texte, actionVers, actionTexte }) {
+// `children` : l'action n'est pas toujours un lien. Un écran d'échec propose de REFAIRE ce qui vient
+// d'échouer — un bouton, pas une destination — et `actionVers` ne sait exprimer qu'une destination.
+// Le reste de la forme (icône, titre, phrase, une seule action) ne change pas pour autant.
+export default function EtatVide({ icone, titre, texte, actionVers, actionTexte, children }) {
   return (
     <div className="etat-vide">
       <span className="etat-vide-icone" aria-hidden="true"><Icone nom={icone} taille={34} /></span>
@@ -20,6 +23,7 @@ export default function EtatVide({ icone, titre, texte, actionVers, actionTexte 
       {actionVers && actionTexte && (
         <Link to={actionVers} className="btn-teal etat-vide-action">{actionTexte}</Link>
       )}
+      {children && <div className="etat-vide-actions">{children}</div>}
     </div>
   );
 }

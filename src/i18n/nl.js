@@ -6731,6 +6731,9 @@ export default {
       reviewsCount: '({count} beoordelingen)'
     },
     restaurantMenu: {
+      notFound: 'Deze zaak bestaat niet of staat niet meer op Fairide.',
+      loadError: 'Deze pagina kon niet worden geladen.',
+      retry: 'Opnieuw proberen',
       deliverTo: 'Bezorgen op',
       noAddress: 'Voeg je adres toe',
       changeAddress: 'Wijzigen',
