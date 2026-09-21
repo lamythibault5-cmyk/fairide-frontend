@@ -56,7 +56,7 @@ export default function AdminDriversPage() {
   const [nature, setNature] = useEtatPage('nature', 'all');
   // Type de livreur (statut légal du dossier coursier) : student | p2p | independent | none (pas encore choisi).
   const [typeLivreur, setTypeLivreur] = useEtatPage('typeLivreur', 'all');
-  const TYPES_LIVREUR = ['student', 'p2p', 'independent'];
+  const TYPES_LIVREUR = ['student_independent', 'p2p', 'independent'];
   const typeDe = (d) => d.courier?.statusType || 'none';
   const libelleType = (k) => (k === 'none' ? tr('adminDrivers.statusNotChosen') : tr(`courierOnboarding.status_${k}`));
   const emojiType = (k) => ({ student: '🎓', p2p: '🤝', independent: '💼' }[k] || '❔');
