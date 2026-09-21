@@ -1,6 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import VIDEO from '../assets/cuisine.mp4';
-import AFFICHE from '../assets/cuisine.jpg';
+/* LA VARIANTE 4K A ÉTÉ SUPPRIMÉE (2026-09-21), pas simplement allégée.
+ *
+ * cuisine.mp4 faisait 3840 × 2160 à 6285 kb/s, soit 53,9 Mo, et partait à tout écran de 1400 px ou
+ * plus — c'est-à-dire à la majorité des ordinateurs. Or ce fond est recouvert d'un voile blanc à 48 %
+ * (.cuisine-fond-voile dans styles.css), passé au filtre saturate/contrast, et placé DERRIÈRE le
+ * contenu. À ce régime, la 4K ne se voit pas : une comparaison image par image entre la source et un
+ * ré-encodage 1080p, voile compris, ne montre aucune différence perceptible.
+ *
+ * Servir 1080p à tous les écrans de 900 px et plus ramène le plus gros téléchargement de 53,9 Mo à
+ * 10,2 Mo. La branche « très large » n'avait plus de raison d'être une fois la 4K retirée : deux
+ * variantes de même définition, c'était deux fichiers pour un seul besoin.
+ *
+ * Si un jour un écran très large justifie mieux, la bonne réponse n'est pas de revenir à la 4K mais
+ * un 1440p ré-encodé (≈ 15 Mo) — et il faudra d'abord vérifier que ça se voit à travers le voile. */
 import VIDEO_HD from '../assets/cuisine-hd.mp4';
 import AFFICHE_HD from '../assets/cuisine-hd.jpg';
 import VIDEO_SD from '../assets/cuisine-sd.mp4';
@@ -99,9 +111,14 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
   // La source n'est PAS choisie d'emblée, et la vidéo n'est pas seulement masquée en CSS : un
   // <video> masqué se télécharge quand même. `source` reste donc nulle tant que les conditions ne
   // sont pas réunies (mouvement réduit, économiseur de données), et c'est ici que se décide quel
-  // fichier — 4K ou 720p — le visiteur reçoit, jamais les deux.
+  // fichier — 1080p, 900p ou portrait — le visiteur reçoit, jamais deux.
   const [source, setSource] = useState(null);
-  const [affiche, setAffiche] = useState(AFFICHE);
+  /* Pas d'affiche par défaut, et c'est délibéré. Toute valeur initiale se ferait télécharger avant
+     que `evaluer()` n'ait décidé — un téléphone récupérait ainsi l'affiche d'ordinateur en plus de la
+     sienne, pour rien. C'était déjà le cas avec l'affiche 4K (249 Ko) ; le passage au 1080p (91 Ko)
+     aurait juste rendu le gaspillage moins visible. `evaluer()` s'exécute au montage, donc l'attente
+     ne dure qu'un rendu, et le fond est de toute façon invisible tant que `chargerMedia` est faux. */
+  const [affiche, setAffiche] = useState(null);
   const video = useRef(null);
 
   // Le navigateur suspend la lecture quand l'onglet passe en arrière-plan, et ne la reprend pas
@@ -202,27 +219,24 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
 
   useEffect(() => {
     const large = window.matchMedia('(min-width: 900px)');
-    const tresLarge = window.matchMedia('(min-width: 1400px)');
     const calme = window.matchMedia('(prefers-reduced-motion: reduce)');
     const evaluer = () => {
       // Économiseur de données : l'utilisateur a demandé qu'on ne consomme pas, on ne consomme pas.
       const economie = navigator.connection?.saveData === true;
       const portrait = window.matchMedia('(orientation: portrait)').matches;
-      const [videoChoisie, afficheChoisie] = tresLarge.matches ? [VIDEO, AFFICHE]
-        : large.matches ? [VIDEO_HD, AFFICHE_HD]
-          : portrait ? [VIDEO_PORTRAIT, AFFICHE_PORTRAIT] : [VIDEO_SD, AFFICHE_SD];
+      // Plus de palier à 1400 px : le 1080p sert tous les écrans d'ordinateur (voir l'en-tête).
+      const [videoChoisie, afficheChoisie] = large.matches ? [VIDEO_HD, AFFICHE_HD]
+        : portrait ? [VIDEO_PORTRAIT, AFFICHE_PORTRAIT] : [VIDEO_SD, AFFICHE_SD];
       setAffiche(afficheChoisie);
       setSource(calme.matches || economie ? null : videoChoisie);
     };
     const orientation = window.matchMedia('(orientation: portrait)');
     evaluer();
     large.addEventListener('change', evaluer);
-    tresLarge.addEventListener('change', evaluer);
     calme.addEventListener('change', evaluer);
     orientation.addEventListener('change', evaluer);
     return () => {
       large.removeEventListener('change', evaluer);
-      tresLarge.removeEventListener('change', evaluer);
       calme.removeEventListener('change', evaluer);
       orientation.removeEventListener('change', evaluer);
     };
@@ -244,9 +258,9 @@ export default function CuisineBackdrop({ desLeDebut = false }) {
           playsInline
           preload="metadata"
         />
-      ) : (
+      ) : affiche ? (
         <img className="cuisine-fond-media" src={affiche} alt="" decoding="async" />
-      )}
+      ) : null}
       {/* Le voile est ce qui rend le reste possible. Une vidéo change de luminosité d'une image à
           l'autre : contrairement à une photo fixe, on ne peut pas calculer son pire pixel. Le voile
           impose donc un plancher indépendant du contenu — même sur une image entièrement noire, le
