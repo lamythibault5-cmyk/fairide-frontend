@@ -10,6 +10,7 @@ import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, reservatio
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
+import Modale from '../../components/Modale';
 import { StarsDisplay } from '../../components/Stars';
 // Chargée à la demande, même raison que dans RestaurantList.jsx : Leaflet ne doit pas retarder
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
@@ -516,9 +517,7 @@ export default function RestaurantMenu() {
           entre le titre et le premier plat. Aucune de ces informations n'est perdue — elles sont
           simplement à un toucher, au lieu d'être devant le plat qu'on venait voir. */}
       {infosOuvertes && (
-        <div className="modal-overlay" onClick={() => setInfosOuvertes(false)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 className="modal-titre">{t('restaurantMenu.infoTitle')}</h3>
+        <Modale titre={t('restaurantMenu.infoTitle')} onFermer={() => setInfosOuvertes(false)}>
 
             {restaurant.hours && (
               <section className="fiche-infos-bloc">
@@ -559,26 +558,26 @@ export default function RestaurantMenu() {
               </section>
             )}
 
-            <div className="modal-pied">
-              <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
-            </div>
+          <div className="modal-pied">
+            <button type="button" className="btn-gold" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
           </div>
-        </div>
+        </Modale>
       )}
 
+      {/* Le titre garde sa taille propre (16px) plutôt que .modal-titre : c'est une question posée,
+          pas l'en-tête d'un panneau d'informations. D'où `ariaLabel` — sans lui, la fenêtre
+          s'annoncerait « dialogue » et rien de plus. */}
       {conflictItem && (
-        <div className="modal-overlay" onClick={() => setConflictItem(null)}>
-          <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-            <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
-            <p className="small" style={{ margin: '0 0 16px' }}>
-              {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
-            </p>
-            <div className="row" style={{ gap: 8 }}>
-              <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
-              <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
-            </div>
+        <Modale ariaLabel={t('floatingCart.conflictTitle')} onFermer={() => setConflictItem(null)}>
+          <h3 style={{ margin: '0 0 10px', fontSize: 16 }}>{t('floatingCart.conflictTitle')}</h3>
+          <p className="small" style={{ margin: '0 0 16px' }}>
+            {t('floatingCart.conflictMessage', { restaurant: cart.restaurantName })}
+          </p>
+          <div className="row" style={{ gap: 8 }}>
+            <button className="btn-teal" onClick={confirmSwitchRestaurant}>{t('floatingCart.conflictConfirm')}</button>
+            <button className="btn-ghost" onClick={() => setConflictItem(null)}>{t('floatingCart.conflictCancel')}</button>
           </div>
-        </div>
+        </Modale>
       )}
     </div>
   );
