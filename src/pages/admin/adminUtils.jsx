@@ -278,9 +278,22 @@ export function kpiValue(kpi) {
 
 // CSV minimal, sans dépendance : échappe guillemets/virgules/retours à la ligne (RFC 4180), BOM UTF-8
 // pour qu'Excel détecte l'encodage correctement à l'ouverture.
+/* Les exports CSV de l'admin portent des valeurs saisies par des inconnus — noms d'inscription, noms
+   de commerce, notes de réservation. Un tableur interprète comme une FORMULE toute cellule commençant
+   par « = », « + », « - », « @ » ou une tabulation. Quelqu'un qui s'inscrit sous le nom
+   « =cmd|'/c calc'!A1 » fait donc exécuter une commande sur la machine de l'administrateur qui ouvre
+   l'export — la cible n'est pas un client, c'est le compte le plus privilégié de la plateforme.
+   Les guillemets ne protègent pas : ils sont consommés par l'analyseur CSV, et la cellule contient
+   alors « =… », qui est évalué. Vérifié avant correction sur cette fonction précise.
+   Les NOMBRES sont épargnés, sinon « -12,50 » deviendrait du texte et les colonnes de montants ne
+   seraient plus sommables. Même règle que csvSur.js côté serveur. */
+const DECLENCHEURS_FORMULE = /^[=+\-@\t\r]/;
+const RESSEMBLE_A_UN_NOMBRE = /^-?\d{1,15}([.,]\d{1,6})?\s*[%€]?$/;
+
 export function toCsv(rows, columns) {
   const escape = (v) => {
-    const s = v === null || v === undefined ? '' : String(v);
+    let s = v === null || v === undefined ? '' : String(v);
+    if (DECLENCHEURS_FORMULE.test(s) && !RESSEMBLE_A_UN_NOMBRE.test(s.trim())) s = `'${s}`;
     return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const header = columns.map((c) => escape(c.label)).join(',');
