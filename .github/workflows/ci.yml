@@ -1,0 +1,82 @@
+# Contrôles automatiques sur chaque proposition de fusion.
+#
+# POURQUOI. `npm run lint` était « toute l'histoire de la vérification » (voir CLAUDE.md), et encore
+# fallait-il penser à le lancer. La checklist de lancement compte deux entrées sur les dépendances
+# (CVE connues, paquets malveillants) : les cocher une fois ne sert à rien, c'est un contrôle qui doit
+# se rejouer à chaque changement.
+#
+# NE PAS y ajouter de secret. Ces travaux tournent sur des propositions de fusion, donc
+# potentiellement sur du code non relu. Le build tourne sans VITE_API_BASE : le pré-rendu ne joint
+# alors aucun commerce et le dit, sans échouer — c'est le comportement voulu, pas un défaut.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verification:
+    name: Lint, i18n et build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      # `npm ci` et non `npm install` : installe exactement le lockfile, et échoue si package.json et
+      # package-lock.json divergent.
+      - run: npm ci
+
+      - name: oxlint
+        run: npm run lint
+
+      # LE CONTRÔLE LE PLUS UTILE DE CE FICHIER. Les traductions vivent dans trois fichiers, un par
+      # langue (src/i18n/fr.js, en.js, nl.js). Une clé ajoutée dans un seul des trois ne casse rien à
+      # la compilation : elle produit une page en français au milieu d'une page néerlandaise, et ça
+      # ne se voit qu'en lisant la page dans cette langue. Ce script compare les trois jeux de clés.
+      - name: Cohérence des trois langues
+        run: npm run check:i18n
+
+      # Le build inclut le pré-rendu (scripts/prerender.mjs), qui écrit une page statique par page
+      # publique et par langue. Il échoue si une table de traduction manque.
+      - name: Build de production
+        run: npm run build
+
+      # Garde-fou de poids : le chemin critique était monté à 638 Ko sans que personne le remarque.
+      # Informatif pour l'instant — à passer bloquant le jour où un seuil fait consensus.
+      - name: Poids des morceaux produits
+        if: always()
+        run: |
+          echo "Morceaux de plus de 300 Ko :"
+          find dist/assets -name '*.js' -size +300k -printf '  %f : %k Ko\n' | sort -k3 -rn || true
+          echo "Total dist : $(du -sh dist | cut -f1)"
+
+  audit:
+    name: Dépendances
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+
+      # Seuil « high » : bloquer sur « moderate » ferait échouer la CI pour des avis qui ne
+      # concernent souvent que l'outillage de développement, et une CI rouge en permanence finit par
+      # ne plus être lue. `--omit=dev` parce qu'une faille dans Vite n'est pas exposée aux clients —
+      # elle ne tourne pas dans leur navigateur.
+      - name: npm audit (production, seuil high)
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Avis complets (informatif)
+        if: always()
+        run: npm audit || true
