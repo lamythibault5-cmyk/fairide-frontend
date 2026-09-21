@@ -79,7 +79,7 @@ export default function AdminMenuPage() {
             {d.attachments?.length > 0 && (
               <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.attachments')}</b> : {d.attachments.map((f, i) => <span key={f.url}>{i > 0 ? ' · ' : ''}<a href={f.url} target="_blank" rel="noreferrer">{f.name || `${i + 1}`}</a></span>)}</p>
             )}
-            <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.wantsPhotos')}</b> : {d.wantsPhotos ? <b>{tr('adminMenu.wantsPhotosYes')}</b> : tr('adminMenu.wantsPhotosNo')}</p>
+            <p className="small" style={{ margin: '2px 0' }}><b>{tr('adminMenu.wantsPhotos')}</b> : {d.platform !== 'other' ? tr('adminMenu.wantsPhotosSource', { source: d.platformLabel }) : d.wantsPhotos ? <b>{tr('adminMenu.wantsPhotosYes')}</b> : tr('adminMenu.wantsPhotosNo')}</p>
             <p className="small" style={{ margin: '2px 0', whiteSpace: 'pre-wrap' }}><b>{tr('adminMenu.notes')}</b> : {d.notes || <i>{tr('adminMenu.noNotes')}</i>}</p>
             <div className="field" style={{ marginTop: 10 }}>
               <label htmlFor="admin-menu-note">{tr('adminMenu.noteLabel')}</label>

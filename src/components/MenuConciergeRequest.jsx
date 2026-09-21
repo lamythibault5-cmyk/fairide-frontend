@@ -6,7 +6,9 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // « Fairide crée ma carte » — LA seule façon de créer sa carte côté restaurateur (fondateur, 2026-09-21) : il dit sur
 // quoi se baser (son site, Uber Eats, Deliveroo, Takeaway, autre), peut nous envoyer une photo ou un PDF de sa carte,
-// dit s'il veut des photos pour ses plats, et l'équipe Fairide fait le reste. Il vérifie la carte avant publication
+// et l'équipe Fairide fait le reste. PHOTOS (fondateur, 21/09) : avec une source (site, Uber Eats, Deliveroo, Takeaway),
+// Fairide reprend EXACTEMENT la carte de cette page, photos comprises — rien à choisir ; la question « veux-tu des
+// photos ? » ne se pose que sans carte en ligne (source « autre » : photo ou PDF de la carte papier, sans photos). Il vérifie la carte avant publication
 // (rien n'est visible des clients sans sa confirmation, voir MenuReadiness) et la modifie ensuite lui-même.
 // Une seule demande ouverte à la fois ; l'état (reçue → en cours → terminée) suit la tâche côté admin (module Tâches).
 const PLATEFORMES = ['website', 'uber_eats', 'deliveroo', 'takeaway', 'other'];
@@ -33,6 +35,8 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
   useEffect(() => { api(`/restaurants/${restoId}/menu/concierge`, { token }).then((r) => setDemande(r.request || null)).catch(() => setDemande(null)); }, [restoId, token]);
 
   const libelle = (p) => LIBELLES[p] || t(`menuConcierge.source_${p}`);
+  // Une source en ligne → ses photos sont reprises telles quelles ; « autre » → on demande s'il en veut.
+  const sourceEnLigne = platform !== 'other';
   const placeholderUrl = { website: 'https://www.mon-restaurant.be/carte', uber_eats: 'https://www.ubereats.com/be/store/…', deliveroo: 'https://deliveroo.be/fr/menu/…', takeaway: 'https://www.takeaway.com/be/…', other: 'https://…' }[platform];
 
   function ajouterFichiers(liste) {
@@ -49,9 +53,10 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
     if (platform === 'other' && !url.trim() && !fichiers.length && !notes.trim()) { toast(t('menuConcierge.errNeedSource')); return; }
     setBusy(true);
     try {
+      const photos = sourceEnLigne ? true : wantsPhotos; // source en ligne : photos reprises de la source
       const r = fichiers.length
-        ? await apiUpload(`/restaurants/${restoId}/menu/concierge`, { files: fichiers, token, fieldName: 'files', fields: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: wantsPhotos ? 'true' : 'false' } })
-        : await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos } });
+        ? await apiUpload(`/restaurants/${restoId}/menu/concierge`, { files: fichiers, token, fieldName: 'files', fields: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos ? 'true' : 'false' } })
+        : await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos } });
       setDemande(r.request); setFichiers([]); toast(t('menuConcierge.sent'));
     } catch (e) { toast(e.message); } finally { setBusy(false); }
   }
@@ -90,7 +95,7 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         {demande.attachments?.length > 0 && (
           <p className="small" style={{ margin: '6px 0 0' }}>📎 <b>{t('menuConcierge.yourFiles')}</b> : {demande.attachments.map((a, i) => <span key={a.url}>{i > 0 ? ' · ' : ''}<a href={a.url} target="_blank" rel="noreferrer">{a.name || `${i + 1}`}</a></span>)}</p>
         )}
-        <p className="small" style={{ margin: '6px 0 0' }}>📸 {demande.wantsPhotos ? t('menuConcierge.photosLineYes') : t('menuConcierge.photosLineNo')}</p>
+        <p className="small" style={{ margin: '6px 0 0' }}>📸 {demande.platform !== 'other' ? t('menuConcierge.photosLineSource', { source: libelle(demande.platform) }) : demande.wantsPhotos ? t('menuConcierge.photosLineYes') : t('menuConcierge.photosLineNo')}</p>
         {demande.notes && !editNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>📝 <b>{t('menuConcierge.yourNotes')}</b> : {demande.notes}</p>}
         {demande.adminNote && <p className="small" style={{ margin: '6px 0 0', whiteSpace: 'pre-wrap' }}>💬 <b>{t('menuConcierge.fairideNote')}</b> : {demande.adminNote}</p>}
         {editNote && (
@@ -157,14 +162,20 @@ export default function MenuConciergeRequest({ restoId, urlSuggeree = '' }) {
         )}
       </div>
 
-      {/* 3. Des photos pour les plats ? */}
+      {/* 3. Les photos : reprises de la source en ligne telles quelles ; sinon (carte papier), on demande. */}
       <div className="concierge-bloc">
         <b>3. {t('menuConcierge.photosTitle')}</b>
-        <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.photosHelp')}</p>
-        <div className="role-pick" role="radiogroup" aria-label={t('menuConcierge.photosTitle')}>
-          <button type="button" role="radio" aria-checked={wantsPhotos} className={`chip${wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(true)}>📸 {t('menuConcierge.photosYes')}</button>
-          <button type="button" role="radio" aria-checked={!wantsPhotos} className={`chip${!wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(false)}>{t('menuConcierge.photosNo')}</button>
-        </div>
+        {sourceEnLigne ? (
+          <p className="small concierge-photos-source" style={{ margin: '6px 0 0' }}>📸 {t('menuConcierge.photosSameSource', { source: libelle(platform) })}<br /><span style={{ opacity: .85 }}>{t('menuConcierge.photosSameSourceHelp')}</span></p>
+        ) : (
+          <>
+            <p className="small" style={{ margin: '2px 0 8px' }}>{t('menuConcierge.photosNoSourceHelp')}</p>
+            <div className="role-pick" role="radiogroup" aria-label={t('menuConcierge.photosTitle')}>
+              <button type="button" role="radio" aria-checked={wantsPhotos} className={`chip${wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(true)}>📸 {t('menuConcierge.photosYes')}</button>
+              <button type="button" role="radio" aria-checked={!wantsPhotos} className={`chip${!wantsPhotos ? ' active' : ''}`} onClick={() => setWantsPhotos(false)}>{t('menuConcierge.photosNo')}</button>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="field">
