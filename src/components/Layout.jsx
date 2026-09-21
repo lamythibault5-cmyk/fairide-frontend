@@ -139,12 +139,16 @@ export default function Layout() {
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
-  // …et sur la page de connexion / inscription, qui est la porte d entrée du même visiteur. Jamais
-  // pour quelqu un de connecté : `!user` prime, quelle que soit l adresse.
-  // Fond de cuisine : la vitrine publique (accueil, connexion) et les pages où l'on flâne — l'aide et la liste
-  // des commerces, avec ou sans compte. Sur ces dernières, les cartes restent opaques (« doux ») : une centaine
-  // de cartes floutées coûterait cher sur téléphone pour un fond qu'on ne verrait que dans les marges.
-  const fondVitrine = !user && (location.pathname === '/' || location.pathname === '/login');
+  // Fond de cuisine : l'accueil, et les pages où l'on flâne — l'aide et la liste des commerces, avec ou
+  // sans compte. Sur ces dernières, les cartes restent opaques (« doux ») : une centaine de cartes
+  // floutées coûterait cher sur téléphone pour un fond qu'on ne verrait que dans les marges.
+  //
+  // /login N'EN FAIT PLUS PARTIE (demande du fondateur, 2026-09-21). Elle l'avait au titre de « porte
+  // d'entrée du même visiteur », mais ce n'est pas une vitrine : on y vient remplir un formulaire, et
+  // le fond s'y révélait au défilement — c'est-à-dire exactement au moment où l'on descend vers les
+  // champs. La vidéo se chargeait en prime pour une page qui ne la montre jamais en grand.
+  // `!user` prime toujours : quelqu'un de connecté n'a de fond nulle part.
+  const fondVitrine = !user && location.pathname === '/';
   const fondDoux = location.pathname === '/aide' || location.pathname === '/restaurants' || RESTAURANT_DETAIL_PATH.test(location.pathname);
   const fondCuisine = fondVitrine || fondDoux;
 
@@ -202,7 +206,11 @@ export default function Layout() {
           2026-09-15 : un premier écran tout iris était « trop uniforme »). Ailleurs, révélés au défilement.
           Essai inverse le 2026-09-18 — aplat plein au repos, ouvert au défilement — abandonné : c'est bien
           la transparence dès l'arrivée qui est voulue ici. */}
-      {fondCuisine && <CuisineBackdrop key={fondVitrine && location.pathname === '/' ? 'accueil' : 'autre'} desLeDebut={fondVitrine && location.pathname === '/'} />}
+      {/* `fondVitrine` NE VAUT PLUS QUE l'accueil depuis que /login n'a plus de fond : les deux
+          conditions redondantes qui traînaient ici (`fondVitrine && pathname === '/'`, deux fois)
+          disaient la même chose que `fondVitrine` seul, et s'écrivaient encore comme s'il pouvait
+          désigner une autre adresse. */}
+      {fondCuisine && <CuisineBackdrop key={fondVitrine ? 'accueil' : 'autre'} desLeDebut={fondVitrine} />}
       {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
         <div className="hero-inner">
