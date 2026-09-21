@@ -85,14 +85,15 @@ export default function Landing() {
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
-          {/* Deux accroches, une seule visible : la longue au-delà de 640px, la courte en deçà.
-              C'est un choix en CSS et non en JS (matchMedia + état) parce qu'un choix en JS se fait
-              APRÈS le premier rendu : sur téléphone, la phrase longue s'afficherait le temps d'une
-              image avant d'être remplacée, et la bannière sauterait au chargement. Les deux textes
-              sont donc dans le DOM, et `display: none` les départage — ce qui les retire aussi bien
-              de l'écran que des lecteurs d'écran, jamais les deux à la fois. */}
-          <p className="landing-sub landing-sub-long">{t('landing.sub')}</p>
-          <p className="landing-sub landing-sub-court">{t('landing.subCourt')}</p>
+          {/* UNE seule accroche, téléphone comme ordinateur (demande du fondateur, 2026-09-21).
+              Il y en avait deux, départagées par `display: none` selon la largeur : une longue et
+              une courte qui ne gardait que le chiffre de la commission. Le raccourci coûtait la
+              moitié du propos là où il est le plus décisif — sur téléphone, où arrive la majorité
+              du trafic. La phrase est assez courte pour tenir sans être coupée ; seule la taille
+              descend sous 640px (voir .landing-sub dans styles.css).
+              Le couple long/court subsiste pour la ligne d'ouverture juste dessous, qui, elle,
+              énumère trois dates et ne peut pas tenir en entier sur un téléphone. */}
+          <p className="landing-sub">{t('landing.sub')}</p>
           {/* Pas de sélecteur de commune ici : l'intérieur de l'app (liste, carte) est réservé aux comptes.
               Le visiteur voit la vitrine « Découvre » plus bas, puis crée son compte. */}
           {/* UN SEUL appel à l'action principal par page et par public (revue de lancement, 2026-09-18) : pour le

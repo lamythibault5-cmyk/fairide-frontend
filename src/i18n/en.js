@@ -6579,11 +6579,10 @@ export default {
     },
     landing: {
       pill: '📍 Local first',
-      title1: 'The neighbourhood\'s businesses,',
-      title2: 'delivered to the door.',
-      sub: 'Fairide connects restaurants, supermarkets and local businesses with fairly paid couriers, without the excessive commission of the big platforms. Pay your meal, not the platform.',
+      title1: 'Pay for your meal,',
+      title2: 'not the platform.',
+      sub: 'The Belgian alternative to Uber Eats and Deliveroo. 10% commission instead of 22 to 32%: the restaurant keeps more, the courier keeps 100% of the delivery fee, and the money stays here.',
       /* Short forms, phone only — see the fr block for the reasoning. */
-      subCourt: 'Commission capped at 10%, against 22 to 32% elsewhere.',
       ordersOpenCourt: '🗓️ Reservations and takeaway from 10 October',
       partnerQuestion: 'A business or a courier?',
       partnerLink: 'Join Fairide',

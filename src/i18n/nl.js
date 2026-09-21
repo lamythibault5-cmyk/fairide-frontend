@@ -6579,11 +6579,10 @@ export default {
     },
     landing: {
       pill: '📍 Lokaal eerst',
-      title1: 'De handelaars van de buurt,',
-      title2: 'aan huis geleverd.',
-      sub: 'Fairide verbindt restaurants, supermarkten en lokale handelaars met eerlijk betaalde koeriers, zonder de overdreven commissie van de grote platformen. Betaal je maaltijd, niet het platform.',
+      title1: 'Betaal je maaltijd,',
+      title2: 'niet het platform.',
+      sub: 'Het Belgische alternatief voor Uber Eats en Deliveroo. 10% commissie in plaats van 22 tot 32%: de zaak houdt meer over, de koerier krijgt 100% van de leveringskosten, en het geld blijft hier.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
-      subCourt: 'Commissie geplafonneerd op 10%, tegenover 22 tot 32% elders.',
       ordersOpenCourt: '🗓️ Reservaties en afhalen vanaf 10 oktober',
       partnerQuestion: 'Handelaar of koerier?',
       partnerLink: 'Sluit je aan bij Fairide',
