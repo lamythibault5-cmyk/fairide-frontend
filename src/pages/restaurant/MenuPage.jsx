@@ -33,7 +33,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const { restaurant, restoId, loadDashboard } = contexte || contexteOutlet || {};
   const num = (n) => (modeAdmin ? n - 1 : n);
 
-  const [translating, setTranslating] = useState(false);
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
   const [itemCategory, setItemCategory] = useState('plat');
@@ -190,25 +189,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
-  // Traduit toute la carte vers les deux langues autres que celle dans laquelle elle est écrite.
-  // Le serveur saute les plats déjà à jour, on peut donc rappuyer après avoir ajouté trois plats
-  // sans retraduire — ni repayer — les cent autres.
-  async function translateMenu() {
-    setTranslating(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/menu/translate`, { method: 'POST', token });
-      await loadDashboard(restoId);
-      if (r.translated === 0) toast(t('menuPage.toastAlreadyTranslated'));
-      else toast(t('menuPage.toastTranslated', { n: r.translated }));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setTranslating(false);
-    }
-  }
-
-  // Correction manuelle d'une traduction. Le serveur la marque comme retouchée : la génération
-  // automatique ne la réécrira plus jamais.
+  // Traduction d'un plat, écrite à la main par le restaurateur. C'est désormais la SEULE voie :
+  // la traduction automatique de toute la carte est partie le 2026-09-21 avec les appels à l'API.
+  // Le serveur marque la valeur comme retouchée (edited_by_owner).
   async function saveMenuItemTranslation(itemId, lang, value) {
     await api(`/restaurants/${restoId}/menu/${itemId}/translations`, {
       method: 'PATCH', token, body: { lang, name: value.name || '', desc: value.desc || '' }
@@ -892,17 +875,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
           enchaîne naturellement dessus. Le bouton est réutilisable — le serveur ne retraduit que
           les plats dont le texte a bougé depuis la dernière fois. */}
-      {restaurant.menu.length > 0 && (
-        <div className="card">
-          <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.translateTitle')}</h3>
-          <p className="small" style={{ margin: '0 0 12px' }}>
-            {t('menuPage.translateIntro')}
-          </p>
-          <button type="button" className="btn-teal" disabled={translating} onClick={translateMenu}>
-            {translating ? t('menuPage.translating') : t('menuPage.translateButton')}
-          </button>
-        </div>
-      )}
       {modeAdmin && <MenuDrafts restoId={restoId} token={token} menuCount={restaurant.menu.length} onPublished={() => loadDashboard(restoId)} />}
 
       {modeAdmin && restaurant.menu.length > 0 && (

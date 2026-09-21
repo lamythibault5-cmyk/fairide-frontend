@@ -12,7 +12,7 @@ export const CATEGORIES = [
 // telle quelle, pas comme une clé i18n cassée (menuCategories.category.Nos spécialités).
 // Libellé d'une section telle que renvoyée par l'API ({ name, translations: { en, nl } }) dans la
 // langue affichée : les 4 sections par défaut passent par les clés i18n, une section personnalisée
-// (« Nos burgers ») par la traduction produite avec la carte (POST /menu/translate, voir
+// (« Nos burgers ») par la traduction enregistrée pour la section (voir
 // restaurant_sections.translations côté backend), à défaut par son nom d'origine.
 export function sectionLabel(section, language, t) {
   if (!section) return '';

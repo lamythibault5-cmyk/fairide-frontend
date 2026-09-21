@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import PlanPhotoAssistant from './PlanPhotoAssistant';
 import PlanModeles from './PlanModeles';
 import { AREAS, AREA_ICONS, areaLabel, TYPES_ELEMENT, ELEMENT_ICONES, ELEMENT_TAILLES_M, SALLE_CLASSES, styleSalle, ContenuElement } from './PlanApercu';
 import '../floor-plan.css';
@@ -14,7 +13,8 @@ export { AREAS, AREA_ICONS, areaLabel };
 // SALLES : le restaurateur crée autant de salles qu'il veut (« Salle du haut », « Terrasse côté rue »…), chacune avec
 // un type (intérieur, terrasse, bar, salon privé — il fixe l'area de ses tables), des dimensions réelles en mètres et
 // des éléments de décor non réservables (murs, fenêtres, entrée, comptoir, cuisine, WC…). Trois façons de commencer :
-// un modèle prêt à l'emploi (PlanModeles), une photo lue par l'assistant IA (PlanPhotoAssistant), ou une salle vide.
+// un modèle prêt à l'emploi (PlanModeles) ou une salle vide. L'assistant qui lisait une PHOTO de la salle
+// (PlanPhotoAssistant) est parti le 2026-09-21 avec les appels à l'API : l'équipe monte les plans sur demande.
 //
 // MODIFIER : tout se fait au doigt ou à la souris — glisser une table ou un élément, le toucher pour ouvrir sa fiche,
 // tirer la poignée ↘ pour l'agrandir, tirer la poignée du coin de la salle pour agrandir la pièce (les tables gardent
@@ -86,7 +86,7 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
   const [enCours, setEnCours] = useState(null);
   const [glisse, setGlisse] = useState(null);
   const [confirmation, setConfirmation] = useState(null);
-  const [creation, setCreation] = useState(null); // { mode: 'photo' | 'modele', cible }
+  const [creation, setCreation] = useState(null); // { mode: 'modele', cible }
   const [nouvelleSalle, setNouvelleSalle] = useState(null); // { name, kind }
   const [renommage, setRenommage] = useState(null); // { id, name }
   const dragRef = useRef(null);
@@ -456,13 +456,8 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
   const vraiesSalles = sallesAff.filter((s) => !s.virtuelle);
   const panneauCreation = creation && (
     <div ref={creationRef} className="fp-creation">
-      {creation.mode === 'photo' ? (
-        <PlanPhotoAssistant restoId={restoId} token={token} toast={toast} salles={vraiesSalles} tables={tables} cible={creation.cible}
-          onFermer={() => setCreation(null)} onApplique={surApplique} />
-      ) : (
-        <PlanModeles restoId={restoId} token={token} toast={toast} salles={vraiesSalles} tables={tables} cible={creation.cible}
-          onFermer={() => setCreation(null)} onApplique={surApplique} />
-      )}
+      <PlanModeles restoId={restoId} token={token} toast={toast} salles={vraiesSalles} tables={tables} cible={creation.cible}
+        onFermer={() => setCreation(null)} onApplique={surApplique} />
     </div>
   );
   const carteCreation = edit && !assigner && !creation && (
@@ -471,9 +466,6 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
       <div className="fp-creer-boutons">
         <button type="button" className="fp-creer-btn" onClick={() => ouvrirCreation('modele')}>
           <span aria-hidden="true">🧩</span><b>{t('floorPlan.createFromTemplate')}</b><small>{t('floorPlan.createFromTemplateSub')}</small>
-        </button>
-        <button type="button" className="fp-creer-btn" onClick={() => ouvrirCreation('photo')}>
-          <span aria-hidden="true">📷</span><b>{t('floorPlan.createFromPhoto')}</b><small>{t('floorPlan.createFromPhotoSub')}</small>
         </button>
         <button type="button" className="fp-creer-btn" onClick={() => { deselectionner(); setNouvelleSalle({ name: '', kind: 'inside' }); }}>
           <span aria-hidden="true">➕</span><b>{t('floorPlan.createEmpty')}</b><small>{t('floorPlan.createEmptySub')}</small>
@@ -588,7 +580,6 @@ export default function FloorPlan({ restoId, token, toast, tables, setTables, re
                         {AREAS.map((a) => <option key={a} value={a}>{AREA_ICONS[a]} {areaLabel(t, a)}</option>)}
                       </select>
                       <button type="button" className="btn-ghost" title={t('floorPlan.tplForRoom')} aria-label={t('floorPlan.tplForRoom')} onClick={() => ouvrirCreation('modele', salle)}>🧩</button>
-                      <button type="button" className="btn-ghost" title={t('floorPlan.photoForRoom')} aria-label={t('floorPlan.photoForRoom')} onClick={() => ouvrirCreation('photo', salle)}>📷</button>
                       <button type="button" className="btn-ghost" title={t('floorPlan.deleteRoom')} aria-label={t('floorPlan.deleteRoom')} disabled={!!enCours} onClick={() => supprimerSalle(salle)}>🗑</button>
                     </span>
                   )}
