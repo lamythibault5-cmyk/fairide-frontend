@@ -4558,6 +4558,8 @@ export default {
       peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
     },
     restoListUi: {
+      // Commerce vitrine : carte visible, commande impossible (voir `vitrine`, backend).
+      showcaseOnly: '👁️ Carte seule',
       closed: '🔒 Fermé',
       supermarket: 'Supermarché',
       freeFrom: '🚴 Offerte dès {min}€',

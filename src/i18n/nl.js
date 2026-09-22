@@ -4548,6 +4548,7 @@ export default {
       peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
     },
     restoListUi: {
+      showcaseOnly: '👁️ Enkel de kaart',
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
       freeFrom: '🚴 Gratis vanaf €{min}',
