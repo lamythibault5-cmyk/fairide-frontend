@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { COMMUNES } from '../../menuCategories';
+import { COMMUNES, categoryImage } from '../../menuCategories';
 import { getOpenStatus } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -49,6 +49,23 @@ export function useCommercesPublics() {
   return restaurants;
 }
 
+// Les VRAIS commerces (inscrits sur Fairide, pas de démonstration), lus sur GET /restaurants/landing — avec une photo de
+// leur type de cuisine quand ils n'ont pas encore de couverture. Fondateur, 2026-09-22 : la page d'accueil montre les
+// vrais commerces, pas les restaurants test.
+export function useCommercesReels() {
+  const [reels, setReels] = useState([]);
+  useEffect(() => { api('/restaurants/landing').then((all) => setReels(Array.isArray(all) ? all.map((r) => ({ ...r, coverImageUrl: r.coverImageUrl || categoryImage(r.cuisine) })) : [])).catch(() => {}); }, []);
+  return reels;
+}
+
+// La vitrine de l'accueil : les vrais commerces d'abord ; les commerces de démonstration ne complètent que s'il n'y a
+// pas assez de vrais pour remplir (`min`). Dès que les vrais suffisent, plus aucune démo n'apparaît.
+export function vitrineAccueil(reels, publics, min = 3) {
+  if (reels.length >= min) return reels;
+  const demos = publics.filter((r) => r.isDemo !== false || r.reel !== true).filter((r) => !reels.some((x) => x.id === r.id));
+  return [...reels, ...demos];
+}
+
 export default function HeroPreview({ restaurants }) {
   const { t } = useLanguage();
   // Trois commerces avec photo, ouverts de préférence, tirés au sort à chaque visite : la bannière change
@@ -87,7 +104,7 @@ export default function HeroPreview({ restaurants }) {
               </div>
               <div className="hero-preview-side">
                 {r.reviewCount > 0 && <span className="hero-preview-rating"><StarIcon /> {Number(r.rating).toFixed(1)}</span>}
-                <span className={`hero-preview-open${r.estOuvert ? '' : ' ferme'}`}>{r.estOuvert ? t('landing.heroPreviewOpen') : t('landing.heroPreviewClosed')}</span>
+                {r.reel && !r.publie ? <span className="hero-preview-open hero-preview-bientot">{t('landing.heroPreviewSoon')}</span> : <span className={`hero-preview-open${r.estOuvert ? '' : ' ferme'}`}>{r.estOuvert ? t('landing.heroPreviewOpen') : t('landing.heroPreviewClosed')}</span>}
               </div>
             </div>
           ))}

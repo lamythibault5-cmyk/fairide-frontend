@@ -6578,6 +6578,7 @@ export default {
       heroPreviewTitle: 'Nu bij jou in de buurt',
       heroPreviewOpen: 'Open',
       heroPreviewClosed: 'Gesloten',
+      heroPreviewSoon: 'Binnenkort',
       discoverEyebrow: 'Ontdek',
       discoverTitle: 'Partnerzaken in Brussel',
       discoverAll: 'Alle zaken ({n})',

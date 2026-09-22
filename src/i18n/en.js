@@ -6578,6 +6578,7 @@ export default {
       heroPreviewTitle: 'Near you right now',
       heroPreviewOpen: 'Open',
       heroPreviewClosed: 'Closed',
+      heroPreviewSoon: 'Coming soon',
       discoverEyebrow: 'Discover',
       discoverTitle: 'Partner businesses in Brussels',
       discoverAll: 'All businesses ({n})',

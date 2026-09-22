@@ -6618,6 +6618,7 @@ export default {
       heroPreviewTitle: 'Près de toi maintenant',
       heroPreviewOpen: 'Ouvert',
       heroPreviewClosed: 'Fermé',
+      heroPreviewSoon: 'Bientôt',
       discoverEyebrow: 'Découvre',
       discoverTitle: 'Les commerces partenaires à Bruxelles',
       discoverAll: 'Tous les commerces ({n})',
