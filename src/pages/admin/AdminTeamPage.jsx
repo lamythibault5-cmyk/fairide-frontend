@@ -410,13 +410,13 @@ function RolesTab({ token, tr }) {
             </thead>
             <tbody>
               {ADMIN_GROUPS.map((g) => {
-                const mods = ADMIN_MODULES.filter((m) => m.group === g);
+                const mods = ADMIN_MODULES.filter((m) => m.hub === g);
                 if (!mods.length) return null;
                 return [
-                  <tr key={`g-${g}`} className="group-row"><td colSpan={ordre.length + 1}>{tr(`adminHome.group_${g}`)}</td></tr>,
+                  <tr key={`g-${g}`} className="group-row"><td colSpan={ordre.length + 1}>{tr(`adminHubs.${g}`)}</td></tr>,
                   ...mods.map((m) => (
                     <tr key={m.key}>
-                      <td>{m.icon} {tr(`adminModules.${m.key}`)}</td>
+                      <td>{tr(`adminModules.${m.key}`)}</td>
                       {ordre.map((r) => (
                         <td key={r} aria-label={autorise(r, m.key) ? tr('adminTeam.allowed') : tr('adminTeam.notAllowed')}>
                           {autorise(r, m.key) ? <span className="ok">✓</span> : <span className="no">-</span>}

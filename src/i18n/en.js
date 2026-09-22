@@ -2039,6 +2039,26 @@ export default {
       empty: 'Nothing here',
       dragHint: 'Drag a card between columns to change its stage.'
     },
+    // Admin console: sidebar hubs and the Today home (see adminModules.js).
+    adminHubs: {
+      today: 'Today',
+      orders: 'Orders',
+      partners: 'Businesses',
+      couriers: 'Couriers',
+      customers: 'Customers',
+      inbox: 'Inbox',
+      money: 'Finance',
+      settings: 'Settings',
+      todayIntro: 'What is running right now, and what needs an action.',
+      liveTitle: 'Live',
+      kpi_inProgress: 'Orders in progress',
+      kpi_ordersToday: 'Orders today',
+      kpi_gmvToday: 'Volume today',
+      kpi_driversAvailable: 'Couriers available',
+      kpi_driversOnline: 'Couriers online',
+      kpi_reservations: 'Bookings within 24 h',
+      kpi_restaurants: 'Active businesses',
+    },
     adminHome: {
       apps: 'Apps',
       breadcrumbAria: 'Breadcrumb',

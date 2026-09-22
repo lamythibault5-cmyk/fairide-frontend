@@ -110,7 +110,23 @@ const TRACES = {
   // grille de 48 avec un trait de 2,4, et posé à côté d'une icône de la barre du bas la différence
   // d'épaisseur se voyait. Les plateaux sont des triangles pointe en haut : à 20px, deux vraies
   // coupes suspendues se refermaient en deux taches.
-  balance: <><path d="M12 4v17" /><path d="M4 8.5h16" /><path d="m4 8.5-2.2 6h4.4Z" /><path d="m20 8.5-2.2 6h4.4Z" /><path d="M8 21h8" /><circle cx="12" cy="4" r="1.2" /></>
+  balance: <><path d="M12 4v17" /><path d="M4 8.5h16" /><path d="m4 8.5-2.2 6h4.4Z" /><path d="m20 8.5-2.2 6h4.4Z" /><path d="M8 21h8" /><circle cx="12" cy="4" r="1.2" /></>,
+
+  // — Console admin —
+  // Ajoutées quand la console a quitté ses 27 emojis (voir pages/admin/adminModules.js). Mêmes
+  // réglages que le reste du fichier, pour qu'une icône admin posée à côté d'une icône client
+  // pèse exactement pareil.
+  // Deux silhouettes : « Clients », « Équipe ». La seconde, en retrait, se distingue de `compte`.
+  personnes: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8" /><path d="M18 14.2a6.5 6.5 0 0 1 3.5 5.8" /></>,
+  coche: <><rect x="3" y="3" width="18" height="18" rx="4" /><path d="m8 12 3 3 5-6" /></>,
+  eclair: <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" />,
+  // Trois curseurs plutôt qu'un engrenage : un engrenage à 20px devient une tache dentelée.
+  reglages: <><path d="M4 6h10" /><path d="M18 6h2" /><circle cx="16" cy="6" r="2" /><path d="M4 12h4" /><path d="M12 12h8" /><circle cx="10" cy="12" r="2" /><path d="M4 18h12" /><circle cx="18" cy="18" r="2" /></>,
+  megaphone: <><path d="M3 10v4a1 1 0 0 0 1 1h3l8 5V4L7 9H4a1 1 0 0 0-1 1Z" /><path d="M19 9a4 4 0 0 1 0 6" /></>,
+  alerte: <><path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4.5" /><path d="M12 17.5h.01" /></>,
+  tendance: <><path d="m3 17 6-6 4 4 8-8" /><path d="M15 7h6v6" /></>,
+  mallette: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /><path d="M3 13h18" /></>,
+  grille: <><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></>
 };
 
 export default function Icone({ nom, taille = 20, className }) {

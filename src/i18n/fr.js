@@ -2039,6 +2039,26 @@ export default {
       empty: 'Rien ici',
       dragHint: 'Glisse une carte d\'une colonne à l\'autre pour changer son étape.'
     },
+    // Console admin : les pôles de la barre latérale et l'accueil « Aujourd'hui » (voir adminModules.js).
+    adminHubs: {
+      today: "Aujourd'hui",
+      orders: 'Commandes',
+      partners: 'Commerces',
+      couriers: 'Livreurs',
+      customers: 'Clients',
+      inbox: 'Messagerie',
+      money: 'Finances',
+      settings: 'Réglages',
+      todayIntro: 'Ce qui tourne en ce moment, et ce qui attend une action.',
+      liveTitle: 'En direct',
+      kpi_inProgress: 'Commandes en cours',
+      kpi_ordersToday: "Commandes aujourd'hui",
+      kpi_gmvToday: 'Volume du jour',
+      kpi_driversAvailable: 'Livreurs disponibles',
+      kpi_driversOnline: 'Livreurs en ligne',
+      kpi_reservations: 'Réservations sous 24 h',
+      kpi_restaurants: 'Commerces actifs',
+    },
     adminHome: {
       apps: 'Applications',
       breadcrumbAria: 'Fil d\'Ariane',

@@ -72,7 +72,7 @@ const DRAPEAU_LANGUE = { fr: '🇫🇷 FR', en: '🇬🇧 EN', nl: '🇳🇱 NL'
 // connexion Google. Jamais la rue, la date de naissance, un code ou un mot de passe.
 export function ProfilLine({ u, tr }) {
   const parts = [];
-  if (u.city || u.postalCode) parts.push(`📍 ${[u.postalCode, u.city].filter(Boolean).join(' ')}`);
+  if (u.city || u.postalCode) parts.push(`${[u.postalCode, u.city].filter(Boolean).join(' ')}`);
   parts.push(DRAPEAU_LANGUE[u.language] || (u.language || 'fr').toUpperCase());
   parts.push(u.emailVerified ? tr('adminCommon.emailVerified') : tr('adminCommon.emailUnverified'));
   parts.push(u.phoneVerified ? tr('adminCommon.phoneVerified') : tr('adminCommon.phoneUnverified'));
@@ -81,7 +81,7 @@ export function ProfilLine({ u, tr }) {
 }
 
 export function TestBadge() {
-  return <span className="pill test-account-pill" title={{ fr: 'Compte de test (fondateur, démo, essais), pas un vrai utilisateur', en: 'Test account (founder, demo, trials), not a real user', nl: 'Testaccount (oprichter, demo, proeven), geen echte gebruiker' }[getLanguage()]}>🧪 Test</span>;
+  return <span className="pill test-account-pill" title={{ fr: 'Compte de test (fondateur, démo, essais), pas un vrai utilisateur', en: 'Test account (founder, demo, trials), not a real user', nl: 'Testaccount (oprichter, demo, proeven), geen echte gebruiker' }[getLanguage()]}>Test</span>;
 }
 
 // Filtre instantané côté client (aucun aller-retour serveur), une fois la liste complète déjà chargée.
@@ -143,9 +143,9 @@ export const ORDER_STATUSES = ['nouveau', 'preparation', 'pret', 'livraison', 'l
 
 export const BUSINESS_STATUS_LABELS = avecCouleurs(
   { prospect: 'inherit', onboarding: 'var(--gold-deep)', actif: 'var(--teal-deep)', suspendu: 'var(--red)' },
-  { fr: { prospect: '🔎 Prospect', onboarding: '🕐 Onboarding', actif: '✅ Actif', suspendu: '🚫 Suspendu' },
-    en: { prospect: '🔎 Prospect', onboarding: '🕐 Onboarding', actif: '✅ Active', suspendu: '🚫 Suspended' },
-    nl: { prospect: '🔎 Prospect', onboarding: '🕐 Onboarding', actif: '✅ Actief', suspendu: '🚫 Geschorst' } }
+  { fr: { prospect: 'Prospect', onboarding: 'Onboarding', actif: 'Actif', suspendu: 'Suspendu' },
+    en: { prospect: 'Prospect', onboarding: 'Onboarding', actif: 'Active', suspendu: 'Suspended' },
+    nl: { prospect: 'Prospect', onboarding: 'Onboarding', actif: 'Actief', suspendu: 'Geschorst' } }
 );
 
 export const ACCOUNTING_ENTRY_TYPE_LABELS = parLangue({
@@ -178,9 +178,9 @@ const PRIORITE_LIBELLES = {
 export const CRM_PRIORITY_LABELS = avecCouleurs(PRIORITE_COULEURS, PRIORITE_LIBELLES);
 
 export const CRM_NOTE_CHANNEL_LABELS = parLangue({
-  fr: { call: '📞 Appel', email: '✉️ Email', meeting: '🤝 Rendez-vous' },
-  en: { call: '📞 Call', email: '✉️ Email', meeting: '🤝 Meeting' },
-  nl: { call: '📞 Oproep', email: '✉️ E-mail', meeting: '🤝 Afspraak' }
+  fr: { call: 'Appel', email: 'Email', meeting: 'Rendez-vous' },
+  en: { call: 'Call', email: 'Email', meeting: 'Meeting' },
+  nl: { call: 'Oproep', email: 'E-mail', meeting: 'Afspraak' }
 });
 
 export const TICKET_CATEGORIES = ['commande', 'paiement', 'compte', 'technique', 'partenariat', 'autre'];
@@ -206,15 +206,15 @@ export const DOCUMENT_TYPE_LABELS = parLangue({
 });
 export const DOCUMENT_VERIFICATION_LABELS = avecCouleurs(
   { en_attente: 'var(--gold-deep)', valide: 'var(--teal-deep)', rejete: 'var(--red)' },
-  { fr: { en_attente: '🕐 En attente', valide: '✅ Validé', rejete: '🚫 Rejeté' },
-    en: { en_attente: '🕐 Pending', valide: '✅ Validated', rejete: '🚫 Rejected' },
-    nl: { en_attente: '🕐 In wacht', valide: '✅ Gevalideerd', rejete: '🚫 Afgewezen' } }
+  { fr: { en_attente: 'En attente', valide: 'Validé', rejete: 'Rejeté' },
+    en: { en_attente: 'Pending', valide: 'Validated', rejete: 'Rejected' },
+    nl: { en_attente: 'In wacht', valide: 'Gevalideerd', rejete: 'Afgewezen' } }
 );
 export const DOCUMENT_EXPIRY_LABELS = avecCouleurs(
   { expired: 'var(--red)', expiring_soon: 'var(--gold-deep)', valid: 'inherit' },
-  { fr: { expired: '⚠️ Expiré', expiring_soon: '🕐 Expire bientôt', valid: '✅ Valide' },
-    en: { expired: '⚠️ Expired', expiring_soon: '🕐 Expiring soon', valid: '✅ Valid' },
-    nl: { expired: '⚠️ Verlopen', expiring_soon: '🕐 Verloopt binnenkort', valid: '✅ Geldig' } }
+  { fr: { expired: 'Expiré', expiring_soon: 'Expire bientôt', valid: 'Valide' },
+    en: { expired: 'Expired', expiring_soon: 'Expiring soon', valid: 'Valid' },
+    nl: { expired: 'Verlopen', expiring_soon: 'Verloopt binnenkort', valid: 'Geldig' } }
 );
 const CIBLES = {
   fr: { restaurant: 'Restaurant', driver: 'Livreur', client: 'Client', order: 'Commande', crm_prospect: 'Prospect CRM', ticket: 'Ticket', document: 'Document', invoice: 'Facture', user: 'Compte' },
@@ -233,7 +233,7 @@ export const TASK_STATUS_LABELS = avecCouleurs(
 );
 export const TASK_DUE_STATE_LABELS = avecCouleurs(
   { overdue: 'var(--red)', due_soon: 'var(--gold-deep)' },
-  { fr: { overdue: '⚠️ En retard', due_soon: '🕐 Bientôt' }, en: { overdue: '⚠️ Overdue', due_soon: '🕐 Soon' }, nl: { overdue: '⚠️ Te laat', due_soon: '🕐 Binnenkort' } }
+  { fr: { overdue: 'En retard', due_soon: 'Bientôt' }, en: { overdue: 'Overdue', due_soon: 'Soon' }, nl: { overdue: 'Te laat', due_soon: 'Binnenkort' } }
 );
 export const TASK_TARGET_TYPE_LABELS = parLangue(CIBLES);
 
