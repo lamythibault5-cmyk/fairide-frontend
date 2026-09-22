@@ -162,7 +162,7 @@ export default function SalesPage() {
                 <button type="button" className={`chip${zoneActive === null ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{t('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${t(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.claimedBy ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : z.claimedBy}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
+                    🎯 {z.name}{z.status !== 'todo' ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : t('sales.zoneTakenShort')}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
                   </button>
                 ))}
               </div>
@@ -280,7 +280,7 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
         {aDesDoublons ? (
           <div className="crm-doublons" role="status">
             {doublons.mine.map((d) => <p key={`m${d.id}`}>⚠️ {t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
-            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, agent: d.agentName, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
             {doublons.restaurants.map((d) => <p key={`r${d.id}`}>🏪 {t('sales.dupRestaurant', { name: d.name, commune: d.commune || '' })}</p>)}
           </div>
         ) : null}
@@ -550,7 +550,7 @@ function GuideCard({ t }) {
 
 // ----------------------------------------------------------------------------------------------- zones
 // Les zones à démarcher, réparties entre commerciaux : les miennes, celles à faire (personne dessus, les moins
-// démarchées d'abord), celles prises par d'autres (prénom). Un clic sur le nom cadre la carte sur la zone.
+// démarchées d'abord), celles prises par d'autres — sans dire par qui (fondateur, 22/09). Un clic sur le nom cadre la carte.
 function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
   const mine = zones.filter((z) => z.status === 'mine');
   const todo = zones.filter((z) => z.status === 'todo').sort((a, b) => (a.mine + a.others) - (b.mine + b.others));
@@ -558,7 +558,7 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
   const ligne = (z, action) => (
     <li key={z.key} className={`crm-zone-ligne crm-zone-${z.status}`}>
       <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}>🎯 <b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
-      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenBy', { agent: z.claimedBy })}` : ''}</span>
+      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenOther')}` : ''}</span>
       {action}
     </li>
   );
@@ -576,8 +576,8 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
 }
 
 // ----------------------------------------------------------------------------------------------- équipe
-// Les commerciaux, par leur PRÉNOM seulement (le serveur n'envoie rien d'autre) : commerces démarchés, inscrits et
-// gains. Pour voir que d'autres bossent et que ça rapporte — et se situer. Classement par gains.
+// Les commerciaux, par leur PRÉNOM seulement (le serveur n'envoie rien d'autre) : inscrits et gains — pas les
+// commerces démarchés (fondateur, 22/09). Pour voir que d'autres bossent et que ça rapporte — et se situer.
 function EquipeCard({ equipe, t, euros }) {
   if (!equipe.length) return null;
   const total = equipe.reduce((s, x) => s + (x.earned || 0), 0);
@@ -590,7 +590,7 @@ function EquipeCard({ equipe, t, euros }) {
         {equipe.map((x, i) => (
           <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
             <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
-            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed, prospects: x.prospects })}</span></span>
+            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed })}</span></span>
             <span className="crm-equipe-gain"><b>{euros(x.earned)}</b>{x.upcoming ? <><br /><span className="small">+ {euros(x.upcoming)} {t('sales.teamUpcoming')}</span></> : null}</span>
           </li>
         ))}

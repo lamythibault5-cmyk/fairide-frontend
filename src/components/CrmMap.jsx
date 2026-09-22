@@ -93,7 +93,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     const couche = couches.current.autres; couche.clearLayers();
     for (const a of autres) {
       const m = L.marker([a.lat, a.lng], { icon: pointAutre(), interactive: true });
-      m.bindTooltip(escapeHtml(a.name ? t('sales.othersPin', { name: a.name, agent: a.agentName || '?' }) : t('sales.othersPinAgent', { agent: a.agentName || '?' })), { direction: 'top', offset: [0, -8] });
+      m.bindTooltip(escapeHtml(t('sales.othersPinAgent')), { direction: 'top', offset: [0, -8] });
       couche.addLayer(m);
     }
   }, [autres, t]);
