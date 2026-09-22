@@ -135,7 +135,7 @@ export default function RestaurantMenu() {
        page miroitait indéfiniment, sans rien à toucher. Sur une page PUBLIQUE, indexée, qui est
        souvent la première de Fairide qu'un client voit. */
     setErreur(null);
-    api(`/restaurants/${id}`).then(setRestaurant).catch(setErreur);
+    api(`/restaurants/${id}`, { token }).then(setRestaurant).catch(setErreur);
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — inutile pour un visiteur anonyme.

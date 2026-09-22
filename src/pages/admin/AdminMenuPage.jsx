@@ -26,7 +26,7 @@ export default function AdminMenuPage() {
   const [erreur, setErreur] = useState('');
 
   const charger = useCallback(async () => {
-    try { setRestaurant(await api(`/restaurants/${id}`)); } catch (e) { setErreur(e.message); }
+    try { setRestaurant(await api(`/restaurants/${id}`, { token })); } catch (e) { setErreur(e.message); }
   }, [id]);
 
   useEffect(() => {
