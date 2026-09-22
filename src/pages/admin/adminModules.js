@@ -42,24 +42,24 @@ export const ADMIN_MODULES = [
   { key: 'couriers', path: '/admin/couriers', icon: 'dossier', hub: 'couriers', badge: (o) => pastille(n(o.couriers?.pending)) },
   { key: 'clients', path: '/admin/clients', icon: 'personnes', hub: 'customers', badge: (o) => pastille(n(o.clients?.newWeek), 'info') },
   { key: 'reviews', path: '/admin/reviews', icon: 'etoile', hub: 'orders', badge: (o) => pastille(n(o.reviews?.low), 'danger') },
-  { key: 'crm', path: '/admin/crm', icon: 'cible', hub: 'partners', badge: (o) => pastille(n(o.crm?.followUpsOverdue), 'danger') },
+  { key: 'crm', path: '/admin/crm', icon: 'cible', hub: 'partners', hidden: true, badge: (o) => pastille(n(o.crm?.followUpsOverdue), 'danger') },
   // Un code actif n'est pas « à traiter » : seule une donnée d'action réelle (codes qui expirent sous
   // peu, si le serveur la fournit) mérite une pastille.
   { key: 'promotions', path: '/admin/promotions', icon: 'etiquette', hub: 'customers', badge: (o) => pastille(n(o.promotions?.expiringSoon)) },
   { key: 'finance', path: '/admin/finance', icon: 'euro', hub: 'money', badge: aucun },
   { key: 'payments', path: '/admin/payments', icon: 'carteBancaire', hub: 'money', badge: (o) => (o.payments?.failedToday !== undefined ? pastille(n(o.payments?.failedToday), 'danger') : null) },
   { key: 'invoices', path: '/admin/invoices', icon: 'document', hub: 'money', badge: (o) => pastille(n(o.invoices?.unpaid), n(o.invoices?.overdue) > 0 ? 'danger' : 'warn') },
-  { key: 'accounting', path: '/admin/accounting', icon: 'guide', hub: 'money', badge: (o) => pastille(n(o.accounting?.unbalancedGroups) + n(o.accounting?.flaggedEntries) + n(o.accounting?.openPeriodsBehind), 'warn') },
+  { key: 'accounting', path: '/admin/accounting', icon: 'guide', hub: 'money', hidden: true, badge: (o) => pastille(n(o.accounting?.unbalancedGroups) + n(o.accounting?.flaggedEntries) + n(o.accounting?.openPeriodsBehind), 'warn') },
   { key: 'support', path: '/admin/support', icon: 'bouee', hub: 'inbox', badge: (o) => pastille(n(o.support?.open), n(o.support?.slaBreached) > 0 ? 'danger' : 'warn') },
   { key: 'documents', path: '/admin/documents', icon: 'contrat', hub: 'settings', badge: (o) => pastille(n(o.documents?.pending) + n(o.documents?.expired) + n(o.documents?.expiringSoon), n(o.documents?.expired) > 0 ? 'danger' : 'warn') },
   { key: 'tasks', path: '/admin/tasks', icon: 'coche', hub: 'inbox', badge: (o) => pastille(n(o.tasks?.overdue) + n(o.tasks?.dueSoon), n(o.tasks?.overdue) > 0 ? 'danger' : 'warn') },
-  { key: 'automations', path: '/admin/automations', icon: 'eclair', hub: 'settings', badge: aucun },
+  { key: 'automations', path: '/admin/automations', icon: 'eclair', hub: 'settings', hidden: true, badge: aucun },
   { key: 'settings', path: '/admin/settings', icon: 'reglages', hub: 'settings', badge: aucun },
   // Applications ajoutées le 2026-09-09 (« toutes les applications importantes pour un business comme Fairide »).
-  { key: 'marketing', path: '/admin/marketing', icon: 'megaphone', hub: 'customers', badge: (o) => pastille(o.marketing?.scheduled || 0, 'info') },
+  { key: 'marketing', path: '/admin/marketing', icon: 'megaphone', hub: 'customers', hidden: true, badge: (o) => pastille(o.marketing?.scheduled || 0, 'info') },
   { key: 'logistics', path: '/admin/logistics', icon: 'carte', hub: 'couriers', badge: (o) => pastille(o.logistics?.zonesUncovered || 0, 'warn') },
   { key: 'incidents', path: '/admin/incidents', icon: 'alerte', hub: 'orders', badge: (o) => pastille(o.incidents?.open || 0, (o.incidents?.overdue || 0) > 0 ? 'danger' : 'warn') },
-  { key: 'reports', path: '/admin/reports', icon: 'tendance', hub: 'money', badge: aucun },
+  { key: 'reports', path: '/admin/reports', icon: 'tendance', hub: 'money', hidden: true, badge: aucun },
   { key: 'team', path: '/admin/team', icon: 'compte', hub: 'settings', badge: aucun },
   { key: 'messages', path: '/admin/messages', icon: 'bulle', hub: 'inbox', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
   // Sales (2026-09-17) : codes commerciaux, commerciaux (proches qui démarchent les restaurateurs) et commerces démarchés.
@@ -105,9 +105,24 @@ export function hubByKey(key) {
   return ADMIN_HUBS.find((h) => h.key === key) || null;
 }
 
+// APPLICATIONS MISES DE CÔTÉ (`hidden: true`, 2026-09-23). Tant que Fairide n'a pas de vrais
+// commerces en ligne, cinq applications faisaient doublon ou attendaient un volume qui n'existe pas :
+//   - CRM : un second pipeline de prospects à côté de Sales, qui a les zones et les commerciaux ;
+//   - Rapports : ses quatre onglets sont désormais ceux du Tableau de bord (voir reports/NumbersTabs.jsx) ;
+//   - Automatisations : des règles qui créent des tâches — les tâches se créent à la main pour l'instant.
+//     Les règles déjà activées CONTINUENT de tourner côté serveur (automationEngine.js) ;
+//   - Comptabilité : la tenue du journal revient au comptable. ATTENTION, c'est aussi là que vivent
+//     l'export XML de la déclaration TVA et la clôture des mois ;
+//   - Marketing : des campagnes e-mail sans clients à qui les envoyer.
+// Masquées, pas supprimées : ni onglet, ni pastille, ni ligne « à traiter », mais l'adresse répond
+// toujours et les données restent. Pour en rendre une, retirer son `hidden: true`.
+export function moduleVisible(mod) {
+  return !!mod && !mod.hidden;
+}
+
 // Applications d'un pôle ouvertes au rôle du membre, dans l'ordre des onglets.
 export function hubModules(hub, role) {
-  return hub.modules.map(moduleByKey).filter((m) => m && moduleAllowed(m, role));
+  return hub.modules.map(moduleByKey).filter((m) => moduleVisible(m) && moduleAllowed(m, role));
 }
 
 // Pastille d'un pôle dans la barre latérale : la somme de ce qui ATTEND une action. Les pastilles
@@ -155,5 +170,7 @@ export function attentionItems(o) {
     { key: 'supportOpen', count: n(o.support?.open), to: '/admin/support', tone: 'info' },
     { key: 'tasksDueSoon', count: n(o.tasks?.dueSoon), to: '/admin/tasks?due=due_soon', tone: 'info' }
   ];
-  return items.filter((i) => i.count > 0);
+  // Une ligne qui mène à une application masquée (les relances CRM) ne s'affiche plus : elle
+  // enverrait vers un écran que la navigation ne montre plus.
+  return items.filter((i) => i.count > 0 && (moduleForPath(i.to.split(/[?#]/)[0])?.hidden !== true));
 }

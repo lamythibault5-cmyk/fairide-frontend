@@ -579,6 +579,7 @@ export default {
       act_resent: 'Invitation renvoyée'
     },
     adminReports: {
+      tab_overview: "Vue d'ensemble",
       tab_sales: 'Ventes',
       tab_customers: 'Clients',
       tab_partners: 'Partenaires',

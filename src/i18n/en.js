@@ -579,6 +579,7 @@ export default {
       act_resent: 'Invitation resent'
     },
     adminReports: {
+      tab_overview: 'Overview',
       tab_sales: 'Sales',
       tab_customers: 'Customers',
       tab_partners: 'Partners',

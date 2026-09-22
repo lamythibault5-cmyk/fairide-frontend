@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import useAdminOverview from '../../hooks/useAdminOverview';
 import useAdminRole from '../../hooks/useAdminRole';
@@ -45,10 +45,12 @@ export default function AdminPageHeader({ module, title, actions, children }) {
           {soeurs.map((m) => {
             const b = moduleBadge(m, overview);
             return (
-              <NavLink key={m.key} to={m.path} className={({ isActive }) => `admin-hub-tab${isActive ? ' active' : ''}`}>
+              // Allumé d'après l'application de l'écran et non d'après l'adresse : les rapports
+              // (/admin/reports) se déclarent « dashboard » et doivent allumer l'onglet Tableau de bord.
+              <Link key={m.key} to={m.path} aria-current={m.key === mod.key ? 'page' : undefined} className={`admin-hub-tab${m.key === mod.key ? ' active' : ''}`}>
                 {tr(`adminModules.${m.key}`)}
                 {b && <span className={`admin-hub-tab-count tone-${b.tone}`}>{b.count}</span>}
-              </NavLink>
+              </Link>
             );
           })}
         </nav>

@@ -579,6 +579,7 @@ export default {
       act_resent: 'Uitnodiging opnieuw verstuurd'
     },
     adminReports: {
+      tab_overview: 'Overzicht',
       tab_sales: 'Verkoop',
       tab_customers: 'Klanten',
       tab_partners: 'Partners',
