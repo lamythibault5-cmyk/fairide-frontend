@@ -235,7 +235,7 @@ export default function Account() {
 
   function refreshRestaurant() {
     if (!restoId) return;
-    api(`/restaurants/${restoId}`).then(setRestaurant).catch((e) => toast(e.message, 'erreur'));
+    api(`/restaurants/${restoId}`, { token }).then(setRestaurant).catch((e) => toast(e.message, 'erreur'));
   }
 
   // N'initialise les cases à cocher qu'une fois par restaurant, pas à chaque refreshRestaurant() (ex.

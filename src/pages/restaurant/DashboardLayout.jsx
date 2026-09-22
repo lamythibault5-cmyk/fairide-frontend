@@ -235,7 +235,7 @@ export default function DashboardLayout() {
       }
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
-        api(`/restaurants/${id}`),
+        api(`/restaurants/${id}`, { token }),
         api(`/restaurants/${id}/reviews`),
         api(`/restaurants/${id}/drivers`, { token })
       ]);

@@ -4560,6 +4560,7 @@ export default {
       exceptionalClosure: '🏖️ Uitzonderlijke sluiting',
       currentlyClosed: '🔒 Momenteel gesloten',
       reservationOnlyInfo: '🍽️ Dit restaurant werkt enkel op reservatie, online bestellen is hier niet mogelijk. Reserveer een tafel om de kaart ter plaatse te ontdekken.',
+      orderingNotOpenInfo: '🕐 Online bestellen is bij deze zaak nog niet open. Deze kaart is ter informatie gepubliceerd.',
       toastLogin: 'Log in of maak een account om te bestellen.',
       toastNoOnline: 'Dit restaurant biedt geen online bestellen aan, reserveer een tafel om de kaart ter plaatse te ontdekken.',
       toastClosed: 'Deze zaak is momenteel gesloten.',
