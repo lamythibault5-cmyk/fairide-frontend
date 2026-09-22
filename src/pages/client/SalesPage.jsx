@@ -250,6 +250,8 @@ export default function SalesPage() {
 // « Photo du commerce » (fondateur, 2026-09-22) : le commercial prend la devanture en photo ; le serveur lit la position
 // de la photo (sinon celle du téléphone), propose les commerces OpenStreetMap autour, l'adresse et la zone ; le
 // commercial choisit le bon, corrige si besoin, et valide → fiche créée « contacté », photo gardée. Plus rien à taper.
+// Depuis le 22/09 (décision du fondateur), l'ENSEIGNE est aussi lue par un modèle de vision : son nom passe en tête des
+// candidats (« lu sur l'enseigne »), et l'adresse ou le téléphone visibles pré-remplissent la fiche.
 function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   const inputRef = useRef(null);
   const [fichier, setFichier] = useState(null);
@@ -257,7 +259,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   const [etape, setEtape] = useState('choisir'); // choisir | analyse | verifier
   const [reco, setReco] = useState(null);
   const [choix, setChoix] = useState(null); // index du candidat, ou 'autre'
-  const [f, setF] = useState({ name: '', address: '', commune: '', cuisine: '', stage: 'contacte', firstNote: '' });
+  const [f, setF] = useState({ name: '', address: '', commune: '', phone: '', cuisine: '', stage: 'contacte', firstNote: '' });
   const [envoi, setEnvoi] = useState(false);
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   useEffect(() => () => { if (apercu) URL.revokeObjectURL(apercu); }, [apercu]);
@@ -271,7 +273,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
       setReco(r);
       const premier = r.candidates?.[0];
       setChoix(premier ? 0 : 'autre');
-      setF((s) => ({ ...s, name: premier?.name || '', address: r.address || '', commune: r.commune || r.zone?.commune || '', cuisine: premier?.cuisine || '' }));
+      setF((s) => ({ ...s, name: premier?.name || '', address: r.address || '', commune: r.commune || r.zone?.commune || '', phone: r.phone || '', cuisine: premier?.cuisine || r.sign?.cuisine || '' }));
       setEtape('verifier');
     } catch (e) { toast(e.message); setEtape('choisir'); }
   }
@@ -315,6 +317,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
             <div className="crm-photo-entete">
               {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
               <div className="small">
+                {reco.sign?.name && <p style={{ margin: '0 0 4px' }}>🪧 <b>{t('sales.photoSign', { name: reco.sign.name })}</b>{reco.sign.notes ? <span> · {reco.sign.notes}</span> : null}</p>}
                 <p style={{ margin: 0 }}>📍 {reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
                 {zone && <p style={{ margin: '4px 0 0' }}>🎯 {t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
                 {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}>🏠 {[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
@@ -332,7 +335,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
               <div className="crm-photo-candidats" role="radiogroup" aria-label={t('sales.photoWhich')}>
                 {reco.candidates.map((c, i) => (
                   <button type="button" key={i} role="radio" aria-checked={choix === i} className={`crm-photo-candidat${choix === i ? ' actif' : ''}`} onClick={() => choisir(i)}>
-                    <b>{c.name}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
+                    <b>{c.name}{c.source === 'sign' || c.source === 'osm+sign' ? <span className="crm-zone-qui" style={{ marginLeft: 6 }}>🪧 {t(c.source === 'sign' ? 'sales.photoFromSign' : 'sales.photoFromBoth')}</span> : null}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
                   </button>
                 ))}
                 <button type="button" role="radio" aria-checked={choix === 'autre'} className={`crm-photo-candidat${choix === 'autre' ? ' actif' : ''}`} onClick={() => choisir('autre')}><b>{t('sales.photoOther')}</b></button>
@@ -346,6 +349,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-commune">{t('sales.fCommune')}</label><input id="ph-commune" value={f.commune} onChange={champ('commune')} /></div>
               </div>
               <div className="row" style={{ gap: 8 }}>
+                <div className="field" style={{ flex: 1 }}><label htmlFor="ph-tel">{t('sales.fPhone')}</label><input id="ph-tel" type="tel" value={f.phone} onChange={champ('phone')} /></div>
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-cuisine">{t('sales.fCuisine')}</label><input id="ph-cuisine" value={f.cuisine} onChange={champ('cuisine')} /></div>
                 <div className="field" style={{ flex: 1 }}><label htmlFor="ph-etape">{t('sales.fStage')}</label>
                   <select id="ph-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}</select>
