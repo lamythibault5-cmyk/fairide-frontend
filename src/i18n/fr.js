@@ -4570,6 +4570,10 @@ export default {
       exceptionalClosure: '🏖️ Fermeture exceptionnelle',
       currentlyClosed: '🔒 Actuellement fermé',
       reservationOnlyInfo: '🍽️ Ce restaurant fonctionne uniquement sur réservation, la commande en ligne n\'est pas disponible ici. Réserve une table pour découvrir la carte sur place.',
+      // Le commerce VEUT la commande en ligne mais ses services ne sont pas encore ouverts. Ne rien
+      // promettre sur la date : on ne la connaît pas. Dire ce qui est vrai — la carte est là, la
+      // commande pas encore — plutôt que de laisser croire à une formule Réservation.
+      orderingNotOpenInfo: '🕐 La commande en ligne n\'est pas encore ouverte chez ce commerce. Cette carte est publiée à titre d\'information.',
       toastLogin: 'Connecte-toi ou crée un compte pour commander.',
       toastNoOnline: 'Ce restaurant ne propose pas la commande en ligne, réserve une table pour découvrir la carte sur place.',
       toastClosed: 'Ce commerce est actuellement fermé.',

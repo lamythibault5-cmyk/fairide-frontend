@@ -243,6 +243,21 @@ export default function RestaurantMenu() {
 
   const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
 
+  /* DEUX RAISONS DE NE PAS POUVOIR COMMANDER, ET ELLES NE SE DISENT PAS PAREIL.
+   *
+   * On affichait « Ce restaurant fonctionne uniquement sur réservation » dans les deux cas. C'est
+   * vrai d'un commerce qui a choisi la formule Réservation. C'est FAUX d'un commerce qui veut la
+   * livraison mais dont les services ne sont pas encore ouverts — servicesOuverts() exige un
+   * abonnement actif (voir formules.js), donc une carte peut être en ligne bien avant les
+   * commandes. Constaté sur les six commerces dont la carte a été montée par Fairide : tous en
+   * formule complète, tous avec la livraison fermée, et la page annonçait au client qu'ils ne
+   * prenaient que des réservations.
+   *
+   * La charge utile porte déjà les deux faces : `wants*` est le choix enregistré du restaurateur,
+   * `offers*` ce qui est réellement ouvert. Leur écart EST la distinction, sans rien ajouter côté
+   * backend. */
+  const surReservationSeulement = !restaurant.wantsDelivery && !restaurant.wantsPickup;
+
   // La bascule ne s'affiche que si le commerce propose vraiment les deux : un seul mode possible
   // n'est pas un choix, c'est une information — elle tient alors dans le panneau des frais.
   const modesPossibles = [restaurant.offersDelivery && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
@@ -503,7 +518,9 @@ export default function RestaurantMenu() {
 
       {onlineOrderingDisabled && (
         <div className="card">
-          <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.reservationOnlyInfo')}</p>
+          <p className="small" style={{ margin: 0 }}>
+            {t(surReservationSeulement ? 'restoMenuUi.reservationOnlyInfo' : 'restoMenuUi.orderingNotOpenInfo')}
+          </p>
         </div>
       )}
 

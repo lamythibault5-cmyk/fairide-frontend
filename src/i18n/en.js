@@ -4560,6 +4560,7 @@ export default {
       exceptionalClosure: '🏖️ Exceptional closure',
       currentlyClosed: '🔒 Currently closed',
       reservationOnlyInfo: '🍽️ This restaurant works by reservation only, online ordering is not available here. Book a table to discover the menu on site.',
+      orderingNotOpenInfo: '🕐 Online ordering is not open yet at this business. This menu is published for information.',
       toastLogin: 'Log in or create an account to order.',
       toastNoOnline: 'This restaurant does not offer online ordering, book a table to discover the menu on site.',
       toastClosed: 'This business is currently closed.',
