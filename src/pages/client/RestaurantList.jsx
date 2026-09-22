@@ -93,6 +93,11 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
         {deliveryOfferLabel && <span className="pill teal">{deliveryOfferLabel}</span>}
         {isClosed && <span className="pill closed-pill">{t('restoListUi.closed')}</span>}
+        {/* COMMERCE VITRINE : sa carte est listée, on ne peut pas y commander. Le dire ICI et pas
+            seulement sur sa page — quelqu'un qui parcourt la liste choisit d'après ces vignettes, et
+            découvrir l'impossibilité de commander après avoir composé un panier serait une perte de
+            temps qu'on lui a fait prendre. Voir `vitrine` dans la charge utile publique. */}
+        {r.vitrine && <span className="pill closed-pill">{t('restoListUi.showcaseOnly')}</span>}
       </div>
       <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>
         <span className="rest-card-name-text">{r.name}</span>

@@ -4548,6 +4548,7 @@ export default {
       peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
     },
     restoListUi: {
+      showcaseOnly: '👁️ Menu only',
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
       freeFrom: '🚴 Free from €{min}',
