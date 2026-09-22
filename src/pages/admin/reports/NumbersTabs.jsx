@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../../context/LanguageContext';
+import useAdminRole from '../../../hooks/useAdminRole';
+import { moduleAllowed, moduleByKey } from '../adminModules';
 import '../../../admin-finance.css';
 
 // Les chiffres en un seul endroit (2026-09-23). Tableau de bord et Rapports étaient deux applications
@@ -17,6 +19,11 @@ const VUES = [
 
 export default function NumbersTabs({ current }) {
   const { t: tr } = useLanguage();
+  // Le Tableau de bord est ouvert à toute l'équipe, les Rapports non (MODULE_ROLES : pas le rôle
+  // support). Sans ce filtre, un membre support voyait quatre onglets qui répondaient tous 403.
+  const { role } = useAdminRole();
+  const rapportsOuverts = moduleAllowed(moduleByKey('reports'), role);
+  if (!rapportsOuverts) return null;
   return (
     <nav className="fin-tabs" aria-label={tr('adminReports.tabsAria')}>
       {VUES.map((v) => (
