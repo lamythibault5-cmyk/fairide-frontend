@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
@@ -6,9 +6,9 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { buildTicketBytes, COLUMNS_58MM, COLUMNS_80MM } from '../../escposTicket';
+import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
-import PrinterSettings, { AUTO_PRINT_KEY } from '../../components/PrinterSettings';
+import TerminalFairide from '../../components/TerminalFairide';
 import TicketEditor from '../../components/TicketEditor';
 import {
   DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
@@ -32,19 +32,12 @@ export default function OrdersPage() {
   const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
   // Largeur de papier retenue par le restaurateur : sa valeur ne change pas d'une commande à l'autre,
   // la redemander à chaque ticket serait une friction inutile.
-  const [paperColumns, setPaperColumns] = useState(() => Number(localStorage.getItem('fairide.paperColumns')) || COLUMNS_58MM);
+  // Fondateur (2026-09-22) : les commandes se voient, s'acceptent et s'impriment sur le TERMINAL Fairide (tout-en-un,
+  // configuré par l'équipe). Plus de réglages Bluetooth / iOS / Android ici : la page garde les commandes et, en
+  // secours, l'impression par la boîte d'impression de l'appareil (« Imprimer le bon de livraison »).
+  const [paperColumns] = useState(() => Number(localStorage.getItem('fairide.paperColumns')) || COLUMNS_58MM);
   const [btName, setBtName] = useState(btPrinter.connectedDeviceName());
   const [printing, setPrinting] = useState(false);
-  const btSupported = btPrinter.isSupported();
-
-  function choosePaper(cols) {
-    setPaperColumns(cols);
-    localStorage.setItem('fairide.paperColumns', String(cols));
-  }
-
-  // Impression automatique de chaque nouvelle commande sur l'imprimante connectée (voir PrinterSettings).
-  const [autoPrint, setAutoPrint] = useState(() => { try { return localStorage.getItem(AUTO_PRINT_KEY) === '1'; } catch { return false; } });
-  function choisirAutoPrint(v) { setAutoPrint(v); try { localStorage.setItem(AUTO_PRINT_KEY, v ? '1' : '0'); } catch { /* sans stockage */ } }
 
   // Nombre d'impressions déjà faites par commande (session) : affiché dans le détail, pour savoir si le
   // ticket est déjà sorti et pouvoir le réimprimer sans hésiter quand la première sortie a raté.
@@ -75,42 +68,6 @@ export default function OrdersPage() {
       setPrinting(false);
     }
   }
-  async function connecterImprimante() {
-    setPrinting(true);
-    try { setBtName(await btPrinter.connect()); toast(t('ordersResto.toastPrinterConnected')); }
-    catch (e) { if (e?.name !== 'NotFoundError') toast(e.message || 'Connexion impossible.'); }
-    finally { setPrinting(false); }
-  }
-  function deconnecterImprimante() { btPrinter.disconnect(); setBtName(null); }
-  function ticketDeTest() {
-    return printBluetooth({
-      id: 'TEST0000', clientName: t('ordersResto.printerTestClient'), clientPhone: '', createdAt: Date.now(), orderType: 'pickup', paid: true,
-      items: [{ name: t('ordersResto.printerTestItem'), qty: 1, price: 0 }], subtotal: 0, deliveryFee: 0, serviceFee: 0, promoDiscount: 0, balanceUsed: 0, total: 0
-    });
-  }
-
-  // Nouvelle commande → ticket imprimé tout seul, si l'option est active et l'imprimante connectée. Les
-  // commandes déjà présentes au premier chargement ne sont jamais réimprimées ; chaque commande l'est au
-  // plus une fois (mémoire de session), même si la liste se rafraîchit ou si l'on change d'onglet.
-  const dejaVues = useRef(null);
-  useEffect(() => {
-    if (!orders) return;
-    if (dejaVues.current === null) { dejaVues.current = new Set(orders.map((o) => o.id)); return; }
-    const nouvelles = orders.filter((o) => !dejaVues.current.has(o.id) && o.paid !== false && !['annule', 'refuse'].includes(o.status));
-    nouvelles.forEach((o) => dejaVues.current.add(o.id));
-    if (!autoPrint || !btPrinter.connectedDeviceName() || nouvelles.length === 0) return;
-    let imprimees = new Set();
-    try { imprimees = new Set(JSON.parse(sessionStorage.getItem('fairide.printed') || '[]')); } catch { /* sans stockage */ }
-    (async () => {
-      for (const o of nouvelles) {
-        if (imprimees.has(o.id)) continue;
-        const ok = await printBluetooth(o, { silencieux: true });
-        if (ok) { imprimees.add(o.id); toast(t('ordersResto.toastAutoPrinted', { id: o.id.slice(0, 8) })); }
-      }
-      try { sessionStorage.setItem('fairide.printed', JSON.stringify([...imprimees].slice(-200))); } catch { /* sans stockage */ }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orders]);
 
   useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
 
@@ -230,8 +187,18 @@ export default function OrdersPage() {
         )}
       </div>
 
-      <PrinterSettings btName={btName} onConnect={connecterImprimante} onDisconnect={deconnecterImprimante} onTest={ticketDeTest} printing={printing}
-        paperColumns={paperColumns} onPaper={choosePaper} autoPrint={autoPrint} onAutoPrint={choisirAutoPrint} onNewTicket={() => setEditeur({ order: null })} />
+      {/* Tout se passe sur le terminal Fairide : voir, accepter, suivre et imprimer les commandes. */}
+      <div className="card terminal-commandes">
+        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🖥️ {t('ordersResto.terminalCardTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 8px' }}>{t('ordersResto.terminalCardIntro')}</p>
+        <ul className="small terminal-commandes-points">
+          <li>{t('ordersResto.terminalCard1')}</li>
+          <li>{t('ordersResto.terminalCard2')}</li>
+          <li>{t('ordersResto.terminalCard3')}</li>
+          <li>{t('ordersResto.terminalCard4')}</li>
+        </ul>
+        <TerminalFairide terminal={restaurant?.terminal || null} compact />
+      </div>
 
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('ordersResto.incoming')}</h2>
       {orders.length === 0 && <div className="empty">{t('ordersResto.noneYet')}</div>}
@@ -411,35 +378,14 @@ export default function OrdersPage() {
             <div className="divider" />
             <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.orderTicket')}</h4>
             <p className="small" style={{ margin: '0 0 8px' }}>
-              {t('ordersResto.slipInBag')} {btSupported ? t('ordersResto.printBtHelp') : t('ordersResto.printNoBtHelp')}
+              {t('ordersResto.slipInBag')} {t('ordersResto.printTerminalHelp')}
             </p>
-            {btSupported && (
-              <div className="row" style={{ gap: 6, marginBottom: 8, alignItems: 'center' }}>
-                <span className="small">{t('ordersResto.paper')}</span>
-                <button
-                  className={paperColumns === COLUMNS_58MM ? 'btn-teal' : 'btn-outline'}
-                  style={{ padding: '5px 11px', fontSize: 12 }}
-                  onClick={() => choosePaper(COLUMNS_58MM)}
-                >58 mm</button>
-                <button
-                  className={paperColumns === COLUMNS_80MM ? 'btn-teal' : 'btn-outline'}
-                  style={{ padding: '5px 11px', fontSize: 12 }}
-                  onClick={() => choosePaper(COLUMNS_80MM)}
-                >80 mm</button>
-                {btName && <span className="small" style={{ marginLeft: 'auto' }}>🔗 {btName}</span>}
-              </div>
-            )}
             {impressions[selectedOrder.id] > 0 && (
               <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })} {t('ordersResto.reprintHint')}</p>
             )}
             <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
-              {btSupported && (
-                <button className="btn-teal" disabled={printing} onClick={() => printBluetooth(selectedOrder)}>
-                  {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : btName ? t('ordersResto.printTicket') : t('ordersResto.connectAndPrint')}
-                </button>
-              )}
-              {btSupported && btName && (
-                <button className="btn-outline" disabled={printing} onClick={() => printBluetooth(selectedOrder, { copies: 2 })}>{t('ordersResto.printTwo')}</button>
+              {btName && (
+                <button className="btn-teal" disabled={printing} onClick={() => printBluetooth(selectedOrder)}>{printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}</button>
               )}
               <button className="btn-outline" onClick={() => setEditeur({ order: selectedOrder })}>✏️ {t('ordersResto.editTicket')}</button>
               <button className="btn-outline" onClick={() => printReceipt(selectedOrder)}>{t('ordersResto.printDeliveryNote')}</button>

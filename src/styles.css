@@ -4302,6 +4302,8 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
 /* Le terminal Fairide expliqué (components/TerminalFairide.jsx) : image + « c'est quoi », étapes, conditions. */
 .terminal-haut { display: flex; gap: 14px; align-items: center; }
+.terminal-commandes { border-left: 4px solid var(--iris); }
+.terminal-commandes-points { margin: 0 0 10px; padding-left: 18px; display: grid; gap: 4px; }
 .terminal-illu { width: 200px; max-width: 45%; flex-shrink: 0; height: auto; }
 .terminal-compact .terminal-illu { width: 160px; }
 .terminal-titre { font-size: 15px; }

@@ -9,7 +9,6 @@ import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
-import TicketHelp from '../components/TicketHelp';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -787,9 +786,6 @@ export default function Account() {
               de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
               d'emploi, partis avant elles pour la même raison. */}
           <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
-          <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
-            {ouvertes.has('tickets') && <TicketHelp />}
-          </LigneCompte>
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
