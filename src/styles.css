@@ -878,6 +878,18 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   box-shadow: var(--shadow-3);
 }
 .menu-item-card-cliquable:hover .menu-item-ajout { background: var(--iris); color: #fff; }
+/* CARTE SANS PHOTO. Le « + » n'a plus d'image sous laquelle se poser : il rejoint la ligne du prix,
+   à droite, où la main le cherche déjà. `position: static` annule l'absolu hérité de
+   .menu-item-ajout — la règle vient après, même spécificité, elle gagne.
+   Le cadre est un peu plus aéré que celui d'une carte illustrée : sans photo, c'est le vide autour
+   du texte qui tient la carte, et le titre a besoin d'air pour ne pas coller au filet. */
+.menu-item-ajout-ligne { position: static; width: 28px; height: 28px; font-size: 18px; flex-shrink: 0; }
+.menu-item-card-sans-photo { padding: 14px; min-height: 104px; }
+.menu-item-card-sans-photo .name { font-size: 15px; margin-bottom: 4px; }
+.menu-item-card-sans-photo .bottom-row { gap: 10px; margin-top: 4px; }
+/* Sur une carte illustrée la pastille promo est posée sur la photo, en absolu. Sans photo, elle
+   redevient un élément de flux, en tête de carte. */
+.promo-badge-ligne { position: static; display: inline-block; margin-bottom: 8px; max-width: 100%; }
 .menu-item-card .name { font-weight: 600; font-size: 14px; margin: 0 0 2px; }
 /* Emoji "healthy" accolé au nom du plat (menu_items.healthy, coché par le restaurateur). white-space:
    nowrap sur le seul emoji : le nom peut passer à la ligne, mais jamais entre le nom et son emoji, qui
@@ -937,6 +949,11 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 @media (max-width: 520px) {
   .menu-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .menu-item-card { padding: 8px; }
+  /* Deux colonnes sur 320px de large : la carte sans photo reprend le pas du reste de la grille,
+     sinon elle dépasse ses voisines illustrées au lieu de se ranger avec elles. */
+  .menu-item-card-sans-photo { padding: 10px; min-height: 84px; }
+  .menu-item-card-sans-photo .name { font-size: 12.5px; }
+  .menu-item-ajout-ligne { width: 24px; height: 24px; font-size: 16px; }
   .menu-item-card .name { font-size: 12.5px; }
   .menu-item-card .desc { font-size: 11px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .dish-thumb-lg { height: 92px; margin-bottom: 6px; }

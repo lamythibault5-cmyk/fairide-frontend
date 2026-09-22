@@ -1,4 +1,4 @@
-import { categoryEmoji, categoryImage, sectionLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
+import { categoryImage, sectionLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
 
@@ -24,15 +24,24 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
   const cliquable = !hideAdd && !indisponible;
   const contenu = (
     <>
-      <div className="menu-item-visuel">
-      {item.activePromo && <span className="promo-badge">{item.activePromo.label}</span>}
+      {/* PAS DE PHOTO, PAS DE CADRE. Un plat sans photo affichait un rectangle de 130px barré d'un
+          emoji de catégorie — le même pour tous les plats de la section, qui n'apprenait rien et
+          occupait la moitié de la carte. Sur une carte importée d'une plateforme, un tiers des plats
+          n'ont pas de photo : la grille se remplissait de 🍽️ identiques.
+          La carte se réduit donc à son texte, et le « + » descend sur la ligne du prix. C'est ce que
+          fait Uber Eats sur ses propres plats sans photo, et la raison est la même : une carte courte
+          se lit, un cadre vide se subit.
+          Le cadre vide SURVIT dans MenuItemRow (tableau de bord) : côté restaurateur, il ne comble
+          pas un trou, il signale une photo à ajouter. */}
       {image ? (
-        <img loading="lazy" src={image} alt={name} className="dish-thumb-lg" />
+        <div className="menu-item-visuel">
+          {item.activePromo && <span className="promo-badge">{item.activePromo.label}</span>}
+          <img loading="lazy" src={image} alt={name} className="dish-thumb-lg" />
+          {cliquable && <span className="menu-item-ajout" aria-hidden="true">+</span>}
+        </div>
       ) : (
-        <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
+        item.activePromo && <span className="promo-badge promo-badge-ligne">{item.activePromo.label}</span>
       )}
-      {cliquable && <span className="menu-item-ajout" aria-hidden="true">+</span>}
-      </div>
       {/* Le badge « healthy » vient de main, le texte traduit de la refonte : les deux se cumulent.
           Le nom affiché est celui de la langue du client, le badge reste posé à côté. */}
       <div className="name">
@@ -44,14 +53,16 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
       <div className="small desc">{indisponible ? t('menuCategories.unavailable') : desc}</div>
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>
+        {!image && cliquable && <span className="menu-item-ajout menu-item-ajout-ligne" aria-hidden="true">+</span>}
       </div>
     </>
   );
+  const classes = `menu-item-card${image ? '' : ' menu-item-card-sans-photo'}`;
   if (!cliquable) {
-    return <div className={`menu-item-card${indisponible ? ' menu-item-card-indisponible' : ''}`}>{contenu}</div>;
+    return <div className={`${classes}${indisponible ? ' menu-item-card-indisponible' : ''}`}>{contenu}</div>;
   }
   return (
-    <button type="button" className="menu-item-card menu-item-card-cliquable" onClick={() => onAdd(item)}>
+    <button type="button" className={`${classes} menu-item-card-cliquable`} onClick={() => onAdd(item)}>
       {contenu}
     </button>
   );
