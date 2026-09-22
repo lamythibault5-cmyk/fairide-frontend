@@ -2,6 +2,10 @@
 
 Guide for Claude Code working in this repository.
 
+Every figure below was re-checked against the source on 2026-09-22. If you change something this
+file describes, change this file too — a stale guide is worse than no guide, because it gets
+believed.
+
 ## What this is
 
 Fairide is a food-delivery / local-commerce platform for Brussels, positioned on a
@@ -11,6 +15,9 @@ only.** The backend is a separate service.
 - Production: `https://fairide.be`
 - Backend API: `https://fairide-backend-production.up.railway.app/api` (Railway)
 - Deploy: Vercel — SPA rewrite of all routes to `/index.html`, see [vercel.json](vercel.json)
+- Backend repo: `https://github.com/lamythibault5-cmyk/fairide-backend`, checked out next door at
+  `../fairide-backend`. Several things you will be asked about (menu import, price tooling) live
+  there, not here.
 
 ## Stack
 
@@ -31,8 +38,13 @@ npm run lint      # oxlint — the only automated check that exists
 npm run preview   # serve the build locally
 ```
 
-`npm run lint` is the whole verification story. There is nothing else to run, so read your
-changes carefully and, where behaviour matters, check them in the browser with `npm run dev`.
+`npm run lint` is the whole verification story **in this repo**, and it currently reports ~168
+pre-existing warnings across the codebase. Don't read a clean-looking tail as success: check that
+*your* files are absent from the output. There is nothing else to run here, so read your changes
+carefully and, where behaviour matters, check them in the browser with `npm run dev`.
+
+The backend does have tests (`npm test`, 42 of them, `node --test`). If your change touches
+anything the backend also reads — page parsing, menu shape — run them there.
 
 ### Environment variables
 
@@ -45,18 +57,20 @@ without a `.env.local` your dev server edits live data.
 | `VITE_API_BASE` | Overrides the Railway backend URL in [src/api.js](src/api.js) |
 | `VITE_GOOGLE_CLIENT_ID` | Google Sign-In (script loaded in [index.html](index.html)) |
 | `VITE_SENTRY_DSN` | Enables Sentry — but only *after* cookie consent, see [src/main.jsx](src/main.jsx) |
-| `VITE_STOCK_DISH_PHOTOS` | `on` (default) fills photo-less dishes from a stock-image table; `off` disables it. Must be `off` before real restaurants go live — see [src/menuCategories.js](src/menuCategories.js) |
+| `VITE_STOCK_DISH_PHOTOS` | `on` (default) fills photo-less dishes from a stock-image table; `off` disables it. **Still `on`.** Must be `off` before real restaurants go live — see [src/menuCategories.js](src/menuCategories.js) |
+| `VITE_PLAUSIBLE_DOMAIN` | Cookieless analytics. Empty = [src/analytics.js](src/analytics.js) loads nothing at all. Was missing from `.env.example` while the code already read it, so analytics was silently off in production — set it in the Vercel variables |
 
 ## Architecture
 
 ### Four roles, one SPA
 
-Every route lives in [src/App.jsx](src/App.jsx) — the full route map, read it first when orienting.
-Access is gated by `<ProtectedRoute role="...">`.
+Every route lives in [src/App.jsx](src/App.jsx) (219 lines) — the full route map, read it first when
+orienting. Access is gated by `<ProtectedRoute role="...">`.
 
 **Routes are code-split by role.** Only the public entry path (home, login, restaurant list, restaurant
-menu) is statically imported; everything else is `React.lazy` behind one `<Suspense>`. Keep it that way
-when adding a route — a static import of a dashboard page pulls it into every customer's first load.
+menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 68 lazy imports as
+of today. Keep it that way when adding a route: a static import of a dashboard page pulls it into
+every customer's first load.
 
 | Role | Route prefix | Pages |
 |---|---|---|
@@ -107,9 +121,14 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 
 ### Styling
 
-**One file: [src/styles.css](src/styles.css)** (~1,280 lines), imported once in `main.jsx`.
+**One file: [src/styles.css](src/styles.css)** (4,551 lines), imported once in `main.jsx`.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
+
+At this size, **find the neighbouring rule before adding one.** Selectors of equal specificity are
+resolved by order, and several blocks near the bottom (the 520px media query especially) override
+rules written hundreds of lines earlier. A rule that "doesn't apply" is usually a rule that applies
+and is then overridden.
 
 Design tokens are CSS custom properties in `:root` at the top of the file. **Change colours
 there, not at call sites.**
@@ -159,22 +178,58 @@ Buttons: `.btn-gold` (lime) is **the** decisive action of a screen — pay, conf
 is secondary, `.btn-hero-ghost` is the secondary button on an iris ground.
 
 Confirmation modals use [ConfirmDialog](src/components/ConfirmDialog.jsx) — never `window.confirm`,
-which is suppressed in installed PWAs and webviews.
+which is suppressed in installed PWAs and webviews. The five `window.confirm` hits you'll find in
+`src/` are all inside comments explaining this; there are no live calls. `window.prompt` has the
+same problem and the same replacement, [ReasonDialog](src/components/admin/ReasonDialog.jsx).
 
 Note the two heavily-commented rules near the top of the file — `overflow-x: clip` on
 `html`/`body` and `-webkit-tap-highlight-color: transparent`. Both encode a bug that was
 already fixed once (`clip` rather than `hidden`, because `hidden` silently breaks
 `position: sticky`). Read the comments before touching them.
 
-### Internationalisation — partial
+#### Dishes without a photo
 
-[src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables;
-default `fr`. But only **30 of 94** components use `useLanguage()`. Roughly: public and
-client-facing surfaces are translated, the restaurant/driver/admin dashboards are hardcoded
-French.
+On the **client** menu ([MenuCategorySections.jsx](src/components/MenuCategorySections.jsx)), a dish
+with no image renders as a compact text-only card — name, description, price, and the `+` moved down
+onto the price row. No placeholder frame.
 
-So when you touch a component, check which kind it is. Adding a key means adding it to all
-three locales.
+This matters more than it sounds: cards imported from a platform are often photo-less in bulk
+(248 of Punjab Tandoori's 249 dishes), and the old category-emoji frame filled whole sections with
+identical 🍽️ blocks.
+
+The empty frame **survives in [MenuItemRow.jsx](src/components/MenuItemRow.jsx)**, the restaurateur's
+editor, and that is deliberate: there it isn't filling a hole, it's prompting for a photo. Don't
+"unify" the two.
+
+### Internationalisation
+
+[src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
+**192 of 227 components** call `useLanguage()` — this is now broad coverage, not the partial state
+earlier versions of this file described. Adding a key means adding it to all three locales.
+
+The remaining untranslated surfaces are mostly deep admin screens. Check which kind of component you
+are in before hardcoding a string.
+
+## Menu import (lives in the backend repo)
+
+Restaurant cards are not typed in by hand. They are imported from a saved platform page by
+`../fairide-backend/scripts/importer-carte.js`, which writes straight to the database — no HTTP, no
+token to forge. Read its header before using or changing it; it documents how to capture a page and
+why each option exists.
+
+What the front end has to know:
+
+- **Section order comes from `restaurant_sections.sort_order`**, not from `menu_items`. The importer
+  gets it right by sorting dishes into the platform's own display order before writing, because
+  `bulkReplaceMenuItems` creates the sections in the order the items arrive.
+- **Uber Eats pages carry their menu in the HTML. Deliveroo pages do not** — Deliveroo renders it
+  client-side, so a Ctrl+U capture is an empty shell and the importer reads a DOM capture instead.
+- Companion scripts, same directory: `prix.js` (bulk price edit, by factor or by Excel CSV),
+  `sauvegarde-carte.js` (snapshot before any `--remplacer`), `apercu-carte.js` (renders a card to a
+  standalone HTML page for review, without publishing anything).
+
+An imported card is written but **not online**: the business stays `pending` until someone clicks
+Approve and Publish in the admin console. Don't describe an import as "live".
 
 ## Conventions
 
@@ -192,36 +247,54 @@ of absent features precisely so nobody re-invents or over-claims them.
 **Commit messages are in French**, present tense, describing the user-visible change
 ("Ajoute l'impression d'un bon de livraison par commande, côté restaurateur").
 
-**Watch file size.** `Account.jsx` (902), `MenuPage.jsx` (696) and `AdminAccountingPage.jsx`
-(690) are already large. Extract a component rather than growing them further.
-`menuCategories.js` (3,316) is a data table, not logic — that one is fine.
+**Watch file size.** [Account.jsx](src/pages/Account.jsx) (1,173) and
+[MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (926) are the two to stop growing — extract a
+component rather than adding to them. `AdminAccountingPage.jsx` is down to 488 and is no longer a
+concern. `menuCategories.js` (3,978) is a data table, not logic — that one is fine.
 
 ## Known gaps
 
-Real, verified as absent — not speculation:
+Real, verified as absent on 2026-09-22 — not speculation.
 
-1. **No Web Push.** Restaurants now get a sound, a tab-title counter and a system notification via
-   [useNewOrderAlert](src/hooks/useNewOrderAlert.js), but all three require the tab to still be open.
-   Closed tab or sleeping device needs a service worker + VAPID keys + subscription storage on the
-   backend. This is also what customer-facing promo notifications would need.
-2. **No background geolocation.** Driver tracking uses `watchPosition`, which survives a backgrounded
-   tab far better than the old `setInterval` but still stops when the phone locks. There is no web fix
-   — it needs a native or Capacitor build. The customer-facing map shows a staleness warning after two
-   minutes so a frozen map is at least legible ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
-3. **PWA is half-built.** [public/manifest.json](public/manifest.json) exists with
-   `display: standalone`, but there is no service worker and the only icon is an SVG — Android
-   install prompts want PNG 192/512.
-4. **No SSR or prerendering, and the sitemap can't list restaurants.** The public restaurant pages are
-   indexable by intent only; see the comment in [public/sitemap.xml](public/sitemap.xml).
-5. **i18n covers ~30 of 94 components.** Public and client surfaces are translated; the restaurant,
-   driver and admin dashboards are hardcoded French.
-6. **Form labels are associated only on Auth and Checkout.** The other pages still have visible
-   `<label>` elements with no `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
-7. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog
+1. **No background geolocation.** Driver tracking uses `watchPosition`
+   ([driver/Dashboard.jsx](src/pages/driver/Dashboard.jsx),
+   [driver/MapPage.jsx](src/pages/driver/MapPage.jsx)), which survives a backgrounded tab far better
+   than the old `setInterval` but still stops when the phone locks. There is no web fix — it needs a
+   native or Capacitor build. The customer-facing map shows a staleness warning after two minutes so
+   a frozen map is at least legible
+   ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
+2. **No SSR or prerendering, and there is no sitemap at all** — `public/sitemap.xml` no longer
+   exists. The public restaurant pages are indexable by intent only.
+3. **Stock dish photos are still on.** `VITE_STOCK_DISH_PHOTOS` defaults to `on`, which fills a
+   photo-less dish with a stock image when its name matches the table exactly. Showing a stock photo
+   as a real merchant's dish is a misleading commercial practice — this must be `off` before the
+   first real restaurant goes live.
+4. **Form labels are associated on most, not all, forms** — 64 of the 77 files containing a
+   `<label>` also use `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
+5. **Imported prices are platform prices.** Cards imported from Uber Eats or Deliveroo carry the
+   marked-up prices merchants set there to absorb a 30% commission — measured at **+39% on average**
+   against Snack Bodrum's counter prices. The Fairide contract commits to no more than +10% over the
+   in-store price, so an imported card is not contract-compliant until its prices are corrected.
+   `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from the
+   merchant.
+6. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog
    (prep-time on accept, refusal reason, WhatsApp order tickets, auto-cancel delay).
+
+### Resolved since earlier versions of this file
+
+Listed so nobody re-implements them: **Web Push exists** ([public/sw.js](public/sw.js) handles `push`
+and `notificationclick`, with [src/push.js](src/push.js) and
+[usePushNotifications.js](src/hooks/usePushNotifications.js); VAPID keys live in the backend env).
+**The PWA is complete** — `manifest.json` ships PNG icons at 192, 512 and maskable-512. The service
+worker **caches nothing, on purpose**; read its header before adding a cache.
 
 ## Git
 
-Remote is `https://github.com/lamythibault5-cmyk/fairide-frontend`. The `gh` CLI is **not
-installed** — use plain `git`. Work on a feature branch and let the owner merge; don't commit
-straight to `main` unless asked.
+Remotes are `https://github.com/lamythibault5-cmyk/fairide-frontend` and, for the backend,
+`https://github.com/lamythibault5-cmyk/fairide-backend`. The `gh` CLI is **not installed** — use
+plain `git`, and build pull-request links by hand:
+`https://github.com/<owner>/<repo>/compare/main...<branch>?expand=1`.
+
+Work on a feature branch and let the owner merge; don't commit straight to `main` unless asked, and
+**never push without being asked to.** When you are asked to push, give the compare link in the same
+reply.
