@@ -1,43 +1,34 @@
-import { useEffect, useRef, useState, useId } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { formatFullSchedule } from '../../openingHours';
-import AddressRecognition from '../../components/AddressRecognition';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
 import { useToast } from '../../context/ToastContext';
-import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
+import { RESTAURANT_TYPES } from '../../menuCategories';
+import CreationCommerce from '../../components/commerce/CreationCommerce';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
-import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
-import AddressSearch from '../../components/AddressSearch';
-import BusinessSearch from '../../components/BusinessSearch';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
-// commun à toutes les sous-pages : formulaire de création, bannières (validation/abonnement/Stripe),
-// et la carte "Aujourd'hui" de la colonne de droite.
+// commun à toutes les sous-pages : création du commerce (components/commerce/CreationCommerce.jsx) et
+// bannières (validation/abonnement/Stripe).
 const FONDATEURS = ['lamythibault5@gmail.com', 'lamythibault60@gmail.com'];
 
 export default function DashboardLayout() {
-  // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
-  // quand ce composant est rendu plusieurs fois sur la meme page.
-  const idsA11y = useId();
   const { t } = useLanguage();
   const { token, user, actingAs, actingAdminEmail, quitterAction } = useAuth();
   const navigate = useNavigate();
   // Comptes fondateurs (admin, ou l'un des e-mails ci-dessous, la même liste que FAIRIDE_FOUNDER_EMAILS côté
   // serveur) : leur restaurant de test se crée même incomplet, le serveur complète ce qui manque.
   const fondateur = !!user?.isAdmin || FONDATEURS.includes(String(user?.email || '').toLowerCase());
-  const [recoEtat, setRecoEtat] = useState('idle');
-  const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const toast = useToast();
   // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
@@ -53,83 +44,6 @@ export default function DashboardLayout() {
   const [drivers, setDrivers] = useState([]);
 
   const [newRestoOpen, setNewRestoOpen] = useState(false);
-  // Commerce déjà désigné à l'inscription : le formulaire arrive prérempli, on ne redemande pas de le chercher.
-  const [commerceDejaChoisi, setCommerceDejaChoisi] = useState(false);
-  const [name, setName] = useState('');
-  const [commune, setCommune] = useState(COMMUNES[0]);
-  const [neighborhood, setNeighborhood] = useState('');
-  const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
-  const [customCuisine, setCustomCuisine] = useState('');
-  const [desc, setDesc] = useState('');
-  const [addressStreet, setAddressStreet] = useState('');
-  const [addressNumber, setAddressNumber] = useState('');
-  const [addressPostalCode, setAddressPostalCode] = useState('');
-  const [coverImageUrl, setCoverImageUrl] = useState('');
-  const [hours, setHours] = useState(null);
-  const [deliveryModePref, setDeliveryModePref] = useState('fairide');
-  const [offersDelivery, setOffersDelivery] = useState(true);
-  const [offersPickup, setOffersPickup] = useState(true);
-  const [offersDineIn, setOffersDineIn] = useState(false);
-  const [openingHoursTexte, setOpeningHoursTexte] = useState('');
-  const [siteWeb, setSiteWeb] = useState('');
-  const [telephoneCommerce, setTelephoneCommerce] = useState('');
-  const [horairesDepuisInscription, setHorairesDepuisInscription] = useState(false);
-  const [modifierHoraires, setModifierHoraires] = useState(false);
-  // Ce que la reconnaissance d'adresse a trouvé à l'inscription (voir Auth.jsx) : commune, quartier,
-  // adresse, et le commerce référencé sur Internet si le restaurateur l'a désigné.
-  useEffect(() => {
-    try {
-      const brut = localStorage.getItem('fairide_resto_hint'); if (!brut) return;
-      const h = JSON.parse(brut);
-      if (h.name) { setName((v) => v || h.name); setCommerceDejaChoisi(true); }
-      // Le type choisi à l'inscription prime ; sinon celui deviné depuis la fiche OpenStreetMap.
-      if (h.cuisineType && RESTAURANT_TYPES.some((rt) => rt.value === h.cuisineType)) {
-        setCuisine(h.cuisineType);
-        if (h.cuisineType === 'Autre' && h.customCuisine) setCustomCuisine(h.customCuisine);
-      } else {
-        const typeDevine = cuisineDepuisOsm(h.cuisine, h.type);
-        if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
-      }
-      if (h.openingHours) setOpeningHoursTexte(h.openingHours);
-      if (h.hours && typeof h.hours === 'object') { setHours(h.hours); setHorairesDepuisInscription(true); }
-      if (h.website) setSiteWeb(h.website);
-      if (h.phone) setTelephoneCommerce(h.phone);
-      // Quartier depuis la position du commerce et description publiée sur son site : préremplis, modifiables.
-      if ((h.lat && h.lng) || h.website) {
-        const q = new URLSearchParams(); if (h.lat && h.lng) { q.set('lat', h.lat); q.set('lng', h.lng); } if (h.website) q.set('website', h.website); if (h.name) q.set('name', h.name);
-        api(`/restaurants/lookup/enrich?${q.toString()}`).then((e) => {
-          if (e.neighborhood) setNeighborhood((v) => v || e.neighborhood);
-          if (e.description) setDesc((v) => v || e.description);
-          // Type de commerce deviné depuis le site, seulement si rien n'a été retenu à l'inscription.
-          if (e.cuisine && RESTAURANT_TYPES.some((rt) => rt.value === e.cuisine)) setCuisine((v) => (!v || v === RESTAURANT_TYPES[0].value ? e.cuisine : v));
-          // Horaires publiés sur le site du commerce : proposés tant que rien n'a été réglé à la main.
-          if (e.hours && Object.values(e.hours).some((c) => Array.isArray(c) && c.length)) {
-            setHours((v) => (v && Object.values(v).some((c) => Array.isArray(c) && c.length) ? v : e.hours));
-            setHorairesDepuisInscription(true);
-          }
-          if (e.city && COMMUNES.includes(e.city) && !COMMUNES.includes(h.commune)) setCommune(e.city);
-        }).catch(() => { /* enrichissement facultatif */ });
-      }
-      if (h.services) {
-        setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
-        if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);
-      }
-      if (h.commune && COMMUNES.includes(h.commune)) setCommune(h.commune);
-      if (h.neighborhood) setNeighborhood((v) => v || h.neighborhood);
-      if (h.street) setAddressStreet((v) => v || h.street);
-      if (h.number) setAddressNumber((v) => v || h.number);
-      if (h.postalCode) setAddressPostalCode((v) => v || h.postalCode);
-    } catch { /* indice illisible : formulaire vide */ }
-  }, []);
-  // Sans indice local (autre appareil, stockage vidé) : le type de cuisine mémorisé sur le compte à l'inscription.
-  useEffect(() => {
-    try { if (localStorage.getItem('fairide_resto_hint')) return; } catch { /* sans stockage */ }
-    const sc = user?.signupCuisine; if (!sc) return;
-    if (RESTAURANT_TYPES.some((rt) => rt.value === sc)) setCuisine(sc);
-    else { setCuisine('Autre'); setCustomCuisine(sc); }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.signupCuisine]);
-
   // Son + notification système + compteur dans le titre de l'onglet à chaque nouvelle commande.
   const [ordersLoaded, setOrdersLoaded] = useState(false);
   // Échec du premier chargement (réseau, serveur en redéploiement) : sans ceci la page restait vide, sans
@@ -301,56 +215,15 @@ export default function DashboardLayout() {
     } catch { return null; }
   }
 
-  async function createResto() {
-    if (!name.trim() && !fondateur) { toast(t('dashResto.toastNameRequired')); return; }
-    if (!fondateur && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim())) {
-      toast(t('dashResto.toastAddressRequired'));
-      return;
-    }
-    if (!offersDelivery && !offersPickup && !offersDineIn) { toast(t('dashResto.toastServicesRequired')); return; }
-    // Adresse tapée mais non reconnue : on ne bloque pas, on demande une confirmation explicite.
-    if ((recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) {
-      toast(t('dashResto.toastAddressConfirm'));
-      return;
-    }
-    if (!fondateur && (!hours || !Object.values(hours).some((shifts) => Array.isArray(shifts) && shifts.length))) {
-      toast(t('dashResto.toastHoursRequired'));
-      return;
-    }
-    const finalCuisine = cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine;
-    const telephoneFiche = telephoneCommerce.trim();
-    try {
-      const r = await api('/restaurants', {
-        method: 'POST', token,
-        body: {
-          name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: finalCuisine, desc: desc.trim(),
-          addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
-          coverImageUrl: coverImageUrl.trim(), hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn, phone: telephoneFiche, website: siteWeb.trim()
-        }
-      });
-      setMyRestos((prev) => [...prev, r]);
-      // Le site web relevé à l'inscription sert ensuite à lire la carte (Mes produits → import depuis le web).
-      try {
-        const h = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-        if (h.website) localStorage.setItem('fairide_menu_source_url', h.website);
-        ouvrirDemandeCarte(r?.id, h);
-        localStorage.removeItem('fairide_resto_hint');
-      } catch { /* rien */ }
-      setName(''); setCuisine(RESTAURANT_TYPES[0].value); setCustomCuisine(''); setNeighborhood(''); setDesc('');
-      setAddressStreet(''); setAddressNumber(''); setAddressPostalCode('');
-      setCoverImageUrl(''); setHours(null); setNewRestoOpen(false);
-      pickResto(r.id);
-      navigate('/dashboard', { replace: true });
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      if (r.wantsOwnDriver) {
-        toast(t('dashResto.toastCreatedOwnDriver'));
-      } else {
-        toast(t('dashResto.toastCreated'));
-      }
-    } catch (e) {
-      toast(e.message, 'erreur');
-    }
+  // Création manuelle, étape par étape (components/commerce/CreationCommerce.jsx) : ce qui suit n'est
+  // que l'arrivée sur le tableau de bord du commerce qu'on vient de créer.
+  function commerceCree(r) {
+    setMyRestos((prev) => [...prev, r]);
+    setNewRestoOpen(false);
+    pickResto(r.id);
+    navigate('/dashboard', { replace: true });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast(r.wantsOwnDriver ? t('dashResto.toastCreatedOwnDriver') : t('dashResto.toastCreated'));
   }
 
   async function connectOnboard() {
@@ -402,122 +275,7 @@ export default function DashboardLayout() {
           )}
         </div>
       )}
-      {newRestoOpen && surAccueil && (
-        <div style={{ marginTop: 10 }}>
-          <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
-            {t('dashResto.createIntro')}
-          </p>
-          <p className="small" style={{ margin: '0 0 12px', opacity: 0.75 }}>
-            {t('dashResto.createNote')}
-          </p>
-
-          {commerceDejaChoisi && (
-            <div className="paiement-encart" style={{ marginBottom: 12 }}>
-              <b>✅ {t('dashResto.prefilledFromSignup')}</b>
-              <p className="small" style={{ margin: '4px 0 0' }}>{t('dashResto.reviewHelp')}</p>
-            </div>
-          )}
-          {!commerceDejaChoisi && <BusinessSearch compact initialPostalCode={addressPostalCode} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} onSelect={(f) => {
-            if (!f) return;
-            if (f.name) setName(f.name);
-            const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
-            if (f.street) setAddressStreet(f.street); if (f.number) setAddressNumber(f.number); if (f.postalCode) setAddressPostalCode(f.postalCode);
-            if (f.city && COMMUNES.includes(f.city)) setCommune(f.city);
-            if (f.openingHours) setOpeningHoursTexte(f.openingHours);
-          }} />}
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.identity')}</h4>
-          <div className="field"><label htmlFor={idsA11y + '-businessname'}>{t('dashResto.businessName')}</label><input id={idsA11y + '-businessname'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
-          <div className="field">
-            <label htmlFor={idsA11y + '-businesstype'}>{t('dashResto.businessType')}</label>
-            <select id={idsA11y + '-businesstype'} value={cuisine} onChange={(e) => setCuisine(e.target.value)}>
-              {RESTAURANT_TYPES.map((c) => <option key={c.value} value={c.value}>{c.emoji} {c.value}</option>)}
-            </select>
-          </div>
-          {cuisine === 'Autre' && (
-            <div className="field"><label htmlFor={idsA11y + '-specifytype'}>{t('dashResto.specifyType')}</label><input id={idsA11y + '-specifytype'} value={customCuisine} onChange={(e) => setCustomCuisine(e.target.value)} placeholder={t('dashResto.phType')} /></div>
-          )}
-
-          <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.addressForDrivers')}</h4>
-          <div className="field">
-            <label htmlFor={idsA11y + '-municipality'}>{t('dashResto.municipality')}</label>
-            <select id={idsA11y + '-municipality'} value={commune} onChange={(e) => setCommune(e.target.value)}>
-              {COMMUNES.map((c) => <option key={c}>{c}</option>)}
-            </select>
-          </div>
-          <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setCommune(a.city); }} />
-          <div className="field"><label htmlFor={idsA11y + '-street'}>{t('dashResto.street')}</label><input id={idsA11y + '-street'} value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor={idsA11y + '-number'}>{t('dashResto.number')}</label>
-              <input id={idsA11y + '-number'} value={addressNumber} onChange={(e) => setAddressNumber(e.target.value)} placeholder="12" />
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor={idsA11y + '-postalcode'}>{t('dashResto.postalCode')}</label>
-              <input id={idsA11y + '-postalcode'} value={addressPostalCode} onChange={(e) => setAddressPostalCode(e.target.value)} placeholder="1000" />
-            </div>
-          </div>
-          <AddressRecognition
-            street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact discret
-            onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
-            onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
-          />
-          {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}
-          <div className="field"><label htmlFor={idsA11y + '-neighbourhoodoptional'}>{t('dashResto.neighbourhoodOptional')}</label><input id={idsA11y + '-neighbourhoodoptional'} value={neighborhood} onChange={(e) => setNeighborhood(e.target.value)} placeholder={t('dashResto.phNeighbourhood')} /></div>
-
-          <div className="divider" />
-          <h4 style={{ margin: '0 0 4px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.openingHours')}</h4>
-          {horairesDepuisInscription && !modifierHoraires && hours ? (
-            <div className="paiement-encart" style={{ marginBottom: 10 }}>
-              <p className="small" style={{ margin: '0 0 4px' }}>✅ {t('dashResto.hoursFromSignup')}</p>
-              <div className="closed-banner-schedule" style={{ margin: '0 0 6px' }}>{formatFullSchedule(hours, t).map((line) => <span key={line}>{line}</span>)}</div>
-              <button type="button" className="btn-ghost" style={{ padding: '4px 8px', fontSize: 12 }} onClick={() => setModifierHoraires(true)}>✏️ {t('dashResto.editHours')}</button>
-            </div>
-          ) : (
-            <>
-              <p className="small" style={{ margin: '0 0 10px' }}>{t('dashResto.openingHoursRequired')}</p>
-              <OpeningHoursEditor value={hours} onChange={setHours} />
-            </>
-          )}
-
-          <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.presentationOptional')}</h4>
-          <div className="field"><label htmlFor={idsA11y + '-description'}>{t('dashResto.description')}</label><input id={idsA11y + '-description'} value={desc} onChange={(e) => setDesc(e.target.value)} placeholder={t('dashResto.phDescription')} /></div>
-          <div className="field"><label htmlFor={idsA11y + '-coverurl'}>{t('dashResto.coverUrl')}</label><input id={idsA11y + '-coverurl'} value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." /></div>
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="new-resto-site">{t('dashResto.website')}</label>
-              <input id="new-resto-site" inputMode="url" value={siteWeb} onChange={(e) => setSiteWeb(e.target.value)} placeholder="https://www.mon-commerce.be" />
-              {siteWeb && commerceDejaChoisi && <span className="small">✅ {t('dashResto.fromFiche')}</span>}
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor="new-resto-tel">{t('dashResto.businessPhone')}</label>
-              <input id="new-resto-tel" type="tel" value={telephoneCommerce} onChange={(e) => setTelephoneCommerce(e.target.value)} placeholder="+32 2 000 00 00" />
-              {telephoneCommerce && commerceDejaChoisi && <span className="small">✅ {t('dashResto.fromFiche')}</span>}
-            </div>
-          </div>
-
-          <div className="divider" />
-          <h4 style={{ margin: '0 0 8px', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.4, opacity: 0.6 }}>{t('dashResto.servicesTitle')}</h4>
-          <p className="small" style={{ margin: '0 0 8px' }}>{t('dashResto.servicesHelp')}</p>
-          <div className="field services-choice">
-            <label className="service-option"><input type="checkbox" checked={offersDelivery} onChange={(e) => setOffersDelivery(e.target.checked)} /> <span>🛵 {t('auth.serviceDelivery')}</span></label>
-            {offersDelivery && (
-              <div className="service-suboptions">
-                <label htmlFor={idsA11y + '-whodelivers'}>{t('dashResto.whoDelivers')}</label>
-                <select id={idsA11y + '-whodelivers'} value={deliveryModePref} onChange={(e) => setDeliveryModePref(e.target.value)}>
-                  <option value="fairide">{t('dashResto.fairidePool')}</option>
-                  <option value="own">{t('dashResto.ownDrivers')}</option>
-                </select>
-                {deliveryModePref === 'own' && <p className="small" style={{ margin: '6px 0 0' }}>{t('dashResto.ownDriversHelp')}</p>}
-              </div>
-            )}
-            <label className="service-option"><input type="checkbox" checked={offersPickup} onChange={(e) => setOffersPickup(e.target.checked)} /> <span>🏠 {t('auth.servicePickup')}</span></label>
-            <label className="service-option"><input type="checkbox" checked={offersDineIn} onChange={(e) => setOffersDineIn(e.target.checked)} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
-          </div>
-          <button className="btn-teal" onClick={createResto}>{t('dashResto.createMyRestaurant')}</button>
-        </div>
-      )}
+      {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
 
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la
           validation par Fairide, les paiements Stripe. Le détail se déplie ; la carte n'existe que s'il
