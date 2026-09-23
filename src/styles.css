@@ -2070,7 +2070,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .dashboard-nav-link:hover { background: var(--cream-dim); color: var(--ink); }
 .dashboard-nav-link.active { background: rgba(59,47,181,0.12); color: var(--teal-deep); }
 /* Assez large pour un tracé de 22px : les icônes de la nav sont des SVG (voir Icone.jsx), plus des
-   emojis dimensionnés par font-size. La règle garde font-size pour la nav admin, restée en emojis. */
+   emojis dimensionnés par font-size. La nav admin y est passée aussi le 2026-09-23. */
 .dashboard-nav-icon { font-size: 17px; line-height: 0; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; text-align: center; flex-shrink: 0; }
 
 /* Variante fond clair du sélecteur de langue. Sa version d'origine est dessinée pour l'aplat
@@ -3276,47 +3276,65 @@ button.account-link-row:last-child { border-bottom: none; }
 }
 .orders-reminder { background: rgba(59,47,181,0.08); border-color: var(--iris); color: var(--ink); padding: 12px 16px; }
 
-/* ---- ERP admin : accueil applications, en-tête de page, kanban, pastilles ---- */
-.admin-home-hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
-.admin-home-hero h2 { margin: 0 0 4px; font-size: 24px; }
+/* ---- Console admin : accueil « Aujourd'hui », en-tête à onglets de pôle (2026-09-23) ----
+   Même grammaire que le côté client depuis sa refonte : blanc, un filet d'1px pour toute
+   séparation, la hiérarchie portée par la taille et la graisse plutôt que par des fonds colorés.
+   Une seule couleur qui crie, le rouge, réservée à ce qui est en retard ou bloqué ; tout le reste
+   est encre ou iris. Les anciennes tuiles d'applications (.admin-app-*), le fil d'Ariane et les
+   pastilles de tuile sont partis avec leurs composants (voir AdminHomePage.jsx, AdminPageHeader.jsx). */
+.admin-home { max-width: 1040px; }
+.admin-home-hero { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+.admin-home-hero h2 { margin: 0 0 4px; font-size: 30px; letter-spacing: -0.02em; }
 .admin-home-hero .small { margin: 0; max-width: 560px; }
 .admin-home-quick { display: flex; gap: 8px; flex-wrap: wrap; }
 .admin-home-quick a { text-decoration: none; padding: 9px 14px; border-radius: var(--radius-chip); font-weight: 600; font-size: 13px; }
-.admin-home-quick a.btn-outline { border: 1px solid var(--line); color: var(--ink); }
-.admin-home-attention { margin-bottom: 20px; }
-.admin-home-attention-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
-.admin-attention { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-chip); text-decoration: none; color: var(--ink); background: var(--cream-dim); border: 1px solid transparent; }
-.admin-attention b { font-family: 'Space Grotesk', sans-serif; font-size: 18px; min-width: 28px; text-align: center; }
-.admin-attention span { flex: 1; font-size: 13px; }
-.admin-attention i { color: var(--ink-faint); font-style: normal; font-size: 18px; }
-.admin-attention:hover { border-color: var(--iris); }
-.admin-attention.tone-danger b { color: var(--red); }
-.admin-attention.tone-warn b { color: var(--iris); }
-.admin-attention.tone-info b { color: var(--ink-soft); }
-.admin-home-clear { margin: 10px 0 0; font-weight: 600; }
-.admin-home-pulse { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
-.admin-home-group { margin-bottom: 22px; }
-.admin-home-group h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); margin: 0 0 10px; }
-.admin-apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
-.admin-app-tile { position: relative; display: flex; flex-direction: column; gap: 4px; padding: 16px 14px 14px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; color: var(--ink); min-height: 128px; transition: border-color .15s, transform .15s; }
-.admin-app-tile:hover { border-color: var(--iris); transform: translateY(-1px); }
-.admin-app-icon { font-size: 28px; line-height: 1; margin-bottom: 4px; }
-.admin-app-name { font-weight: 700; font-size: 15px; }
-.admin-app-desc { line-height: 1.35; }
-.admin-badge { position: absolute; top: 10px; right: 10px; min-width: 22px; height: 22px; padding: 0 7px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
-.admin-badge.tone-danger { background: var(--red); }
-.admin-badge.tone-info { background: var(--cream-dim); color: var(--ink-soft); }
-.admin-page-header { margin-bottom: 14px; }
-.admin-breadcrumb { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--ink-faint); margin-bottom: 6px; }
-.admin-breadcrumb a { color: var(--iris); text-decoration: none; font-weight: 600; }
-.admin-breadcrumb a:hover { text-decoration: underline; }
-.admin-page-header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
-.admin-page-header-title { display: flex; gap: 12px; align-items: flex-start; min-width: 0; }
-.admin-page-header-icon { font-size: 26px; line-height: 1.2; }
-.admin-page-header h2 { margin: 0; font-size: 22px; }
-.admin-page-header p.small { margin: 2px 0 0; max-width: 640px; }
-.admin-help-toggle { background: none; border: none; padding: 0 0 0 6px; color: var(--iris); font-size: 12px; font-weight: 600; text-decoration: underline; cursor: pointer; }
-.admin-help-box { margin-top: 10px; background: rgba(59,47,181,0.06); border-left: 3px solid var(--iris); border-radius: var(--radius-chip); padding: 10px 12px; font-size: 13px; white-space: pre-line; }
+.admin-home-quick a.btn-outline { border: 1px solid var(--line); color: var(--ink); background: #fff; }
+.admin-home-stale { color: var(--red); }
+.admin-home-section { margin-bottom: 28px; }
+.admin-section-label { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 13px; font-weight: 600; color: var(--ink-soft); letter-spacing: 0; }
+.admin-section-count { font-size: 12px; font-weight: 600; color: var(--ink-faint); }
+.admin-home-clear { margin: 0; padding: 18px 16px; border: 1px solid var(--line); border-radius: var(--radius); color: var(--ink-soft); }
+
+/* Chiffres en direct : un nombre en grand, son libellé dessous. Chaque tuile est un lien vers la vue
+   qui l'explique, d'où le survol en iris. */
+.admin-kpis { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.admin-kpi { display: flex; flex-direction: column; gap: 4px; padding: 16px; text-decoration: none; color: var(--ink); box-shadow: -1px 0 0 var(--line), 0 -1px 0 var(--line); transition: background .15s; }
+.admin-kpi:hover { background: var(--cream-dim); }
+.admin-kpi-value { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.admin-kpi-label { font-size: 12.5px; color: var(--ink-soft); }
+
+/* Liste « à traiter » : une liste groupée, une ligne par chose à faire. Le point de couleur dit
+   l'urgence, le chiffre à droite dit combien, le chevron dit que la ligne s'ouvre. */
+.admin-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: #fff; }
+.admin-list li + li { border-top: 1px solid var(--line); }
+.admin-list-row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; text-decoration: none; color: var(--ink); transition: background .15s; }
+.admin-list-row:hover { background: var(--cream-dim); }
+.admin-list-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); flex-shrink: 0; }
+.admin-list-row.tone-danger .admin-list-dot { background: var(--red); }
+.admin-list-row.tone-warn .admin-list-dot { background: var(--iris); }
+.admin-list-text { flex: 1; min-width: 0; font-size: 14px; }
+.admin-list-count { font-size: 15px; font-variant-numeric: tabular-nums; }
+.admin-list-row.tone-danger .admin-list-count { color: var(--red); }
+.admin-list-chevron { color: var(--ink-faint); font-size: 18px; line-height: 1; }
+
+/* En-tête de page : le pôle en grand, les actions à droite, les onglets des applications sœurs
+   dessous, soulignés d'un filet — l'onglet ouvert porte un trait iris de 2px. */
+.admin-page-header { margin-bottom: 18px; }
+.admin-page-header-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.admin-page-title { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
+.admin-hub-tabs { display: flex; gap: 22px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; }
+.admin-hub-tabs::-webkit-scrollbar { display: none; }
+.admin-hub-tab { display: inline-flex; align-items: center; gap: 6px; padding: 10px 0; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: 14px; font-weight: 600; color: var(--ink-soft); text-decoration: none; white-space: nowrap; transition: color .15s, border-color .15s; }
+.admin-hub-tab:hover { color: var(--ink); }
+.admin-hub-tab.active { color: var(--ink); border-bottom-color: var(--iris); }
+.admin-hub-tab-count { font-size: 12px; font-weight: 600; color: var(--ink-faint); font-variant-numeric: tabular-nums; }
+.admin-hub-tab-count.tone-warn { color: var(--iris); }
+.admin-hub-tab-count.tone-danger { color: var(--red); }
+.admin-page-subline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.admin-page-subline h3 { margin: 0; font-size: 17px; }
+.admin-help-toggle { background: none; border: none; padding: 0; color: var(--ink-soft); font-size: 12.5px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.admin-help-toggle:hover { color: var(--iris); }
+.admin-help-box { margin: 0 0 12px; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 12px 14px; font-size: 13px; color: var(--ink-soft); white-space: pre-line; max-width: 720px; }
 .admin-page-header-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .admin-control-panel { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
 .admin-control-panel .role-pick .chip { flex: none; padding: 8px 12px; }
@@ -3350,6 +3368,10 @@ button.account-link-row:last-child { border-bottom: none; }
 .dashboard-nav-link .nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: var(--radius-pill); font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; background: var(--iris); color: #fff; }
 .dashboard-nav-link .nav-badge.tone-danger { background: var(--red); }
 .dashboard-nav-link .nav-badge.tone-info { background: var(--line); color: var(--ink-soft); }
+/* Barre admin : seul le rouge (en retard, bloqué) reste une pastille pleine. Un « à faire » ordinaire
+   n'est plus qu'un chiffre : sept pastilles iris allumées en permanence ne signalaient plus rien. */
+.dashboard-nav.admin .nav-badge.tone-warn { background: transparent; color: var(--ink-soft); }
+.dashboard-nav.admin .dashboard-nav-link.active .nav-badge.tone-warn { color: inherit; }
 .admin-search-hint { position: absolute; right: 26px; top: 9px; font-size: 10px; color: var(--ink-faint); border: 1px solid var(--line); border-radius: var(--radius-pill); padding: 1px 5px; pointer-events: none; }
 @media (max-width: 900px) {
   .dashboard-nav-group { display: none; }

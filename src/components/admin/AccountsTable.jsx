@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 // Deux colonnes, pour chaque type d'utilisateur : tous les comptes, et les vrais comptes — ni comptes test
 // (fondateur, essais, alias +qa), ni démos, ni comptes supprimés. Les chiffres viennent de /admin/overview.
 const LIGNES = [
-  ['clients', '👥', '/admin/clients'], ['drivers', '🛵', '/admin/drivers'], ['couriers', '📁', '/admin/couriers'], ['restaurants', '🏪', '/admin/restaurants']
+  ['clients', '/admin/clients'], ['drivers', '/admin/drivers'], ['couriers', '/admin/couriers'], ['restaurants', '/admin/restaurants']
 ];
 
 export default function AccountsTable({ accounts }) {
@@ -22,11 +22,11 @@ export default function AccountsTable({ accounts }) {
             <tr><th></th><th style={{ textAlign: 'right' }}>{tr('adminCommon.allAccounts')}</th><th style={{ textAlign: 'right' }}>{tr('adminCommon.realAccounts')}</th></tr>
           </thead>
           <tbody>
-            {LIGNES.map(([k, icone, to]) => {
+            {LIGNES.map(([k, to]) => {
               const a = accounts[k] || { all: 0, real: 0 };
               return (
                 <tr key={k}>
-                  <td><Link to={to}>{icone} {tr(`adminCommon.accRow_${k}`)}</Link></td>
+                  <td><Link to={to}>{tr(`adminCommon.accRow_${k}`)}</Link></td>
                   <td style={{ textAlign: 'right' }}>{a.all}</td>
                   <td style={{ textAlign: 'right' }}><b>{a.real}</b></td>
                 </tr>

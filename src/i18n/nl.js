@@ -579,6 +579,7 @@ export default {
       act_resent: 'Uitnodiging opnieuw verstuurd'
     },
     adminReports: {
+      tab_overview: 'Overzicht',
       tab_sales: 'Verkoop',
       tab_customers: 'Klanten',
       tab_partners: 'Partners',
@@ -2038,6 +2039,26 @@ export default {
       kanban: 'Kanban',
       empty: 'Niets hier',
       dragHint: 'Sleep een kaart tussen kolommen om de fase te wijzigen.'
+    },
+    // Admin-console: de polen van de zijbalk en het startscherm Vandaag (zie adminModules.js).
+    adminHubs: {
+      today: 'Vandaag',
+      orders: 'Bestellingen',
+      partners: 'Zaken',
+      couriers: 'Koeriers',
+      customers: 'Klanten',
+      inbox: 'Berichten',
+      money: 'Financiën',
+      settings: 'Instellingen',
+      todayIntro: 'Wat er nu loopt, en wat een actie vraagt.',
+      liveTitle: 'Live',
+      kpi_inProgress: 'Lopende bestellingen',
+      kpi_ordersToday: 'Bestellingen vandaag',
+      kpi_gmvToday: 'Volume vandaag',
+      kpi_driversAvailable: 'Beschikbare koeriers',
+      kpi_driversOnline: 'Koeriers online',
+      kpi_reservations: 'Reservaties binnen 24 u',
+      kpi_restaurants: 'Actieve zaken',
     },
     adminHome: {
       apps: 'Apps',

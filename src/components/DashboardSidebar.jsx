@@ -1,4 +1,4 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
@@ -8,7 +8,7 @@ import AdminGlobalSearch from './admin/AdminGlobalSearch';
 import useAdminOverview from '../hooks/useAdminOverview';
 import useAdminRole from '../hooks/useAdminRole';
 import useInbox from '../hooks/useInbox';
-import { ADMIN_GROUPS, ADMIN_MODULES, moduleAllowed, moduleBadge } from '../pages/admin/adminModules';
+import { ADMIN_HUBS, hubBadge, hubModules, moduleForPath } from '../pages/admin/adminModules';
 
 // Où mène le logo de la barre latérale, et où l'on atterrit après connexion (voir pages/Home.jsx).
 // Pour un client, c'est la liste des restaurants : la page /home qui s'y interposait n'affichait
@@ -68,39 +68,39 @@ function navItemsForRole(role, t) {
 // ERP interne : les applications du registre (pages/admin/adminModules.js), groupées par famille comme
 // sur l'accueil, avec le compteur « à traiter » de chacune. Affichées à la place de la nav du rôle pour
 // tout compte admin (voir isAdminAccount plus bas), quelle que soit la page visitée.
+// Neuf entrées, plus vingt-huit : l'accueil, un lien par pôle (voir ADMIN_HUBS), le compte. L'entrée d'un pôle reste allumée
+// sur n'importe lequel de ses onglets — d'où le calcul à la main plutôt que l'isActive de NavLink,
+// qui ne connaît que sa propre adresse.
 function AdminNav({ t }) {
   const { overview } = useAdminOverview();
   // Équipe & accès : on masque les applications fermées au rôle du membre (tout reste visible tant que le
   // rôle n'est pas connu — le serveur applique la vraie règle, voir middleware/auth.js).
   const { role } = useAdminRole();
+  const { pathname } = useLocation();
+  const poleCourant = moduleForPath(pathname)?.hub;
+  const classe = (actif) => `dashboard-nav-link${actif ? ' active' : ''}`;
   return (
     <nav className="dashboard-nav admin">
-      <NavLink to="/admin" end title={t('adminHome.apps')} aria-label={t('adminHome.apps')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
-        <span className="dashboard-nav-icon">🏠</span>
-        <span>{t('adminHome.apps')}</span>
+      <NavLink to="/admin" end title={t('adminHubs.today')} aria-label={t('adminHubs.today')} className={({ isActive }) => classe(isActive)}>
+        <span className="dashboard-nav-icon"><Icone nom="maison" taille={20} /></span>
+        <span>{t('adminHubs.today')}</span>
       </NavLink>
-      {ADMIN_GROUPS.map((groupe) => {
-        const mods = ADMIN_MODULES.filter((m) => m.group === groupe && moduleAllowed(m, role));
+      {ADMIN_HUBS.map((hub) => {
+        const mods = hubModules(hub, role);
         if (!mods.length) return null;
+        const badge = hubBadge(hub, overview, role);
+        const label = t(`adminHubs.${hub.key}`);
+        const actif = poleCourant === hub.key;
         return (
-          <div key={groupe} className="dashboard-nav-section">
-            <div className="dashboard-nav-group">{t(`adminHome.group_${groupe}`)}</div>
-            {mods.map((m) => {
-              const badge = moduleBadge(m, overview);
-              const label = t(`adminModules.${m.key}`);
-              return (
-                <NavLink key={m.key} to={m.path} title={label} aria-label={label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
-                  <span className="dashboard-nav-icon">{m.icon}</span>
-                  <span>{label}</span>
-                  {badge && <span className={`nav-badge tone-${badge.tone}`}>{badge.count}</span>}
-                </NavLink>
-              );
-            })}
-          </div>
+          <Link key={hub.key} to={mods[0].path} title={label} aria-label={label} aria-current={actif ? 'page' : undefined} className={classe(actif)}>
+            <span className="dashboard-nav-icon"><Icone nom={hub.icon} taille={20} /></span>
+            <span>{label}</span>
+            {badge && <span className={`nav-badge tone-${badge.tone}`}>{badge.count}</span>}
+          </Link>
         );
       })}
-      <NavLink to="/account" title={t('nav.account')} aria-label={t('nav.account')} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}>
-        <span className="dashboard-nav-icon">👤</span>
+      <NavLink to="/account" title={t('nav.account')} aria-label={t('nav.account')} className={({ isActive }) => classe(isActive)}>
+        <span className="dashboard-nav-icon"><Icone nom="compte" taille={20} /></span>
         <span>{t('nav.account')}</span>
       </NavLink>
     </nav>

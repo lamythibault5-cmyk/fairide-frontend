@@ -12,6 +12,7 @@ import { money, pct } from './adminUtils';
 import AccountsTable from '../../components/admin/AccountsTable';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
+import NumbersTabs from './reports/NumbersTabs';
 
 const periods = (tr) => [
   { key: 'today', label: tr('adminCommon.today') },
@@ -72,6 +73,7 @@ export default function AdminDashboardPage() {
           <button type="button" className="btn-outline" disabled={refreshing} onClick={() => { load(true); refreshOverview(); }}>{refreshing ? '...' : tr('adminDash.refresh')}</button>
         </div>
       } />
+      <NumbersTabs current="overview" />
     </>
   );
 

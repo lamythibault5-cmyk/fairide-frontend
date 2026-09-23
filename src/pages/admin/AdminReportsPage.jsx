@@ -10,6 +10,7 @@ import SalesTab from './reports/SalesTab';
 import CustomersTab from './reports/CustomersTab';
 import PartnersTab from './reports/PartnersTab';
 import FunnelTab from './reports/FunnelTab';
+import NumbersTabs from './reports/NumbersTabs';
 import '../../admin-finance.css';
 import '../../admin-reports.css';
 
@@ -17,14 +18,15 @@ import '../../admin-reports.css';
 // mémorisé entre applications), quatre onglets (Ventes, Clients, Partenaires, Entonnoir) portés par
 // l'URL (?tab=), les données de test exclues par défaut, et un export CSV de la table principale de
 // chaque onglet via GET /admin/reports/export.
+// Rattachée au Tableau de bord depuis le 2026-09-23 : son en-tête se déclare « dashboard » et sa rangée
+// d'onglets est celle de reports/NumbersTabs.jsx, qui ajoute « Vue d'ensemble » devant les quatre.
 const TABS = ['sales', 'customers', 'partners', 'funnel'];
-const TAB_KEYS = { sales: 'adminReports.tab_sales', customers: 'adminReports.tab_customers', partners: 'adminReports.tab_partners', funnel: 'adminReports.tab_funnel' };
 
 export default function AdminReportsPage() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const tab = TABS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'sales';
   const { period, setPeriod, queryString } = usePeriod();
   const [includeTest, setIncludeTest] = useState(false);
@@ -47,7 +49,7 @@ export default function AdminReportsPage() {
   const common = { token, query };
   return (
     <div>
-      <AdminPageHeader module="reports" actions={(
+      <AdminPageHeader module="dashboard" actions={(
         <>
           <PeriodPicker period={period} onChange={setPeriod} compact />
           <label className="rep-toggle">
@@ -57,9 +59,8 @@ export default function AdminReportsPage() {
           <button type="button" className="btn-ghost" onClick={() => exporter()} disabled={exporting}>{tr('adminCommon.csv')}</button>
         </>
       )} />
-      <nav className="fin-tabs" aria-label={tr('adminReports.tabsAria')}>
-        {TABS.map((k) => <div key={k} role="tab" aria-selected={tab === k} className={`chip${tab === k ? ' active' : ''}`} onClick={() => setSearchParams({ tab: k })}>{tr(TAB_KEYS[k])}</div>)}
-      </nav>
+      <NumbersTabs current={tab} />
+
       {tab === 'sales' && <SalesTab {...common} />}
       {tab === 'customers' && <CustomersTab {...common} />}
       {tab === 'partners' && <PartnersTab {...common} onExport={exporter} />}
