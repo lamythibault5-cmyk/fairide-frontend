@@ -1497,6 +1497,8 @@ export default {
       colType: 'Statuut'
     },
     courierOnboarding: {
+      partPersonal: "Jouw gegevens",
+      partRides: "Jouw ritten",
       title: 'Mijn koeriersdossier',
       backToDashboard: 'Terug naar het dashboard',
       legalFooter: 'Plafonds en tarieven: wettelijke parameters {year} (FOD Financiën, RSZ), jaarlijks geïndexeerd.',

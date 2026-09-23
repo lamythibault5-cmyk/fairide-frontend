@@ -1497,6 +1497,8 @@ export default {
       colType: 'Status'
     },
     courierOnboarding: {
+      partPersonal: "Your details",
+      partRides: "Your rides",
       title: 'My courier file',
       backToDashboard: 'Back to dashboard',
       legalFooter: 'Caps and rates: legal parameters {year} (FPS Finance, NSSO), indexed yearly.',

@@ -361,9 +361,12 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     nationalityGroup: c.nationalityGroup ?? '' });
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const [expiry, setExpiry] = useState('');
+  const [partie, setPartie] = useState(0);
   const fichiers = useRef({});
   const motorise = ['scooter', 'voiture'].includes(f.vehicleType);
 
+  // Silencieux : appelé à chaque « Continuer », un toast « Enregistré » par écran ne dirait rien de plus
+  // que le passage à l'écran suivant. Une erreur, elle, s'affiche toujours (voir action()).
   async function enregistrer() {
     const body = { ...f };
     if (!body.nationalNumber) delete body.nationalNumber;
@@ -372,7 +375,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     // L'attestation sur l'honneur ne s'envoie qu'une fois, cochée : le serveur l'horodate.
     if (!body.p2pHonourDeclared || c.p2pHonourDeclaredAt) delete body.p2pHonourDeclared;
     for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
-    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }), t('courierOnboarding.toastSaved'));
+    const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body }));
     if (ok) setF((x) => ({ ...x, nationalNumber: '' }));
     return ok;
   }
@@ -390,103 +393,125 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
   const docsRequis = [...new Set([...(d.commonDocuments ?? ['profile_photo']), ...(d.requiredDocuments?.[c.statusType] ?? []), ...(motorise ? (d.motorizedDocuments ?? ['driving_licence', 'vehicle_registration', 'vehicle_insurance']) : []), ...(horsEee ? ['residence_permit', 'professional_card'] : [])])];
   const docsDe = (type) => (d.documents ?? []).filter((x) => x.docType === type);
 
+  // L'ÉTAPE EN QUATRE ÉCRANS (2026-09-23). Elle tenait sur une seule page : identité administrative,
+  // courses, champs du statut et pièces à déposer, avec deux boutons (« Enregistrer », puis « Enregistrer
+  // et continuer ») qui faisaient presque la même chose. Même principe que l'inscription : un sujet par
+  // écran, un seul bouton. « Continuer » enregistre l'écran avant de passer au suivant, et un écran sans
+  // objet pour le statut (pas de section statut, aucune pièce requise) n'existe simplement pas.
+  const titreStatut = { p2p: `🤝 ${t('courierOnboarding.p2pSection')}`, student_independent: `🎓 ${t('courierOnboarding.stuIndepSection')}`, independent: `🧑‍💼 ${t('courierOnboarding.indepSection')}` }[c.statusType];
+  const parties = ['perso', 'course', ...(titreStatut ? ['statut'] : []), ...(docsRequis.length ? ['documents'] : [])];
+  const cle = parties[Math.min(partie, parties.length - 1)];
+  const titres = { perso: t('courierOnboarding.partPersonal'), course: t('courierOnboarding.partRides'), statut: titreStatut, documents: `📎 ${t('courierOnboarding.docsTitle')}` };
+  const rang = parties.indexOf(cle);
+  async function continuer() {
+    // Les pièces se déposent une à une, à l'envoi du fichier : l'écran des documents n'a rien à enregistrer.
+    if (cle !== 'documents' && !(await enregistrer())) return;
+    if (rang < parties.length - 1) { setPartie(rang + 1); window.scrollTo({ top: 0 }); } else onNext();
+  }
+
   return (
     <div className="card">
-      <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.infosTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.infosHelp')}</p>
-      <div className="courier-grid">
-        <Champ label={t('conformite.fNationality')} help={horsEee ? t('conformite.fNationalityThirdHelp') : null}>
-          <select value={f.nationalityGroup} onChange={set('nationalityGroup')}>
-            <option value="">-</option>
-            {['BE', 'EEA_CH', 'THIRD'].map((n) => <option key={n} value={n}>{t(`conformite.nationality_${n}`)}</option>)}
-          </select>
-        </Champ>
-        <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
-        <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
-          <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
-        </Champ>
-        <Champ label={t('courierOnboarding.fIban')}><input aria-label="BE68 5390 0754 7034" value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
-        <Champ label={t('courierOnboarding.fZone')}>
-          <select value={f.zone} onChange={set('zone')}><option value="">-</option>{(d.zones ?? []).map((z) => <option key={z} value={z}>{z}</option>)}</select>
-        </Champ>
-        <Champ label={t('courierOnboarding.fVehicle')}>
-          <select value={f.vehicleType} onChange={set('vehicleType')}><option value="">-</option>{(d.vehicles ?? []).map((v) => <option key={v} value={v}>{t(`courierOnboarding.vehicle_${v}`)}</option>)}</select>
-        </Champ>
-        {motorise && (<>
-          <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
-          <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+      <div className="auth-step-head">
+        <h3>{titres[cle]}</h3>
+        <div className="auth-step-bar"><span style={{ width: `${((rang + 1) / parties.length) * 100}%` }} /></div>
+      </div>
+      {cle === 'perso' && (<>
+        <div className="courier-grid">
+          <Champ label={t('conformite.fNationality')} help={horsEee ? t('conformite.fNationalityThirdHelp') : null}>
+            <select value={f.nationalityGroup} onChange={set('nationalityGroup')}>
+              <option value="">-</option>
+              {['BE', 'EEA_CH', 'THIRD'].map((n) => <option key={n} value={n}>{t(`conformite.nationality_${n}`)}</option>)}
+            </select>
+          </Champ>
+          <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
+          <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
+            <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
+          </Champ>
+          <Champ label={t('courierOnboarding.fIban')}><input aria-label="BE68 5390 0754 7034" value={f.iban} onChange={set('iban')} placeholder="BE68 5390 0754 7034" /></Champ>
+        </div>
+      </>)}
+      {cle === 'course' && (<>
+        <div className="courier-grid">
+          <Champ label={t('courierOnboarding.fZone')}>
+            <select value={f.zone} onChange={set('zone')}><option value="">-</option>{(d.zones ?? []).map((z) => <option key={z} value={z}>{z}</option>)}</select>
+          </Champ>
+          <Champ label={t('courierOnboarding.fVehicle')}>
+            <select value={f.vehicleType} onChange={set('vehicleType')}><option value="">-</option>{(d.vehicles ?? []).map((v) => <option key={v} value={v}>{t(`courierOnboarding.vehicle_${v}`)}</option>)}</select>
+          </Champ>
+          {motorise && (<>
+            <Champ label={t('courierOnboarding.fLicence')}><input value={f.licenceNumber} onChange={set('licenceNumber')} /></Champ>
+            <Champ label={t('courierOnboarding.fPlate')}><input aria-label="1-ABC-123" value={f.licencePlate} onChange={set('licencePlate')} placeholder="1-ABC-123" /></Champ>
+          </>)}
+          <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
+            <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
+              <option value="">-</option>
+              <option value="own">{t('auth.bag_own')}</option>
+              <option value="fairide">{t('auth.bag_fairide')}</option>
+            </select>
+          </Champ>
+        </div>
+
+      </>)}
+      {cle === 'statut' && (<>
+        {c.statusType === 'p2p' && (<>
+          <Champ label={t('courierOnboarding.fIncomeExternal')} help={t('courierOnboarding.fIncomeExternalHelp', { amount: euroOuTiret(legal.p2pAnnualCeilingGross) })}><input type="number" min="0" step="0.01" value={f.incomeExternalDeclared} onChange={set('incomeExternalDeclared')} /></Champ>
+          <h5 style={{ margin: '10px 0 4px' }}>{t('courierOnboarding.fHonour')}</h5>
+          <label className="service-option"><input type="checkbox" checked={!!f.p2pHonourDeclared} disabled={!!c.p2pHonourDeclaredAt} onChange={set('p2pHonourDeclared')} /> <span>{t('courierOnboarding.fHonourText')}</span></label>
+          {c.p2pHonourDeclaredAt && <p className="small" style={{ margin: '2px 0 6px', opacity: 0.8 }}>✅ {t('courierOnboarding.honourDeclaredAt', { date: new Date(c.p2pHonourDeclaredAt).toLocaleDateString(getLocale()) })}</p>}
+          <label className="service-option"><input type="checkbox" checked={!!f.p2pNonProfessional} onChange={set('p2pNonProfessional')} /> <span>{t('courierOnboarding.p2pNonPro')}</span></label>
+          <label className="service-option"><input type="checkbox" checked={!!f.p2pWithholdingConsent} onChange={set('p2pWithholdingConsent')} /> <span>{t('courierOnboarding.p2pWithholding', { rate: pctTexte(legal.p2pWithholdingRate) })}</span></label>
+          <label className="service-option"><input type="checkbox" checked={!!f.p2pTaxConsent} onChange={set('p2pTaxConsent')} /> <span>{t('courierOnboarding.p2pTax')}</span></label>
         </>)}
-        <Champ label={t('courierOnboarding.fBag')} help={['none', 'due'].includes(c.bag?.depositStatus || 'none') ? t('courierOnboarding.fBagHelp', { amount: c.bag?.depositAmount || 40 }) : t(`courierOnboarding.bagDeposit_${c.bag.depositStatus}`, { amount: c.bag?.depositAmount || 40 })}>
-          <select value={f.bagOption} onChange={set('bagOption')} disabled={!['none', 'due'].includes(c.bag?.depositStatus || 'none')}>
-            <option value="">-</option>
-            <option value="own">{t('auth.bag_own')}</option>
-            <option value="fairide">{t('auth.bag_fairide')}</option>
-          </select>
-        </Champ>
-      </div>
 
-      {c.statusType === 'p2p' && (<>
-        <h4 style={{ margin: '14px 0 6px' }}>🤝 {t('courierOnboarding.p2pSection')}</h4>
-        <Champ label={t('courierOnboarding.fIncomeExternal')} help={t('courierOnboarding.fIncomeExternalHelp', { amount: euroOuTiret(legal.p2pAnnualCeilingGross) })}><input type="number" min="0" step="0.01" value={f.incomeExternalDeclared} onChange={set('incomeExternalDeclared')} /></Champ>
-        <h5 style={{ margin: '10px 0 4px' }}>{t('courierOnboarding.fHonour')}</h5>
-        <label className="service-option"><input type="checkbox" checked={!!f.p2pHonourDeclared} disabled={!!c.p2pHonourDeclaredAt} onChange={set('p2pHonourDeclared')} /> <span>{t('courierOnboarding.fHonourText')}</span></label>
-        {c.p2pHonourDeclaredAt && <p className="small" style={{ margin: '2px 0 6px', opacity: 0.8 }}>✅ {t('courierOnboarding.honourDeclaredAt', { date: new Date(c.p2pHonourDeclaredAt).toLocaleDateString(getLocale()) })}</p>}
-        <label className="service-option"><input type="checkbox" checked={!!f.p2pNonProfessional} onChange={set('p2pNonProfessional')} /> <span>{t('courierOnboarding.p2pNonPro')}</span></label>
-        <label className="service-option"><input type="checkbox" checked={!!f.p2pWithholdingConsent} onChange={set('p2pWithholdingConsent')} /> <span>{t('courierOnboarding.p2pWithholding', { rate: pctTexte(legal.p2pWithholdingRate) })}</span></label>
-        <label className="service-option"><input type="checkbox" checked={!!f.p2pTaxConsent} onChange={set('p2pTaxConsent')} /> <span>{t('courierOnboarding.p2pTax')}</span></label>
-      </>)}
-
-      {c.statusType === 'student_independent' && (<>
-        <h4 style={{ margin: '14px 0 6px' }}>🎓 {t('courierOnboarding.stuIndepSection')}</h4>
-        <div className="courier-grid">
-          <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
-          <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
-          <ChampCaisse f={f} set={set} t={t} />
-          <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
-        </div>
-        {legal.studentParentsCeiling != null && <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>ℹ️ {t('courierOnboarding.studentParentsInfo', { amount: euro(legal.studentParentsCeiling) })}</p>}
-      </>)}
-
-      {c.statusType === 'independent' && (<>
-        <h4 style={{ margin: '14px 0 6px' }}>🧑‍💼 {t('courierOnboarding.indepSection')}</h4>
-        <div className="courier-grid">
-          <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
-          <ChampCaisse f={f} set={set} t={t} />
-          <Champ label={t('courierOnboarding.fLegalName')}><input value={f.legalName} onChange={set('legalName')} /></Champ>
-          <Champ label={t('courierOnboarding.fSeat')}><input value={f.seatAddress} onChange={set('seatAddress')} /></Champ>
-        </div>
-      </>)}
-
-      <div className="row" style={{ marginTop: 10, gap: 8, flexWrap: 'wrap' }}>
-        <button type="button" className="btn-teal" disabled={busy} onClick={enregistrer}>{busy ? '…' : t('courierOnboarding.save')}</button>
-      </div>
-
-      {docsRequis.length > 0 && (<>
-        <h4 style={{ margin: '16px 0 6px' }}>📎 {t('courierOnboarding.docsTitle')}</h4>
-        <p className="small" style={{ margin: '0 0 8px' }}>{t('courierOnboarding.docsHelp')}</p>
-        {docsRequis.map((type) => (
-          <div key={type} className="courier-doc">
-            <div>
-              <b>{t(`courierOnboarding.doc_${type}`)}</b>
-              <p className="small" style={{ margin: '2px 0 0' }}>{t(`courierOnboarding.doc_${type}_help`)}</p>
-              {docsDe(type).map((x) => (
-                <div key={x.id} className="small" style={{ marginTop: 4 }}>
-                  {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/couriers/me/documents/${x.id}/lien`, token, toast, messageErreur: t('courierOnboarding.docUnavailable') })}>{t('courierOnboarding.docView')}</button>
-                  {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
-                  {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
-                  {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
-                </div>
-              ))}
-            </div>
-            <div className="courier-doc-actions">
-              {AVEC_ECHEANCE.includes(type) && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
-              <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={type !== 'profile_photo'} accept={type === 'profile_photo' ? 'image/*' : 'application/pdf,image/*'} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
-              <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
-            </div>
+        {c.statusType === 'student_independent' && (<>
+          <div className="courier-grid">
+            <Champ label={t('courierOnboarding.fSchool')}><input value={f.schoolName} onChange={set('schoolName')} /></Champ>
+            <Champ label={t('courierOnboarding.fAcademicYear')}><input aria-label="2026-2027" value={f.academicYear} onChange={set('academicYear')} placeholder="2026-2027" /></Champ>
+            <ChampCaisse f={f} set={set} t={t} />
+            <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
           </div>
-        ))}
+          {legal.studentParentsCeiling != null && <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>ℹ️ {t('courierOnboarding.studentParentsInfo', { amount: euro(legal.studentParentsCeiling) })}</p>}
+        </>)}
+
+        {c.statusType === 'independent' && (<>
+          <div className="courier-grid">
+            <ChampsEntreprise c={c} f={f} set={set} t={t} legal={legal} />
+            <ChampCaisse f={f} set={set} t={t} />
+            <Champ label={t('courierOnboarding.fLegalName')}><input value={f.legalName} onChange={set('legalName')} /></Champ>
+            <Champ label={t('courierOnboarding.fSeat')}><input value={f.seatAddress} onChange={set('seatAddress')} /></Champ>
+          </div>
+        </>)}
+
       </>)}
-      <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={async () => { if (await enregistrer()) onNext(); }}>{t('courierOnboarding.saveAndNext')}</button></div>
+      {cle === 'documents' && (<>
+        {docsRequis.length > 0 && (<>
+          {docsRequis.map((type) => (
+            <div key={type} className="courier-doc">
+              <div>
+                <b>{t(`courierOnboarding.doc_${type}`)}</b>
+                <p className="small" style={{ margin: '2px 0 0' }}>{t(`courierOnboarding.doc_${type}_help`)}</p>
+                {docsDe(type).map((x) => (
+                  <div key={x.id} className="small" style={{ marginTop: 4 }}>
+                    {x.verifiedAt ? '✅' : x.rejectedReason ? '❌' : '⏳'} <button type="button" className="lien-bouton" onClick={() => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/couriers/me/documents/${x.id}/lien`, token, toast, messageErreur: t('courierOnboarding.docUnavailable') })}>{t('courierOnboarding.docView')}</button>
+                    {x.expiresAt && ` · ${t('courierOnboarding.docExpires', { date: new Date(x.expiresAt).toLocaleDateString(getLocale()) })}`}
+                    {x.rejectedReason && <span style={{ color: 'var(--red)' }}> · {x.rejectedReason}</span>}
+                    {!x.verifiedAt && <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => action(() => api(`/couriers/me/documents/${x.id}`, { method: 'DELETE', token }))}>{t('courierOnboarding.docDelete')}</button>}
+                  </div>
+                ))}
+              </div>
+              <div className="courier-doc-actions">
+                {AVEC_ECHEANCE.includes(type) && <input type="date" value={expiry} onChange={(e) => setExpiry(e.target.value)} title={t('courierOnboarding.docExpiryLabel')} />}
+                <input ref={(el) => { fichiers.current[type] = el; }} type="file" multiple={type !== 'profile_photo'} accept={type === 'profile_photo' ? 'image/*' : 'application/pdf,image/*'} style={{ display: 'none' }} onChange={(e) => deposer(type, e)} />
+                <button type="button" className="btn-outline" disabled={busy} onClick={() => fichiers.current[type]?.click()}>{docsDe(type).length ? t('courierOnboarding.docReplace') : t('courierOnboarding.docUpload')}</button>
+              </div>
+            </div>
+          ))}
+        </>)}
+      </>)}
+      <div className="auth-step-nav">
+        {rang > 0 && <button type="button" className="btn-outline" onClick={() => setPartie(rang - 1)}>{t('auth.back')}</button>}
+        <button type="button" className="btn-gold" style={{ flex: 1 }} disabled={busy} onClick={continuer}>{busy ? '…' : t('auth.continueStep')}</button>
+      </div>
     </div>
   );
 }

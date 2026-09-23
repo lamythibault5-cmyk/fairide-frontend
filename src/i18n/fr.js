@@ -1497,6 +1497,8 @@ export default {
       colType: 'Statut'
     },
     courierOnboarding: {
+      partPersonal: "Tes informations",
+      partRides: "Tes courses",
       title: 'Mon dossier livreur',
       backToDashboard: 'Retour au tableau de bord',
       legalFooter: 'Plafonds et taux : paramètres légaux {year} (SPF Finances, ONSS), indexés chaque année.',
