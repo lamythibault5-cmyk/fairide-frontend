@@ -31,7 +31,6 @@ const activityLabels = (tr) => ({
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
-const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'revenue', 'orders'];
 const STATUT_ADMIN = (tr) => ({ pending: tr('adminDrivers.filterPending'), approved: tr('adminDrivers.filterApproved'), blocked: tr('adminDrivers.filterBlocked') });
 const VAT_LABELS = (tr) => ({ franchise: tr('adminDrivers.vatFranchise'), assujetti: tr('adminDrivers.vatSubject') });
 // Dossier coursier (statut légal, véhicule, zone) en une ligne ; le détail complet est dans Dossiers livreurs.
@@ -66,7 +65,9 @@ export default function AdminDriversPage() {
   const emojiType = (k) => ({ student: '🎓', p2p: '🤝', independent: '💼' }[k] || '❔');
   const [activite, setActivite] = useEtatPage('activite', '');
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
-  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
+  // Plus de liste « trier par » (allègement de la console, 23/09/2026) : des plus récents aux plus anciens ; en vue
+  // tableau, les en-têtes de colonne trient.
+  const triServeur = 'created_desc';
   const { sort, toggle } = useTableSort('deliveriesCount');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
@@ -218,9 +219,6 @@ export default function AdminDriversPage() {
         <select value={activite} onChange={(e) => setActivite(e.target.value)} style={{ maxWidth: 180 }}>
           <option value="">{tr('adminDrivers.allActivities')}</option>
           {Object.entries(activityLabels(tr)).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
-        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
-          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
         </select>
         <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>

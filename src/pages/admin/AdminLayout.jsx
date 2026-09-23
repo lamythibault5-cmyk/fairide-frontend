@@ -12,7 +12,7 @@ export default function AdminLayout() {
   const { pathname } = useLocation();
   // La coquille (Layout.jsx) ne se recrée plus à chaque adresse admin : c'est ici que chaque page apparaît en fondu.
   return (
-    <div className="page-fade" key={pathname}>
+    <div className="page-fade admin-console" key={pathname}>
       <AdminErrorBoundary resetKey={pathname}><Outlet /></AdminErrorBoundary>
     </div>
   );

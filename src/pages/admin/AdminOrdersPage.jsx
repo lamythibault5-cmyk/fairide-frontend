@@ -219,11 +219,11 @@ export default function AdminOrdersPage() {
           <option value="pickup">{tr('adminOrders.typePickup')}</option>
           <option value="dine_in">{tr('adminOrders.typeDineIn')}</option>
         </select>
+        {/* Gardée : le tableau de bord et l'accueil envoient ici avec ?today=1. Montant min / max retirés (allègement
+            de la console, 23/09/2026) : jamais utilisés, et la recherche + les dates suffisent. */}
         <label className="small admin-inline-field"><input type="checkbox" checked={!!searchParams.get('today')} onChange={(e) => setParam('today', e.target.checked ? '1' : '')} /> {tr('adminOrders.todayOnly')}</label>
         <label className="small admin-inline-field">{tr('adminOrders.dateFrom')} <input type="date" value={searchParams.get('from') || ''} onChange={(e) => setParam('from', e.target.value)} /></label>
         <label className="small admin-inline-field">{tr('adminOrders.dateTo')} <input type="date" value={searchParams.get('to') || ''} onChange={(e) => setParam('to', e.target.value)} /></label>
-        <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={searchParams.get('min') || ''} onChange={(e) => setParam('min', e.target.value)} style={{ width: 80 }} /></label>
-        <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={searchParams.get('max') || ''} onChange={(e) => setParam('max', e.target.value)} style={{ width: 80 }} /></label>
         {[...EXTRA, 'restaurantId', 'driverId', 'clientId'].some((k) => searchParams.get(k)) && <button type="button" className="btn-ghost" onClick={() => { const next = Object.fromEntries([...searchParams.entries()]); for (const k of [...EXTRA, 'restaurantId', 'driverId', 'clientId']) delete next[k]; setSearchParams(next); }}>✕ {tr('adminOrders.clearFilters')}</button>}
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>

@@ -26,8 +26,6 @@ import urlSure from '../../urlSure';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
-// Tris proposés par le serveur (GET /admin/restaurants?sort=…) : portent sur TOUS les restaurants.
-const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'commune', 'revenue', 'orders'];
 // Restaurant test : de démonstration (restaurants.is_demo, créés par les seeds) ou tenu par un compte QA (+qa).
 // Les autres sont de vraies inscriptions : visibles des clients seulement une fois publiées (publicListed).
 const estTest = (r) => !!r.isDemo || estCompteTest(r);
@@ -98,15 +96,15 @@ export default function AdminRestaurantsPage() {
   const [mode, setMode] = useViewMode('restaurants', 'cards');
   const filtre = searchParams.get('status') || 'all'; // all | pending | carte | approved | blocked
   const [nature, setNature] = useEtatPage('nature', 'all'); // all | real | test | deleted
-  const [commune, setCommune] = useEtatPage('commune', '');
-  const [cuisine, setCuisine] = useEtatPage('cuisine', '');
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
-  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
+  // Allègement de la console (fondateur, 23/09/2026) : plus de listes « toutes les communes / toutes les
+  // cuisines / trier par » — personne ne s'en servait, la recherche et les pastilles suffisent. La liste
+  // reste servie des plus récents aux plus anciens ; en vue tableau, les en-têtes de colonne trient.
+  const triServeur = 'created_desc';
   const { sort, toggle } = useTableSort('revenue');
   const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 
-  // Recherche, tri et statut admin sont faits par le serveur ; nature / commune / cuisine / « carte »
-  // affinent les lignes chargées.
+  // Recherche, tri et statut admin sont faits par le serveur ; nature et « carte » affinent les lignes chargées.
   const liste = useServerList('/admin/restaurants', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
   const { rows: restaurants, setRows: setRestaurants, total, loading, error, reload: load, loadMore } = liste;
   // Compteurs de TOUTE la base (GET /admin/restaurants/stats). Ils étaient calculés sur les lignes
@@ -246,8 +244,6 @@ export default function AdminRestaurantsPage() {
     ]);
   }
 
-  const communes = useMemo(() => [...new Set((restaurants || []).map((r) => r.commune).filter(Boolean))].sort(), [restaurants]);
-  const cuisines = useMemo(() => [...new Set((restaurants || []).map((r) => r.cuisine).filter(Boolean))].sort(), [restaurants]);
   const colonnes = [
     { key: 'name', label: tr('adminCommon.name'), get: (r) => <><b>{r.name}</b>{estTest(r) && <TestBadge />}</>, sortValue: (r) => r.name },
     { key: 'listing', label: tr('adminRestos.listingCol'), get: (r) => (estTest(r) ? <span className="small">{tr('adminRestos.alwaysListed')}</span> : <span className={`pill ${r.publicListed ? 'listing-on' : 'listing-off'}`}>{r.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span>), sortValue: (r) => (estTest(r) ? 2 : r.publicListed ? 1 : 0) },
@@ -268,7 +264,7 @@ export default function AdminRestaurantsPage() {
     commune: { get: (r) => r.commune || '-' }, cuisine: { get: (r) => r.cuisine || '-' },
     status: { get: (r) => STATUT_ADMIN(tr)[r.adminStatus] || r.adminStatus }, business: { get: (r) => BUSINESS_STATUS_LABELS[r.businessStatus]?.label || r.businessStatus }
   };
-  const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r) && (!commune || r.commune === commune) && (!cuisine || r.cuisine === cuisine)), colonnes, sort), [restaurants, filtre, nature, commune, cuisine, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const visibles = useMemo(() => sortRows((restaurants || []).filter((r) => (filtre !== 'carte' || !!r.conciergeStatus) && natureOkResto(nature, r)), colonnes, sort), [restaurants, filtre, nature, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const kpi = useMemo(() => (restaurants || []).reduce((a, r) => ({ pending: a.pending + (r.adminStatus === 'pending' ? 1 : 0), carte: a.carte + (r.conciergeStatus ? 1 : 0), real: a.real + (estTest(r) || estCompteSupprime(r) ? 0 : 1), deleted: a.deleted + (estCompteSupprime(r) ? 1 : 0), unlisted: a.unlisted + (!estTest(r) && !r.publicListed ? 1 : 0), orders: a.orders + r.orderCount, revenue: a.revenue + r.revenue, commission: a.commission + r.commissionGenerated }), { pending: 0, carte: 0, real: 0, deleted: 0, unlisted: 0, orders: 0, revenue: 0, commission: 0 }), [restaurants]);
   // Chiffres affichés en tête et sur les pastilles : ceux du serveur (toute la base) dès qu'ils sont
   // là, sinon ceux des lignes chargées — pour que la page reste lisible même sans la route.
@@ -292,7 +288,6 @@ export default function AdminRestaurantsPage() {
           <div className="stat-card"><div className="num">{chiffres.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{chiffres.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
           <div className="stat-card"><div className="num">{money(chiffres.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
-          <div className="stat-card"><div className="num">{money(chiffres.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
         </div>
       )}
       {restaurants && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: restaurants.length, total })}</p>}
@@ -304,11 +299,6 @@ export default function AdminRestaurantsPage() {
           ))}
         </div>
         <NatureChips nature={nature} onChange={setNature} allCount={stats ? stats.total : undefined} realCount={chiffres.real} testCount={stats ? stats.test : undefined} deletedCount={chiffres.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminRestos.filterReal'), test: tr('adminRestos.filterTest'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
-        <select value={commune} onChange={(e) => setCommune(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCommunes')}</option>{communes.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        <select value={cuisine} onChange={(e) => setCuisine(e.target.value)} style={{ maxWidth: 170 }}><option value="">{tr('adminRestos.allCuisines')}</option>{cuisines.map((c) => <option key={c} value={c}>{c}</option>)}</select>
-        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
-          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
-        </select>
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 200 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>

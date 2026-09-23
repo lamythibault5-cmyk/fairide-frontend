@@ -63,3 +63,10 @@
   .admin-result-count { margin-left: 0; width: 100%; }
   .admin-today-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* Pastilles de filtre de la console (Commandes, Factures, Paiements, Sales…). `.role-pick .chip` vient du choix de
+   rôle à l'inscription : largeur égale forcée (flex: 1) et 4 px de marge latérale. Hors d'un .admin-control-panel,
+   qui le corrigeait déjà, sept statuts de commande se partageaient la ligne à parts égales et le texte débordait
+   de la bulle. Ici, chaque pastille prend la largeur de son texte, et la rangée passe à la ligne au besoin. */
+.admin-console .role-pick { flex-wrap: wrap; }
+.admin-console .role-pick .chip { flex: none; padding: 8px 12px; white-space: nowrap; }
