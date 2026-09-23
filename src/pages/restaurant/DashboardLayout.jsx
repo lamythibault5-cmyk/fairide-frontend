@@ -34,8 +34,6 @@ export default function DashboardLayout() {
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
   const chemin = useLocation().pathname.replace(/\/$/, '');
   const surAccueil = ['/dashboard', '/dashboard/edit'].includes(chemin);
-  // La page Carte (map, livreurs, jeux) s'ouvre même sans restaurant : rien n'y dépend d'un commerce créé.
-  const surCarte = chemin === '/dashboard/map';
   const [myRestos, setMyRestos] = useState(null);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
@@ -265,7 +263,7 @@ export default function DashboardLayout() {
           {!newRestoOpen && myRestos.length === 0 && surAccueil && (
             <button type="button" className="btn-ghost" onClick={() => setNewRestoOpen(true)}>{t('dashResto.createMine')}</button>
           )}
-          {myRestos.length === 0 && !surAccueil && !surCarte && (
+          {myRestos.length === 0 && !surAccueil && (
             <div className="empty" style={{ marginTop: 8 }}>
               <div style={{ fontSize: 30, marginBottom: 6 }}>🔒</div>
               <b>{t('dashResto.waitTitle')}</b>
@@ -330,7 +328,7 @@ export default function DashboardLayout() {
           s'il est en train de modifier son menu ou de consulter ses avis. */}
       {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
 
-      {!restaurant && myRestos.length > 0 && !surCarte && (
+      {!restaurant && myRestos.length > 0 && (
         /* La carte d'échec est celle de components/ErrorCard.jsx, commune aux quatre espaces :
            elle était écrite à la main ici, avec un émoji 📡 que le reste de l'interface a abandonné
            (voir l'en-tête de Icone.jsx). Le seuil de deux tentatives ne bouge pas : un échec isolé
@@ -344,7 +342,7 @@ export default function DashboardLayout() {
           />
         ) : <SkeletonCards count={3} />
       )}
-      {(restaurant || (surCarte && myRestos.length === 0)) && (
+      {restaurant && (
         <div className="page-fade" key={chemin}>
           <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
         </div>

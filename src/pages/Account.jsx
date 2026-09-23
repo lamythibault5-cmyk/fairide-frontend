@@ -779,11 +779,8 @@ export default function Account() {
 
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
-          {/* « Aperçu client » et « Carte » ont quitté la barre du bas, ramenée à cinq onglets pour
-              que chaque cible fasse 56px (voir DashboardSidebar.jsx). Ce sont des pages qu'on ouvre
-              de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
-              d'emploi, partis avant elles pour la même raison. */}
-          <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
+          {/* Plus de rangée « Carte » (2026-09-23) : la page promettait de suivre les livreurs en direct,
+              mais leur position n'est jamais envoyée au commerce (voir App.jsx, route dashboard/map). */}
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>

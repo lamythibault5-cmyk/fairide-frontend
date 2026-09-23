@@ -45,7 +45,6 @@ const RestaurantOrdersPage = lazyPage(() => import('./pages/restaurant/OrdersPag
 const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewPage'));
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
 const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/PromotionsPage'));
-const RestaurantMapPage = lazyPage(() => import('./pages/restaurant/MapPage'));
 const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
@@ -152,7 +151,10 @@ export default function App() {
           <Route path="preview" element={<RestaurantPreviewPage />} />
           <Route path="edit" element={<Navigate to="/dashboard" replace />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
-          <Route path="map" element={<RestaurantMapPage />} />
+          {/* La carte du commerce promettait le suivi des livreurs en direct, mais leur position n'est
+              jamais envoyée au commerce (routes/orders.js, promesse faite aux livreurs) : elle attendait
+              une position qui n'arrivait pas. L'ancienne adresse mène aux commandes. */}
+          <Route path="map" element={<Navigate to="/dashboard/orders" replace />} />
           <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
