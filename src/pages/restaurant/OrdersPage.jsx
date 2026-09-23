@@ -9,8 +9,6 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
-import TerminalFairide from '../../components/TerminalFairide';
-import TicketEditor from '../../components/TicketEditor';
 import {
   DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
@@ -45,8 +43,25 @@ export default function OrdersPage() {
   // Nombre d'impressions déjà faites par commande (session) : affiché dans le détail, pour savoir si le
   // ticket est déjà sorti et pouvoir le réimprimer sans hésiter quand la première sortie a raté.
   const [impressions, setImpressions] = useState({});
-  const [editeur, setEditeur] = useState(null); // null | { order } (modification) | { order: null } (création)
-  const [recuEdite, setRecuEdite] = useState(null);
+  const [basculeOuverture, setBasculeOuverture] = useState(false);
+
+  // OUVERT / EN PAUSE, EN TÊTE DE LA PAGE DE SERVICE (2026-09-23). La case « Restaurant ouvert » vivait
+  // au milieu du formulaire de Mon commerce, sous les horaires, et ne prenait effet qu'au clic sur
+  // Enregistrer : en plein coup de feu, personne n'allait la chercher là. C'est le geste de la tablette
+  // Uber Eats (« Mettre en pause les commandes ») : un appui, effet immédiat. Même champ `open` côté
+  // serveur — fermé, le commerce refuse les nouvelles commandes (routes/orders.js) et sort de la liste
+  // publique ; les commandes déjà reçues continuent normalement.
+  async function basculerOuverture() {
+    setBasculeOuverture(true);
+    try {
+      await api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open: !restaurant.open } });
+      await loadDashboard(restoId);
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setBasculeOuverture(false);
+    }
+  }
 
   async function printBluetooth(order, { silencieux = false, copies = 1 } = {}) {
     setPrinting(true);
@@ -74,7 +89,20 @@ export default function OrdersPage() {
 
   // Ce qui demande une action ou une surveillance en premier, ce qui est déjà réglé en dernier —
   // pour que le restaurateur voie toujours ce qui compte sans avoir à chercher dans la liste.
-  const sortedOrders = useMemo(() => [...orders].sort((a, b) => orderStagePriority(a) - orderStagePriority(b)), [orders]);
+  //
+  // Les commandes closes (terminées, refusées, annulées) passent dans un historique replié : le serveur
+  // renvoie TOUT l'historique du commerce, et au bout de quelques semaines la liste de service n'était plus
+  // qu'une longue traîne de commandes livrées sous les deux qui comptaient.
+  const { enCours, closes, duJour } = useMemo(() => {
+    const finies = ['terminee', 'annulee'];
+    const tri = [...orders].sort((a, b) => orderStagePriority(a) - orderStagePriority(b));
+    const aujourdhui = new Date().toDateString();
+    return {
+      enCours: tri.filter((o) => !finies.includes(orderStageKey(o))),
+      closes: orders.filter((o) => finies.includes(orderStageKey(o))),
+      duJour: orders.filter((o) => o.status !== 'refuse' && o.status !== 'annule' && new Date(o.createdAt).toDateString() === aujourdhui).length
+    };
+  }, [orders]);
 
   async function orderAction(orderId, action, body) {
     try {
@@ -154,115 +182,117 @@ export default function OrdersPage() {
     document.title = prevTitle;
     setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
   }
-  function printReceiptEdite(order) {
-    setRecuEdite(order);
-    // Le portail doit être rendu avec ce ticket avant l'ouverture de la boîte d'impression.
-    setTimeout(() => { printReceipt(order); setTimeout(() => setRecuEdite(null), 500); }, 50);
-  }
+
+  const carteCommande = (o) => {
+    const stageKey = orderStageKey(o);
+    const stage = ORDER_STAGES.find((s) => s.key === stageKey);
+    const stageColor = stageColors[stageKey];
+    return (
+    <div
+      className={`card order-card-clickable order-type-${orderTypeColor(o)}`}
+      key={o.id}
+      style={{ borderLeft: `5px solid ${stageColor}` }}
+      onClick={() => setSelectedOrder(o)}
+    >
+      <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: `${stageColor}22`, color: stageColor }}>
+          {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
+        </span>
+        <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
+          onClick={(e) => { e.stopPropagation(); if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
+      </div>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <b>{o.clientName}</b>
+        <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
+      </div>
+      <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
+      {o.paymentMode === 'on_site' && (
+        <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
+          {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
+        </div>
+      )}
+      <ProgressBar status={o.status} orderType={o.orderType} />
+      <DeliveryTiming order={o} />
+      <EcheanceAcceptation order={o} />
+      <BandeauAllergie order={o} />
+      <BadgeAlcool order={o} />
+      <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('ordersResto.reservationNoOrder')}</div>
+      {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
+      {o.orderType === 'dine_in' && <div className="small">{t('ordersResto.dineInLine', { n: o.partySize, name: o.reservationName })}</div>}
+      {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
+      {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
+        <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
+      )}
+      <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
+        {o.status === 'nouveau' && (
+          <>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
+            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'refuse')}>{t('ordersResto.refuse')}</button>
+          </>
+        )}
+        {o.status === 'preparation' && (
+          <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+        )}
+        {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
+          <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
+        )}
+      </div>
+      {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
+        <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
+          <input aria-label={t('ordersResto.phCustomerCode')}
+            placeholder={t('ordersResto.phCustomerCode')}
+            style={{ maxWidth: 140 }}
+            value={pickupCodeInputs[o.id] || ''}
+            onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+          />
+          <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
+            {confirmingPickup === o.id ? '...' : o.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
+          </button>
+        </div>
+      )}
+      {o.status === 'pret' && o.orderType === 'delivery' && o.driverId && (
+        <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
+          <input aria-label={t('ordersResto.phDriverCode')}
+            placeholder={t('ordersResto.phDriverCode')}
+            style={{ maxWidth: 140 }}
+            value={pickupCodeInputs[o.id] || ''}
+            onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+          />
+          <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmPickup(o.id)}>
+            {confirmingPickup === o.id ? '...' : t('ordersResto.confirmPickup')}
+          </button>
+        </div>
+      )}
+      {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
+        <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
+      )}
+    </div>
+    );
+  };
 
   return (
     <div className="no-print">
-      {/* Tout se passe sur le terminal Fairide : voir, accepter, suivre et imprimer les commandes. */}
-      <div className="card terminal-commandes">
-        <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🖥️ {t('ordersResto.terminalCardTitle')}</h3>
-        <p className="small" style={{ margin: '0 0 8px' }}>{t('ordersResto.terminalCardIntro')}</p>
-        <ul className="small terminal-commandes-points">
-          <li>{t('ordersResto.terminalCard1')}</li>
-          <li>{t('ordersResto.terminalCard2')}</li>
-          <li>{t('ordersResto.terminalCard3')}</li>
-          <li>{t('ordersResto.terminalCard4')}</li>
-        </ul>
-        <TerminalFairide terminal={restaurant?.terminal || null} compact />
-      </div>
+      {/* Plus de carte de présentation du terminal ici : quatre paragraphes et une illustration lus à
+          chaque service, au-dessus des commandes. Elle reste dans Mon compte › Terminal Fairide. */}
+      {restaurant && (
+        <button type="button" className={`service-switch${restaurant.open ? '' : ' off'}`} aria-pressed={!!restaurant.open} disabled={basculeOuverture} onClick={basculerOuverture}>
+          <span className="service-switch-dot" aria-hidden="true" />
+          <span className="service-switch-text">
+            <b>{restaurant.open ? t('ordersResto.openTitle') : t('ordersResto.pausedTitle')}</b>
+            <span>{basculeOuverture ? '…' : restaurant.open ? t('ordersResto.openSub') : t('ordersResto.pausedSub')}</span>
+          </span>
+        </button>
+      )}
+      <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}</p>
 
-      <h2 className="section-title" style={{ marginTop: 0 }}>{t('ordersResto.incoming')}</h2>
-      {orders.length === 0 && <div className="empty">{t('ordersResto.noneYet')}</div>}
-      {sortedOrders.map((o) => {
-        const stageKey = orderStageKey(o);
-        const stage = ORDER_STAGES.find((s) => s.key === stageKey);
-        const stageColor = stageColors[stageKey];
-        return (
-        <div
-          className={`card order-card-clickable order-type-${orderTypeColor(o)}`}
-          key={o.id}
-          style={{ borderLeft: `5px solid ${stageColor}` }}
-          onClick={() => setSelectedOrder(o)}
-        >
-          <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 700, padding: '3px 9px', borderRadius: 20, background: `${stageColor}22`, color: stageColor }}>
-              {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
-            </span>
-            <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-              onClick={(e) => { e.stopPropagation(); if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
-          </div>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{o.clientName}</b>
-            <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
-          </div>
-          <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
-          {o.paymentMode === 'on_site' && (
-            <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
-              {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
-            </div>
-          )}
-          <ProgressBar status={o.status} orderType={o.orderType} />
-          <DeliveryTiming order={o} />
-          <EcheanceAcceptation order={o} />
-          <BandeauAllergie order={o} />
-          <BadgeAlcool order={o} />
-          <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('ordersResto.reservationNoOrder')}</div>
-          {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
-          {o.orderType === 'dine_in' && <div className="small">{t('ordersResto.dineInLine', { n: o.partySize, name: o.reservationName })}</div>}
-          {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
-          {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
-            <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
-          )}
-          <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-            {o.status === 'nouveau' && (
-              <>
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
-                <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'refuse')}>{t('ordersResto.refuse')}</button>
-              </>
-            )}
-            {o.status === 'preparation' && (
-              <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
-            )}
-            {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
-              <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
-            )}
-          </div>
-          {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
-            <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-              <input aria-label={t('ordersResto.phCustomerCode')}
-                placeholder={t('ordersResto.phCustomerCode')}
-                style={{ maxWidth: 140 }}
-                value={pickupCodeInputs[o.id] || ''}
-                onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-              />
-              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
-                {confirmingPickup === o.id ? '...' : o.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
-              </button>
-            </div>
-          )}
-          {o.status === 'pret' && o.orderType === 'delivery' && o.driverId && (
-            <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
-              <input aria-label={t('ordersResto.phDriverCode')}
-                placeholder={t('ordersResto.phDriverCode')}
-                style={{ maxWidth: 140 }}
-                value={pickupCodeInputs[o.id] || ''}
-                onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-              />
-              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmPickup(o.id)}>
-                {confirmingPickup === o.id ? '...' : t('ordersResto.confirmPickup')}
-              </button>
-            </div>
-          )}
-          {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
-            <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
-          )}
-        </div>
-        );
-      })}
+      {enCours.length === 0 && <div className="empty">{orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')}</div>}
+      {enCours.map(carteCommande)}
+      {closes.length > 0 && (
+        <details className="service-historique">
+          <summary>{t('ordersResto.history', { n: closes.length })}</summary>
+          {closes.map(carteCommande)}
+        </details>
+      )}
 
       {selectedOrder && createPortal(
         <div className="modal-overlay no-print" onClick={() => setSelectedOrder(null)}>
@@ -320,7 +350,7 @@ export default function OrdersPage() {
             {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}
             {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
             {selectedOrder.orderType === 'dine_in' && (
-              <p className="small" style={{ margin: '4px 0' }}>🍽️ Table pour {selectedOrder.partySize} personne{selectedOrder.partySize > 1 ? 's' : ''}, réservée au nom de <b>{selectedOrder.reservationName}</b>.</p>
+              <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.dineInLine', { n: selectedOrder.partySize, name: selectedOrder.reservationName })}</p>
             )}
             {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
             <BandeauAllergie order={selectedOrder} />
@@ -355,19 +385,17 @@ export default function OrdersPage() {
               </div>
             )}
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.orderTicket')}</h4>
-            <p className="small" style={{ margin: '0 0 8px' }}>
-              {t('ordersResto.slipInBag')} {t('ordersResto.printTerminalHelp')}
-            </p>
+            {/* UN bouton d'impression (2026-09-23). Le terminal Fairide imprime les tickets de lui-même
+                (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
+                connectée, sinon la boîte d'impression de l'appareil. « Modifier le ticket » et le texte
+                d'explication qui précédaient les boutons sont partis. */}
             {impressions[selectedOrder.id] > 0 && (
-              <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })} {t('ordersResto.reprintHint')}</p>
+              <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
             )}
             <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
-              {btName && (
-                <button className="btn-teal" disabled={printing} onClick={() => printBluetooth(selectedOrder)}>{printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}</button>
-              )}
-              <button className="btn-outline" onClick={() => setEditeur({ order: selectedOrder })}>✏️ {t('ordersResto.editTicket')}</button>
-              <button className="btn-outline" onClick={() => printReceipt(selectedOrder)}>{t('ordersResto.printDeliveryNote')}</button>
+              <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder) : printReceipt(selectedOrder))}>
+                {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
+              </button>
               <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
             </div>
           </div>
@@ -377,7 +405,7 @@ export default function OrdersPage() {
       {/* Portail séparé du modal (lui-même marqué no-print) : c'est ce qui garantit que le reçu reste
           visible à l'impression même si le modal et le reste de la page sont masqués (voir OrderReceipt.jsx
           et .receipt-print dans styles.css — un enfant ne peut jamais annuler le display:none d'un ancêtre). */}
-      {(recuEdite || selectedOrder) && createPortal(<OrderReceipt order={recuEdite || selectedOrder} restaurant={restaurant} />, document.body)}
+      {selectedOrder && createPortal(<OrderReceipt order={selectedOrder} restaurant={restaurant} />, document.body)}
       <ConfirmDialog open={!!pasVenu} danger
         title={t('ordersResto.confirmNoShowTitle')}
         message={t('ordersResto.confirmNoShowText', { name: pasVenu?.clientName || '' })}
@@ -396,12 +424,6 @@ export default function OrdersPage() {
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
-      {editeur && (
-        <TicketEditor initial={editeur.order} btName={btName} printing={printing}
-          onPrintBluetooth={(ticket, copies) => printBluetooth(ticket, { copies })}
-          onPrintBrowser={printReceiptEdite}
-          onClose={() => setEditeur(null)} />
-      )}
     </div>
   );
 }

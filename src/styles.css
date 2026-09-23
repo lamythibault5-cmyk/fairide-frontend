@@ -1293,6 +1293,28 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 
 .empty { text-align: center; padding: 36px 20px; color: var(--ink-soft); font-size: 14px; border: 1px dashed var(--line); border-radius: var(--radius); }
 
+/* L'interrupteur d'état en tête d'une page de service : « Disponible / En pause » du livreur
+   (driver/Dashboard.jsx), « Ouvert / Commandes en pause » du commerce (restaurant/OrdersPage.jsx).
+   Toute la largeur, un seul appui — le geste des apps Uber Driver et Uber Eats Orders.
+   Allumé = fond iris ; éteint = blanc et filet. Pas de lime : chacune de ces pages a déjà son
+   accent (« Prête » côté commerce), et la règle est d'un seul par vue. */
+.driver-switch, .service-switch {
+  display: flex; align-items: center; gap: 14px; width: 100%; min-height: 64px;
+  padding: 14px 18px; margin: 0 0 12px; text-align: left; cursor: pointer;
+  background: var(--iris); color: #fff; border: 1px solid var(--iris); border-radius: var(--radius);
+  font: inherit;
+}
+.driver-switch.off, .service-switch.off { background: var(--cream); color: var(--ink); border-color: var(--line); }
+.driver-switch:disabled, .service-switch:disabled { opacity: .7; cursor: default; }
+.driver-switch-dot, .service-switch-dot { flex: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
+.driver-switch.off .driver-switch-dot, .service-switch.off .service-switch-dot { background: var(--ink-faint); }
+.driver-switch-text, .service-switch-text { display: flex; flex-direction: column; gap: 2px; }
+.driver-switch-text b, .service-switch-text b { font-size: 16px; }
+.driver-switch-text span, .service-switch-text span { font-size: 13px; opacity: .8; }
+.service-resume { margin: 0 0 12px; }
+.service-historique { margin-top: 16px; }
+.service-historique > summary { cursor: pointer; font-weight: 700; padding: 8px 0; color: var(--ink-soft); }
+
 /* Écran vide de pleine page (components/EtatVide.jsx) — à ne pas confondre avec .empty, qui
    signale en une ligne qu'une liste est vide au milieu d'une page qui contient autre chose. Ici le
    vide EST la page : pas de cadre en pointillés, qui la ferait passer pour une panne, mais une

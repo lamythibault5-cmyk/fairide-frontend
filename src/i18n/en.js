@@ -1497,6 +1497,8 @@ export default {
       colType: 'Status'
     },
     courierOnboarding: {
+      partPersonal: "Your details",
+      partRides: "Your rides",
       title: 'My courier file',
       backToDashboard: 'Back to dashboard',
       legalFooter: 'Caps and rates: legal parameters {year} (FPS Finance, NSSO), indexed yearly.',
@@ -5221,6 +5223,26 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      save: "Save",
+      groupShop: "My business",
+      rowIdentity: "Name and photos",
+      rowContact: "Contact",
+      rowClosures: "Exceptional closures",
+      rowLegal: "Legal details",
+      rowDeliveryOffer: "Delivery offer",
+      rowType: "Business type",
+      toComplete: "To complete",
+      todayHours: "Today: {hours}",
+      closuresCount: "{n} upcoming",
+      closuresNone: "None",
+      deliveryOwn: "My couriers ({n})",
+      deliveryPool: "Fairide couriers",
+      offerFree: "Free delivery",
+      offerFromMin: "Free from €{amount}",
+      offerDiscount: "€{amount} off delivery",
+      offerNone: "None",
+      addClosure: "Add closure",
+      codeSentShort: "Code sent by email.",
       title: 'My restaurant details',
       infoTitle: 'Restaurant details',
       nameLabel: 'Restaurant name (shown to customers)',
@@ -5348,6 +5370,13 @@ export default {
       removeSecond: 'Remove'
     },
     ordersResto: {
+      openTitle: 'Open for orders',
+      openSub: 'Tap to pause',
+      pausedTitle: 'Orders paused',
+      pausedSub: 'Hidden from customers · tap to reopen',
+      summary: '{current} in progress · {today} today',
+      noneCurrent: 'No orders in progress.',
+      history: 'History ({n})',
       incoming: 'Incoming orders',
       noneYet: 'No order yet.',
       accept: 'Accept',
@@ -5519,7 +5548,9 @@ export default {
       earningsLink: 'My earnings',
       earningsSub: 'Gross, withholding, net paid · per month and per ride',
       deliveredToday: 'Delivered today',
-      earningLine: 'Gross €{gross} · withheld €{withholding} · net €{net}'
+      earningLine: 'Gross €{gross} · withheld €{withholding} · net €{net}',
+      tapToPause: 'Tap to pause',
+      tapToResume: 'Tap to receive rides'
     },
     dashResto: {
       today: 'Today',
@@ -6494,7 +6525,9 @@ export default {
       leave: 'Leave',
       myMenu: 'My menu',
       reservations: 'Reservations',
-      courierFile: 'My courier file'
+      courierFile: 'My courier file',
+      rides: 'Rides',
+      earnings: 'Earnings'
     },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',

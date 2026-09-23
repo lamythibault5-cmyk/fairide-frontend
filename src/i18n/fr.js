@@ -1497,6 +1497,8 @@ export default {
       colType: 'Statut'
     },
     courierOnboarding: {
+      partPersonal: "Tes informations",
+      partRides: "Tes courses",
       title: 'Mon dossier livreur',
       backToDashboard: 'Retour au tableau de bord',
       legalFooter: 'Plafonds et taux : paramètres légaux {year} (SPF Finances, ONSS), indexés chaque année.',
@@ -5237,6 +5239,26 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      save: "Enregistrer",
+      groupShop: "Mon commerce",
+      rowIdentity: "Nom et photos",
+      rowContact: "Contact",
+      rowClosures: "Fermetures exceptionnelles",
+      rowLegal: "Infos légales",
+      rowDeliveryOffer: "Livraison offerte",
+      rowType: "Type de commerce",
+      toComplete: "À compléter",
+      todayHours: "Aujourd'hui : {hours}",
+      closuresCount: "{n} à venir",
+      closuresNone: "Aucune",
+      deliveryOwn: "Mes livreurs ({n})",
+      deliveryPool: "Livreurs Fairide",
+      offerFree: "Livraison gratuite",
+      offerFromMin: "Gratuite dès {amount} €",
+      offerDiscount: "−{amount} € sur la livraison",
+      offerNone: "Aucune",
+      addClosure: "Ajouter la fermeture",
+      codeSentShort: "Code envoyé par e-mail.",
       title: 'Infos de mon restaurant',
       infoTitle: 'Infos du restaurant',
       nameLabel: 'Nom du restaurant (affiché aux clients)',
@@ -5364,6 +5386,13 @@ export default {
       removeSecond: 'Retirer'
     },
     ordersResto: {
+      openTitle: 'Ouvert aux commandes',
+      openSub: 'Touche pour mettre en pause',
+      pausedTitle: 'Commandes en pause',
+      pausedSub: 'Invisible des clients · touche pour rouvrir',
+      summary: "{current} en cours · {today} aujourd'hui",
+      noneCurrent: 'Aucune commande en cours.',
+      history: 'Historique ({n})',
       incoming: 'Commandes entrantes',
       noneYet: 'Pas encore de commande.',
       accept: 'Accepter',
@@ -5535,7 +5564,9 @@ export default {
       earningsLink: 'Mes gains',
       earningsSub: 'Brut, précompte, net versé · par mois et par course',
       deliveredToday: 'Livrées aujourd\'hui',
-      earningLine: 'Brut {gross} € · retenue {withholding} € · net {net} €'
+      earningLine: 'Brut {gross} € · retenue {withholding} € · net {net} €',
+      tapToPause: 'Touche pour te mettre en pause',
+      tapToResume: 'Touche pour recevoir des courses'
     },
     dashResto: {
       today: 'Aujourd\'hui',
@@ -6523,7 +6554,9 @@ export default {
       leave: 'Quitter',
       myMenu: 'Mon menu',
       reservations: 'Réservations',
-      courierFile: 'Mon dossier livreur'
+      courierFile: 'Mon dossier livreur',
+      rides: 'Courses',
+      earnings: 'Gains'
     },
     footer: {
       tagline: 'La livraison de repas et de commerces locaux à commission réduite, à Bruxelles.',

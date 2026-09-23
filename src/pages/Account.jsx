@@ -779,11 +779,8 @@ export default function Account() {
 
       {role === 'restaurant' && restaurant && (
         <div className="card account-groupe" aria-label={t('accountUi.myBusiness')}>
-          {/* « Aperçu client » et « Carte » ont quitté la barre du bas, ramenée à cinq onglets pour
-              que chaque cible fasse 56px (voir DashboardSidebar.jsx). Ce sont des pages qu'on ouvre
-              de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
-              d'emploi, partis avant elles pour la même raison. */}
-          <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
+          {/* Plus de rangée « Carte » (2026-09-23) : la page promettait de suivre les livreurs en direct,
+              mais leur position n'est jamais envoyée au commerce (voir App.jsx, route dashboard/map). */}
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
@@ -1011,7 +1008,7 @@ export default function Account() {
       )}
 
       {/* Rubriques du livreur qu'on ouvre de temps en temps, sorties de la barre du bas au profit de ce
-          qu'il consulte en course : commandes, carte, pourboires. */}
+          qu'il consulte en course : courses, carte, gains. */}
       {role === 'driver' && (
         <div className="card account-groupe" aria-label={t('accountUi.myRides')}>
           <LigneCompte icone="stats" titre={t('account.driverActivityTitle')} sous={driverDeliveries ? t('accountUi.deliveriesDone', { n: driverDeliveries.filter((o) => o.status === 'livre').length }) : '…'} ouverte={ouvertes.has('activite')} onClick={() => basculer('activite')}>
@@ -1020,7 +1017,9 @@ export default function Account() {
           <LigneCompte icone="contrat" titre={t('driverTerms.rowTitle')} sous={t('driverTerms.rowSub')} ouverte={ouvertes.has('contrat')} onClick={() => basculer('contrat')}>
             {ouvertes.has('contrat') && <DriverContractTerms />}
           </LigneCompte>
-          <LigneCompte to="/driver/earnings" icone="euro" titre={t('accountUi.earningsRow')} sous={t('accountUi.earningsRowSub')} />
+          {/* « Mes gains » est un onglet de la barre du bas depuis le 2026-09-23 ; c'est le dossier livreur,
+              sorti de la barre une fois le compte validé, qui se rouvre d'ici. */}
+          <LigneCompte to="/driver/onboarding" icone="dossier" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
           <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>

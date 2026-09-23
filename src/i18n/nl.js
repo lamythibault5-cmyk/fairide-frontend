@@ -1497,6 +1497,8 @@ export default {
       colType: 'Statuut'
     },
     courierOnboarding: {
+      partPersonal: "Jouw gegevens",
+      partRides: "Jouw ritten",
       title: 'Mijn koeriersdossier',
       backToDashboard: 'Terug naar het dashboard',
       legalFooter: 'Plafonds en tarieven: wettelijke parameters {year} (FOD Financiën, RSZ), jaarlijks geïndexeerd.',
@@ -5221,6 +5223,26 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      save: "Opslaan",
+      groupShop: "Mijn zaak",
+      rowIdentity: "Naam en foto's",
+      rowContact: "Contact",
+      rowClosures: "Uitzonderlijke sluitingen",
+      rowLegal: "Wettelijke gegevens",
+      rowDeliveryOffer: "Levering aangeboden",
+      rowType: "Type zaak",
+      toComplete: "In te vullen",
+      todayHours: "Vandaag: {hours}",
+      closuresCount: "{n} gepland",
+      closuresNone: "Geen",
+      deliveryOwn: "Mijn koeriers ({n})",
+      deliveryPool: "Fairide-koeriers",
+      offerFree: "Gratis levering",
+      offerFromMin: "Gratis vanaf € {amount}",
+      offerDiscount: "€ {amount} korting op levering",
+      offerNone: "Geen",
+      addClosure: "Sluiting toevoegen",
+      codeSentShort: "Code per e-mail verzonden.",
       title: 'Gegevens van mijn restaurant',
       infoTitle: 'Restaurantgegevens',
       nameLabel: 'Naam van het restaurant (getoond aan klanten)',
@@ -5348,6 +5370,13 @@ export default {
       removeSecond: 'Verwijderen'
     },
     ordersResto: {
+      openTitle: 'Open voor bestellingen',
+      openSub: 'Tik om te pauzeren',
+      pausedTitle: 'Bestellingen gepauzeerd',
+      pausedSub: 'Onzichtbaar voor klanten · tik om te heropenen',
+      summary: '{current} bezig · {today} vandaag',
+      noneCurrent: 'Geen bestellingen bezig.',
+      history: 'Geschiedenis ({n})',
       incoming: 'Inkomende bestellingen',
       noneYet: 'Nog geen bestelling.',
       accept: 'Aanvaarden',
@@ -5519,7 +5548,9 @@ export default {
       earningsLink: 'Mijn verdiensten',
       earningsSub: 'Bruto, voorheffing, netto uitbetaald · per maand en per rit',
       deliveredToday: 'Vandaag geleverd',
-      earningLine: 'Bruto {gross} € · inhouding {withholding} € · netto {net} €'
+      earningLine: 'Bruto {gross} € · inhouding {withholding} € · netto {net} €',
+      tapToPause: 'Tik om te pauzeren',
+      tapToResume: 'Tik om ritten te ontvangen'
     },
     dashResto: {
       today: 'Vandaag',
@@ -6494,7 +6525,9 @@ export default {
       leave: 'Verlaten',
       myMenu: 'Mijn menu',
       reservations: 'Reservaties',
-      courierFile: 'Mijn koeriersdossier'
+      courierFile: 'Mijn koeriersdossier',
+      rides: 'Ritten',
+      earnings: 'Verdiensten'
     },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',

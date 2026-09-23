@@ -45,7 +45,6 @@ const RestaurantOrdersPage = lazyPage(() => import('./pages/restaurant/OrdersPag
 const RestaurantPreviewPage = lazyPage(() => import('./pages/restaurant/PreviewPage'));
 const RestaurantEditPage = lazyPage(() => import('./pages/restaurant/EditPage'));
 const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/PromotionsPage'));
-const RestaurantMapPage = lazyPage(() => import('./pages/restaurant/MapPage'));
 const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
@@ -56,7 +55,6 @@ const RestaurantReservationsPage = lazyPage(() => import('./pages/restaurant/Res
 const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
 const DriverMapPage = lazyPage(() => import('./pages/driver/MapPage'));
 const DriverReviewsPage = lazyPage(() => import('./pages/driver/ReviewsPage'));
-const DriverTipsPage = lazyPage(() => import('./pages/driver/TipsPage'));
 const DriverInvoicesPage = lazyPage(() => import('./pages/driver/InvoicesPage'));
 const DriverEarningsPage = lazyPage(() => import('./pages/driver/EarningsPage'));
 const DriverOnboarding = lazyPage(() => import('./pages/driver/Onboarding'));
@@ -153,7 +151,10 @@ export default function App() {
           <Route path="preview" element={<RestaurantPreviewPage />} />
           <Route path="edit" element={<Navigate to="/dashboard" replace />} />
           <Route path="promotions" element={<RestaurantPromotionsPage />} />
-          <Route path="map" element={<RestaurantMapPage />} />
+          {/* La carte du commerce promettait le suivi des livreurs en direct, mais leur position n'est
+              jamais envoyée au commerce (routes/orders.js, promesse faite aux livreurs) : elle attendait
+              une position qui n'arrivait pas. L'ancienne adresse mène aux commandes. */}
+          <Route path="map" element={<Navigate to="/dashboard/orders" replace />} />
           <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
@@ -163,7 +164,8 @@ export default function App() {
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
         <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
-        <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
+        {/* Les pourboires sont des lignes de « Mes gains » : l'ancienne adresse y mène. */}
+        <Route path="/driver/tips" element={<Navigate to="/driver/earnings" replace />} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
