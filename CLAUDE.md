@@ -123,7 +123,7 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 
 ### Styling
 
-**One file: [src/styles.css](src/styles.css)** (4610 lines), imported once in `main.jsx`.
+**One file: [src/styles.css](src/styles.css)** (4,610 lines), imported once in `main.jsx`.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
 
