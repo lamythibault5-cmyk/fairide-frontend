@@ -925,11 +925,11 @@ export default function Account() {
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
-            {/* La version suit les cases, avant même d'enregistrer : réservation et à emporter payé sur place = gratuit ;
-                livraison ou à emporter payé en ligne = version complète (même règle que formules.js côté serveur). Sans
-                abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
+            {/* La version suit les cases, avant même d'enregistrer : réservation de table seule = gratuit ; à emporter (quel
+                que soit son mode de paiement) ou livraison = version complète (même règle que formules.js côté serveur).
+                Sans abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
             {(() => {
-              const complete = offersDelivery || (offersPickup && pickupPaymentMode !== 'on_site');
+              const complete = offersDelivery || offersPickup;
               const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>
