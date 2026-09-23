@@ -61,7 +61,8 @@ export default function OrderReceipt({ order, restaurant }) {
       <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{order.subtotal.toFixed(2)}€</span></div>
       {order.promoDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promo', { label: order.promoLabel })}</span><span>-{order.promoDiscount.toFixed(2)}€</span></div>}
       {order.orderType === 'delivery' && <div className="receipt-line"><span>{t('receipt.delivery')}</span><span>{order.deliveryFee.toFixed(2)}€</span></div>}
-      {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{order.serviceFee.toFixed(2)}€</span></div>}
+      {/* TVA comprise (serviceFee est HTVA, serviceFeeVat sa TVA) : le total la contient, la ligne doit la contenir aussi. */}
+      {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{(order.serviceFee + (order.serviceFeeVat || 0)).toFixed(2)}€</span></div>}
       {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{order.giftVoucherDiscount.toFixed(2)}€</span></div>}
       {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{order.balanceUsed.toFixed(2)}€</span></div>}
       <div className="receipt-divider" />

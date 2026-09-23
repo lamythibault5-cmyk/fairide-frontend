@@ -15,14 +15,13 @@ const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_prici
 
 const pricingFields = (tr) => [
   { key: 'commissionRate', label: tr('adminSettings.commissionLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.commissionHint') },
-  { key: 'deliveryFairideRate', label: tr('adminSettings.deliveryShareLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.deliveryShareHint') },
+  { key: 'serviceFeeRate', label: tr('adminSettings.serviceFeeLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.serviceFeeHint') },
   { key: 'deliveryBaseFee', label: tr('adminSettings.baseDeliveryRate'), suffix: '€', hint: tr('adminSettings.baseFeeHint') },
   { key: 'deliveryBaseKm', label: tr('adminSettings.baseDistance'), suffix: 'km' },
   { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km', hint: tr('adminSettings.perKmExtraHint') },
   { key: 'driverPerKmMotor', label: tr('adminSettings.driverPerKmMotor'), suffix: '€/km', hint: tr('adminSettings.driverPerKmMotorHint') },
   { key: 'driverPerKmBike', label: tr('adminSettings.driverPerKmBike'), suffix: '€/km', hint: tr('adminSettings.driverPerKmBikeHint') },
   { key: 'vatRateCommission', label: tr('adminSettings.vatCommission'), suffix: '%', isRate: true, hint: tr('adminSettings.vatCommissionHint') },
-  { key: 'vatRateDeliveryShare', label: tr('adminSettings.vatDeliveryShare'), suffix: '%', isRate: true, hint: tr('adminSettings.vatDeliveryHint') },
   { key: 'vatRateServiceFee', label: tr('adminSettings.vatServiceFees'), suffix: '%', isRate: true, hint: tr('adminSettings.vatServiceHint') }
 ];
 // Clés/suffixes seuls, pour les conversions hors rendu (les libellés y sont inutiles).

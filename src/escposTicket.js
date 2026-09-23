@@ -154,7 +154,8 @@ export function buildTicketBytes(order, restaurant, { columns = COLUMNS_58MM } =
   t.line(pair('Sous-total', money(order.subtotal), columns));
   if (order.promoDiscount > 0) t.line(pair(`Promo ${order.promoLabel || ''}`.trim(), `-${money(order.promoDiscount)}`, columns));
   if (order.orderType === 'delivery') t.line(pair('Livraison', money(order.deliveryFee), columns));
-  if (order.serviceFee > 0) t.line(pair('Frais de service', money(order.serviceFee), columns));
+  // TVA comprise, comme le total imprimé plus bas (serviceFee est HTVA).
+  if (order.serviceFee > 0) t.line(pair('Frais de service', money(order.serviceFee + (order.serviceFeeVat || 0)), columns));
   if (order.balanceUsed > 0) t.line(pair('Solde client utilise', `-${money(order.balanceUsed)}`, columns));
   t.rule();
   t.bold(true).size(true);
