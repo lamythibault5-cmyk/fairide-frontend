@@ -17,7 +17,9 @@
 // `icon` est un nom de tracé de components/Icone.jsx, plus un emoji : voir l'en-tête de ce fichier-là.
 export const ADMIN_HUBS = [
   { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents', 'reviews'] },
-  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'sales', 'crm'] },
+  // Fondateur, 2026-09-23 : la pastille « Commerces » montre le NOMBRE DE VRAIS COMMERCES inscrits (ni démo, ni test), pas
+  // ce qui attend une action ; les restaurants à valider gardent leur propre pastille sur l'onglet Restaurants.
+  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
   { key: 'couriers', icon: 'scooter', modules: ['drivers', 'couriers', 'logistics'] },
   { key: 'customers', icon: 'personnes', modules: ['clients', 'promotions', 'marketing'] },
   { key: 'inbox', icon: 'bulle', modules: ['support', 'messages', 'tasks'] },
@@ -63,7 +65,9 @@ export const ADMIN_MODULES = [
   { key: 'team', path: '/admin/team', icon: 'compte', hub: 'settings', badge: aucun },
   { key: 'messages', path: '/admin/messages', icon: 'bulle', hub: 'inbox', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
   // Sales (2026-09-17) : codes commerciaux, commerciaux (proches qui démarchent les restaurateurs) et commerces démarchés.
-  { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'warn') },
+  // Les relances Sales dépassées restent visibles sur l'onglet Sales, mais n'entrent pas dans la pastille du pôle
+  // « Commerces » : celle-ci ne compte que les vrais restaurants à valider (fondateur, 2026-09-23).
+  { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'info') },
   { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
 
@@ -131,6 +135,8 @@ export function hubModules(hub, role) {
 // restent visibles sur l'onglet de leur application.
 const RANG = { info: 0, warn: 1, danger: 2 };
 export function hubBadge(hub, overview, role) {
+  // Un pôle peut afficher un chiffre à lui (« Commerces » = vrais commerces inscrits) au lieu de la somme des urgences.
+  if (hub.badge) return overview ? hub.badge(overview) : null;
   let count = 0;
   let tone = null;
   for (const m of hubModules(hub, role)) {

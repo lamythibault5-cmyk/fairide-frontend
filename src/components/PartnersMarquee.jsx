@@ -8,14 +8,16 @@ import { useLanguage } from '../context/LanguageContext';
 // lien vers une fiche resto ni vers une interface qui exigerait une connexion), le défilement continue
 // sans interruption quoi que fasse le visiteur. Public (pas besoin d'être connecté), lu directement
 // depuis /restaurants ; se met donc à jour tout seul à mesure que de nouveaux commerces rejoignent Fairide.
-export default function PartnersMarquee() {
+export default function PartnersMarquee({ restaurants: fournis = null }) {
   const { t } = useLanguage();
-  const [restaurants, setRestaurants] = useState([]);
+  const [charges, setCharges] = useState([]);
 
   useEffect(() => {
-    api('/restaurants').then((all) => setRestaurants(all.sort(() => Math.random() - 0.5))).catch(() => {});
-  }, []);
+    if (fournis) return; // la page d'accueil fournit déjà sa vitrine (vrais commerces d'abord)
+    api('/restaurants').then((all) => setCharges(all.sort(() => Math.random() - 0.5))).catch(() => {});
+  }, [fournis]);
 
+  const restaurants = fournis || charges;
   if (restaurants.length === 0) return null;
 
   const canLoop = restaurants.length >= 4;

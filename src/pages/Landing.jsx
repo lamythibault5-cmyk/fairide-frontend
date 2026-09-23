@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { COMMUNES } from '../menuCategories';
@@ -11,7 +11,7 @@ import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
-import HeroPreview, { useCommercesPublics } from '../components/landing/HeroPreview';
+import HeroPreview, { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import Icone from '../components/Icone';
 
@@ -69,7 +69,10 @@ export default function Landing() {
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
   // Lus une fois pour toute la page : aperçu de la bannière, vitrine « Découvre », et le nombre affiché.
-  const restaurants = useCommercesPublics();
+  const publics = useCommercesPublics();
+  const reels = useCommercesReels();
+  // Vrais commerces d'abord (fondateur, 22/09) ; les démos ne complètent que s'ils sont trop peu nombreux.
+  const restaurants = useMemo(() => vitrineAccueil(reels, publics, 3), [reels, publics]);
   const [p2pOuvert, setP2pOuvert] = useState(false);
   useEffect(() => { api('/couriers/options').then((o) => setP2pOuvert(!!o?.p2pEnabled)).catch(() => {}); }, []);
 
@@ -209,7 +212,7 @@ export default function Landing() {
       <Reveal as="h2" className="section-title">{t('landing.contactTitle')}</Reveal>
       <Reveal><ContactSection /></Reveal>
 
-      <Reveal><PartnersMarquee /></Reveal>
+      <Reveal><PartnersMarquee restaurants={vitrineAccueil(reels, publics, 4)} /></Reveal>
 
       <Reveal className="landing-cta">
         <h2>{t('landing.ctaTitle')}</h2>

@@ -9,7 +9,6 @@ import PhoneVerification from '../components/PhoneVerification';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
 import RestaurantContract from '../components/RestaurantContract';
-import TicketHelp from '../components/TicketHelp';
 import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
@@ -787,9 +786,6 @@ export default function Account() {
               de temps en temps, pas au service : elles rejoignent ici Promotions, Factures et Mode
               d'emploi, partis avant elles pour la même raison. */}
           <LigneCompte to="/dashboard/map" icone="carte" titre={t('nav.map')} />
-          <LigneCompte icone="imprimante" titre={t('ticketHelp.rowTitle')} ouverte={ouvertes.has('tickets')} onClick={() => basculer('tickets')}>
-            {ouvertes.has('tickets') && <TicketHelp />}
-          </LigneCompte>
           {/* Le terminal Fairide : statut tenu par l'équipe (admin), caution, dates. Version gratuite : rien à faire. */}
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
@@ -929,11 +925,11 @@ export default function Account() {
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
-            {/* La version suit les cases, avant même d'enregistrer : réservation et à emporter payé sur place = gratuit ;
-                livraison ou à emporter payé en ligne = version complète (même règle que formules.js côté serveur). Sans
-                abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
+            {/* La version suit les cases, avant même d'enregistrer : réservation de table seule = gratuit ; à emporter (quel
+                que soit son mode de paiement) ou livraison = version complète (même règle que formules.js côté serveur).
+                Sans abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
             {(() => {
-              const complete = offersDelivery || (offersPickup && pickupPaymentMode !== 'on_site');
+              const complete = offersDelivery || offersPickup;
               const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>

@@ -22,17 +22,15 @@ export default function DiscoverSection({ restaurants }) {
     const base = restaurants.filter((r) => r.coverImageUrl && (!filtre || r.cuisine === filtre));
     const melange = [...base].sort(() => Math.random() - 0.5);
     // Une photo ne sert qu'une fois ; sans filtre, un type de commerce n'apparaît qu'une fois tant qu'il en reste d'autres.
-    const idPhoto = (u) => (String(u || '').match(/photo-[0-9a-f-]+/) || [u])[0];
+    const idPhoto = (u, r) => (r && r.reel ? `reel-${r.id}` : (String(u || '').match(/photo-[0-9a-f-]+/) || [u])[0]);
     const photos = new Set(); const types = new Set(); const retenus = [];
-    for (const r of melange) { const ph = idPhoto(r.coverImageUrl); if (photos.has(ph) || (!filtre && types.has(r.cuisine))) continue; photos.add(ph); types.add(r.cuisine); retenus.push(r); if (retenus.length >= NB) break; }
-    for (const r of melange) { if (retenus.length >= NB) break; const ph = idPhoto(r.coverImageUrl); if (retenus.includes(r) || photos.has(ph)) continue; photos.add(ph); retenus.push(r); }
+    for (const r of melange) { const ph = idPhoto(r.coverImageUrl, r); if (photos.has(ph) || (!filtre && types.has(r.cuisine))) continue; photos.add(ph); types.add(r.cuisine); retenus.push(r); if (retenus.length >= NB) break; }
+    for (const r of melange) { if (retenus.length >= NB) break; const ph = idPhoto(r.coverImageUrl, r); if (retenus.includes(r) || photos.has(ph)) continue; photos.add(ph); retenus.push(r); }
     return retenus;
   }, [restaurants, filtre]);
 
   // Tuile d'information qui remplit la fin de la grille (grid-column: auto / -1) : chiffres de la vitrine et
   // deux portes d'entrée, plutôt qu'un trou blanc quand le nombre de cartes ne tombe pas juste.
-  const nbCommunes = new Set(restaurants.map((r) => r.commune).filter(Boolean)).size;
-  const nbCuisines = new Set(restaurants.map((r) => r.cuisine).filter(Boolean)).size;
 
   if (restaurants.length === 0) return null;
   return (
@@ -55,7 +53,7 @@ export default function DiscoverSection({ restaurants }) {
             <div className="discover-tile-img">
               <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 400, '(max-width: 640px) 50vw, 400px')} alt={r.name} onError={cacherImageCassee} />
               <span className="discover-tile-cuisine">{r.cuisine}</span>
-              {r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)}</span>}
+              {r.reel && !r.publie ? <span className="discover-tile-rating">{t('landing.heroPreviewSoon')}</span> : r.reviewCount > 0 && <span className="discover-tile-rating">★ {Number(r.rating).toFixed(1)}</span>}
             </div>
             <div className="discover-tile-body">
               <b>{r.name}</b>
@@ -68,8 +66,6 @@ export default function DiscoverSection({ restaurants }) {
           <b className="discover-info-title">{t('landing.discoverInfoTitle')}</b>
           <div className="discover-info-stats">
             <span><b>30</b> {t('landing.discoverInfoBusinesses')}</span>
-            <span><b>{nbCommunes}</b> {t('landing.discoverInfoCommunes')}</span>
-            <span><b>{nbCuisines}</b> {t('landing.discoverInfoCuisines')}</span>
             <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>

@@ -104,6 +104,18 @@ textarea { font: inherit; }
 .crm-equipe-liste li:first-child .crm-equipe-rang { background: #F5B800; color: #fff; }
 .crm-equipe-gain { text-align: right; white-space: nowrap; }
 
+/* Photo du commerce : aperçu, candidats reconnus, vignette sur la carte du commerce et photo dans la fiche. */
+.crm-photo-choix { text-align: center; padding: 18px 0; }
+.crm-photo-analyse { text-align: center; }
+.crm-photo-apercu { width: 120px; height: 120px; object-fit: cover; border-radius: 10px; border: 1px solid var(--line); }
+.crm-photo-entete { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.crm-photo-candidats { display: grid; gap: 6px; }
+.crm-photo-candidat { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; background: #fff; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.crm-photo-candidat.actif { border-color: var(--iris); background: #F4F2FF; }
+.crm-carte-photo { position: relative; padding-left: 70px; }
+.crm-vignette { position: absolute; left: 10px; top: 10px; width: 52px; height: 52px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); }
+.crm-fiche-photo { width: 100%; max-height: 180px; object-fit: cover; border-radius: 10px; margin-bottom: 10px; }
+
 /* Démarchage : flyer en évidence, guide en blocs. */
 .crm-guide { margin-bottom: 14px; }
 .crm-flyer { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 10px; padding: 10px 12px; border: 1px solid #F5B800; border-radius: var(--radius-field); background: #FFFBEA; }

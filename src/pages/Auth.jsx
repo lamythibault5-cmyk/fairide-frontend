@@ -125,7 +125,7 @@ export default function Auth() {
   const [commerceTrouve, setCommerceTrouve] = useState(null);
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
-  // pickupPaymentMode : 'on_site' (version gratuite) | 'online' | 'both' (version complète) — voir OffreFormules.
+  // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
   const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false, pickupPaymentMode: 'on_site' });
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
@@ -1217,7 +1217,8 @@ export default function Auth() {
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span>🏠 {t('auth.servicePickup')}</span></label>
                   {services.pickup && (
-                    // Comment l'à emporter est payé décide de la version : sur place = gratuit, en ligne ou au choix = complète.
+                    // Comment l'à emporter est payé décide de la commission : sur place = 0 %, en ligne ou au choix = 10 % sur les
+                    // commandes payées en ligne. L'à emporter lui-même relève toujours de la version complète (2026-09-23).
                     <div className="service-suboptions" role="group" aria-label={t('accountUi.pickupPayTitle')}>
                       {[['on_site', 'pickupPayOnSiteOnly'], ['online', 'pickupPayOnline'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
                         <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}<span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span></span></label>
@@ -1226,7 +1227,7 @@ export default function Auth() {
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
                   {/* Gratuit → payant dit en clair dès l'inscription, avec la date du premier prélèvement (voir OffreFormules). */}
-                  <OffreFormules payant={services.delivery || (services.pickup && services.pickupPaymentMode !== 'on_site')} inscription />
+                  <OffreFormules payant={services.delivery || services.pickup} inscription />
                   {fieldError('services')}
                 </div>
               </>

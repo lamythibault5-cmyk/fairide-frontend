@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { api } from '../../api';
+import { api, apiUpload } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
@@ -44,6 +44,7 @@ export default function SalesPage() {
   const [recherche, setRecherche] = useState('');
   const [ouvert, setOuvert] = useState(null); // id du prospect ouvert
   const [creation, setCreation] = useState(false);
+  const [photo, setPhoto] = useState(false); // volet « Photo du commerce » (reconnaissance)
   // Vue : mes commerces, les zones (à faire, à moi, prises par d'autres — fondateur, 21/09 : « pas besoin des noms des
   // commerces des autres, plutôt les zones »), ou ce qu'il me reste à faire (prochaines actions du jour et en retard).
   const [vue, setVue] = useState('mine');
@@ -119,7 +120,8 @@ export default function SalesPage() {
         </div>
         <div className="row" style={{ gap: 8 }}>
           <button type="button" className="btn-ghost" style={{ fontSize: 13 }} onClick={exporterCsv} disabled={!prospects?.length}>⬇️ {t('sales.exportCsv')}</button>
-          <button type="button" className="btn-gold" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
+          <button type="button" className="btn-gold" onClick={() => setPhoto(true)}>📷 {t('sales.photoButton')}</button>
+          <button type="button" className="btn-outline" onClick={() => setCreation(true)}>+ {t('sales.addProspect')}</button>
         </div>
       </div>
 
@@ -162,7 +164,7 @@ export default function SalesPage() {
                 <button type="button" className={`chip${zoneActive === null ? ' active' : ''}`} onClick={() => setZoneActive(null)}>{t('sales.zoneAll')}</button>
                 {zones.map((z) => (
                   <button type="button" key={z.key} className={`chip crm-zone-chip${zoneActive === z.key ? ' active' : ''}`} onClick={() => setZoneActive(zoneActive === z.key ? null : z.key)} title={`${z.commune} · ${t(`sales.zoneTag_${z.tag}`)}`}>
-                    🎯 {z.name}{z.claimedBy ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : z.claimedBy}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
+                    🎯 {z.name}{z.status !== 'todo' ? <span className={`crm-zone-qui${z.claimedByMe ? ' crm-zone-moi' : ''}`}>{z.claimedByMe ? t('sales.teamMe') : t('sales.zoneTakenShort')}</span> : null}{z.mine ? <span className="crm-zone-n">{z.mine}</span> : null}{z.others ? <span className="crm-zone-n crm-zone-n-autres">{z.others}</span> : null}
                   </button>
                 ))}
               </div>
@@ -217,7 +219,8 @@ export default function SalesPage() {
       {vue === 'todo' && aFaire.length === 0 && <div className="card"><p className="small" style={{ margin: 0 }}>{t('sales.todayEmpty')}</p></div>}
       <div className="crm-liste">
         {(vue === 'todo' ? aFaire : vue === 'mine' ? (prospectsAffiches || []) : []).map((p) => (
-          <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}`} onClick={() => setOuvert(p.id)}>
+          <button type="button" key={p.id} className={`card crm-carte crm-etape-${p.stage}${p.photoUrl ? ' crm-carte-photo' : ''}`} onClick={() => setOuvert(p.id)}>
+            {p.photoUrl && <img className="crm-vignette" src={p.photoUrl} alt="" loading="lazy" />}
             <div className="crm-carte-tete">
               <b>{p.name}</b>
               <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>
@@ -236,9 +239,133 @@ export default function SalesPage() {
         ))}
       </div>
 
+      {photo && <PhotoProspect token={token} t={t} toast={toast} zones={zones} onClose={() => setPhoto(false)} onSaved={(p) => { setPhoto(false); charger(); setOuvert(p.id); }} />}
       {creation && <ProspectForm token={token} t={t} toast={toast} onClose={() => setCreation(false)} onSaved={(p) => { setCreation(false); charger(); setOuvert(p.id); }} />}
       {ouvert && <ProspectDetail id={ouvert} token={token} t={t} toast={toast} locale={locale} stageLabel={stageLabel} onClose={() => { setOuvert(null); charger(); }} onDeleted={() => { setOuvert(null); charger(); }} />}
     </div>
+  );
+}
+
+// ----------------------------------------------------------------------------------------------- photo
+// « Photo du commerce » (fondateur, 2026-09-22) : le commercial prend la devanture en photo ; le serveur lit la position
+// de la photo (sinon celle du téléphone), propose les commerces OpenStreetMap autour, l'adresse et la zone ; le
+// commercial choisit le bon, corrige si besoin, et valide → fiche créée « contacté », photo gardée. Plus rien à taper.
+// Depuis le 22/09 (décision du fondateur), l'ENSEIGNE est aussi lue par un modèle de vision : son nom passe en tête des
+// candidats (« lu sur l'enseigne »), et l'adresse ou le téléphone visibles pré-remplissent la fiche.
+function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
+  const inputRef = useRef(null);
+  const [fichier, setFichier] = useState(null);
+  const [apercu, setApercu] = useState(null);
+  const [etape, setEtape] = useState('choisir'); // choisir | analyse | verifier
+  const [reco, setReco] = useState(null);
+  const [choix, setChoix] = useState(null); // index du candidat, ou 'autre'
+  const [f, setF] = useState({ name: '', address: '', commune: '', phone: '', cuisine: '', stage: 'contacte', firstNote: '' });
+  const [envoi, setEnvoi] = useState(false);
+  const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+  useEffect(() => () => { if (apercu) URL.revokeObjectURL(apercu); }, [apercu]);
+
+  async function analyser(fich) {
+    setFichier(fich); setApercu(URL.createObjectURL(fich)); setEtape('analyse');
+    // Position du téléphone en parallèle : utile si la photo n'a pas de GPS (WhatsApp, capture d'écran…).
+    let pos = null; try { pos = await maPosition(); } catch { /* sans position */ }
+    try {
+      const r = await apiUpload('/sales/photo', { file: fich, token, fieldName: 'photo', fields: pos ? { lat: pos.lat, lng: pos.lng } : undefined });
+      setReco(r);
+      const premier = r.candidates?.[0];
+      setChoix(premier ? 0 : 'autre');
+      setF((s) => ({ ...s, name: premier?.name || '', address: r.address || '', commune: r.commune || r.zone?.commune || '', phone: r.phone || '', cuisine: premier?.cuisine || r.sign?.cuisine || '' }));
+      setEtape('verifier');
+    } catch (e) { toast(e.message); setEtape('choisir'); }
+  }
+  function choisir(i) {
+    setChoix(i);
+    if (i === 'autre') { setF((s) => ({ ...s, name: '', cuisine: '' })); return; }
+    const c = reco.candidates[i]; setF((s) => ({ ...s, name: c.name, cuisine: c.cuisine || s.cuisine }));
+  }
+  async function valider(e) {
+    e.preventDefault();
+    if (!f.name.trim()) { toast(t('sales.errName')); return; }
+    setEnvoi(true);
+    try {
+      const c = choix !== 'autre' && reco?.candidates?.[choix];
+      const position = c && c.lat !== null && c.lat !== undefined ? { lat: c.lat, lng: c.lng } : reco?.position ? { lat: reco.position.lat, lng: reco.position.lng } : {};
+      const p = await api('/sales/prospects', { method: 'POST', token, body: { ...f, ...position, photoUrl: reco?.photoUrl || undefined } });
+      toast(t('sales.photoSaved')); onSaved(p);
+    } catch (err) { toast(err.message); } finally { setEnvoi(false); }
+  }
+  const zone = reco?.zone; const zoneEtat = zone && zones.find((z) => z.key === zone.key);
+  return createPortal(
+    <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={t('sales.photoTitle')} onClick={onClose}>
+      <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={valider} noValidate>
+        <h3 className="modal-titre">📷 {t('sales.photoTitle')}</h3>
+        <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.photoIntro')}</p>
+        <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => { const x = e.target.files?.[0]; if (x) analyser(x); e.target.value = ''; }} />
+        {etape === 'choisir' && (
+          <div className="crm-photo-choix">
+            <button type="button" className="btn-gold" onClick={() => inputRef.current?.click()}>📷 {t('sales.photoTake')}</button>
+            <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.photoHint')}</p>
+          </div>
+        )}
+        {etape === 'analyse' && (
+          <div className="crm-photo-analyse">
+            {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
+            <p className="small">⏳ {t('sales.photoAnalysing')}</p>
+          </div>
+        )}
+        {etape === 'verifier' && reco && (
+          <>
+            <div className="crm-photo-entete">
+              {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
+              <div className="small">
+                {reco.sign?.name && <p style={{ margin: '0 0 4px' }}>🪧 <b>{t('sales.photoSign', { name: reco.sign.name })}</b>{reco.sign.notes ? <span> · {reco.sign.notes}</span> : null}</p>}
+                <p style={{ margin: 0 }}>📍 {reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
+                {zone && <p style={{ margin: '4px 0 0' }}>🎯 {t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
+                {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}>🏠 {[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
+                <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => inputRef.current?.click()}>{t('sales.photoRetake')}</button>
+              </div>
+            </div>
+            {reco.already?.length > 0 && (
+              <div className="crm-doublons" role="status">
+                {reco.already.map((d) => <p key={d.id}>⚠️ {d.mine ? t('sales.photoAlreadyMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) }) : t('sales.photoAlreadyOther', { name: d.name })}</p>)}
+              </div>
+            )}
+            <div className="crm-bloc">
+              <b className="crm-bloc-titre">{t('sales.photoWhich')}</b>
+              {reco.candidates.length === 0 && <p className="small" style={{ margin: '0 0 6px' }}>{reco.position ? t('sales.photoNoCandidate') : t('sales.photoNoPosition')}</p>}
+              <div className="crm-photo-candidats" role="radiogroup" aria-label={t('sales.photoWhich')}>
+                {reco.candidates.map((c, i) => (
+                  <button type="button" key={i} role="radio" aria-checked={choix === i} className={`crm-photo-candidat${choix === i ? ' actif' : ''}`} onClick={() => choisir(i)}>
+                    <b>{c.name}{c.source === 'sign' || c.source === 'osm+sign' ? <span className="crm-zone-qui" style={{ marginLeft: 6 }}>🪧 {t(c.source === 'sign' ? 'sales.photoFromSign' : 'sales.photoFromBoth')}</span> : null}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
+                  </button>
+                ))}
+                <button type="button" role="radio" aria-checked={choix === 'autre'} className={`crm-photo-candidat${choix === 'autre' ? ' actif' : ''}`} onClick={() => choisir('autre')}><b>{t('sales.photoOther')}</b></button>
+              </div>
+            </div>
+            <div className="crm-bloc">
+              <b className="crm-bloc-titre">{t('sales.photoCheck')}</b>
+              <div className="field"><label htmlFor="ph-nom">{t('sales.fName')} *</label><input id="ph-nom" value={f.name} onChange={champ('name')} /></div>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="field" style={{ flex: 2 }}><label htmlFor="ph-adresse">{t('sales.fAddress')}</label><input id="ph-adresse" value={f.address} onChange={champ('address')} /></div>
+                <div className="field" style={{ flex: 1 }}><label htmlFor="ph-commune">{t('sales.fCommune')}</label><input id="ph-commune" value={f.commune} onChange={champ('commune')} /></div>
+              </div>
+              <div className="row" style={{ gap: 8 }}>
+                <div className="field" style={{ flex: 1 }}><label htmlFor="ph-tel">{t('sales.fPhone')}</label><input id="ph-tel" type="tel" value={f.phone} onChange={champ('phone')} /></div>
+                <div className="field" style={{ flex: 1 }}><label htmlFor="ph-cuisine">{t('sales.fCuisine')}</label><input id="ph-cuisine" value={f.cuisine} onChange={champ('cuisine')} /></div>
+                <div className="field" style={{ flex: 1 }}><label htmlFor="ph-etape">{t('sales.fStage')}</label>
+                  <select id="ph-etape" value={f.stage} onChange={champ('stage')}>{STAGES.map((s) => <option key={s} value={s}>{STAGE_ICONES[s]} {t(`sales.stage_${s}`)}</option>)}</select>
+                </div>
+              </div>
+              <div className="field"><label htmlFor="ph-note">{t('sales.fFirstNote')}</label><textarea id="ph-note" rows={2} value={f.firstNote} onChange={champ('firstNote')} placeholder={t('sales.fFirstNotePh')} /></div>
+            </div>
+          </>
+        )}
+        <div className="modal-pied crm-pied">
+          {etape === 'verifier' && <button type="submit" className="btn-teal" disabled={envoi || !fichier}>{envoi ? '…' : t('sales.photoValidate')}</button>}
+          <button type="button" className="btn-ghost" onClick={onClose}>{t('common.cancel')}</button>
+        </div>
+      </form>
+    </div>,
+    document.body
   );
 }
 
@@ -280,7 +407,7 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
         {aDesDoublons ? (
           <div className="crm-doublons" role="status">
             {doublons.mine.map((d) => <p key={`m${d.id}`}>⚠️ {t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
-            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, agent: d.agentName, stage: t(`sales.stage_${d.stage}`) })}</p>)}
+            {doublons.others.map((d) => <p key={`o${d.id}`}>🧑‍💼 {t('sales.dupOthers', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
             {doublons.restaurants.map((d) => <p key={`r${d.id}`}>🏪 {t('sales.dupRestaurant', { name: d.name, commune: d.commune || '' })}</p>)}
           </div>
         ) : null}
@@ -358,6 +485,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
       <div className="modal-box drawer-box crm-fiche" onClick={(e) => e.stopPropagation()}>
         {!p ? <div className="small">{t('common.loading')}</div> : (
           <>
+            {p.photoUrl && <a href={p.photoUrl} target="_blank" rel="noreferrer"><img className="crm-fiche-photo" src={p.photoUrl} alt={p.name} /></a>}
             <div className="crm-fiche-tete">
               <div>
                 <h3 className="modal-titre" style={{ margin: 0 }}>{p.name}</h3>
@@ -550,7 +678,7 @@ function GuideCard({ t }) {
 
 // ----------------------------------------------------------------------------------------------- zones
 // Les zones à démarcher, réparties entre commerciaux : les miennes, celles à faire (personne dessus, les moins
-// démarchées d'abord), celles prises par d'autres (prénom). Un clic sur le nom cadre la carte sur la zone.
+// démarchées d'abord), celles prises par d'autres — sans dire par qui (fondateur, 22/09). Un clic sur le nom cadre la carte.
 function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
   const mine = zones.filter((z) => z.status === 'mine');
   const todo = zones.filter((z) => z.status === 'todo').sort((a, b) => (a.mine + a.others) - (b.mine + b.others));
@@ -558,7 +686,7 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
   const ligne = (z, action) => (
     <li key={z.key} className={`crm-zone-ligne crm-zone-${z.status}`}>
       <button type="button" className="crm-zone-nom" onClick={() => onFocus(z.key)}>🎯 <b>{z.name}</b><span className="small"> · {z.commune} · {t(`sales.zoneTag_${z.tag}`)}</span></button>
-      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenBy', { agent: z.claimedBy })}` : ''}</span>
+      <span className="small crm-zone-info">{t('sales.zoneCanvassed', { n: z.mine + z.others })}{z.status === 'taken' ? ` · 🧑‍💼 ${t('sales.zoneTakenOther')}` : ''}</span>
       {action}
     </li>
   );
@@ -576,8 +704,8 @@ function ZonesView({ zones, t, busy, onFocus, onClaim, onRelease }) {
 }
 
 // ----------------------------------------------------------------------------------------------- équipe
-// Les commerciaux, par leur PRÉNOM seulement (le serveur n'envoie rien d'autre) : commerces démarchés, inscrits et
-// gains. Pour voir que d'autres bossent et que ça rapporte — et se situer. Classement par gains.
+// Les commerciaux, par leur PRÉNOM seulement (le serveur n'envoie rien d'autre) : inscrits et gains — pas les
+// commerces démarchés (fondateur, 22/09). Pour voir que d'autres bossent et que ça rapporte — et se situer.
 function EquipeCard({ equipe, t, euros }) {
   if (!equipe.length) return null;
   const total = equipe.reduce((s, x) => s + (x.earned || 0), 0);
@@ -590,7 +718,7 @@ function EquipeCard({ equipe, t, euros }) {
         {equipe.map((x, i) => (
           <li key={`${x.firstName}-${i}`} className={x.me ? 'crm-equipe-moi' : ''}>
             <span className="crm-equipe-rang" aria-hidden="true">{i + 1}</span>
-            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed, prospects: x.prospects })}</span></span>
+            <span className="crm-equipe-nom">🧑‍💼 <b>{x.firstName}</b>{x.me ? <span className="small"> · {t('sales.teamMe')}</span> : null}<br /><span className="small">{t('sales.teamLine', { signed: x.signed })}</span></span>
             <span className="crm-equipe-gain"><b>{euros(x.earned)}</b>{x.upcoming ? <><br /><span className="small">+ {euros(x.upcoming)} {t('sales.teamUpcoming')}</span></> : null}</span>
           </li>
         ))}

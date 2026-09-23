@@ -3745,6 +3745,7 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 .hero-preview-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); white-space: nowrap; }
 .hero-preview-open.ferme { background: var(--cream-dim); color: var(--ink-soft); }
+.hero-preview-open.hero-preview-bientot { background: #F5B800; color: var(--ink); }
 .hero-preview-skeleton { pointer-events: none; }
 .hero-preview-skeleton .hero-preview-img { animation: shimmer 1.4s ease infinite; background: linear-gradient(90deg, var(--cream-dim) 25%, #fff 37%, var(--cream-dim) 63%); background-size: 400px 100%; }
 .hero-preview-lines { display: flex; flex-direction: column; gap: 6px; }
@@ -4357,6 +4358,8 @@ html.jeu-plein-actif, html.jeu-plein-actif body { -webkit-user-select: none; use
 .offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
 /* Le terminal Fairide expliqué (components/TerminalFairide.jsx) : image + « c'est quoi », étapes, conditions. */
 .terminal-haut { display: flex; gap: 14px; align-items: center; }
+.terminal-commandes { border-left: 4px solid var(--iris); }
+.terminal-commandes-points { margin: 0 0 10px; padding-left: 18px; display: grid; gap: 4px; }
 .terminal-illu { width: 200px; max-width: 45%; flex-shrink: 0; height: auto; }
 .terminal-compact .terminal-illu { width: 160px; }
 .terminal-titre { font-size: 15px; }
