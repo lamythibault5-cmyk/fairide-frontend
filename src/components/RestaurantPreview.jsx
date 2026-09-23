@@ -4,9 +4,8 @@ import FichePlat from './FichePlat';
 import MenuCategorySections from './MenuCategorySections';
 import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
-
-const DELIVERY_FEE = 4.5;
-const SYSTEM_FEE_RATE = 0.10;
+import { DELIVERY_FEE } from '../context/CartContext';
+import { fraisService } from '../fraisService';
 
 function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
@@ -57,7 +56,8 @@ export default function RestaurantPreview({ restaurant }) {
   subtotal = +subtotal.toFixed(2);
   // À emporter : pas de frais de livraison, comme dans le vrai checkout (voir Checkout.jsx estimatedTotalBeforeBalance).
   const deliveryFee = fulfillmentType === 'delivery' ? DELIVERY_FEE : 0;
-  const serviceFee = +(deliveryFee * SYSTEM_FEE_RATE).toFixed(2);
+  // Frais de service : 10 % TTC des plats et de la livraison (src/fraisService.js) — même règle que le checkout.
+  const serviceFee = fraisService(subtotal + deliveryFee);
   const total = +(subtotal + deliveryFee + serviceFee).toFixed(2);
 
   return (

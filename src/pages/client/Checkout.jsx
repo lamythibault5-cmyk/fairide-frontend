@@ -155,14 +155,16 @@ export default function Checkout() {
   if (!restaurant) return <SkeletonCards count={2} />;
 
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
-  // À emporter : pas de frais de livraison/système, contrairement à l'estimation par défaut de cart.totals().
-  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
   // Avant le 20 octobre, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
   const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
+  // Frais de service estimés (10 % TTC, voir src/fraisService.js) : sur plats + livraison en livraison, sur les plats seuls
+  // sinon, et aucun quand l'à emporter est payé sur place — Fairide n'encaisse rien (même règle que routes/orders.js).
+  const fraisServiceEstimes = fulfillmentType === 'delivery' ? totals.serviceFee : surPlaceChoisi ? 0 : totals.pickupServiceFee;
+  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : +(totals.subtotal + fraisServiceEstimes).toFixed(2);
   const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
@@ -645,10 +647,12 @@ export default function Checkout() {
                   {totals.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
-                  {/* TVA comprise : la ligne affichait les frais hors TVA alors que le total, lui, la contenait —
-                      la somme des lignes ne tombait jamais sur le total affiché juste en dessous. */}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')} ({t('checkout.fromPrefix')})</span><span>{(totals.serviceFee + totals.serviceFeeVat).toFixed(2)}€</span></div>
                 </>
+              )}
+              {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
+                  « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
+              {fraisServiceEstimes > 0 && (
+                <div className="line"><span>{t('checkout.serviceFeeLine')}{fulfillmentType === 'delivery' ? ` (${t('checkout.fromPrefix')})` : ''}</span><span>{fraisServiceEstimes.toFixed(2)}€</span></div>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (

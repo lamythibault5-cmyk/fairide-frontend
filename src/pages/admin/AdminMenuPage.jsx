@@ -61,11 +61,12 @@ export default function AdminMenuPage() {
           <BoutonGererCommerce id={id} token={token} api={api} toast={toast} tr={tr} className={d && ouverte ? 'btn-gold' : 'btn-teal'} />
         </>} />
 
+      {/* Le bloc n'apparaît que s'il y a une demande : c'est Fairide qui monte toutes les cartes désormais,
+          un encadré « aucune demande » sur chaque commerce ne disait plus rien. Quand le restaurateur a
+          envoyé une demande, on la garde : c'est là que sont son lien et ses fichiers. */}
+      {d && (
       <div className="card" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
         <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>🤝 {tr('adminMenu.requestTitle')}</h3>
-        {!fiche && <p className="small" style={{ margin: 0 }}>{tr('adminCommon.loading')}</p>}
-        {fiche && !d && <p className="small" style={{ margin: 0 }}>{tr('adminMenu.noRequest')}</p>}
-        <p className="small" style={{ margin: '6px 0 0', opacity: 0.85 }}>{tr('adminMenu.fullAccessHint')}</p>
         {d && (
           <>
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -96,6 +97,7 @@ export default function AdminMenuPage() {
           </>
         )}
       </div>
+      )}
 
       {erreur && <div className="card"><p className="small" style={{ margin: 0 }}>⚠️ {erreur}</p></div>}
       {!restaurant && !erreur && <SkeletonCards count={3} />}

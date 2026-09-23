@@ -95,7 +95,7 @@ export default function AdminFinancePage() {
               <div className="stat-card"><div className="num">{money(d.restaurantRevenue)}</div><div className="label">{tr('adminFinance.restoRevenue')}</div></div>
               <div className="stat-card"><div className="num">{money(d.commission)}</div><div className="label">{tr('adminFinance.restoCommissions', { rate: (d.commissionRate * 100).toFixed(0) })}</div></div>
               <div className="stat-card"><div className="num">{money(d.deliveryFeesTotal)}</div><div className="label">{tr('adminFinance.totalDeliveryFees')}</div></div>
-              <div className="stat-card"><div className="num">{money(d.deliveryFairideShare)}</div><div className="label">{tr('adminFinance.deliveryShare', { rate: (d.deliveryFairideRate * 100).toFixed(0) })}</div></div>
+              <div className="stat-card"><div className="num">{money(d.deliveryFairideShare)}</div><div className="label">{tr('adminFinance.deliveryShare', { rate: ((d.serviceFeeRate ?? 0.1) * 100).toFixed(0) })}</div></div>
               <div className="stat-card"><div className="num">{money(d.driverShare)}</div><div className="label">{tr('adminFinance.driversShare')}</div></div>
               <div className="stat-card"><div className="num">{money(d.otherFees)}</div><div className="label">{tr('adminFinance.otherServiceFees')}</div></div>
               <div className="stat-card highlight"><div className="num">{money(d.fairideRevenue)}</div><div className="label">{tr('adminFinance.totalRevenue')}</div></div>

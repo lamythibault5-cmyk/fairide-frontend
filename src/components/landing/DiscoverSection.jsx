@@ -66,7 +66,7 @@ export default function DiscoverSection({ restaurants }) {
           <b className="discover-info-title">{t('landing.discoverInfoTitle')}</b>
           <div className="discover-info-stats">
             <span><b>30</b> {t('landing.discoverInfoBusinesses')}</span>
-            <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>
+            <span><b>0 %</b> {t('landing.discoverInfoCommission')}</span>
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 'auto' }}>
