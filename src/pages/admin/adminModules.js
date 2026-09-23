@@ -63,7 +63,9 @@ export const ADMIN_MODULES = [
   { key: 'team', path: '/admin/team', icon: 'compte', hub: 'settings', badge: aucun },
   { key: 'messages', path: '/admin/messages', icon: 'bulle', hub: 'inbox', badge: (o) => pastille(o.messages?.unread || 0, 'warn') },
   // Sales (2026-09-17) : codes commerciaux, commerciaux (proches qui démarchent les restaurateurs) et commerces démarchés.
-  { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'warn') },
+  // Les relances Sales dépassées restent visibles sur l'onglet Sales, mais n'entrent pas dans la pastille du pôle
+  // « Commerces » : celle-ci ne compte que les vrais restaurants à valider (fondateur, 2026-09-23).
+  { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'info') },
   { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
 ];
 
