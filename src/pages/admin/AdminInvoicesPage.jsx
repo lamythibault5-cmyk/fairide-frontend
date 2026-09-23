@@ -106,8 +106,6 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
   const [qInput, setQInput] = useState('');
   const q = useDebouncedValue(qInput, 350);
   const [status, setStatus] = useEtatPage('statutFactures', '');
-  const [minAmount, setMinAmount] = useState('');
-  const [maxAmount, setMaxAmount] = useState('');
   const [page, setPage] = useState(0);
   const [selectedId, setSelectedId] = useState(null);
   const [showGenerate, setShowGenerate] = useState(false);
@@ -123,15 +121,13 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
     if (presetRestaurantId) params.set('restaurantId', presetRestaurantId);
     if (from) params.set('dateFrom', from);
     if (to) params.set('dateTo', to);
-    if (minAmount) params.set('minAmount', minAmount);
-    if (maxAmount) params.set('maxAmount', maxAmount);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
     return api(`/admin/invoices?${params.toString()}`, { token });
-  }, [q, status, page, presetRestaurantId, from, to, minAmount, maxAmount]);
+  }, [q, status, page, presetRestaurantId, from, to]);
   const load = state.reload;
 
-  useEffect(() => { setPage(0); }, [q, status, from, to, minAmount, maxAmount]);
+  useEffect(() => { setPage(0); }, [q, status, from, to]);
 
   function exportCsv() {
     const rows = state.data?.rows || [];
@@ -150,9 +146,6 @@ function InvoicesTab({ token, toast, presetRestaurantId }) {
       <PeriodPicker period={period} onChange={setPeriod} allowAll compact />
       <div className="fin-toolbar">
         <input aria-label={tr('adminInvoices.phSearch')} type="search" placeholder={tr('adminInvoices.phSearch')} value={qInput} onChange={(e) => setQInput(e.target.value)} />
-        <label className="small admin-inline-field">{tr('adminOrders.minAmount')} <input type="number" min={0} step={1} value={minAmount} onChange={(e) => setMinAmount(e.target.value)} style={{ width: 80 }} /></label>
-        <label className="small admin-inline-field">{tr('adminOrders.maxAmount')} <input type="number" min={0} step={1} value={maxAmount} onChange={(e) => setMaxAmount(e.target.value)} style={{ width: 80 }} /></label>
-        {(minAmount || maxAmount) && <button type="button" className="btn-ghost" onClick={() => { setMinAmount(''); setMaxAmount(''); }}>✕ {tr('adminOrders.clearFilters')}</button>}
         <span className="spacer" />
         <button type="button" className="btn-outline" onClick={exportCsv}>{tr('adminCommon.csv')}</button>
         <button type="button" className="btn-teal" onClick={() => setShowGenerate(true)}>{tr('adminInvoices.generateInvoiceBtn')}</button>

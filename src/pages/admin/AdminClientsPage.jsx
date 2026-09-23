@@ -24,7 +24,6 @@ import useEtatPage from '../../hooks/useEtatPage';
 
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const PAGE_SIZE = 100;
-const TRIS_SERVEUR = ['created_desc', 'created_asc', 'name', 'orders', 'revenue', 'last_order'];
 const J30 = 30 * 86400000; const J7 = 7 * 86400000;
 
 export default function AdminClientsPage() {
@@ -49,7 +48,9 @@ export default function AdminClientsPage() {
   const [filtre, setFiltre] = useEtatPage('filtre', searchParams.get('filter') || 'all', { forcer: !!searchParams.get('filter') });
   const [nature, setNature] = useEtatPage('nature', 'all');
   const [groupBy, setGroupBy] = useEtatPage('groupBy', '');
-  const [triServeur, setTriServeur] = useEtatPage('tri', 'created_desc');
+  // Plus de liste « trier par » (allègement de la console, 23/09/2026) : des plus récents aux plus anciens ; en vue
+  // tableau, les en-têtes de colonne trient.
+  const triServeur = 'created_desc';
   const { sort, toggle } = useTableSort('totalSpent');
   // Ajustement de solde : { client, sens: 'credit' | 'debit' } ; le montant est saisi dans le dialogue.
   const [solde, setSolde] = useState(null);
@@ -207,9 +208,6 @@ export default function AdminClientsPage() {
           ))}
         </div>
         <NatureChips nature={nature} onChange={setNature} realCount={kpi.real} deletedCount={kpi.deleted} labels={{ all: tr('adminCommon.allM'), real: tr('adminCommon.filterRealAccounts'), test: tr('adminCommon.filterTestAccounts'), deleted: tr('adminCommon.filterDeletedAccounts') }} />
-        <select value={triServeur} onChange={(e) => setTriServeur(e.target.value)} style={{ maxWidth: 200 }} title={tr('adminCommon.sortServer')}>
-          {TRIS_SERVEUR.map((k) => <option key={k} value={k}>{tr('adminCommon.sortBy')} : {tr(`adminCommon.sort_${k}`)}</option>)}
-        </select>
         {mode === 'table' && (
           <select value={groupBy} onChange={(e) => setGroupBy(e.target.value)} style={{ maxWidth: 220 }}>
             <option value="">{tr('adminCommon.noGroup')}</option>
