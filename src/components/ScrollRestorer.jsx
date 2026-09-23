@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useLocation, useNavigationType } from 'react-router-dom';
 
 // Rendu une seule fois, en dehors de <Routes> (voir App.jsx), pour ne se remonter qu'à un vrai
@@ -22,6 +22,18 @@ import { useLocation, useNavigationType } from 'react-router-dom';
 //   - toute autre navigation (clic sur un onglet, sur une carte) : on part du haut, c'est une
 //     nouvelle page qu'on commence.
 const RESTAURATION_DELAIS = [0, 100, 300, 600, 1000, 1500];
+// REMONTER EN HAUT, PLUSIEURS FOIS. Un seul scrollTo(0, 0) au changement de page ne suffisait pas au téléphone : la
+// nouvelle page arrive en squelettes, puis sa hauteur change (données, images, barre d'adresse de Safari qui se
+// redéploie) et on se retrouvait quelques dizaines de pixels plus bas, le titre coupé. On remonte donc tout de
+// suite (avant l'affichage), puis encore pendant ~0,8 s — sauf si la personne touche l'écran ou fait défiler
+// entre-temps : on ne lui reprend jamais la main.
+const REMONTEE_DELAIS = [0, 50, 150, 300, 500, 800];
+function remonterEnHaut() {
+  window.scrollTo(0, 0);
+  // Safari iOS : selon l'état de la barre d'adresse, c'est l'un ou l'autre qui défile.
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+}
 
 export default function ScrollRestorer() {
   const location = useLocation();
@@ -42,14 +54,27 @@ export default function ScrollRestorer() {
     return () => window.removeEventListener('scroll', onScroll);
   }, [location.pathname]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const premierChargement = isFirstRun.current;
     isFirstRun.current = false;
     const retour = navigationType === 'POP' || location.state?.restaurerDefilement === true;
 
     if (!premierChargement && !retour) {
-      window.scrollTo(0, 0);
-      return undefined;
+      // Les ancres (#section) gardent leur cible.
+      if (location.hash) return undefined;
+      remonterEnHaut();
+      let annule = false;
+      const lacher = () => { annule = true; };
+      window.addEventListener('touchstart', lacher, { passive: true, once: true });
+      window.addEventListener('wheel', lacher, { passive: true, once: true });
+      window.addEventListener('keydown', lacher, { once: true });
+      const minuteurs = REMONTEE_DELAIS.map((delay) => setTimeout(() => { if (!annule) remonterEnHaut(); }, delay));
+      return () => {
+        minuteurs.forEach(clearTimeout);
+        window.removeEventListener('touchstart', lacher);
+        window.removeEventListener('wheel', lacher);
+        window.removeEventListener('keydown', lacher);
+      };
     }
     const saved = Number(sessionStorage.getItem(`fairide_scroll:${location.pathname}`) || 0);
     if (saved <= 0) return undefined;
