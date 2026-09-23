@@ -30,6 +30,7 @@ Disallow: /dashboard
 Disallow: /driver
 Disallow: /admin
 Disallow: /reset-password
+Disallow: /jeux
 Disallow: /crm
 Disallow: /recherche
 
@@ -46,6 +47,7 @@ Disallow: /nl/dashboard
 Disallow: /nl/driver
 Disallow: /nl/admin
 Disallow: /nl/reset-password
+Disallow: /nl/jeux
 Disallow: /nl/crm
 Disallow: /nl/recherche
 
@@ -62,6 +64,7 @@ Disallow: /en/dashboard
 Disallow: /en/driver
 Disallow: /en/admin
 Disallow: /en/reset-password
+Disallow: /en/jeux
 Disallow: /en/crm
 Disallow: /en/recherche
 

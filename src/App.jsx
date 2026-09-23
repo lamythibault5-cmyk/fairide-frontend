@@ -101,6 +101,7 @@ const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
 const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
+const GamesPage = lazyPage(() => import('./pages/GamesPage'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
 const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 
@@ -167,6 +168,8 @@ export default function App() {
         <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
+        {/* Mini-jeux : rubrique de Mon compte. L'écran scindé avec la carte du livreur n'y apparaît que pour un client. */}
+        <Route path="/jeux" element={<ProtectedRoute><GamesPage /></ProtectedRoute>} />
         {/* Sales : page des commerciaux (accès donné par l'admin ; le serveur refuse les autres). /crm est l'ancien chemin. */}
         <Route path="/sales" element={<ProtectedRoute><SalesPage /></ProtectedRoute>} />
         <Route path="/crm" element={<Navigate to="/sales" replace />} />
