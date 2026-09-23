@@ -102,6 +102,13 @@ export default function Onboarding() {
 
       <Notifications t={t} token={token} />
 
+      {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
+          serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
+          qu'en dossier brouillon : sans ce bloc, un livreur validé n'aurait aucun moyen de les accepter. */}
+      {!enDossier && MANQUES_PAR_ETAPE.notices.some((m) => manques.includes(m)) && (
+        <EtapeNotices token={token} busy={busy} action={action} onNext={() => charger()} />
+      )}
+
       {enDossier && (
         <>
           <div className="courier-steps" role="tablist">

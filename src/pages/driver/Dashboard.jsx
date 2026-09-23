@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -24,6 +24,7 @@ function formatClock(date) {
 
 export default function DriverDashboard() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
@@ -205,7 +206,11 @@ export default function DriverDashboard() {
 
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
-    catch (e) { toast(e.message, 'erreur'); }
+    catch (e) {
+      toast(e.message, 'erreur');
+      // Notices à relire (B4) ou titre de séjour expiré (B2) : ça se règle dans l'espace livreur, on y va.
+      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE'].includes(e.code)) navigate('/driver/onboarding');
+    }
   }
 
   async function deliver(order, ageVerifie = false) {
