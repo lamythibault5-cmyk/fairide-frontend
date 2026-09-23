@@ -435,7 +435,7 @@ export default function Account() {
     e.preventDefault();
     // Même règle que le serveur (routes/auth.js) : longueur ET casse. Ne contrôler que la longueur
     // ici laissait passer un mot de passe que l'enregistrement refusait ensuite en 400.
-    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) { toast(t('account.toastPasswordTooShort')); return; }
+    if (newPassword.length < 6 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) { toast(t('account.toastPasswordTooShort')); return; }
     if (newPasswordConfirm !== newPassword) { toast(t('auth.errPasswordMismatch'), 'erreur'); return; }
     setSavingPassword(true);
     try {
