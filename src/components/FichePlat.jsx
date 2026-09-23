@@ -37,7 +37,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   const racine = useRef(null);
 
   // Échap ferme, le fond de page ne défile plus derrière la feuille — même geste que la vue agrandie
-  // du suivi (TrackingWithGames.jsx), pour que la fermeture s'apprenne une seule fois. Le hook ajoute
+  // du suivi (CarteSuivi.jsx), pour que la fermeture s'apprenne une seule fois. Le hook ajoute
   // ce qui manquait : le focus reste DANS la feuille tant qu'elle est ouverte, et revient au plat
   // qu'on venait d'ouvrir quand elle se ferme. La séparation en effets distincts — dont la raison
   // était notée ici — est reprise telle quelle dans le hook.

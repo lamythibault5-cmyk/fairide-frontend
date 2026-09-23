@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
@@ -13,7 +13,7 @@ import TerminalFairide from '../../components/TerminalFairide';
 import TicketEditor from '../../components/TicketEditor';
 import {
   DeliveryTiming, EcheanceAcceptation, ProgressBar, statusLabel, deliveryInstructionLabel, formatOrderItem, orderTypeColor, orderTypeLabel,
-  ORDER_STAGES, orderStageKey, orderStagePriority, loadStageColors, saveStageColors, resetStageColors
+  ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -32,8 +32,7 @@ export default function OrdersPage() {
   // Conformité : commande avec demande d'allergie à confirmer (A1), remise d'alcool à contrôler (B6).
   const [allergieAConfirmer, setAllergieAConfirmer] = useState(null);
   const [ageAVerifier, setAgeAVerifier] = useState(null);
-  const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
-  const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
+  const stageColors = useMemo(() => couleursEtapes(restoId), [restoId]);
   // Largeur de papier retenue par le restaurateur : sa valeur ne change pas d'une commande à l'autre,
   // la redemander à chaque ticket serait une friction inutile.
   // Fondateur (2026-09-22) : les commandes se voient, s'acceptent et s'impriment sur le TERMINAL Fairide (tout-en-un,
@@ -71,20 +70,6 @@ export default function OrdersPage() {
     } finally {
       setPrinting(false);
     }
-  }
-
-  useEffect(() => { setStageColors(loadStageColors(restoId)); }, [restoId]);
-
-  function setStageColor(key, color) {
-    setStageColors((prev) => {
-      const next = { ...prev, [key]: color };
-      saveStageColors(restoId, next);
-      return next;
-    });
-  }
-
-  function resetColors() {
-    setStageColors(resetStageColors(restoId));
   }
 
   // Ce qui demande une action ou une surveillance en premier, ce qui est déjà réglé en dernier —
@@ -177,34 +162,6 @@ export default function OrdersPage() {
 
   return (
     <div className="no-print">
-      <div className="card">
-        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ margin: 0, fontSize: 15 }}>{t('ordersResto.colorsTitle')}</h3>
-          <button type="button" className="btn-ghost" onClick={() => setColorSettingsOpen((v) => !v)}>
-            {colorSettingsOpen ? 'Fermer' : 'Personnaliser'}
-          </button>
-        </div>
-        {colorSettingsOpen && (
-          <div style={{ marginTop: 10 }}>
-            <p className="small" style={{ margin: '0 0 10px' }}>
-              {t('ordersResto.colorsIntro')}
-            </p>
-            {ORDER_STAGES.map((s) => (
-              <div key={s.key} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}>
-                <span className="small">{s.icon} {t(`orderStatus.stage_${s.key}`)}</span>
-                <input
-                  type="color"
-                  value={stageColors[s.key]}
-                  onChange={(e) => setStageColor(s.key, e.target.value)}
-                  style={{ width: 36, height: 28, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}
-                />
-              </div>
-            ))}
-            <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={resetColors}>{t('ordersResto.resetColors')}</button>
-          </div>
-        )}
-      </div>
-
       {/* Tout se passe sur le terminal Fairide : voir, accepter, suivre et imprimer les commandes. */}
       <div className="card terminal-commandes">
         <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>🖥️ {t('ordersResto.terminalCardTitle')}</h3>

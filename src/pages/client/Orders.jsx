@@ -161,9 +161,6 @@ export default function Orders() {
     }
   }
 
-  // Les mini-jeux ne vivent plus ici : ils ont leur page (/jeux), ouverte depuis Mon compte, avec
-  // l'écran scindé sur la carte du livreur quand une commande est en route. Voir pages/GamesPage.jsx.
-
   // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
   // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
   // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.

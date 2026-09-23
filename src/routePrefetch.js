@@ -51,7 +51,6 @@ const CHARGEURS = {
   '/confidentialite': () => import('./pages/legal/Privacy'),
   '/aide': () => import('./pages/HelpPage'),
   '/notre-histoire': () => import('./pages/OurStory'),
-  '/jeux': () => import('./pages/GamesPage'),
   '/sales': () => import('./pages/client/SalesPage'),
   '/admin/sales': () => import('./pages/admin/AdminSalesPage'),
 };

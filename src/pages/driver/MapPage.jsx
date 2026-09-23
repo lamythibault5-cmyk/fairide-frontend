@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import DriverNavigationMap from '../../components/DriverNavigationMap';
-import TrackingWithGames from '../../components/TrackingWithGames';
+import CarteSuivi from '../../components/CarteSuivi';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Cadence maximale d'envoi de la position au serveur — même valeur que Dashboard.jsx, un seul rythme
@@ -121,8 +121,8 @@ export default function MapPage() {
       {active.length === 0 ? (
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="empty" style={{ marginBottom: 10 }}>{t('mapDriver.noneOngoing')}</div>
-          <TrackingWithGames
-            role="driver" jeux={false} hauteur={hauteurCourse}
+          <CarteSuivi
+            role="driver" hauteur={hauteurCourse}
             legende={position ? t('mapDriver.hereYouAre') : t('mapDriver.whenStarts')}
             etaSansEstimation={t('mapDriver.noRide')}
             rendreCarte={({ height, onEta }) => <DriverNavigationMap originLat={position?.lat} originLng={position?.lng} height={height} onEta={onEta} />}
@@ -151,13 +151,13 @@ export default function MapPage() {
               {!target.lat || !target.lng ? (
                 <div className="empty" style={{ margin: '10px 0' }}>{t('mapDriver.addressNotLocated')}</div>
               ) : pickedUp ? (
-                // En course, pas de jeux : le livreur roule, la carte seule, en grand.
+                // En course : le livreur roule, la carte seule, en grand.
                 <div style={{ margin: '10px 0' }}>{carte({ height: hauteurCourse })}</div>
               ) : (
                 // Commande pas encore retirée : le livreur va au restaurant ou y attend — la carte seule,
-                // agrandissable, sans jeux (les mini-jeux sont réservés aux clients).
-                <TrackingWithGames
-                  role="driver" jeux={false} hauteur={hauteurCourse}
+                // agrandissable.
+                <CarteSuivi
+                  role="driver" hauteur={hauteurCourse}
                   legende={o.status === 'pret' ? t('mapDriver.readyAtRestaurant') : t('mapDriver.preparing')}
                   etaSansEstimation={t('mapDriver.toRestaurantIcon')}
                   rendreCarte={carte}

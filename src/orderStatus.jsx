@@ -98,28 +98,13 @@ export function orderStagePriority(order) {
   return idx === -1 ? STAGE_PRIORITY.length : idx;
 }
 
+// Couleur de chaque étape de commande, fixe. Le panneau « Couleurs des commandes » qui permettait de les changer a
+// été retiré (allègement, 23/09/2026 : personne ne s'en servait). On efface au passage les réglages qu'il avait
+// laissés dans le navigateur, pour que tous les restaurateurs voient les mêmes couleurs que le support.
 const DEFAULT_STAGE_COLORS = Object.fromEntries(ORDER_STAGES.map((s) => [s.key, s.defaultColor]));
-
-function stageColorsKey(restoId) {
-  return `fairide_order_stage_colors_${restoId}`;
-}
-
-export function loadStageColors(restoId) {
-  try {
-    const saved = JSON.parse(localStorage.getItem(stageColorsKey(restoId)) || '{}');
-    return { ...DEFAULT_STAGE_COLORS, ...saved };
-  } catch {
-    return { ...DEFAULT_STAGE_COLORS };
-  }
-}
-
-export function saveStageColors(restoId, colors) {
-  localStorage.setItem(stageColorsKey(restoId), JSON.stringify(colors));
-}
-
-export function resetStageColors(restoId) {
-  localStorage.removeItem(stageColorsKey(restoId));
-  return { ...DEFAULT_STAGE_COLORS };
+export function stageColors(restoId) {
+  try { localStorage.removeItem(`fairide_order_stage_colors_${restoId}`); } catch { /* sans stockage */ }
+  return DEFAULT_STAGE_COLORS;
 }
 
 // Couleur associée au type de commande, pour que le restaurant repère chaque commande d'un coup d'œil :
