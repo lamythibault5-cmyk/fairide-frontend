@@ -90,6 +90,8 @@ const TRACES = {
   billet: <><rect x="2" y="6" width="20" height="12" rx="2" /><circle cx="12" cy="12" r="2.5" /><path d="M6 12h.01" /><path d="M18 12h.01" /></>,
   // Un message du commerce, au paiement.
   bulle: <path d="M21 12a8 8 0 0 1-8 8H4l2.2-2.6A8 8 0 1 1 21 12Z" />,
+  // La manette des mini-jeux : une croix directionnelle à gauche, deux boutons à droite.
+  manette: <><rect x="2" y="7" width="20" height="11" rx="4" /><path d="M7 11v3" /><path d="M5.5 12.5h3" /><circle cx="16" cy="11.8" r=".9" /><circle cx="18.2" cy="14" r=".9" /></>,
   // Le son : un haut-parleur, et sa variante barrée quand la musique est coupée.
   son: <><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z" /><path d="M15.5 9.2a4 4 0 0 1 0 5.6" /><path d="M18 6.7a7.5 7.5 0 0 1 0 10.6" /></>,
   sonCoupe: <><path d="M11 5 6.5 9H3v6h3.5L11 19V5Z" /><path d="m16 10 4 4" /><path d="m20 10-4 4" /></>,
