@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react';
-import { api } from '../../../api';
+import { api, apiDownload } from '../../../api';
 import { useAuth } from '../../../context/AuthContext';
 import { useToast } from '../../../context/ToastContext';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -13,7 +13,9 @@ import { ErrorCard } from '../../../components/admin/AdminListTools';
  *    si l'avocat l'impose). Backend : PATCH /admin/compliance/parameters, bornes vérifiées côté serveur.
  * 2. Export mensuel anonymisé « offres reçues / refus / prises » par livreur : la pièce qui montre que les
  *    offres reçues ne baissent pas avec les refus (présomption de salariat, critère « sanction du refus »).
- *    Pas de nom, pas d'identifiant : un rang. Ce tableau n'alimente AUCUNE décision — il sert de preuve. */
+ *    Pas de nom, pas d'identifiant : un rang. Ce tableau n'alimente AUCUNE décision — il sert de preuve.
+ * 3. Dossier CRT (G6) — archive pour la demande d'avis : contrat type, notice, géolocalisation, dispatch,
+ *    six mois de statistiques anonymisées. Les captures d'écran s'y ajoutent à la main (liste dans l'archive). */
 const CLES = ['delivery_bump_cents', 'delivery_bump_every_min', 'delivery_bump_cap_cents', 'delivery_no_courier_cancel_min'];
 
 export default function DispatchTab() {
@@ -79,6 +81,12 @@ export default function DispatchTab() {
           </table>
         </div>
       )}
+
+      <h4 style={{ marginTop: 20 }}>{t('conformite.crtTitle')}</h4>
+      <p className="small" style={{ marginTop: 0 }}>{t('conformite.crtHelp')}</p>
+      <button type="button" className="btn-outline" onClick={() => apiDownload('/admin/compliance/crt-dossier.zip', { token, filename: `fairide-dossier-crt-${new Date().toISOString().slice(0, 10)}.zip` }).catch((e) => toast(e.message, 'erreur'))}>
+        {t('conformite.crtDownload')}
+      </button>
     </div>
   );
 }

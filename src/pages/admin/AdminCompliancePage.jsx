@@ -16,6 +16,7 @@ import '../../admin-compliance.css';
 import useEtatPage from '../../hooks/useEtatPage';
 import { ONGLETS_CONFORMITE, DecisionsTab, DsaTab, BreachesTab, ProcessorsTab, ForbiddenTab, ParametersTab } from './compliance/ConformiteP0Tabs';
 import DispatchTab from './compliance/DispatchTab';
+import DeclarationsTab from './compliance/DeclarationsTab';
 
 // Application « Conformité & RGPD » : registre des demandes des personnes concernées (délai légal d'un
 // mois), export / suppression des données d'un compte, suivi des versions de contrats des partenaires,
@@ -66,6 +67,7 @@ export default function AdminCompliancePage() {
       {onglet === 'forbidden' && <ForbiddenTab />}
       {onglet === 'parameters' && <ParametersTab />}
       {onglet === 'dispatch' && <DispatchTab />}
+      {onglet === 'declarations' && <DeclarationsTab />}
       {showCreate && <CreateRequestModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
     </div>
   );

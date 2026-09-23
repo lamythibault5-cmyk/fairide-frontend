@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import { api, apiDownload } from '../../api';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
+import CopieDac7 from './CopieDac7';
 
 /* Le livreur vend la livraison (décision du 23/09/2026) : ce qui va avec, dans son espace.
  *
@@ -11,7 +12,8 @@ import { useToast } from '../../context/ToastContext';
  *
  * DocumentsVente (G2) — un document par livraison, émis par Fairide en son nom au titre du mandat
  * d'autofacturation, numéroté dans une série qui lui est propre. Enregistré via apiDownload (jeton,
- * 401 centralisé) plutôt qu'ouvert dans un onglet : window.open après un await est bloqué par Safari. */
+ * 401 centralisé) plutôt qu'ouvert dans un onglet : window.open après un await est bloqué par Safari.
+ * En bas de la même carte : la copie DAC7 annuelle (B8), ce que Fairide a déclaré sur ses revenus. */
 export function TarifMinimum({ courier, token, action, busy }) {
   const { t } = useLanguage();
   const id = useId();
@@ -56,6 +58,7 @@ export function DocumentsVente({ token }) {
           <button type="button" className="btn-ghost" style={{ padding: '2px 8px' }} onClick={() => ouvrir(d)}>{t('conformite.saleDocsOpen')}</button>
         </div>
       ))}
+      <CopieDac7 chemin={(a) => `/couriers/me/dac7/${a}.pdf`} token={token} />
     </div>
   );
 }

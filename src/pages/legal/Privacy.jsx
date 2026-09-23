@@ -5,7 +5,10 @@ import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Texte dans translations.js (espace `privacy`), en trois langues.
-const SECTIONS = ['controller', 'collected', 'mandatory', 'purpose', 'sharing', 'transfers', 'retention', 'rights', 'automated', 'others', 'cookies', 'security', 'changes'];
+// identity, devices, controllers : compléments D8 du backlog du 23/09/2026 (Stripe Identity et biométrie,
+// autorisations du téléphone, Stripe et Google responsables distincts). L'ordre fait partie du texte versionné
+// (fairide-backend/cgu.js, VERSIONS_CONFIDENTIALITE) : le changer change l'empreinte.
+const SECTIONS = ['controller', 'collected', 'mandatory', 'purpose', 'sharing', 'transfers', 'retention', 'rights', 'automated', 'identity', 'devices', 'controllers', 'others', 'cookies', 'security', 'changes'];
 const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 
 // Les sous-traitants, dans l'ordre où ils interviennent : payer, être prévenu, se connecter, être

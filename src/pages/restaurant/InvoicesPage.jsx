@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
+import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
 import InvoiceArchive from '../../components/InvoiceArchive';
 import CommissionStatements from '../../components/CommissionStatements';
@@ -86,7 +87,13 @@ export default function InvoicesPage() {
         ))}
       </div>
 
-      {onglet === 'releves' && <CommissionStatements />}
+      {onglet === 'releves' && (
+        <>
+          <CommissionStatements />
+          {/* Copie DAC7 annuelle (A10) : ce que Fairide a déclaré au SPF Finances sur les ventes du commerce. */}
+          <div className="card no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token} /></div>
+        </>
+      )}
 
       {onglet === 'abonnement' && (
         <div className="card no-print">

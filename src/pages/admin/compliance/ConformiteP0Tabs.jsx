@@ -18,8 +18,9 @@ import { fmtDate, fmtDateTime, downloadPdf } from '../adminUtils';
  *   processors — sous-traitants et DPA (D2) ;
  *   forbidden  — produits interdits trouvés au catalogue, exceptions (A3) ;
  *   parameters — âge minimum de l'alcool, date des allergènes par plat (A1, A4) ;
- *   dispatch   — réglages de la livraison et export anonymisé des offres (./DispatchTab.jsx). */
-export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch'];
+ *   dispatch   — réglages de la livraison, export anonymisé des offres, dossier CRT (./DispatchTab.jsx) ;
+ *   declarations — DAC7 des deux populations et registre art. 17 (./DeclarationsTab.jsx). */
+export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch', 'declarations'];
 
 function useCharge(chemin, deps = []) {
   const { token } = useAuth();

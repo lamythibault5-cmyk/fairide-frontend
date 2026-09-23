@@ -36,8 +36,8 @@ const STATUTS = ['p2p', 'student_independent', 'independent'];
 const EMOJI_STATUT = { p2p: '🤝', student_independent: '🎓', independent: '🧑‍💼' };
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
-// Attestations d'assurance : date d'échéance demandée, Fairide rappelle le renouvellement.
-const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'residence_permit'];
+// Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
+const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit'];
 const euro = euroPlafond;
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);

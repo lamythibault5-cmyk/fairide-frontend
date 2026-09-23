@@ -258,6 +258,13 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   (facts + contractual basis) — the API refuses a bare `{ status: 'blocked' }`. New compliance tabs
   (decisions, DSA reports, breaches, processors, prohibited products, parameters) are in
   [pages/admin/compliance/](src/pages/admin/compliance/).
+- **Filings** (admin › Conformité › *Déclarations*, [DeclarationsTab](src/pages/admin/compliance/DeclarationsTab.jsx)):
+  DAC7 for both couriers and businesses, CSV exports, the yearly copy sent to each seller, and the art. 17
+  platform-work register. Sellers download their own DAC7 copy ([CopieDac7](src/components/conformite/CopieDac7.jsx))
+  from the courier documents card and the restaurant invoices › statements tab.
+- **Privacy policy text** is versioned like the T&Cs: changing `privacy.*` (or the `SECTIONS` order in
+  Privacy.jsx) changes its hash — register a new version in the backend's `cgu.js`
+  (`VERSIONS_CONFIDENTIALITE`), or its test fails.
 - **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. Bump the date in
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
