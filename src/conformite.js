@@ -13,7 +13,7 @@ export function manqueConformite(valeur, restaurant, lignes, typeCommande, t) {
 }
 
 // Libellé d'un manquement du dossier livreur ajouté par le backlog (les autres restent dans courierOnboarding).
-export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info'];
+export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'];
 export function libelleManque(m, t) {
   return MANQUES_CONFORMITE.includes(m) ? t(`conformite.courierMissing_${m}`) : t(`courierOnboarding.missing_${m}`);
 }

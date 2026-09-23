@@ -10,9 +10,13 @@ import Modale from '../Modale';
  *        fairide-backend/consentementsLivreur.js). Tant qu'elles ne sont pas acceptées dans leur
  *        version courante, le serveur refuse la prise de course (NOTICES_A_ACCEPTER).
  *   B8 — information DAC7, dans la même étape.
+ *   G2 — mandat d'autofacturation (décision du 23/09/2026) : le livreur vend la livraison, Fairide émet
+ *        ses documents de vente en son nom. Il doit figurer ici : le serveur l'exige avant la première
+ *        course (consentementsLivreur.AVANT_PREMIERE_COURSE), l'omettre bloquerait le livreur sans
+ *        qu'il puisse voir ce qu'on lui demande.
  *   B1 — consentement biométrique, SÉPARÉ, demandé seulement au moment de lancer Stripe Identity ;
  *        la vérification manuelle reste proposée à côté, sans condition. */
-const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info'];
+const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'];
 
 export function EtapeNotices({ token, busy, action, onNext }) {
   const { t } = useLanguage();

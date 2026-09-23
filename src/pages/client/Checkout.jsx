@@ -851,15 +851,17 @@ export default function Checkout() {
 
           {!isPureReservation && (
             <div className="breakdown">
-              <div className="line"><span>{t('common.subtotal')}</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
+              {/* Trois contrats, trois vendeurs (décision du 23/09/2026, C2) : chaque ligne dit à qui le client
+                  achète. Le livreur n'est pas encore connu ici — il sera nommé dès qu'il accepte la course. */}
+              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
               {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')}</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}

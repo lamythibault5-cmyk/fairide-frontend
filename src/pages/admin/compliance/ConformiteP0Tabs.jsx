@@ -17,8 +17,9 @@ import { fmtDate, fmtDateTime, downloadPdf } from '../adminUtils';
  *   breaches   — registre des violations de données (D3), exportable ;
  *   processors — sous-traitants et DPA (D2) ;
  *   forbidden  — produits interdits trouvés au catalogue, exceptions (A3) ;
- *   parameters — âge minimum de l'alcool, date des allergènes par plat (A1, A4). */
-export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters'];
+ *   parameters — âge minimum de l'alcool, date des allergènes par plat (A1, A4) ;
+ *   dispatch   — réglages de la livraison et export anonymisé des offres (./DispatchTab.jsx). */
+export const ONGLETS_CONFORMITE = ['decisions', 'dsa', 'breaches', 'processors', 'forbidden', 'parameters', 'dispatch'];
 
 function useCharge(chemin, deps = []) {
   const { token } = useAuth();

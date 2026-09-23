@@ -262,6 +262,25 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
 
+## Three sellers per order (decided 2026-09-23)
+
+The customer buys the food from the business, the **delivery from the independent courier** who accepts
+the job, and the service fee from Fairide. The backend records a seller per line (`order_lines`, see
+`../fairide-backend/troisVendeurs.js`). What the front end shows because of it:
+
+- checkout recap labels each line with its seller (`conformite.seller*`);
+- [VendeurLivraison](src/components/conformite/VendeurLivraison.jsx) on the client's orders — the
+  courier's "Prénom N.", company number and VAT regime once known, and a free "decline this courier"
+  while the order hasn't left;
+- driver offers show the price, any Fairide-paid increase and a **Refuse** button, and an approximate
+  destination (the server strips the client's name, phone and house number before the job is taken);
+- [EspaceVendeurLivreur](src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the
+  courier's sale documents (self-billing mandate, accepted in the notices step);
+- admin › Conformité › *Attribution des courses* ([DispatchTab](src/pages/admin/compliance/DispatchTab.jsx)).
+
+Never add anything that ranks, rates or penalises couriers for refusing: the backend's
+`tests/trois-vendeurs.test.js` fails if dispatch starts reading such data, and the courier notice promises it.
+
 ## Conventions
 
 **Code comments are in French, and they are unusually substantive** — they explain *why*, cite

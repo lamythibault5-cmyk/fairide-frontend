@@ -204,6 +204,16 @@ export default function DriverDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 
+  // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
+  // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.
+  async function refuserOffre(id) {
+    try {
+      await api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token });
+      setAvailable((prev) => prev.filter((x) => x.id !== id));
+      toast(t('conformite.offerRefused'));
+    } catch (e) { toast(e.message, 'erreur'); }
+  }
+
   async function claim(id) {
     try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
     catch (e) {
@@ -380,12 +390,19 @@ export default function DriverDashboard() {
               </span>
               <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
               {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })}</div>
+              {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
+              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })} <span style={{ color: 'var(--ink-soft)' }}>({t('conformite.offerApproxAddress')})</span></div>
               {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
               <DeliveryTiming order={o} />
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-                <span className="small">{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</span>
-                <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                <span className="small">
+                  <b>{t('conformite.offerPrice', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</b>
+                  {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: (o.bonusCents / 100).toFixed(2) })}</span>}
+                </span>
+                <span className="row" style={{ gap: 6 }}>
+                  <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+                  <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                </span>
               </div>
             </div>
           ))}

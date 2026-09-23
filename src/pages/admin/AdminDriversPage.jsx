@@ -378,7 +378,7 @@ export default function AdminDriversPage() {
         </RecordDrawer>,
         document.body
       )}
-      <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" loading={busy}
+      <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" livreur loading={busy}
         onCancel={() => setDecision(null)}
         onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', payload); } finally { setBusy(false); setDecision(null); } }} />
       <ConfirmDialog

@@ -10,8 +10,15 @@ import { useLanguage } from '../../context/LanguageContext';
  * contrat ou des CGU, la base légale le cas échéant. Pour la résiliation d'un commerce : 30 jours de
  * préavis (P2B art. 4), ou une exception nommée.
  *
- * onConfirm(payload) reçoit { measure, facts, contractualBasis, legalBasis, effectiveAt?, noticeException? }. */
-export default function DecisionDialog({ open, cible, targetType, loading, onConfirm, onCancel }) {
+ * LIVREURS : le motif se choisit dans une LISTE FERMÉE (décision du 23/09/2026, B7 révisé) — le serveur
+ * et la base refusent tout autre motif. La lenteur, les refus de course, les notes ou l'inactivité n'y
+ * figurent pas et n'y figureront pas : c'est ce que la notice de transparence promet aux livreurs.
+ * `livreur` : vrai pour un compte livreur passé en targetType « user » (page Livreurs).
+ *
+ * onConfirm(payload) reçoit { measure, facts, contractualBasis, legalBasis, reasonCode?, effectiveAt?, noticeException? }. */
+const MOTIFS_LIVREUR = ['fraud_identity', 'food_safety', 'alcohol_to_minor', 'illegal_conduct_reported', 'documents_expired', 'legal_obligation'];
+
+export default function DecisionDialog({ open, cible, targetType, livreur = false, loading, onConfirm, onCancel }) {
   const { t } = useLanguage();
   const id = useId();
   const [measure, setMeasure] = useState('suspension');
@@ -19,15 +26,17 @@ export default function DecisionDialog({ open, cible, targetType, loading, onCon
   const [contractualBasis, setContractualBasis] = useState('');
   const [legalBasis, setLegalBasis] = useState('');
   const [exception, setException] = useState('');
+  const [reasonCode, setReasonCode] = useState('');
   const dans30 = new Date(Date.now() + 31 * 86400000).toISOString().slice(0, 10);
   const [effectiveAt, setEffectiveAt] = useState(dans30);
-  useEffect(() => { if (open) { setMeasure('suspension'); setFacts(''); setContractualBasis(''); setLegalBasis(''); setException(''); setEffectiveAt(dans30); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (open) { setMeasure('suspension'); setFacts(''); setContractualBasis(''); setLegalBasis(''); setException(''); setReasonCode(''); setEffectiveAt(dans30); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!open) return null;
   const resiliationCommerce = targetType === 'restaurant' && measure === 'termination';
-  const pret = facts.trim().length >= 20 && contractualBasis.trim().length > 0;
+  const motifRequis = livreur || targetType === 'courier';
+  const pret = facts.trim().length >= 20 && contractualBasis.trim().length > 0 && (!motifRequis || !!reasonCode);
   function valider() {
     onConfirm({
-      measure, facts: facts.trim(), contractualBasis: contractualBasis.trim(), legalBasis: legalBasis.trim() || undefined,
+      measure, facts: facts.trim(), ...(motifRequis ? { reasonCode } : {}), contractualBasis: contractualBasis.trim(), legalBasis: legalBasis.trim() || undefined,
       ...(resiliationCommerce ? (exception ? { noticeException: exception } : { effectiveAt: new Date(`${effectiveAt}T00:00:00`).toISOString() }) : {})
     });
   }
@@ -41,6 +50,16 @@ export default function DecisionDialog({ open, cible, targetType, loading, onCon
           <option value="termination">{t('conformite.measure_termination')}</option>
         </select>
       </div>
+      {motifRequis && (
+        <div className="field">
+          <label htmlFor={`${id}-r`}>{t('conformite.reasonCodeLabel')}</label>
+          <select id={`${id}-r`} value={reasonCode} onChange={(e) => setReasonCode(e.target.value)}>
+            <option value="">—</option>
+            {MOTIFS_LIVREUR.map((x) => <option key={x} value={x}>{t(`conformite.reason_${x}`)}</option>)}
+          </select>
+          <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.reasonCodeHelp')}</p>
+        </div>
+      )}
       <div className="field">
         <label htmlFor={`${id}-f`}>{t('conformite.decisionFacts')}</label>
         <textarea id={`${id}-f`} rows={4} value={facts} onChange={(e) => setFacts(e.target.value)} placeholder={t('conformite.decisionFactsPh')} />

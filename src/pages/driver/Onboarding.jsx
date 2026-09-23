@@ -10,6 +10,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import CourierUsageBar, { niveauxAlerte, libelleNiveaux, euroPlafond } from '../../components/CourierUsageBar';
 import ouvrirDocument from '../../ouvrirDocument';
 import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
+import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
 import { libelleManque } from '../../conformite';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
@@ -25,7 +26,7 @@ const ETAPES = ['statut', 'identite', 'infos', 'notices', 'contrat', 'paiement',
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
   infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'attestation_honneur_p2p', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
-  notices: ['transparency_notice', 'geolocation_policy', 'dac7_info'],
+  notices: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'],
   contrat: ['contrat'], paiement: [], envoi: ['statut_non_verifie']
 };
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
@@ -132,6 +133,10 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
         <Compteurs d={d} t={t} token={token} action={action} busy={busy} />
       )}
+      {/* Le livreur vend la livraison (décision du 23/09/2026) : son tarif minimum, dès l'inscription ;
+          ses documents de vente, une fois qu'il a pu livrer. */}
+      <TarifMinimum key={c.minFeeCents ?? 'aucun'} courier={c} token={token} action={action} busy={busy} />
+      {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
     </div>
