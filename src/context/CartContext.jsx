@@ -210,13 +210,11 @@ export function CartProvider({ children }) {
       ? DELIVERY_FEE
       : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, DELIVERY_FEE);
     const clientDeliveryFee = +(DELIVERY_FEE - deliveryDiscount).toFixed(2);
-    // Livraison : frais sur plats + livraison payée par le client. À emporter / réservation avec plats payés en
-    // ligne : sur les plats seuls (pickupServiceFee) — Checkout choisit, et n'en compte aucun si c'est payé sur place.
-    const serviceFee = fraisService(subtotal + clientDeliveryFee);
-    const pickupServiceFee = fraisService(subtotal);
+    // Frais de service sur la livraison seulement, calculés sur le tarif complet (même règle que routes/orders.js :
+    // ce que le commerce offre de la livraison ne réduit pas la part de Fairide). À emporter : aucun.
+    const serviceFee = fraisService(DELIVERY_FEE);
     const total = +(subtotal + clientDeliveryFee + serviceFee).toFixed(2);
-    const pickupTotal = +(subtotal + pickupServiceFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, pickupServiceFee, total, pickupTotal };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
   }
 
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant

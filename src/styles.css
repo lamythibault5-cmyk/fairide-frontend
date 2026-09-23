@@ -1746,9 +1746,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .euro-cut { font-size: 13px; color: rgba(255,255,255,0.72); font-variant-numeric: tabular-nums; }
 .euro-track { height: 30px; border-radius: var(--radius-chip); background: rgba(255,255,255,0.14); overflow: hidden; }
 .euro-fill { height: 100%; border-radius: var(--radius-chip); transition: width 1s cubic-bezier(.22,.61,.36,1); }
-/* 0 % : Fairide ne prélève rien au commerce depuis le 23/09/2026 (frais de service payés par le client, voir
-   src/fraisService.js). La piste vide EST le message ; ne pas « corriger » en lui redonnant une largeur. */
-.euro-fill-us { background: var(--lime); width: 0%; }
+.euro-fill-us { background: var(--lime); width: 10%; }
 .euro-fill-them { background: rgba(255,255,255,0.55); width: 27%; }
 .euro-legend { margin: 9px 0 0; font-size: 13.5px; color: rgba(255,255,255,0.72); }
 .euro-note {

@@ -85,7 +85,7 @@ export default function AdminDashboardPage() {
     <div>
       {entete}
       <p className="small" style={{ marginTop: -8, marginBottom: 12 }}>
-        {tr('adminDash.ratesLine', { rate: (data.commissionRate * 100).toFixed(0), share: ((data.serviceFeeRate ?? 0.1) * 100).toFixed(0) })}
+        {tr('adminDash.ratesLine', { rate: (data.commissionRate * 100).toFixed(0), share: ((data.deliveryFairideRate ?? 0.1) * 100).toFixed(0) })}
       </p>
 
       {auj && (
