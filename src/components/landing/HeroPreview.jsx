@@ -76,9 +76,13 @@ export default function HeroPreview({ restaurants }) {
     const ouvert = (r) => !r.hours || getOpenStatus(r.hours, now, r.closures).isOpen;
     const melange = [...avecPhoto].sort(() => Math.random() - 0.5);
     // Trois types de cuisine différents quand c'est possible : une vitrine variée, pas trois night shops.
-    const ordonnes = [...melange.filter(ouvert), ...melange.filter((r) => !ouvert(r))];
-    const vus = new Set(); const distincts = ordonnes.filter((r) => { if (vus.has(r.cuisine)) return false; vus.add(r.cuisine); return true; });
-    return [...distincts, ...ordonnes.filter((r) => !distincts.includes(r))].slice(0, 3).map((r) => ({ ...r, estOuvert: ouvert(r) }));
+    // Les commerces classés par l'admin (landingRank, 1 = premier) ouvrent la bannière, dans l'ordre ; le tirage au sort ne
+    // concerne que les autres.
+    const classes = avecPhoto.filter((r) => Number.isFinite(r.landingRank)).sort((a, b) => a.landingRank - b.landingRank);
+    const libres = melange.filter((r) => !classes.includes(r));
+    const ordonnes = [...libres.filter(ouvert), ...libres.filter((r) => !ouvert(r))];
+    const vus = new Set(classes.map((r) => r.cuisine)); const distincts = ordonnes.filter((r) => { if (vus.has(r.cuisine)) return false; vus.add(r.cuisine); return true; });
+    return [...classes, ...distincts, ...ordonnes.filter((r) => !distincts.includes(r))].slice(0, 3).map((r) => ({ ...r, estOuvert: ouvert(r) }));
   }, [restaurants]);
 
   return (
