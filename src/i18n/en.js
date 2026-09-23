@@ -1018,7 +1018,6 @@ export default {
       titleLoading: 'Business menu',
       back: '← Restaurants',
       requestTitle: '“Fairide takes care of it” request',
-      noRequest: 'No “Fairide takes care of it” request for this business. You can still edit its menu below, exactly as the owner would.',
       requestedOn: 'Requested on {date}',
       seeTask: 'See the task',
       platform: 'Reference platform',
@@ -1044,8 +1043,7 @@ export default {
       saveNote: 'Save the note',
       toastUpdated: 'Request updated.',
       toastDone: 'Request finished: the owner is notified by e-mail and sees your note on their page.',
-      intro: 'You are editing the menu of {name} ({n} item(s)) with exactly the owner\'s tools: sections, dishes, options, import from a PDF / photo / website, templates, translation. Everything you save is visible to them and to customers immediately.',
-      fullAccessHint: 'Need more than the menu (hours, photos, details, promotions)? “Manage this business” opens its full dashboard, as the restaurateur.'
+      intro: 'You are editing the menu of {name} ({n} item(s)) with exactly the owner\'s tools: sections, dishes, options, import from a PDF / photo / website, templates, translation. Everything you save is visible to them and to customers immediately.'
     },
     ticketHelp: {
       rowTitle: 'Tickets and printer',
@@ -7674,11 +7672,8 @@ export default {
       menuChangedSinceSigned: 'Your menu has changed since your last signature: sign it again to receive orders.',
       menuNeverSigned: 'You are responsible for your prices, VAT and allergens: sign your menu to receive orders.',
       menuMissingCount: '{n} item(s) to complete before signing:',
-      menuMissing_TVA_MANQUANTE: 'VAT rate to set',
       menuMissing_ALLERGENES_NON_DECLARES: 'allergens to declare',
-      menuApplyVat: 'Apply the suggested rates ({n} dishes)',
-      menuVatApplied: 'Rates applied: check them before signing.',
-      menuVatHelp: 'Suggestion: 21% for alcohol, 6% for the rest. Have your accountant confirm it: you are responsible for it when you sign.',
+      menuVatAuto: 'VAT: 6% on food and soft drinks, 21% on alcohol, applied when you sign.',
       menuSignedToast: 'Menu signed.',
       typedName: 'Your full name',
       menuSignButton: 'Sign my menu ({n} dishes)',

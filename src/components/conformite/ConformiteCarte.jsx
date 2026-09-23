@@ -65,19 +65,13 @@ export default function ConformiteCarte({ restoId, rafraichir, onChange }) {
                   {m.missing.slice(0, 8).map((x) => <li key={`${x.itemId}-${x.code}`}>{x.name} — {t(`conformite.menuMissing_${x.code}`)}</li>)}
                   {m.missing.length > 8 && <li>…</li>}
                 </ul>
-                {m.vatSuggestions.length > 0 && (
-                  <button type="button" className="btn-outline" disabled={busy} style={{ marginBottom: 8 }}
-                    onClick={() => agir(async () => {
-                      for (const s of m.vatSuggestions) await api(`/restaurants/${restoId}/menu/${s.itemId}`, { method: 'PATCH', token, body: { vatRate: s.suggested } });
-                    }, t('conformite.menuVatApplied'))}>
-                    {t('conformite.menuApplyVat', { n: m.vatSuggestions.length })}
-                  </button>
-                )}
-                {m.vatSuggestions.length > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatHelp')}</p>}
               </>
             )}
             {m.missing.length === 0 && m.itemCount > 0 && (
               <form onSubmit={(e) => { e.preventDefault(); agir(() => api(`/restaurants/${restoId}/menu/sign`, { method: 'POST', token, body: { typedName: nom.trim(), confirmed: !!coches.carte } }), t('conformite.menuSignedToast')); }}>
+                {/* Plus de liste « taux de TVA à indiquer » plat par plat : le serveur pose le taux standard à la
+                    signature (carteSignee.signer). On annonce la règle ici, pour qu'il signe en sachant ce qu'il signe. */}
+                {m.vatAutoCount > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('conformite.menuVatAuto')}</p>}
                 <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
                   <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!coches.carte} onChange={(e) => setCoches((c) => ({ ...c, carte: e.target.checked }))} />
                   <span className="small">{m.text}</span>

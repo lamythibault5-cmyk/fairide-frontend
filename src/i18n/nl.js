@@ -1018,7 +1018,6 @@ export default {
       titleLoading: 'Kaart van de zaak',
       back: '← Restaurants',
       requestTitle: 'Aanvraag “Fairide regelt het”',
-      noRequest: 'Geen aanvraag “Fairide regelt het” voor deze zaak. U kunt de kaart hieronder toch aanpassen, precies zoals de uitbater dat zou doen.',
       requestedOn: 'Aangevraagd op {date}',
       seeTask: 'Taak bekijken',
       platform: 'Referentieplatform',
@@ -1044,8 +1043,7 @@ export default {
       saveNote: 'Bericht opslaan',
       toastUpdated: 'Aanvraag bijgewerkt.',
       toastDone: 'Aanvraag afgerond: de uitbater krijgt een e-mail en ziet uw bericht op zijn pagina.',
-      intro: 'U bewerkt de kaart van {name} ({n} product(en)) met precies de tools van de uitbater: secties, gerechten, opties, import van een pdf / foto / website, sjablonen, vertaling. Alles wat u opslaat is meteen zichtbaar voor hem en voor de klanten.',
-      fullAccessHint: 'Meer nodig dan de kaart (uren, foto\'s, fiche, promoties)? “Deze zaak beheren” opent het volledige dashboard, als de uitbater.'
+      intro: 'U bewerkt de kaart van {name} ({n} product(en)) met precies de tools van de uitbater: secties, gerechten, opties, import van een pdf / foto / website, sjablonen, vertaling. Alles wat u opslaat is meteen zichtbaar voor hem en voor de klanten.'
     },
     ticketHelp: {
       rowTitle: 'Bonnen en printer',
@@ -7674,11 +7672,8 @@ export default {
       menuChangedSinceSigned: 'Uw menukaart is gewijzigd sinds uw laatste handtekening: onderteken ze opnieuw om bestellingen te ontvangen.',
       menuNeverSigned: 'U staat in voor uw prijzen, de btw en de allergenen: onderteken uw menukaart om bestellingen te ontvangen.',
       menuMissingCount: '{n} punt(en) aan te vullen vóór de ondertekening:',
-      menuMissing_TVA_MANQUANTE: 'btw-tarief op te geven',
       menuMissing_ALLERGENES_NON_DECLARES: 'allergenen op te geven',
-      menuApplyVat: 'De voorgestelde tarieven toepassen ({n} gerechten)',
-      menuVatApplied: 'Tarieven toegepast: controleer ze vóór u ondertekent.',
-      menuVatHelp: 'Voorstel: 21 % voor alcohol, 6 % voor de rest. Laat het bevestigen door uw boekhouder: door te ondertekenen staat u ervoor in.',
+      menuVatAuto: 'Btw: 6 % op gerechten en frisdranken, 21 % op alcohol, toegepast bij de ondertekening.',
       menuSignedToast: 'Menukaart ondertekend.',
       typedName: 'Uw volledige naam',
       menuSignButton: 'Mijn menukaart ondertekenen ({n} gerechten)',

@@ -1018,7 +1018,6 @@ export default {
       titleLoading: 'Carte du commerce',
       back: '← Restaurants',
       requestTitle: 'Demande « Fairide s\'en occupe »',
-      noRequest: 'Aucune demande « Fairide s\'en occupe » pour ce commerce. Tu peux quand même modifier sa carte ci-dessous, exactement comme le ferait le restaurateur.',
       requestedOn: 'Demandée le {date}',
       seeTask: 'Voir la tâche',
       platform: 'Plateforme de référence',
@@ -1044,8 +1043,7 @@ export default {
       saveNote: 'Enregistrer le mot',
       toastUpdated: 'Demande mise à jour.',
       toastDone: 'Demande terminée : le restaurateur est prévenu par e-mail et voit ton mot sur sa page.',
-      intro: 'Tu modifies la carte de {name} ({n} produit(s)) avec exactement les outils du restaurateur : sections, plats, options, import d\'un PDF / d\'une photo / d\'un site, modèles, traduction. Tout ce que tu enregistres est visible par lui et par les clients immédiatement.',
-      fullAccessHint: 'Besoin de plus que la carte (horaires, photos, fiche, promotions) ? « Gérer ce commerce » ouvre son tableau de bord complet, comme le restaurateur.'
+      intro: 'Tu modifies la carte de {name} ({n} produit(s)) avec exactement les outils du restaurateur : sections, plats, options, import d\'un PDF / d\'une photo / d\'un site, modèles, traduction. Tout ce que tu enregistres est visible par lui et par les clients immédiatement.'
     },
     ticketHelp: {
       rowTitle: 'Tickets et imprimante',
@@ -7716,11 +7714,8 @@ export default {
       menuChangedSinceSigned: 'Votre carte a changé depuis votre dernière signature : signez-la de nouveau pour recevoir des commandes.',
       menuNeverSigned: 'Vous répondez de vos prix, de la TVA et des allergènes : signez votre carte pour recevoir des commandes.',
       menuMissingCount: '{n} point(s) à compléter avant de signer :',
-      menuMissing_TVA_MANQUANTE: 'taux de TVA à indiquer',
       menuMissing_ALLERGENES_NON_DECLARES: 'allergènes à déclarer',
-      menuApplyVat: 'Appliquer les taux proposés ({n} plats)',
-      menuVatApplied: 'Taux appliqués : vérifiez-les avant de signer.',
-      menuVatHelp: 'Proposition : 21 % pour l\'alcool, 6 % pour le reste. Faites-la confirmer par votre comptable : c\'est vous qui en répondez en signant.',
+      menuVatAuto: 'TVA : 6 % sur les plats et boissons sans alcool, 21 % sur l\'alcool, appliquée à la signature.',
       menuSignedToast: 'Carte signée.',
       typedName: 'Votre nom complet',
       menuSignButton: 'Signer ma carte ({n} plats)',
