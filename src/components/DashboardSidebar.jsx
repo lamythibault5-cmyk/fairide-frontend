@@ -18,7 +18,7 @@ const HOME_PATH_BY_ROLE = { client: '/restaurants', restaurant: '/dashboard', dr
 
 // Items de nav par rôle : mêmes cibles que l'ancien .role-nav de Layout.jsx, juste redisposées
 // verticalement avec une icône — pas de nouvelle page/route inventée ici.
-function navItemsForRole(role, t) {
+function navItemsForRole(role, t, user) {
   if (role === 'client') {
     return [
       // CINQ onglets, plus six. Sur un téléphone, la barre du bas n'a de place que pour cinq cibles
@@ -51,14 +51,18 @@ function navItemsForRole(role, t) {
     ];
   }
   if (role === 'driver') {
+    // Ce qu'un livreur regarde EN COURSE : ses courses, la carte, ses gains. Avis et factures sont
+    // dans Mon compte — on les ouvre de temps en temps, pas au guidon. Une rubrique, un seul endroit.
+    //
+    // 2026-09-23 : « Pourboires » est devenu « Gains » — la page des gains liste déjà chaque pourboire
+    // (lignes de type `tip`), la page dédiée ne faisait qu'en extraire un sous-total. Et « Mon dossier
+    // livreur » n'est un onglet que tant que le compte n'est pas validé : c'est l'inscription, qu'on
+    // termine une fois ; ensuite il se rouvre depuis Mon compte.
     return [
-      // Ce qu'un livreur regarde EN COURSE : ses commandes, la carte, ses pourboires. Avis et factures
-      // sont partis dans Mon compte — on les ouvre de temps en temps, pas au guidon. Même règle que
-      // pour le client : une rubrique ne figure qu'à UN endroit, jamais aux deux.
-      { to: '/driver', end: true, icon: 'commandes', label: 'Mes commandes' },
-      { to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile') },
+      { to: '/driver', end: true, icon: 'commandes', label: t('nav.rides') },
+      ...(user?.adminStatus === 'approved' ? [] : [{ to: '/driver/onboarding', icon: 'dossier', label: t('nav.courierFile') }]),
       { to: '/driver/map', icon: 'carte', label: t('nav.map') },
-      { to: '/driver/tips', icon: 'euro', label: 'Pourboires' },
+      { to: '/driver/earnings', icon: 'euro', label: t('nav.earnings') },
       { to: '/account', icon: 'compte', label: t('nav.account') }
     ];
   }
@@ -124,7 +128,7 @@ export default function DashboardSidebar() {
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t);
+  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user);
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
   const brandHome = isAdminAccount ? '/admin' : (HOME_PATH_BY_ROLE[effectiveRole] || '/');
 

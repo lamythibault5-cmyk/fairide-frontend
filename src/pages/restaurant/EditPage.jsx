@@ -64,7 +64,6 @@ export default function EditPage() {
   const [logoPickerOpen, setLogoPickerOpen] = useState(false);
   const [logoSuggestions, setLogoSuggestions] = useState([]);
   const [editHours, setEditHours] = useState(null);
-  const [editOpenFlag, setEditOpenFlag] = useState(true);
   const [savingResto, setSavingResto] = useState(false);
 
   const [deleting, setDeleting] = useState(false);
@@ -133,7 +132,6 @@ export default function EditPage() {
     setEditCover(restaurant.coverImageUrl || '');
     setEditLogo(restaurant.logoImageUrl || '');
     setEditHours(restaurant.hours || null);
-    setEditOpenFlag(restaurant.open);
     setFreeDeliveryEdit(!!restaurant.freeDelivery);
     setDeliveryFeeDiscountEdit(String(restaurant.deliveryFeeDiscount || 0));
     setFreeDeliveryMinOrderEnabled(restaurant.freeDeliveryMinOrder != null);
@@ -166,7 +164,7 @@ export default function EditPage() {
           phoneSecondary: phone2Ouvert ? editPhoneSecondary.trim() : '', email: editEmail.trim(), emailSecondary: email2Ouvert ? editEmailSecondary.trim() : '',
           desc: editDesc.trim(), commune: editCommune, neighborhood: editNeighborhood.trim(),
           addressStreet: editAddressStreet.trim(), addressNumber: editAddressNumber.trim(), addressPostalCode: editAddressPostalCode.trim(), addressCity: editCommune,
-          coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours, open: editOpenFlag
+          coverImageUrl: editCover.trim(), logoImageUrl: editLogo.trim(), hours: editHours
         }
       });
       await loadDashboard(restoId);
@@ -531,10 +529,9 @@ export default function EditPage() {
         )}
         <span className="titre-groupe" id="edit-horaires">{t('editResto.openingHours')}</span>
         <div role="group" aria-labelledby="edit-horaires"><OpeningHoursEditor value={editHours} onChange={setEditHours} /></div>
-        <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
-          <input type="checkbox" style={{ width: 'auto' }} checked={editOpenFlag} onChange={(e) => setEditOpenFlag(e.target.checked)} />
-          <span className="small">{t('editResto.openVisible')}</span>
-        </label>
+        {/* La case « Restaurant ouvert » est partie en tête de la page Commandes (interrupteur, effet
+            immédiat). `open` n'est plus envoyé d'ici : enregistrer ce formulaire ne doit pas rouvrir un
+            commerce mis en pause depuis l'autre page. */}
         <button className="btn-teal" disabled={savingResto} onClick={saveRestoInfo}>{savingResto ? '...' : 'Enregistrer'}</button>
 
         <div className="divider" />

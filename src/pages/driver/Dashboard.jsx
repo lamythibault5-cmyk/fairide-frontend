@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import LigneCompte from '../../components/LigneCompte';
+import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
@@ -27,7 +28,6 @@ export default function DriverDashboard() {
   const navigate = useNavigate();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
-  const { setRightSlot } = useOutletContext();
   const [available, setAvailable] = useState([]);
   const [mine, setMine] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,8 +41,6 @@ export default function DriverDashboard() {
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
   const [togglingPause, setTogglingPause] = useState(false);
-  // La rangée d'état dépliée en tête (validation), null si aucune.
-  const [statutOuvert, setStatutOuvert] = useState(null);
   const activeIdsRef = useRef([]);
 
   async function togglePause() {
@@ -248,29 +246,10 @@ export default function DriverDashboard() {
     } catch (e) { toast(e.message, 'erreur'); }
   }
 
-  useEffect(() => {
-    const awaitingPickupCount = mine.filter((o) => ['preparation', 'pret'].includes(o.status)).length;
-    const activeCount = mine.filter((o) => o.status === 'livraison').length;
-    const statusText = activeCount === 0
-      ? null
-      : user?.locationSharingEnabled === false
-        ? t('dashDriver.geoDisabled')
-        : sharingLocation
-          ? t('dashDriver.geoShared', { last: lastPositionAt ? t('dashDriver.geoLastSent', { time: formatClock(lastPositionAt) }) : '' })
-          : t('dashDriver.geoWaiting');
-    setRightSlot(
-      <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('dashDriver.today')}</h3>
-        <div className="stat-grid">
-          <div className="stat-card"><div className="num">{available.length}</div><div className="label">{t('dashDriver.available')}</div></div>
-          <div className="stat-card"><div className="num">{awaitingPickupCount}</div><div className="label">{t('dashDriver.toPickUp')}</div></div>
-          <div className="stat-card highlight"><div className="num">{activeCount}</div><div className="label">{t('dashDriver.delivering')}</div></div>
-        </div>
-        {statusText && <p className="small" style={{ margin: '10px 0 0' }}>{statusText}</p>}
-      </div>
-    );
-    return () => setRightSlot(null);
-  }, [available, mine, sharingLocation, lastPositionAt, user?.locationSharingEnabled, setRightSlot]);
+  // Plus de carte « Aujourd'hui » dans la colonne de droite (2026-09-23) : ses trois compteurs
+  // (disponibles, à récupérer, en livraison) redisaient les titres des sections de la page, et sur un
+  // téléphone la colonne passe SOUS le contenu — le livreur ne la voyait qu'en bas de page. L'état du
+  // partage de position qu'elle portait aussi est dans la rangée « Partage de position ».
 
   if (loading) return <SkeletonCards count={3} />;
   // Voir load() : seulement tant que rien n'a jamais chargé, sinon on garderait les courses en main.
@@ -288,27 +267,54 @@ export default function DriverDashboard() {
     ? t('dashDriver.earningLine', { gross: Number(o.driverEarning.gross).toFixed(2), withholding: Number(o.driverEarning.withholding ?? 0).toFixed(2), net: Number(o.driverEarning.net ?? (o.driverEarning.gross - (o.driverEarning.withholding || 0))).toFixed(2) })
     : t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) }));
 
+  const approuve = user?.adminStatus === 'approved';
+  const peutRouler = approuve && user?.stripeConnectStatus === 'active';
+  const enPause = !!user?.driverPaused;
+
+  // Une carte de course livrée ou à récupérer : on la montre TOUJOURS, pause ou non — se mettre en
+  // pause coupe les nouvelles offres, pas les courses déjà prises.
+  const carteRetrait = (o) => (
+    <div className="card" key={o.id}>
+      <div className="row" style={{ justifyContent: 'space-between' }}>
+        <b>{o.restaurantName}</b>
+        <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
+      </div>
+      <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+      {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+      <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
+      <DeliveryTiming order={o} />
+      <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
+      <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
+        <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
+        <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
+      </div>
+      {o.status !== 'pret' && <p className="small">{t('dashDriver.stillPreparing')}</p>}
+    </div>
+  );
+
   return (
     <div>
-      {/* L'état du compte livreur, en rangées du même dessin que Mon compte (LigneCompte) : validation,
-          paiements, disponibilité, partage de position. Une carte, une rangée par sujet, l'action à
-          droite quand il y en a une — plus trois encadrés colorés empilés. */}
+      {/* L'INTERRUPTEUR EN TÊTE (2026-09-23). Comme l'app Uber Driver : la première chose que le
+          livreur voit, c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la
+          largeur. Avant, « Pause » était un petit bouton au bout d'une rangée, sous deux liens vers le
+          dossier et les gains — liens qui existent déjà dans la barre du bas et dans Mon compte, et
+          qui sont partis d'ici pour cette raison (une rubrique, un seul endroit). */}
+      {peutRouler && (
+        <button type="button" className={`driver-switch${enPause ? ' off' : ''}`} aria-pressed={!enPause} disabled={togglingPause} onClick={togglePause}>
+          <span className="driver-switch-dot" aria-hidden="true" />
+          <span className="driver-switch-text">
+            <b>{enPause ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}</b>
+            <span>{togglingPause ? '…' : enPause ? t('dashDriver.tapToResume') : t('dashDriver.tapToPause')}</span>
+          </span>
+        </button>
+      )}
+
+      {/* Rangées d'état qui demandent une action ou une vigilance : paiements à configurer, position
+          partagée pendant une livraison. Rien d'autre — la carte n'apparaît que s'il y a une rangée. */}
+      {((approuve && user?.stripeConnectStatus !== 'active') || active.length > 0) && (
       <div className="card account-groupe" aria-label={t('dashDriver.ariaAccount')}>
-        {user?.adminStatus === 'blocked' && (
-          <LigneCompte accent="danger" icone="interdit" titre={t('dashDriver.blockedTitle')} sous={t('dashDriver.blockedSub')} ouverte={statutOuvert === 'validation'} onClick={() => setStatutOuvert(statutOuvert === 'validation' ? null : 'validation')}>
-            <p className="small" style={{ margin: 0 }}>
-              {t('dashDriver.blockedText')}
-            </p>
-          </LigneCompte>
-        )}
-        <LigneCompte to="/driver/onboarding" icone="dossier" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
-        <LigneCompte to="/driver/earnings" icone="euro" titre={t('dashDriver.earningsLink')} sous={t('dashDriver.earningsSub')} />
-        {/* Plus de rangée « En attente de validation » ici : dès que le compte n'est pas validé,
-            le corps de la page est REMPLACÉ par une carte qui dit la même chose, avec la même
-            horloge et davantage de détail (voir plus bas, dashDriver.waitingTitle). Le livreur
-            lisait donc deux fois le même message, l'un sous l'autre, sur le même écran. C'est la
-            carte qui reste : elle explique ce qui est vérifié et quand il sera prévenu. */}
-        {user?.adminStatus === 'approved' && user?.stripeConnectStatus !== 'active' && (
+        {approuve && user?.stripeConnectStatus !== 'active' && (
           <LigneCompte
             accent={user?.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"
             titre={user?.stripeConnectStatus === 'restricted' ? t('dashDriver.paymentInfoTitle') : t('dashDriver.paymentsToConfigure')}
@@ -325,18 +331,6 @@ export default function DriverDashboard() {
             )}
           />
         )}
-        {user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && (
-          <LigneCompte
-            accent={user?.driverPaused ? 'warn' : 'ok'} icone={user?.driverPaused ? 'horloge' : 'bouclier'}
-            titre={user?.driverPaused ? t('dashDriver.accountPaused') : t('dashDriver.availableToDeliver')}
-            sous={user?.driverPaused ? t('dashDriver.pausedSub') : t('dashDriver.availableSub')}
-            action={(
-              <button type="button" className={user?.driverPaused ? 'btn-teal' : 'btn-outline'} style={{ padding: '8px 12px', fontSize: 13 }} disabled={togglingPause} onClick={togglePause}>
-                {togglingPause ? '...' : user?.driverPaused ? '▶️ Reprendre' : '⏸️ Pause'}
-              </button>
-            )}
-          />
-        )}
         {active.length > 0 && (
           <LigneCompte
             accent={user?.locationSharingEnabled === false ? 'warn' : sharingLocation ? 'ok' : 'warn'} icone="position"
@@ -350,16 +344,56 @@ export default function DriverDashboard() {
           />
         )}
       </div>
+      )}
 
-      {user?.adminStatus !== 'approved' ? (
+      {!approuve ? (
         <div className="empty" style={{ padding: '40px 20px' }}>
-          <div style={{ fontSize: 34, marginBottom: 8 }}>{user?.adminStatus === 'blocked' ? 'interdit' : 'horloge'}</div>
+          {/* Une icône, pas son nom : la ligne affichait littéralement « horloge » ou « interdit » en
+              34px — reliquat du remplacement des emojis par <Icone>, où la chaîne était restée seule. */}
+          <div style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}><Icone nom={user?.adminStatus === 'blocked' ? 'interdit' : 'horloge'} taille={34} /></div>
           <b>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedTitle') : t('dashDriver.waitingTitle')}</b>
           <p className="small" style={{ margin: '6px auto 0', maxWidth: 420 }}>{user?.adminStatus === 'blocked' ? t('dashDriver.blockedText') : t('dashDriver.waitingEmpty')}</p>
         </div>
-      ) : user?.driverPaused ? (
-        <div className="empty">{t('dashDriver.pausedText')}</div>
-      ) : (
+      ) : (<>
+        {/* LA COURSE EN MAIN D'ABORD. Un livreur en pleine livraison ouvrait la page sur la liste des
+            nouvelles offres et devait descendre pour retrouver le code client à saisir. L'ordre suit
+            maintenant l'urgence : je livre → je vais chercher → je pourrais prendre. Une section vide
+            ne s'affiche plus du tout, plutôt que « Pas de livraison en cours ». */}
+        {active.length > 0 && <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.myOngoing')}</h2>}
+        {active.map((o) => (
+          <div className="card" key={o.id}>
+            <b>{o.restaurantName}</b> → {o.clientName}
+            <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+            <BandeauAllergie order={o} />
+            <BadgeAlcool order={o} />
+            {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
+            <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
+            {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
+            {o.deliveryInstructions && (
+              <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
+            )}
+            <DeliveryTiming order={o} />
+            <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
+            {o.clientPhone && <div className="small">📞 <a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
+            <div className="row" style={{ marginTop: 8, gap: 8 }}>
+              <input aria-label={t('dashDriver.phCustomerCode')}
+                placeholder={t('dashDriver.phCustomerCode')}
+                inputMode="numeric"
+                style={{ maxWidth: 140 }}
+                value={codeInputs[o.id] || ''}
+                onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
+              />
+              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
+            </div>
+          </div>
+        ))}
+
+        {awaitingPickup.length > 0 && <h2 className="section-title" style={active.length ? undefined : { marginTop: 0 }}>{t('dashDriver.awaitingPickup')}</h2>}
+        {awaitingPickup.map(carteRetrait)}
+
+        {enPause ? (
+          <div className="empty">{t('dashDriver.pausedText')}</div>
+        ) : (
         <>
           <AlerteLivreurBar {...alerte} />
           {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
@@ -368,7 +402,7 @@ export default function DriverDashboard() {
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
             </div>
           )}
-          <h2 className="section-title" style={{ marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
+          <h2 className="section-title" style={active.length || awaitingPickup.length ? undefined : { marginTop: 0 }}>{t('dashDriver.availableOrders')}</h2>
           {vehicule?.type && (
             <p className="small" style={{ margin: '-6px 0 10px' }}>
               {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
@@ -407,77 +441,19 @@ export default function DriverDashboard() {
             </div>
           ))}
         </>
-      )}
+        )}
 
-      {/* Retraits et livraisons en cours : rien à montrer tant que l'admin n'a pas validé le livreur. */}
-      {user?.adminStatus === 'approved' && (<>
-      <h2 className="section-title">{t('dashDriver.awaitingPickup')}</h2>
-      {awaitingPickup.length === 0 && <div className="empty">{t('dashDriver.noneToPickUp')}</div>}
-      {awaitingPickup.map((o) => (
-        <div className="card" key={o.id}>
-          <div className="row" style={{ justifyContent: 'space-between' }}>
-            <b>{o.restaurantName}</b>
-            <span className={`status-badge status-${o.status}`}>{o.status === 'pret' ? t('dashDriver.readyToPickUp') : t('dashDriver.preparing')}</span>
-          </div>
-          <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-          <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
-          {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
-          <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
-          <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
-            <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
-            <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
-          </div>
-          {o.status !== 'pret' && (
-            <p className="small">{t('dashDriver.stillPreparing')}</p>
-          )}
-        </div>
-      ))}
-
-      {/* L'état du partage de position est dans la rangée « Partage de position » en tête de page,
-          avec le rappel « garde l'écran allumé » : sans app native, écran éteint = suivi interrompu. */}
-      <h2 className="section-title">{t('dashDriver.myOngoing')}</h2>
-      {active.length === 0 && <div className="empty">{t('dashDriver.noneOngoing')}</div>}
-      {active.map((o) => (
-        <div className="card" key={o.id}>
-          <b>{o.restaurantName}</b> → {o.clientName}
-          <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
-          <BandeauAllergie order={o} />
-          <BadgeAlcool order={o} />
-          {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-          <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
-          {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
-          {o.deliveryInstructions && (
-            <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
-          )}
-          <DeliveryTiming order={o} />
-          <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
-          {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
-          <div className="row" style={{ marginTop: 8, gap: 8 }}>
-            <input aria-label={t('dashDriver.phCustomerCode')}
-              placeholder={t('dashDriver.phCustomerCode')}
-              style={{ maxWidth: 140 }}
-              value={codeInputs[o.id] || ''}
-              onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
-            />
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
-          </div>
-        </div>
-      ))}
-
-      {livreesAujourdhui.length > 0 && (<>
-        <h2 className="section-title">{t('dashDriver.deliveredToday')}</h2>
-        {livreesAujourdhui.map((o) => (
-          <div className="card" key={o.id}>
-            <div className="row" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
-              <span><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}</span>
-              <span className="small">{ligneGain(o)}</span>
+        {livreesAujourdhui.length > 0 && (<>
+          <h2 className="section-title">{t('dashDriver.deliveredToday')}</h2>
+          {livreesAujourdhui.map((o) => (
+            <div className="card" key={o.id}>
+              <div className="row" style={{ justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}>
+                <span><b>{o.restaurantName}</b>{o.commune ? ` → ${o.commune}` : ''}</span>
+                <span className="small">{ligneGain(o)}</span>
+              </div>
             </div>
-          </div>
-        ))}
-        <p className="small" style={{ margin: '-4px 0 12px' }}><Link to="/driver/earnings">{t('dashDriver.earningsLink')} →</Link></p>
-      </>)}
+          ))}
+        </>)}
       </>)}
       <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}

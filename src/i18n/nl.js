@@ -5348,6 +5348,13 @@ export default {
       removeSecond: 'Verwijderen'
     },
     ordersResto: {
+      openTitle: 'Open voor bestellingen',
+      openSub: 'Tik om te pauzeren',
+      pausedTitle: 'Bestellingen gepauzeerd',
+      pausedSub: 'Onzichtbaar voor klanten · tik om te heropenen',
+      summary: '{current} bezig · {today} vandaag',
+      noneCurrent: 'Geen bestellingen bezig.',
+      history: 'Geschiedenis ({n})',
       incoming: 'Inkomende bestellingen',
       noneYet: 'Nog geen bestelling.',
       accept: 'Aanvaarden',
@@ -5519,7 +5526,9 @@ export default {
       earningsLink: 'Mijn verdiensten',
       earningsSub: 'Bruto, voorheffing, netto uitbetaald · per maand en per rit',
       deliveredToday: 'Vandaag geleverd',
-      earningLine: 'Bruto {gross} € · inhouding {withholding} € · netto {net} €'
+      earningLine: 'Bruto {gross} € · inhouding {withholding} € · netto {net} €',
+      tapToPause: 'Tik om te pauzeren',
+      tapToResume: 'Tik om ritten te ontvangen'
     },
     dashResto: {
       today: 'Vandaag',
@@ -6494,7 +6503,9 @@ export default {
       leave: 'Verlaten',
       myMenu: 'Mijn menu',
       reservations: 'Reservaties',
-      courierFile: 'Mijn koeriersdossier'
+      courierFile: 'Mijn koeriersdossier',
+      rides: 'Ritten',
+      earnings: 'Verdiensten'
     },
     footer: {
       tagline: 'Levering van maaltijden en lokale handelszaken tegen verlaagde commissie, in Brussel.',

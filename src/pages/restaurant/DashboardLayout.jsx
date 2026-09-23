@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useId } from 'react';
-import { Link, Outlet, useLocation, useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { formatFullSchedule } from '../../openingHours';
 import AddressRecognition from '../../components/AddressRecognition';
@@ -9,7 +9,6 @@ import { useToast } from '../../context/ToastContext';
 import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
-import { StarsDisplay } from '../../components/Stars';
 import OpeningHoursEditor from '../../components/OpeningHoursEditor';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import LigneCompte from '../../components/LigneCompte';
@@ -40,7 +39,6 @@ export default function DashboardLayout() {
   const [recoEtat, setRecoEtat] = useState('idle');
   const [adresseConfirmee, setAdresseConfirmee] = useState(false);
   const toast = useToast();
-  const { setRightSlot } = useOutletContext();
   // Sans restaurant, seule la racine (« Mon commerce ») propose la création ; les autres sections attendent.
   // /dashboard/edit est l'ancienne adresse des infos : même page (la redirection ne joue qu'avec un restaurant).
   const chemin = useLocation().pathname.replace(/\/$/, '');
@@ -149,29 +147,12 @@ export default function DashboardLayout() {
   // (appelé de façon asynchrone, après coup) ne pourrait plus lire ce paramètre autrement.
   const connectReturnRef = useRef(new URLSearchParams(window.location.search).get('connect'));
 
-  useEffect(() => {
-    if (!restaurant) return undefined;
-    const delivered = orders.filter((o) => o.status === 'livre');
-    const revenue = orders.reduce((a, o) => a + o.subtotal, 0);
-    const commissionPaid = orders.reduce((a, o) => a + o.commission, 0);
-    const saved = revenue * 0.30 - commissionPaid;
-    setRightSlot(
-      <div className="card">
-        <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('dashResto.today')}</h3>
-        <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-          {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} size={16} />}
-          <span className="small">{restaurant.reviewCount > 0 ? t('dashResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('dashResto.noReviewsYet')}</span>
-        </div>
-        <div className="stat-grid">
-          <div className="stat-card"><div className="num">{orders.length}</div><div className="label">{t('dashResto.orders')}</div></div>
-          <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('dashResto.delivered')}</div></div>
-          <div className="stat-card"><div className="num">{revenue.toFixed(0)}€</div><div className="label">{t('dashResto.foodRevenue')}</div></div>
-          <div className="stat-card highlight"><div className="num">{saved > 0 ? saved.toFixed(0) : '0'}€</div><div className="label">{t('dashResto.savedVsPlatforms')}</div></div>
-        </div>
-      </div>
-    );
-    return () => setRightSlot(null);
-  }, [restaurant, orders, setRightSlot]);
+  // Plus de carte « Aujourd'hui » dans la colonne de droite (2026-09-23). Elle comptait TOUTES les
+  // commandes jamais reçues (le serveur renvoie l'historique complet) sous le titre « Aujourd'hui »,
+  // additionnait au chiffre d'affaires les commandes refusées et annulées, et affichait un « Économisé
+  // vs les grandes plateformes » calculé sur une commission supposée de 30 %, que rien ne permettait de
+  // vérifier. Le nombre de commandes en cours et du jour est maintenant en tête de la page Commandes ;
+  // les avis sont dans Mon compte.
 
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then((list) => {

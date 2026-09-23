@@ -5348,6 +5348,13 @@ export default {
       removeSecond: 'Remove'
     },
     ordersResto: {
+      openTitle: 'Open for orders',
+      openSub: 'Tap to pause',
+      pausedTitle: 'Orders paused',
+      pausedSub: 'Hidden from customers · tap to reopen',
+      summary: '{current} in progress · {today} today',
+      noneCurrent: 'No orders in progress.',
+      history: 'History ({n})',
       incoming: 'Incoming orders',
       noneYet: 'No order yet.',
       accept: 'Accept',
@@ -5519,7 +5526,9 @@ export default {
       earningsLink: 'My earnings',
       earningsSub: 'Gross, withholding, net paid · per month and per ride',
       deliveredToday: 'Delivered today',
-      earningLine: 'Gross €{gross} · withheld €{withholding} · net €{net}'
+      earningLine: 'Gross €{gross} · withheld €{withholding} · net €{net}',
+      tapToPause: 'Tap to pause',
+      tapToResume: 'Tap to receive rides'
     },
     dashResto: {
       today: 'Today',
@@ -6494,7 +6503,9 @@ export default {
       leave: 'Leave',
       myMenu: 'My menu',
       reservations: 'Reservations',
-      courierFile: 'My courier file'
+      courierFile: 'My courier file',
+      rides: 'Rides',
+      earnings: 'Earnings'
     },
     footer: {
       tagline: 'Reduced-commission delivery from local restaurants and shops in Brussels.',

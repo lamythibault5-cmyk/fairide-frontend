@@ -56,7 +56,6 @@ const RestaurantReservationsPage = lazyPage(() => import('./pages/restaurant/Res
 const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
 const DriverMapPage = lazyPage(() => import('./pages/driver/MapPage'));
 const DriverReviewsPage = lazyPage(() => import('./pages/driver/ReviewsPage'));
-const DriverTipsPage = lazyPage(() => import('./pages/driver/TipsPage'));
 const DriverInvoicesPage = lazyPage(() => import('./pages/driver/InvoicesPage'));
 const DriverEarningsPage = lazyPage(() => import('./pages/driver/EarningsPage'));
 const DriverOnboarding = lazyPage(() => import('./pages/driver/Onboarding'));
@@ -163,7 +162,8 @@ export default function App() {
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />
         <Route path="/driver/reviews" element={<ProtectedRoute role="driver"><DriverReviewsPage /></ProtectedRoute>} />
-        <Route path="/driver/tips" element={<ProtectedRoute role="driver"><DriverTipsPage /></ProtectedRoute>} />
+        {/* Les pourboires sont des lignes de « Mes gains » : l'ancienne adresse y mène. */}
+        <Route path="/driver/tips" element={<Navigate to="/driver/earnings" replace />} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
