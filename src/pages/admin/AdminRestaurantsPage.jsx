@@ -288,6 +288,7 @@ export default function AdminRestaurantsPage() {
           <div className="stat-card"><div className="num">{chiffres.real}</div><div className="label">{tr('adminRestos.kpiReal')}</div></div>
           <div className="stat-card"><div className="num">{chiffres.orders}</div><div className="label">{tr('adminCommon.paidOrders')}</div></div>
           <div className="stat-card"><div className="num">{money(chiffres.revenue)}</div><div className="label">{tr('adminRestos.kpiRevenue')}</div></div>
+          <div className="stat-card"><div className="num">{money(chiffres.commission)}</div><div className="label">{tr('adminRestos.kpiCommission')}</div></div>
         </div>
       )}
       {restaurants && !tousCharges && <p className="small" style={{ margin: '-8px 0 12px', opacity: 0.7 }}>{tr('adminCommon.kpiOnLoaded', { n: restaurants.length, total })}</p>}

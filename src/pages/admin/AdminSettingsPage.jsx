@@ -15,7 +15,7 @@ const sectionLabels = (tr) => ({ "Tarification": tr('adminSettings.section_prici
 
 const pricingFields = (tr) => [
   { key: 'commissionRate', label: tr('adminSettings.commissionLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.commissionHint') },
-  { key: 'serviceFeeRate', label: tr('adminSettings.serviceFeeLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.serviceFeeHint') },
+  { key: 'deliveryFairideRate', label: tr('adminSettings.serviceFeeLabel'), suffix: '%', isRate: true, hint: tr('adminSettings.serviceFeeHint') },
   { key: 'deliveryBaseFee', label: tr('adminSettings.baseDeliveryRate'), suffix: '€', hint: tr('adminSettings.baseFeeHint') },
   { key: 'deliveryBaseKm', label: tr('adminSettings.baseDistance'), suffix: 'km' },
   { key: 'deliveryExtraPerKm', label: tr('adminSettings.perKmExtra'), suffix: '€/km', hint: tr('adminSettings.perKmExtraHint') },

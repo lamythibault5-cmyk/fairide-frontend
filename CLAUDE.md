@@ -9,8 +9,8 @@ believed.
 ## What this is
 
 Fairide is a food-delivery / local-commerce platform for Brussels, positioned on a
-zero commission for businesses (vs. 22-32% on the big platforms) — Fairide is paid by a €20/month
-subscription and a 10% service fee the *customer* pays (see « Pricing model » below). **This repo is the front end
+10% share (vs. 22-32% commission on the big platforms), taken the Uber Eats way: inside the displayed
+price, not as a checkout line (see « Pricing model » below). **This repo is the front end
 only.** The backend is a separate service.
 
 - Production: `https://fairide.be`
@@ -270,20 +270,20 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
 
-## Pricing model (decided 2026-09-23)
+## Pricing model (decided 2026-09-23, evening — replaces the morning's "0% commission")
 
-The business shows its in-store prices and receives **100%** of them — `commissionRate` is 0. Fairide earns the
-€20/month subscription (unchanged) and a **service fee of 10%, VAT included, on food + delivery**, paid by the
-customer (food only for takeaway, nothing when takeaway is paid on site). Where it lives:
+Menus show the **in-store price + 10%** (a €10 burger is €11 on Fairide). On an order paid online the business
+receives **exactly its in-store price**; Fairide keeps the markup, i.e. `commission` + `commission_vat` =
+subtotal × r / (1 + r) with r = `commissionRate` (0.10) — about 9.09% of the displayed price, VAT included.
+The customer additionally pays the delivery fee and a **service fee of 10% of the delivery, excl. VAT, VAT added**.
+Takeaway paid on site: no commission, no fee. The €20/month subscription is unchanged.
 
-- server: `pricing.fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`; settings
-  `commission_rate` = 0 and `service_fee_rate` = 0.10 (migration 009). `service_fee` stores the fee excl. VAT,
-  `service_fee_vat` the VAT extracted from it — show **their sum** wherever the customer sees the fee;
-- client estimate: [src/fraisService.js](src/fraisService.js), used by `CartContext` and `RestaurantPreview`;
-- legal texts: contract `RESTO-2026.11` (clause « Rémunération de Fairide »), T&Cs `CGU-2026-09-23`.
-
-Changing the rate means changing both `fraisService` implementations, the T&Cs text (and its registered hash),
-and the copy that quotes « 10 % ».
+- server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
+  `service_fee` stores the fee excl. VAT, `service_fee_vat` its VAT — show **their sum** to the customer;
+- client estimate: [src/fraisService.js](src/fraisService.js);
+- the +10% is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js`), not at runtime;
+- legal texts: contract `RESTO-2026.12`, T&Cs `CGU-2026-09-23-b` (they tell customers prices may be higher than
+  on site). Never write « le prix du commerce » or « 100 % au restaurant » in customer-facing copy.
 
 ## Three sellers per order (decided 2026-09-23)
 
@@ -347,9 +347,8 @@ Real, verified as absent on 2026-09-22 — not speculation.
    `<label>` also use `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
 5. **Imported prices are platform prices.** Cards imported from Uber Eats or Deliveroo carry the
    marked-up prices merchants set there to absorb a 30% commission — measured at **+39% on average**
-   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store** prices (the
-   10% fee is added at checkout, not in the menu), so an imported card is wrong until its prices are
-   corrected. `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from
+   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store price + 10%**, so an
+   imported card is wrong until its prices are corrected. `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from
    the merchant. The contract deliberately does *not* oblige in-store prices — that would be a parity
    clause, see the header of `../fairide-backend/restaurantContract.js`.
 6. See the numbered TODO in `GuidePage.jsx` for the restaurateur-side feature backlog

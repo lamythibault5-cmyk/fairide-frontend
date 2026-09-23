@@ -161,10 +161,10 @@ export default function Checkout() {
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
   const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
-  // Frais de service estimés (10 % TTC, voir src/fraisService.js) : sur plats + livraison en livraison, sur les plats seuls
-  // sinon, et aucun quand l'à emporter est payé sur place — Fairide n'encaisse rien (même règle que routes/orders.js).
-  const fraisServiceEstimes = fulfillmentType === 'delivery' ? totals.serviceFee : surPlaceChoisi ? 0 : totals.pickupServiceFee;
-  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : +(totals.subtotal + fraisServiceEstimes).toFixed(2);
+  // Frais de service (10 % de la livraison + TVA, voir src/fraisService.js) : en livraison seulement. La part de Fairide
+  // sur les plats est déjà dans les prix affichés.
+  const fraisServiceEstimes = fulfillmentType === 'delivery' ? totals.serviceFee : 0;
+  const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
   const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));

@@ -1,7 +1,7 @@
 {
   "name": "Fairide — Livraison locale à Bruxelles",
   "short_name": "Fairide",
-  "description": "Commande chez les commerces de ton quartier à Bruxelles — sans commission pour les restaurants, 100 % des frais de livraison pour les livreurs.",
+  "description": "Commande chez les commerces de ton quartier à Bruxelles — commission plafonnée à 10% pour les restaurants et livreurs.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

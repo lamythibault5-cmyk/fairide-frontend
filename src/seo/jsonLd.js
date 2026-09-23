@@ -42,7 +42,7 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: LOGO_URL,
     image: OG_IMAGE_URL,
-    description: "Plateforme de livraison bruxelloise sans commission pour les restaurants et commerces locaux.",
+    description: "Plateforme de livraison bruxelloise à commission plafonnée à 10 %, pour les restaurants et commerces locaux.",
     areaServed: { '@type': 'City', name: 'Bruxelles', addressCountry: 'BE' },
     contactPoint: {
       '@type': 'ContactPoint',
