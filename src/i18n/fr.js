@@ -1892,7 +1892,7 @@ export default {
     paiementResto: {
       howTitle: 'Comment tu es payé',
       step1: 'Le client paie en ligne au moment de la commande (carte, Bancontact, Apple Pay, Google Pay). L\'argent est encaissé par Stripe, jamais par Fairide.',
-      step2: 'Sur chaque commande, le prix de tes plats te revient, moins la commission Fairide plafonnée à 10 % HTVA. Les frais de livraison vont intégralement au livreur, les pourboires aussi.',
+      step2: 'Sur chaque commande payée en ligne, le prix de tes plats te revient, moins la commission Fairide plafonnée à 10 % HTVA. Une commande payée sur place, tu l\'encaisses toi-même, en entier : 0 % de commission. Les frais de livraison vont intégralement au livreur, les pourboires aussi.',
       step3: 'Ta part est transférée automatiquement sur ton compte Stripe à chaque commande payée, puis versée sur ton compte bancaire chaque lundi (tout ce qui a été encaissé la semaine précédente). Une facture de commission mensuelle t\'est envoyée par e-mail et reste disponible dans Factures.',
       subscriptionTitle: 'Rien à activer maintenant',
       subscriptionText: 'Tu peux créer ton compte et ton restaurant sans rien payer ni activer. La version gratuite — réservations de table — ne coûte rien, sans commission ni abonnement (ouverte aux clients dès le 10 octobre 2026). Pour l\'à emporter (dès le 10 octobre) et la livraison (dès le 20 octobre), la version complète (20 €/mois, avec le terminal Fairide) s\'active à partir du 6 octobre, et son premier mois offert ne commence à compter qu\'à l\'ouverture du paiement en ligne, le 20 octobre. Une commande payée sur place te revient en entier : 0 % de commission.',

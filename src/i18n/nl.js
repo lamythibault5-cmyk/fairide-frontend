@@ -1892,7 +1892,7 @@ export default {
     paiementResto: {
       howTitle: 'Hoe je betaald wordt',
       step1: 'De klant betaalt online bij het bestellen (kaart, Bancontact, Apple Pay, Google Pay). Het geld wordt geïnd door Stripe, nooit door Fairide.',
-      step2: 'Bij elke bestelling komt de prijs van je gerechten jou toe, min de Fairide-commissie van maximaal 10% excl. btw. De leveringskosten gaan volledig naar de koerier, de fooien ook.',
+      step2: 'Bij elke online betaalde bestelling komt de prijs van je gerechten jou toe, min de Fairide-commissie van maximaal 10% excl. btw. Een ter plaatse betaalde bestelling int je zelf, volledig: 0% commissie. De leveringskosten gaan volledig naar de koerier, de fooien ook.',
       step3: 'Jouw aandeel wordt bij elke betaalde bestelling automatisch naar je Stripe-account overgemaakt en elke maandag op je bankrekening gestort (alles wat de week ervoor werd ontvangen). Een maandelijkse commissiefactuur wordt je per e-mail gestuurd en blijft beschikbaar onder Facturen.',
       subscriptionTitle: 'Nu niets te activeren',
       subscriptionText: 'Je kunt je account en je restaurant aanmaken zonder iets te betalen of te activeren. De gratis versie — tafelreserveringen — kost niets, zonder commissie of abonnement (open voor klanten vanaf 10 oktober 2026). Voor afhaal (vanaf 10 oktober) en levering (vanaf 20 oktober) is de volledige versie (€ 20/maand, met de Fairide-terminal) activeerbaar vanaf 6 oktober, en de gratis maand begint pas te tellen bij de opening van de online betaling, op 20 oktober. Een ter plaatse betaalde bestelling is volledig voor jou: 0% commissie.',

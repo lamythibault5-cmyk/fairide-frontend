@@ -1892,7 +1892,7 @@ export default {
     paiementResto: {
       howTitle: 'How you get paid',
       step1: 'The customer pays online when ordering (card, Bancontact, Apple Pay, Google Pay). The money is collected by Stripe, never by Fairide.',
-      step2: 'On each order, the price of your dishes comes to you, minus the Fairide commission capped at 10% excl. VAT. Delivery fees go entirely to the courier, tips too.',
+      step2: 'On each order paid online, the price of your dishes comes to you, minus the Fairide commission capped at 10% excl. VAT. An order paid on site, you collect yourself, in full: 0% commission. Delivery fees go entirely to the courier, tips too.',
       step3: 'Your share is transferred automatically to your Stripe account for every paid order, then paid out to your bank account every Monday (everything collected the previous week). A monthly commission invoice is e-mailed to you and stays available under Invoices.',
       subscriptionTitle: 'Nothing to activate now',
       subscriptionText: 'You can create your account and your restaurant without paying or activating anything. The free version — table reservations — costs nothing, no commission and no subscription (open to customers from 10 October 2026). For takeaway (from 10 October) and delivery (from 20 October), the full version (€20/month, with the Fairide terminal) can be activated from 6 October, and its free month only starts counting when online payment opens, on 20 October. An order paid on site is yours in full: 0% commission.',
