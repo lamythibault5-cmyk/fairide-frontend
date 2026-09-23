@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { coucheTuiles } from '../../../carte';
 import 'leaflet/dist/leaflet.css';
 // L'échappement vivait ici, et c'était le seul des quatre cartes à l'avoir : il est maintenant partagé.
 import { escapeHtml } from '../../../escapeHtml';
@@ -30,10 +31,7 @@ export default function LiveMap({ points, height = 420 }) {
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current).setView(BRUSSELS_CENTER, 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(mapRef.current);
+    coucheTuiles(L).addTo(mapRef.current);
     layerRef.current = L.layerGroup().addTo(mapRef.current);
     const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
     resizeObserver.observe(containerRef.current);

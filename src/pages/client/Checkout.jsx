@@ -15,6 +15,8 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiementEnLigne } from '../../launch';
+import CheckoutConformite from '../../components/conformite/CheckoutConformite';
+import { manqueConformite } from '../../conformite';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -74,6 +76,8 @@ export default function Checkout() {
   const [paying, setPaying] = useState(false);
   const [deliveryConfirmed, setDeliveryConfirmed] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  // Allergie, âge, CGU (backlog de conformité C1, C3, A1) — voir components/conformite/CheckoutConformite.jsx.
+  const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
 
@@ -237,6 +241,8 @@ export default function Checkout() {
       ? (fulfillmentType === 'dine_in' && creneauChoisi ? creneauChoisi.debut : new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString())
       : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
+    const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
+    if (manque) { toast(manque); return; }
     setPlacing(true);
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
@@ -255,13 +261,17 @@ export default function Checkout() {
           } : {}),
           ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim(), zonePreference: zonePreference || null } : {}),
           useBalance: useBalance && !surPlace,
-          giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined
+          giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
+          ...(fulfillmentType !== 'dine_in' ? { allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined } : {}),
+          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
         }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
       setDeliveryConfirmed(false);
       setPendingOrder(order);
     } catch (e) {
+      // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
+      if (e.code === 'CGU_A_ACCEPTER') setConformite((c) => ({ ...c, termsNeeded: true, acceptTerms: false, termsVersion: e.data?.termsVersion || c.termsVersion }));
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
@@ -673,6 +683,7 @@ export default function Checkout() {
                 </p>
               )}
             </details>
+            <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
           </div>
           )}
           </aside>
@@ -840,15 +851,17 @@ export default function Checkout() {
 
           {!isPureReservation && (
             <div className="breakdown">
-              <div className="line"><span>{t('common.subtotal')}</span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
+              {/* Trois contrats, trois vendeurs (décision du 23/09/2026, C2) : chaque ligne dit à qui le client
+                  achète. Le livreur n'est pas encore connu ici — il sera nommé dès qu'il accepte la course. */}
+              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
               {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')}</span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')}</span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}
@@ -857,6 +870,12 @@ export default function Checkout() {
             </div>
           )}
 
+          {pendingOrder.allergyRequest && (
+            <p className="small" style={{ margin: '0 0 8px' }}><b>{t('conformite.allergyRecapLabel')}</b> « {pendingOrder.allergyRequest} » — {t('conformite.allergyRecapPending')}</p>
+          )}
+          {pendingOrder.containsAlcohol && (
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('conformite.ageRecap', { age: pendingOrder.minAge || 18 })}</p>
+          )}
           {!deliveryConfirmed && (
             <p className="small" style={{ margin: '0 0 8px', color: 'var(--red)' }}>{t('checkout.confirmCheckboxWarning')}</p>
           )}

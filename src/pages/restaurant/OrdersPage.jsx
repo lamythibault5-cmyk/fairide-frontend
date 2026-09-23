@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
 import TerminalFairide from '../../components/TerminalFairide';
@@ -28,6 +29,9 @@ export default function OrdersPage() {
   const [clotureEnCours, setClotureEnCours] = useState(false);
   const [pickupCodeInputs, setPickupCodeInputs] = useState({});
   const [confirmingPickup, setConfirmingPickup] = useState(null);
+  // Conformité : commande avec demande d'allergie à confirmer (A1), remise d'alcool à contrôler (B6).
+  const [allergieAConfirmer, setAllergieAConfirmer] = useState(null);
+  const [ageAVerifier, setAgeAVerifier] = useState(null);
   const [stageColors, setStageColors] = useState(() => loadStageColors(restoId));
   const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
   // Largeur de papier retenue par le restaurateur : sa valeur ne change pas d'une commande à l'autre,
@@ -87,9 +91,9 @@ export default function OrdersPage() {
   // pour que le restaurateur voie toujours ce qui compte sans avoir à chercher dans la liste.
   const sortedOrders = useMemo(() => [...orders].sort((a, b) => orderStagePriority(a) - orderStagePriority(b)), [orders]);
 
-  async function orderAction(orderId, action) {
+  async function orderAction(orderId, action, body) {
     try {
-      await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token });
+      await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
       loadDashboard(restoId);
     } catch (e) {
       toast(e.message, 'erreur');
@@ -128,12 +132,16 @@ export default function OrdersPage() {
     }
   }
 
-  async function confirmTakeaway(orderId) {
+  // `ageVerifie` : la pièce d'identité a été contrôlée (commande avec alcool, backlog B6). Sans elle, on
+  // ouvre d'abord la vérification — le serveur refuserait de toute façon (AGE_A_VERIFIER).
+  async function confirmTakeaway(order, ageVerifie = false) {
+    const orderId = order.id;
     const code = (pickupCodeInputs[orderId] || '').trim();
     if (!code) { toast(t('ordersResto.toastAskCustomerCode')); return; }
+    if (order.containsAlcohol && order.orderType === 'pickup' && !ageVerifie) { setAgeAVerifier(order); return; }
     setConfirmingPickup(orderId);
     try {
-      await api(`/orders/${orderId}/confirm-takeaway`, { method: 'PATCH', token, body: { code } });
+      await api(`/orders/${orderId}/confirm-takeaway`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setPickupCodeInputs((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
       toast(t('ordersResto.toastTakeawayDone'));
       loadDashboard(restoId);
@@ -142,6 +150,16 @@ export default function OrdersPage() {
     } finally {
       setConfirmingPickup(null);
     }
+  }
+
+  async function refuserRemiseAge(order) {
+    try {
+      await api(`/orders/${order.id}/age-refused`, { method: 'PATCH', token, body: { reason: 'refused_age' } });
+      toast(t('conformite.ageRefusedDone'));
+      setAgeAVerifier(null);
+      setSelectedOrder(null);
+      loadDashboard(restoId);
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   function printReceipt(order) {
@@ -233,6 +251,8 @@ export default function OrdersPage() {
           <ProgressBar status={o.status} orderType={o.orderType} />
           <DeliveryTiming order={o} />
           <EcheanceAcceptation order={o} />
+          <BandeauAllergie order={o} />
+          <BadgeAlcool order={o} />
           <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('ordersResto.reservationNoOrder')}</div>
           {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
           {o.orderType === 'dine_in' && <div className="small">{t('ordersResto.dineInLine', { n: o.partySize, name: o.reservationName })}</div>}
@@ -243,7 +263,7 @@ export default function OrdersPage() {
           <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
             {o.status === 'nouveau' && (
               <>
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'accept')}>{t('ordersResto.accept')}</button>
+                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
                 <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'refuse')}>{t('ordersResto.refuse')}</button>
               </>
             )}
@@ -262,7 +282,7 @@ export default function OrdersPage() {
                 value={pickupCodeInputs[o.id] || ''}
                 onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
               />
-              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o.id)}>
+              <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
                 {confirmingPickup === o.id ? '...' : o.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
               </button>
             </div>
@@ -346,6 +366,8 @@ export default function OrdersPage() {
               <p className="small" style={{ margin: '4px 0' }}>🍽️ Table pour {selectedOrder.partySize} personne{selectedOrder.partySize > 1 ? 's' : ''}, réservée au nom de <b>{selectedOrder.reservationName}</b>.</p>
             )}
             {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
+            <BandeauAllergie order={selectedOrder} />
+            <BadgeAlcool order={selectedOrder} />
             {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
             {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
@@ -357,7 +379,7 @@ export default function OrdersPage() {
                   value={pickupCodeInputs[selectedOrder.id] || ''}
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
                 />
-                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder.id)}>
+                <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
                   {confirmingPickup === selectedOrder.id ? '...' : selectedOrder.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
                 </button>
               </div>
@@ -406,6 +428,17 @@ export default function OrdersPage() {
         loading={clotureEnCours}
         onCancel={() => setPasVenu(null)}
         onConfirm={signalerPasVenu} />
+      {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
+      <ConfirmDialog open={!!allergieAConfirmer}
+        title={t('conformite.allergyConfirmTitle')}
+        message={t('conformite.allergyConfirmText', { request: allergieAConfirmer?.allergyRequest || '' })}
+        confirmLabel={t('conformite.allergyConfirmAccept')}
+        onCancel={() => setAllergieAConfirmer(null)}
+        onConfirm={() => { const o = allergieAConfirmer; setAllergieAConfirmer(null); orderAction(o.id, 'accept', { allergyAck: true }); }} />
+      {/* B6 : pas de remise d'alcool sans pièce d'identité contrôlée. Refus → commande close, tâche admin. */}
+      <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
+        onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}
+        onRefuse={() => refuserRemiseAge(ageAVerifier)} />
       {editeur && (
         <TicketEditor initial={editeur.order} btName={btName} printing={printing}
           onPrintBluetooth={(ticket, copies) => printBluetooth(ticket, { copies })}

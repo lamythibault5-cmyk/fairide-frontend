@@ -104,7 +104,9 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         {r.certified && <CertifiedBadge />}
       </h3>
       <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
-        <StarsDisplay value={r.rating} />
+        {/* Pas d'étoiles sans avis : la note par défaut en base (4,5) s'affichait pour tout commerce
+            nouveau — une note que personne n'a donnée, présentée comme un avis (CDE VI.100). */}
+        {r.reviewCount > 0 && <StarsDisplay value={r.rating} />}
         <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
       </div>
       <p className="small rest-card-desc">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
@@ -250,7 +252,8 @@ export default function RestaurantList() {
     // estimation de course ; ni l'un ni l'autre n'existe. La distance est la seule approximation
     // honnete dont on dispose, et elle porte son vrai nom.
     .sort((a, b) => {
-      if (tri === 'note') return (b.rating || 0) - (a.rating || 0);
+      // Seules les notes réellement données comptent : sans avis, le commerce passe après ceux qui en ont.
+      if (tri === 'note') return (b.reviewCount > 0 ? b.rating : 0) - (a.reviewCount > 0 ? a.rating : 0);
       if (tri === 'distance') return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity);
       return 0;
     })
@@ -272,7 +275,7 @@ export default function RestaurantList() {
     const dejaLa = new Set(liste.map((r) => r.id));
     const renfort = [...restaurants]
       .filter((r) => !dejaLa.has(r.id))
-      .sort((a, b) => (Number(b.avgRating || b.rating) || 0) - (Number(a.avgRating || a.rating) || 0))
+      .sort((a, b) => (b.reviewCount > 0 ? Number(b.avgRating || b.rating) || 0 : 0) - (a.reviewCount > 0 ? Number(a.avgRating || a.rating) || 0 : 0))
       .slice(0, MIN_PAR_RANGEE - liste.length);
     return [...liste, ...renfort];
   };

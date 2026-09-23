@@ -21,6 +21,9 @@ export default function LegalNotice() {
           <p className="small" style={{ whiteSpace: 'pre-line' }}><Rich text={t(`legalNotice.${s}`)} /></p>
         </div>
       ))}
+      {/* Points de contact DSA (art. 11-12, backlog C6) : autorités et utilisateurs, langues acceptées. */}
+      <h3>{t('conformite.dsaContactTitle')}</h3>
+      <p className="small" style={{ whiteSpace: 'pre-line' }}><Rich text={t('conformite.dsaContactBody')} /></p>
     </div>
   );
 }

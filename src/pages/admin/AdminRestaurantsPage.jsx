@@ -11,6 +11,7 @@ import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
@@ -90,6 +91,7 @@ export default function AdminRestaurantsPage() {
   const [detail, setDetail] = useState(null);
   const [orders, setOrders] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [decision, setDecision] = useState(null); // suspension / résiliation motivée (D6)
   // Validation refusée pour non-conformité : { id, conformite } tant que l'équipe n'a pas tranché.
   const [derogation, setDerogation] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -150,9 +152,12 @@ export default function AdminRestaurantsPage() {
      conformiteCommerce.js). Le refus n'est pas définitif : il ouvre un dialogue qui montre CE qui
      manque et demande un motif pour passer outre, motif journalisé sur la fiche.
      On n'empêche pas l'équipe de valider — on l'empêche de valider sans savoir. */
-  async function setStatus(id, status, { force = false, reason = '' } = {}) {
+  // `decision` : faits, base contractuelle, mesure — exigés pour une suspension (D6, voir DecisionDialog).
+  async function setStatus(id, status, { force = false, reason = '', decision = {} } = {}) {
     try {
-      await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status, ...(force ? { force: true, reason } : {}) } });
+      const rep = await api(`/admin/restaurants/${id}/status`, { method: 'PATCH', token, body: { status, ...(force ? { force: true, reason } : {}), ...decision } });
+      // Résiliation avec préavis : décidée et notifiée, mais le commerce reste actif jusqu'à la date d'effet.
+      if (status === 'blocked' && !rep.adminStatus) { toast(tr('conformite.decisionScheduledToast')); return; }
       setRestaurants((prev) => (prev || []).map((r) => (r.id === id ? { ...r, adminStatus: status } : r)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
@@ -185,7 +190,7 @@ export default function AdminRestaurantsPage() {
   // Toute action qui change ce que voient les clients (publication, approbation) ou bloque un commerce
   // passe par une confirmation, comme partout dans l'ERP.
   function askSuspend(r) {
-    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: r.name }), message: tr('adminRestos.suspendBody'), danger: true, run: () => setStatus(r.id, 'blocked') });
+    setDecision({ id: r.id, name: r.name });
   }
   function askReactivate(r) {
     setConfirmAction({ title: tr('adminRestos.confirmReactivate', { name: r.name }), run: () => setStatus(r.id, 'approved') });
@@ -375,6 +380,9 @@ export default function AdminRestaurantsPage() {
           onToggleTest={() => { refreshDetail(); load(); }}
         />
       )}
+      <DecisionDialog open={!!decision} cible={decision?.name} targetType="restaurant" loading={busy}
+        onCancel={() => setDecision(null)}
+        onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', { decision: payload }); } finally { setBusy(false); setDecision(null); } }} />
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}

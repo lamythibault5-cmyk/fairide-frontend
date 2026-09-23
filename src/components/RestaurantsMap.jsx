@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
+import { coucheTuiles } from '../carte';
 import 'leaflet/dist/leaflet.css';
 import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
 import { escapeHtml } from '../escapeHtml';
@@ -48,10 +49,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current).setView(BRUSSELS_CENTER, singleMarker ? 15 : 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(mapRef.current);
+    coucheTuiles(L).addTo(mapRef.current);
     if (!singleMarker) {
       mapRef.current.on('click', () => setSelected(null));
     }
@@ -148,7 +146,7 @@ export default function RestaurantsMap({ restaurants, height = 420, singleMarker
               {selected.certified && <CertifiedBadge size={16} />}
             </h3>
             <div className="row" style={{ gap: 6, margin: '2px 0' }}>
-              <StarsDisplay value={selected.rating} />
+              {selected.reviewCount > 0 && <StarsDisplay value={selected.rating} />}
               <span className="small">{selected.reviewCount > 0 ? t('map.reviewsCount', { count: selected.reviewCount }) : t('restaurantList.newBadge')}</span>
             </div>
             {selected.desc && <p className="small" style={{ margin: '6px 0' }}>{selected.desc}</p>}

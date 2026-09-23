@@ -9,6 +9,9 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import CourierUsageBar, { niveauxAlerte, libelleNiveaux, euroPlafond } from '../../components/CourierUsageBar';
 import ouvrirDocument from '../../ouvrirDocument';
+import { EtapeNotices, ConsentementBiometrique } from '../../components/conformite/LivreurConformite';
+import { TarifMinimum, DocumentsVente } from '../../components/conformite/EspaceVendeurLivreur';
+import { libelleManque } from '../../conformite';
 
 // Parcours d'inscription du livreur, en étapes : statut (économie collaborative / étudiant-indépendant /
 // indépendant), identité vérifiée (Stripe Identity aujourd'hui, itsme/eID dès le contrat itsme, ou dépôt
@@ -18,10 +21,12 @@ import ouvrirDocument from '../../ouvrirDocument';
 // moment (le dossier repasse alors en vérification).
 // Rien ici n'impose d'horaire, de quota de courses ni de taux d'acceptation : le livreur choisit ses
 // courses. Aucun montant légal n'est écrit dans ce fichier : tout vient de `legal` (configuration fiscale).
-const ETAPES = ['statut', 'identite', 'infos', 'contrat', 'paiement', 'envoi'];
+// « notices » (backlog B4, B8) : notice des systèmes automatisés, politique de géolocalisation, DAC7.
+const ETAPES = ['statut', 'identite', 'infos', 'notices', 'contrat', 'paiement', 'envoi'];
 const MANQUES_PAR_ETAPE = {
   statut: ['statut'], identite: ['identite', 'document_identity_card'],
-  infos: ['date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'attestation_honneur_p2p', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
+  infos: ['nationalite', 'titre_sejour', 'carte_professionnelle', 'date_naissance', 'registre_national', 'iban', 'zone', 'vehicule', 'permis_immatriculation', 'ecole', 'caisse', 'attestation_honneur_p2p', 'age_minimum', 'consentements_p2p', 'bce', 'tva', 'tva_numero', 'siege', 'document_school_certificate', 'document_social_insurance_fund', 'document_liability_insurance', 'document_bce_extract', 'document_profile_photo', 'document_driving_licence', 'document_vehicle_registration', 'document_vehicle_insurance'],
+  notices: ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate'],
   contrat: ['contrat'], paiement: [], envoi: ['statut_non_verifie']
 };
 // « statut_non_verifie » n'est pas une action du livreur : c'est Fairide qui vérifie. Il n'empêche
@@ -31,8 +36,8 @@ const STATUTS = ['p2p', 'student_independent', 'independent'];
 const EMOJI_STATUT = { p2p: '🤝', student_independent: '🎓', independent: '🧑‍💼' };
 // Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
 const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
-// Attestations d'assurance : date d'échéance demandée, Fairide rappelle le renouvellement.
-const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance'];
+// Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
+const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit'];
 const euro = euroPlafond;
 // Taux stocké en fraction (0.107) affiché en pourcentage (« 10,7 ») ; « — » si la configuration ne le donne pas.
 const pctTexte = (x) => (x == null || x === '' ? '—' : `${(Number(x) * 100).toLocaleString(getLocale(), { maximumFractionDigits: 2 })}`);
@@ -98,19 +103,27 @@ export default function Onboarding() {
 
       <Notifications t={t} token={token} />
 
+      {/* Livreur déjà validé : les notices (B4, B8) doivent être relues quand leur texte change, sinon le
+          serveur refuse la prochaine course (NOTICES_A_ACCEPTER). Les étapes ci-dessous ne s'affichent
+          qu'en dossier brouillon : sans ce bloc, un livreur validé n'aurait aucun moyen de les accepter. */}
+      {!enDossier && MANQUES_PAR_ETAPE.notices.some((m) => manques.includes(m)) && (
+        <EtapeNotices token={token} busy={busy} action={action} onNext={() => charger()} />
+      )}
+
       {enDossier && (
         <>
           <div className="courier-steps" role="tablist">
             {ETAPES.map((e, i) => (
               <button key={e} type="button" role="tab" aria-selected={courante === e} className={`courier-step${courante === e ? ' active' : ''}${etapeOk(e) ? ' done' : ''}`} onClick={() => setEtape(e)}>
-                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{t(`courierOnboarding.step_${e}`)}</span>
+                <span className="courier-step-num">{etapeOk(e) ? '✓' : i + 1}</span><span>{e === 'notices' ? t('conformite.noticesStep') : t(`courierOnboarding.step_${e}`)}</span>
               </button>
             ))}
           </div>
 
           {courante === 'statut' && <EtapeStatut d={d} t={t} busy={busy} onChoose={(statusType) => action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType } }), t('courierOnboarding.toastStatusSaved')).then((ok) => ok && setEtape('identite'))} />}
           {courante === 'identite' && <EtapeIdentite d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('infos')} />}
-          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('contrat')} />}
+          {courante === 'infos' && <EtapeInfos d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('notices')} />}
+          {courante === 'notices' && <EtapeNotices token={token} busy={busy} action={action} onNext={() => { charger(); setEtape('contrat'); }} />}
           {courante === 'contrat' && <EtapeContrat d={d} t={t} busy={busy} token={token} action={action} onNext={() => setEtape('paiement')} />}
           {courante === 'paiement' && <EtapePaiement d={d} t={t} busy={busy} token={token} user={user} onNext={() => setEtape('envoi')} />}
           {courante === 'envoi' && <EtapeEnvoi d={d} t={t} busy={busy} onSubmit={() => action(() => api('/couriers/me/submit', { method: 'POST', token }), t('courierOnboarding.toastSubmitted')).then(() => refreshUser?.())} onGoTo={setEtape} />}
@@ -120,6 +133,10 @@ export default function Onboarding() {
       {(valide || c.lifecycleStatus === 'blocked_threshold' || c.lifecycleStatus === 'pending_review' || c.lifecycleStatus === 'suspended') && (
         <Compteurs d={d} t={t} token={token} action={action} busy={busy} />
       )}
+      {/* Le livreur vend la livraison (décision du 23/09/2026) : son tarif minimum, dès l'inscription ;
+          ses documents de vente, une fois qu'il a pu livrer. */}
+      <TarifMinimum key={c.minFeeCents ?? 'aucun'} courier={c} token={token} action={action} busy={busy} />
+      {(valide || c.lifecycleStatus === 'suspended' || c.lifecycleStatus === 'blocked_threshold') && <DocumentsVente token={token} />}
       {!enDossier && <ChangementStatut d={d} t={t} token={token} action={action} busy={busy} onChanged={() => { setEtape('statut'); refreshUser?.(); }} />}
       <p className="small" style={{ marginTop: 16, opacity: 0.75 }}>{t('courierOnboarding.legalFooter', { year: legal.year ?? new Date().getFullYear() })} · <Link to="/driver">{t('courierOnboarding.backToDashboard')}</Link></p>
     </div>
@@ -212,10 +229,17 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
   const toast = useToast();
   const id = d.courier.identity ?? {}; const prov = d.identityProviders ?? {};
   const fichier = useRef(null);
+  const [consentement, setConsentement] = useState(null);
   async function demarrer(provider) {
     await action(async () => {
-      const r = await api('/couriers/me/identity/start', { method: 'POST', token, body: { provider } });
-      if (r.url) { window.location.href = r.url; return null; }
+      try {
+        const r = await api('/couriers/me/identity/start', { method: 'POST', token, body: { provider } });
+        if (r.url) { window.location.href = r.url; return null; }
+      } catch (e) {
+        // B1 : le selfie exige un consentement biométrique séparé — on l'affiche au lieu de l'erreur.
+        if (e.code === 'CONSENTEMENT_BIOMETRIQUE_REQUIS') { setConsentement(e.data?.consent || null); return null; }
+        throw e;
+      }
       return null;
     });
   }
@@ -269,6 +293,9 @@ function EtapeIdentite({ d, t, busy, token, action, onNext }) {
         </div>
       )}
       <div className="row" style={{ marginTop: 12 }}><button type="button" className="btn-gold" onClick={onNext}>{t('courierOnboarding.next')}</button></div>
+      <ConsentementBiometrique consent={consentement} token={token} onFermer={() => setConsentement(null)}
+        onAccepte={() => { setConsentement(null); demarrer('stripe_identity'); }}
+        onManuel={async () => { setConsentement(null); await action(() => api('/couriers/me/identity/start', { method: 'POST', token, body: { provider: 'manual' } })); fichier.current?.click(); }} />
     </div>
   );
 }
@@ -330,7 +357,8 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     p2pHonourDeclared: !!c.p2pHonourDeclaredAt,
     p2pNonProfessional: !!c.p2p?.nonProfessionalDeclared, p2pWithholdingConsent: !!c.p2p?.withholdingConsent, p2pTaxConsent: !!c.p2p?.taxDataConsent,
     companyNumber: c.independent?.companyNumber ?? '', vatStatus: c.independent?.vatStatus ?? '', vatNumber: c.independent?.vatNumber ?? '', legalName: c.independent?.legalName ?? '', seatAddress: c.independent?.seatAddress ?? '',
-    incomeExternalDeclared: th.incomeExternalDeclared ?? th.grossIncomeExternalDeclared ?? 0 });
+    incomeExternalDeclared: th.incomeExternalDeclared ?? th.grossIncomeExternalDeclared ?? 0,
+    nationalityGroup: c.nationalityGroup ?? '' });
   const set = (k) => (e) => setF((x) => ({ ...x, [k]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }));
   const [expiry, setExpiry] = useState('');
   const fichiers = useRef({});
@@ -340,6 +368,7 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     const body = { ...f };
     if (!body.nationalNumber) delete body.nationalNumber;
     if (!body.bagOption) delete body.bagOption;
+    if (!body.nationalityGroup) delete body.nationalityGroup;
     // L'attestation sur l'honneur ne s'envoie qu'une fois, cochée : le serveur l'horodate.
     if (!body.p2pHonourDeclared || c.p2pHonourDeclaredAt) delete body.p2pHonourDeclared;
     for (const k of Object.keys(body)) if (body[k] === null) delete body[k];
@@ -356,7 +385,9 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
     if (files.length > 1) toast(t('courierOnboarding.toastDocsUploaded', { n: files.length }));
   }
   // Photo de profil pour tous, pièces du statut, puis permis / immatriculation / assurance pour un véhicule motorisé.
-  const docsRequis = [...new Set([...(d.commonDocuments ?? ['profile_photo']), ...(d.requiredDocuments?.[c.statusType] ?? []), ...(motorise ? (d.motorizedDocuments ?? ['driving_licence', 'vehicle_registration', 'vehicle_insurance']) : [])])];
+  // Hors EEE (B2) : titre de séjour (avec échéance) et carte professionnelle d'indépendant.
+  const horsEee = f.nationalityGroup === 'THIRD';
+  const docsRequis = [...new Set([...(d.commonDocuments ?? ['profile_photo']), ...(d.requiredDocuments?.[c.statusType] ?? []), ...(motorise ? (d.motorizedDocuments ?? ['driving_licence', 'vehicle_registration', 'vehicle_insurance']) : []), ...(horsEee ? ['residence_permit', 'professional_card'] : [])])];
   const docsDe = (type) => (d.documents ?? []).filter((x) => x.docType === type);
 
   return (
@@ -364,6 +395,12 @@ function EtapeInfos({ d, t, busy, token, action, onNext }) {
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('courierOnboarding.infosTitle')}</h3>
       <p className="small" style={{ margin: '0 0 12px' }}>{t('courierOnboarding.infosHelp')}</p>
       <div className="courier-grid">
+        <Champ label={t('conformite.fNationality')} help={horsEee ? t('conformite.fNationalityThirdHelp') : null}>
+          <select value={f.nationalityGroup} onChange={set('nationalityGroup')}>
+            <option value="">-</option>
+            {['BE', 'EEA_CH', 'THIRD'].map((n) => <option key={n} value={n}>{t(`conformite.nationality_${n}`)}</option>)}
+          </select>
+        </Champ>
         <Champ label={t('courierOnboarding.fBirthDate')}><input type="date" value={f.birthDate} onChange={set('birthDate')} /></Champ>
         <Champ label={t('courierOnboarding.fNrn')} help={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('courierOnboarding.nrnHelp')}>
           <input aria-label="85.07.30-033.28" inputMode="numeric" value={f.nationalNumber} onChange={set('nationalNumber')} placeholder="85.07.30-033.28" />
@@ -530,7 +567,7 @@ function EtapeEnvoi({ d, t, busy, onSubmit, onGoTo }) {
         <>
           <p className="small" style={{ margin: '0 0 8px' }}>{t('courierOnboarding.submitMissing')}</p>
           <ul className="courier-missing">
-            {manque.map((m) => <li key={m}><button type="button" className="btn-ghost" style={{ padding: '2px 6px' }} onClick={() => onGoTo(etapeDe(m))}>{t(`courierOnboarding.missing_${m}`)}</button></li>)}
+            {manque.map((m) => <li key={m}><button type="button" className="btn-ghost" style={{ padding: '2px 6px' }} onClick={() => onGoTo(etapeDe(m))}>{libelleManque(m, t)}</button></li>)}
           </ul>
         </>
       )}

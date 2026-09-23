@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { api } from '../api';
 import { COMMUNES } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import ContactSection from '../components/ContactSection';
@@ -19,7 +20,9 @@ import Icone from '../components/Icone';
    `icon` est un NOM du jeu maison (Icone.jsx), plus un emoji : voir l'en-tête de ce fichier-là,
    qui explique pourquoi l'application les a tous remplacés. L'accueil était le dernier endroit
    qui y avait échappé. */
-function joinCards(t) {
+// `p2pOuvert` (backlog B9) : l'accueil ne propose le statut de particulier (économie collaborative) que si
+// la plateforme l'a ouvert (drapeau p2p_enabled, fermé tant que l'agrément du SPF manque). Inconnu = fermé.
+function joinCards(t, p2pOuvert = false) {
   return [
     {
       key: 'client', icon: 'sac',
@@ -42,7 +45,7 @@ function joinCards(t) {
       key: 'driver', icon: 'scooter',
       eyebrow: t('landing.joinDriverRole'),
       title: t('landing.joinDriverTitle'),
-      points: [t('landing.joinDriverP1'), t('landing.joinDriverP2')],
+      points: [t('landing.joinDriverP1'), p2pOuvert ? t('landing.joinDriverP2') : t('conformite.joinDriverP2NoP2p')],
       link: t('landing.joinDriverLink'),
       to: '/login?audience=partner&role=driver'
     }
@@ -70,6 +73,8 @@ export default function Landing() {
   const reels = useCommercesReels();
   // Vrais commerces d'abord (fondateur, 22/09) ; les démos ne complètent que s'ils sont trop peu nombreux.
   const restaurants = useMemo(() => vitrineAccueil(reels, publics, 3), [reels, publics]);
+  const [p2pOuvert, setP2pOuvert] = useState(false);
+  useEffect(() => { api('/couriers/options').then((o) => setP2pOuvert(!!o?.p2pEnabled)).catch(() => {}); }, []);
 
   return (
     <div className="decor-page">
@@ -179,7 +184,7 @@ export default function Landing() {
 
       <Reveal as="h2" className="section-title">{t('landing.joinTitle')}</Reveal>
       <div className="join-grid">
-        {joinCards(t).map((c, i) => (
+        {joinCards(t, p2pOuvert).map((c, i) => (
           <Reveal
             as={Link}
             to={c.to}

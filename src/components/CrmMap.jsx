@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
+import { coucheTuiles } from '../carte';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
@@ -43,7 +44,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
   useEffect(() => {
     if (!conteneur.current || carte.current) return undefined;
     carte.current = L.map(conteneur.current, { scrollWheelZoom: false }).setView(BRUSSELS_CENTER, 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>', maxZoom: 19 }).addTo(carte.current);
+    coucheTuiles(L).addTo(carte.current);
     Object.values(couches.current).forEach((c) => c.addTo(carte.current));
     // Voir RestaurantsMap : Leaflet mesure son conteneur à l'init ; on recalcule à chaque changement de taille.
     const observateur = new ResizeObserver(() => { carte.current?.invalidateSize(); });

@@ -13,6 +13,7 @@ import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
+import VendeurLivraison from '../../components/conformite/VendeurLivraison';
 
 function ReviewForm({ order, token, toast, onDone, t }) {
   const [foodRating, setFoodRating] = useState(5);
@@ -265,6 +266,7 @@ export default function Orders() {
           {o.driverName && (
             <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
           )}
+          <VendeurLivraison order={o} token={token} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
           {o.status === 'livraison' && o.restaurantLat && o.deliveryLat && (
             <div style={{ margin: '10px 0' }}>
               <DeliveryTrackingMap

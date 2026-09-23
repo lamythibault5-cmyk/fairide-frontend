@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useNavigate, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -12,6 +12,7 @@ import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
+import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -23,6 +24,7 @@ function formatClock(date) {
 
 export default function DriverDashboard() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
   const { setRightSlot } = useOutletContext();
@@ -33,6 +35,8 @@ export default function DriverDashboard() {
   // Un ref et non un state : sa valeur est lue dans load(), qui n'est pas re-créée à chaque rendu.
   const chargeReussieRef = useRef(false);
   const [codeInputs, setCodeInputs] = useState({});
+  // Remise d'une commande avec alcool : pièce d'identité à contrôler d'abord (backlog B6).
+  const [ageAVerifier, setAgeAVerifier] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
@@ -200,22 +204,48 @@ export default function DriverDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user?.locationSharingEnabled]);
 
-  async function claim(id) {
-    try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
-    catch (e) { toast(e.message, 'erreur'); }
+  // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
+  // autre décision (docs/dispatch.md côté serveur). Retrait local immédiat, sans attendre le rechargement.
+  async function refuserOffre(id) {
+    try {
+      await api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token });
+      setAvailable((prev) => prev.filter((x) => x.id !== id));
+      toast(t('conformite.offerRefused'));
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
-  async function deliver(id) {
+  async function claim(id) {
+    try { await api(`/orders/${id}/claim`, { method: 'PATCH', token }); load(); }
+    catch (e) {
+      toast(e.message, 'erreur');
+      // Notices à relire (B4) ou titre de séjour expiré (B2) : ça se règle dans l'espace livreur, on y va.
+      if (['NOTICES_A_ACCEPTER', 'TITRE_SEJOUR_EXPIRE'].includes(e.code)) navigate('/driver/onboarding');
+    }
+  }
+
+  async function deliver(order, ageVerifie = false) {
+    const id = order.id;
     const code = (codeInputs[id] || '').trim();
     if (!code) { toast(t('dashDriver.toastAskCode')); return; }
+    if (order.containsAlcohol && !ageVerifie) { setAgeAVerifier(order); return; }
     try {
-      await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code } });
+      await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
       toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
       toast(e.message, 'erreur');
     }
+  }
+
+  // Âge non prouvé à la porte : la commande est close, la course t'est payée, l'équipe décide du reste.
+  async function refuserRemiseAge(order) {
+    try {
+      await api(`/orders/${order.id}/age-refused`, { method: 'PATCH', token, body: { reason: 'refused_age' } });
+      setAgeAVerifier(null);
+      toast(t('conformite.ageRefusedDriverDone'));
+      load();
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   useEffect(() => {
@@ -360,12 +390,19 @@ export default function DriverDashboard() {
               </span>
               <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
               {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })}</div>
+              {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
+              <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })} <span style={{ color: 'var(--ink-soft)' }}>({t('conformite.offerApproxAddress')})</span></div>
               {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
               <DeliveryTiming order={o} />
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
-                <span className="small">{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</span>
-                <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                <span className="small">
+                  <b>{t('conformite.offerPrice', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</b>
+                  {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: (o.bonusCents / 100).toFixed(2) })}</span>}
+                </span>
+                <span className="row" style={{ gap: 6 }}>
+                  <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
+                  <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => claim(o.id)}>{t('dashDriver.takeRide')}</button>
+                </span>
               </div>
             </div>
           ))}
@@ -406,6 +443,8 @@ export default function DriverDashboard() {
         <div className="card" key={o.id}>
           <b>{o.restaurantName}</b> → {o.clientName}
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+          <BandeauAllergie order={o} />
+          <BadgeAlcool order={o} />
           {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
           <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
           {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
@@ -422,7 +461,7 @@ export default function DriverDashboard() {
               value={codeInputs[o.id] || ''}
               onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
             />
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>{t('dashDriver.confirmDelivery')}</button>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
           </div>
         </div>
       ))}
@@ -440,6 +479,9 @@ export default function DriverDashboard() {
         <p className="small" style={{ margin: '-4px 0 12px' }}><Link to="/driver/earnings">{t('dashDriver.earningsLink')} →</Link></p>
       </>)}
       </>)}
+      <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
+        onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}
+        onRefuse={() => refuserRemiseAge(ageAVerifier)} />
     </div>
   );
 }

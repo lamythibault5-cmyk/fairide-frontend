@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { coucheTuiles, itineraireRue } from '../carte';
+import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
@@ -26,19 +28,10 @@ function emojiIcon(emoji, bg) {
 
 const ORIGIN_ICON = emojiIcon('🛵', '#14121F');
 
-async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
-  const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('routing-failed');
-  const data = await res.json();
-  const route = data.routes?.[0];
-  const coords = route?.geometry?.coordinates;
-  if (!coords || !coords.length) throw new Error('no-route');
-  return { latLngs: coords.map(([lng, lat]) => [lat, lng]), duration: route.duration, distance: route.distance };
-}
 
 export default function DriverNavigationMap({ originLat, originLng, targetLat, targetLng, targetLabel, targetEmoji, targetColor = '#3B2FB5', onEta, height = 280 }) {
   const { t } = useLanguage();
+  const { token } = useAuth();
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const originMarkerRef = useRef(null);
@@ -56,10 +49,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     mapRef.current = L.map(containerRef.current, { zoomControl: false }).setView(BRUSSELS_CENTER, 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(mapRef.current);
+    coucheTuiles(L).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
     mapRef.current.on('dragstart', () => { autoSuiviRef.current = false; setRecentrable(true); });
     // Voir RestaurantsMap.jsx : corrige la bande grise Leaflet quand le conteneur change de taille
@@ -132,7 +122,7 @@ export default function DriverNavigationMap({ originLat, originLng, targetLat, t
     if (autoSuiviRef.current) mapRef.current.fitBounds(boundsRef.current, { padding: [40, 40] });
 
     let cancelled = false;
-    fetchStreetRoute(originLat, originLng, targetLat, targetLng)
+    itineraireRue(token, originLat, originLng, targetLat, targetLng)
       .then(({ latLngs, duration, distance }) => {
         if (cancelled || !lineRef.current) return;
         lineRef.current.setLatLngs(latLngs);
