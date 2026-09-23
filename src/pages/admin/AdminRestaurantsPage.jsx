@@ -125,6 +125,15 @@ export default function AdminRestaurantsPage() {
     api(`/admin/orders?restaurantId=${r.id}&limit=20`, { token }).then((res) => setOrders(res.rows)).catch((e) => toast(e.message, 'erreur'));
   }
 
+  // Ordre dans la bannière de la page d'accueil : 1 = premier, vide = tiré au sort avec les autres vrais commerces.
+  async function setLandingRank(id, rank) {
+    try {
+      const r = await api(`/admin/restaurants/${id}/landing`, { method: 'PATCH', token, body: { rank: rank === '' ? null : Number(rank) } });
+      setRestaurants((prev) => (prev || []).map((x) => (x.id === id ? { ...x, landingRank: r.landingRank } : x)));
+      if (detail?.id === id) setDetail((prev) => ({ ...prev, landingRank: r.landingRank }));
+      toast(r.landingRank ? tr('adminRestos.landingRankToast', { n: r.landingRank }) : tr('adminRestos.landingRankCleared'));
+    } catch (e) { toast(e.message); }
+  }
   async function setListing(id, publicListed) {
     try {
       await api(`/admin/restaurants/${id}/listing`, { method: 'PATCH', token, body: { publicListed } });
@@ -358,6 +367,7 @@ export default function AdminRestaurantsPage() {
           onSuspend={() => askSuspend(detail)}
           onApprove={() => askApprove(detail)}
           onToggleListing={() => askListing(detail)}
+          onLandingRank={setLandingRank}
           onReactivate={() => askReactivate(detail)}
           onTerminal={(status, cle) => askTerminal(detail, status, cle)}
           onDelete={() => askDelete(detail)}
@@ -471,7 +481,7 @@ function ConformitePanel({ detail, onChanged }) {
   );
 }
 
-function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal }) {
+function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, onApprove, onReactivate, onDelete, onChanged, onToggleListing, onToggleTest, onTerminal, onLandingRank }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -577,6 +587,16 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           <p className="small" style={{ margin: '6px 0 2px' }}>
             {estTest(detail) ? <>🧪 {tr('adminRestos.testLine')}</> : <><span className={`pill ${detail.publicListed ? 'listing-on' : 'listing-off'}`}>{detail.publicListed ? tr('adminRestos.listedPill') : tr('adminRestos.unlistedPill')}</span> {detail.publicListed ? tr('adminRestos.listedLine') : tr('adminRestos.unlistedLine')}</>}
           </p>
+          {!estTest(detail) && (
+            <div className="row" style={{ gap: 8, alignItems: 'center', margin: '4px 0 6px', flexWrap: 'wrap' }}>
+              <label htmlFor="landing-rank" className="small"><b>🏠 {tr('adminRestos.landingRankLabel')}</b></label>
+              <select id="landing-rank" value={detail.landingRank ?? ''} onChange={(e) => onLandingRank(detail.id, e.target.value)} style={{ maxWidth: 220 }}>
+                <option value="">{tr('adminRestos.landingRankNone')}</option>
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{tr('adminRestos.landingRankN', { n })}</option>)}
+              </select>
+              <span className="small">{tr('adminRestos.landingRankHelp')}</span>
+            </div>
+          )}
           <div className="drawer-section" style={{ margin: '10px 0', padding: '10px 12px', background: 'var(--cream-dim, #f6f3ec)', borderRadius: 10 }}>
             <p className="small" style={{ margin: 0 }}><b>🍽️ {tr('adminRestos.menuTitle')}</b> · {detail.menuItemCount !== null && detail.menuItemCount !== undefined ? tr('adminRestos.menuLine', { n: detail.menuItemCount }) : ''}</p>
             {detail.concierge && (

@@ -31,8 +31,6 @@ export default function DiscoverSection({ restaurants }) {
 
   // Tuile d'information qui remplit la fin de la grille (grid-column: auto / -1) : chiffres de la vitrine et
   // deux portes d'entrée, plutôt qu'un trou blanc quand le nombre de cartes ne tombe pas juste.
-  const nbCommunes = new Set(restaurants.map((r) => r.commune).filter(Boolean)).size;
-  const nbCuisines = new Set(restaurants.map((r) => r.cuisine).filter(Boolean)).size;
 
   if (restaurants.length === 0) return null;
   return (
@@ -68,8 +66,6 @@ export default function DiscoverSection({ restaurants }) {
           <b className="discover-info-title">{t('landing.discoverInfoTitle')}</b>
           <div className="discover-info-stats">
             <span><b>30</b> {t('landing.discoverInfoBusinesses')}</span>
-            <span><b>{nbCommunes}</b> {t('landing.discoverInfoCommunes')}</span>
-            <span><b>{nbCuisines}</b> {t('landing.discoverInfoCuisines')}</span>
             <span><b>10 %</b> {t('landing.discoverInfoCommission')}</span>
           </div>
           <p className="small discover-info-text">{t('landing.discoverInfoText')}</p>
