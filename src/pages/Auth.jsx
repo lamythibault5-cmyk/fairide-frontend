@@ -3,7 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import BrandMark from '../components/BrandMark';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -292,6 +292,11 @@ export default function Auth() {
   // Inscription via Google : le jeton d'identité est gardé jusqu'à la fin du formulaire (c'est lui qui
   // crée le compte), le profil qu'il contient préremplit prénom, nom et e-mail — qu'on ne redemande pas.
   const [googleCredential, setGoogleCredential] = useState(null);
+  // CGU (backlog C1) : case non pré-cochée, obligatoire pour un compte client, et version affichée —
+  // le serveur enregistre la version que la personne a vue, avec l'heure, l'IP et l'empreinte du texte.
+  const [accepteCgu, setAccepteCgu] = useState(false);
+  const [versionCgu, setVersionCgu] = useState('');
+  useEffect(() => { api('/auth/terms/current').then((r) => setVersionCgu(r.version)).catch(() => {}); }, []);
   const [googleProfile, setGoogleProfile] = useState(null);
   const [nomModifiable, setNomModifiable] = useState(false);
   function decoderJwt(cred) {
@@ -652,7 +657,8 @@ export default function Auth() {
         vatNumber: vatNumber.trim(), responsibleName: responsibleName.trim(), cuisine: cuisineFinale,
         business: construireCommerce()
       } : {}),
-      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {})
+      ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {}),
+      ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {})
     });
     await televerserDocumentsLivreur(data.token);
     toast(t('auth.welcome', { name: data.user.name }));
@@ -712,6 +718,11 @@ export default function Auth() {
             return;
           }
         }
+        if (role === 'client' && !accepteCgu) {
+          toast(t('conformite.toastTermsRequired'));
+          setLoading(false);
+          return;
+        }
         if (role === 'driver' && 'geolocation' in navigator) {
           // Demande l'autorisation de géolocalisation une seule fois, à la création du compte.
           // Elle pourra être désactivée plus tard dans les réglages du compte.
@@ -738,6 +749,7 @@ export default function Auth() {
             business: construireCommerce()
           } : {}),
           ...(role === 'driver' ? { companyNumber: companyNumber.trim(), courierStatus, vehicleType, bagOption } : {}),
+          ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
           website: siteWeb
         });
         // Statistiques (sans donnée personnelle) : une inscription par type de compte.
@@ -1348,6 +1360,14 @@ export default function Auth() {
               </button>
             ))}
 
+            {isLastStep && role === 'client' && (
+              <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '4px 0 12px' }}>
+                <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={accepteCgu} onChange={(e) => setAccepteCgu(e.target.checked)} />
+                <span className="small">
+                  {t('conformite.termsAcceptPrefix')} <Link to="/cgv" target="_blank" rel="noopener">{t('conformite.termsLink')}</Link>{versionCgu ? ` (${versionCgu})` : ''}.
+                </span>
+              </label>
+            )}
             {incomplet && incomplet.step === step && Object.keys(errors).length > 0 && (
               <p className="auth-incomplet" role="alert">⚠️ {t('auth.checkIncomplete', { n: incomplet.n, step: stepCopy?.title || '' })}</p>
             )}

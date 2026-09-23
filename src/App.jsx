@@ -96,6 +96,9 @@ const LegalNotice = lazyPage(() => import('./pages/legal/LegalNotice'));
 const Terms = lazyPage(() => import('./pages/legal/Terms'));
 const Privacy = lazyPage(() => import('./pages/legal/Privacy'));
 const CookiesPolicy = lazyPage(() => import('./pages/legal/Cookies'));
+// Conformité (backlog du 23/09/2026) : classement et avis (C5), signalement DSA (C6).
+const RankingPage = lazyPage(() => import('./pages/legal/RankingPage'));
+const ReportPage = lazyPage(() => import('./pages/legal/ReportPage'));
 const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const GamesPage = lazyPage(() => import('./pages/GamesPage'));
@@ -205,6 +208,8 @@ export default function App() {
         <Route path="/cgv" element={<Terms />} />
         <Route path="/confidentialite" element={<Privacy />} />
         <Route path="/cookies" element={<CookiesPolicy />} />
+        <Route path="/classement" element={<RankingPage />} />
+        <Route path="/signaler" element={<ReportPage />} />
         <Route path="/aide" element={<HelpPage />} />
         <Route path="/notre-histoire" element={<OurStory />} />
 

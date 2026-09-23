@@ -12,6 +12,7 @@ import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
@@ -40,6 +41,8 @@ export default function AdminClientsPage() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  // Suspension : décision motivée (faits, base contractuelle), voir components/admin/DecisionDialog.jsx.
+  const [decision, setDecision] = useState(null);
   const [busy, setBusy] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
   const [mode, setMode] = useViewMode('clients', 'cards');
@@ -63,9 +66,11 @@ export default function AdminClientsPage() {
     api(`/admin/clients/${c.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
   }
 
-  async function setStatus(id, status) {
+  // `decision` : { measure, facts, contractualBasis, … } pour une suspension (D6) — le serveur la refuse sans.
+  async function setStatus(id, status, decision = {}) {
     try {
-      await api(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: { status } });
+      const r = await api(`/admin/clients/${id}/status`, { method: 'PATCH', token, body: { status, ...decision } });
+      if (status === 'blocked' && !r.adminStatus) { toast(tr('adminCommon.toastStatusUpdated')); return; }
       setClients((prev) => (prev || []).map((c) => (c.id === id ? { ...c, adminStatus: status } : c)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
@@ -76,7 +81,7 @@ export default function AdminClientsPage() {
   }
 
   function askSuspend(c) {
-    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: c.name }), message: tr('adminClients.suspendBody'), danger: true, run: () => setStatus(c.id, 'blocked') });
+    setDecision({ id: c.id, name: c.name });
   }
   async function deleteClient(c) {
     const r = await api(`/admin/clients/${c.id}`, { method: 'DELETE', token });
@@ -317,6 +322,9 @@ export default function AdminClientsPage() {
         </RecordDrawer>,
         document.body
       )}
+      <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" loading={busy}
+        onCancel={() => setDecision(null)}
+        onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', payload); } finally { setBusy(false); setDecision(null); } }} />
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}

@@ -29,6 +29,7 @@ import useJsonLd from '../../seo/useJsonLd';
 import { restaurantJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
 import { localizedItem } from '../../menuTranslation';
 import { resolveItemImage } from '../../menuCategories';
+import FicheVendeur from '../../components/conformite/FicheVendeur';
 
 // Clé du jour (openingHours) → clé de traduction du nom du jour (resa.monday…).
 
@@ -529,6 +530,8 @@ export default function RestaurantMenu() {
           or c'est en descendant dans une longue carte qu'on se met à chercher, pas en arrivant.
           Le seuil de 8 plats et l'habillage (.recherche-champ, celui de la recherche du site) ne
           changent pas ; seul l'endroit change. */}
+
+      <FicheVendeur restaurant={restaurant} />
 
       <div className="card">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}

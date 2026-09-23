@@ -1,3 +1,4 @@
+import ChampsConformitePlat from './conformite/ChampsConformitePlat';
 import { useState, useId } from 'react';
 import { imgProps } from '../images';
 import { useSortable } from '@dnd-kit/sortable';
@@ -34,6 +35,11 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   const [healthy, setHealthy] = useState(!!item.healthy);
   const [organic, setOrganic] = useState(!!item.organic);
   const [vegan, setVegan] = useState(!!item.vegan);
+  // Allergènes, TVA, alcool (backlog de conformité A1, A2, A4) — voir components/conformite/ChampsConformitePlat.jsx.
+  const [conformite, setConformite] = useState({
+    allergens: item.allergens || [], allergensDeclaredNone: !!item.allergensDeclaredNone,
+    vatRate: item.vatRate ?? null, isAlcohol: !!item.isAlcohol, minAge: item.minAge ?? null
+  });
   const [saving, setSaving] = useState(false);
   const [groupIds, setGroupIds] = useState(() => new Set((item.optionGroups || []).map((g) => g.id)));
 
@@ -67,7 +73,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
   async function save() {
     setSaving(true);
     try {
-      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan });
+      await onSave(item.id, { name: name.trim(), desc: desc.trim(), price: parseFloat(price), category, subsection: subsection.trim(), imageUrl: imageUrl.trim(), suggestAtCheckout, healthy, organic, vegan, ...conformite });
       if (onSetOptionGroups) await onSetOptionGroups(item.id, Array.from(groupIds));
       // Les traductions partent APRÈS le plat lui-même : le serveur recalcule l'empreinte du texte
       // source à l'enregistrement d'une correction, elle doit donc refléter le nom qui vient d'être
@@ -211,6 +217,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             <span className="small">{t('menuItem.veganLabel')}</span>
           </label>
         </div>
+        <ChampsConformitePlat valeur={conformite} onChange={setConformite} />
         {categoryKind(category) && (
           <div className="field">
             <label className="row" style={{ gap: 8, cursor: 'pointer' }}>

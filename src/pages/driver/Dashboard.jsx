@@ -12,6 +12,7 @@ import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
+import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
@@ -33,6 +34,8 @@ export default function DriverDashboard() {
   // Un ref et non un state : sa valeur est lue dans load(), qui n'est pas re-créée à chaque rendu.
   const chargeReussieRef = useRef(false);
   const [codeInputs, setCodeInputs] = useState({});
+  // Remise d'une commande avec alcool : pièce d'identité à contrôler d'abord (backlog B6).
+  const [ageAVerifier, setAgeAVerifier] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
   const [connecting, setConnecting] = useState(false);
@@ -205,17 +208,29 @@ export default function DriverDashboard() {
     catch (e) { toast(e.message, 'erreur'); }
   }
 
-  async function deliver(id) {
+  async function deliver(order, ageVerifie = false) {
+    const id = order.id;
     const code = (codeInputs[id] || '').trim();
     if (!code) { toast(t('dashDriver.toastAskCode')); return; }
+    if (order.containsAlcohol && !ageVerifie) { setAgeAVerifier(order); return; }
     try {
-      await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code } });
+      await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
       toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
       toast(e.message, 'erreur');
     }
+  }
+
+  // Âge non prouvé à la porte : la commande est close, la course t'est payée, l'équipe décide du reste.
+  async function refuserRemiseAge(order) {
+    try {
+      await api(`/orders/${order.id}/age-refused`, { method: 'PATCH', token, body: { reason: 'refused_age' } });
+      setAgeAVerifier(null);
+      toast(t('conformite.ageRefusedDriverDone'));
+      load();
+    } catch (e) { toast(e.message, 'erreur'); }
   }
 
   useEffect(() => {
@@ -406,6 +421,8 @@ export default function DriverDashboard() {
         <div className="card" key={o.id}>
           <b>{o.restaurantName}</b> → {o.clientName}
           <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
+          <BandeauAllergie order={o} />
+          <BadgeAlcool order={o} />
           {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
           <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
           {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
@@ -422,7 +439,7 @@ export default function DriverDashboard() {
               value={codeInputs[o.id] || ''}
               onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
             />
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o.id)}>{t('dashDriver.confirmDelivery')}</button>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => deliver(o)}>{t('dashDriver.confirmDelivery')}</button>
           </div>
         </div>
       ))}
@@ -440,6 +457,9 @@ export default function DriverDashboard() {
         <p className="small" style={{ margin: '-4px 0 12px' }}><Link to="/driver/earnings">{t('dashDriver.earningsLink')} →</Link></p>
       </>)}
       </>)}
+      <VerificationAge order={ageAVerifier} onFermer={() => setAgeAVerifier(null)}
+        onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); deliver(o, true); }}
+        onRefuse={() => refuserRemiseAge(ageAVerifier)} />
     </div>
   );
 }

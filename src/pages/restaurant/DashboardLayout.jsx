@@ -159,7 +159,7 @@ export default function DashboardLayout() {
       <div className="card">
         <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('dashResto.today')}</h3>
         <div className="row" style={{ gap: 6, marginBottom: 10 }}>
-          <StarsDisplay value={restaurant.rating} size={16} />
+          {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} size={16} />}
           <span className="small">{restaurant.reviewCount > 0 ? t('dashResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('dashResto.noReviewsYet')}</span>
         </div>
         <div className="stat-grid">

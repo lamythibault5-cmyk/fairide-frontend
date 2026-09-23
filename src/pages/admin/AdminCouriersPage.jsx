@@ -8,6 +8,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import { useViewMode, ViewSwitcher } from '../../components/admin/KanbanBoard';
 import { ErrorCard, ResultCount } from '../../components/admin/AdminListTools';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import DecisionDialog from '../../components/admin/DecisionDialog';
 import ReasonDialog from '../../components/admin/ReasonDialog';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -161,6 +162,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [onglet, setOnglet] = useState('dossier');
   const [confirm, setConfirm] = useState(null); // { title, message, danger, run }
   const [motifDialog, setMotifDialog] = useState(null); // { title, message, label, danger, confirmLabel, required, run(reason) }
+  const [decisionLivreur, setDecisionLivreur] = useState(false); // suspension motivée (B7, D6)
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
   useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
@@ -296,7 +298,11 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {c.lifecycleStatus !== 'approved' && <button className="btn-teal" disabled={busy || (missing.length > 0 && c.lifecycleStatus !== 'suspended')} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: c.lifecycleStatus === 'suspended' ? 'reactivate' : 'approved', reason: reason || undefined } }), tr('adminCouriers.toastApproved')) })}>{c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve')}</button>}
             {c.lifecycleStatus === 'pending_review' && <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.reject'), message: tr('adminCouriers.rejectBody'), danger: true, confirmLabel: tr('adminCouriers.reject'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'rejected', reason } }), tr('adminCouriers.toastRejected')) })}>{tr('adminCouriers.reject')}</button>}
-            {['approved', 'blocked_threshold'].includes(c.lifecycleStatus) && <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.suspend'), message: tr('adminCouriers.suspendBody'), danger: true, required: false, confirmLabel: tr('adminCouriers.suspend'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'suspended', reason: reason || undefined } })) })}>{tr('adminCouriers.suspend')}</button>}
+            {/* Suspension (B7, D6) : décision humaine motivée, exposé des motifs envoyé, réexamen sous 14 jours. */}
+            {['approved', 'blocked_threshold'].includes(c.lifecycleStatus) && <button className="btn-danger-ghost" disabled={busy} onClick={() => setDecisionLivreur(true)}>{tr('adminCouriers.suspend')}</button>}
+            <DecisionDialog open={decisionLivreur} cible={c.name || ''} targetType="courier" loading={busy}
+              onCancel={() => setDecisionLivreur(false)}
+              onConfirm={async (payload) => { setDecisionLivreur(false); await agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'suspended', ...payload } })); }} />
           </div>
           <div className="divider" />
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>

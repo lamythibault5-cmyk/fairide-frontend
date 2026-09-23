@@ -11,6 +11,7 @@ import useServerList from '../../hooks/useServerList';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import DecisionDialog from '../../components/admin/DecisionDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
@@ -51,6 +52,8 @@ export default function AdminDriversPage() {
   const [selected, setSelected] = useState(null);
   const [detail, setDetail] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  // Suspension : décision motivée (faits, base contractuelle), voir components/admin/DecisionDialog.jsx.
+  const [decision, setDecision] = useState(null);
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useViewMode('drivers', 'cards');
   const filtre = searchParams.get('status') || 'all';
@@ -86,9 +89,11 @@ export default function AdminDriversPage() {
     loadDocuments(d.id);
   }
 
-  async function setStatus(id, status) {
+  // `decision` : { measure, facts, contractualBasis, … } pour une suspension (D6) — le serveur la refuse sans.
+  async function setStatus(id, status, decision = {}) {
     try {
-      await api(`/admin/drivers/${id}/status`, { method: 'PATCH', token, body: { status } });
+      const r = await api(`/admin/drivers/${id}/status`, { method: 'PATCH', token, body: { status, ...decision } });
+      if (status === 'blocked' && !r.adminStatus) { toast(tr('adminCommon.toastStatusUpdated')); return; }
       setDrivers((prev) => (prev || []).map((d) => (d.id === id ? { ...d, adminStatus: status } : d)));
       if (selected?.id === id) setSelected((prev) => ({ ...prev, adminStatus: status }));
       if (detail?.id === id) setDetail((prev) => ({ ...prev, adminStatus: status }));
@@ -99,7 +104,7 @@ export default function AdminDriversPage() {
   }
 
   function askSuspend(d) {
-    setConfirmAction({ title: tr('adminCommon.confirmSuspend', { name: d.name }), message: tr('adminDrivers.suspendBody'), danger: true, run: () => setStatus(d.id, 'blocked') });
+    setDecision({ id: d.id, name: d.name });
   }
   function askReactivate(d) {
     setConfirmAction({ title: tr('adminDrivers.confirmReactivate', { name: d.name }), run: () => setStatus(d.id, 'approved') });
@@ -373,6 +378,9 @@ export default function AdminDriversPage() {
         </RecordDrawer>,
         document.body
       )}
+      <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" loading={busy}
+        onCancel={() => setDecision(null)}
+        onConfirm={async (payload) => { setBusy(true); try { await setStatus(decision.id, 'blocked', payload); } finally { setBusy(false); setDecision(null); } }} />
       <ConfirmDialog
         open={!!confirmAction}
         title={confirmAction?.title}

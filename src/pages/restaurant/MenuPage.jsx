@@ -18,6 +18,7 @@ import TemplatePicker from '../../components/TemplatePicker';
 import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
+import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import PlatformPhotosImport from '../../components/PlatformPhotosImport';
 import MenuDrafts from '../../components/MenuDrafts';
 import MenuReadiness from '../../components/MenuReadiness';
@@ -494,6 +495,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   return (
     <div>
       <MenuReadiness restaurant={restaurant} restoId={restoId} token={token} modeAdmin={modeAdmin} onConfirmed={() => loadDashboard(restoId)} />
+      {/* Carte signée, allergènes, vendeur professionnel (backlog de conformité A1, A2, A8). */}
+      <ConformiteCarte restoId={restoId} rafraichir={restaurant} onChange={() => loadDashboard(restoId)} />
       <div className="menu-etape">
         <span className="menu-etape-num">1</span>
         <div>

@@ -1,6 +1,7 @@
 import { categoryImage, sectionLabel, resolveItemImage, groupBySubsection } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import { localizedItem } from '../menuTranslation';
+import { libellesAllergenes } from '../allergenes';
 
 // TOUTE LA CARTE EST LA CIBLE, plus seulement le « + » de son coin.
 //
@@ -49,8 +50,13 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
         {item.healthy && <span className="dish-healthy" title={t('menuCategories.healthy')} aria-label={t('menuCategories.healthy')} role="img">{'\u00A0'}🥗</span>}
         {item.organic && <span className="dish-healthy" title={t('menuCategories.organic')} aria-label={t('menuCategories.organic')} role="img">{'\u00A0'}🌿</span>}
         {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
+        {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
+        {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
       </div>
       <div className="small desc">{indisponible ? t('menuCategories.unavailable') : desc}</div>
+      {/* Allergènes déclarés par le commerce (backlog A1, palier 2) : sur le plat, avant l'ajout. */}
+      {item.allergens?.length > 0 && <div className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</div>}
+      {!item.allergens?.length && item.allergensDeclaredNone && <div className="small plat-allergenes">{t('conformite.allergensNone')}</div>}
       <div className="bottom-row">
         <span className="price">{item.price.toFixed(2)}€</span>
         {!image && cliquable && <span className="menu-item-ajout menu-item-ajout-ligne" aria-hidden="true">+</span>}

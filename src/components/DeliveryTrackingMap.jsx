@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import { coucheTuiles, itineraireRue } from '../carte';
+import { useAuth } from '../context/AuthContext';
 import 'leaflet/dist/leaflet.css';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { escapeHtml } from '../escapeHtml';
@@ -54,16 +56,6 @@ const RESTAURANT_ICON = emojiIcon('🏪', '#3B2FB5');
 const DELIVERY_ICON = emojiIcon('🏠', '#C8F03C');
 
 // Itinéraire routier ET durée estimée, d'un seul appel. `duration` est en secondes, `distance` en mètres.
-async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
-  const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error('routing-failed');
-  const data = await res.json();
-  const route = data.routes?.[0];
-  const coords = route?.geometry?.coordinates;
-  if (!coords || !coords.length) throw new Error('no-route');
-  return { latLngs: coords.map(([lng, lat]) => [lat, lng]), duration: route.duration, distance: route.distance };
-}
 
 // `homeLat`/`homeLng` (optionnels) : la maison du client, affichée seule quand aucune livraison n'est en
 // cours — une carte vide centrée sur Bruxelles ne dit rien à personne, une carte centrée chez soi dit
@@ -75,6 +67,7 @@ async function fetchStreetRoute(fromLat, fromLng, toLat, toLng) {
 // livraison (« Toi » pour le client, « Client » pour le restaurateur).
 export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = '🏠', homeColor = '#C8F03C', legendeDestination, onEta, height = 260 }) {
   const { t } = useLanguage();
+  const { token } = useAuth();
   // Libellés par défaut résolus ici (pas dans la signature) : t n'existe qu'à l'intérieur du composant.
   homeLabel = homeLabel ?? t('trackingMap.home');
   legendeDestination = legendeDestination ?? t('trackingMap.you');
@@ -131,10 +124,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
     // Tuiles OpenStreetMap. La version précédente utilisait le fond CARTO « Voyager », devenu payant :
     // chaque tuile affichait « API KEY REQUIRED » en travers. OSM est ce que les autres cartes de
     // l'application utilisent déjà, gratuit et sans clé.
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19
-    }).addTo(mapRef.current);
+    coucheTuiles(L).addTo(mapRef.current);
     L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
     mapRef.current.on('dragstart', () => { autoSuiviRef.current = false; });
     const resizeObserver = new ResizeObserver(() => mapRef.current?.invalidateSize());
@@ -195,7 +185,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       setShowRecenter(true);
 
       let cancelled = false;
-      fetchStreetRoute(restaurantLat, restaurantLng, deliveryLat, deliveryLng)
+      itineraireRue(token, restaurantLat, restaurantLng, deliveryLat, deliveryLng)
         .then(({ latLngs }) => {
           if (cancelled || !lineRef.current) return;
           lineRef.current.setLatLngs(latLngs);
@@ -263,7 +253,7 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       const assezVieux = Date.now() - dernier.at >= ETA_INTERVALLE_MIN_MS;
       if (aBouge || assezVieux) {
         etaDernierRef.current = { pos, at: Date.now() };
-        fetchStreetRoute(driverLat, driverLng, deliveryLat, deliveryLng)
+        itineraireRue(token, driverLat, driverLng, deliveryLat, deliveryLng)
           .then(({ latLngs, duration, distance }) => {
             if (cancelled || !mapRef.current) return;
             if (!remainingLineRef.current) {

@@ -14,6 +14,7 @@ import { ErrorCard, Pager, ResultCount } from '../../components/admin/AdminListT
 import { fmtDate, fmtDateTime, downloadPdf, useDebouncedValue } from './adminUtils';
 import '../../admin-compliance.css';
 import useEtatPage from '../../hooks/useEtatPage';
+import { ONGLETS_CONFORMITE, DecisionsTab, DsaTab, BreachesTab, ProcessorsTab, ForbiddenTab, ParametersTab } from './compliance/ConformiteP0Tabs';
 
 // Application « Conformité & RGPD » : registre des demandes des personnes concernées (délai légal d'un
 // mois), export / suppression des données d'un compte, suivi des versions de contrats des partenaires,
@@ -23,7 +24,9 @@ const PAGE_SIZE = 25;
 // l'onglet « requests », qui est le registre des DEMANDES. Le premier liste ce que Fairide traite,
 // le second ce qu'on lui demande. « dossier » = les pièces de Fairide elle-même (statuts, UBO, AIPD,
 // avis juridique), que le module Documents ne savait pas ranger faute de cible 'fairide'.
-const TABS = ['requests', 'contracts', 'registre', 'dossier', 'exports', 'retention'];
+// Onglets du backlog de conformité du 23/09/2026 (décisions, DSA, violations, sous-traitants, produits
+// interdits, paramètres) : voir ./compliance/ConformiteP0Tabs.jsx.
+const TABS = ['requests', 'contracts', 'registre', 'dossier', 'exports', 'retention', ...ONGLETS_CONFORMITE];
 const TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'];
 const STATUSES = ['received', 'in_progress', 'done', 'rejected'];
 const CHANNELS = ['email', 'form', 'phone', 'other'];
@@ -46,7 +49,7 @@ export default function AdminCompliancePage() {
       } />
       <div className="role-pick compliance-tabs" role="tablist">
         {TABS.map((k) => (
-          <div key={k} role="tab" aria-selected={onglet === k} className={`chip${onglet === k ? ' active' : ''}`} onClick={() => setOnglet(k)}>{tr(`adminCompliance.tab_${k}`)}</div>
+          <div key={k} role="tab" aria-selected={onglet === k} className={`chip${onglet === k ? ' active' : ''}`} onClick={() => setOnglet(k)}>{ONGLETS_CONFORMITE.includes(k) ? tr(`conformite.tab_${k}`) : tr(`adminCompliance.tab_${k}`)}</div>
         ))}
       </div>
       {onglet === 'requests' && <RequestsTab refreshKey={refreshKey} />}
@@ -55,6 +58,12 @@ export default function AdminCompliancePage() {
       {onglet === 'dossier' && <DossierTab />}
       {onglet === 'exports' && <ExportsTab />}
       {onglet === 'retention' && <RetentionTab />}
+      {onglet === 'decisions' && <DecisionsTab />}
+      {onglet === 'dsa' && <DsaTab />}
+      {onglet === 'breaches' && <BreachesTab />}
+      {onglet === 'processors' && <ProcessorsTab />}
+      {onglet === 'forbidden' && <ForbiddenTab />}
+      {onglet === 'parameters' && <ParametersTab />}
       {showCreate && <CreateRequestModal onClose={() => setShowCreate(false)} onCreated={() => { setShowCreate(false); setRefreshKey((k) => k + 1); }} />}
     </div>
   );
@@ -682,7 +691,7 @@ function DossierTab() {
         <div className="card" style={{ marginTop: 0 }}>
           <h3 style={{ marginTop: 0 }}>
             {tr('adminCompliance.dossierTitle')}{' '}
-            <span style={{ color: data.pret ? '#2e7d32' : 'var(--gold-deep)' }}>{data.completes}/{data.total}</span>
+            <span style={{ color: data.pret ? '#2e7d32' : 'var(--gold-deep)' }}>{data.completes}/{data.total}{data.completudePct != null ? ` · ${data.completudePct} %` : ''}</span>
           </h3>
           {data.note && <p className="small" style={{ opacity: 0.8, marginTop: 0 }}>{data.note}</p>}
           <div className="table-scroll">

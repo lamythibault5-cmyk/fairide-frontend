@@ -2,7 +2,7 @@
 
 Guide for Claude Code working in this repository.
 
-Every figure below was re-checked against the source on 2026-09-22. If you change something this
+Every figure below was re-checked against the source on 2026-09-23. If you change something this
 file describes, change this file too — a stale guide is worse than no guide, because it gets
 believed.
 
@@ -43,7 +43,7 @@ pre-existing warnings across the codebase. Don't read a clean-looking tail as su
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.
 
-The backend does have tests (`npm test`, 42 of them, `node --test`). If your change touches
+The backend does have tests (`npm test`, 71 of them, `node --test`). If your change touches
 anything the backend also reads — page parsing, menu shape — run them there.
 
 ### Environment variables
@@ -58,17 +58,18 @@ without a `.env.local` your dev server edits live data.
 | `VITE_GOOGLE_CLIENT_ID` | Google Sign-In (script loaded in [index.html](index.html)) |
 | `VITE_SENTRY_DSN` | Enables Sentry — but only *after* cookie consent, see [src/main.jsx](src/main.jsx) |
 | `VITE_STOCK_DISH_PHOTOS` | `on` (default) fills photo-less dishes from a stock-image table; `off` disables it. **Still `on`.** Must be `off` before real restaurants go live — see [src/menuCategories.js](src/menuCategories.js) |
+| `VITE_MAP_TILE_URL` / `VITE_MAP_TILE_ATTRIBUTION` | Map tiles for all five Leaflet maps ([src/carte.js](src/carte.js)). Empty = public OpenStreetMap tiles, whose usage policy excludes heavy commercial use — **set before launch** |
 | `VITE_PLAUSIBLE_DOMAIN` | Cookieless analytics. Empty = [src/analytics.js](src/analytics.js) loads nothing at all. Was missing from `.env.example` while the code already read it, so analytics was silently off in production — set it in the Vercel variables |
 
 ## Architecture
 
 ### Four roles, one SPA
 
-Every route lives in [src/App.jsx](src/App.jsx) (219 lines) — the full route map, read it first when
+Every route lives in [src/App.jsx](src/App.jsx) (224 lines) — the full route map, read it first when
 orienting. Access is gated by `<ProtectedRoute role="...">`.
 
 **Routes are code-split by role.** Only the public entry path (home, login, restaurant list, restaurant
-menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 68 lazy imports as
+menu) is statically imported; everything else is `React.lazy` behind `<Suspense>` — 70 lazy imports as
 of today. Keep it that way when adding a route: a static import of a dashboard page pulls it into
 every customer's first load.
 
@@ -121,7 +122,7 @@ thrown to the caller as normal. Don't add per-call 401 checks.
 
 ### Styling
 
-**One file: [src/styles.css](src/styles.css)** (4,551 lines), imported once in `main.jsx`.
+**One file: [src/styles.css](src/styles.css)** (4,589 lines), imported once in `main.jsx`.
 Global class names, no CSS modules, no Tailwind. Inline `style={{}}` is used freely for
 one-off spacing and is an accepted pattern here.
 
@@ -204,7 +205,7 @@ editor, and that is deliberate: there it isn't filling a hole, it's prompting fo
 ### Internationalisation
 
 [src/i18n/translations.js](src/i18n/translations.js) holds `fr` / `en` / `nl` tables; default `fr`.
-**192 of 227 components** call `useLanguage()` — this is now broad coverage, not the partial state
+**203 of the 238 `.jsx` files** call `useLanguage()` — this is now broad coverage, not the partial state
 earlier versions of this file described. Adding a key means adding it to all three locales.
 
 The remaining untranslated surfaces are mostly deep admin screens. Check which kind of component you
@@ -231,6 +232,36 @@ What the front end has to know:
 An imported card is written but **not online**: the business stays `pending` until someone clicks
 Approve and Publish in the admin console. Don't describe an import as "live".
 
+## Compliance (backlog of 2026-09-23)
+
+Legal requirements are enforced by the **backend** (see its README, « Conformité » section); the front end
+shows them and collects what the law requires. All strings are in the `conformite` i18n namespace; the
+components live in [src/components/conformite/](src/components/conformite/), shared helpers in
+[src/conformite.js](src/conformite.js). What exists, verified:
+
+- **Checkout** ([CheckoutConformite](src/components/conformite/CheckoutConformite.jsx)): allergy request
+  (the business must confirm before preparing), age declaration when the cart holds alcohol, T&Cs
+  acceptance when the account hasn't accepted the current version. The pay button reads « Commander et
+  payer » on purpose (CDE VI.46 §2) — don't rename it.
+- **Restaurant page**: seller block visible without a click ([FicheVendeur](src/components/conformite/FicheVendeur.jsx)),
+  allergens and an 18+ badge on each dish, a « Signaler » link to [/signaler](src/pages/legal/ReportPage.jsx).
+  [/classement](src/pages/legal/RankingPage.jsx) describes the ranking **as the code does it** — if you
+  change the sort in RestaurantList.jsx, change that page's text in the same commit.
+- **Stars need reviews.** `restaurants.rating` defaults to 4.5 in the database: never render
+  `StarsDisplay` or sort by rating without `reviewCount > 0` — that would show a rating nobody gave.
+- **Merchant**: card signature, allergen attestation and professional declaration in
+  [ConformiteCarte](src/components/conformite/ConformiteCarte.jsx) (menu page); allergens / VAT / alcohol
+  per dish in the dish editor; allergy confirmation and ID check at the counter in the orders page.
+- **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity,
+  nationality and residence permit (onboarding); ID check at the door (dashboard).
+- **Admin**: suspending anyone goes through [DecisionDialog](src/components/admin/DecisionDialog.jsx)
+  (facts + contractual basis) — the API refuses a bare `{ status: 'blocked' }`. New compliance tabs
+  (decisions, DSA reports, breaches, processors, prohibited products, parameters) are in
+  [pages/admin/compliance/](src/pages/admin/compliance/).
+- **T&Cs text**: changing `terms.*` in the i18n files changes the text clients accept. Bump the date in
+  `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
+  `cgu.js`) — the backend test fails until you do.
+
 ## Conventions
 
 **Code comments are in French, and they are unusually substantive** — they explain *why*, cite
@@ -248,7 +279,7 @@ of absent features precisely so nobody re-invents or over-claims them.
 ("Ajoute l'impression d'un bon de livraison par commande, côté restaurateur").
 
 **Watch file size.** [Account.jsx](src/pages/Account.jsx) (1,173) and
-[MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (926) are the two to stop growing — extract a
+[MenuPage.jsx](src/pages/restaurant/MenuPage.jsx) (929) are the two to stop growing — extract a
 component rather than adding to them. `AdminAccountingPage.jsx` is down to 488 and is no longer a
 concern. `menuCategories.js` (3,978) is a data table, not logic — that one is fine.
 
@@ -263,8 +294,9 @@ Real, verified as absent on 2026-09-22 — not speculation.
    native or Capacitor build. The customer-facing map shows a staleness warning after two minutes so
    a frozen map is at least legible
    ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
-2. **No SSR or prerendering, and there is no sitemap at all** — `public/sitemap.xml` no longer
-   exists. The public restaurant pages are indexable by intent only.
+2. **No SSR.** `npm run build` runs a prerender ([scripts/prerender.mjs](scripts/prerender.mjs)) that writes
+   static HTML for the public pages (three languages) and the restaurant pages, and a `dist/sitemap.xml`
+   (138 addresses on 2026-09-23). Pages added after the build list are not prerendered.
 3. **Stock dish photos are still on.** `VITE_STOCK_DISH_PHOTOS` defaults to `on`, which fills a
    photo-less dish with a stock image when its name matches the table exactly. Showing a stock photo
    as a real merchant's dish is a misleading commercial practice — this must be `off` before the
