@@ -2485,6 +2485,15 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .jeu-best { color: var(--gold-deep); white-space: nowrap; }
 .jeu-score { color: var(--ink); white-space: nowrap; }
 .jeu-niveau { color: var(--ink-soft); font-weight: 600; }
+/* Les trois cœurs (GameFrame, VIES). Chaque cœur est remonté quand il change d'état (clé React) : un cœur qui se
+   remplit rebondit, un cœur qui se vide tremble et pâlit — on voit ce qu'on vient de perdre sans lire de chiffre. */
+.jeu-vies { display: inline-flex; gap: 1px; margin-left: 6px; vertical-align: -1px; }
+.jeu-coeur { display: inline-block; color: var(--red); font-size: 1.15em; line-height: 1; animation: jeu-coeur-plein .35s ease-out; }
+.jeu-coeur.vide { color: var(--line); animation: jeu-coeur-vide .45s ease-out; }
+@keyframes jeu-coeur-plein { 0% { transform: scale(.4); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes jeu-coeur-vide { 0% { transform: scale(1.4); color: var(--red); } 25% { transform: translateX(-3px) scale(1.2); } 50% { transform: translateX(3px); } 100% { transform: none; } }
+.jeu--plein .jeu-coeur.vide { color: rgba(255,255,255,.3); }
+@media (prefers-reduced-motion: reduce) { .jeu-coeur, .jeu-coeur.vide { animation: none; } }
 .jeu-regles-btn {
   width: 26px; height: 26px; padding: 0; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
   background: var(--cream-dim); border: 1px solid var(--line); border-radius: var(--radius-pill); font-size: 14px; line-height: 1; cursor: pointer;
@@ -3036,13 +3045,6 @@ button.account-link-row:last-child { border-bottom: none; }
    directs du groupe — une rangée simple, ou le bloc « rangée + panneau » d'une rangée dépliable — pour
    qu'il tombe toujours au même endroit, panneau ouvert ou fermé. */
 .account-groupe { padding: 0; overflow: hidden; }
-/* L'onglet Mini-jeux de Mon compte : une rangée pleine iris, texte blanc — le fond iris est l'un des deux autorisés,
-   et le lime reste libre pour l'action décisive de la page. Même gabarit que .account-link-row, en carte seule. */
-.account-jeux { display: flex; align-items: center; gap: 12px; padding: 14px 16px; margin: 0 0 16px; border-radius: var(--radius); background: var(--iris); color: #fff; text-decoration: none; }
-.account-jeux:hover { background: var(--iris-deep); }
-.account-jeux .small { color: rgba(255,255,255,0.78); }
-.account-jeux .account-link-chevron { color: #fff; }
-.account-jeux-icone { display: inline-flex; color: var(--lime); }
 .account-groupe > * { border-bottom: 1px solid var(--line-soft, var(--line)); }
 .account-groupe > :last-child { border-bottom: none; }
 .account-groupe .account-link-row { border-bottom: none; }

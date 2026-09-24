@@ -36,6 +36,10 @@ export const sfx = {
   alerte() { note(300, { type: 'square', duree: 0.05, gain: 0.18 }); },
   // Nouveau record : un accord qui monte.
   record() { [523, 659, 784, 1047].forEach((f, i) => note(f, { duree: 0.28, gain: 0.3, quand: i * 0.09 })); },
+  // Un cœur perdu (la partie continue) : un choc plus court et plus clair que celui de la fin.
+  touche() { note(330, { type: 'sawtooth', duree: 0.18, gain: 0.28, glisse: 150 }); },
+  // Un cœur rendu : deux notes qui montent, plus douces que le bonus.
+  vie() { note(660, { duree: 0.12, gain: 0.3 }); note(990, { duree: 0.2, gain: 0.3, quand: 0.09 }); },
   // Fin de partie : choc sourd qui descend.
   perdu() { note(220, { type: 'sawtooth', duree: 0.35, gain: 0.35, glisse: 60 }); },
   // À appeler sur un geste utilisateur (Commencer) : crée ou réveille le contexte, sinon le premier son est avalé.

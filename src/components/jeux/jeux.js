@@ -13,7 +13,8 @@
 // changer de difficulté. Les valeurs sont celles des anciennes versions, converties (px par tic de
 // 60 ms sur un cadre de 260px → fraction de hauteur par seconde).
 //
-// CONTRAT. api = { w, h, large, marquer(n), perdre(), effet?, eclat?, niveau(), score(), t? }. Le jeu expose :
+// CONTRAT. api = { w, h, large, marquer(n), perdre(), soigner?, vies?, viesMax?, invincible?, effet?, eclat?, niveau(), score(), t? }.
+// perdre() retire un cœur et rend vrai tant que la partie continue (voir VIES dans GameFrame). Le jeu expose :
 //   reset()                      — nouvelle partie
 //   update(dt, input)            — dt en secondes (plafonné par le moteur), input = { x, y, enfonce,
 //                                  tapes: [{x, y}], niveau }
@@ -110,7 +111,9 @@ function creerChute(api, cfg) {
         depuisSpawn = 0;
         // Un bonus de temps en temps (jamais deux à l'écran, jamais pendant qu'un est actif), sinon l'objet du jeu.
         const bonusPresent = objets.some((x) => x.bonus) || aimant > 0 || nitro > 0 || bouclier;
-        const o = cfg.bonus && !bonusPresent && Math.random() < 0.06 + n * 0.004 ? cfg.bonus(n) : cfg.nouvelObjet(n);
+        // Un cœur manque : un bonus sur trois devient un cœur qui en rend un (voir VIES dans GameFrame).
+        const blesse = (api.vies?.() ?? 0) < (api.viesMax?.() ?? 0);
+        const o = cfg.bonus && !bonusPresent && Math.random() < 0.06 + n * 0.004 ? (blesse && Math.random() < 0.35 ? { ...COEUR } : cfg.bonus(n)) : cfg.nouvelObjet(n);
         let v = cfg.vitesse(n) * h * (o.vitesseFacteur || 1);
         // Équité : deux objets n'atteignent jamais le sol à moins de `ecart` s l'un de l'autre, quel que
         // soit le tirage des vitesses. Sans ça, un plat lent rattrapé par un plat rapide arrivaient
@@ -142,7 +145,8 @@ function creerChute(api, cfg) {
         // Aimant (FairCatch) : les bons objets à portée glissent vers le sac.
         if (aimant > 0 && !o.mauvais && !o.bonus && o.y > yJ - h * 0.55) o.x += (joueurX - o.x) * Math.min(1, dt * 4.5);
         const dx = Math.abs(o.x - joueurX); const dy = o.y - yJ;
-        if (Math.abs(dy) < t * 0.6 && dx < demiContact) {
+        // `inoffensif` : l'objet a traversé le joueur pendant sa grâce (il clignote) — il finit sa course sans plus rien toucher.
+        if (!o.inoffensif && Math.abs(dy) < t * 0.6 && dx < demiContact) {
           // Bonus attrapé : il s'active, +2, et un mot dans le terrain.
           if (o.bonus) {
             api.bonus?.(); api.enchainer?.(); api.marquer(2); vRebond = 7;
@@ -151,6 +155,7 @@ function creerChute(api, cfg) {
             if (o.bonus === 'bouclier') { bouclier = true; api.effet?.(o.x, yJ - t * 0.9, `🛡️ ${tx(api, 'jeux.fx_bouclier', 'Bouclier !')}`, OR); }
             if (o.bonus === 'nitro') { nitro = EXPRESS; api.effet?.(o.x, yJ - t * 0.9, `⚡ ${tx(api, 'jeux.fx_express', 'Express !')}`, OR); }
             if (o.bonus === 'pourboire') { api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, `💶 +3`, OR); }
+            if (o.bonus === 'vie') { api.soigner?.(); api.effet?.(o.x, yJ - t * 0.9, `+1 ♥ ${tx(api, 'jeux.fx_vie', 'Vie !')}`, ROUGE); }
             continue;
           }
           const effet = cfg.toucher(o);
@@ -158,7 +163,12 @@ function creerChute(api, cfg) {
             // Bouclier : il encaisse ce déchet et disparaît. Nitro : l'obstacle éclate, et compte comme évité.
             if (bouclier) { bouclier = false; api.rompre?.(); api.secouer?.(0.5); api.effet?.(o.x, yJ - t * 0.9, `🛡️ ${tx(api, 'jeux.fx_encaisse', 'Encaissé !')}`, OR); api.eclat?.(o.x, yJ - t * 0.4, '#FFFFFF', 18); continue; }
             if (nitro > 0) { api.enchainer?.(); api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, `⚡ +1`, LIME); api.eclat?.(o.x, yJ - t * 0.4, LIME, 12); continue; }
-            return api.perdre();
+            // Pendant la grâce, l'obstacle traverse le joueur, estompé. Sinon il éclate et coûte un cœur.
+            if ((api.invincible?.() ?? 0) > 0) { o.inoffensif = true; restants.push(o); continue; }
+            if ((api.vies?.() ?? 1) > 0) api.eclat?.(o.x, yJ - t * 0.4, ROUGE, 14);
+            api.perdre();
+            o.inoffensif = true; o.sortie = SORTIE; restants.push(o);
+            continue;
           }
           if (effet === 'point') {
             const pts = o.points || 1;
@@ -178,7 +188,8 @@ function creerChute(api, cfg) {
         // L'objet vient de passer sous le joueur sans contact : esquivé (FairDodge), déchet évité (FairSort).
         if (!o.passe && dy >= t * 0.6) {
           o.passe = true;
-          const effet = o.bonus ? null : cfg.passer?.(o, dx, demiContact, t); // un bonus manqué ne rapporte rien
+          // Un bonus manqué ne rapporte rien, un obstacle traversé pendant la grâce non plus.
+          const effet = o.bonus || o.inoffensif ? null : cfg.passer?.(o, dx, demiContact, t);
           if (effet === 'point') { api.enchainer?.(); api.marquer(1); api.effet?.(o.x, yJ - t * 0.9, '+1'); }
           if (effet === 'frole') { api.enchainer?.(); api.marquer(2); api.effet?.(o.x, yJ - t * 0.9, `${tx(api, 'jeux.fx_pfiou', 'Pfiou !')} +2`, ORANGE); api.eclat?.(o.x, yJ, ORANGE, 6); }
           if (effet === 'alerte') { alerte = 0.4; api.effet?.(o.x, yJ - t * 0.9, tx(api, 'jeux.fx_ouf', 'Ouf !'), ORANGE); }
@@ -186,10 +197,14 @@ function creerChute(api, cfg) {
           if (!o.mauvais && !o.bonus && !cfg.route) api.rompre?.();
         }
         if (o.y > sol) {
-          const effet = cfg.manquer(o);
+          const effet = o.bonus || o.inoffensif ? null : cfg.manquer(o);
           if (effet === 'perdu') {
             if (bouclier) { bouclier = false; api.rompre?.(); api.secouer?.(0.5); api.effet?.(o.x, sol - t * 1.2, `🛡️ ${tx(api, 'jeux.fx_encaisse', 'Encaissé !')}`, OR); o.sortie = SORTIE; restants.push(o); continue; }
-            return api.perdre();
+            // Un plat par terre : un cœur de moins (sauf pendant la grâce, où il s'efface sans rien coûter).
+            if (!((api.invincible?.() ?? 0) > 0) && (api.vies?.() ?? 1) > 0) { api.effet?.(o.x, sol - t * 1.2, '−1 ♥', ROUGE); api.eclat?.(o.x, sol - t * 0.4, ROUGE, 10); }
+            api.perdre();
+            o.sortie = SORTIE; restants.push(o);
+            continue;
           }
           if (effet === 'point') { api.marquer(1); api.effet?.(o.x, sol - t * 1.2, '+1'); }
           o.sortie = SORTIE;
@@ -299,7 +314,7 @@ function creerChute(api, cfg) {
         const k = borner(o.y / sol, 0, 1);
         // Objet en train de s'effacer au sol : il rétrécit et pâlit.
         const s = o.sortie > 0 ? o.sortie / 0.14 : 1;
-        ctx.globalAlpha = s;
+        ctx.globalAlpha = s * (o.inoffensif && !o.sortie ? 0.4 : 1); // traversé pendant la grâce : estompé
         // Ombre au sol qui grandit à l'approche : on lit où l'objet va tomber.
         ctx.fillStyle = `rgba(0,0,0,${(0.12 + k * 0.28).toFixed(3)})`;
         ctx.beginPath(); ctx.ellipse(o.x, h - t * 0.45, t * (0.2 + k * 0.25) * s, t * 0.07, 0, 0, Math.PI * 2); ctx.fill();
@@ -403,6 +418,8 @@ function creerChute(api, cfg) {
       }
       // Le joueur penche légèrement dans le sens de son déplacement et rebondit quand il attrape.
       ctx.save();
+      // Grâce après un cœur perdu : le joueur clignote, comme dans tous les jeux d'arcade — on comprend sans lire.
+      if ((api.invincible?.() ?? 0) > 0) ctx.globalAlpha = Math.sin(horloge * 28) > 0 ? 0.3 : 1;
       ctx.translate(joueurX, h - t * 0.55);
       const sq = borner(rebond, -0.3, 0.3);
       ctx.scale(1 + sq * 0.5, 1 - sq * 0.6);
@@ -485,6 +502,8 @@ function rectArrondi(ctx, x, y, l, ht, r) {
 const CHUTE_LIN = 0.7;
 const PLATS = ['🍕', '🍔', '🍟', '🍩', '🍣', '🌮', '🥐', '🍦'];
 const OBSTACLES = ['🚧', '🪨', '🕳️', '🔥', '💥'];
+// Le cœur qui tombe quand il en manque un (FairCatch, FairDodge) : un bonus comme les autres, un peu lent pour qu'on l'ait.
+const COEUR = { emoji: '❤️', bonus: 'vie', vitesseFacteur: 0.85 };
 
 export const JEUX = [
   {
@@ -493,7 +512,7 @@ export const JEUX = [
     regles: [
       'But : des plats tombent du ciel, attrape-les tous dans ton panier avant qu’ils ne touchent le sol.',
       'Score : +1 par plat attrapé, +3 pour un plat doré ✨, +5 quand tu complètes la commande du client affichée en haut. 5 prises d’affilée = points ×2, 10 = ×3. L’aimant 🧲 attire les plats pendant 5 s. À chaque niveau (paliers de plus en plus longs), ça tombe un peu plus vite.',
-      'Fin de partie : un seul plat par terre et c’est fini. Ton record est gardé et compte pour le podium.'
+      'Vies : tu as 3 cœurs ♥. Un plat par terre en coûte un, puis tu clignotes un instant sans rien risquer. Un cœur ❤️ tombe parfois quand il t’en manque un : attrape-le. Plus de cœurs, c’est fini ; ton record compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
@@ -514,7 +533,7 @@ export const JEUX = [
     regles: [
       'But : tu livres en scooter et la route est semée d’obstacles (🚧 🪨 🕳️ 🔥 💥), faufile-toi sans rien toucher.',
       'Score : +1 par obstacle évité, +2 « Pfiou ! » quand il te frôle, +3 par pourboire 💶 ramassé. 5 esquives d’affilée = points ×2, 10 = ×3. La nitro ⚡ te rend invincible 3 s : les obstacles éclatent. À chaque niveau (paliers de plus en plus longs), la route accélère un peu.',
-      'Fin de partie : un seul choc et le scooter s’arrête. Ton record est gardé et compte pour le podium.'
+      'Vies : tu as 3 cœurs ♥. Un choc en coûte un, puis tu clignotes un instant et les obstacles te traversent. Un cœur ❤️ apparaît parfois sur la route quand il t’en manque un. Plus de cœurs, le scooter s’arrête ; ton record compte pour le podium.'
     ],
     controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le scooter suit. Clavier : flèches ← →, Échap ou P pour la pause.',
     creer: (api) => creerChute(api, {
@@ -535,17 +554,21 @@ export const JEUX = [
   },
   {
     key: 'reaction', label: 'FairFlash', sub: 'Réflexes rapides', emoji: '🎯',
-    stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 20, perdu: '⏱️ Trop lent !',
+    stockage: 'fairide_reaction_best', pointsParNiveau: 8, maxNiveau: 20, perdu: '⏱️ Trop lent !', invincible: 0,
     regles: [
       'But : une cible 🎯 surgit quelque part sur le terrain, tape dessus avant que l’anneau autour ne se referme.',
       'Score : +1 par cible touchée, +2 « Parfait ! » si tu tapes pendant que l’anneau est doré. 5 d’affilée = points ×2, 10 = ×3. Dès le niveau 2 la cible bouge ; toutes les 10 cibles, 3 s de Frénésie 🔥 où tout vaut Parfait. À chaque niveau (paliers de plus en plus longs), l’anneau se referme un peu plus vite.',
-      'Fin de partie : l’anneau se referme (il passe au rouge) avant que tu n’aies touché la cible. Taper à côté ne coûte rien.'
+      'Vies : tu as 3 cœurs ♥. Une cible ratée (l’anneau se referme) en coûte un, une bombe 💣 touchée aussi — elles apparaissent dès le niveau 3. Chaque Frénésie t’en rend un. Taper dans le vide ne coûte rien.'
     ],
     controles: 'Commandes : tape (ou clique) sur la cible. Clavier : Échap ou P pour la pause.',
     creer(api) {
       let w = api.w; let h = api.h; let cible = null; let reste = 0; let fenetre = 1; let precedente = null;
       let horloge = 0; let touches = []; // ondes laissées par les cibles touchées (x, y, age, parfait, r)
       let frenesie = 0; let touchees = 0; // frénésie : FRENESIE s pendant lesquelles l'anneau ne se referme pas, on tape à la volée
+      // Bombe 💣 (24/09/2026) : dès le niveau 3, une cible sur trois environ arrive avec une bombe posée ailleurs.
+      // Taper dessus coûte un cœur. Jusque-là, taper partout sans viser ne coûtait rien : il fallait donner une raison
+      // de regarder avant de taper. Elle disparaît avec sa cible. `fini` : dernier cœur perdu, on ne fait plus rien.
+      let bombe = null; let fini = false;
       const FRENESIE = 3;
       // Cible bien visible sans manger le terrain : le fondateur l'a demandée un peu plus petite (2026-09-19, × 0,8),
       // ses ondes et son viseur suivent puisque tout est exprimé en tailles de cible.
@@ -565,21 +588,32 @@ export const JEUX = [
         // Dès le niveau 2 la cible dérive (et rebondit sur les bords) : il faut la viser, pas seulement la voir.
         const vit = n >= 2 ? Math.min(w, h) * courbe(n - 2, 0.1, 0.36, 7) : 0; const dir = Math.random() * Math.PI * 2;
         cible = { x, y, age: 0, ratee: false, vx: Math.cos(dir) * vit, vy: Math.sin(dir) * vit }; precedente = cible;
+        // La bombe, loin de la cible (au moins 1,6 taille) : on ne doit jamais la toucher en visant juste.
+        bombe = null;
+        if (n >= 2 && Math.random() < Math.min(0.45, 0.22 + n * 0.02)) {
+          for (let i = 0; i < 10; i++) {
+            const bx = aleatoire(t / 2 + 4, w - t / 2 - 4); const by = aleatoire(t / 2 + 4, h - t / 2 - 4);
+            if (Math.hypot(bx - x, by - y) >= t * 1.6) { bombe = { x: bx, y: by, age: 0 }; break; }
+          }
+        }
       };
       return {
-        reset() { cible = null; reste = 0; precedente = null; touches = []; frenesie = 0; touchees = 0; },
+        reset() { cible = null; reste = 0; precedente = null; touches = []; frenesie = 0; touchees = 0; bombe = null; fini = false; },
         redimensionner(nw, nh) {
           const kx = nw / w; const ky = nh / h; w = nw; h = nh;
           if (cible) { cible.x *= kx; cible.y *= ky; }
+          if (bombe) { bombe.x *= kx; bombe.y *= ky; }
         },
-        etat() { return { cible: !!cible, x: cible?.x, y: cible?.y, reste, fenetre, frenesie, touchees }; },
+        etat() { return { cible: !!cible, x: cible?.x, y: cible?.y, reste, fenetre, frenesie, touchees, bombe: bombe ? { x: bombe.x, y: bombe.y } : null }; },
         update(dt, input) {
           if (!cible) nouvelleCible(input.niveau);
           const t = taille();
           horloge += dt;
           for (const o of touches) o.age += dt;
           touches = touches.filter((o) => o.age < 0.5);
+          if (fini) return undefined; // ralenti de fin : les ondes finissent de s'étendre, rien d'autre
           if (frenesie > 0) frenesie = Math.max(0, frenesie - dt);
+          if (bombe) bombe.age += dt;
           // Dérive de la cible, rebond sur les bords du terrain.
           if (cible.vx || cible.vy) {
             cible.x += cible.vx * dt; cible.y += cible.vy * dt;
@@ -593,7 +627,8 @@ export const JEUX = [
               if (frenesie <= 0) {
                 api.enchainer?.();
                 touchees += 1;
-                if (touchees % 10 === 0) { frenesie = FRENESIE; api.bonus?.(); api.effet?.(w / 2, h * 0.3, `🔥 ${tx(api, 'jeux.fx_frenesie', 'Frénésie !')}`, OR); }
+                // La Frénésie rend aussi un cœur s'il en manque un.
+                if (touchees % 10 === 0) { frenesie = FRENESIE; api.bonus?.(); api.effet?.(w / 2, h * 0.3, `🔥 ${tx(api, 'jeux.fx_frenesie', 'Frénésie !')}`, OR); if (api.soigner?.()) api.effet?.(w / 2, h * 0.3 + 26, `+1 ♥ ${tx(api, 'jeux.fx_vie', 'Vie !')}`, ROUGE); }
               }
               api.marquer(parfait ? 2 : 1);
               api.effet?.(cible.x, cible.y - t * 0.8, parfait ? `${tx(api, 'jeux.fx_parfait', 'Parfait !')} +2` : '+1', parfait ? OR : undefined);
@@ -603,11 +638,24 @@ export const JEUX = [
               nouvelleCible(api.niveau());
               return undefined;
             }
+            // À côté de la cible mais sur la bombe : elle saute, un cœur de moins. La cible, elle, continue.
+            if (bombe && Math.hypot(tape.x - bombe.x, tape.y - bombe.y) <= t * 0.55) {
+              api.effet?.(bombe.x, bombe.y - t * 0.7, `💥 ${tx(api, 'jeux.fx_boum', 'Boum !')}`, ROUGE);
+              api.eclat?.(bombe.x, bombe.y, ORANGE, 22); api.eclat?.(bombe.x, bombe.y, ROUGE, 12);
+              bombe = null;
+              api.rompre?.();
+              if (!api.perdre()) { fini = true; return undefined; }
+            }
           }
           // En frénésie l'anneau ne se referme pas : tape à la volée, chaque cible vaut « Parfait ».
           if (frenesie <= 0) reste -= dt;
           cible.age += dt;
-          if (reste <= 0) { reste = 0; cible.ratee = true; return api.perdre(); }
+          if (reste <= 0) {
+            // Anneau refermé : un cœur de moins et une nouvelle cible ailleurs — ou, au dernier cœur, la fin au ralenti.
+            reste = 0; cible.ratee = true;
+            api.eclat?.(cible.x, cible.y, ROUGE, 12);
+            if (api.perdre()) { api.effet?.(cible.x, cible.y - t * 0.8, '−1 ♥', ROUGE); nouvelleCible(api.niveau()); } else fini = true;
+          }
           return undefined;
         },
         draw(ctx) {
@@ -638,6 +686,21 @@ export const JEUX = [
             ctx.fillStyle = `rgba(255,209,102,${(0.08 + Math.sin(horloge * 12) * 0.04).toFixed(3)})`; ctx.fillRect(0, 0, w, h);
             ctx.fillStyle = OR; ctx.font = `900 ${api.large ? 16 : 13}px system-ui, sans-serif`; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
             ctx.fillText(`🔥 ${frenesie.toFixed(1)}s`, 10, 10);
+          }
+          if (bombe) {
+            // La bombe : jeton sombre cerclé de rouge pointillé qui tourne, mèche qui grésille — elle se lit « à
+            // éviter » à la forme et à la couleur, avant même de reconnaître l'emoji. Apparition en rebond, comme la cible.
+            const tb = taille(); const a = Math.min(1, bombe.age / 0.2);
+            const rb = tb * 0.42 * (1 + Math.sin(a * Math.PI) * 0.18 * (1 - a) + (a - 1) * 0.3);
+            ctx.save();
+            ctx.strokeStyle = `rgba(255,77,99,${(0.6 + Math.sin(bombe.age * 8) * 0.3).toFixed(3)})`;
+            ctx.lineWidth = Math.max(2, rb * 0.12); ctx.setLineDash([rb * 0.35, rb * 0.25]); ctx.lineDashOffset = -bombe.age * rb * 2;
+            ctx.beginPath(); ctx.arc(bombe.x, bombe.y, rb * 1.3, 0, Math.PI * 2); ctx.stroke();
+            ctx.restore();
+            jeton(ctx, bombe.x, bombe.y, rb, 'dechet');
+            emoji(ctx, '💣', bombe.x, bombe.y, rb * 1.5, Math.sin(bombe.age * 20) * 0.08);
+            ctx.fillStyle = Math.sin(bombe.age * 30) > 0 ? '#FFD166' : '#FF6B6B';
+            ctx.beginPath(); ctx.arc(bombe.x + rb * 0.45, bombe.y - rb * 0.6, Math.max(2, rb * 0.1), 0, Math.PI * 2); ctx.fill();
           }
           if (!cible) return;
           const t = taille(); const k = reste / fenetre;
