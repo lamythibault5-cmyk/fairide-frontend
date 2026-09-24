@@ -30,7 +30,18 @@ const SENS_KEY = 'fairide_game_sens';
 const GAINS = { douce: 1.15, normale: 1.6, vive: 2.1 };
 const lireSens = () => { try { const v = localStorage.getItem(SENS_KEY); return GAINS[v] ? v : 'normale'; } catch { return 'normale'; } };
 const tactileProbable = () => { try { return window.matchMedia('(pointer: coarse)').matches; } catch { return false; } };
-const IRIS = '#3B2FB5'; const LIME = '#C8F03C';
+const IRIS = '#3B2FB5'; const LIME = '#C8F03C'; const ROUGE = '#FF6B6B';
+// TROIS VIES (24/09/2026). Une seule erreur et c'était fini : une partie durait souvent moins de vingt secondes, et
+// la première chute arrivait avant d'avoir pris le rythme. Chaque erreur coûte désormais un cœur ; le dernier perdu
+// termine la partie. Un jeu peut en demander un autre nombre (jeu.vies).
+const VIES = 3;
+// Après un cœur perdu, le joueur clignote et ne peut plus être touché pendant ce temps (s) : sans ça, deux plats
+// tombés à 0,3 s d'écart coûtaient deux cœurs d'un coup. FairFlash le met à 0 (jeu.invincible) : la cible suivante
+// repart de toute façon avec un anneau plein, et une seconde de grâce y serait une cible gratuite.
+const INVINCIBLE = 1.4;
+// Le dernier cœur perdu, la partie ne se fige plus net : elle continue RALENTI s (temps réel) à 30 % de sa vitesse,
+// le temps de voir ce qui s'est passé, puis la carte de fin arrive.
+const RALENTI = 0.7; const VITESSE_RALENTI = 0.3;
 // Une ligne de règles = une icône + son texte ; le libellé avant le premier « : » est mis en gras.
 const ICONES_REGLES = ['cible', 'etoile', 'interdit', 'manette'];
 
@@ -68,7 +79,7 @@ function creerEffets() {
       }
     },
     // Annonce au centre du terrain (niveau franchi, compte à rebours) ; yk = hauteur relative.
-    annoncer(texte, duree = 1.3, yk = 0.3, grand = false) { annonce = { texte, reste: duree, duree, yk, grand }; },
+    annoncer(texte, duree = 1.3, yk = 0.3, grand = false, couleur = LIME) { annonce = { texte, reste: duree, duree, yk, grand, couleur }; },
     flasher() { flash = 1; },
     // Secousse : le terrain tremble un instant (chute, choc), en décalant tout le dessin.
     secouer(force = 1) { secousse = Math.max(secousse, force); },
@@ -118,7 +129,7 @@ function creerEffets() {
         ctx.save(); ctx.globalAlpha = alpha; ctx.translate(w / 2, h * annonce.yk); ctx.scale(echelle, echelle);
         ctx.font = `900 ${px}px system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.lineWidth = 6; ctx.strokeStyle = 'rgba(20,18,31,.6)'; ctx.strokeText(annonce.texte, 0, 0);
-        ctx.fillStyle = LIME; ctx.fillText(annonce.texte, 0, 0);
+        ctx.fillStyle = annonce.couleur; ctx.fillText(annonce.texte, 0, 0);
         ctx.restore();
       }
       if (flash > 0) { ctx.fillStyle = `rgba(217,45,60,${(flash * 0.35).toFixed(3)})`; ctx.fillRect(0, 0, w, h); }
@@ -229,6 +240,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
   // Combos : `serie` = bonnes actions d'affilée (le jeu appelle api.enchainer / api.rompre) ; le multiplicateur vaut
   // ×2 dès 5 d'affilée, ×3 dès 10 — annoncé, sonné, et appliqué à chaque point marqué. Le record est fêté une fois.
   const serieRef = useRef(0); const recordFete = useRef(false); const dernierSon = useRef(0);
+  // Vies (voir VIES) : la ref sert la boucle, l'état n'alimente que les cœurs du tableau de bord.
+  const viesMax = jeu.vies ?? VIES;
+  const [vies, setVies] = useState(viesMax);
+  const viesRef = useRef(viesMax);
+  const invincibleRef = useRef(0); // secondes de grâce restantes après un cœur perdu
+  const finRef = useRef(null); // secondes de ralenti restantes avant la carte de fin ; null = partie en cours
   const multiplicateur = () => 1 + Math.min(2, Math.floor(serieRef.current / 5));
   const scoreRef = useRef(0);
   const meilleurRef = useRef(meilleur);
@@ -382,6 +399,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       get h() { return tailleRef.current.h; },
       get large() { return grandRef.current; },
       marquer(n = 1) {
+        if (finRef.current != null) return; // pendant le ralenti de fin, plus rien ne compte
         const avant = niveau();
         // Le score est poussé à React une fois par image (fin de pas()), pas à chaque point : un salto combo
         // pouvait marquer quatre fois dans la même image, donc quatre rendus du cadre en pleine partie.
@@ -403,6 +421,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       },
       // Une bonne action de plus dans la série : le combo monte (annonce et son aux paliers ×2 / ×3).
       enchainer() {
+        if (finRef.current != null) return multiplicateur();
         const avant = multiplicateur();
         serieRef.current += 1;
         const apres = multiplicateur();
@@ -417,20 +436,36 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       // Bonus attrapé (aimant, nitro, bouclier…) : son dédié.
       bonus() { sfx.bonus(); try { navigator.vibrate?.(12); } catch { /* sans vibreur */ } },
       secouer(force) { effets.current.secouer(force); },
+      // Une erreur : un cœur de moins. Rend VRAI tant que la partie continue (le jeu remet alors une cible, laisse
+      // l'objet s'effacer…), FAUX quand c'était le dernier — la fin se joue au ralenti (voir pas()), le jeu n'a
+      // qu'à ne plus rien déclencher.
       perdre() {
-        if (statusRef.current !== 'playing') return;
+        if (statusRef.current !== 'playing' || finRef.current != null) return false;
+        if (invincibleRef.current > 0) return true; // déjà touché à l'instant : la grâce couvre celle-ci
         effets.current.flasher(); effets.current.secouer(1); effets.current.combo(1, 0); serieRef.current = 0;
-        sfx.perdu(); try { navigator.vibrate?.(60); } catch { /* sans vibreur */ }
-        const record = scoreRef.current > meilleurRef.current;
-        if (record) {
-          meilleurRef.current = scoreRef.current; setMeilleur(scoreRef.current);
-          try { localStorage.setItem(jeu.stockage, String(scoreRef.current)); } catch { /* stockage indisponible : le score vit le temps de la page */ }
+        if (viesRef.current > 1) {
+          viesRef.current -= 1; setVies(viesRef.current);
+          invincibleRef.current = jeu.invincible ?? INVINCIBLE;
+          effets.current.annoncer(`−1 ♥`, 0.9, 0.42, true, ROUGE);
+          sfx.touche(); try { navigator.vibrate?.(40); } catch { /* sans vibreur */ }
+          return true;
         }
-        setScore(scoreRef.current); scoreModifie.current = false;
-        setNouveauRecord(record);
-        setStatus('lost');
-        onScoreRef.current?.(scoreRef.current);
+        viesRef.current = 0; setVies(0);
+        sfx.perdu(); try { navigator.vibrate?.(80); } catch { /* sans vibreur */ }
+        finRef.current = RALENTI;
+        return false;
       },
+      // Un cœur rendu (cœur ramassé, Frénésie), jamais au-delà du maximum. Rend VRAI s'il a servi.
+      soigner() {
+        if (finRef.current != null || viesRef.current >= viesMax) return false;
+        viesRef.current += 1; setVies(viesRef.current);
+        sfx.vie(); try { navigator.vibrate?.(12); } catch { /* sans vibreur */ }
+        return true;
+      },
+      vies: () => viesRef.current,
+      viesMax: () => viesMax,
+      // Secondes de grâce restantes : le jeu fait clignoter le joueur et laisse passer ce qui le touche.
+      invincible: () => invincibleRef.current,
       // Effets partagés : « +1 » flottant, éclat de particules.
       effet(x, y, texte, couleur) { effets.current.texte(x, y, texte, couleur); },
       eclat(x, y, couleur, n) { effets.current.eclat(x, y, couleur, n); },
@@ -453,6 +488,19 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taille]);
 
+  // Fin de partie, une fois le ralenti écoulé : record, carte de fin, score envoyé au podium.
+  function terminer() {
+    const record = scoreRef.current > meilleurRef.current;
+    if (record) {
+      meilleurRef.current = scoreRef.current; setMeilleur(scoreRef.current);
+      try { localStorage.setItem(jeu.stockage, String(scoreRef.current)); } catch { /* stockage indisponible : le score vit le temps de la page */ }
+    }
+    setScore(scoreRef.current); scoreModifie.current = false;
+    setNouveauRecord(record);
+    setStatus('lost');
+    onScoreRef.current?.(scoreRef.current);
+  }
+
   // La boucle. Ne tourne qu'en partie ; s'arrête d'elle-même dès que le statut change.
   useEffect(() => {
     if (status !== 'playing') return undefined;
@@ -474,7 +522,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
         dette -= rendu;
         dt = periode + rendu;
       } else dette = 0;
+      // Ralenti de fin : le jeu avance à VITESSE_RALENTI, le compte à rebours du ralenti en temps réel.
+      const ralenti = finRef.current != null;
+      if (ralenti) { finRef.current -= dt; dt *= VITESSE_RALENTI; }
+      if (invincibleRef.current > 0) invincibleRef.current = Math.max(0, invincibleRef.current - dt);
       const inp = input.current;
+      if (ralenti) { inp.tapes = []; inp.gauche = false; inp.droite = false; } // plus de saisie : on regarde
       // Flèches ← → : un pointeur virtuel qui glisse à vitesse constante (les jeux ne voient qu'un x).
       if (inp.gauche !== inp.droite) {
         const { w, h } = tailleRef.current;
@@ -486,6 +539,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
       effets.current.update(dt);
       dessiner();
       if (scoreModifie.current) { scoreModifie.current = false; setScore(scoreRef.current); setPop((p) => p + 1); }
+      if (finRef.current != null && finRef.current <= 0) { finRef.current = null; terminer(); return; }
       if (statusRef.current === 'playing') raf.current = requestAnimationFrame(pas);
     };
     raf.current = requestAnimationFrame(pas);
@@ -623,6 +677,7 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
 
   function demarrer() {
     scoreRef.current = 0; setScore(0); setNouveauRecord(false);
+    viesRef.current = viesMax; setVies(viesMax); invincibleRef.current = 0; finRef.current = null;
     input.current = { x: null, y: null, enfonce: false, tapes: [], sauts: 0, gauche: false, droite: false };
     instance.current?.reset();
     effets.current.vider();
@@ -664,7 +719,12 @@ export default function GameFrame({ jeu, width = 140, height = 280, fill = false
     <div ref={racine} onPointerDown={surPointeurBasRacine} style={styleJeu(jeu.key)} className={`jeu${large || plein ? ' jeu--large' : ''}${remplir ? ' jeu--fill' : ''}${plein ? ' jeu--plein' : ''}${plein && !jeu.paysage ? ' jeu--portrait' : ''}`}>
       <div className="jeu-hud">
         <span className="jeu-best" title={t('gameFrame.bestTitle')}><Icone nom="etoile" taille={14} />{meilleur}</span>
-        <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>{score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span></span>
+        <span className="jeu-score" key={pop}><span className={`jeu-score-val${pop ? ' pop' : ''}`}>{score}</span> <span className="jeu-niveau">{t('gameFrame.level', { n: niv + 1 })}</span>
+          {/* Les cœurs : la clé change quand un cœur se vide ou se remplit, ce qui rejoue son animation (CSS). */}
+          <span className="jeu-vies" role="img" aria-label={tDef(t, 'gameFrame.lives', `${vies} vies`, { n: vies })}>
+            {Array.from({ length: viesMax }, (_, i) => <span key={`${i}-${i < vies}`} className={`jeu-coeur${i < vies ? '' : ' vide'}`} aria-hidden="true">♥</span>)}
+          </span>
+        </span>
         <span className="jeu-hud-boutons">
           <span style={{ position: 'relative' }}>
             <button type="button" className={`jeu-regles-btn jeu-musique-btn${musiqueActive ? ' active' : ''}`} onClick={() => setMenuMusique((o) => !o)} aria-haspopup="menu" aria-expanded={menuMusique} aria-label={t('gameFrame.musicMenuTitle')} title={t('gameFrame.musicMenuTitle')}>

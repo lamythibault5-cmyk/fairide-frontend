@@ -58,6 +58,8 @@ const REPLI = {
   '\u{1F369}': ['#E87FB0', 'rond'], '\u{1F363}': ['#F0EDE6', 'rond'], '\u{1F32E}': ['#E0B23C', 'rond'],
   '\u{1F950}': ['#D9A05B', 'rond'], '\u{1F366}': ['#F0D9C0', 'rond'],
   // Déchets de FairSort : teintes sales et sombres, jamais celles d'un plat.
+  // Le cœur qui rend une vie, la bombe de FairFlash (24/09/2026).
+  '\u{2764}\u{FE0F}': ['#E0344A', 'rond'], '\u{1F4A3}': ['#2A2733', 'rond'],
   '\u{1F5D1}\u{FE0F}': ['#6E7480', 'barre'], '\u{1F9A0}': ['#6FAE3A', 'rond'], '\u{1F480}': ['#D8D3C6', 'rond'], '\u{1F9EA}': ['#8E4FC6', 'barre']
 };
 
