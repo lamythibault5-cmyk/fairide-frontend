@@ -199,9 +199,11 @@ This matters more than it sounds: cards imported from a platform are often photo
 (248 of Punjab Tandoori's 249 dishes), and the old category-emoji frame filled whole sections with
 identical 🍽️ blocks.
 
-The empty frame **survives in [MenuItemRow.jsx](src/components/MenuItemRow.jsx)**, the restaurateur's
-editor, and that is deliberate: there it isn't filling a hole, it's prompting for a photo. Don't
-"unify" the two.
+The restaurateur's editor ([MenuItemRow.jsx](src/components/MenuItemRow.jsx)) does the same since
+2026-09-25: its dish tiles reuse `menu-item-card-sans-photo`. It used to keep the empty emoji frame on
+purpose, as a prompt to add a photo, but a whole imported card of them (Le Laakam: 156 dishes, no photo)
+looked like a broken page. The prompt now lives only in the edit form, next to the photo field
+(`dish-thumb-empty`). Don't bring the frame back to the grid.
 
 ### Internationalisation
 

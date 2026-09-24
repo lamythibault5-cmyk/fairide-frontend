@@ -5204,7 +5204,6 @@ export default {
       method5Title: '✍️ Créer ma carte moi-même',
       method5Sub: 'Pars d\'une sélection de plats typiques de ta cuisine, ou ajoute tes sections et tes plats un par un, plus bas sur cette page.',
       method5Button: 'Aller à ma carte',
-      quickStartConcierge: '🤝 Demander à Fairide de s\'en occuper',
       methodsTitleAdmin: 'Monter sa carte à la main',
       methodsIntroAdmin: 'Les cartes des commerces sont importées depuis leur page Uber Eats ou Deliveroo, photos et suppléments compris. Pour monter une carte à la main, pars des plats types de sa cuisine ou ajoute les sections et les plats un par un. Vérifie les prix et les descriptions comme le ferait le restaurateur.',
       adjustTitle: 'Ajuster tous les prix de ta carte',

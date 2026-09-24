@@ -5190,7 +5190,6 @@ export default {
       method5Title: '✍️ Mijn kaart zelf maken',
       method5Sub: 'Begin met een selectie typische gerechten van je keuken, of voeg je secties en gerechten één voor één toe, lager op deze pagina.',
       method5Button: 'Naar mijn kaart',
-      quickStartConcierge: '🤝 Fairide vragen het te doen',
       methodsTitleAdmin: 'Zijn kaart met de hand opbouwen',
       methodsIntroAdmin: 'De kaarten van zaken worden geïmporteerd vanaf hun Uber Eats- of Deliveroo-pagina, met foto\'s en supplementen. Om een kaart met de hand op te bouwen, vertrek je van de typische gerechten van de keuken of voeg je secties en gerechten een voor een toe. Controleer prijzen en beschrijvingen zoals de uitbater dat zou doen.',
       adjustTitle: 'Alle prijzen van je kaart aanpassen',

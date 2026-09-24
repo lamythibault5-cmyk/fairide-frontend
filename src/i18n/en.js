@@ -5190,7 +5190,6 @@ export default {
       method5Title: '✍️ Create my menu myself',
       method5Sub: 'Start from a selection of dishes typical of your cuisine, or add your sections and dishes one by one, further down this page.',
       method5Button: 'Go to my menu',
-      quickStartConcierge: '🤝 Ask Fairide to do it',
       methodsTitleAdmin: 'Build their menu by hand',
       methodsIntroAdmin: 'Business menus are imported from their Uber Eats or Deliveroo page, photos and add-ons included. To build a menu by hand, start from the typical dishes of its cuisine or add sections and dishes one by one. Check prices and descriptions as the owner would.',
       adjustTitle: 'Adjust all the prices on your menu',

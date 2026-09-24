@@ -457,10 +457,10 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // sources les plus fréquentes, et le copier-coller de secours demandait au restaurateur six
   // gestes pour un résultat incertain. Les cartes se montent maintenant en interne — voir
   // docs/importer-une-carte.md et scripts/importer-carte.js côté backend.
-  function allerAuConcierge() {
-    setStartChoiceMade(true);
-    setTimeout(() => { document.getElementById('menu-concierge')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 50);
-  }
+  //
+  // « Demander à Fairide de s'en occuper » a aussi quitté le démarrage rapide de la console (2026-09-25) :
+  // il faisait défiler vers #menu-concierge, qui n'existe que côté restaurateur — en console, le bouton
+  // ne faisait que refermer la carte de démarrage.
 
   // « Geste prix » sur la carte déjà en ligne : tous les prix ± X % (arrondi au 0,10 €), après confirmation.
   const [ajustPct, setAjustPct] = useState('');
@@ -568,7 +568,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </p>
           {!starterPickerOpen ? (
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-gold" onClick={allerAuConcierge}>{t('menuPage.quickStartConcierge')}</button>
               <button className="btn-teal" onClick={() => setStarterPickerOpen(true)}>
                 {t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}
               </button>
