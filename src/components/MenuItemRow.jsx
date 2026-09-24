@@ -263,10 +263,16 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     );
   }
 
+  /* PLAT SANS PHOTO : carte en texte seul, comme sur la carte client (MenuCategorySections.jsx) et comme
+   * Uber Eats. Le cadre vide avec l'emoji de catégorie était gardé ici exprès, pour inviter à ajouter une
+   * photo ; mais une carte importée en compte des dizaines (Le Laakam : 156 plats, aucune photo) et la
+   * grille entière avait l'air cassée (équipe, 2026-09-25). L'invitation reste dans la fiche d'édition,
+   * à côté du champ photo (dish-thumb-empty plus haut). */
+  const image = resolveItemImage(item, sections);
   return (
     <div
       ref={setNodeRef}
-      className={`menu-item-card${reorderMode ? ' menu-item-card-reordering' : ''}${selectMode && selected ? ' menu-item-card-selected' : ''}`}
+      className={`menu-item-card${image ? '' : ' menu-item-card-sans-photo'}${reorderMode ? ' menu-item-card-reordering' : ''}${selectMode && selected ? ' menu-item-card-selected' : ''}`}
       style={{
         cursor: reorderMode ? 'default' : 'pointer',
         position: 'relative',
@@ -294,10 +300,8 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         </span>
       )}
       {item.activePromo && <span className="promo-badge">🏷️ {item.activePromo.label}</span>}
-      {resolveItemImage(item, sections) ? (
-        <img loading="lazy" decoding="async" {...imgProps(resolveItemImage(item, sections), 320, '(max-width: 640px) 50vw, 320px')} alt={item.name} className="dish-thumb-lg" />
-      ) : (
-        <div className="dish-thumb-lg-empty"><span className="icon">{categoryEmoji(item.category)}</span></div>
+      {image && (
+        <img loading="lazy" decoding="async" {...imgProps(image, 320, '(max-width: 640px) 50vw, 320px')} alt={item.name} className="dish-thumb-lg" />
       )}
       <div className="name">
         {item.name}
