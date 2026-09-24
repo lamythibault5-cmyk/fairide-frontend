@@ -19,8 +19,6 @@ import GalleryPickerModal from '../../components/GalleryPickerModal';
 import { galleryForSection } from '../../menuCategories';
 import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
-import PlatformPhotosImport from '../../components/PlatformPhotosImport';
-import MenuDrafts from '../../components/MenuDrafts';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 
@@ -32,7 +30,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   const { t } = useLanguage();
   const contexteOutlet = useOutletContext();
   const { restaurant, restoId, loadDashboard } = contexte || contexteOutlet || {};
-  const num = (n) => (modeAdmin ? n - 1 : n);
 
   const [itemName, setItemName] = useState('');
   const [itemPrice, setItemPrice] = useState('');
@@ -74,10 +71,14 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // (photos/PDF lus par l'IA, lien, texte collé, modèles, brouillons, remise à zéro, photos de plateforme) restent
   // disponibles à l'équipe en console admin, qui fait le travail. Le restaurateur garde la modification manuelle de
   // sa carte (étape 2), la traduction et le geste sur les prix (étape 3).
+  //
+  // RETIRÉS DE LA CONSOLE (équipe, 2026-09-25) : les photos reprises d'une page de plateforme enregistrée
+  // (PlatformPhotosImport — fichier .html/.mhtml ou code source collé) et les brouillons de carte
+  // (MenuDrafts — une seconde carte à publier ou à substituer à la première). Trop techniques pour une
+  // équipe non technique, et devenus inutiles : les cartes arrivent avec leurs photos et leurs
+  // suppléments par l'import backend (fairide-backend/scripts/importer-carte.js). Les deux composants
+  // existent encore, sans appelant — à supprimer ou à réintégrer, pas à rebrancher en passant.
   const autresVisibles = modeAdmin;
-  // Photos reprises d'une page Uber Eats / Deliveroo / Takeaway (PlatformPhotosImport) : carte repliée par
-  // défaut une fois la carte créée, ouverte d'un clic — l'analyse ne coûte rien mais demande un fichier.
-  const [photosOuvertes, setPhotosOuvertes] = useState(false);
 
   // Sélection/réorganisation activée section par section (id de la section concernée, ou null si aucune
   // n'est active) plutôt qu'un mode global sur tout le menu — plus simple à suivre quand le menu a
@@ -537,14 +538,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
 
         {autresVisibles && (
           <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(3)}</span><h4>{t('menuPage.methodPhotosTitle')}</h4></div>
-            <p className="small methode-sous">{t('menuPage.methodPhotosSub')}</p>
-            <PlatformPhotosImport restoId={restoId} token={token} items={restaurant.menu} sections={restaurant.sections || []} onApplied={() => loadDashboard(restoId)} />
-          </div>
-        )}
-        {autresVisibles && (
-          <div className="methode">
-            <div className="methode-tete"><span className="methode-num">{num(6)}</span><h4>{t('menuPage.method5Title')}</h4></div>
+            <div className="methode-tete"><span className="methode-num">1</span><h4>{t('menuPage.method5Title')}</h4></div>
             <p className="small methode-sous">{t('menuPage.method5Sub')}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               {restaurant.menu.length === 0 && <button type="button" className="btn-outline" onClick={() => { setStartChoiceMade(false); setStarterPickerOpen(true); setTimeout(() => document.getElementById('menu-demarrage')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80); }}>{t('menuPage.chooseStarterDishes', { n: fullTemplateItems(restaurant.cuisine).length })}</button>}
@@ -554,7 +548,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         )}
         {autresVisibles && restaurant.menu.length === 0 && platsUnClic.length > 0 && (
           <div className="methode methode-un-clic">
-            <div className="methode-tete"><span className="methode-num">{num(7)}</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
+            <div className="methode-tete"><span className="methode-num">2</span><h4>{t('menuPage.oneClickTitle')}</h4><span className="pill teal">{t('menuPage.oneClickFastest')}</span></div>
             <p className="small methode-sous">{t('menuPage.oneClickSub', { n: platsUnClic.length, cuisine: restaurant.cuisine })}</p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
               <button type="button" className="btn-outline" disabled={applyingStarter} onClick={demarrerEnUnClic}>{applyingStarter ? '…' : t('menuPage.oneClickButton', { n: platsUnClic.length })}</button>
@@ -822,7 +816,11 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         onDelete={deleteOptionGroup}
       />
 
-      {(restaurant.menu.length > 0 || startChoiceMade) && (
+      {/* Raccourcis de construction (boissons / desserts « classiques », plats types de la cuisine) :
+          seulement pendant qu'on monte une carte à la main (startChoiceMade). Ils s'affichaient sous
+          TOUTE carte non vide — y compris une carte importée complète, où un clic ajoutait un Coca ou un
+          tiramisu au prix deviné par Fairide, que le commerce ne vend peut-être pas (équipe, 2026-09-25). */}
+      {startChoiceMade && (
         <>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
             <button type="button" className="btn-ghost" disabled={addingClassicDrinks} onClick={() => addClassics(CLASSIC_DRINKS, 'boisson', setAddingClassicDrinks)}>
@@ -861,29 +859,6 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </div>
         </div>
       )}
-      {modeAdmin && restaurant.menu.length > 0 && (
-        <div className="card" id="menu-photos-plateforme">
-          <div className="row" style={{ gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('platformPhotos.title')}</h3>
-              {!photosOuvertes && <p className="small" style={{ margin: 0 }}>{t('menuPage.methodPhotosSub')}</p>}
-            </div>
-            <button type="button" className="btn-outline" style={{ flexShrink: 0, padding: '6px 12px', fontSize: 13 }} onClick={() => setPhotosOuvertes((o) => !o)} aria-expanded={photosOuvertes} aria-controls="menu-photos-plateforme-corps">
-              {photosOuvertes ? t('menuPage.photosCardHide') : t('menuPage.photosCardShow')}
-            </button>
-          </div>
-          {photosOuvertes && (
-            <div id="menu-photos-plateforme-corps" style={{ marginTop: 10 }}>
-              <PlatformPhotosImport restoId={restoId} token={token} items={restaurant.menu} sections={restaurant.sections || []} onApplied={() => loadDashboard(restoId)} />
-            </div>
-          )}
-        </div>
-      )}
-      {/* Bloc de traduction, placé avant l'import : un restaurateur qui vient d'importer sa carte
-          enchaîne naturellement dessus. Le bouton est réutilisable — le serveur ne retraduit que
-          les plats dont le texte a bougé depuis la dernière fois. */}
-      {modeAdmin && <MenuDrafts restoId={restoId} token={token} menuCount={restaurant.menu.length} onPublished={() => loadDashboard(restoId)} />}
-
       {modeAdmin && restaurant.menu.length > 0 && (
         <div className="card" id="menu-reset">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.resetTitle')}</h3>
