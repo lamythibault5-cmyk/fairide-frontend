@@ -503,9 +503,13 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           <h2 className="menu-etape-titre">{t('menuPage.stepCreate')}</h2>
           <p className="small" style={{ margin: 0 }}>{carteVide ? t('menuPage.stepCreateHelpEmpty') : t('menuPage.stepCreateHelpDone', { n: restaurant.menu.length })}</p>
         </div>
-        {!carteVide && (
+        {/* Côté restaurateur seulement. En console admin, ce bouton (« Ajouter des plats en nombre »)
+            rouvrait les méthodes d'import sur une carte déjà remplie ; les cartes sont désormais montées
+            par scripts/importer-carte.js côté backend, et le bouton a été retiré à la demande de l'équipe
+            (2026-09-25). Sur une carte vide, les méthodes restent affichées d'office (methodesVisibles). */}
+        {!carteVide && !modeAdmin && (
           <button type="button" className="btn-outline" style={{ marginLeft: 'auto', padding: '6px 12px', fontSize: 13 }} onClick={() => setMethodesOuvertes((o) => !o)}>
-            {methodesOuvertes ? t('menuPage.hideMethods') : t(modeAdmin ? 'menuPage.showMethods' : 'menuPage.askFairideAgain')}
+            {methodesOuvertes ? t('menuPage.hideMethods') : t('menuPage.askFairideAgain')}
           </button>
         )}
       </div>

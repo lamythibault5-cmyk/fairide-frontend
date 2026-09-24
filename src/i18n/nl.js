@@ -5217,7 +5217,6 @@ export default {
       stepCreate: 'Je kaart aanmaken',
       stepCreateHelpEmpty: 'Vraag Fairide hieronder om je kaart te maken. Niets wordt gepubliceerd zonder dat je het hebt nagekeken.',
       stepCreateHelpDone: '{n} producten online.',
-      showMethods: 'Veel gerechten toevoegen',
       hideMethods: 'Methodes verbergen',
       stepEdit: 'Je kaart aanpassen, indien nodig',
       stepEditHelp: 'Je kaart zoals klanten ze zien. Alles kun je zelf aanpassen: gerechten, prijzen, foto\'s, secties.',

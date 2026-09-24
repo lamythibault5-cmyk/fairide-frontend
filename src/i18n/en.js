@@ -5217,7 +5217,6 @@ export default {
       stepCreate: 'Create your menu',
       stepCreateHelpEmpty: 'Ask Fairide to create your menu below. Nothing is published until you have checked it.',
       stepCreateHelpDone: '{n} products online.',
-      showMethods: 'Add many dishes',
       hideMethods: 'Hide the methods',
       stepEdit: 'Edit your menu, if needed',
       stepEditHelp: 'Your menu as customers see it. Everything can be edited by you: dishes, prices, photos, sections.',

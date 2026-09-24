@@ -5231,7 +5231,6 @@ export default {
       stepCreate: 'Créer ta carte',
       stepCreateHelpEmpty: 'Demande à Fairide de créer ta carte ci-dessous. Rien n\'est publié sans que tu l\'aies vérifié.',
       stepCreateHelpDone: '{n} produits en ligne.',
-      showMethods: 'Ajouter des plats en nombre',
       hideMethods: 'Masquer les méthodes',
       /* Les cinq méthodes manuelles sont repliées derrière ce bouton : la demande à Fairide occupe
          seule le premier écran (voir MenuPage.jsx). */
