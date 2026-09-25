@@ -13,7 +13,7 @@
     { "source": "/", "destination": "/index.html" },
     { "source": "/:lang(nl|en)", "destination": "/index.html" },
     {
-      "source": "/:lang(nl|en)?/:page(login|reset-password|restaurants|reserver|recherche|mentions-legales|cgv|confidentialite|cookies|aide|notre-histoire|account|orders|map|panier|checkout|order-success|order-cancelled|invoices|favorites|dashboard|driver|admin|jeux|crm|sales)/:rest*",
+      "source": "/:lang(nl|en)?/:page(login|reset-password|restaurants|reserver|recherche|mentions-legales|cgv|confidentialite|cookies|aide|notre-histoire|account|orders|map|panier|checkout|order-success|order-cancelled|invoices|favorites|dashboard|driver|admin|crm|sales)/:rest*",
       "destination": "/index.html"
     }
   ],

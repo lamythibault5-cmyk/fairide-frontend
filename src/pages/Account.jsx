@@ -1042,13 +1042,6 @@ export default function Account() {
         {role !== 'client' && <LigneCompte to="/notre-histoire" icone="boussole" titre={t('accountUi.ourStory')} />}
       </div>
 
-      {/* Mini-jeux : un onglet à part, tout en bas — ce n'est pas ce qu'on vient chercher dans Mon compte. Même
-          rangée pour les trois rôles. Il était en iris plein (23/09/2026) pour qu'on le remarque ; le fondateur l'a
-          voulu blanc comme les autres rangées le 24/09 : une carte à lui suffit à le détacher. */}
-      <div className="card account-groupe">
-        <LigneCompte to="/jeux" icone="manette" titre={t('accountUi.games')} sous={t('accountUi.gamesSub')} />
-      </div>
-
       <button className="btn-danger-ghost" onClick={logout}>{t('nav.logout')}</button>
 
       <p className="account-legal">
