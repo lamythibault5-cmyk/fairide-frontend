@@ -91,7 +91,9 @@ export default function MapPage() {
     // « Recommandé » ne réordonne rien : c'est l'ordre que le serveur renvoie, celui des autres
     // pages. Un tri maison baptisé « recommandé » laisserait croire à un classement éditorial qui
     // n'existe pas.
-    if (tri === 'note') return [...avecDistance].sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    // Note comptée seulement si quelqu'un a noté : restaurants.rating vaut 4,5 par défaut en base, et un
+    // commerce sans avis passait devant un commerce noté 4,2 par de vrais clients. Même règle que RestaurantList.
+    if (tri === 'note') return [...avecDistance].sort((a, b) => (b.reviewCount > 0 ? b.rating || 0 : 0) - (a.reviewCount > 0 ? a.rating || 0 : 0));
     if (tri === 'distance') return [...avecDistance].sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     return avecDistance;
   }, [restaurants, promosSeules, ouvertsSeuls, cuisine, prix, tri, position, recherche]);

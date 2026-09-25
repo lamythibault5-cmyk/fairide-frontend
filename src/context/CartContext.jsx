@@ -97,7 +97,9 @@ export function CartProvider({ children }) {
     setLines((prev) => {
       const existing = prev[lineKey];
       if (!existing) return prev;
-      const qty = existing.qty + delta;
+      // Même plafond que addOne et que le serveur (99 par plat) : sans lui, le « + » du récapitulatif
+      // montait au-delà, et la commande était refusée au paiement (« Quantité invalide »).
+      const qty = Math.min(99, existing.qty + delta);
       const next = { ...prev };
       if (qty <= 0) delete next[lineKey]; else next[lineKey] = { ...existing, qty };
       return next;

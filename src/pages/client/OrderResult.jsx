@@ -43,7 +43,22 @@ export default function OrderResult({ success }) {
   useEffect(() => {
     if (success) return;
     cartRef.current.restoreStashed();
-  }, [success]);
+    // Paiement abandonné : la commande restée impayée est annulée tout de suite. Le serveur retient le
+    // solde Fairide et le bon cadeau DÈS la création de la commande ; sans cette annulation, ils restaient
+    // bloqués jusqu'au ménage des commandes impayées (45 min, orderTimeouts.js côté serveur) — et le client,
+    // qui retrouve son panier ici et repasse commande, ne voyait plus son solde.
+    // Seulement si elle est bien IMPAYÉE : un client peut annuler une commande payée tant que le commerce ne
+    // l'a pas acceptée (remboursement), et un retour arrière vers cette page ne doit pas le faire à sa place.
+    if (orderId && token) {
+      api('/orders/mine', { token })
+        .then((orders) => {
+          const o = orders.find((x) => String(x.id) === String(orderId));
+          if (o && !o.paid && o.status === 'nouveau') return api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
+          return null;
+        })
+        .catch(() => {});
+    }
+  }, [success, orderId, token]);
 
   useEffect(() => {
     if (!orderId || !success || !token) return;
