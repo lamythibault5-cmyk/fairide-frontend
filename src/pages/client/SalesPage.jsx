@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import CrmMap, { distanceM } from '../../components/CrmMap';
 
 import '../../crm.css';
+import BusinessSearch from '../../components/BusinessSearch';
 
 // Page « Sales » des commerciaux : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
 // commerces qu'elle démarche, et où ils en sont — étape, visites, appels, notes datées, avis du restaurateur,
@@ -32,6 +33,19 @@ function maPosition() {
 // <input type="datetime-local"> attend l'heure locale sans fuseau.
 const versLocal = (ms) => { if (!ms) return ''; const d = new Date(ms); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`; };
 const maintenantLocal = () => versLocal(Date.now());
+
+// Commune bruxelloise d'un code postal : OpenStreetMap donne souvent « Bruxelles - Brussel » ou « Ixelles - Elsene »,
+// alors que Sales range les commerces par commune.
+const COMMUNE_PAR_CP = {
+  1000: 'Bruxelles', 1020: 'Bruxelles', 1030: 'Schaerbeek', 1040: 'Etterbeek', 1050: 'Ixelles', 1060: 'Saint-Gilles', 1070: 'Anderlecht',
+  1080: 'Molenbeek-Saint-Jean', 1081: 'Koekelberg', 1082: 'Berchem-Sainte-Agathe', 1083: 'Ganshoren', 1090: 'Jette', 1120: 'Bruxelles',
+  1130: 'Bruxelles', 1140: 'Evere', 1150: 'Woluwe-Saint-Pierre', 1160: 'Auderghem', 1170: 'Watermael-Boitsfort', 1180: 'Uccle', 1190: 'Forest',
+  1200: 'Woluwe-Saint-Lambert', 1210: 'Saint-Josse-ten-Noode'
+};
+// Cuisine OpenStreetMap (anglais, ex. « italian;pizza ») → le libellé qu'on utilise dans Sales.
+const CUISINE_OSM = { italian: 'Italien', pizza: 'Pizza', burger: 'Burgers', kebab: 'Kebab & Grill', sushi: 'Sushi', japanese: 'Japonais', chinese: 'Chinois', thai: 'Thaïlandais', vietnamese: 'Vietnamien', indian: 'Indien', lebanese: 'Libanais', moroccan: 'Marocain', turkish: 'Turc', greek: 'Grec', mexican: 'Mexicain', african: 'Africain', asian: 'Asiatique', korean: 'Coréen', belgian: 'Belge', french: 'Français', spanish: 'Espagnol', portuguese: 'Portugais', friture: 'Friterie', chicken: 'Fried Chicken', sandwich: 'Sandwichs & Salades', bagel: 'Sandwichs & Salades', coffee_shop: 'Coffee Shop', ice_cream: 'Desserts & Glaces', seafood: 'Poisson & Fruits de mer', vegetarian: 'Végétarien', vegan: 'Végétarien', ramen: 'Ramen', poke: 'Poke Bowl', bubble_tea: 'Bubble Tea', breakfast: 'Petit-déjeuner & Brunch' };
+const cuisineDepuisFiche = (c) => { const v = String(c || '').split(/[;,]/)[0].trim().toLowerCase(); return CUISINE_OSM[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, ' ') : ''); };
+const communeDepuisFiche = (fiche) => COMMUNE_PAR_CP[Number(fiche.postalCode)] || String(fiche.city || '').split(' - ')[0].trim();
 
 export default function SalesPage() {
   const { t } = useLanguage();
@@ -254,6 +268,7 @@ export default function SalesPage() {
 // candidats (« lu sur l'enseigne »), et l'adresse ou le téléphone visibles pré-remplissent la fiche.
 function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   const inputRef = useRef(null);
+  const pelliculeRef = useRef(null);
   const [fichier, setFichier] = useState(null);
   const [apercu, setApercu] = useState(null);
   const [etape, setEtape] = useState('choisir'); // choisir | analyse | verifier
@@ -264,10 +279,13 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
   useEffect(() => () => { if (apercu) URL.revokeObjectURL(apercu); }, [apercu]);
 
-  async function analyser(fich) {
+  // source : 'camera' (photo prise à l'instant, devant le commerce) ou 'pellicule' (photo déjà dans le téléphone).
+  async function analyser(fich, source = 'camera') {
     setFichier(fich); setApercu(URL.createObjectURL(fich)); setEtape('analyse');
-    // Position du téléphone en parallèle : utile si la photo n'a pas de GPS (WhatsApp, capture d'écran…).
-    let pos = null; try { pos = await maPosition(); } catch { /* sans position */ }
+    // Position du téléphone en parallèle : utile si la photo n'a pas de GPS (WhatsApp, capture d'écran…). Pas pour une
+    // photo de la pellicule : elle a pu être prise ailleurs, la position du téléphone tromperait la recherche — on se
+    // fie alors au GPS de la photo et à la lecture de l'enseigne.
+    let pos = null; if (source === 'camera') { try { pos = await maPosition(); } catch { /* sans position */ } }
     try {
       const r = await apiUpload('/sales/photo', { file: fich, token, fieldName: 'photo', fields: pos ? { lat: pos.lat, lng: pos.lng } : undefined });
       setReco(r);
@@ -299,11 +317,17 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
       <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={valider} noValidate>
         <h3 className="modal-titre">📷 {t('sales.photoTitle')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.photoIntro')}</p>
-        <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => { const x = e.target.files?.[0]; if (x) analyser(x); e.target.value = ''; }} />
+        <input ref={inputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={(e) => { const x = e.target.files?.[0]; if (x) analyser(x, 'camera'); e.target.value = ''; }} />
+        {/* Sans « capture » : le téléphone ouvre la pellicule (photos prises plus tôt, reçues…). */}
+        <input ref={pelliculeRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => { const x = e.target.files?.[0]; if (x) analyser(x, 'pellicule'); e.target.value = ''; }} />
         {etape === 'choisir' && (
           <div className="crm-photo-choix">
-            <button type="button" className="btn-gold" onClick={() => inputRef.current?.click()}>📷 {t('sales.photoTake')}</button>
+            <div className="row" style={{ gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <button type="button" className="btn-gold" onClick={() => inputRef.current?.click()}>📷 {t('sales.photoTake')}</button>
+              <button type="button" className="btn-outline" onClick={() => pelliculeRef.current?.click()}>🖼️ {t('sales.photoGallery')}</button>
+            </div>
             <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.photoHint')}</p>
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('sales.photoGalleryHint')}</p>
           </div>
         )}
         {etape === 'analyse' && (
@@ -321,7 +345,10 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
                 <p style={{ margin: 0 }}>📍 {reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
                 {zone && <p style={{ margin: '4px 0 0' }}>🎯 {t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
                 {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}>🏠 {[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
-                <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => inputRef.current?.click()}>{t('sales.photoRetake')}</button>
+                <span className="row" style={{ gap: 12 }}>
+                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => inputRef.current?.click()}>{t('sales.photoRetake')}</button>
+                  <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 12 }} onClick={() => pelliculeRef.current?.click()}>🖼️ {t('sales.photoGallery')}</button>
+                </span>
               </div>
             </div>
             {reco.already?.length > 0 && (
@@ -386,6 +413,25 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
   const [position, setPosition] = useState(null); // { lat, lng } posé avec « je suis devant »
   const [geoEnCours, setGeoEnCours] = useState(false);
   const champ = (k) => (e) => setF((s) => ({ ...s, [k]: e.target.value }));
+  // Raccourci (fondateur, 2026-09-25), le même qu'à l'inscription des restaurateurs : le code postal, puis la liste de
+  // tous les commerces de la zone — un clic sur le bon remplit nom, adresse, commune, téléphone, e-mail et cuisine.
+  // Ouvert d'office ; « je remplis à la main » ou « Changer » le referment / le rouvrent.
+  const [recherche, setRecherche] = useState('ouverte'); // 'ouverte' | 'remplie' | 'fermee'
+  const [cpRecherche, setCpRecherche] = useState('');
+  function appliquerFiche(fiche) {
+    if (!fiche) return;
+    if (fiche.source === 'manuel' && !fiche.name) { setRecherche('fermee'); return; }
+    setF((s) => ({
+      ...s,
+      name: fiche.name || s.name,
+      address: [[fiche.street, fiche.number].filter(Boolean).join(' '), [fiche.postalCode, communeDepuisFiche(fiche)].filter(Boolean).join(' ')].filter(Boolean).join(', ') || s.address,
+      commune: communeDepuisFiche(fiche) || s.commune,
+      phone: fiche.phone || s.phone,
+      email: fiche.email || s.email,
+      cuisine: cuisineDepuisFiche(fiche.cuisine) || s.cuisine
+    }));
+    setRecherche('remplie');
+  }
   async function prendrePosition() {
     setGeoEnCours(true);
     try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError'), 'erreur'); } finally { setGeoEnCours(false); }
@@ -403,7 +449,19 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
       <form className="modal-box drawer-box crm-form" onClick={(e) => e.stopPropagation()} onSubmit={enregistrer} noValidate>
         <h3 className="modal-titre">{t('sales.addProspect')}</h3>
         <p className="small" style={{ margin: '0 0 12px' }}>{t('sales.formHint')}</p>
-        <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} autoFocus /></div>
+        {recherche === 'ouverte' ? (
+          <div className="crm-bloc">
+            <b className="crm-bloc-titre">🔎 {t('sales.findByPostal')}</b>
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('sales.findByPostalHint')}</p>
+            <BusinessSearch compact initialPostalCode={cpRecherche} onPostalCode={setCpRecherche} onSelect={(fiche) => { if (fiche && (fiche.source !== 'manuel' || !fiche.name)) appliquerFiche(fiche); }} />
+          </div>
+        ) : (
+          <p className="small crm-rempli" style={{ margin: '0 0 10px' }}>
+            {recherche === 'remplie' ? `✅ ${t('sales.filledFromList')} ` : ''}
+            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}>🔎 {t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.findByPostal')}</button>
+          </p>
+        )}
+        <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} /></div>
         {aDesDoublons ? (
           <div className="crm-doublons" role="status">
             {doublons.mine.map((d) => <p key={`m${d.id}`}>⚠️ {t('sales.dupMine', { name: d.name, stage: t(`sales.stage_${d.stage}`) })}</p>)}
