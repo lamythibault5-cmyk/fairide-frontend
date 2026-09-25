@@ -4447,7 +4447,7 @@ export default {
       gotIt: 'Begrepen',
       why: 'Waarom spelletjes?',
       choose: 'Kies een minispel',
-      pageIntro: 'Drie minispellen om de tijd te doden: vang het eten, ontwijk de obstakels, raak het doel op tijd.',
+      pageIntro: 'Zes minigames om de tijd te doden: vang de gerechten, ontwijk de obstakels, raak het doel op tijd, sorteer het afval, maak flips met de fiets, mik op de openingen.',
       pageMetaDescription: 'De minispellen van Fairide: kleine spellen om de tijd te doden, naast de kaart van je koerier.',
       pageOnTheWay: 'Je bestelling bij {name} is onderweg',
       pageSplitOpen: 'Spelen met de kaart van de koerier',

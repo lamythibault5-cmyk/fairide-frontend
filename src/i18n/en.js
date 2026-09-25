@@ -4447,7 +4447,7 @@ export default {
       gotIt: 'Got it',
       why: 'Why games?',
       choose: 'Choose a mini-game',
-      pageIntro: 'Three mini-games to pass the time: catch the food, dodge the obstacles, hit the target in time.',
+      pageIntro: 'Six mini-games to pass the time: catch the food, dodge the obstacles, hit the target in time, sort out the trash, chain bike flips, aim for the gaps.',
       pageMetaDescription: 'Fairide mini-games: little games to pass the time, next to your courier\'s map.',
       pageOnTheWay: 'Your order from {name} is on its way',
       pageSplitOpen: 'Play with the courier\'s map',

@@ -867,7 +867,7 @@ export const JEUX = [
             if (dansHauteur && !dansOuverture) {
               if ((api.invincible?.() ?? 0) > 0) { restants.push(m); continue; } // grâce : le mur traverse la flèche
               impact = { x: ax, y: Math.max(pointe, m.y), reste: 1.2 };
-              api.rompre?.(); api.effet?.(ax, pointe - h * 0.1, '−1 ♥', ROUGE); api.eclat?.(ax, pointe, ROUGE, 12);
+              api.eclat?.(ax, pointe, ROUGE, 12); // le « −1 ♥ » et la fin de série sont annoncés par le moteur (perdre)
               // Dernier cœur : la partie se termine (ralenti de fin, voir GameFrame). Sinon la piste repart de zéro.
               if (!api.perdre()) return undefined;
               murs = []; anneaux = []; traine = []; depuis = 0; dernierCentre = null; return undefined;
@@ -987,7 +987,10 @@ export const JEUX = [
           }
 
           // La flèche : halo, fût épais cerné d'encre, empennage rose et violet, pointe verte (alignée) ou ambre.
-          ctx.save(); ctx.translate(ax, yf); ctx.rotate(borner(inclinaison, -0.5, 0.5));
+          // Pendant la grâce qui suit un cœur perdu, elle clignote (les murs la traversent), comme dans les autres jeux.
+          const grace = api.invincible?.() ?? 0;
+          ctx.save(); if (grace > 0 && Math.floor(grace * 10) % 2 === 0) ctx.globalAlpha = 0.35;
+          ctx.translate(ax, yf); ctx.rotate(borner(inclinaison, -0.5, 0.5));
           const gHalo = ctx.createRadialGradient(0, -L * 0.2, 2, 0, -L * 0.2, L * 0.95);
           gHalo.addColorStop(0, alignee ? 'rgba(200,240,60,.35)' : 'rgba(255,209,102,.35)'); gHalo.addColorStop(1, 'rgba(0,0,0,0)');
           ctx.fillStyle = gHalo; ctx.beginPath(); ctx.arc(0, -L * 0.2, L * 0.95, 0, Math.PI * 2); ctx.fill();

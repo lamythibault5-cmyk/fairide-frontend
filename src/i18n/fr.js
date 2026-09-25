@@ -4457,7 +4457,7 @@ export default {
       gotIt: 'Compris',
       why: 'Pourquoi des jeux ?',
       choose: 'Choisir un mini-jeu',
-      pageIntro: 'Trois mini-jeux pour patienter : attrape les plats, évite les obstacles, touche la cible à temps.',
+      pageIntro: 'Six mini-jeux pour patienter : attrape les plats, évite les obstacles, touche la cible à temps, trie les déchets, enchaîne les saltos à vélo, vise les passages.',
       pageMetaDescription: 'Les mini-jeux Fairide : des petits jeux pour patienter, à côté de la carte de ton livreur.',
       pageOnTheWay: 'Ta commande chez {name} est en route',
       pageSplitOpen: 'Jouer avec la carte du livreur',
