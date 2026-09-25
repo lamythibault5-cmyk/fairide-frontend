@@ -44,7 +44,7 @@ pre-existing warnings across the codebase. Don't read a clean-looking tail as su
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.
 
-The backend does have tests (`npm test`, 71 of them, `node --test`). If your change touches
+The backend does have tests (`npm test`, 97 of them on 2026-09-25, `node --test`). If your change touches
 anything the backend also reads — page parsing, menu shape — run them there.
 
 ### Environment variables

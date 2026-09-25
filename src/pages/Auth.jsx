@@ -337,6 +337,10 @@ export default function Auth() {
   // passe validé. Voir routes/auth.js pour la raison de cet ordre.
   const [totpAttendu, setTotpAttendu] = useState(false);
   const [totpCode, setTotpCode] = useState('');
+  // Connexion Google d'un compte à double authentification : le serveur la réclame désormais aussi (elle
+  // ne l'était qu'au mot de passe). Le jeton Google est gardé le temps de saisir le code, puis renvoyé
+  // avec lui par le même bouton « Se connecter » — il reste valable une heure.
+  const [googleEnAttente2fa, setGoogleEnAttente2fa] = useState(null);
   const [resending, setResending] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
   const [forgotEmail, setForgotEmail] = useState('');
@@ -638,6 +642,11 @@ export default function Auth() {
         retenirGoogle(response.credential);
         setMode('register');
         toast(t('auth.googleNewAccount'));
+      } else if (err.code === 'TOTP_REQUIRED') {
+        // Compte Google protégé par un second facteur : on ouvre le champ du code, le formulaire renverra
+        // le jeton Google avec lui (voir googleEnAttente2fa).
+        setGoogleEnAttente2fa(response.credential);
+        setTotpAttendu(true);
       } else {
         toast(err.message, 'erreur');
       }
@@ -763,6 +772,12 @@ export default function Auth() {
           toast(t('auth.welcome', { name: data.user.name }));
           await allerApresInscription(data.user);
         }
+      } else if (googleEnAttente2fa) {
+        const data = await loginWithGoogle(googleEnAttente2fa, role, { totpCode: totpCode.trim() });
+        reussi = true;
+        setGoogleEnAttente2fa(null);
+        toast(t('auth.welcome', { name: data.user.name }));
+        await allerApresConnexion(data.user);
       } else {
         const data = await login(email.trim(), password, totpCode.trim() || undefined);
         reussi = true;
