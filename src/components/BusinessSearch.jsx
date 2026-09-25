@@ -18,7 +18,8 @@ const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: 
 // siteTrouve : site officiel trouvé par la recherche web de l'inscription quand la fiche n'en avait pas — ajouté à la
 // fiche (et donc proposé à la relecture), jamais par-dessus un site déjà renseigné.
 // initialFiche : fiche déjà choisie (reprise d'une inscription après un rechargement) — affichée d'emblée.
-export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '', initialFiche = null }) {
+// libelleManuel : texte du bouton « pas dans la liste » (par défaut, celui du restaurateur qui cherche SON commerce).
+export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '', initialFiche = null, libelleManuel = null }) {
   const { t } = useLanguage();
   const [cp, setCp] = useState(initialPostalCode);
   const [zone, setZone] = useState(null); // { results, unavailable, pending }
@@ -143,7 +144,7 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               </li>
             ))}
           </ul>
-          <button type="button" className="btn-ghost business-manual" onClick={saisirALaMain}>{t('businessSearch.notInList')}</button>
+          <button type="button" className="btn-ghost business-manual" onClick={saisirALaMain}>{libelleManuel || t('businessSearch.notInList')}</button>
         </>
       )}
 

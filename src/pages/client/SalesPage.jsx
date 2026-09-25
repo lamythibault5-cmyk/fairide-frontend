@@ -418,9 +418,17 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
   // Ouvert d'office ; « je remplis à la main » ou « Changer » le referment / le rouvrent.
   const [recherche, setRecherche] = useState('ouverte'); // 'ouverte' | 'remplie' | 'fermee'
   const [cpRecherche, setCpRecherche] = useState('');
+  // Commerce introuvable dans la liste (fondateur, 2026-09-25) : on l'inscrit à la main. La commune du code postal déjà
+  // tapé est reprise, le curseur va dans « Nom » ; seul le nom est obligatoire.
+  function passerEnManuel() {
+    const commune = COMMUNE_PAR_CP[Number(cpRecherche)];
+    if (commune) setF((s) => ({ ...s, commune: s.commune || commune }));
+    setRecherche('fermee');
+    setTimeout(() => document.getElementById('crm-nom')?.focus(), 50);
+  }
   function appliquerFiche(fiche) {
     if (!fiche) return;
-    if (fiche.source === 'manuel' && !fiche.name) { setRecherche('fermee'); return; }
+    if (fiche.source === 'manuel' && !fiche.name) { passerEnManuel(); return; }
     setF((s) => ({
       ...s,
       name: fiche.name || s.name,
@@ -453,12 +461,14 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
           <div className="crm-bloc">
             <b className="crm-bloc-titre">🔎 {t('sales.findByPostal')}</b>
             <p className="small" style={{ margin: '0 0 8px' }}>{t('sales.findByPostalHint')}</p>
-            <BusinessSearch compact initialPostalCode={cpRecherche} onPostalCode={setCpRecherche} onSelect={(fiche) => { if (fiche && (fiche.source !== 'manuel' || !fiche.name)) appliquerFiche(fiche); }} />
+            {/* Toujours visible, au-dessus de la liste (qui peut compter des centaines de commerces). */}
+            <button type="button" className="btn-outline crm-manuel-btn" style={{ fontSize: 13, marginBottom: 10 }} onClick={passerEnManuel}>✍️ {t('sales.manualEntry')}</button>
+            <BusinessSearch compact libelleManuel={`✍️ ${t('sales.manualEntry')}`} initialPostalCode={cpRecherche} onPostalCode={setCpRecherche} onSelect={(fiche) => { if (fiche && (fiche.source !== 'manuel' || !fiche.name)) appliquerFiche(fiche); }} />
           </div>
         ) : (
           <p className="small crm-rempli" style={{ margin: '0 0 10px' }}>
-            {recherche === 'remplie' ? `✅ ${t('sales.filledFromList')} ` : ''}
-            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}>🔎 {t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.findByPostal')}</button>
+            {recherche === 'remplie' ? `✅ ${t('sales.filledFromList')} ` : `✍️ ${t('sales.manualMode')} `}
+            <button type="button" className="btn-ghost" style={{ padding: '2px 0', fontSize: 13 }} onClick={() => setRecherche('ouverte')}>🔎 {t(recherche === 'remplie' ? 'sales.changeBusiness' : 'sales.searchInstead')}</button>
           </p>
         )}
         <div className="field"><label htmlFor="crm-nom">{t('sales.fName')} *</label><input id="crm-nom" value={f.name} onChange={champ('name')} /></div>
