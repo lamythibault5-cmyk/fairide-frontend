@@ -28,6 +28,7 @@
 // aussi traduites par le moteur, clé par clé : jeux.<key>_regles_0..3.
 
 import { aleatoire, choix, courbe, emoji, fondDegrade, sacFairide, IRIS, LIME } from './dessin';
+import { creerRider } from './rider';
 
 const OR = '#FFD166';
 const ROUGE = '#FF6B6B';
@@ -501,6 +502,8 @@ function rectArrondi(ctx, x, y, l, ht, r) {
 // Part linéaire de la courbe de chute (le reste est accéléré) : 0,7 = départ à 70 % de la vitesse moyenne, arrivée à 130 %.
 const CHUTE_LIN = 0.7;
 const PLATS = ['🍕', '🍔', '🍟', '🍩', '🍣', '🌮', '🥐', '🍦'];
+// Les déchets de FairSort (cerclés de rouge par le badge ✕).
+const MAUVAIS = ['🗑️', '🦠', '💀', '🧪'];
 const OBSTACLES = ['🚧', '🪨', '🕳️', '🔥', '💥'];
 // Le cœur qui tombe quand il en manque un (FairCatch, FairDodge) : un bonus comme les autres, un peu lent pour qu'on l'ait.
 const COEUR = { emoji: '❤️', bonus: 'vie', vitesseFacteur: 0.85 };
@@ -743,6 +746,280 @@ export const JEUX = [
           ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
           ctx.fillStyle = 'rgba(255,255,255,.35)';
           ctx.beginPath(); ctx.ellipse(cx - r * 0.35, cy - r * 0.45, r * 0.28, r * 0.13, -0.6, 0, Math.PI * 2); ctx.fill();
+        }
+      };
+    }
+  },
+  {
+    key: 'sort', label: 'FairSort', sub: 'Trie les bons plats', emoji: '🗑️',
+    stockage: 'fairide_sort_best', pointsParNiveau: 10, maxNiveau: 20, perdu: '🤢 Mauvais choix !',
+    regles: [
+      'But : des plats tombent, mais aussi des déchets cerclés de rouge (🗑️ 🦠 💀 🧪). Attrape les plats, laisse tomber les déchets.',
+      'Score : +1 par plat attrapé ; 5 d’affilée = points ×2, 10 = ×3 (un plat raté casse la série, sans coûter de point). Le bouclier 🛡️ encaisse un déchet à ta place. À chaque niveau (paliers de plus en plus longs) : un peu plus de déchets, un peu plus vite.',
+      'Vies : tu as 3 cœurs ♥. Un déchet dans le panier en coûte un (le bouclier 🛡️ t’en évite un), puis tu clignotes un instant sans rien risquer. Le cadre clignote orange quand un déchet t’a frôlé : ouf ! Plus de cœur : fin de partie. Ton record compte pour le podium.'
+    ],
+    controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, le panier suit. Clavier : flèches ← →, Échap ou P pour la pause.',
+    creer: (api) => creerChute(api, {
+      // Ciel vert profond (et non plus vert vif) : les jetons blancs cerclés de vert s'y fondaient.
+      joueur: '🧺', ciel: ['#0B2A24', '#17614B'], eclat: LIME, demiContact: 1.3, badges: true, sac: true, echelle: 0.88,
+      // Bonus : le bouclier 🛡️ — il encaisse UN déchet à ta place.
+      bonus: () => ({ emoji: '🛡️', bonus: 'bouclier', vitesseFacteur: 0.9 }),
+      nouvelObjet: (n) => {
+        const mauvais = Math.random() < courbe(n, 0.22, 0.5, 7);
+        return { emoji: choix(mauvais ? MAUVAIS : PLATS), mauvais };
+      },
+      intervalle: (n) => courbe(n, 1.02, 0.34, 6),
+      vitesse: (n) => aleatoire(courbe(n, 0.128, 0.40, 7), courbe(n, 0.256, 0.62, 7)),
+      toucher: (o) => (o.mauvais ? 'perdu' : 'point'), manquer: () => null,
+      // Un déchet passé à moins d'un tiers d'objet du panier : alerte orange, sans point ni pénalité.
+      passer: (o, dx, demi, t) => (o.mauvais && dx < demi + t * 0.35 ? 'alerte' : null)
+    })
+  },
+  {
+    key: 'rider', label: 'FairRider', sub: 'Saltos, sauts, loopings, lettres', emoji: '🚴',
+    stockage: 'fairide_rider_best', pointsParNiveau: 8, maxNiveau: 12, paysage: true, perdu: '🤕 Chute !', vies: 1,
+    regles: [
+      'But : maintiens pour mettre les gaz au sol ; en l’air, maintenir fait tourner le vélo en arrière (backflip), relâcher arrête la rotation. Double tap (ou double clic) pour sauter par-dessus les obstacles de la route. Tremplins, crêtes, trous et falaises te font décoller, et les loopings se bouclent tout seuls si tu arrives assez vite.',
+      'Lettres : un mot lié à Fairide (7 lettres au plus) est affiché en haut, et chaque mot complété en révèle un plus long. Ses lettres sont sur la route ou en l’air — il faut parfois sauter pour les cueillir. Attrape-les toutes : tous les points gagnés pendant ce mot sont doublés, puis le mot suivant apparaît. Une lettre ratée revient plus loin.',
+      'Score : +1 par backflip (un double vaut 2, un triple 3) et autant en prime dès deux tours dans le même vol, +1 si tu retombes pile dans l’axe, +3 par looping, +1 par obstacle franchi en l’air, +1 par lettre, +1 par sac de livraison, +1 par bout de piste. Fin de partie : retomber de travers (au-delà de 65°), tomber dans un trou ou percuter un obstacle au sol.'
+    ],
+    controles: 'Maintiens (doigt, souris ou Espace) : gaz au sol, backflip en l’air. Double tap, double clic ou double Espace : saut — au clavier, ↑ ou W saute directement. Échap ou P pour la pause.',
+    creer: (api) => creerRider(api)
+  },
+  {
+    key: 'arrow', label: 'FairArrow', sub: 'Vise les passages', emoji: '🏹',
+    stockage: 'fairide_arrow_best', pointsParNiveau: 8, maxNiveau: 20, perdu: '💢 Dans le mur !',
+    regles: [
+      'But : ta flèche fonce vers le haut, des murs descendent avec chacun une seule ouverture, vise le passage.',
+      'Score : +1 par mur traversé, +2 par anneau doré ⭕ enfilé entre deux murs. 5 murs d’affilée = points ×2, 10 = ×3. Le passage à viser est éclairé en vert. À chaque niveau (paliers de plus en plus longs), les murs accélèrent et les ouvertures rétrécissent un peu.',
+      'Vies : tu as 3 cœurs ♥. Un mur touché en coûte un, la piste repart et tu clignotes un instant sans rien risquer. Plus de cœur : fin de partie. Ton record est gardé et compte pour le podium.'
+    ],
+    controles: 'Commandes : glisse le doigt (ou la souris) à gauche et à droite, la flèche suit. Clavier : flèches ← →, Échap ou P pour la pause.',
+    creer(api) {
+      let w = api.w; let h = api.h; let murs = []; let ax = w / 2; let cibleX = w / 2; let depuis = 0; let inclinaison = 0; let traine = []; let dernierCentre = null; let impact = null;
+      let vAx = 0; let defile = 0; let vDecor = 0;
+      let anneaux = []; let mursPoses = 0; // anneaux bonus (+2) semés entre deux murs, un sur trois
+      const yFleche = () => h * 0.8;
+      // Flèche, murs et anneaux un peu plus fins (fondateur, 2026-09-19, × 0,8) : le passage à viser reste le même,
+      // on voit simplement plus de piste. Les ouvertures (jouabilité) ne changent pas.
+      const ECHELLE = 0.8;
+      const longueur = () => Math.max(28, h * 0.09 * ECHELLE);
+      const epaisseurMur = () => Math.max(8, h * 0.03 * ECHELLE);
+      const rayonAnneau = () => Math.max(12, Math.min(w, h) * 0.055 * ECHELLE);
+      const espacement = () => h * 0.42;
+      const TRAINE = 0.3; // durée de vie d'un point de traînée
+      return {
+        reset() { murs = []; ax = w / 2; cibleX = w / 2; depuis = espacement(); inclinaison = 0; traine = []; dernierCentre = null; impact = null; vAx = 0; defile = 0; anneaux = []; mursPoses = 0; },
+        redimensionner(nw, nh) {
+          const kx = nw / w; const ky = nh / h; w = nw; h = nh;
+          ax *= kx; cibleX *= kx; depuis *= ky;
+          if (dernierCentre != null) dernierCentre *= kx;
+          const ep = epaisseurMur();
+          for (const m of murs) { m.x *= kx; m.largeur *= kx; m.y *= ky; m.ep = ep; }
+          for (const an of anneaux) { an.x *= kx; an.y *= ky; an.r = rayonAnneau(); }
+          for (const tr of traine) { tr.x *= kx; tr.y *= ky; }
+        },
+        etat() {
+          let prochain = null;
+          for (const m of murs) if (!m.compte && (!prochain || m.y > prochain.y)) prochain = m;
+          return { murs: murs.length, traine: traine.length, ax, anneaux: anneaux.length, passage: prochain ? prochain.x + prochain.largeur / 2 : null, impact: impact ? 1 : 0 };
+        },
+        update(dt, input) {
+          const n = input.niveau;
+          const v = h * courbe(n, 0.38, 1.15, 7);
+          const ouverture = w * courbe(n, 0.36, 0.15, 7);
+          const ep = epaisseurMur();
+          if (input.x != null) cibleX = borner(input.x, 10, w - 10);
+          // Ressort presque critique (voir creerChute) : la flèche prend son virage et se stabilise sans vibrer.
+          {
+            const raideur = 1900; const amorti = 2 * Math.sqrt(raideur) * 0.95;
+            const sous = Math.max(1, Math.ceil(dt / (1 / 120)));
+            for (let i = 0; i < sous; i++) { const d = dt / sous; vAx += ((cibleX - ax) * raideur - vAx * amorti) * d; ax += vAx * d; }
+            ax = borner(ax, 10, w - 10);
+          }
+          inclinaison += ((vAx / (w * 3)) - inclinaison) * Math.min(1, dt * 12);
+          depuis += v * dt; defile += v * dt; vDecor = v;
+          if (depuis >= espacement()) {
+            depuis = 0;
+            // L'ouverture suivante reste atteignable : au plus 70 % de la largeur (54 % au dernier palier) de
+            // distance avec la précédente — mais jamais au même endroit (au moins une demi-ouverture de décalage).
+            const saut = w * (0.7 - n * 0.02);
+            const prec = dernierCentre ?? w / 2;
+            let centre = prec;
+            for (let i = 0; i < 10; i++) {
+              centre = aleatoire(Math.max(ouverture / 2, prec - saut), Math.min(w - ouverture / 2, prec + saut));
+              if (Math.abs(centre - prec) >= ouverture * 0.5) break;
+            }
+            dernierCentre = centre;
+            murs.push({ y: -ep, x: centre - ouverture / 2, largeur: ouverture, ep, compte: false });
+            // Un anneau bonus un mur sur trois, à mi-chemin du suivant, décalé du passage : il faut faire un écart pour +2.
+            mursPoses += 1;
+            if (mursPoses % 3 === 0) { const r = rayonAnneau(); const ecart = (Math.random() < 0.5 ? -1 : 1) * aleatoire(w * 0.12, w * 0.28); anneaux.push({ x: borner(centre + ecart, r + 6, w - r - 6), y: -ep - espacement() / 2, r, pris: false }); }
+          }
+          const yf = yFleche(); const L = longueur(); const pointe = yf - L * 0.6; const demi = 7;
+          const restants = [];
+          for (const m of murs) {
+            m.y += v * dt;
+            // Zone de contact : de la pointe au milieu du fût. Les empennes (sous yf) passent sans compter :
+            // le mur est déjà franchi quand il les atteint.
+            const dansHauteur = m.y < yf + 4 && m.y + m.ep > pointe;
+            const dansOuverture = ax - demi > m.x && ax + demi < m.x + m.largeur;
+            if (dansHauteur && !dansOuverture) {
+              if ((api.invincible?.() ?? 0) > 0) { restants.push(m); continue; } // grâce : le mur traverse la flèche
+              impact = { x: ax, y: Math.max(pointe, m.y), reste: 1.2 };
+              api.rompre?.(); api.effet?.(ax, pointe - h * 0.1, '−1 ♥', ROUGE); api.eclat?.(ax, pointe, ROUGE, 12);
+              // Dernier cœur : la partie se termine (ralenti de fin, voir GameFrame). Sinon la piste repart de zéro.
+              if (!api.perdre()) return undefined;
+              murs = []; anneaux = []; traine = []; depuis = 0; dernierCentre = null; return undefined;
+            }
+            if (!m.compte && m.y > yf) { m.compte = true; api.enchainer?.(); api.marquer(1); api.effet?.(ax, yf - h * 0.12, '+1'); api.eclat?.(ax, pointe, LIME, 5); }
+            if (m.y < h + m.ep) restants.push(m);
+          }
+          murs = restants;
+          // Anneaux : la pointe qui passe dedans = +2 ; ceux qui sortent en bas disparaissent.
+          for (const an of anneaux) {
+            an.y += v * dt;
+            if (!an.pris && Math.abs(an.y - pointe) < v * dt + 4 && Math.abs(ax - an.x) < an.r * 0.85) { an.pris = true; api.enchainer?.(); api.bonus?.(); api.marquer(2); api.effet?.(an.x, an.y - h * 0.08, `⭕ ${tx(api, 'jeux.fx_anneau', 'Anneau')} +2`, OR); api.eclat?.(an.x, an.y, OR, 14); }
+          }
+          anneaux = anneaux.filter((an) => an.y < h + an.r * 2);
+          if (impact) { impact.reste -= dt; if (impact.reste <= 0) impact = null; }
+          // Traînée : les dernières positions de la flèche, qui descendent avec le décor et s'estompent.
+          traine.push({ x: ax, y: yf + L * 0.45, reste: TRAINE });
+          for (const tr of traine) { tr.reste -= dt; tr.y += v * dt; }
+          traine = traine.filter((tr) => tr.reste > 0).slice(-18);
+          return undefined;
+        },
+        draw(ctx) {
+          // Nuit violette plus profonde qu'avant : les barrières claires et le passage lime ressortent mieux.
+          fondDegrade(ctx, w, h, '#17123A', '#3B31A0');
+          // Lignes de vitesse en trois plans, qui filent vers le bas moins vite que les murs : on sent qu'on fonce.
+          for (let i = 0; i < 18; i++) {
+            const plan = 0.3 + (i % 3) * 0.25;
+            const px = (i * 97.3 + 13) % w;
+            const lg = h * (0.04 + plan * 0.07) * (1 + vDecor / h * 0.6);
+            const py = ((((i * 131) % (h + lg)) + defile * plan) % (h + lg)) - lg;
+            ctx.fillStyle = `rgba(255,255,255,${(0.05 + plan * 0.12).toFixed(3)})`;
+            ctx.fillRect(px, py, 1.2 + plan, lg);
+          }
+          const yf = yFleche(); const L = longueur();
+          // Le prochain mur à franchir.
+          let prochain = null;
+          for (const m of murs) if (!m.compte && (!prochain || m.y > prochain.y)) prochain = m;
+          const alignee = !prochain || (ax - 7 > prochain.x && ax + 7 < prochain.x + prochain.largeur);
+          const accent = alignee ? LIME : OR;
+
+          if (prochain) {
+            const bas = prochain.y + prochain.ep;
+            // Faisceau lumineux sous le passage : on lit d'un coup d'œil où viser, même de loin.
+            const g = ctx.createLinearGradient(0, bas, 0, bas + h * 0.24);
+            g.addColorStop(0, 'rgba(200,240,60,.42)'); g.addColorStop(1, 'rgba(200,240,60,0)');
+            ctx.fillStyle = g; ctx.fillRect(prochain.x, bas, prochain.largeur, h * 0.24);
+            // Chevrons qui montent dans le faisceau : « passe par ici ».
+            const pasC = Math.max(12, h * 0.035); const cx = prochain.x + prochain.largeur / 2; const lc = Math.min(prochain.largeur * 0.22, 16);
+            ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            for (let k = 0; k < 3; k++) {
+              const yc = bas + pasC * (k + 1) - ((defile * 0.25) % pasC);
+              ctx.strokeStyle = `rgba(200,240,60,${(0.85 - k * 0.25).toFixed(2)})`;
+              ctx.beginPath(); ctx.moveTo(cx - lc, yc + lc * 0.5); ctx.lineTo(cx, yc - lc * 0.1); ctx.lineTo(cx + lc, yc + lc * 0.5); ctx.stroke();
+            }
+            // Ligne de visée pointillée, de la pointe au mur : verte si l'on passe, ambre sinon.
+            if (bas < yf - L * 0.7) {
+              ctx.save();
+              ctx.setLineDash([6, 7]); ctx.lineDashOffset = defile * 0.4;
+              ctx.strokeStyle = alignee ? 'rgba(200,240,60,.75)' : 'rgba(255,209,102,.8)'; ctx.lineWidth = 2;
+              ctx.beginPath(); ctx.moveTo(ax, yf - L * 0.7); ctx.lineTo(ax, bas + 2); ctx.stroke();
+              ctx.restore();
+            }
+          }
+
+          // Les murs : des barrières rayées rouge et blanc, franches ; les suivants, plus loin dans la file,
+          // restent estompés pour ne pas voler l'attention au prochain.
+          for (const m of murs) {
+            const actif = m === prochain;
+            ctx.globalAlpha = actif ? 1 : 0.5;
+            for (const [x0, lw] of [[0, m.x], [m.x + m.largeur, w - m.x - m.largeur]]) {
+              if (lw <= 0) continue;
+              ctx.fillStyle = 'rgba(0,0,0,.3)';
+              rectArrondi(ctx, x0, m.y + 3, lw, m.ep, Math.min(5, m.ep / 2)); ctx.fill();
+              ctx.fillStyle = '#F4F1EA';
+              rectArrondi(ctx, x0, m.y, lw, m.ep, Math.min(5, m.ep / 2)); ctx.fill();
+              ctx.save();
+              rectArrondi(ctx, x0, m.y, lw, m.ep, Math.min(5, m.ep / 2)); ctx.clip();
+              ctx.fillStyle = '#E0344A';
+              const pasR = m.ep * 1.5;
+              for (let sx = x0 - m.ep; sx < x0 + lw + m.ep; sx += pasR) {
+                ctx.beginPath(); ctx.moveTo(sx, m.y + m.ep); ctx.lineTo(sx + m.ep * 0.75, m.y + m.ep); ctx.lineTo(sx + m.ep * 1.5, m.y); ctx.lineTo(sx + m.ep * 0.75, m.y); ctx.closePath(); ctx.fill();
+              }
+              ctx.restore();
+            }
+            if (actif) {
+              // Poteaux lime de part et d'autre du passage, avec un halo : la porte à franchir.
+              const hp = m.ep + 10;
+              for (const px of [m.x - 3, m.x + m.largeur + 3]) {
+                const gh = ctx.createRadialGradient(px, m.y + m.ep / 2, 1, px, m.y + m.ep / 2, hp);
+                gh.addColorStop(0, 'rgba(200,240,60,.55)'); gh.addColorStop(1, 'rgba(200,240,60,0)');
+                ctx.fillStyle = gh; ctx.beginPath(); ctx.arc(px, m.y + m.ep / 2, hp, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = LIME; rectArrondi(ctx, px - 3, m.y - 5, 6, m.ep + 10, 3); ctx.fill();
+              }
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          // Anneaux bonus : cercle doré épais, halo, et un point au centre — pris = onde qui s'ouvre.
+          for (const an of anneaux) {
+            if (an.pris) continue;
+            const gh = ctx.createRadialGradient(an.x, an.y, an.r * 0.4, an.x, an.y, an.r * 2.2);
+            gh.addColorStop(0, 'rgba(255,209,102,.30)'); gh.addColorStop(1, 'rgba(255,209,102,0)');
+            ctx.fillStyle = gh; ctx.beginPath(); ctx.arc(an.x, an.y, an.r * 2.2, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = OR; ctx.lineWidth = Math.max(4, an.r * 0.3); ctx.beginPath(); ctx.arc(an.x, an.y, an.r, 0, Math.PI * 2); ctx.stroke();
+            ctx.strokeStyle = '#14121F'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(an.x, an.y, an.r + Math.max(2, an.r * 0.15), 0, Math.PI * 2); ctx.stroke();
+            ctx.fillStyle = 'rgba(255,255,255,.8)'; ctx.beginPath(); ctx.arc(an.x, an.y, Math.max(2, an.r * 0.12), 0, Math.PI * 2); ctx.fill();
+          }
+          // Traînée : un ruban qui s'affine et pâlit derrière la flèche, de la couleur de la visée.
+          if (traine.length > 1) {
+            ctx.lineCap = 'round';
+            for (let i = 1; i < traine.length; i++) {
+              const a = traine[i - 1]; const b = traine[i]; const k = b.reste / TRAINE;
+              ctx.globalAlpha = k * 0.6; ctx.strokeStyle = accent; ctx.lineWidth = 1.5 + k * 5;
+              ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+            }
+            ctx.globalAlpha = 1;
+          }
+
+          // La flèche : halo, fût épais cerné d'encre, empennage rose et violet, pointe verte (alignée) ou ambre.
+          ctx.save(); ctx.translate(ax, yf); ctx.rotate(borner(inclinaison, -0.5, 0.5));
+          const gHalo = ctx.createRadialGradient(0, -L * 0.2, 2, 0, -L * 0.2, L * 0.95);
+          gHalo.addColorStop(0, alignee ? 'rgba(200,240,60,.35)' : 'rgba(255,209,102,.35)'); gHalo.addColorStop(1, 'rgba(0,0,0,0)');
+          ctx.fillStyle = gHalo; ctx.beginPath(); ctx.arc(0, -L * 0.2, L * 0.95, 0, Math.PI * 2); ctx.fill();
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          // Empennage
+          for (const sens of [-1, 1]) {
+            ctx.fillStyle = sens < 0 ? '#FF5C8A' : '#8C7CFF';
+            ctx.beginPath(); ctx.moveTo(0, L * 0.18); ctx.lineTo(sens * 11, L * 0.46); ctx.lineTo(sens * 11, L * 0.66); ctx.lineTo(0, L * 0.44); ctx.closePath(); ctx.fill();
+            ctx.strokeStyle = '#14121F'; ctx.lineWidth = 1.5; ctx.stroke();
+          }
+          // Fût
+          ctx.strokeStyle = '#14121F'; ctx.lineWidth = 7;
+          ctx.beginPath(); ctx.moveTo(0, L * 0.5); ctx.lineTo(0, -L * 0.3); ctx.stroke();
+          ctx.strokeStyle = '#F7F5F0'; ctx.lineWidth = 4;
+          ctx.beginPath(); ctx.moveTo(0, L * 0.5); ctx.lineTo(0, -L * 0.3); ctx.stroke();
+          // Pointe
+          ctx.fillStyle = accent;
+          ctx.beginPath(); ctx.moveTo(0, -L * 0.66); ctx.lineTo(-13, -L * 0.26); ctx.lineTo(0, -L * 0.34); ctx.lineTo(13, -L * 0.26); ctx.closePath(); ctx.fill();
+          ctx.strokeStyle = '#14121F'; ctx.lineWidth = 2; ctx.stroke();
+          ctx.restore();
+
+          // Impact : un éclat rouge en étoile et une onde, le temps que la carte de fin apparaisse.
+          if (impact) {
+            ctx.strokeStyle = ROUGE; ctx.lineWidth = 3; ctx.lineCap = 'round';
+            for (let i = 0; i < 10; i++) {
+              const a = i * Math.PI / 5;
+              ctx.beginPath(); ctx.moveTo(impact.x + Math.cos(a) * 7, impact.y + Math.sin(a) * 7); ctx.lineTo(impact.x + Math.cos(a) * 17, impact.y + Math.sin(a) * 17); ctx.stroke();
+            }
+            ctx.fillStyle = '#FFFFFF'; ctx.beginPath(); ctx.arc(impact.x, impact.y, 5, 0, Math.PI * 2); ctx.fill();
+            ctx.strokeStyle = 'rgba(255,107,107,.6)'; ctx.lineWidth = 2;
+            ctx.beginPath(); ctx.arc(impact.x, impact.y, 24, 0, Math.PI * 2); ctx.stroke();
+          }
         }
       };
     }
