@@ -52,7 +52,6 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   const [openingHoursTexte, setOpeningHoursTexte] = useState('');
   const [offersDelivery, setOffersDelivery] = useState(true);
   const [offersPickup, setOffersPickup] = useState(true);
-  const [offersDineIn, setOffersDineIn] = useState(false);
   const [deliveryModePref, setDeliveryModePref] = useState('fairide');
   const [desc, setDesc] = useState('');
   const [siteWeb, setSiteWeb] = useState('');
@@ -94,7 +93,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
         }).catch(() => { /* enrichissement facultatif */ });
       }
       if (h.services) {
-        setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup); setOffersDineIn(!!h.services.dineIn);
+        setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup);
         if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);
       }
       if (h.commune && COMMUNES.includes(h.commune)) setCommune(h.commune);
@@ -124,7 +123,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
       if ((recoEtat === 'none' || recoEtat === 'error') && !adresseConfirmee) return t('dashResto.toastAddressConfirm');
     }
     if (cle === 'horaires' && !fondateur && !horairesRemplis(hours)) return t('dashResto.toastHoursRequired');
-    if (cle === 'services' && !offersDelivery && !offersPickup && !offersDineIn) return t('dashResto.toastServicesRequired');
+    if (cle === 'services' && !offersDelivery && !offersPickup) return t('dashResto.toastServicesRequired');
     return null;
   }
 
@@ -141,7 +140,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn, phone: telephoneCommerce.trim(), website: siteWeb.trim()
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn: false, phone: telephoneCommerce.trim(), website: siteWeb.trim()
         }
       });
       // Le site web relevé à l'inscription sert ensuite à lire la carte (Mes produits → import depuis le web).
@@ -246,7 +245,6 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
             </div>
           )}
           <label className="service-option"><input type="checkbox" checked={offersPickup} onChange={(e) => setOffersPickup(e.target.checked)} /> <span>🏠 {t('auth.servicePickup')}</span></label>
-          <label className="service-option"><input type="checkbox" checked={offersDineIn} onChange={(e) => setOffersDineIn(e.target.checked)} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
         </div>
       )}
 

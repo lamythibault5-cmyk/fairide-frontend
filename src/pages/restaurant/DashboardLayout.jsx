@@ -200,7 +200,7 @@ export default function DashboardLayout() {
           addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
           hours: horairesValides ? h.hours : null, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
           fromSignup: true,
-          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false, offersDineIn: !!sv.dineIn,
+          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false, offersDineIn: false,
           phone: h.phone || '', website: h.website || ''
         }
       });
@@ -301,9 +301,8 @@ export default function DashboardLayout() {
               <p className="small" style={{ margin: 0 }}>{t('dashResto.notListedText')}</p>
             </LigneCompte>
           )}
-          {/* Version gratuite (réservations, à emporter payé sur place) : aucun paiement ne transite par Fairide — la rangée
-              n'a rien à demander, même avec un acompte coché (il ne s'applique qu'une fois les paiements actifs). Même
-              règle que formules.paiementsRequis côté serveur. */}
+          {/* À emporter payé uniquement sur place : aucun paiement ne transite par Fairide, la rangée n'a rien à demander.
+              Même règle que formules.paiementsRequis côté serveur. */}
           {restaurant.stripeConnectStatus !== 'active' && (restaurant.wantsDelivery || (restaurant.wantsPickup && restaurant.pickupPaymentMode !== 'on_site')) && (
             <LigneCompte
               accent={restaurant.stripeConnectStatus === 'restricted' ? 'danger' : 'warn'} icone="carteBancaire"

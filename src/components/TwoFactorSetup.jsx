@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
-import { qrSvgPath } from './reservations/qr';
+import { qrSvgPath } from './qr';
 
 /* Double authentification (TOTP) — enrôlement et retrait, depuis son propre compte.
  *
@@ -11,7 +11,7 @@ import { qrSvgPath } from './reservations/qr';
  * relit confortablement, et ce parcours a son propre état à trois temps (préparer → confirmer →
  * codes de secours) qui n'a rien à voir avec le reste de la page.
  *
- * Le QR est dessiné par components/reservations/qr.js, déjà écrit pour l'onglet Intégration des
+ * Le QR est dessiné par components/qr.js, déjà écrit pour l'onglet Intégration des
  * réservations : générateur sans dépendance, versions 1 à 10, soit 213 octets — un lien otpauth en
  * fait environ 130. Rien à installer, et un paquet de moins à auditer (voir les entrées « dépendances
  * vulnérables » et « paquets malveillants » de la checklist de lancement).

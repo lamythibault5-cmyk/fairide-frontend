@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -32,12 +32,9 @@ export default function Checkout() {
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
-  const location = useLocation();
   const { t } = useLanguage();
   const libellesDates = { today: t('checkout.dateToday'), tomorrow: t('checkout.dateTomorrow') };
-  // Arrivée via "Réserver une table" depuis la page du restaurant : réservation seule, sans articles
-  // au panier — le client valide juste ses infos de réservation, envoyées au restaurant sans paiement.
-  const reservationOnly = !!location.state?.reservationOnly;
+  // Fairide = livraison et à emporter (fondateur, 2026-09-25) : plus de réservation de table.
 
   const [restaurant, setRestaurant] = useState(null);
   const [notFound, setNotFound] = useState(false);
@@ -50,27 +47,17 @@ export default function Checkout() {
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
   const [paiementSurPlace, setPaiementSurPlace] = useState(false);
-  // Bon cadeau du commerce (vendu au comptoir, voir Réservations → Bons cadeaux côté restaurateur) :
+  // Bon cadeau du commerce (vendu au comptoir, voir Promotions → Bons cadeaux côté restaurateur) :
   // vérifié à la saisie, déduit côté serveur à la création de la commande.
   const [giftCode, setGiftCode] = useState('');
   const [giftCheck, setGiftCheck] = useState(null);
-  const [fulfillmentType, setFulfillmentType] = useState(reservationOnly ? 'dine_in' : 'delivery');
+  const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [scheduleDate, setScheduleDate] = useState(reservationOnly ? getScheduleDateOptions(7, libellesDates)[0].value : '');
+  const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   const [dateOptions] = useState(() => getScheduleDateOptions(7, libellesDates));
-  const [partySize, setPartySize] = useState(2);
-  const [reservationName, setReservationName] = useState(user.name || '');
-  const [reservationNote, setReservationNote] = useState('');
-  // Où le client préfère être installé : '' (peu importe), 'inside' ou 'outside'. Une préférence, pas
-  // une condition — le serveur replie sur une autre zone et le dit dans la confirmation.
-  const [zonePreference, setZonePreference] = useState('');
-  // Disponibilité réelle du restaurant pour la date et le groupe choisis (créneaux libres, règles,
-  // acompte) — voir GET /restaurants/:id/availability. Remplace la grille fixe 9h–22h pour la table.
-  const [dispo, setDispo] = useState(null);
-  const [dispoChargement, setDispoChargement] = useState(false);
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
   const [paying, setPaying] = useState(false);
@@ -81,13 +68,10 @@ export default function Checkout() {
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
 
-  // Réservation seule (bouton "Réserver une table") : le panier n'a jamais reçu d'article pour ce
-  // restaurant, donc cart.restaurantId peut être vide — on retombe alors sur l'id transmis explicitement
-  // par le bouton (voir RestaurantMenu.jsx) plutôt que de rediriger vers /restaurants à tort.
-  const restaurantId = cart.restaurantId || (reservationOnly ? location.state?.restaurantId : null);
+  const restaurantId = cart.restaurantId;
 
   useEffect(() => {
-    if (!restaurantId || (cart.count === 0 && !reservationOnly)) {
+    if (!restaurantId || cart.count === 0) {
       navigate('/restaurants');
       return;
     }
@@ -101,18 +85,7 @@ export default function Checkout() {
   useEffect(() => {
     if (!restaurant || fulfillmentInitRef.current) return;
     fulfillmentInitRef.current = true;
-    if (reservationOnly) {
-      if (!restaurant.offersDineIn) {
-        toast(t('checkout.toastNoReservation'));
-        navigate(`/restaurants/${restaurantId}`);
-      }
-      return;
-    }
-    // Restaurant passé en réservation seule alors que le client avait déjà un panier : le repli vers
-    // 'dine_in' laissait passer une commande de plats en ligne, exactement ce que le restaurateur vient
-    // d'interdire — et ce que sa fiche annonce au client. On le renvoie vers la fiche, d'où part le
-    // parcours de réservation. Le panier est conservé : il redeviendra valable si le restaurant
-    // rouvre la commande en ligne.
+    // Commerce sans livraison ni à emporter (commande en ligne fermée) : retour à sa fiche, le panier est conservé.
     if (!restaurant.offersDelivery && !restaurant.offersPickup) {
       toast(t('checkout.toastNoOnlineOrder'));
       navigate(`/restaurants/${restaurantId}`);
@@ -130,26 +103,6 @@ export default function Checkout() {
 
   // L'etape « dessert/boisson » a quitte le paiement : elle est maintenant sur la page Panier, avant
   // d'y entrer. On arrive donc directement sur la confirmation des informations de commande.
-
-  // Créneaux libres pour la date et le groupe : rechargés à chaque changement de l'un ou l'autre. Le
-  // créneau déjà choisi est conservé s'il reste disponible, effacé sinon (on ne laisse pas partir
-  // une réservation sur une heure devenue complète). Déclaré AVANT les sorties anticipées ci-dessous,
-  // comme tout hook : l'ordre des hooks doit être le même à chaque rendu.
-  useEffect(() => {
-    if (fulfillmentType !== 'dine_in' || !restaurantId || !scheduleDate || !partySize) { setDispo(null); return undefined; }
-    let annule = false;
-    setDispoChargement(true);
-    api(`/restaurants/${restaurantId}/availability?date=${scheduleDate}&partySize=${Number(partySize)}${zonePreference ? `&zone=${zonePreference}` : ''}`)
-      .then((d) => {
-        if (annule) return;
-        setDispo(d);
-        setScheduleTime((h) => (h && d.creneaux?.some((c) => c.heure === h && c.disponible) ? h : ''));
-      })
-      .catch((e) => { if (!annule) { setDispo(null); toast(e.message, 'erreur'); } })
-      .finally(() => { if (!annule) setDispoChargement(false); });
-    return () => { annule = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fulfillmentType, restaurantId, scheduleDate, partySize, zonePreference]);
 
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
@@ -172,25 +125,11 @@ export default function Checkout() {
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
     : null;
-  const isPureReservation = pendingOrder?.orderType === 'dine_in' && pendingOrder.items.length === 0;
-  // Réservation : les jours proposés vont jusqu'à l'horizon du restaurant, les heures sont ses
-  // créneaux réellement libres. Le créneau choisi porte son instant exact (heure de Bruxelles) et
-  // l'acompte qui s'y applique (il dépend de la table qui serait attribuée).
-  const dateOptionsResa = fulfillmentType === 'dine_in' ? getScheduleDateOptions(restaurant?.reservationMaxDays || 7, libellesDates) : dateOptions;
-  const creneauChoisi = dispo?.creneaux?.find((c) => c.heure === scheduleTime) || null;
-  const acompteDu = creneauChoisi ? creneauChoisi.acompte : (dispo?.acompte?.montant || 0);
-
   function selectFulfillment(type) {
     setFulfillmentType(type);
-    if (type === 'dine_in') {
-      setScheduleEnabled(false);
-      if (!scheduleDate) setScheduleDate(dateOptions[0].value);
-      setScheduleTime('');
-    } else {
-      setScheduleEnabled(false);
-      setScheduleDate('');
-      setScheduleTime('');
-    }
+    setScheduleEnabled(false);
+    setScheduleDate('');
+    setScheduleTime('');
   }
 
   /* LE PAIEMENT EST UNE PAGE DE RANGÉES, PAS UN ASSISTANT.
@@ -218,30 +157,12 @@ export default function Checkout() {
       toast(t('checkout.toastAddressRequired'));
       return;
     }
-    if (fulfillmentType === 'dine_in') {
-      if (!scheduleDate || !scheduleTime) {
-        toast(t('checkout.toastReservationDateTimeRequired'));
-        return;
-      }
-      if (!partySize || partySize < 1) {
-        toast(t('checkout.toastPartySizeRequired'));
-        return;
-      }
-      if (!reservationName.trim()) {
-        toast(t('checkout.toastReservationNameRequired'));
-        return;
-      }
-    }
     if (scheduleEnabled && (!scheduleDate || !scheduleTime)) {
       toast(t('checkout.toastScheduledDateTimeRequired'));
       return;
     }
-    const isScheduled = fulfillmentType === 'dine_in' || scheduleEnabled;
-    // Table : l'instant vient du créneau serveur (heure de Bruxelles, quel que soit le fuseau du
-    // téléphone) ; commande programmée : heure locale, comme avant.
-    const scheduledForISO = isScheduled
-      ? (fulfillmentType === 'dine_in' && creneauChoisi ? creneauChoisi.debut : new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString())
-      : null;
+    // Commande programmée : heure locale.
+    const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
     if (manque) { toast(manque); return; }
@@ -261,10 +182,9 @@ export default function Checkout() {
             addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
             deliveryInstructions, deliveryNote: deliveryNote.trim()
           } : {}),
-          ...(fulfillmentType === 'dine_in' ? { partySize: Number(partySize), reservationName: reservationName.trim(), reservationNote: reservationNote.trim(), zonePreference: zonePreference || null } : {}),
           useBalance: useBalance && !surPlace,
           giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
-          ...(fulfillmentType !== 'dine_in' ? { allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined } : {}),
+          allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
           ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
         }
       });
@@ -291,14 +211,11 @@ export default function Checkout() {
         navigate('/orders');
         return;
       }
-      // Réservation avec acompte : c'est l'acompte qu'on encaisse (la commande est à 0 €) ; le serveur
-      // confirme la table dès qu'il est payé. Sinon, le parcours de paiement habituel.
-      const acompteAPayer = pendingOrder.orderType === 'dine_in' && pendingOrder.reservationDepositStatus === 'pending' && pendingOrder.reservationDepositAmount > 0;
-      const pay = await api(acompteAPayer ? `/payments/deposit-checkout/${pendingOrder.id}` : `/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
+      const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         cart.clear();
-        toast(isPureReservation ? t('checkout.toastReservationSent') : t('checkout.toastOrderPaid'));
+        toast(t('checkout.toastOrderPaid'));
         navigate('/orders');
       } else {
         // Le panier est mis de côté, pas vidé et pas laissé en place — voir stashForPayment() dans
@@ -349,17 +266,12 @@ export default function Checkout() {
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
                   les options, au lieu de trois boutons sans contexte. */}
-              <span className="titre-groupe" id="checkout-fulfillment-label">{cart.count === 0 ? t('checkout.yourReservation') : t('checkout.howToGet')}</span>
+              <span className="titre-groupe" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
               {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
                   « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
                   l'option retenue cernée d'une arête iris. Trois pilules côte à côte se lisaient
                   comme trois boutons d'égale importance, alors qu'il s'agit d'un choix unique. */}
               <div className="choix-cartes" role="group" aria-labelledby="checkout-fulfillment-label">
-                {restaurant.offersDineIn && (
-                  <button type="button" className={`choix-carte${fulfillmentType === 'dine_in' ? ' est-actif' : ''}`} aria-pressed={fulfillmentType === 'dine_in'} onClick={() => selectFulfillment('dine_in')}>
-                    <Icone nom="restaurants" taille={20} /><span>{t('orderStatus.orderType.dineIn')}</span>
-                  </button>
-                )}
                 {cart.count > 0 && (
                   <>
                     {restaurant.offersDelivery && (
@@ -438,108 +350,13 @@ export default function Checkout() {
                 {(paiementSurPlace || enLigneFerme) && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.payOnSiteNote')}</p>}
               </div>
             )}
-            {fulfillmentType === 'dine_in' && (
-              <>
-                <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.dineInHere', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
-                <div className="field">
-                  {/* Deux champs (jour + heure) sous un seul intitulé : groupe, et chaque select reçoit
-                      en plus son propre aria-label pour être identifiable une fois le focus dessus. */}
-                  <span className="field-intitule" id="checkout-reservation-label">{t('checkout.reservationDateTime')}</span>
-                  <ChoixPastilles
-                    libelle={t('checkout.reservationDateTime')}
-                    valeur={scheduleDate}
-                    onChange={(v) => { setScheduleDate(v); setScheduleTime(''); }}
-                    options={dateOptionsResa.map((d) => ({ value: d.value, label: d.label }))}
-                  />
-                  {/* Les créneaux pleins restent visibles mais désactivés : voir qu'il y avait 20h30 et que
-                      c'est complet aide à choisir 19h30, là où une liste amputée laisse croire que le
-                      restaurant ferme tôt. C'est justement ce qu'une liste déroulante ne montrait pas :
-                      il fallait l'ouvrir pour découvrir quels créneaux existaient. */}
-                  {dispoChargement ? (
-                    <p className="small" style={{ margin: '8px 0 0' }}>{t('checkout.loadingSlots')}</p>
-                  ) : (
-                    <ChoixPastilles
-                      libelle={t('checkout.timePlaceholder')}
-                      valeur={scheduleTime}
-                      onChange={setScheduleTime}
-                      options={(dispo?.creneaux || []).map((c) => ({
-                        value: c.heure,
-                        label: c.heure,
-                        disabled: !c.disponible,
-                        note: !c.disponible
-                          ? (c.raison === 'complet' ? t('checkout.slotFull') : c.raison === 'trop_tot' ? t('checkout.slotTooSoon') : t('checkout.slotUnavailable'))
-                          : (c.acompte > 0 ? `${c.acompte.toFixed(2)}€` : null)
-                      }))}
-                    />
-                  )}
-                  {!dispoChargement && dispo && dispo.raison && (
-                    <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>
-                      {t(`checkout.noSlotsReason_${dispo.raison}`, { max: dispo.maxCouverts })}
-                    </p>
-                  )}
-                  {!dispoChargement && dispo && !dispo.raison && !dispo.creneaux.some((c) => c.disponible) && (
-                    <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.noSlotsToday')}</p>
-                  )}
-                  {scheduledPreview && (
-                    <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.reservationForPreview', { preview: scheduledPreview })}</p>
-                  )}
-                  {dispo?.regles?.messageAccueil && (
-                    <p className="small" style={{ margin: '8px 0 0', padding: '8px 10px', background: 'var(--cream-dim)', borderRadius: 9 }}><Icone nom="bulle" taille={14} /> {dispo.regles.messageAccueil}</p>
-                  )}
-                </div>
-                <div className="row" style={{ gap: 8 }}>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label htmlFor="checkout-f-7">{t('checkout.partySize')}</label>
-                    <input id="checkout-f-7"
-                      type="number" min="1" max={dispo?.maxCouverts || 30}
-                      value={partySize}
-                      onChange={(e) => setPartySize(e.target.value === '' ? '' : Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="field" style={{ flex: 2 }}>
-                    <label htmlFor="checkout-f-8">{t('checkout.reservationName')}</label>
-                    <input id="checkout-f-8" value={reservationName} onChange={(e) => setReservationName(e.target.value)} placeholder={t('checkout.reservationNamePlaceholder')} />
-                  </div>
-                </div>
-                {/* Intérieur ou terrasse : « Terrasse » n'apparaît que si la salle en a une. */}
-                <div className="field">
-                  <span className="small" style={{ display: 'block', fontWeight: 600, marginBottom: 6 }}>{t('checkout.zoneQuestion')}</span>
-                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }} role="group" aria-label={t('checkout.zoneQuestion')}>
-                    {[['', 'zoneAny'], ['inside', 'zoneInside'], ...((restaurant.hasOutsideTables || dispo?.zones?.outside) ? [['outside', 'zoneOutside']] : [])].map(([valeur, cle]) => (
-                      <button type="button" key={cle} className={zonePreference === valeur ? 'btn-gold' : 'btn-outline'} style={{ padding: '6px 12px', fontSize: 13 }}
-                        aria-pressed={zonePreference === valeur} onClick={() => setZonePreference(valeur)}>
-                        {valeur === 'inside' ? <Icone nom="maison" taille={15} /> : valeur === 'outside' ? <Icone nom="soleil" taille={15} /> : null}{t(`checkout.${cle}`)}
-                      </button>
-                    ))}
-                  </div>
-                  {zonePreference && creneauChoisi && creneauChoisi.zoneDisponible === false && (
-                    <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.zoneNotAtThisTime', { zone: t(zonePreference === 'outside' ? 'checkout.zoneOutside' : 'checkout.zoneInside') })}</p>
-                  )}
-                </div>
-                <div className="field">
-                  <label htmlFor="checkout-f-9">{t('checkout.reservationNote')}</label>
-                  <input id="checkout-f-9" value={reservationNote} maxLength={500} onChange={(e) => setReservationNote(e.target.value)} placeholder={t('checkout.reservationNotePlaceholder')} />
-                </div>
-                {/* Ce que le client s'engage à quoi, avant de valider : acompte (déduit sur place),
-                    délai d'annulation, et confirmation manuelle éventuelle. */}
-                {dispo && !dispo.raison && (
-                  <div className="small" style={{ margin: '0 0 10px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {cart.count === 0 && acompteDu > 0 && (
-                      <span>{t('checkout.depositInfo', { amount: `${acompteDu.toFixed(2)}€` })}{dispo.acompte?.note ? ` ${dispo.acompte.note}` : ''}</span>
-                    )}
-                    <span>{dispo.regles.annulationHeures > 0 ? t('checkout.cancelPolicy', { hours: dispo.regles.annulationHeures }) : t('checkout.cancelPolicyUntilStart')}</span>
-                    {!dispo.regles.confirmationAuto && <span>{t('checkout.awaitsConfirmation')}</span>}
-                  </div>
-                )}
-              </>
-            )}
             {/* QUAND LA RECEVOIR — deux cartes, comme le bloc « Delivery options » des captures.
                 C'était une case à cocher isolée, qu'on ne lisait pas : maintenant les deux réponses
                 possibles sont posées côte à côte et l'une est visiblement retenue.
                 Il n'y a pas de troisième carte « Prioritaire » : Fairide n'a pas d'option de
                 livraison payante plus rapide, et on n'invente pas une fonctionnalité pour faire
                 joli — il n'existe même aucun champ de délai de préparation, ni ici ni au serveur. */}
-            {fulfillmentType !== 'dine_in' && (
+            {(
               <div className="field">
                 <span className="titre-groupe" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
                 <div className="choix-cartes" role="group" aria-labelledby="checkout-quand-label">
@@ -598,16 +415,14 @@ export default function Checkout() {
           <aside className="checkout-recap">
           <div className="cart-bar">
             <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
-            <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : t('checkout.reservationNoOrder')}</span>
+            <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : ''}</span>
             {serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
-                {placing ? '...' : cart.count === 0 ? t('checkout.sendReservation') : t('checkout.validateInfo')}
+                {placing ? '...' : t('checkout.validateInfo')}
               </button>
             ) : (
-              <span className="small" style={{ fontWeight: 600 }}><Icone nom="reservations" taille={14} /> {paiementBloque
+              <span className="small" style={{ fontWeight: 600 }}><Icone nom="horloge" taille={14} /> {paiementBloque
                 ? t('checkout.onlinePaymentOpenSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })
-                : fulfillmentType === 'dine_in'
-                ? t('checkout.reservationsOpenSoon', { date: dateOuverture('dine_in', getLocale()) })
                 : fulfillmentType === 'delivery'
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
                   : t('checkout.ordersOpenSoon', { date: dateOuverture('pickup', getLocale()) })}</span>
@@ -781,7 +596,7 @@ export default function Checkout() {
 
       {pendingOrder && (
         <div className="card" ref={pendingOrderRef}>
-          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{isPureReservation ? t('checkout.confirmReservationTitle') : t('checkout.confirmOrderTitle')}</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 15 }}>{t('checkout.confirmOrderTitle')}</h3>
           {pendingOrder.orderType === 'delivery' && !pendingOrder.scheduledFor && (
             <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.deliveryFeeNote')}</p>
           )}
@@ -797,7 +612,6 @@ export default function Checkout() {
               <span className="small" style={{ fontWeight: 600 }}>
                 {pendingOrder.orderType === 'delivery' && t('checkout.confirmDeliveryInfo')}
                 {pendingOrder.orderType === 'pickup' && t('checkout.confirmPickupSelf')}
-                {pendingOrder.orderType === 'dine_in' && t('checkout.confirmReservation')}
               </span>
             </label>
             {pendingOrder.orderType === 'delivery' && (
@@ -822,38 +636,9 @@ export default function Checkout() {
                 )}
               </>
             )}
-            {pendingOrder.orderType === 'dine_in' && (
-              <>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.tableAtColon')}</b> {restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.reservedNameOfColon')}</b> {pendingOrder.reservationName}</p>
-                <p className="small" style={{ margin: '0 0 4px' }}><b>{t('checkout.partySizeColon')}</b> {pendingOrder.partySize}</p>
-                {(pendingOrder.tableNumber != null || pendingOrder.tableName) && (
-                  <p className="small" style={{ margin: '0 0 4px' }}>
-                    <b>{t('checkout.tableColon')}</b>{' '}
-                    {pendingOrder.tableNumber != null ? t('checkout.tableNumber', { n: pendingOrder.tableNumber }) : pendingOrder.tableName}
-                    {pendingOrder.tableZone ? ` · ${t(`checkout.zoneLabel_${pendingOrder.tableZone}`)}` : ''}
-                    {pendingOrder.zoneRespected === false && <span style={{ color: 'var(--ink-soft)' }}> · {t('checkout.zoneFallback')}</span>}
-                  </p>
-                )}
-                {pendingOrder.scheduledFor && (
-                  <p className="small" style={{ margin: 0 }}><b>{t('checkout.reservedForColon')}</b> {new Date(pendingOrder.scheduledFor).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</p>
-                )}
-                {pendingOrder.reservationNote && (
-                  <p className="small" style={{ margin: '4px 0 0' }}><b>{t('checkout.noteColon')}</b> {pendingOrder.reservationNote}</p>
-                )}
-              </>
-            )}
           </div>
 
-          {/* Acompte : la seule somme due maintenant sur une réservation sans plats. Montant figé par le
-              serveur à la création (voir routes/orders.js), c'est lui qu'on affiche et qu'on encaisse. */}
-          {isPureReservation && pendingOrder.reservationDepositAmount > 0 && (
-            <div className="breakdown">
-              <div className="line total"><span>{t('checkout.depositLine')}</span><span>{pendingOrder.reservationDepositAmount.toFixed(2)}€</span></div>
-            </div>
-          )}
-
-          {!isPureReservation && (
+          {(
             <div className="breakdown">
               {/* Trois contrats, trois vendeurs (décision du 23/09/2026, C2) : chaque ligne dit à qui le client
                   achète. Le livreur n'est pas encore connu ici — il sera nommé dès qu'il accepte la course. */}
@@ -886,8 +671,6 @@ export default function Checkout() {
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
               {paying ? '...'
-                : isPureReservation && pendingOrder.reservationDepositAmount > 0 ? t('checkout.payDepositAndReserve', { amount: `${pendingOrder.reservationDepositAmount.toFixed(2)}€` })
-                : isPureReservation ? t('checkout.sendReservation')
                 : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite')
                 : t('checkout.confirmAndPay')}
             </button>

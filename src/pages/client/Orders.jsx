@@ -104,7 +104,7 @@ function ReviewForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [reviewingId, setReviewingId] = useState(null);
   const [cancellingId, setCancellingId] = useState(null);
@@ -177,12 +177,6 @@ export default function Orders() {
     return (
       <div>
         <h1 className="page-title">{titre}</h1>
-      {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
-          « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="commandes-barre">
-        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
-        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-      </div>
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
@@ -200,12 +194,6 @@ export default function Orders() {
   return (
     <div>
       <h1 className="page-title">{titre}</h1>
-      {/* Commandes et réservations partagent la barre du bas : la bascule remplace l'ancienne rangée
-          « Mes réservations » de Mon compte, qui n'était qu'un lien vers ce même filtre. */}
-      <div className="commandes-barre">
-        <button type="button" className={typeFiltre ? 'btn-outline' : 'btn-teal'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({})}>{t('orders.filterAll')}</button>
-        <button type="button" className={typeFiltre === 'dine_in' ? 'btn-teal' : 'btn-outline'} style={{ padding: '6px 14px' }} onClick={() => setSearchParams({ type: 'dine_in' })}>{t('orders.filterReservations')}</button>
-      </div>
       {rappels.map((o) => {
         const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
         return (

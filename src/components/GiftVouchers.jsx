@@ -1,10 +1,15 @@
 import { useEffect, useState } from 'react';
-import { api } from '../../api';
-import ConfirmDialog from '../ConfirmDialog';
-import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { dateOuverturePaiements } from '../../launch';
-import { dateCourte, euros } from './resaUtils';
-import useEtatPage from '../../hooks/useEtatPage';
+import { api } from '../api';
+import ConfirmDialog from './ConfirmDialog';
+import { useLanguage, getLocale } from '../context/LanguageContext';
+import { dateOuverturePaiements } from '../launch';
+import './bons.css';
+
+// Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
+// servent aussi à payer les commandes à emporter et en livraison.
+const dateCourte = (ms, locale = getLocale()) => new Intl.DateTimeFormat(locale, { timeZone: 'Europe/Brussels', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(ms));
+const euros = (n) => `${Number(n || 0).toFixed(2).replace('.', ',')} €`;
+import useEtatPage from '../hooks/useEtatPage';
 
 // BONS CADEAUX — vendus et encaissés par le restaurant lui-même (comptoir, virement) : création avec
 // carte imprimable et envoi par e-mail, recherche par code ou nom, utilisation partielle au comptoir,
@@ -42,34 +47,34 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
   return (
     <>
       <div className="card" style={{ borderColor: 'var(--gold)' }}>
-        <p className="small" style={{ margin: 0 }}><b>{t('resa.gvOnlineSoonTitle')}</b> {t('resa.gvOnlineSoon', { date: dateOuverturePaiements(getLocale()) })}</p>
+        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon', { date: dateOuverturePaiements(getLocale()) })}</p>
       </div>
 
       <div className="card">
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <h3 style={{ margin: 0, fontSize: 15, flex: '1 1 auto' }}>{t('resa.gvTitle')}</h3>
-          {totaux && <span className="small">{t('resa.gvTotals', { active: totaux.active, outstanding: euros(totaux.outstanding), sold: euros(totaux.sold) })}</span>}
-          <button type="button" className="btn-teal" onClick={() => setCreation((c) => !c)}>{creation ? t('resa.close') : t('resa.gvNew')}</button>
+          <h3 style={{ margin: 0, fontSize: 15, flex: '1 1 auto' }}>{t('bons.gvTitle')}</h3>
+          {totaux && <span className="small">{t('bons.gvTotals', { active: totaux.active, outstanding: euros(totaux.outstanding), sold: euros(totaux.sold) })}</span>}
+          <button type="button" className="btn-teal" onClick={() => setCreation((c) => !c)}>{creation ? t('bons.close') : t('bons.gvNew')}</button>
         </div>
         {creation && <CreationBon restoId={restoId} token={token} toast={toast} restaurant={restaurant} onDone={(v) => { setCreation(false); rafraichir(); setOuvert(v); }} />}
         <div className="resa-outils">
-          <div className="resa-recherche"><input aria-label={t('resa.gvSearchPh')} value={q} placeholder={t('resa.gvSearchPh')} onChange={(e) => setQ(e.target.value)} aria-label={t('resa.gvSearchPh')} /></div>
-          <div className="resa-filtres" role="group" aria-label={t('resa.filtersAria')}>
-            {STATUTS.map((s) => <button key={s} type="button" className={statut === s ? 'actif' : ''} onClick={() => setStatut(s)}>{t(`resa.gvFilter_${s}`)}</button>)}
+          <div className="resa-recherche"><input aria-label={t('bons.gvSearchPh')} value={q} placeholder={t('bons.gvSearchPh')} onChange={(e) => setQ(e.target.value)} aria-label={t('bons.gvSearchPh')} /></div>
+          <div className="resa-filtres" role="group" aria-label={t('bons.filtersAria')}>
+            {STATUTS.map((s) => <button key={s} type="button" className={statut === s ? 'actif' : ''} onClick={() => setStatut(s)}>{t(`bons.gvFilter_${s}`)}</button>)}
           </div>
         </div>
         <div className="bon-liste" style={{ marginTop: 10 }}>
-          {liste === null && <p className="small">{t('resa.loading')}</p>}
+          {liste === null && <p className="small">{t('bons.loading')}</p>}
           {erreur && <p className="small" style={{ color: 'var(--red)' }}>{erreur}</p>}
           {liste && liste.length === 0 && !erreur && (
-            <div className="resa-vide"><b>{t('resa.gvEmptyTitle')}</b>{q.trim() || statut !== 'tous' ? t('resa.gvEmptyFiltered') : t('resa.gvEmptyHelp')}</div>
+            <div className="resa-vide"><b>{t('bons.gvEmptyTitle')}</b>{q.trim() || statut !== 'tous' ? t('bons.gvEmptyFiltered') : t('bons.gvEmptyHelp')}</div>
           )}
           {liste && liste.map((v) => (
             <button type="button" key={v.id} className="bon-ligne" onClick={() => setOuvert(v)}>
               <span className="bon-code">{v.code}</span>
-              <span className={`bon-statut bon-statut-${v.status}`}>{t(`resa.gvStatus_${v.status}`)}</span>
-              <span className="small">{v.recipientName ? t('resa.gvFor', { name: v.recipientName }) : v.buyerName ? t('resa.gvBoughtBy', { name: v.buyerName }) : ''}{v.expiresAt ? ` · ${t('resa.gvExpires', { date: new Date(`${v.expiresAt}T12:00:00`).toLocaleDateString(getLocale()) })}` : ''}</span>
-              <span className="bon-montants"><b>{euros(v.remaining)}</b><br /><span className="small">{t('resa.gvOf', { amount: euros(v.amount) })}</span></span>
+              <span className={`bon-statut bon-statut-${v.status}`}>{t(`bons.gvStatus_${v.status}`)}</span>
+              <span className="small">{v.recipientName ? t('bons.gvFor', { name: v.recipientName }) : v.buyerName ? t('bons.gvBoughtBy', { name: v.buyerName }) : ''}{v.expiresAt ? ` · ${t('bons.gvExpires', { date: new Date(`${v.expiresAt}T12:00:00`).toLocaleDateString(getLocale()) })}` : ''}</span>
+              <span className="bon-montants"><b>{euros(v.remaining)}</b><br /><span className="small">{t('bons.gvOf', { amount: euros(v.amount) })}</span></span>
             </button>
           ))}
         </div>
@@ -92,7 +97,7 @@ function CreationBon({ restoId, token, toast, onDone }) {
     setEnvoi(true);
     try {
       const v = await api(`/restaurants/${restoId}/gift-vouchers`, { method: 'POST', token, body: { ...f, amount: Number(f.amount), expiresAt: f.expiresAt || null } });
-      toast(v.emailSent ? t('resa.gvCreatedSent', { email: f.buyerEmail }) : t('resa.gvCreated'));
+      toast(v.emailSent ? t('bons.gvCreatedSent', { email: f.buyerEmail }) : t('bons.gvCreated'));
       onDone(v);
     } catch (err) { toast(err.message, 'erreur'); } finally { setEnvoi(false); }
   }
@@ -101,7 +106,7 @@ function CreationBon({ restoId, token, toast, onDone }) {
     <form onSubmit={creer} style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line)' }}>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div style={{ flex: '0 0 120px' }}>
-          <label htmlFor="gv-montant">{t('resa.gvAmount')}</label>
+          <label htmlFor="gv-montant">{t('bons.gvAmount')}</label>
           <input id="gv-montant" type="number" min="5" max="2000" step="5" value={f.amount} onChange={champ('amount')} required />
         </div>
         <div className="pill-row" style={{ flex: '1 1 200px', alignSelf: 'flex-end' }}>
@@ -110,33 +115,33 @@ function CreationBon({ restoId, token, toast, onDone }) {
       </div>
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 8 }}>
         <div style={{ flex: '1 1 160px' }}>
-          <label htmlFor="gv-acheteur">{t('resa.gvBuyer')}</label>
+          <label htmlFor="gv-acheteur">{t('bons.gvBuyer')}</label>
           <input id="gv-acheteur" value={f.buyerName} maxLength={80} onChange={champ('buyerName')} />
         </div>
         <div style={{ flex: '1 1 200px' }}>
-          <label htmlFor="gv-email">{t('resa.gvBuyerEmail')}</label>
+          <label htmlFor="gv-email">{t('bons.gvBuyerEmail')}</label>
           <input id="gv-email" type="email" value={f.buyerEmail} maxLength={160} onChange={champ('buyerEmail')} />
         </div>
         <div style={{ flex: '1 1 160px' }}>
-          <label htmlFor="gv-benef">{t('resa.gvRecipient')}</label>
+          <label htmlFor="gv-benef">{t('bons.gvRecipient')}</label>
           <input id="gv-benef" value={f.recipientName} maxLength={80} onChange={champ('recipientName')} />
         </div>
         <div style={{ flex: '0 0 150px' }}>
-          <label htmlFor="gv-expire">{t('resa.gvExpiry')}</label>
+          <label htmlFor="gv-expire">{t('bons.gvExpiry')}</label>
           <input id="gv-expire" type="date" value={f.expiresAt} onChange={champ('expiresAt')} />
         </div>
       </div>
       <div className="field" style={{ marginTop: 8 }}>
-        <label htmlFor="gv-message">{t('resa.gvMessage')}</label>
-        <input id="gv-message" value={f.message} maxLength={500} placeholder={t('resa.gvMessagePh')} onChange={champ('message')} />
+        <label htmlFor="gv-message">{t('bons.gvMessage')}</label>
+        <input id="gv-message" value={f.message} maxLength={500} placeholder={t('bons.gvMessagePh')} onChange={champ('message')} />
       </div>
       <label className="row" style={{ gap: 8, cursor: 'pointer', marginTop: 4 }}>
         <input type="checkbox" style={{ width: 'auto' }} checked={f.sendEmail} onChange={champ('sendEmail')} disabled={!f.buyerEmail} />
-        <span className="small">{t('resa.gvSendEmail')}</span>
+        <span className="small">{t('bons.gvSendEmail')}</span>
       </label>
-      <p className="small" style={{ margin: '8px 0 0' }}>{t('resa.gvCreateHelp')}</p>
+      <p className="small" style={{ margin: '8px 0 0' }}>{t('bons.gvCreateHelp')}</p>
       <div className="row" style={{ gap: 8, marginTop: 10 }}>
-        <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('resa.gvCreate')}</button>
+        <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('bons.gvCreate')}</button>
       </div>
     </form>
   );
@@ -165,25 +170,25 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
     try {
       const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/redeem`, { method: 'POST', token, body: { amount: Number(montant), note } });
       setDetail(maj); onChange(maj); setMontant(''); setNote('');
-      toast(t('resa.gvRedeemed', { amount: euros(Number(montant)) }));
+      toast(t('bons.gvRedeemed', { amount: euros(Number(montant)) }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function changerStatut(status) {
     setEnCours('statut');
-    try { const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { method: 'PATCH', token, body: { status } }); setDetail((d) => ({ ...(d || bon), ...maj })); onChange(maj); toast(status === 'cancelled' ? t('resa.gvCancelled') : t('resa.gvReactivated')); }
+    try { const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { method: 'PATCH', token, body: { status } }); setDetail((d) => ({ ...(d || bon), ...maj })); onChange(maj); toast(status === 'cancelled' ? t('bons.gvCancelled') : t('bons.gvReactivated')); }
     catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function envoyer() {
     setEnCours('email');
-    try { await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/send`, { method: 'POST', token, body: { email } }); toast(t('resa.gvEmailSent', { email })); }
+    try { await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}/send`, { method: 'POST', token, body: { email } }); toast(t('bons.gvEmailSent', { email })); }
     catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   function imprimer() {
     const zone = document.getElementById(`bon-print-${bon.id}`);
     if (!zone) return;
     const w = window.open('', '_blank', 'width=700,height=600');
-    if (!w) { toast(t('resa.gvPopupBlocked')); return; }
-    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${t('resa.gvPrintTitle')}</title><style>body{font-family:sans-serif;padding:24px;color:#14121F}.bon-carte{border:2px solid #14121F;border-radius:16px;padding:22px 24px;max-width:460px;position:relative}.bon-carte-resto{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#6B655D}.bon-carte-titre{font-size:22px;font-weight:800;margin:4px 0 10px}.bon-carte-montant{font-size:40px;font-weight:900;line-height:1;color:#3B2FB5}.bon-carte-code{margin:14px 0 8px;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:.12em;padding:8px 12px;border:1px dashed #14121F;border-radius:10px;display:inline-block}.bon-carte-message{font-style:italic;margin:8px 0}.bon-carte-pied{font-size:12px;color:#6B655D;margin-top:8px}</style></head><body>${zone.innerHTML}</body></html>`);
+    if (!w) { toast(t('bons.gvPopupBlocked')); return; }
+    w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${t('bons.gvPrintTitle')}</title><style>body{font-family:sans-serif;padding:24px;color:#14121F}.bon-carte{border:2px solid #14121F;border-radius:16px;padding:22px 24px;max-width:460px;position:relative}.bon-carte-resto{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:#6B655D}.bon-carte-titre{font-size:22px;font-weight:800;margin:4px 0 10px}.bon-carte-montant{font-size:40px;font-weight:900;line-height:1;color:#3B2FB5}.bon-carte-code{margin:14px 0 8px;font-family:monospace;font-size:20px;font-weight:800;letter-spacing:.12em;padding:8px 12px;border:1px dashed #14121F;border-radius:10px;display:inline-block}.bon-carte-message{font-style:italic;margin:8px 0}.bon-carte-pied{font-size:12px;color:#6B655D;margin-top:8px}</style></head><body>${zone.innerHTML}</body></html>`);
     w.document.close(); w.focus(); setTimeout(() => { w.print(); }, 250);
   }
   const actif = v.status === 'active';
@@ -191,71 +196,71 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
   return (
     <div className="card">
       <div className="row" style={{ alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>{t('resa.gvDetailTitle', { code: v.code })}</h3>
-        <span className={`bon-statut bon-statut-${v.status}`}>{t(`resa.gvStatus_${v.status}`)}</span>
-        <button type="button" className="btn-ghost" onClick={onClose}>{t('resa.close')}</button>
+        <h3 style={{ margin: 0, fontSize: 15, flex: 1 }}>{t('bons.gvDetailTitle', { code: v.code })}</h3>
+        <span className={`bon-statut bon-statut-${v.status}`}>{t(`bons.gvStatus_${v.status}`)}</span>
+        <button type="button" className="btn-ghost" onClick={onClose}>{t('bons.close')}</button>
       </div>
 
       <div id={`bon-print-${bon.id}`}>
         <div className="bon-carte">
           <div className="bon-carte-resto">{restaurant?.name}</div>
-          <div className="bon-carte-titre">{t('resa.gvCardTitle')}</div>
+          <div className="bon-carte-titre">{t('bons.gvCardTitle')}</div>
           <div className="bon-carte-montant">{euros(v.amount)}</div>
-          {v.recipientName && <div style={{ marginTop: 8 }}>{t('resa.gvCardFor', { name: v.recipientName })}</div>}
+          {v.recipientName && <div style={{ marginTop: 8 }}>{t('bons.gvCardFor', { name: v.recipientName })}</div>}
           {v.message && <div className="bon-carte-message">« {v.message} »</div>}
           <div className="bon-carte-code">{v.code}</div>
           <div className="bon-carte-pied">
-            {v.expiresAt ? t('resa.gvCardValidUntil', { date: new Date(`${v.expiresAt}T12:00:00`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) }) : t('resa.gvCardNoExpiry')}
-            {' · '}{t('resa.gvCardHow')}
+            {v.expiresAt ? t('bons.gvCardValidUntil', { date: new Date(`${v.expiresAt}T12:00:00`).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' }) }) : t('bons.gvCardNoExpiry')}
+            {' · '}{t('bons.gvCardHow')}
           </div>
         </div>
       </div>
 
       <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
-        <button type="button" className="btn-outline" onClick={imprimer}>{t('resa.gvPrint')}</button>
-        <input aria-label={t('resa.gvBuyerEmail')} type="email" value={email} placeholder={t('resa.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} aria-label={t('resa.gvBuyerEmail')} />
-        <button type="button" className="btn-outline" disabled={!email || enCours === 'email'} onClick={envoyer}>{enCours === 'email' ? '…' : t('resa.gvSendByEmail')}</button>
+        <button type="button" className="btn-outline" onClick={imprimer}>{t('bons.gvPrint')}</button>
+        <input aria-label={t('bons.gvBuyerEmail')} type="email" value={email} placeholder={t('bons.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} aria-label={t('bons.gvBuyerEmail')} />
+        <button type="button" className="btn-outline" disabled={!email || enCours === 'email'} onClick={envoyer}>{enCours === 'email' ? '…' : t('bons.gvSendByEmail')}</button>
       </div>
 
       <p className="small" style={{ margin: '10px 0 0' }}>
-        {t('resa.gvRemaining', { remaining: euros(v.remaining), amount: euros(v.amount) })}
-        {v.buyerName ? ` · ${t('resa.gvBoughtBy', { name: v.buyerName })}` : ''} · {t('resa.gvCreatedOn', { date: dateCourte(v.createdAt) })}
+        {t('bons.gvRemaining', { remaining: euros(v.remaining), amount: euros(v.amount) })}
+        {v.buyerName ? ` · ${t('bons.gvBoughtBy', { name: v.buyerName })}` : ''} · {t('bons.gvCreatedOn', { date: dateCourte(v.createdAt) })}
       </p>
 
       {actif && (
         <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--line)' }}>
-          <b className="small">{t('resa.gvRedeemTitle')}</b>
+          <b className="small">{t('bons.gvRedeemTitle')}</b>
           <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'flex-end', marginTop: 6 }}>
             <div style={{ flex: '0 0 130px' }}>
-              <label htmlFor={`gv-use-${bon.id}`}>{t('resa.gvRedeemAmount')}</label>
+              <label htmlFor={`gv-use-${bon.id}`}>{t('bons.gvRedeemAmount')}</label>
               <input id={`gv-use-${bon.id}`} type="number" min="0.5" max={v.remaining} step="0.5" value={montant} onChange={(e) => setMontant(e.target.value)} />
             </div>
             <div style={{ flex: '1 1 160px' }}>
-              <label htmlFor={`gv-note-${bon.id}`}>{t('resa.gvRedeemNote')}</label>
-              <input id={`gv-note-${bon.id}`} value={note} maxLength={200} placeholder={t('resa.gvRedeemNotePh')} onChange={(e) => setNote(e.target.value)} />
+              <label htmlFor={`gv-note-${bon.id}`}>{t('bons.gvRedeemNote')}</label>
+              <input id={`gv-note-${bon.id}`} value={note} maxLength={200} placeholder={t('bons.gvRedeemNotePh')} onChange={(e) => setNote(e.target.value)} />
             </div>
-            <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => setMontant(String(v.remaining))}>{t('resa.gvRedeemAll')}</button>
-            <button type="button" className="btn-teal" disabled={!Number(montant) || Number(montant) > v.remaining || enCours === 'usage'} onClick={() => setConfirmerUsage(true)}>{enCours === 'usage' ? '…' : t('resa.gvRedeem')}</button>
+            <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }} onClick={() => setMontant(String(v.remaining))}>{t('bons.gvRedeemAll')}</button>
+            <button type="button" className="btn-teal" disabled={!Number(montant) || Number(montant) > v.remaining || enCours === 'usage'} onClick={() => setConfirmerUsage(true)}>{enCours === 'usage' ? '…' : t('bons.gvRedeem')}</button>
           </div>
         </div>
       )}
 
       <div className="bon-usages">
-        <b className="small">{t('resa.gvUsesTitle')}</b>
-        {!detail && <p className="small" style={{ margin: '4px 0 0' }}>{t('resa.loading')}</p>}
-        {detail && detail.uses.length === 0 && <p className="small" style={{ margin: '4px 0 0' }}>{t('resa.gvUsesNone')}</p>}
+        <b className="small">{t('bons.gvUsesTitle')}</b>
+        {!detail && <p className="small" style={{ margin: '4px 0 0' }}>{t('bons.loading')}</p>}
+        {detail && detail.uses.length === 0 && <p className="small" style={{ margin: '4px 0 0' }}>{t('bons.gvUsesNone')}</p>}
         {detail && detail.uses.map((u) => (
-          <div key={u.id}><span>{dateCourte(u.createdAt)} · {u.orderId ? t('resa.gvUseOrder') : u.note || t('resa.gvUseCounter')}</span><b>{u.amount < 0 ? '+' : '-'}{euros(Math.abs(u.amount))}</b></div>
+          <div key={u.id}><span>{dateCourte(u.createdAt)} · {u.orderId ? t('bons.gvUseOrder') : u.note || t('bons.gvUseCounter')}</span><b>{u.amount < 0 ? '+' : '-'}{euros(Math.abs(u.amount))}</b></div>
         ))}
       </div>
 
       <div className="row" style={{ gap: 6, marginTop: 10 }}>
-        {actif && <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} disabled={!!enCours} onClick={() => setAnnulation(true)}>{t('resa.gvCancel')}</button>}
-        {v.status === 'cancelled' && <button type="button" className="btn-ghost" disabled={!!enCours} onClick={() => changerStatut('active')}>{t('resa.gvReactivate')}</button>}
+        {actif && <button type="button" className="btn-ghost" style={{ color: 'var(--red)' }} disabled={!!enCours} onClick={() => setAnnulation(true)}>{t('bons.gvCancel')}</button>}
+        {v.status === 'cancelled' && <button type="button" className="btn-ghost" disabled={!!enCours} onClick={() => changerStatut('active')}>{t('bons.gvReactivate')}</button>}
       </div>
-      <ConfirmDialog open={annulation} danger title={t('resa.gvCancelTitle')} message={t('resa.gvCancelMsg', { code: v.code })} confirmLabel={t('resa.gvCancel')}
+      <ConfirmDialog open={annulation} danger title={t('bons.gvCancelTitle')} message={t('bons.gvCancelMsg', { code: v.code })} confirmLabel={t('bons.gvCancel')}
         onCancel={() => setAnnulation(false)} onConfirm={() => { setAnnulation(false); changerStatut('cancelled'); }} />
-      <ConfirmDialog open={confirmerUsage} title={t('resa.gvRedeemTitle')} message={t('resa.gvRedeemConfirm', { amount: euros(Number(montant) || 0), code: v.code })} confirmLabel={t('resa.gvRedeem')}
+      <ConfirmDialog open={confirmerUsage} title={t('bons.gvRedeemTitle')} message={t('bons.gvRedeemConfirm', { amount: euros(Number(montant) || 0), code: v.code })} confirmLabel={t('bons.gvRedeem')}
         onCancel={() => setConfirmerUsage(false)} onConfirm={() => { setConfirmerUsage(false); utiliser(); }} />
     </div>
   );

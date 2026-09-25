@@ -40,9 +40,6 @@ function navItemsForRole(role, t, user) {
       { to: '/dashboard', end: true, icon: 'commerce', label: t('nav.myBusiness') },
       { to: '/dashboard/menu', icon: 'restaurants', label: t('nav.myMenu') },
       { to: '/dashboard/orders', icon: 'commandes', label: t('nav.orders') },
-      // Réservations : agenda, plan de salle, règles de réservation, agenda externe, bons, statistiques — onglets
-      // d'une même page. Rubrique principale depuis le 2026-09-15 (demande du fondateur), retirée de Mon compte.
-      { to: '/dashboard/reservations', icon: 'reservations', label: t('nav.reservations') },
       // Promotions, Factures et Mode d'emploi sont partis dans Mon compte : ce sont des rubriques
       // qu'on ouvre de temps en temps, pas au service. « Aperçu client » et « Carte » les y ont
       // rejoints, pour la même raison et une de plus : à sept onglets, la barre du bas d'un

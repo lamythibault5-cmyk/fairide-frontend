@@ -43,8 +43,8 @@ function Illustration({ t }) {
       <rect x="160" y="105" width="44" height="16" rx="8" fill="#C6F06B" />
       <text x="182" y="116" fontSize="7" fontWeight="700" fill="#1F1F24" textAnchor="middle" fontFamily="system-ui, sans-serif">{t('accountUi.terminalScreenAccept')}</text>
       <rect x="111" y="133" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
-      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🍽️ {t('accountUi.terminalScreenBooking')}</text>
-      <text x="204" y="146" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">19:30 · 4</text>
+      <text x="116" y="146" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🛵 {t('accountUi.terminalScreenBooking')}</text>
+      <text x="204" y="146" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">18 min</text>
       <rect x="111" y="158" width="98" height="20" rx="6" fill="#fff" stroke="#E6E2D6" />
       <text x="116" y="171" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🥡 {t('accountUi.terminalScreenPickup')}</text>
       <text x="204" y="171" fontSize="6.5" fill="#666" textAnchor="end" fontFamily="system-ui, sans-serif">12 min</text>
@@ -96,7 +96,6 @@ export default function TerminalFairide({ terminal = null, compact = false }) {
       <div className={`terminal-conditions ${tonalite}`}>
         <p className="small" style={{ margin: 0 }}><b>{condition}</b></p>
         <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.terminalDepositRule', { amount: caution })}</p>
-        <p className="small" style={{ margin: '4px 0 0', opacity: .85 }}>{t('accountUi.terminalFreeVersion')}</p>
       </div>
       {terminal && (terminal.deliveredAt || terminal.returnedAt || terminal.refundedAt) && (
         <p className="small" style={{ margin: '8px 0 0' }}>

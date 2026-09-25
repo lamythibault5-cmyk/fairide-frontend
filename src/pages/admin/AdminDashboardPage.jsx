@@ -183,8 +183,6 @@ export default function AdminDashboardPage() {
         {overview?.drivers?.online !== undefined && <RealtimeCard num={overview.drivers.online} label={tr('adminDash.driversOnline')} to="/admin/drivers" />}
         {overview && (
           <>
-            <RealtimeCard num={overview.reservations?.today ?? 0} label={tr('adminDash.reservationsToday')} to="/admin/orders?type=dine_in" />
-            <RealtimeCard num={overview.reservations?.pending ?? 0} label={tr('adminDash.reservationsPending')} to="/admin/orders?type=dine_in&status=nouveau" warn={overview.reservations?.pending > 0} />
             <RealtimeCard num={overview.support?.open ?? 0} label={tr('adminDash.openTickets')} to="/admin/support" warn={overview.support?.slaBreached > 0} />
             <RealtimeCard num={overview.tasks?.overdue ?? 0} label={tr('adminDash.overdueTasks')} to="/admin/tasks?due=overdue" warn={overview.tasks?.overdue > 0} />
             <RealtimeCard num={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0)} label={tr('adminDash.pendingValidations')} to={overview.restaurants?.pending > 0 ? '/admin/restaurants?status=pending' : '/admin/drivers?status=pending'} warn={(overview.restaurants?.pending ?? 0) + (overview.drivers?.pending ?? 0) > 0} />

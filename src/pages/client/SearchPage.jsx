@@ -45,7 +45,6 @@ const sujetsAide = (t) => [
 
 const rubriquesCompte = (t) => [
   { to: '/orders', titre: t('search.myOrders'), sous: t('search.myOrdersSub'), mots: 'commande commandes historique suivi order orders history tracking bestelling bestellingen geschiedenis', connecte: true },
-  { to: '/orders?type=dine_in', titre: t('search.myReservations'), sous: t('search.myReservationsSub'), mots: 'reservation reservations table reserver', connecte: true },
   { to: '/favorites', titre: t('search.myFavourites'), sous: t('search.myFavouritesSub'), mots: 'favoris favori coeur enregistre', connecte: true },
   { to: '/invoices', titre: t('search.myInvoices'), sous: t('search.myInvoicesSub'), mots: 'facture factures recu recus justificatif', connecte: true },
   { to: '/account', titre: t('search.myAccount'), sous: t('search.myAccountSub'), mots: 'compte profil mot de passe email telephone langue adresse parrainage code promo supprimer', connecte: true },

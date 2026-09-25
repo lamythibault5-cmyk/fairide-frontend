@@ -568,7 +568,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
           )}
           <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLine', { sub: detail.subscriptionStatus, mode: detail.deliveryMode })}</p>
-          {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr(detail.plan === 'reservation' ? 'adminRestos.planReservation' : 'adminRestos.planComplete') })}</p>}
+          {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr('adminRestos.planComplete') })}</p>}
           {detail.terminal && (
             <div className="small" style={{ margin: '2px 0' }}>
               <p style={{ margin: 0 }}>🖥️ {tr('adminRestos.terminalLine', { status: tr(`adminRestos.terminalStatus_${detail.terminal.status}`), amount: Number(detail.terminal.depositAmount || 80).toFixed(0), rank: detail.terminal.signupRank ? tr('adminRestos.terminalRank', { n: detail.terminal.signupRank }) : '' })}{detail.terminal.note ? ` · ${detail.terminal.note}` : ''}</p>

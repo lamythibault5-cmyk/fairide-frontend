@@ -1,6 +1,7 @@
 import { useEffect, useState, useId } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
+import GiftVouchers from '../../components/GiftVouchers';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -270,6 +271,10 @@ export default function PromotionsPage() {
           </div>
         </div>
       )}
+
+      {/* Bons cadeaux : vendus au comptoir, utilisables sur les commandes Fairide (déplacés ici quand le module
+          Réservations a été retiré, 2026-09-25). */}
+      <div style={{ marginTop: 22 }}><GiftVouchers restoId={restoId} token={token} toast={toast} restaurant={restaurant} /></div>
     </div>
   );
 }

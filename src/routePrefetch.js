@@ -18,8 +18,6 @@ const CHARGEURS = {
   '/dashboard/reviews': () => import('./pages/restaurant/ReviewsPage'),
   '/dashboard/invoices': () => import('./pages/restaurant/InvoicesPage'),
   '/dashboard/guide': () => import('./pages/restaurant/GuidePage'),
-  '/dashboard/tables': () => import('./pages/restaurant/TablesPage'),
-  '/dashboard/reservations': () => import('./pages/restaurant/ReservationsPage'),
   '/driver': () => import('./pages/driver/Dashboard'),
   '/driver/map': () => import('./pages/driver/MapPage'),
   '/driver/reviews': () => import('./pages/driver/ReviewsPage'),
@@ -60,12 +58,10 @@ const enCours = new Map();
 // principal. Un échec (hors-ligne, déploiement en cours) n'est pas une erreur ici : l'appel suivant réessaiera.
 export function prechargerPage(pathname) {
   const chemin = String(pathname || '').replace(/\/$/, '') || '/';
-  let cle = null;
-  if (/^\/restaurants\/[^/]+\/reserver$/.test(chemin)) cle = 'reserver';
-  else cle = Object.keys(CHARGEURS).filter((k) => chemin === k || chemin.startsWith(`${k}/`)).sort((a, b) => b.length - a.length)[0];
+  const cle = Object.keys(CHARGEURS).filter((k) => chemin === k || chemin.startsWith(`${k}/`)).sort((a, b) => b.length - a.length)[0];
   if (!cle) return null;
   if (enCours.has(cle)) return enCours.get(cle);
-  const charge = cle === 'reserver' ? () => import('./pages/client/ReservationWizard') : CHARGEURS[cle];
+  const charge = CHARGEURS[cle];
   const promesse = Promise.resolve().then(charge).catch(() => { enCours.delete(cle); });
   enCours.set(cle, promesse);
   return promesse;

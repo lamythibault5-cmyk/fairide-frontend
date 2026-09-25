@@ -30,10 +30,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
   if (!o) return null; // backend pas encore déployé : on n'affiche rien plutôt qu'une check-list fausse
 
   const aConfirmer = o.menuPending;
-  // Formule Réservation (gratuite) : pas de paiements à configurer, sauf acompte. L'abonnement n'entre jamais
-  // dans « tout est prêt » : sans lui, la réservation est en ligne ; il n'ouvre que livraison et emporter.
   // paymentsRequired / menuReady absents (serveur plus ancien) : on garde l'ancienne exigence.
-  const reservation = o.plan === 'reservation';
   const paiementsOk = o.paymentsRequired === false || o.paymentsReady;
   const carteOk = o.menuReady !== false;
   const toutPret = !o.menuPending && carteOk && o.contractAccepted && paiementsOk;
@@ -73,7 +70,6 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
         <div className="card" id="menu-mise-en-ligne">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('menuPage.readyTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.readyIntro')}</p>
-          {reservation && <p className="small" style={{ margin: '0 0 10px' }}><b>{t('menuPage.readyPlanReservation')}</b></p>}
           <ul style={{ padding: 0, margin: 0 }}>
             {/* L'étape « carte » ne concerne que les commerces dont l'équipe Fairide a préparé la carte :
                 ailleurs, il n'y a rien à confirmer et l'afficher cochée serait mensonger. */}
@@ -114,7 +110,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
 
       {!modeAdmin && toutPret && o.menuConfirmedAt && (
         <div className="card" id="menu-mise-en-ligne">
-          <p className="small" style={{ margin: 0 }}>{t(reservation && !o.paymentsReady ? 'menuPage.readyAllDoneReservation' : 'menuPage.readyAllDone')}</p>
+          <p className="small" style={{ margin: 0 }}>{t('menuPage.readyAllDone')}</p>
         </div>
       )}
     </>

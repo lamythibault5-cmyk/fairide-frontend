@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useCart, DELIVERY_FEE } from '../../context/CartContext';
 import Icone from '../../components/Icone';
-import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, reservationsOuvertes, dateOuvertureReservations } from '../../launch';
+import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
@@ -244,20 +244,6 @@ export default function RestaurantMenu() {
 
   const onlineOrderingDisabled = !restaurant.offersDelivery && !restaurant.offersPickup;
 
-  /* DEUX RAISONS DE NE PAS POUVOIR COMMANDER, ET ELLES NE SE DISENT PAS PAREIL.
-   *
-   * On affichait « Ce restaurant fonctionne uniquement sur réservation » dans les deux cas. C'est
-   * vrai d'un commerce qui a choisi la formule Réservation. C'est FAUX d'un commerce qui veut la
-   * livraison mais dont les services ne sont pas encore ouverts — servicesOuverts() exige un
-   * abonnement actif (voir formules.js), donc une carte peut être en ligne bien avant les
-   * commandes. Constaté sur les six commerces dont la carte a été montée par Fairide : tous en
-   * formule complète, tous avec la livraison fermée, et la page annonçait au client qu'ils ne
-   * prenaient que des réservations.
-   *
-   * La charge utile porte déjà les deux faces : `wants*` est le choix enregistré du restaurateur,
-   * `offers*` ce qui est réellement ouvert. Leur écart EST la distinction, sans rien ajouter côté
-   * backend. */
-  const surReservationSeulement = !restaurant.wantsDelivery && !restaurant.wantsPickup;
 
   // La bascule ne s'affiche que si le commerce propose vraiment les deux : un seul mode possible
   // n'est pas un choix, c'est une information — elle tient alors dans le panneau des frais.
@@ -497,30 +483,21 @@ export default function RestaurantMenu() {
           </div>
         )}
 
-        {/* Avant le 10 octobre : réservations et à emporter à venir ; du 10 au 20 : seule la livraison attend. */}
+        {/* Avant le 10 octobre : à emporter et livraison à venir ; du 10 au 20 : seule la livraison attend. */}
         {(!commandesOuvertes(user) || (restaurant.offersDelivery && !livraisonOuverte(user))) && (
           <div className="ouverture-bandeau" role="status">
             {commandesOuvertes(user)
               ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
-              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureReservations(getLocale()) })}
+              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })}
           </div>
         )}
 
-        {restaurant.offersDineIn && (reservationsOuvertes(user) ? (
-          <button type="button" className="btn-outline btn-block" onClick={() => navigate(`/restaurants/${id}/reserver`)}>
-            {t('restaurantMenu.reserveTable')}
-          </button>
-        ) : (
-          <button type="button" className="btn-outline btn-block" disabled title={t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}>
-            {t('restaurantMenu.reserveSoon', { date: dateOuvertureReservations(getLocale()) })}
-          </button>
-        ))}
       </header>
 
       {onlineOrderingDisabled && (
         <div className="card">
           <p className="small" style={{ margin: 0 }}>
-            {t(surReservationSeulement ? 'restoMenuUi.reservationOnlyInfo' : 'restoMenuUi.orderingNotOpenInfo')}
+            {t('restoMenuUi.orderingNotOpenInfo')}
           </p>
         </div>
       )}

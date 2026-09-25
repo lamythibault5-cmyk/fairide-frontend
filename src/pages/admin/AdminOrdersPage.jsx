@@ -217,7 +217,6 @@ export default function AdminOrdersPage() {
           <option value="">{tr('adminOrders.typeAll')}</option>
           <option value="delivery">{tr('adminOrders.typeDelivery')}</option>
           <option value="pickup">{tr('adminOrders.typePickup')}</option>
-          <option value="dine_in">{tr('adminOrders.typeDineIn')}</option>
         </select>
         {/* Gardée : le tableau de bord et l'accueil envoient ici avec ?today=1. Montant min / max retirés (allègement
             de la console, 23/09/2026) : jamais utilisés, et la recherche + les dates suffisent. */}

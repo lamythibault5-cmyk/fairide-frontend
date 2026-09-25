@@ -16,7 +16,7 @@ import { useLanguage } from '../../context/LanguageContext';
  *     routes/admin.js DELETE /admin/reviews/:id (retrait par l'équipe) ;
  *   - aucune donnée de placement payant n'existe en base.
  * Si l'un de ces fichiers change, cette page change dans le même commit. */
-const SECTIONS = ['order', 'sorts', 'rows', 'notPaid', 'reviews', 'reliability', 'contest'];
+const SECTIONS = ['order', 'sorts', 'rows', 'notPaid', 'reviews', 'contest'];
 
 export default function RankingPage() {
   const { t } = useLanguage();

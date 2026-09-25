@@ -55,7 +55,7 @@ export default function EcranContact({ restaurant, restoId, loadDashboard, onFer
         <div className="field">
           <label htmlFor="commerce-mail2">{t('editResto.secondEmail')}</label>
           <div className="row" style={{ gap: 8, alignItems: 'center' }}>
-            <input id="commerce-mail2" type="email" inputMode="email" style={{ flex: 1 }} value={mail2} onChange={(e) => setMail2(e.target.value)} placeholder="reservations@mon-commerce.be" />
+            <input id="commerce-mail2" type="email" inputMode="email" style={{ flex: 1 }} value={mail2} onChange={(e) => setMail2(e.target.value)} placeholder="commandes@mon-commerce.be" />
             <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => { setMail2(''); setMail2Ouvert(false); }}>{t('editResto.removeSecond')}</button>
           </div>
         </div>

@@ -36,7 +36,6 @@ export default function AdminHomePage() {
     overview.today && { key: 'gmvToday', value: money(overview.today.gmv), to: '/admin/dashboard' },
     { key: 'driversAvailable', value: n(overview.drivers?.available), to: '/admin/logistics' },
     overview.drivers?.online !== undefined && { key: 'driversOnline', value: n(overview.drivers?.online), to: '/admin/logistics' },
-    { key: 'reservations', value: n(overview.reservations?.today), to: '/admin/orders?type=dine_in' },
     { key: 'restaurants', value: n(overview.restaurants?.approved), to: '/admin/restaurants' }
   ].filter(Boolean) : [];
 

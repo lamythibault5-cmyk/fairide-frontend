@@ -65,7 +65,6 @@ export default function TicketEditor({ initial, btName, printing, onPrintBluetoo
             <select id="tk-type" value={f.orderType} onChange={set('orderType')}>
               <option value="delivery">{t('ticketEditor.typeDelivery')}</option>
               <option value="pickup">{t('ticketEditor.typePickup')}</option>
-              <option value="dine_in">{t('ticketEditor.typeDineIn')}</option>
             </select>
           </div>
         </div>

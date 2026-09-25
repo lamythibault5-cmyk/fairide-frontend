@@ -126,7 +126,7 @@ export default function Auth() {
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
-  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, dineIn: false, pickupPaymentMode: 'on_site' });
+  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   const [cuisine, setCuisine] = useState('');
@@ -207,7 +207,7 @@ export default function Auth() {
       phone: phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
-      offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: !!services.dineIn,
+      offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: false,
       pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
       deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
@@ -402,7 +402,7 @@ export default function Auth() {
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
-  // Arrivée ici via une action nécessitant un compte (ex. "+" sur une carte, "Réserver une table")
+  // Arrivée ici via une action nécessitant un compte (ex. "+" sur une carte)
   // depuis une page publique — on revient y déposer le client une fois connecté, au lieu de le
   // renvoyer systématiquement à l'accueil (voir RestaurantMenu.jsx / RestaurantList.jsx).
   const from = location.state?.from || '/';
@@ -527,7 +527,7 @@ export default function Auth() {
       if ((hoursDepuisWeb || typeDepuisSite || siteTrouve) && !infosVerifiees) e.infosVerifiees = t('auth.errVerifyPrefill');
     }
     if (key === 'services') {
-      if (!services.delivery && !services.pickup && !services.dineIn) e.services = t('auth.errServices');
+      if (!services.delivery && !services.pickup) e.services = t('auth.errServices');
     }
     if (key === 'address') {
       if (!addressStreet.trim()) e.addressStreet = required;
@@ -1277,7 +1277,6 @@ export default function Auth() {
                       ))}
                     </div>
                   )}
-                  <label className="service-option"><input type="checkbox" checked={services.dineIn} onChange={(e) => setServices((s) => ({ ...s, dineIn: e.target.checked }))} /> <span>🍽️ {t('auth.serviceDineIn')}</span></label>
                   {/* Gratuit → payant dit en clair dès l'inscription, avec la date du premier prélèvement (voir OffreFormules). */}
                   <OffreFormules payant={services.delivery || services.pickup} inscription />
                   {fieldError('services')}

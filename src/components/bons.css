@@ -1,0 +1,38 @@
+/* Bons cadeaux (GiftVouchers.jsx) — styles repris de l'ancien module Réservations, retiré le 2026-09-25. */
+.resa-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+.resa-outils .resa-recherche { flex: 1 1 200px; min-width: 0; position: relative; }
+.resa-outils .resa-recherche input { padding-left: 32px; }
+.resa-outils .resa-recherche::before { content: '🔎'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; pointer-events: none; }
+.resa-filtres { display: flex; flex-wrap: wrap; gap: 6px; }
+.resa-filtres button { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: var(--radius-pill); padding: 5px 11px; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.resa-filtres button.actif { background: var(--ink); border-color: var(--ink); color: #fff; }
+.resa-filtres button b { font-weight: 800; margin-left: 4px; }
+.bon-liste { display: flex; flex-direction: column; gap: 8px; }
+.bon-ligne { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: #fff; cursor: pointer; text-align: left; font: inherit; color: inherit; width: 100%; }
+.bon-ligne:hover { border-color: var(--iris); }
+.bon-ligne .bon-code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-weight: 800; letter-spacing: .06em; }
+.bon-ligne .bon-montants { margin-left: auto; text-align: right; }
+.bon-ligne .bon-montants b { font-size: 15px; }
+.bon-statut { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .03em; }
+.bon-statut-active { background: rgba(46,158,91,0.14); color: #1F7A45; }
+.bon-statut-used { background: var(--cream-dim); color: var(--ink-soft); }
+.bon-statut-expired, .bon-statut-cancelled { background: rgba(217,45,60,0.10); color: var(--red); }
+.bon-carte { border: 2px solid #14121F; border-radius: var(--radius); padding: 22px 24px; background: #fff; max-width: 460px; position: relative; overflow: hidden; }
+.bon-carte::after { content: '🎁'; position: absolute; right: 18px; top: 14px; font-size: 34px; opacity: .9; }
+.bon-carte .bon-carte-resto { font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--ink-soft); }
+.bon-carte .bon-carte-titre { font-size: 22px; font-weight: 800; margin: 4px 0 10px; }
+.bon-carte .bon-carte-montant { font-size: 40px; font-weight: 900; line-height: 1; color: #3B2FB5; }
+.bon-carte .bon-carte-code { margin: 14px 0 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 20px; font-weight: 800; letter-spacing: .12em; padding: 8px 12px; border: 1px dashed #14121F; border-radius: var(--radius-card-sm); display: inline-block; }
+.bon-carte .bon-carte-message { font-style: italic; margin: 8px 0; }
+.bon-carte .bon-carte-pied { font-size: 12px; color: var(--ink-soft); margin-top: 8px; }
+.bon-usages { margin-top: 10px; border-top: 1px solid var(--line); padding-top: 8px; }
+.bon-usages div { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; padding: 3px 0; }
+.resa-vide { text-align: center; padding: 26px 14px; color: var(--ink-soft); border: 1px dashed var(--line); border-radius: var(--radius-card-sm); }
+.resa-vide b { display: block; color: var(--ink); margin-bottom: 4px; }
+  .bon-print-zone { display: block !important; }
+.bon-print-zone { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  .bon-print-zone, .bon-print-zone * { visibility: visible; }
+  .bon-print-zone { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+}

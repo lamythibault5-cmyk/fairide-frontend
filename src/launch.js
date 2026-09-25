@@ -29,8 +29,8 @@ export function dateOuverture(type, locale = 'fr-BE') {
   return formater(OUVERTURES[type] || OUVERTURE_LIVRAISON, locale);
 }
 
-export function reservationsOuvertes(user) { return serviceOuvert('dine_in', user); }
-export function dateOuvertureReservations(locale = 'fr-BE') { return dateOuverture('dine_in', locale); }
+// Réservation de table retirée (2026-09-25) : il ne reste que l'à emporter et la livraison.
+export function dateOuvertureEmporter(locale = 'fr-BE') { return dateOuverture('pickup', locale); }
 // Une commande en ligne est possible (à emporter) ; la livraison peut encore attendre, voir livraisonOuverte.
 export function commandesOuvertes(user) { return serviceOuvert('pickup', user); }
 export function dateOuvertureCommandes(locale = 'fr-BE') { return dateOuverture('pickup', locale); }

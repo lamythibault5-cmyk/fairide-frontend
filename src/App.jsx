@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { lazyPage } from './lazyPage';
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
 import NavigationFeedback from './components/NavigationFeedback';
@@ -28,8 +28,6 @@ import NotFound from './pages/NotFound';
 // --- Espace client (au-delà des pages publiques) ---
 const SearchPage = lazyPage(() => import('./pages/client/SearchPage'));
 const Checkout = lazyPage(() => import('./pages/client/Checkout'));
-const ReservationWizard = lazyPage(() => import('./pages/client/ReservationWizard'));
-const ReserverPage = lazyPage(() => import('./pages/client/ReserverPage'));
 const Favorites = lazyPage(() => import('./pages/client/Favorites'));
 const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
@@ -48,8 +46,6 @@ const RestaurantPromotionsPage = lazyPage(() => import('./pages/restaurant/Promo
 const RestaurantReviewsPage = lazyPage(() => import('./pages/restaurant/ReviewsPage'));
 const RestaurantInvoicesPage = lazyPage(() => import('./pages/restaurant/InvoicesPage'));
 const RestaurantGuidePage = lazyPage(() => import('./pages/restaurant/GuidePage'));
-const RestaurantTablesPage = lazyPage(() => import('./pages/restaurant/TablesPage'));
-const RestaurantReservationsPage = lazyPage(() => import('./pages/restaurant/ReservationsPage'));
 
 // --- Espace livreur ---
 const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
@@ -102,6 +98,12 @@ const OurStory = lazyPage(() => import('./pages/OurStory'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
 const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 
+// Anciens liens de réservation (/reserver/:id, /restaurants/:id/reserver) → la fiche du commerce.
+function RedirectionFiche() {
+  const { id } = useParams();
+  return <Navigate to={`/restaurants/${id}`} replace />;
+}
+
 export default function App() {
   return (
     <>
@@ -124,9 +126,10 @@ export default function App() {
             statique : une page indexable ne doit pas attendre un second téléchargement pour s'afficher. */}
         <Route path="/restaurants" element={<RestaurantList />} />
         <Route path="/restaurants/:id" element={<RestaurantMenu />} />
-        <Route path="/restaurants/:id/reserver" element={<ReservationWizard />} />
-        {/* Lien public de réservation (fiche Google, Instagram, Facebook, site, QR) — voir ReserverPage. */}
-        <Route path="/reserver/:id" element={<ReserverPage />} />
+        {/* Réservation de table retirée (2026-09-25) : les liens déjà partagés (fiche Google, QR, réseaux) mènent à la
+            carte du commerce, où l'on commande à emporter ou en livraison. */}
+        <Route path="/restaurants/:id/reserver" element={<RedirectionFiche />} />
+        <Route path="/reserver/:id" element={<RedirectionFiche />} />
         {/* Publique comme la liste : chercher un commerce ou un plat ne demande pas de compte. Les
             résultats personnels (commandes) n'apparaissent que connecté. */}
         <Route path="/recherche" element={<SearchPage />} />
@@ -157,8 +160,8 @@ export default function App() {
           <Route path="reviews" element={<RestaurantReviewsPage />} />
           <Route path="invoices" element={<RestaurantInvoicesPage />} />
           <Route path="guide" element={<RestaurantGuidePage />} />
-          <Route path="tables" element={<RestaurantTablesPage />} />
-          <Route path="reservations" element={<RestaurantReservationsPage />} />
+          <Route path="tables" element={<Navigate to="/dashboard" replace />} />
+          <Route path="reservations" element={<Navigate to="/dashboard/promotions" replace />} />
         </Route>
         <Route path="/driver" element={<ProtectedRoute role="driver"><DriverDashboard /></ProtectedRoute>} />
         <Route path="/driver/map" element={<ProtectedRoute role="driver"><DriverMapPage /></ProtectedRoute>} />

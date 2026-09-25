@@ -21,7 +21,6 @@ import PaiementLivreur from '../components/PaiementLivreur';
 import { abonnementOuvert, datePremierPrelevement } from '../launch';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
-import MyGuestReviews from '../components/MyGuestReviews';
 import { StarsDisplay } from '../components/Stars';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -113,7 +112,6 @@ export default function Account() {
   const [offersPickup, setOffersPickup] = useState(true);
   // À emporter : 'online' (en ligne seulement), 'on_site' (sur place seulement) ou 'both' (le client choisit).
   const [pickupPaymentMode, setPickupPaymentMode] = useState('online');
-  const [offersDineIn, setOffersDineIn] = useState(true);
   const [savingServices, setSavingServices] = useState(false);
   const servicesInitRef = useRef(false);
   const [generatedCodes, setGeneratedCodes] = useState(null);
@@ -248,17 +246,16 @@ export default function Account() {
     setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
     setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
     setPickupPaymentMode(restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online'));
-    setOffersDineIn(restaurant.offersDineIn);
   }, [restaurant]);
 
   async function saveServices() {
-    if (!offersDelivery && !offersPickup && !offersDineIn) {
+    if (!offersDelivery && !offersPickup) {
       toast(t('accountUi.toastOneService'));
       return;
     }
     setSavingServices(true);
     try {
-      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn, pickupPaymentMode } });
+      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn: false, pickupPaymentMode } });
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {
@@ -759,9 +756,6 @@ export default function Account() {
           {/* Les favoris ont quitté la barre du bas, ramenée à cinq onglets pour que chaque cible
               fasse 56px (voir DashboardSidebar.jsx). On les ouvre moins souvent que la liste, la
               recherche ou ses commandes — c'est le sixième par l'usage, donc celui qui part. */}
-          <LigneCompte icone="bouclier" titre={t('accountUi.guestReviewsTitle')} ouverte={ouvertes.has('avisRestos')} onClick={() => basculer('avisRestos')}>
-            {ouvertes.has('avisRestos') && <MyGuestReviews />}
-          </LigneCompte>
           {/* La rangée « Adresse de livraison » a disparu : elle affichait mot pour mot l'adresse déjà
               écrite sous « Mes infos », deux blocs plus haut, et menait au même endroit — la même
               donnée, présentée deux fois comme deux réglages différents. Fairide ne retient qu'UNE
@@ -792,15 +786,15 @@ export default function Account() {
             {ouvertes.has('contrat') && <RestaurantContract restoId={restaurant.id} onAccepte={rechargerRestaurant} />}
           </LigneCompte>
           <div id="section-paiement">
-            <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : restaurant.plan === 'reservation' ? t('accountUi.paymentRowSubOptional') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
+            <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={restaurant.stripeConnectStatus === 'active' ? t('accountUi.paymentRowSubActive') : t('accountUi.paymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
               {retour && <Link to={retour} className="btn-ghost" style={{ display: 'inline-block', marginBottom: 10, padding: '6px 10px', fontSize: 13 }}>← {t('accountUi.backToDashboard')}</Link>}
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
-          {/* Version gratuite (plan « reservation » côté serveur : réservations, à emporter payé sur place) : aucun abonnement
-              à activer. Il n'est jamais activé d'office, même avec tous les services cochés : c'est le restaurateur qui le fait. */}
+          {/* Une seule offre depuis le 2026-09-25 (à emporter et livraison, 20 €/mois) : l'abonnement n'est jamais activé
+              d'office, c'est le restaurateur qui le fait. */}
           <div id="section-abonnement">
-          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) ? t('accountUi.subNotNeeded') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
+          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
@@ -816,27 +810,20 @@ export default function Account() {
                 {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subNextCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : ''}
               </p>
             )}
-            {/* Sans abonnement actif, la réservation de table reste en ligne : seuls livraison et emporter s'arrêtent. */}
             {restaurant.subscriptionStatus === 'past_due' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                {t(restaurant.offersDineIn ? 'accountUi.subPastDueResa' : 'accountUi.subPastDue')}
+                {t('accountUi.subPastDue')}
               </p>
             )}
             {restaurant.subscriptionStatus === 'paused' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
-                {t(restaurant.offersDineIn ? 'accountUi.subPausedResa' : 'accountUi.subPaused')}
+                {t('accountUi.subPaused')}
               </p>
             )}
-            {restaurant.plan === 'reservation' && ['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && (
-              <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                <b>{t('accountUi.planReservationTitle')}</b>
-                <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotNeededText')}</p>
-              </div>
+            {restaurant.subscriptionStatus === 'canceled' && (
+              <p className="small" style={{ margin: '0 0 12px' }}>{t('accountUi.subCanceled')}</p>
             )}
-            {restaurant.subscriptionStatus === 'canceled' && restaurant.plan !== 'reservation' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>{t(restaurant.offersDineIn ? 'accountUi.subCanceledResa' : 'accountUi.subCanceled')}</p>
-            )}
-            {restaurant.subscriptionStatus === 'inactive' && restaurant.plan !== 'reservation' && (
+            {restaurant.subscriptionStatus === 'inactive' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subInactiveIntro')}
                 {' '}{t('accountUi.subPendingValidation', { date: datePremierPrelevement().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}
@@ -846,14 +833,14 @@ export default function Account() {
             {/* Aucun abonnement à activer avant la sortie de l'application (6 octobre 2026) : le bouton
                 d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
                 la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && !abonnementOuvert() && (
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !abonnementOuvert() && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t('accountUi.subNotYetTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
               </div>
             )}
             {/* Contrat d'abord : l'abonnement ne s'active qu'une fois la version en vigueur lue et acceptée (serveur : 409 CONTRACT_REQUIRED). */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && !restaurant.isDemo && restaurant.onboarding && !restaurant.onboarding.contractAccepted && (
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !restaurant.isDemo && restaurant.onboarding && !restaurant.onboarding.contractAccepted && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>📜 {t('accountUi.subContractTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
@@ -862,14 +849,14 @@ export default function Account() {
             )}
             {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et
                 sans ce mot la rangée se terminait sur du vide, sans jamais dire ce qui manquait. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && restaurant.adminStatus !== 'approved' && (
+            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && restaurant.adminStatus !== 'approved' && (
               <div className="paiement-encart" style={{ marginBottom: 12 }}>
                 <b>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedTitle' : 'accountUi.subPendingApprovalTitle')}</b>
                 <p className="small" style={{ margin: '4px 0 0' }}>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedText' : 'accountUi.subPendingApprovalText')}</p>
               </div>
             )}
             {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 6 octobre, formule complète pas encore abonnée (contrat accepté). */}
-            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && restaurant.plan !== 'reservation' && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
+            {(restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
               <div>
                 <div className="field" style={{ maxWidth: 260 }}>
                   <label htmlFor={idsA11y + '-promocode'}>{t('auth.promoCode')}</label>
@@ -914,21 +901,20 @@ export default function Account() {
 
           <LigneCompte
             icone="cloche" titre={t('accountUi.servicesOffered')}
-            sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup'), offersDineIn && t('accountUi.reservation')].filter(Boolean).join(' · ') || t('accountUi.noActiveService')}
+            sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup')].filter(Boolean).join(' · ') || t('accountUi.noActiveService')}
             ouverte={ouvertes.has('services')} onClick={() => basculer('services')}
           >
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
-            {/* La version suit les cases, avant même d'enregistrer : réservation de table seule = gratuit ; à emporter (quel
-                que soit son mode de paiement) ou livraison = version complète (même règle que formules.js côté serveur).
-                Sans abonnement actif, le choix est gardé et s'ouvrira à son activation. */}
+            {/* Une seule offre (2026-09-25) : à emporter et livraison, abonnement de 20 €/mois. Sans abonnement actif, le
+                choix est gardé et s'ouvrira à son activation (même règle que formules.js côté serveur). */}
             {(() => {
               const complete = offersDelivery || offersPickup;
               const abonne = restaurant.isDemo || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
               return (
                 <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                  <b>{t(complete ? 'accountUi.planCompleteTitle' : 'accountUi.planReservationTitle')}</b>
+                  <b>{t('accountUi.planCompleteTitle')}</b>
                   {complete && !abonne && (
                     <p className="small" style={{ margin: '4px 0 8px' }}>
                       <b>{t('accountUi.planNeedsSubTitle')}</b><br />
@@ -949,9 +935,7 @@ export default function Account() {
                     { cle: 'delivery', icone: '🚴', nom: t('accountUi.delivery'), valeur: offersDelivery, set: setOffersDelivery,
                       effet: t('accountUi.svcDeliveryDesc') },
                     { cle: 'pickup', icone: '🥡', nom: t('accountUi.pickup'), valeur: offersPickup, set: setOffersPickup,
-                      effet: t('accountUi.svcPickupDesc') },
-                    { cle: 'dine_in', icone: 'restaurants', nom: t('accountUi.svcReservation'), valeur: offersDineIn, set: setOffersDineIn,
-                      effet: t('accountUi.svcReservationDesc') }
+                      effet: t('accountUi.svcPickupDesc') }
                   ].map((s) => (
                     <tr key={s.cle} className={s.valeur ? '' : 'service-off'}>
                       <td><b>{s.icone} {s.nom}</b></td>
@@ -988,19 +972,16 @@ export default function Account() {
             {/* Récapitulatif vivant : le restaurateur voit la conséquence de sa combinaison avant
                 d'enregistrer, plutôt que d'avoir à la déduire de trois cases. */}
             <p className="small service-summary">
-              {!offersDelivery && !offersPickup && !offersDineIn
+              {!offersDelivery && !offersPickup
                 ? t('accountUi.oneServiceWarn')
-                : !offersDelivery && !offersPickup
-                  ? t('accountUi.onlyReservationInfo')
-                  : offersDelivery && offersPickup && offersDineIn
-                    ? t('accountUi.allServicesInfo')
-                    : t('accountUi.someServicesInfo', { list: [offersDelivery && t('accountUi.svcListDelivery'), offersPickup && t('accountUi.svcListPickup'), offersDineIn && t('accountUi.svcListReservation')].filter(Boolean).join(', ') })}
+                : offersDelivery && offersPickup
+                  ? t('accountUi.allServicesInfo')
+                  : t('accountUi.someServicesInfo', { list: [offersDelivery && t('accountUi.svcListDelivery'), offersPickup && t('accountUi.svcListPickup')].filter(Boolean).join(', ') })}
             </p>
             <button className="btn-teal" disabled={savingServices} onClick={saveServices}>{savingServices ? '...' : t('common.save')}</button>
           </LigneCompte>
 
-          {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom.
-              Les réservations (agenda, plan de salle, règles, agenda externe) ont leur propre rubrique principale. */}
+          {/* Rubriques qu'on ouvre de temps en temps, sorties de la barre du bas. Ici elles gardent leur nom. */}
           <LigneCompte to="/dashboard/promotions" icone="etiquette" titre={t('accountUi.promotions')} />
           <LigneCompte to="/dashboard/guide" icone="guide" titre={t('accountUi.guide')} />
           <LigneCompte to="/dashboard/reviews" icone="etoile" titre={t('accountUi.customerReviews')} sous={restaurant.reviewCount > 0 ? t('accountUi.ratingSummary', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('accountUi.noReviewsYet')} />
