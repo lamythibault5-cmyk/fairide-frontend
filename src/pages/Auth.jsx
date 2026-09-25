@@ -553,6 +553,29 @@ export default function Auth() {
   }
 
   const [verifDispo, setVerifDispo] = useState(false);
+  /* Mot de passe vérifié par le serveur dès qu'on quitte le champ (même règle que l'inscription, fuites connues
+     comprises) : le refus s'affiche tout de suite sous le champ (fondateur, 2026-09-25). Rend null si le mot de passe
+     passe ou si le serveur ne répond pas (l'inscription tranchera), sinon 'forme' | 'fuite'. Mémorisé par valeur. */
+  const verifMdp = useRef({ valeur: null, raison: null });
+  async function verifierMotDePasse(valeur) {
+    if (!valeur) return null;
+    if (valeur.length < 6 || !/[A-Z]/.test(valeur) || !/[a-z]/.test(valeur)) return 'forme';
+    if (verifMdp.current.valeur === valeur) return verifMdp.current.raison;
+    try {
+      const r = await api('/auth/check-password', { method: 'POST', body: { password: valeur } });
+      const raison = r && r.ok === false ? (r.raison || 'forme') : null;
+      verifMdp.current = { valeur, raison };
+      return raison;
+    } catch { return null; }
+  }
+  async function controlerMotDePasseEnQuittant() {
+    if (!password) return;
+    const raison = await verifierMotDePasse(password);
+    setErrors((prev) => {
+      const { password: _ancien, ...reste } = prev;
+      return raison ? { ...reste, password: t(raison === 'fuite' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength') } : reste;
+    });
+  }
   /* Un e-mail = un compte, un numéro de téléphone = un compte : le serveur applique la règle à
      l'inscription (409), mais on la vérifie déjà en quittant l'étape concernée pour que le refus
      s'affiche sous le champ fautif, pas après avoir tout rempli. Réseau indisponible : on laisse
@@ -560,14 +583,19 @@ export default function Auth() {
   async function verifierDisponibilite(key) {
     const corps = key === 'identity' ? { phone: phone.trim() } : key === 'account' && !googleCredential ? { email: email.trim() } : null;
     if (!corps) return {};
+    const e = {};
+    // Mot de passe refusé par le serveur (fuites connues) : dit ICI, sous le champ, pas à la dernière étape.
+    if (key === 'account' && !googleCredential) {
+      const raison = await verifierMotDePasse(password);
+      if (raison) e.password = t(raison === 'fuite' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength');
+    }
     try {
       const r = await api('/auth/check-availability', { method: 'POST', body: corps });
-      const e = {};
       if (r.phoneValid === false) e.phone = t('auth.errPhoneInvalid');
       if (r.phoneTaken) e.phone = t('auth.errPhoneTaken');
       if (r.emailTaken) e.email = t('auth.errEmailTaken');
       return e;
-    } catch { return {}; }
+    } catch { return e; }
   }
 
   // Un double appui sur « Continuer » pendant la vérification de disponibilité (réseau lent) ne doit pas
@@ -800,6 +828,15 @@ export default function Auth() {
         // Compte supprimé ou inexistant : on le dit, et on ouvre directement la création de compte (e-mail conservé).
         toast(t(err.code === 'ACCOUNT_DELETED' ? 'auth.errAccountDeleted' : 'auth.errNoAccount'));
         setMode('register');
+      } else if (err.field === 'password' || err.code === 'PASSWORD_BREACHED' || err.code === 'PASSWORD_WEAK') {
+        // Tout ce qui a été saisi reste en place (commerce, horaires, services…) : seul le mot de passe est à refaire.
+        const message = t(err.code === 'PASSWORD_BREACHED' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength');
+        setPassword(''); setPasswordConfirm(''); verifMdp.current = { valeur: null, raison: null };
+        setErrors({ password: message });
+        const i = steps.indexOf('account');
+        if (i >= 0) setStep(i);
+        toast(t('auth.errPasswordRetry'), 'erreur');
+        montrerPremiereErreur();
       } else if (err.field === 'phone' || err.field === 'email') {
         const message = err.field === 'phone' ? (/invalide/i.test(err.message) ? t('auth.errPhoneInvalid') : t('auth.errPhoneTaken')) : t('auth.errEmailTaken');
         setErrors({ [err.field]: message });
@@ -1344,9 +1381,17 @@ export default function Auth() {
                     disparaît au premier caractère, exactement quand on en a besoin. */}
                 <div className="field">
                   <label htmlFor="auth-f-18">{t('auth.password')}</label>
-                  <PasswordInput id="auth-f-18" value={password} onChange={(e) => setPassword(e.target.value)}
-                    invalid={!!errors.password} />
-                  {errors.password ? fieldError('password') : <p className="champ-aide">{t('auth.passwordRule')}</p>}
+                  <PasswordInput id="auth-f-18" value={password}
+                    onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((prev) => { const { password: _p, ...reste } = prev; return reste; }); }}
+                    onBlur={controlerMotDePasseEnQuittant} invalid={!!errors.password} />
+                  {errors.password ? fieldError('password') : (
+                    // Les trois critères, cochés au fil de la frappe : on sait tout de suite ce qui manque.
+                    <ul className="mdp-criteres" aria-live="polite">
+                      {[['mdpLongueur', password.length >= 6], ['mdpMajuscule', /[A-Z]/.test(password)], ['mdpMinuscule', /[a-z]/.test(password)]].map(([cle, ok]) => (
+                        <li key={cle} className={ok ? 'ok' : ''}><span aria-hidden="true">{ok ? '✓' : '○'}</span> {t(`auth.${cle}`)}</li>
+                      ))}
+                    </ul>
+                  )}
                   {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste
                       au-dessus, et Uber ne double jamais une étiquette par un texte d'exemple. */}
                 </div>

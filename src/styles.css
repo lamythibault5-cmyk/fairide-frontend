@@ -4215,3 +4215,8 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
    rythme vertical, il se lit et se change ici, à côté de .rest-grid. 14px au lieu de 24 — avec la
    marge basse des cartes neutralisée, l'écart total passe de 46px à 20px. */
 .liste-section { margin-bottom: 14px; }
+
+/* Critères du mot de passe à l'inscription, cochés pendant la frappe (Auth.jsx). */
+.mdp-criteres { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-soft, #6b6880); }
+.mdp-criteres li { display: inline-flex; align-items: center; gap: 5px; }
+.mdp-criteres li.ok { color: var(--green, #1f8a4c); font-weight: 600; }

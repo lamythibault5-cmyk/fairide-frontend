@@ -30,12 +30,12 @@ function OeilBarre() {
   );
 }
 
-export default function PasswordInput({ id, value, onChange, placeholder, invalid = false, autoComplete = 'new-password' }) {
+export default function PasswordInput({ id, value, onChange, onBlur, placeholder, invalid = false, autoComplete = 'new-password' }) {
   const { t } = useLanguage();
   const [visible, setVisible] = useState(false);
   return (
     <div className="password-input">
-      <input id={id} type={visible ? 'text' : 'password'} value={value} onChange={onChange} placeholder={placeholder}
+      <input id={id} type={visible ? 'text' : 'password'} value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
         className={invalid ? 'input-invalid' : undefined} autoComplete={autoComplete} />
       {/* onMouseDown preventDefault : le champ garde le focus (le clavier du téléphone ne se ferme pas, la page
           ne se décale pas sous le doigt entre l'appui et le relâchement). */}
