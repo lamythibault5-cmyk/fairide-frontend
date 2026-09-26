@@ -6030,6 +6030,7 @@ export default {
       paymentPending: 'Betaling in afwachting',
       cancelOrder: 'Mijn bestelling annuleren',
       leaveReview: 'Een beoordeling achterlaten',
+      leaveTip: 'Een fooi geven',
       reviewSent: '✓ Beoordeling verstuurd, bedankt!',
       toastCancelled: 'Bestelling geannuleerd.',
       filterAll: 'Alle',

@@ -1337,7 +1337,7 @@ export default function Auth() {
                       try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim(), city: addressCity.trim() || r.commune || '', commune: r.commune, neighborhood: r.neighborhood })); } catch { /* sans stockage */ }
                     }}
                     onPickCandidate={(c, r) => {
-                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood })); } catch { /* sans stockage */ }
                     }}
                     onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
                   />

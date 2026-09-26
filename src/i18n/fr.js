@@ -6070,6 +6070,7 @@ export default {
       paymentPending: 'Paiement en attente',
       cancelOrder: 'Annuler ma commande',
       leaveReview: 'Laisser un avis',
+      leaveTip: 'Laisser un pourboire',
       reviewSent: '✓ Avis envoyé, merci !',
       toastCancelled: 'Commande annulée.',
       filterAll: 'Toutes',

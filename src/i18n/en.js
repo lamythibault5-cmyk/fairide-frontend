@@ -6030,6 +6030,7 @@ export default {
       paymentPending: 'Payment pending',
       cancelOrder: 'Cancel my order',
       leaveReview: 'Leave a review',
+      leaveTip: 'Leave a tip',
       reviewSent: '✓ Review sent, thank you!',
       toastCancelled: 'Order cancelled.',
       filterAll: 'All',
