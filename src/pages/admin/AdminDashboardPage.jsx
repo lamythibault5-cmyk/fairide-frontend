@@ -55,7 +55,8 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 30000);
+    // Onglet caché : pas de rechargement (personne ne regarde) ; au retour, useRevalidation ou le prochain tour relit.
+    const interval = setInterval(() => { if (document.visibilityState === 'visible') load(); }, 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [period, customFrom, customTo]);
