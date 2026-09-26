@@ -4362,6 +4362,9 @@ export default {
       archiveDesc2: 'Eén factuur per maand, automatisch uitgegeven begin elke maand voor de voorbije maand en per e-mail verstuurd met de pdf. Elke pdf detailleert alle bestellingen: datum, type, bedrag, tarief, commissie excl. btw, btw en totaal. 📧 om ze opnieuw te ontvangen, UBL voor je boekhoudsoftware (Peppol).'
     },
     promosPage: {
+      inactiveSuffix: ' · inactief',
+      deletePromo: 'Verwijderen',
+      bogoOption: '{n} gekocht = 1 gratis',
       title: 'Promoties',
       intro: 'Kortingen op een specifiek gerecht, of een aanbieding op de hele bestelling. Slechts één actieve promo per gerecht tegelijk, en één actieve winkelmandpromo tegelijk.',
       loading: 'Laden...',
@@ -4919,6 +4922,9 @@ export default {
       removeSecond: 'Verwijderen'
     },
     ordersResto: {
+      confirmRefuseTitle: 'Deze bestelling weigeren?',
+      confirmRefuseText: 'De bestelling van {name} wordt geweigerd en de klant automatisch terugbetaald.',
+      printFailed: 'Afdrukken mislukt.',
       openTitle: 'Open voor bestellingen',
       openSub: 'Tik om te pauzeren',
       pausedTitle: 'Bestellingen gepauzeerd',
@@ -5204,6 +5210,8 @@ export default {
       confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
     },
     accountUi: {
+      balanceAvailable: '€ {amount} beschikbaar',
+      confirmCode: 'Bevestigen',
       pickupPayTitle: 'Betaling van afhaalbestellingen',
       pickupPayOnline: 'Alleen online',
       pickupPayOnlineText: 'De klant betaalt bij het bestellen, via Fairide. De bestelling is gegarandeerd; je ontvangt je prijs in de zaak, Fairide houdt de 10% die bij de getoonde prijs komt.',
@@ -5375,7 +5383,7 @@ export default {
       terminalRow: 'Mijn Fairide-terminal',
       salesCrmRow: 'Sales',
       salesCrmSub: '{n} benaderde zaak/zaken · openen',
-      terminalSub_none: 'Bij de volledige versie · gratis of waarborg van € 80',
+      terminalSub_none: 'Gratis voor de eerste 50 zaken, anders waarborg van € {amount}',
       terminalSub_offert: 'Overhandigd · gratis',
       terminalSub_caution_due: 'Waarborg van € {amount} te betalen bij de overhandiging',
       terminalSub_caution_versee: 'Overhandigd · waarborg van € {amount} betaald',
@@ -5461,7 +5469,7 @@ export default {
       gvRedeemTitle: 'Aan de toog gebruiken',
       gvRedeemAmount: 'Af te trekken bedrag (€)',
       gvRedeemNote: 'Notitie',
-      gvRedeemNotePh: 'Tafel 4, rekening van 12/10…',
+      gvRedeemNotePh: 'Afhaling aan de toog van 12/10…',
       gvRedeemAll: 'Volledig saldo',
       gvRedeem: 'Aftrekken',
       gvUsesTitle: 'Gebruik',
@@ -5754,6 +5762,8 @@ export default {
       fairideAdvantagePercent: 'Fairide-voordeel: {name} geeft −{v}% op elk product, omdat het platform hier maar 10% neemt.',
       ordersOpenBanner: 'Afhalen vanaf {dateResa} · levering vanaf {date}. Tot dan: bekijk de kaart, stel je winkelmandje samen en bewaar je favoriete zaken.',
       ordersOpenBannerResaOpen: 'Je kunt al afhalen bestellen. Levering start op {date}.',
+      ordersOpenBannerOnlineOnly: 'Online bestellen opent op {date} bij deze zaak. Bekijk intussen de kaart en stel je mandje samen.',
+      ordersOpenBannerPickupOnly: 'Afhalen vanaf {date}. Bekijk intussen de kaart, stel je mandje samen en bewaar je favoriete zaken.',
       infoButton: 'Info',
       infoTitle: 'Praktische info',
       hoursLabel: 'Openingsuren',

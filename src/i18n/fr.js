@@ -1968,7 +1968,7 @@ export default {
       zoneTakenEmpty: 'Personne d\'autre n\'a pris de zone.',
       zoneTake: 'Je prends',
       zoneLeave: 'Je laisse',
-      zoneTakenBy: 'prise par {agent}', zoneTakenOther: 'prise par un autre commercial', zoneTakenShort: 'prise', zoneTakenOther: 'prise par un autre commercial', zoneTakenShort: 'prise',
+      zoneTakenBy: 'prise par {agent}', zoneTakenOther: 'prise par un autre commercial', zoneTakenShort: 'prise',
       zoneCanvassed: '{n} commerce(s) déjà démarché(s)',
       toastZoneTaken: 'Zone prise : elle est à toi.',
       toastZoneLeft: 'Zone libérée.',
@@ -4376,6 +4376,9 @@ export default {
       archiveDesc2: 'Une facture par mois, émise automatiquement en début de mois pour le mois écoulé et envoyée par e-mail avec le PDF. Chaque PDF détaille toutes les commandes : date, type, montant, taux, commission HTVA, TVA et TTC. 📧 pour la recevoir à nouveau, UBL pour ton logiciel comptable (Peppol).'
     },
     promosPage: {
+      inactiveSuffix: ' · inactive',
+      deletePromo: 'Supprimer',
+      bogoOption: '{n} acheté(s) = 1 offert',
       title: 'Promotions',
       intro: 'Réductions sur un plat précis, ou une offre sur toute la commande. Une seule promo active à la fois par plat, et une seule promo panier active à la fois.',
       loading: 'Chargement...',
@@ -4935,6 +4938,9 @@ export default {
       removeSecond: 'Retirer'
     },
     ordersResto: {
+      confirmRefuseTitle: 'Refuser cette commande ?',
+      confirmRefuseText: 'La commande de {name} sera refusée et le client remboursé automatiquement.',
+      printFailed: 'Impression impossible.',
       openTitle: 'Ouvert aux commandes',
       openSub: 'Touche pour mettre en pause',
       pausedTitle: 'Commandes en pause',
@@ -5223,6 +5229,8 @@ export default {
       confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
     },
     accountUi: {
+      balanceAvailable: '{amount} € disponibles',
+      confirmCode: 'Confirmer',
       pickupPayTitle: 'Paiement des commandes à emporter',
       pickupPayOnline: 'En ligne uniquement',
       pickupPayOnlineText: 'Le client paie en commandant, via Fairide. La commande est garantie ; tu reçois ton prix de salle, Fairide garde les 10 % ajoutés au prix affiché.',
@@ -5394,7 +5402,7 @@ export default {
       terminalRow: 'Mon terminal Fairide',
       salesCrmRow: 'Sales',
       salesCrmSub: '{n} commerce(s) démarché(s) · ouvrir',
-      terminalSub_none: 'Avec la version complète · offert ou caution de 80 €',
+      terminalSub_none: 'Offert aux 50 premiers commerces, sinon caution de {amount} €',
       terminalSub_offert: 'Remis · offert',
       terminalSub_caution_due: 'Caution de {amount} € à verser à la remise',
       terminalSub_caution_versee: 'Remis · caution de {amount} € versée',
@@ -5480,7 +5488,7 @@ export default {
       gvRedeemTitle: 'Utiliser au comptoir',
       gvRedeemAmount: 'Montant à déduire (€)',
       gvRedeemNote: 'Note',
-      gvRedeemNotePh: 'Table 4, addition du 12/10…',
+      gvRedeemNotePh: 'Retrait au comptoir du 12/10…',
       gvRedeemAll: 'Tout le solde',
       gvRedeem: 'Déduire',
       gvUsesTitle: 'Utilisations',
@@ -5794,6 +5802,8 @@ export default {
       fairideAdvantagePercent: 'Avantage Fairide : {name} offre −{v} % sur chaque produit, parce qu\'ici la plateforme ne prend que 10 %.',
       ordersOpenBanner: 'À emporter dès le {dateResa} · livraison dès le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.',
       ordersOpenBannerResaOpen: 'Tu peux déjà commander à emporter. La livraison ouvre le {date}.',
+      ordersOpenBannerOnlineOnly: 'La commande en ligne ouvre le {date} chez ce commerce. D\'ici là, découvre la carte et compose ton panier.',
+      ordersOpenBannerPickupOnly: 'À emporter dès le {date}. D\'ici là, découvre la carte, compose ton panier et mets tes commerces en favoris.',
       infoButton: 'Infos',
       infoTitle: 'Infos pratiques',
       hoursLabel: 'Horaires',

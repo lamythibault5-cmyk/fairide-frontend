@@ -63,7 +63,7 @@ export default function useNewOrderAlert(orders, ready) {
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
   );
 
-  const newOrders = orders.filter((o) => o.status === 'nouveau');
+  const newOrders = orders.filter((o) => o.status === 'nouveau' && o.paid);
   const newCount = newOrders.length;
 
   const ctxRef = useRef(null);

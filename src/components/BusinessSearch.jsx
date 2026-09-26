@@ -19,6 +19,9 @@ const FICHE_VIDE = { name: '', cuisine: '', street: '', number: '', postalCode: 
 // fiche (et donc proposé à la relecture), jamais par-dessus un site déjà renseigné.
 // initialFiche : fiche déjà choisie (reprise d'une inscription après un rechargement) — affichée d'emblée.
 // libelleManuel : texte du bouton « pas dans la liste » (par défaut, celui du restaurateur qui cherche SON commerce).
+// Ces champs vivent dans un <form> (Sales, inscription) : Entrée (ou « OK » du clavier du téléphone) l'enverrait.
+function bloquerEntree(e) { if (e.key === 'Enter') e.preventDefault(); }
+
 export default function BusinessSearch({ onSelect, onPostalCode, compact = false, initialPostalCode = '', siteTrouve = '', initialFiche = null, libelleManuel = null }) {
   const { t } = useLanguage();
   const [cp, setCp] = useState(initialPostalCode);
@@ -107,10 +110,10 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
       <label htmlFor="business-search-cp">📍 {t('businessSearch.postalLabel')}</label>
       <p className="small business-search-help">{t('businessSearch.postalHelp')}</p>
       <div className="business-search-row">
-        <input id="business-search-cp" inputMode="numeric" maxLength={4} value={cp} placeholder={t('businessSearch.postalPlaceholder')}
+        <input id="business-search-cp" inputMode="numeric" maxLength={4} onKeyDown={bloquerEntree} value={cp} placeholder={t('businessSearch.postalPlaceholder')}
           onChange={(e) => { setCp(e.target.value.replace(/\D/g, '').slice(0, 4)); setFiche(null); setOrigine(null); setFiltre(''); onSelect?.(null); }} disabled={!!fiche} />
         {cpValide && !fiche && (
-          <input id="business-search-filter" value={filtre} onChange={(e) => setFiltre(e.target.value)} autoComplete="off"
+          <input id="business-search-filter" onKeyDown={bloquerEntree} value={filtre} onChange={(e) => setFiltre(e.target.value)} autoComplete="off"
             placeholder={repli ? t('businessSearch.namePlaceholder') : t('businessSearch.filterPlaceholder')} />
         )}
       </div>

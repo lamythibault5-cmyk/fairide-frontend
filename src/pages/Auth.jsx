@@ -259,7 +259,7 @@ export default function Auth() {
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
     try {
       const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, street: fiche.street || ancien.street || '', number: fiche.number || ancien.number || '', postalCode: fiche.postalCode || ancien.postalCode || '', city: fiche.city || fiche.commune || ancien.city || '', cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', street: fiche.street || '', number: fiche.number || '', postalCode: fiche.postalCode || '', commune: fiche.city || '', lat: fiche.lat ?? null, lng: fiche.lng ?? null }));
+      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, street: fiche.street || ancien.street || '', number: fiche.number || ancien.number || '', postalCode: fiche.postalCode || ancien.postalCode || '', city: fiche.city || fiche.commune || ancien.city || '', cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', commune: fiche.city || '', lat: fiche.lat ?? null, lng: fiche.lng ?? null }));
     } catch { /* sans stockage */ }
   }
   useEffect(() => {
@@ -556,21 +556,27 @@ export default function Auth() {
   /* Mot de passe vérifié par le serveur dès qu'on quitte le champ (même règle que l'inscription, fuites connues
      comprises) : le refus s'affiche tout de suite sous le champ (fondateur, 2026-09-25). Rend null si le mot de passe
      passe ou si le serveur ne répond pas (l'inscription tranchera), sinon 'forme' | 'fuite'. Mémorisé par valeur. */
-  const verifMdp = useRef({ valeur: null, raison: null });
-  async function verifierMotDePasse(valeur) {
-    if (!valeur) return null;
-    if (valeur.length < 6 || !/[A-Z]/.test(valeur) || !/[a-z]/.test(valeur)) return 'forme';
-    if (verifMdp.current.valeur === valeur) return verifMdp.current.raison;
-    try {
-      const r = await api('/auth/check-password', { method: 'POST', body: { password: valeur } });
-      const raison = r && r.ok === false ? (r.raison || 'forme') : null;
-      verifMdp.current = { valeur, raison };
-      return raison;
-    } catch { return null; }
+  // La vérification EN COURS est mémorisée (promesse), pas seulement son résultat : quitter le champ puis cliquer
+  // « Continuer » aussitôt n'envoie qu'un appel (l'API est limitée à 40 vérifications par quart d'heure).
+  const verifMdp = useRef({ valeur: null, promesse: null });
+  const motDePasseActuel = useRef(password);
+  motDePasseActuel.current = password;
+  function verifierMotDePasse(valeur) {
+    if (!valeur) return Promise.resolve(null);
+    if (valeur.length < 6 || !/[A-Z]/.test(valeur) || !/[a-z]/.test(valeur)) return Promise.resolve('forme');
+    if (verifMdp.current.valeur === valeur && verifMdp.current.promesse) return verifMdp.current.promesse;
+    const promesse = api('/auth/check-password', { method: 'POST', body: { password: valeur } })
+      .then((r) => (r && r.ok === false ? (r.raison || 'forme') : null))
+      .catch(() => { if (verifMdp.current.valeur === valeur) verifMdp.current = { valeur: null, promesse: null }; return null; });
+    verifMdp.current = { valeur, promesse };
+    return promesse;
   }
   async function controlerMotDePasseEnQuittant() {
     if (!password) return;
-    const raison = await verifierMotDePasse(password);
+    const valeur = password;
+    const raison = await verifierMotDePasse(valeur);
+    // Le mot de passe a changé pendant la vérification : cette réponse ne le concerne plus.
+    if (valeur !== motDePasseActuel.current) return;
     setErrors((prev) => {
       const { password: _ancien, ...reste } = prev;
       return raison ? { ...reste, password: t(raison === 'fuite' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength') } : reste;
@@ -831,7 +837,7 @@ export default function Auth() {
       } else if (err.field === 'password' || err.code === 'PASSWORD_BREACHED' || err.code === 'PASSWORD_WEAK') {
         // Tout ce qui a été saisi reste en place (commerce, horaires, services…) : seul le mot de passe est à refaire.
         const message = t(err.code === 'PASSWORD_BREACHED' ? 'auth.errPasswordBreached' : 'auth.errPasswordStrength');
-        setPassword(''); setPasswordConfirm(''); verifMdp.current = { valeur: null, raison: null };
+        setPassword(''); setPasswordConfirm(''); verifMdp.current = { valeur: null, promesse: null };
         setErrors({ password: message });
         const i = steps.indexOf('account');
         if (i >= 0) setStep(i);
@@ -1328,7 +1334,7 @@ export default function Auth() {
                       // services et les contacts saisis aux étapes précédentes. Les écraser ici privait
                       // le tableau de bord de quoi recréer le commerce, et le restaurateur se retrouvait
                       // à tout ressaisir une seconde fois.
-                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim(), city: addressCity.trim() || r.commune || '', commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim(), city: addressCity.trim() || r.commune || '', commune: r.commune, neighborhood: r.neighborhood })); } catch { /* sans stockage */ }
                     }}
                     onPickCandidate={(c, r) => {
                       try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
@@ -1435,8 +1441,8 @@ export default function Auth() {
               {step > 0 && (
                 <button type="button" className="btn-outline" onClick={goBack}>{t('auth.back')}</button>
               )}
-              <button type="submit" className="btn-gold" style={{ flex: 1 }} disabled={loading}>
-                {loading ? t('common.loading') : isLastStep ? t('auth.createAccount') : t('auth.continueStep')}
+              <button type="submit" className="btn-gold" style={{ flex: 1 }} disabled={loading || verifDispo}>
+                {loading || verifDispo ? t('common.loading') : isLastStep ? t('auth.createAccount') : t('auth.continueStep')}
               </button>
             </div>
           </form>

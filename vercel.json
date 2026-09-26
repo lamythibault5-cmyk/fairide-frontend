@@ -1,5 +1,7 @@
 {
   "redirects": [
+    { "source": "/jeux", "destination": "/", "permanent": true },
+    { "source": "/:lang(nl|en)/jeux", "destination": "/:lang", "permanent": true },
     { "source": "/cgu", "destination": "/cgv", "permanent": true },
     { "source": "/:lang(nl|en)/cgu", "destination": "/:lang/cgv", "permanent": true },
     { "source": "/terms", "destination": "/cgv", "permanent": true },

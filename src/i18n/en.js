@@ -1968,7 +1968,7 @@ export default {
       zoneTakenEmpty: 'Nobody else has taken an area.',
       zoneTake: 'I take it',
       zoneLeave: 'I let it go',
-      zoneTakenBy: 'taken by {agent}', zoneTakenOther: 'taken by another agent', zoneTakenShort: 'taken', zoneTakenOther: 'taken by another agent', zoneTakenShort: 'taken',
+      zoneTakenBy: 'taken by {agent}', zoneTakenOther: 'taken by another agent', zoneTakenShort: 'taken',
       zoneCanvassed: '{n} business(es) already canvassed',
       toastZoneTaken: 'Area taken: it is yours.',
       toastZoneLeft: 'Area released.',
@@ -4362,6 +4362,9 @@ export default {
       archiveDesc2: 'One invoice per month, issued automatically at the start of the month for the past month and e-mailed with the PDF. Each PDF details every order: date, type, amount, rate, commission excl. VAT, VAT and total. 📧 to receive it again, UBL for your accounting software (Peppol).'
     },
     promosPage: {
+      inactiveSuffix: ' · inactive',
+      deletePromo: 'Delete',
+      bogoOption: 'Buy {n} = 1 free',
       title: 'Promotions',
       intro: 'Discounts on a specific dish, or an offer on the whole order. Only one active promo per dish at a time, and only one active cart promo at a time.',
       loading: 'Loading...',
@@ -4919,6 +4922,9 @@ export default {
       removeSecond: 'Remove'
     },
     ordersResto: {
+      confirmRefuseTitle: 'Decline this order?',
+      confirmRefuseText: 'The order from {name} will be declined and the customer refunded automatically.',
+      printFailed: 'Printing failed.',
       openTitle: 'Open for orders',
       openSub: 'Tap to pause',
       pausedTitle: 'Orders paused',
@@ -5204,6 +5210,8 @@ export default {
       confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
     },
     accountUi: {
+      balanceAvailable: '€{amount} available',
+      confirmCode: 'Confirm',
       pickupPayTitle: 'Payment for takeaway orders',
       pickupPayOnline: 'Online only',
       pickupPayOnlineText: 'The customer pays when ordering, via Fairide. The order is guaranteed; you receive your in-store price, Fairide keeps the 10% added to the displayed price.',
@@ -5375,7 +5383,7 @@ export default {
       terminalRow: 'My Fairide terminal',
       salesCrmRow: 'Sales',
       salesCrmSub: '{n} business(es) canvassed · open',
-      terminalSub_none: 'With the full version · free or €80 deposit',
+      terminalSub_none: 'Free for the first 50 businesses, otherwise €{amount} deposit',
       terminalSub_offert: 'Handed over · free',
       terminalSub_caution_due: '€{amount} deposit to pay at hand-over',
       terminalSub_caution_versee: 'Handed over · €{amount} deposit paid',
@@ -5461,7 +5469,7 @@ export default {
       gvRedeemTitle: 'Redeem at the counter',
       gvRedeemAmount: 'Amount to deduct (€)',
       gvRedeemNote: 'Note',
-      gvRedeemNotePh: 'Table 4, bill of 12/10…',
+      gvRedeemNotePh: 'Counter pickup of 12/10…',
       gvRedeemAll: 'Whole balance',
       gvRedeem: 'Deduct',
       gvUsesTitle: 'Uses',
@@ -5754,6 +5762,8 @@ export default {
       fairideAdvantagePercent: 'Fairide advantage: {name} gives −{v}% on every product, because here the platform only takes 10%.',
       ordersOpenBanner: 'Takeaway from {dateResa} · delivery from {date}. Until then, browse the menu, build your cart and save your favourite businesses.',
       ordersOpenBannerResaOpen: 'You can already order takeaway. Delivery opens on {date}.',
+      ordersOpenBannerOnlineOnly: 'Online ordering opens on {date} at this business. Until then, browse the menu and build your basket.',
+      ordersOpenBannerPickupOnly: 'Takeaway from {date}. Until then, browse the menu, build your basket and save your favourite businesses.',
       infoButton: 'Info',
       infoTitle: 'Useful info',
       hoursLabel: 'Opening hours',

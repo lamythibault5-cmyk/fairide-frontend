@@ -92,7 +92,11 @@ export default function Checkout() {
       return;
     }
     // Livraison pas encore ouverte (avant le 20 octobre) : l'à emporter est proposé d'abord.
-    if (!restaurant.offersDelivery || (!serviceOuvert('delivery', user) && restaurant.offersPickup)) setFulfillmentType('pickup');
+    if (!restaurant.offersDelivery || (!serviceOuvert('delivery', user) && restaurant.offersPickup)) { setFulfillmentType('pickup'); return; }
+    // Sinon, le mode choisi sur la fiche du commerce (RestaurantMenu, sessionStorage) est repris.
+    let choisi = null;
+    try { choisi = sessionStorage.getItem(`fairide_mode_${restaurantId}`); } catch { /* navigation privée */ }
+    if (choisi === 'pickup' && restaurant.offersPickup) setFulfillmentType('pickup');
   }, [restaurant]);
 
   useEffect(() => {
