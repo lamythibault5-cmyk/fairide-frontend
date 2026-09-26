@@ -15,7 +15,11 @@ import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
 import VendeurLivraison from '../../components/conformite/VendeurLivraison';
 
-function ReviewForm({ order, token, toast, onDone, t }) {
+// `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
+// abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
+// laisser : le formulaire ne se rouvre pas sur une commande notée, et le renvoyer butait sur « avis déjà
+// envoyé » avant d'atteindre le pourboire.
+function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
   const [foodRating, setFoodRating] = useState(5);
   const [foodComment, setFoodComment] = useState('');
   const [deliveryRating, setDeliveryRating] = useState(order.driverName ? 5 : 0);
@@ -27,14 +31,21 @@ function ReviewForm({ order, token, toast, onDone, t }) {
   async function submit() {
     setSaving(true);
     try {
-      await api(`/orders/${order.id}/review`, {
-        method: 'POST', token,
-        body: {
-          foodRating, foodComment: foodComment.trim(),
-          deliveryRating: order.driverName ? deliveryRating : undefined,
-          deliveryComment: order.driverName ? deliveryComment.trim() : undefined
+      if (!pourboireSeul) {
+        try {
+          await api(`/orders/${order.id}/review`, {
+            method: 'POST', token,
+            body: {
+              foodRating, foodComment: foodComment.trim(),
+              deliveryRating: order.driverName ? deliveryRating : undefined,
+              deliveryComment: order.driverName ? deliveryComment.trim() : undefined
+            }
+          });
+        } catch (e) {
+          // 409 = avis déjà enregistré (second envoi après un pourboire qui a échoué) : on passe au pourboire.
+          if (e.status !== 409) throw e;
         }
-      });
+      }
       const tip = tipInput.trim() ? +Number(tipInput).toFixed(2) : tipChoice;
       if (order.driverName && tip > 0) {
         await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
@@ -58,12 +69,12 @@ function ReviewForm({ order, token, toast, onDone, t }) {
 
   return (
     <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
-      <div style={{ marginBottom: 10 }}>
+      {!pourboireSeul && <div style={{ marginBottom: 10 }}>
         <div className="small" style={{ marginBottom: 4 }}>{t('review.foodRatingLabel')}</div>
         <StarsInput value={foodRating} onChange={setFoodRating} />
         <input value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
-      </div>
-      {order.driverName && (
+      </div>}
+      {order.driverName && !pourboireSeul && (
         <div style={{ marginBottom: 10 }}>
           <div className="small" style={{ marginBottom: 4 }}>{t('review.deliveryRatingLabel')}</div>
           <StarsInput value={deliveryRating} onChange={setDeliveryRating} />
@@ -262,9 +273,12 @@ export default function Orders() {
           {o.status === 'livre' && o.reviewed && (
             <div className="small" style={{ marginTop: 8, color: 'var(--teal-deep)' }}>{t('orders.reviewSent')}</div>
           )}
+          {o.status === 'livre' && o.reviewed && o.driverName && !o.tipPaid && reviewingId !== o.id && (
+            <button className="btn-ghost" style={{ marginTop: 8 }} onClick={() => setReviewingId(o.id)}>{t('orders.leaveTip')}</button>
+          )}
           {reviewingId === o.id && (
             <ReviewForm
-              order={o} token={token} toast={toast} t={t}
+              order={o} token={token} toast={toast} t={t} pourboireSeul={!!o.reviewed}
               onDone={() => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true } : x))); }}
             />
           )}

@@ -259,7 +259,7 @@ export default function Auth() {
     if (fiche.companyNumber && !companyNumber.trim()) setCompanyNumber(fiche.companyNumber.replace(/^BE/i, '').trim());
     try {
       const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}');
-      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, street: fiche.street || ancien.street || '', number: fiche.number || ancien.number || '', postalCode: fiche.postalCode || ancien.postalCode || '', city: fiche.city || fiche.commune || ancien.city || '', cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', street: fiche.street || '', number: fiche.number || '', postalCode: fiche.postalCode || '', commune: fiche.city || '', lat: fiche.lat ?? null, lng: fiche.lng ?? null }));
+      localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: fiche.name, street: fiche.street || ancien.street || '', number: fiche.number || ancien.number || '', postalCode: fiche.postalCode || ancien.postalCode || '', city: fiche.city || fiche.commune || ancien.city || '', cuisine: fiche.cuisine || fiche.type || '', phone: fiche.phone || '', email: fiche.email || '', website: fiche.website || '', openingHours: fiche.openingHours || '', commune: fiche.city || '', lat: fiche.lat ?? null, lng: fiche.lng ?? null }));
     } catch { /* sans stockage */ }
   }
   useEffect(() => {
@@ -1328,10 +1328,10 @@ export default function Auth() {
                       // services et les contacts saisis aux étapes précédentes. Les écraser ici privait
                       // le tableau de bord de quoi recréer le commerce, et le restaurateur se retrouvait
                       // à tout ressaisir une seconde fois.
-                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim(), city: addressCity.trim() || r.commune || '', commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim(), city: addressCity.trim() || r.commune || '', commune: r.commune, neighborhood: r.neighborhood })); } catch { /* sans stockage */ }
                     }}
                     onPickCandidate={(c, r) => {
-                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood, street: addressStreet.trim(), number: addressNumber.trim(), postalCode: addressPostalCode.trim() })); } catch { /* sans stockage */ }
+                      try { const ancien = JSON.parse(localStorage.getItem('fairide_resto_hint') || '{}'); localStorage.setItem('fairide_resto_hint', JSON.stringify({ ...ancien, name: c.name || ancien.name, cuisine: c.cuisine || ancien.cuisine, commune: r.commune, neighborhood: r.neighborhood })); } catch { /* sans stockage */ }
                     }}
                     onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
                   />
