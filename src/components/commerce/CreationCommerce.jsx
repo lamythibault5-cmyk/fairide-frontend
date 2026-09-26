@@ -140,7 +140,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           name: name.trim(), commune, neighborhood: neighborhood.trim(), cuisine: cuisine === 'Autre' ? customCuisine.trim() || 'Autre' : cuisine, desc: desc.trim(),
           addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: commune,
           hours, deliveryMode: deliveryModePref,
-          openingHours: openingHoursTexte, offersDelivery, offersPickup, offersDineIn: false, phone: telephoneCommerce.trim(), website: siteWeb.trim()
+          openingHours: openingHoursTexte, offersDelivery, offersPickup, phone: telephoneCommerce.trim(), website: siteWeb.trim()
         }
       });
       // Le site web relevé à l'inscription sert ensuite à lire la carte (Mes produits → import depuis le web).

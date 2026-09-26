@@ -33,20 +33,12 @@ export default function OrderReceipt({ order, restaurant }) {
       <p className="receipt-center">{formatDateTime(order.createdAt)} · {orderTypeLabel(order)}</p>
       <div className="receipt-divider" />
       <p style={{ margin: '4px 0' }}>
-        <b>{order.orderType === 'dine_in' ? order.reservationName : order.clientName}</b>
+        <b>{order.clientName}</b>
         {order.clientPhone && <> · {order.clientPhone}</>}
       </p>
-      {order.orderType === 'dine_in' && order.partySize > 0 && <p style={{ margin: '4px 0' }}>Table pour {order.partySize} personne{order.partySize > 1 ? 's' : ''}</p>}
       {order.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.instruction', { label: deliveryInstructionLabel(order.deliveryInstructions, t) })}</p>}
       {order.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>{t('receipt.note', { note: order.deliveryNote })}</p>}
       <div className="receipt-divider" />
-      {/* Réservation de table sans plat : sans ce cas, le reçu affichait une liste vide puis un
-          « Total payé 0.00€ », qui se lit comme une commande impayée. */}
-      {order.items.length === 0 && (
-        <p className="receipt-center" style={{ margin: '8px 0' }}>
-          <b>{t('receipt.reservationNoOrder')}</b><br />{t('receipt.willOrderOnSite')}
-        </p>
-      )}
       {order.items.map((i) => (
         <div key={i.itemId} className="receipt-line" style={{ alignItems: 'flex-start' }}>
           <span>

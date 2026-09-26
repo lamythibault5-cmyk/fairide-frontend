@@ -4,9 +4,9 @@
 
 // Ce qui manque encore au panier avant d'envoyer la commande (message de toast), ou null. Voir
 // components/conformite/CheckoutConformite.jsx : âge si alcool (C3), CGU si pas encore acceptées (C1).
-export function manqueConformite(valeur, restaurant, lignes, typeCommande, t) {
+export function manqueConformite(valeur, restaurant, lignes, _typeCommande, t) {
   const menu = restaurant?.menu || [];
-  const alcool = typeCommande !== 'dine_in' && lignes.some((l) => menu.find((m) => m.id === l.itemId)?.isAlcohol);
+  const alcool = lignes.some((l) => menu.find((m) => m.id === l.itemId)?.isAlcohol);
   if (alcool && !valeur.ageDeclaration) return t('conformite.toastAgeRequired');
   if (valeur.termsNeeded && !valeur.acceptTerms) return t('conformite.toastTermsRequired');
   return null;

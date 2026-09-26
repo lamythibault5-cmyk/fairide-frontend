@@ -25,7 +25,7 @@ export function formatOrderItem(i) {
 }
 
 export const STEPS = ['nouveau', 'preparation', 'pret', 'livraison', 'livre'];
-// Une commande à emporter/sur place n'a pas de trajet "en route" — le client vient lui-même.
+// Une commande à emporter n'a pas de trajet "en route" — le client vient lui-même.
 const PICKUP_STEPS = ['nouveau', 'preparation', 'pret', 'livre'];
 
 const STATUS_LABELS_FR = {
@@ -33,29 +33,21 @@ const STATUS_LABELS_FR = {
   livre: 'Livrée', refuse: 'Refusée', annule: 'Annulée'
 };
 
-// Une réservation de table n'est ni « nouvelle » ni « en préparation » : elle attend une confirmation,
-// puis elle est confirmée. Les mêmes statuts bruts, des mots qui parlent de tables.
-const STATUS_LABELS_DINE_IN_FR = { nouveau: 'À confirmer', preparation: 'Confirmée', pret: 'Table prête' };
-
 // `pourClient` : le client et le commerce ne lisent pas le même mot pour le même statut. « Nouvelle » dit
 // au restaurateur « à traiter » ; au client, ça ne dit pas que le commerce n'a pas encore confirmé. De même,
 // « Prête » pour une livraison laisse croire que ça arrive, alors qu'on attend encore un livreur.
 export function statusLabel(status, orderType, t, pourClient = false) {
-  if (pourClient && t && orderType !== 'dine_in') {
+  if (pourClient && t) {
     if (status === 'nouveau') return t('orderStatus.status.nouveauClient');
     if (status === 'pret' && orderType === 'delivery') return t('orderStatus.status.pretDelivery');
   }
   if (status === 'livre' && orderType === 'pickup') return t ? t('orderStatus.status.livrePickup') : 'Récupérée';
-  if (status === 'livre' && orderType === 'dine_in') return t ? t('orderStatus.status.livreDineIn') : 'Terminée';
-  if (orderType === 'dine_in' && STATUS_LABELS_DINE_IN_FR[status]) {
-    return t ? t(`orderStatus.status.${status}DineIn`) : STATUS_LABELS_DINE_IN_FR[status];
-  }
   if (t) return t(`orderStatus.status.${status}`);
   return STATUS_LABELS_FR[status] || status;
 }
 
 // Étape opérationnelle d'une commande, du point de vue du restaurateur — distincte du statut brut
-// (qui a plus de valeurs) et du type de commande (livraison/emporter/sur place) : ce qui compte ici
+// (qui a plus de valeurs) et du type de commande (livraison/emporter) : ce qui compte ici
 // c'est "qu'est-ce que je dois faire, là, maintenant ?". Deux étapes distinctes impliquent un livreur
 // pas encore là, à ne pas confondre : "attenteConfirmationLivreur" (avant même de cuisiner — aucun
 // livreur n'a encore pris la commande, voir GET /orders/available qui l'expose dès le statut
@@ -108,18 +100,17 @@ export function stageColors(restoId) {
 }
 
 // Couleur associée au type de commande, pour que le restaurant repère chaque commande d'un coup d'œil :
-// jaune = livraison classique, bleu = à emporter, violet = sur place, orange = heure programmée (prioritaire sur le type).
+// jaune = livraison classique, bleu = à emporter, orange = heure programmée (prioritaire sur le type).
 export function orderTypeColor(order) {
   if (order.scheduledFor) return 'orange';
   if (order.orderType === 'pickup') return 'blue';
-  if (order.orderType === 'dine_in') return 'purple';
   return 'yellow';
 }
 
 export function orderTypeLabel(order, t) {
   const base = t
-    ? (order.orderType === 'pickup' ? t('orderStatus.orderType.pickup') : order.orderType === 'dine_in' ? t('orderStatus.orderType.dineIn') : t('orderStatus.orderType.delivery'))
-    : (order.orderType === 'pickup' ? '🏠 À emporter' : order.orderType === 'dine_in' ? '🍽️ Sur place' : '🛵 Livraison');
+    ? (order.orderType === 'pickup' ? t('orderStatus.orderType.pickup') : t('orderStatus.orderType.delivery'))
+    : (order.orderType === 'pickup' ? '🏠 À emporter' : '🛵 Livraison');
   if (order.scheduledFor) return `${base} · 🕐 ${formatDateTime(order.scheduledFor)}`;
   return base;
 }
@@ -163,10 +154,9 @@ export function DeliveryTiming({ order }) {
   const { createdAt, estimatedDeliveryAt, status, orderType, scheduledFor } = order;
   if (status === 'refuse' || status === 'annule') return null;
 
-  const isDineIn = orderType === 'dine_in';
   const isPickup = orderType === 'pickup';
   const doneStatus = 'livre';
-  const doneLabel = isDineIn ? t('orderStatus.status.livreDineIn') : isPickup ? t('orderStatus.status.livrePickup') : t('orderStatus.status.livre');
+  const doneLabel = isPickup ? t('orderStatus.status.livrePickup') : t('orderStatus.status.livre');
   const orderedAt = t('orderStatus.timing.orderedAt', { time: formatTime(createdAt) });
 
   if (status === doneStatus) {
@@ -178,7 +168,7 @@ export function DeliveryTiming({ order }) {
   }
 
   if (scheduledFor) {
-    const label = isDineIn ? t('orderStatus.timing.reservedFor') : t('orderStatus.timing.scheduledFor');
+    const label = t('orderStatus.timing.scheduledFor');
     return (
       <div className="small">
         {orderedAt} · {label} <b>{formatDateTime(scheduledFor)}</b>
@@ -186,7 +176,7 @@ export function DeliveryTiming({ order }) {
     );
   }
 
-  const readyLabel = isDineIn ? t('orderStatus.timing.tableReadyAt') : isPickup ? t('orderStatus.timing.pickupEstimate') : t('orderStatus.timing.deliveryEstimate');
+  const readyLabel = isPickup ? t('orderStatus.timing.pickupEstimate') : t('orderStatus.timing.deliveryEstimate');
   const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
   return (
     <div className="small">
@@ -198,11 +188,10 @@ export function DeliveryTiming({ order }) {
 
 // « Et maintenant ? » — une phrase sous le statut, qui dit ce qui se passe et ce que le client a à faire.
 // Les badges seuls laissaient deviner : entre « Prête » et l'arrivée du livreur, plus rien n'expliquait
-// l'attente. Rien pour une réservation de table : elle a ses propres messages.
+// l'attente.
 export function ProchaineEtape({ order }) {
   const { t } = useLanguage();
   const { status, orderType } = order;
-  if (orderType === 'dine_in') return null;
   const livraison = orderType === 'delivery';
   let cle = null;
   if (status === 'nouveau' && order.acceptDeadline) {
@@ -232,7 +221,7 @@ export function ProgressBar({ status, orderType }) {
   }
   const isDelivery = orderType === 'delivery';
   const steps = isDelivery ? STEPS : PICKUP_STEPS;
-  const lastLabel = isDelivery ? t('orderStatus.progress.delivered') : orderType === 'dine_in' ? t('orderStatus.progress.dineInDone') : t('orderStatus.progress.pickedUp');
+  const lastLabel = isDelivery ? t('orderStatus.progress.delivered') : t('orderStatus.progress.pickedUp');
   const labels = isDelivery
     ? [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), t('orderStatus.progress.onTheWay'), lastLabel]
     : [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), lastLabel];

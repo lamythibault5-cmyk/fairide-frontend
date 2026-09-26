@@ -23,7 +23,7 @@ export function ticketVersCommande(f) {
   const subtotal = +items.reduce((a, it) => a + it.qty * it.price, 0).toFixed(2);
   const deliveryFee = f.orderType === 'delivery' ? Number(f.deliveryFee || 0) : 0;
   return {
-    id: f.id || `M-${Date.now().toString(36).toUpperCase().slice(-6)}`, clientName: f.clientName || '', reservationName: f.clientName || '', partySize: null, clientPhone: f.clientPhone || '', orderType: f.orderType,
+    id: f.id || `M-${Date.now().toString(36).toUpperCase().slice(-6)}`, clientName: f.clientName || '', clientPhone: f.clientPhone || '', orderType: f.orderType,
     items, subtotal, deliveryFee, serviceFee: 0, promoDiscount: 0, balanceUsed: 0, total: +(subtotal + deliveryFee).toFixed(2),
     deliveryNote: f.note || '', address: f.address || '', createdAt: Date.now(), paid: true, status: 'nouveau', manuel: !f.id
   };

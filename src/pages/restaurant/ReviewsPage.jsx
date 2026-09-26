@@ -52,8 +52,6 @@ export default function ReviewsPage() {
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b style={{ fontSize: 13 }}>
                   {r.clientName}
-                  {/* Avis laissé après une réservation de table (commande dine_in) : dit d'où il vient. */}
-                  {r.orderType === 'dine_in' && <span className="pill" style={{ marginLeft: 8, fontWeight: 600 }}>🍽️ {t('reviewsResto.afterReservation')}</span>}
                 </b>
                 <StarsDisplay value={r.foodRating} />
               </div>

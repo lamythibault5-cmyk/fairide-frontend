@@ -78,7 +78,7 @@ export default function OrderResult({ success }) {
         if (order?.paid) {
           setState('paid');
           // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
-          suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : order.orderType === 'dine_in' ? 'reservation' : 'livraison' });
+          suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : 'livraison' });
           if (order.orderType === 'pickup') suivre('commande_emporter');
           // Paiement confirmé : la copie du panier mise de côté avant la redirection n'a plus lieu
           // d'être. (Le panier visible, lui, a déjà été vidé au départ — voir stashForPayment.)

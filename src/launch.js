@@ -1,11 +1,10 @@
 // Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js et routes/restaurants.js).
-// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 6 octobre 2026 ; réservations
-// de table et commandes à emporter à partir du 10 octobre ; livraison (livreurs) à partir du 20 octobre. Tout le reste
+// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 6 octobre 2026 ;
+// commandes à emporter à partir du 10 octobre ; livraison (livreurs) à partir du 20 octobre. Tout le reste
 // est visible et utilisable avant. Les administrateurs passent (essais). L'application native (App Store / Google
 // Play) arrive le 6 octobre 2026.
 export const CAMPAGNE_RESEAUX = new Date('2026-10-06T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
-export const OUVERTURE_RESERVATIONS = new Date('2026-10-10T00:00:00+02:00');
 export const OUVERTURE_EMPORTER = new Date('2026-10-10T00:00:00+02:00');
 export const OUVERTURE_LIVRAISON = new Date('2026-10-20T00:00:00+02:00');
 // Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, le 20 octobre 2026 (fondateur, 2026-09-19).
@@ -15,13 +14,13 @@ export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAI
 export function dateOuverturePaiementEnLigne(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENT_EN_LIGNE, locale); }
 // Premières commandes payées en ligne : c'est cette date qui fait courir le mois offert de l'abonnement.
 export const OUVERTURE_COMMANDES = OUVERTURE_PAIEMENT_EN_LIGNE;
-const OUVERTURES = { dine_in: OUVERTURE_RESERVATIONS, pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
+const OUVERTURES = { pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
 
 function formater(date, locale) {
   return date.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
 }
 
-// type : 'dine_in' | 'pickup' | 'delivery'.
+// type : 'pickup' | 'delivery'.
 export function serviceOuvert(type, user) {
   return Date.now() >= (OUVERTURES[type] || OUVERTURE_LIVRAISON).getTime() || !!user?.isAdmin;
 }
@@ -29,7 +28,7 @@ export function dateOuverture(type, locale = 'fr-BE') {
   return formater(OUVERTURES[type] || OUVERTURE_LIVRAISON, locale);
 }
 
-// Réservation de table retirée (2026-09-25) : il ne reste que l'à emporter et la livraison.
+// Fairide : à emporter et livraison.
 export function dateOuvertureEmporter(locale = 'fr-BE') { return dateOuverture('pickup', locale); }
 // Une commande en ligne est possible (à emporter) ; la livraison peut encore attendre, voir livraisonOuverte.
 export function commandesOuvertes(user) { return serviceOuvert('pickup', user); }

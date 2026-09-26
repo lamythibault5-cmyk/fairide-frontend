@@ -216,9 +216,8 @@ export default function OrdersPage() {
       <EcheanceAcceptation order={o} />
       <BandeauAllergie order={o} />
       <BadgeAlcool order={o} />
-      <div className="small" style={{ margin: '6px 0' }}>{o.items.length > 0 ? o.items.map(formatOrderItem).join(', ') : t('ordersResto.reservationNoOrder')}</div>
+      <div className="small" style={{ margin: '6px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
       {o.orderType === 'delivery' && <div className="small">📍 {o.address}</div>}
-      {o.orderType === 'dine_in' && <div className="small">{t('ordersResto.dineInLine', { n: o.partySize, name: o.reservationName })}</div>}
       {o.clientPhone && <div className="small">📞 {o.clientPhone}</div>}
       {o.orderType === 'delivery' && o.driverName && ['preparation', 'pret'].includes(o.status) && (
         <div className="small" style={{ fontWeight: 600 }}>{t('ordersResto.driverAssigned', { name: o.driverName })}</div>
@@ -237,7 +236,7 @@ export default function OrdersPage() {
           <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
         )}
       </div>
-      {o.status === 'pret' && (o.orderType === 'pickup' || o.orderType === 'dine_in') && (
+      {o.status === 'pret' && o.orderType === 'pickup' && (
         <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
           <input aria-label={t('ordersResto.phCustomerCode')}
             placeholder={t('ordersResto.phCustomerCode')}
@@ -246,7 +245,7 @@ export default function OrdersPage() {
             onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
           />
           <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === o.id} onClick={() => confirmTakeaway(o)}>
-            {confirmingPickup === o.id ? '...' : o.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
+            {confirmingPickup === o.id ? '...' : t('ordersResto.validateOrder')}
           </button>
         </div>
       )}
@@ -315,15 +314,6 @@ export default function OrdersPage() {
             <ProgressBar status={selectedOrder.status} orderType={selectedOrder.orderType} />
             <DeliveryTiming order={selectedOrder} />
             <div className="divider" />
-            {/* Une réservation de table peut n'avoir aucun plat (voir routes/orders.js : seul 'dine_in'
-                l'autorise). Sans ce cas, la fiche affichait une section « Articles » vide suivie d'un
-                « Total payé 0,00 € », qui se lit comme une commande impayée au lieu d'une table réservée. */}
-            {selectedOrder.items.length === 0 ? (
-              <p className="small" style={{ margin: '4px 0' }}>
-                {t('ordersResto.reservationNoOrder')}
-              </p>
-            ) : (
-              <>
             <h4 style={{ margin: '0 0 6px' }}>{t('ordersResto.items')}</h4>
             {selectedOrder.items.map((i) => (
               <div key={i.itemId} className="row" style={{ justifyContent: 'space-between', padding: '4px 0', alignItems: 'flex-start' }}>
@@ -343,22 +333,17 @@ export default function OrdersPage() {
               {selectedOrder.balanceUsed > 0 && <div className="line"><span>{t('ordersResto.balanceUsed')}</span><span>-{selectedOrder.balanceUsed.toFixed(2)}€</span></div>}
               <div className="line total"><span>{selectedOrder.paymentMode === 'on_site' ? `💶 ${t('ordersResto.toCollectOnSite')}` : t('ordersResto.totalPaid')}</span><span>{selectedOrder.total.toFixed(2)}€</span></div>
             </div>
-              </>
-            )}
             <div className="divider" />
-            <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : selectedOrder.orderType === 'dine_in' ? t('ordersResto.dineIn') : t('ordersResto.delivery')}</h4>
+            <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
             {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}>📍 {selectedOrder.address}</p>}
             {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
-            {selectedOrder.orderType === 'dine_in' && (
-              <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.dineInLine', { n: selectedOrder.partySize, name: selectedOrder.reservationName })}</p>
-            )}
             {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
             <BandeauAllergie order={selectedOrder} />
             <BadgeAlcool order={selectedOrder} />
             {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
             {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
-            {selectedOrder.status === 'pret' && (selectedOrder.orderType === 'pickup' || selectedOrder.orderType === 'dine_in') && (
+            {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
                 <input aria-label={t('ordersResto.phCustomerCode')}
                   placeholder={t('ordersResto.phCustomerCode')}
@@ -367,7 +352,7 @@ export default function OrdersPage() {
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
                 />
                 <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={confirmingPickup === selectedOrder.id} onClick={() => confirmTakeaway(selectedOrder)}>
-                  {confirmingPickup === selectedOrder.id ? '...' : selectedOrder.orderType === 'dine_in' ? t('ordersResto.validateArrival') : t('ordersResto.validateOrder')}
+                  {confirmingPickup === selectedOrder.id ? '...' : t('ordersResto.validateOrder')}
                 </button>
               </div>
             )}

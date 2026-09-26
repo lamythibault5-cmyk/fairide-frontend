@@ -32,7 +32,7 @@ const filters = (tr) => [
 const DRAPEAUX = ['noDriver', 'refunded', 'late', 'stale', 'stuck'];
 
 const PAGE_SIZE = 50;
-const TYPE_LABELS = (tr) => ({ delivery: tr('adminOrders.typeDelivery'), pickup: tr('adminOrders.typePickup'), dine_in: tr('adminOrders.typeDineIn') });
+const TYPE_LABELS = (tr) => ({ delivery: tr('adminOrders.typeDelivery'), pickup: tr('adminOrders.typePickup') });
 const KANBAN_COLORS = { nouveau: 'var(--orange)', preparation: 'var(--blue)', pret: 'var(--iris)', livraison: 'var(--purple)', livre: '#3FB950', refuse: 'var(--red)', annule: 'var(--ink-faint)' };
 // Colonnes dont le tri est fait par le serveur (GET /admin/orders?sort=…) : le tri porte alors sur
 // TOUTES les commandes filtrées, pas seulement la page affichée. Les autres colonnes trient la page.

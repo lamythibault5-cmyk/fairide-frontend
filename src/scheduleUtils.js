@@ -4,8 +4,7 @@ function dateKey(d) {
 }
 
 // Dates sélectionnables pour "programmer" une commande : aujourd'hui + les 7 prochains jours (même
-// fenêtre que la validation côté serveur). Une réservation de table suit l'horizon du restaurant
-// (reservationMaxDays), d'où le paramètre.
+// fenêtre que la validation côté serveur).
 export function getScheduleDateOptions(days = 7, labels = { today: "Aujourd'hui", tomorrow: 'Demain' }) {
   const now = new Date();
   const opts = [];

@@ -16,7 +16,7 @@ import { useLanguage } from '../../context/LanguageContext';
  *
  * Contrôlé par Checkout.jsx (`valeur` / `onChange`) : c'est lui qui envoie ces champs avec la commande.
  * Le serveur revérifie tout : ce bloc ne fait qu'éviter au client un aller-retour d'erreur. */
-export default function CheckoutConformite({ restaurant, lignes, typeCommande, valeur, onChange }) {
+export default function CheckoutConformite({ restaurant, lignes, valeur, onChange }) {
   const { token } = useAuth();
   const { t } = useLanguage();
   const id = useId();
@@ -36,24 +36,21 @@ export default function CheckoutConformite({ restaurant, lignes, typeCommande, v
   // Âge exigé : le plus élevé des plats, 18 par défaut (politique Fairide, voir alcool.js côté serveur).
   const ageRequis = platsAlcool.length ? Math.max(18, ...platsAlcool.map((m) => m.minAge || 18)) : null;
   const telephone = restaurant?.allergenContactPhone || '';
-  const commandeEnLigne = typeCommande !== 'dine_in';
 
   return (
     <div className="checkout-conformite" style={{ marginTop: 12 }}>
-      {commandeEnLigne && (
-        <details open={!!valeur.allergyRequest} style={{ marginBottom: 10 }}>
-          <summary className="small" style={{ cursor: 'pointer', fontWeight: 600 }}>{t('conformite.allergyToggle')}</summary>
-          <div className="field" style={{ marginTop: 6 }}>
-            <label htmlFor={`${id}-allergie`} className="small">{t('conformite.allergyLabel')}</label>
-            <textarea id={`${id}-allergie`} rows={2} maxLength={500} value={valeur.allergyRequest || ''}
-              onChange={(e) => maj({ allergyRequest: e.target.value })} placeholder={t('conformite.allergyPlaceholder')} />
-          </div>
-          <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyHow')}</p>
-          {telephone && <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyCallFirst', { phone: telephone })}</p>}
-        </details>
-      )}
+      <details open={!!valeur.allergyRequest} style={{ marginBottom: 10 }}>
+        <summary className="small" style={{ cursor: 'pointer', fontWeight: 600 }}>{t('conformite.allergyToggle')}</summary>
+        <div className="field" style={{ marginTop: 6 }}>
+          <label htmlFor={`${id}-allergie`} className="small">{t('conformite.allergyLabel')}</label>
+          <textarea id={`${id}-allergie`} rows={2} maxLength={500} value={valeur.allergyRequest || ''}
+            onChange={(e) => maj({ allergyRequest: e.target.value })} placeholder={t('conformite.allergyPlaceholder')} />
+        </div>
+        <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyHow')}</p>
+        {telephone && <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.allergyCallFirst', { phone: telephone })}</p>}
+      </details>
 
-      {ageRequis && commandeEnLigne && (
+      {ageRequis && (
         <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginBottom: 10 }}>
           <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!valeur.ageDeclaration} onChange={(e) => maj({ ageDeclaration: e.target.checked })} />
           <span className="small">{t('conformite.ageDeclaration', { age: ageRequis })}</span>

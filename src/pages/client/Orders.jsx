@@ -6,7 +6,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
-import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
@@ -142,35 +142,10 @@ export default function Orders() {
     }
   }
 
-  // Acompte laissé en attente (le client a quitté la page de paiement) : on rouvre le paiement d'ici.
-  async function payDeposit(orderId) {
-    setCancellingId(orderId);
-    try {
-      const pay = await api(`/payments/deposit-checkout/${orderId}`, { method: 'POST', token });
-      if (pay.simulated) {
-        const orders = await api('/orders/mine', { token });
-        setOrders(orders);
-        toast(pay.message);
-      } else {
-        window.location.href = pay.checkoutUrl;
-      }
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setCancellingId(null);
-    }
-  }
-
-  // ?type=dine_in n'ouvre pas une autre page : les réservations SONT des commandes, rangées dans
-  // la même liste. Le filtre ne fait que la restreindre, pour que « Mes réservations » depuis Mon
-  // compte n'oblige pas à retrouver ses tables au milieu de ses livraisons.
+  // ?type=pickup|delivery restreint la liste à un type de commande.
   const typeFiltre = searchParams.get('type');
   const listeAffichee = typeFiltre ? orders.filter((o) => o.orderType === typeFiltre) : orders;
-  const titre = typeFiltre === 'dine_in' ? t('orders.myReservations') : t('orders.title');
-  // Rappel à l'écran, en plus de l'e-mail de la veille : les tables confirmées qui commencent dans les
-  // 24 prochaines heures.
-  const maintenant = Date.now();
-  const rappels = orders.filter((o) => o.orderType === 'dine_in' && o.status === 'preparation' && o.scheduledFor && o.scheduledFor > maintenant && o.scheduledFor - maintenant <= 24 * 3600000);
+  const titre = t('orders.title');
 
   if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
@@ -181,8 +156,8 @@ export default function Orders() {
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}
         <EtatVide
-          icone={typeFiltre === 'dine_in' ? 'reservations' : 'sac'}
-          titre={typeFiltre === 'dine_in' ? t('orders.noReservations') : t('orders.empty')}
+          icone="sac"
+          titre={t('orders.empty')}
           texte={t('orders.emptyHint')}
           actionVers="/restaurants"
           actionTexte={t('orders.emptyAction')}
@@ -194,15 +169,6 @@ export default function Orders() {
   return (
     <div>
       <h1 className="page-title">{titre}</h1>
-      {rappels.map((o) => {
-        const jour = new Date(o.scheduledFor).toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) === new Date().toLocaleDateString(getLocale(), { timeZone: 'Europe/Brussels' }) ? t('orders.reminderToday') : t('orders.reminderTomorrow');
-        return (
-          <div key={`rappel-${o.id}`} className="card orders-reminder" role="status">
-            <b><Icone nom="reservations" taille={15} /> {t('orders.reminderBanner', { name: o.restaurantName, when: jour, time: new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/Brussels' }), n: o.partySize })}</b>
-            {o.deliveryCode && <span className="small"> · {t('orders.reminderCode', { code: o.deliveryCode })}</span>}
-          </div>
-        );
-      })}
       {listeAffichee.map((o) => (
         <Fragment key={o.id}>
         <div className={`card order-type-${orderTypeColor(o)}`}>
@@ -221,7 +187,7 @@ export default function Orders() {
               où il fallait chercher les virgules pour savoir ce qu'on avait commandé. La capture
               « Past Orders » met une ligne par article, la quantité dans une case à gauche, et les
               options en gris dessous. C'est la même information, lisible d'un coup d'oeil. */}
-          {o.items.length > 0 ? (
+          {o.items.length > 0 && (
             <ul className="commande-articles">
               {o.items.map((i, n) => (
                 <li key={n}>
@@ -233,14 +199,9 @@ export default function Orders() {
                 </li>
               ))}
             </ul>
-          ) : (
-            <div className="small" style={{ margin: '6px 0' }}>{t('orders.reservationNoOrder')}</div>
           )}
           {o.orderType === 'pickup' && (
             <div className="small">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
-          )}
-          {o.orderType === 'dine_in' && (
-            <div className="small">{t('orders.dineInAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '', count: o.partySize, reservationName: o.reservationName })}</div>
           )}
           {o.orderType === 'delivery' && (
             <div className="small"><Icone nom="position" taille={14} /> {o.address}</div>
@@ -269,52 +230,16 @@ export default function Orders() {
             <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '8px 0' }}>
               <div className="small" style={{ marginBottom: 2 }}>
                 {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
-                {o.orderType === 'dine_in' && t('orders.codeShowArrival')}
                 {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
               </div>
               <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.deliveryCode}</div>
             </div>
           )}
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-            {o.orderType === 'dine_in' && o.items.length === 0 ? (
-              <span className="small">
-                {o.reservationDepositAmount > 0
-                  ? t('orders.deposit', { amount: `${o.reservationDepositAmount.toFixed(2)}€`, status: t(`orders.depositStatus_${o.reservationDepositStatus}`) })
-                  : t('orders.noPrepayment')}
-              </span>
-            ) : (
-              <>
-                <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
-                <b>{o.total.toFixed(2)}€</b>
-              </>
-            )}
+            <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
+            <b>{o.total.toFixed(2)}€</b>
           </div>
-          {o.orderType === 'dine_in' && o.items.length > 0 && o.reservationDepositAmount > 0 && (
-            <div className="small">{t('orders.deposit', { amount: `${o.reservationDepositAmount.toFixed(2)}€`, status: t(`orders.depositStatus_${o.reservationDepositStatus}`) })}</div>
-          )}
-
-          {/* Une réservation s'annule en ligne jusqu'au délai du restaurant (acompte rendu) ; après, on
-              l'appelle. Une commande classique, tant qu'elle n'est pas payée. */}
-          {o.orderType === 'dine_in' && !['annule', 'refuse', 'livre'].includes(o.status) && (
-            <>
-              {o.reservationDepositStatus === 'pending' && o.reservationDepositAmount > 0 && (
-                <button className="btn-gold" style={{ marginTop: 8 }} disabled={cancellingId === o.id} onClick={() => payDeposit(o.id)}>
-                  {t('orders.payDeposit')}, {o.reservationDepositAmount.toFixed(2)}€
-                </button>
-              )}
-              {o.reservationCancelDeadline && Date.now() < o.reservationCancelDeadline && (
-                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { date: new Date(o.reservationCancelDeadline).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) })}</div>
-              )}
-              {(!o.reservationCancelDeadline || Date.now() < o.reservationCancelDeadline) ? (
-                <button className="btn-ghost" style={{ marginTop: 4, color: 'var(--red)' }} disabled={cancellingId === o.id} onClick={() => cancelOrder(o.id)}>
-                  {cancellingId === o.id ? '...' : t('orders.cancelReservation')}
-                </button>
-              ) : (
-                <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelClosed')}</div>
-              )}
-            </>
-          )}
-          {o.orderType !== 'dine_in' && o.status === 'nouveau' && (
+          {o.status === 'nouveau' && (
             <>
               <button
                 className="btn-ghost"
@@ -327,7 +252,7 @@ export default function Orders() {
               <div className="small" style={{ marginTop: 4 }}>{t('orders.cancelHint')}</div>
             </>
           )}
-          {o.orderType !== 'dine_in' && ['preparation', 'pret', 'livraison'].includes(o.status) && (
+          {['preparation', 'pret', 'livraison'].includes(o.status) && (
             <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelLocked')}</div>
           )}
 

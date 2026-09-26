@@ -5,7 +5,6 @@
 //
 // Événements suivis (jamais de nom, d'adresse, d'e-mail ni de montant exact — seulement des catégories) :
 //   commande_finalisee  { mode: 'livraison' | 'emporter' }
-//   reservation_table
 //   commande_emporter   (raccourci de commande_finalisee mode emporter, pour un objectif dédié)
 //   inscription_restaurant
 //   candidature_livreur

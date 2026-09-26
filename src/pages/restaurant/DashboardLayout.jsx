@@ -200,7 +200,7 @@ export default function DashboardLayout() {
           addressStreet: h.street || user?.addressStreet || '', addressNumber: h.number || user?.addressNumber || '', addressPostalCode: h.postalCode || user?.addressPostalCode || '', addressCity: h.commune || user?.addressCity || '',
           hours: horairesValides ? h.hours : null, openingHours: h.openingHours || '', deliveryMode: sv.deliveryMode === 'own' ? 'own' : 'fairide',
           fromSignup: true,
-          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false, offersDineIn: false,
+          offersDelivery: sv.delivery !== false, offersPickup: sv.pickup !== false,
           phone: h.phone || '', website: h.website || ''
         }
       });

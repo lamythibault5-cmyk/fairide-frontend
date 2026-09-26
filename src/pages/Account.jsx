@@ -255,7 +255,7 @@ export default function Account() {
     }
     setSavingServices(true);
     try {
-      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, offersDineIn: false, pickupPaymentMode } });
+      await api(`/restaurants/${restoId}/services`, { method: 'PATCH', token, body: { offersDelivery, offersPickup, pickupPaymentMode } });
       refreshRestaurant();
       toast(t('accountUi.toastServicesUpdated'));
     } catch (err) {

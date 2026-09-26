@@ -207,7 +207,7 @@ export default function Auth() {
       phone: phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
-      offersDelivery: !!services.delivery, offersPickup: !!services.pickup, offersDineIn: false,
+      offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
       pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
       deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux

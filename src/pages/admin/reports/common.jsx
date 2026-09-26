@@ -37,7 +37,7 @@ export function deltaPct(current, previous) {
   return +((((Number(current) || 0) - p) / p) * 100).toFixed(1);
 }
 
-// Libellé d'un type de commande (delivery / pickup / dine_in) ; valeur brute si inconnue.
+// Libellé d'un type de commande (delivery / pickup) ; valeur brute si inconnue.
 export function orderTypeLabel(type, tr) {
   const key = `adminReports.type_${type}`;
   const label = tr(key);
