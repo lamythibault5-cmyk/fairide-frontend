@@ -70,7 +70,7 @@ export default function DashboardLayout() {
     api('/restaurants/mine/dashboard', { token }).then((list) => {
       setMyRestos(list);
       // Un seul restaurant possible par compte -> pas besoin de le faire choisir dans une liste, on l'ouvre direct.
-      if (list.length === 1) pickResto(list[0].id);
+      if (list.length === 1) pickResto(list[0].id, list[0]);
       // Pas encore de restaurant (compte ouvert avant la création automatique, ou création échouée à
       // l'inscription) : on le crée tout de suite depuis ce que l'inscription a retenu, sans rien demander ;
       // le formulaire ne s'ouvre qu'en dernier recours, déjà prérempli.
@@ -100,9 +100,19 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Rafraîchissement : les commandes toutes les 15 s, même onglet en arrière-plan (c'est ce qui fait sonner l'alerte
+  // « nouvelle commande », voir useNewOrderAlert) ; la fiche complète, les avis et les livreurs une fois par minute et
+  // seulement onglet visible. Avant, les quatre partaient toutes les 15 s, onglet caché compris : la fiche seule
+  // recharge toute la carte, soit une quinzaine de requêtes en base à chaque tour et par tablette.
+  const tour = useRef(0);
   useEffect(() => {
     if (!restoId) return;
-    const interval = setInterval(() => loadDashboard(restoId), 15000);
+    const interval = setInterval(() => {
+      tour.current += 1;
+      // Rafraîchissement en arrière-plan : une coupure réseau passagère ne doit pas afficher une erreur toutes les 15 s.
+      if (tour.current % 4 === 0 && document.visibilityState === 'visible') loadDashboard(restoId, { silencieux: true });
+      else loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+    }, 15000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
@@ -118,7 +128,8 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chemin, restoId]);
 
-  async function loadDashboard(id) {
+  // `fiche` : recharger aussi la fiche du commerce (carte comprise) ; `annexes` : les avis et les livreurs.
+  async function loadDashboard(id, { fiche = true, annexes = true, silencieux = false } = {}) {
     try {
       // Retour de l'onboarding Stripe Connect : le statut n'est pas suivi par webhook pour ce type
       // de compte, on le relit activement une fois avant de charger le reste du tableau de bord.
@@ -128,14 +139,14 @@ export default function DashboardLayout() {
       }
       const [ordersData, restoData, reviewsData, driversData] = await Promise.all([
         api(`/orders/restaurant/${id}`, { token }),
-        api(`/restaurants/${id}`, { token }),
-        api(`/restaurants/${id}/reviews`),
-        api(`/restaurants/${id}/drivers`, { token })
+        fiche ? api(`/restaurants/${id}`, { token }) : null,
+        annexes ? api(`/restaurants/${id}/reviews`) : null,
+        annexes ? api(`/restaurants/${id}/drivers`, { token }) : null
       ]);
       setOrders(ordersData);
-      setRestaurant(restoData);
-      setReviews(reviewsData);
-      setDrivers(driversData);
+      if (restoData) setRestaurant(restoData);
+      if (reviewsData) setReviews(reviewsData);
+      if (driversData) setDrivers(driversData);
       // Marque la fin du premier chargement réel : sans ce signal, l'alerte "nouvelle commande"
       // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
       // useNewOrderAlert).
@@ -146,15 +157,17 @@ export default function DashboardLayout() {
         // Objet neuf à chaque échec : un message identique ne suffirait pas à déclencher un nouveau rendu.
         setErreurChargement({ message: e.message, n: tentatives.current });
         if (tentatives.current < 2) { tentatives.current += 1; setTimeout(() => loadDashboard(id), 2500 * tentatives.current); }
-      } else {
+      } else if (!silencieux) {
         toast(e.message, 'erreur');
       }
     }
   }
 
-  function pickResto(id) {
+  // `fiche` : la fiche déjà reçue (liste /mine/dashboard) — affichée tout de suite, sans second chargement.
+  function pickResto(id, fiche = null) {
     setRestoId(id);
-    loadDashboard(id);
+    if (fiche) setRestaurant(fiche);
+    loadDashboard(id, { fiche: !fiche });
   }
 
   // Création silencieuse depuis l'indice d'inscription (fairide_resto_hint) : un nom suffit. Les

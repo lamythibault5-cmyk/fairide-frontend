@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import * as Sentry from '@sentry/react';
+import { signalerErreur } from '../../sentry';
 import { useLanguage } from '../../context/LanguageContext';
 import { rechargerSiNouveauCode } from '../../lazyPage';
 
@@ -43,7 +43,7 @@ export default class AdminErrorBoundary extends Component {
 
   componentDidCatch(error, info) {
     if (rechargerSiNouveauCode(error)) return;
-    Sentry.captureException(error, { extra: { componentStack: info?.componentStack, admin: true } });
+    signalerErreur(error, { componentStack: info?.componentStack, admin: true });
   }
 
   componentDidUpdate(prevProps) {
