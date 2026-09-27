@@ -4352,6 +4352,7 @@ export default {
       noPaidOrders: 'Aucune commande payée ce mois-ci.',
       date: 'Date',
       description: 'Description',
+      priceExVat: 'Prix HTVA',
       totalExVat: 'Total HTVA',
       totalIncVat: 'Total TTC',
       paymentTerms: 'Conditions de paiement : montant déjà prélevé à la source sur les paiements clients, aucun règlement supplémentaire n\'est dû par le restaurant.',
@@ -5639,7 +5640,6 @@ export default {
       priceAria: 'Ce que la plateforme prend sur une commande de 40 euros',
       priceTitle: 'Sur une commande de {montant} euros, la plateforme prend :',
       priceThem: 'Grandes plateformes',
-      priceExVat: 'hors TVA',
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
