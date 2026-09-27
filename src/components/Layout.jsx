@@ -218,13 +218,10 @@ export default function Layout() {
               de la largeur de quoi que ce soit. Voir .header-row dans styles.css. */}
           <div className="row header-row">
             <Link className="brand" to="/">
-              {/* Sans tuile : le bol lime flotte sur l'iris, net à toute densité (SVG). 44px, ce
-                  n'est pas un chiffre rond mais le verrou de la spec : la marque fait 1,3 fois la
-                  hauteur d'ascendante du mot, soit 44px pour un « fairide » à 34px, et l'écart de
-                  14px (gap de .brand) vaut les 0,35 × corps demandés. L'ancien vélo montait à 78px
-                  parce qu'il était en paysage et ne pesait que 40px de haut ; le bol est carré, la
-                  même valeur en ferait une vignette deux fois plus grande que le mot. */}
-              <BrandMark size={leanHeader ? 34 : 44} tile={false} color="#C8F03C" />
+              {/* Sans tuile : le vélo lime flotte sur l'iris, net à toute densité (SVG). 78px de LARGE : le
+                  vélo est en paysage (82 × 42), il ne pèse donc qu'environ 40px de haut — la hauteur
+                  du mot. Le bol carré, entre le 2026-09-18 et le 2026-09-27, tenait à 44. */}
+              <BrandMark size={leanHeader ? 44 : 78} tile={false} color="#C8F03C" />
               {!leanHeader && (
                 <div className="brand-text">
                   {/* <span> et non <h1> : la marque est présente sur toutes les pages, elle y

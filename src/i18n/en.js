@@ -4338,7 +4338,6 @@ export default {
       noPaidOrders: 'No paid order this month.',
       date: 'Date',
       description: 'Description',
-      priceExVat: 'Price excl. VAT',
       totalExVat: 'Total excl. VAT',
       totalIncVat: 'Total incl. VAT',
       paymentTerms: 'Payment terms: amount already deducted at source from customer payments, no additional payment is due from the restaurant.',
@@ -5600,7 +5599,6 @@ export default {
       priceTitle: 'On a {montant}-euro order, the platform takes:',
       priceThem: 'Big platforms',
       priceExVat: 'excl. VAT',
-      priceInclVat: 'VAT incl.',
       sub: 'The Belgian alternative to Uber Eats and Deliveroo. 10% commission instead of 22 to 32%: the restaurant keeps more, the courier keeps 100% of the delivery fee, and the money stays here.',
       /* Short forms, phone only — see the fr block for the reasoning. */
       ordersOpenCourt: 'Takeaway from 10 October, delivery from the 20th',

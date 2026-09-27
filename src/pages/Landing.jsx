@@ -82,8 +82,8 @@ export default function Landing() {
     <div className="decor-page">
 
       <div className="landing-hero landing-hero-adresse">
-        {/* Ton sombre : le coin de la bannière est un aplat iris. Voir BelgianMark.jsx. */}
-        <BelgianMark size={84} ton="sombre" title={t('landing.proudlyBelgian')} />
+        {/* Le vélo aux couleurs du drapeau, sur sa tuile iris. Voir BelgianMark.jsx. */}
+        <BelgianMark size={84} title={t('landing.proudlyBelgian')} />
 
         <div className="landing-hero-text">
           {/* L'AFFICHE : ce qu'on veut voir sans défiler, et rien d'autre. Ce groupe existe pour

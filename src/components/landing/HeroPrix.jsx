@@ -11,9 +11,10 @@ import { useLanguage } from '../../context/LanguageContext';
 // D'OÙ VIENNENT LES CHIFFRES — à relire avant d'en changer un.
 // - 30 % : haut de la fourchette 22-32 % déjà citée partout sur le site, hors TVA.
 // - 10 % : la part de Fairide, TVA COMPRISE — commission + commission_vat (CLAUDE.md, « Pricing
-//   model »). La maquette titrait « Commission hors TVA » : faux pour notre colonne, d'où l'étiquette
-//   par bloc plutôt qu'un sur-titre commun. Comparer du TVAC à du HTVA nous désavantage, jamais
-//   l'inverse : la comparaison reste honnête.
+//   model »). Les deux taux ne sont donc pas sur la même base (30 % HTVA contre 10 % TVAC), et c'est
+//   dans le sens qui NOUS désavantage : la comparaison reste honnête sans étiquette. Les mentions
+//   « hors TVA » / « TVA comprise » sous chaque montant ont été retirées à la demande du fondateur
+//   (2026-09-27). Si l'on change un jour un taux, vérifier que l'écart reste dans ce sens-là.
 // - Comme dans le bloc euro, la base est le prix du commerce : 40 € de commande, Fairide en prend 4,
 //   que le client paie en plus (carte à +10 %). Ne pas écrire « le resto ne paie rien » ni
 //   « 100 % au restaurant » (CLAUDE.md).
@@ -39,13 +40,13 @@ export default function HeroPrix() {
         <div className="hero-prix-bloc hero-prix-eux">
           <span className="hero-prix-nom">{t('landing.priceThem')}</span>
           <b className="hero-prix-montant">{euros(eux)}</b>
-          <span className="hero-prix-taux">{pct(TAUX_EUX)} · {t('landing.priceExVat')}</span>
+          <span className="hero-prix-taux">{pct(TAUX_EUX)}</span>
           <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': pct(TAUX_EUX).replace(' ', '') }} /></div>
         </div>
         <div className="hero-prix-bloc hero-prix-nous">
           <span className="hero-prix-nom wordmark">fairide</span>
           <b className="hero-prix-montant">{euros(nous)}</b>
-          <span className="hero-prix-taux">{pct(TAUX_NOUS)} · {t('landing.priceInclVat')}</span>
+          <span className="hero-prix-taux">{pct(TAUX_NOUS)}</span>
           <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': pct(TAUX_NOUS).replace(' ', '') }} /></div>
         </div>
       </div>

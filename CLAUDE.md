@@ -175,6 +175,13 @@ Fonts: **Space Grotesk** for the whole interface (400/500/700), `@import` at the
 `styles.css`. Fraunces was removed — the personality comes from scale and tracking, not from a
 serif/sans pair. Headings are `-0.02em`.
 
+**The logo is the bicycle « 5a »** (two wheels, top tube, seat tube; lime on an iris tile) — back since
+2026-09-27 after nine days as the « Swept plume » bowl. Geometry lives in [BrandMark.jsx](src/components/BrandMark.jsx)
+and is repeated in `public/icons/icon.svg`, `public/favicon.svg`, the splash in [index.html](index.html) and the
+Belgian-colours version [BelgianMark.jsx](src/components/BelgianMark.jsx). The PNG icons and `og-image.png` are
+renders of it: change the drawing, re-render them. `FairRide-logo-spec.md` and `brand/` describe the bowl and are
+out of date.
+
 The one exception is the word `fairide` itself, which is set in **Bricolage Grotesque** (700–800,
 optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`. It is a *logotype* face, loaded
 from a `<link>` in [index.html](index.html) rather than the `@import`, because the splash screen

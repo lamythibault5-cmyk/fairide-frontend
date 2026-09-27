@@ -4338,7 +4338,6 @@ export default {
       noPaidOrders: 'Geen betaalde bestelling deze maand.',
       date: 'Datum',
       description: 'Beschrijving',
-      priceExVat: 'Prijs excl. btw',
       totalExVat: 'Totaal excl. btw',
       totalIncVat: 'Totaal incl. btw',
       paymentTerms: 'Betalingsvoorwaarden: bedrag al aan de bron ingehouden op de klantbetalingen, het restaurant is geen bijkomende betaling verschuldigd.',
@@ -5600,7 +5599,6 @@ export default {
       priceTitle: 'Op een bestelling van {montant} euro neemt het platform:',
       priceThem: 'Grote platformen',
       priceExVat: 'excl. btw',
-      priceInclVat: 'incl. btw',
       sub: 'Het Belgische alternatief voor Uber Eats en Deliveroo. 10% commissie in plaats van 22 tot 32%: de zaak houdt meer over, de koerier krijgt 100% van de leveringskosten, en het geld blijft hier.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
       ordersOpenCourt: 'Afhalen vanaf 10 oktober, levering vanaf de 20e',

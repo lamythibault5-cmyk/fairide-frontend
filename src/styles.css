@@ -224,30 +224,23 @@ a { color: inherit; }
    intrinsèque par défaut du navigateur (~300x150) et déborde largement du petit cadre prévu. */
 .mark { overflow: hidden; flex-shrink: 0; display: inline-flex; }
 .mark svg { display: block; width: 100%; height: 100%; }
-/* Logo animé (BrandMark.jsx, seul porteur de .mark-anime depuis que la bannière d'accueil a perdu sa signature) : joué UNE fois au montage, puis le logo reste tel quel
-   (fill-mode forwards, aucune boucle). La séquence raconte le dessin dans l'ordre où on le lirait —
-   le rebord se trace d'abord (0 → 0,42 s), le bol descend depuis ce rebord (0,26 s), puis les trois
-   traits de vapeur partent vers l'arrière l'un après l'autre (0,46 / 0,58 / 0,70 s) : environ 1,1 s
-   en tout. La vapeur EN DERNIER, parce que c'est elle qui donne le mouvement : la marque se pose,
-   puis s'élance.
+/* Logo animé (BrandMark.jsx, seul porteur de .mark-anime) : joué UNE fois au montage, puis le logo
+   reste tel quel (fill-mode forwards, aucune boucle). Le vélo se dessine dans l'ordre où on le lirait :
+   les deux roues se tracent (la seconde un peu après), puis les tubes s'allongent, puis les moyeux
+   apparaissent — environ 1 s en tout. Retour du vélo le 2026-09-27, voir l'en-tête de BrandMark.jsx.
 
-   Le tracé joue sur stroke-dashoffset. Les chemins portent `pathLength="100"` (voir BrandMark.jsx),
-   donc une seule paire de valeurs suffit pour toutes les courbes — inutile de remesurer chacune.
-   Le bol, lui, est un remplissage et non un trait : il grandit en scaleY depuis le haut de sa
-   propre boîte, qui est exactement la corde du demi-disque, c'est-à-dire la ligne du rebord. */
-.mark-anime .bm-rebord { stroke-dasharray: 100; stroke-dashoffset: 100; animation: bm-tracer .42s cubic-bezier(.4, 0, .2, 1) forwards; }
-.mark-anime .bm-bol { transform-box: fill-box; transform-origin: center top; transform: scaleY(0); animation: bm-bol .34s .26s cubic-bezier(.2, .8, .2, 1) forwards; }
-.mark-anime .bm-vapeur { stroke-dasharray: 100; stroke-dashoffset: 100; animation: bm-tracer .4s cubic-bezier(.4, 0, .2, 1) forwards; }
-.mark-anime .bm-vapeur-1 { animation-delay: .46s; }
-.mark-anime .bm-vapeur-2 { animation-delay: .58s; }
-.mark-anime .bm-vapeur-3 { animation-delay: .7s; }
-@keyframes bm-tracer { to { stroke-dashoffset: 0; } }
-@keyframes bm-bol { to { transform: scaleY(1); } }
+   79 ≈ 2π × 12,5 : la circonférence d'une roue, pour que stroke-dasharray couvre le cercle entier. */
+.mark-anime .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .5s cubic-bezier(.4, 0, .2, 1) forwards; }
+.mark-anime .bm-roue-avant { animation-delay: .08s; }
+.mark-anime .bm-tube { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: bm-tube .32s cubic-bezier(.2, .8, .2, 1) forwards; }
+.mark-anime .bm-tube-haut { animation-delay: .38s; }
+.mark-anime .bm-tube-selle { animation-delay: .5s; }
+.mark-anime .bm-moyeu { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: bm-pop .28s .68s cubic-bezier(.34, 1.56, .64, 1) forwards; }
+@keyframes bm-roue { to { stroke-dashoffset: 0; } }
+@keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
+@keyframes bm-pop { to { transform: scale(1); } }
 @media (prefers-reduced-motion: reduce) {
-  /* Surtout PAS de `opacity: 1` dans cette remise à zéro : une déclaration CSS l'emporte sur
-     l'attribut de présentation SVG, et les trois traits de vapeur perdraient leur dégradé
-     d'opacité 1 / 0,78 / 0,55 — la marque se lirait comme trois traits pleins. */
-  .mark-anime .bm-rebord, .mark-anime .bm-bol, .mark-anime .bm-vapeur { animation: none; stroke-dashoffset: 0; transform: none; }
+  .mark-anime .bm-roue, .mark-anime .bm-tube, .mark-anime .bm-moyeu { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
 }
 /* 24% du côté, exactement le rayon d'icône de la spec — et plus de liseré lime autour : sur
    la bannière iris, la tuile du logo est de la même couleur que le fond, seul le bol lime
@@ -559,7 +552,8 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
      vapeur les plus pâles, parce qu'à 30px ils se collent. Raisonnement fait en pixels CSS, sur le
      seul écran qui en compte trois physiques pour un — à l'arrivée la marque n'avait qu'un filet de
      vapeur sur iPhone, là où elle en a trois partout ailleurs. Retiré. */
-  .header-row .brand .mark { width: 36px !important; height: 36px !important; }
+  /* Vélo en paysage (82 × 42) depuis le 2026-09-27 : largeur ET hauteur, sinon il se déforme. */
+  .header-row .brand .mark { width: 52px !important; height: 27px !important; }
 }
 @media (max-width: 520px) {
   .header-auth { gap: 6px; }
@@ -1852,8 +1846,18 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
      l'exemple des 40 €, qu'on VEUT voir dans le premier écran — c'est l'argument. L'ancienne
      hauteur minimale servait à repousser l'aperçu des commerces sous la ligne de flottaison. */
   .landing-hero-adresse { padding-top: 34px; }
-  .landing-hero-adresse .landing-hero-affiche { min-height: 0; padding-top: 18px; }
-  .landing-hero-adresse   .hero-adresse-barre { min-height: 58px; padding-left: 16px; }
+  /* LA BARRE D'ADRESSE AU MILIEU DE L'ÉCRAN (fondateur, 2026-09-27). L'affiche finit par la barre :
+     en calant son BAS sur la mi-hauteur de l'écran (flex-end + hauteur minimale), le centre de la
+     barre tombe à 50svh. Les 118px : haut du contenu mesuré à 165px sous le haut de l'écran
+     (en-tête + rembourrages), moins la demi-hauteur de la barre (29px), moins les 18px de
+     rembourrage de l'affiche, que min-height inclut (border-box). Mesuré à 390×844 et 412×915 ;
+     si l'en-tête change de hauteur, remesurer.
+     Sur un écran court, le titre et l'accroche dépassent déjà la moitié : la hauteur minimale ne
+     joue plus, d'où le resserrement juste en dessous. */
+  .landing-hero-adresse .landing-hero-affiche {
+    min-height: calc(50svh - 118px); padding-top: 18px; justify-content: flex-end;
+  }
+  .hero-adresse-barre { min-height: 58px; padding-left: 16px; }
   .hero-adresse-barre input { font-size: 16px; } /* 16px minimum : en dessous, iOS zoome au focus */
   .hero-adresse-go { width: 44px; height: 44px; }
   /* Les deux blocs RESTENT côte à côte : c'est la comparaison. Empilés, on ne voit plus l'écart. */
@@ -1863,7 +1867,16 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-prix-nom { font-size: 13px; }
   .hero-prix-montant { font-size: 42px; }
   .hero-prix-taux { font-size: 12px; }
-  }
+}
+/* Téléphone COURT (iPhone SE, 667px) : titre et accroche poussaient la barre à 405px pour un milieu
+   à 333. On reprend la place au-dessus — rembourrages et corps de texte — pour la ramener vers le
+   centre sans rien retirer. */
+@media (max-width: 640px) and (max-height: 740px) {
+  .landing-hero-adresse { padding-top: 12px; }
+  .landing-hero-adresse .landing-hero-affiche { padding-top: 0; }
+  .landing-hero-adresse .landing-title { font-size: 27px; margin: 8px 0 10px; }
+  .landing-hero-adresse .landing-sub { font-size: 14px; line-height: 1.45; margin-bottom: 14px; }
+}
 
 /* Ici vivaient les trois chiffres de la bannière (.stats-bar : « 10 % · 19 · 100 % » en lime, sous
    un filet blanc). Retirés le 2026-09-21 à la demande du fondateur, avec leur filet. Ce qu'ils
