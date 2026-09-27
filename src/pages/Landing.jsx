@@ -96,10 +96,6 @@ export default function Landing() {
               Il portait aussi, jusqu'ici, la signature de marque, les trois gages de confiance et
               la liste des quartiers déjà livrés — retirés à la demande du fondateur. */}
           <div className="landing-hero-affiche">
-          {/* « Pas une multinationale » : la raison de choisir Fairide que le fondateur veut voir en
-              premier (2026-09-27) — l'argent reste ici. Le pays n'est pas nommé, la marque belge du
-              coin le dit déjà. */}
-          <span className="pill hero landing-eyebrow"><Icone nom="maison" taille={14} /> {t('landing.heroEyebrow')}</span>
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
@@ -115,13 +111,11 @@ export default function Landing() {
           {/* UN SEUL appel à l'action principal par page et par public (revue de lancement, 2026-09-18) : c'est
               désormais la barre d'adresse, et non plus le bouton « Commander maintenant » qui menait à
               l'inscription. La liste des commerces est publique (App.jsx) : on peut répondre à « livrez-vous
-              chez moi ? » sans demander de compte. Voir l'en-tête de HeroAdresse.jsx.
-              Le lien juste dessous garde une porte pour qui veut regarder sans donner d'adresse — un vrai
-              lien, explorable par les robots. */}
+              chez moi ? » sans demander de compte ; c'est l'ouverture d'un commerce qui en demande un (voir
+              RestaurantCard dans RestaurantList.jsx). Voir l'en-tête de HeroAdresse.jsx.
+              Le sur-titre « Pas une multinationale » et le lien « Ou parcourir tous les commerces » qui
+              encadraient la barre ont été retirés à la demande du fondateur (2026-09-27). */}
           <HeroAdresse />
-          <p className="landing-parcourir">
-            <Link to="/restaurants">{t('landing.browseAll')} →</Link>
-          </p>
           </div>
         </div>
         {/* L'aperçu des commerces (HeroPreview) a cédé cette place à l'exemple des 40 € (2026-09-27) :

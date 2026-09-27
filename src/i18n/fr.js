@@ -5630,23 +5630,18 @@ export default {
       /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
          court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
          `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
-      heroEyebrow: 'Pas une multinationale · 100 % d\'ici',
       subAdresse: "L'alternative d'ici à Uber Eats et Deliveroo. Moins cher pour toi, plus juste pour le restaurant et le livreur — et ton argent reste ici.",
       addrLabel: 'Adresse de livraison',
       addrPlaceholder: 'Ton adresse de livraison',
       addrGo: 'Voir les commerces qui livrent ici',
       addrOutside: 'Fairide ne livre pas encore à {lieu} — pour l\'instant, les 19 communes de Bruxelles.',
-      browseAll: 'Ou parcourir tous les commerces',
       /* « la plateforme prend » et non « le resto paie » (maquette) : sur Fairide, les 10 % s'ajoutent au prix
          du commerce, c'est le client qui les paie (CLAUDE.md, « Pricing model »). */
-      priceAria: 'Ce que la plateforme prend sur une commande de 40 €',
-      priceTitle: 'Sur une commande de {montant}, la plateforme prend :',
+      priceAria: 'Ce que la plateforme prend sur une commande de 40 euros',
+      priceTitle: 'Sur une commande de {montant} euros, la plateforme prend :',
       priceThem: 'Grandes plateformes',
       priceExVat: 'hors TVA',
       priceInclVat: 'TVA comprise',
-      priceGainStrong: '{montant} de plus',
-      priceGainRest: 'pour le resto, à chaque commande',
-      priceNote: 'Grandes plateformes : 22 à 32 % hors TVA selon la plateforme et le contrat. Fairide : 10 % TVA comprise, ajoutés au prix du commerce.',
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on

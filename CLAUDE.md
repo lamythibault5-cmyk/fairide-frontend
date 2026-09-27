@@ -83,7 +83,14 @@ every customer's first load.
 
 `/restaurants` and `/restaurants/:id` are **deliberately public** — no `ProtectedRoute` — so
 they stay indexable and shareable. Only actions (order, favourite) require login. Don't
-"fix" this by wrapping them.
+"fix" this by wrapping them. One click is gated on purpose (2026-09-27): a logged-out visitor who opens
+a business **from the list** (`RestaurantCard` in RestaurantList.jsx) goes to login first, and
+Auth.jsx brings them back to that business after sign-in or client sign-up. The route itself stays
+public — shared links, search engines and prerendered pages still land on it directly.
+
+The landing page's main action is an address bar ([HeroAdresse](src/components/landing/HeroAdresse.jsx)):
+it maps the postal code to one of the 19 communes and opens `/restaurants` filtered on it, without
+saving anything.
 
 Restaurant and admin sections use nested routes under a shared layout
 (`DashboardLayout` / `AdminLayout`) with `<Outlet />`.

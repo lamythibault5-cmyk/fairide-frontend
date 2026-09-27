@@ -33,7 +33,7 @@ export default function HeroPrix() {
 
   return (
     <section className="hero-prix" aria-label={t('landing.priceAria')}>
-      <h2 className="hero-prix-titre">{t('landing.priceTitle', { montant: euros(COMMANDE) })}</h2>
+      <h2 className="hero-prix-titre">{t('landing.priceTitle', { montant: COMMANDE })}</h2>
 
       <div className="hero-prix-blocs">
         <div className="hero-prix-bloc hero-prix-eux">
@@ -49,11 +49,9 @@ export default function HeroPrix() {
           <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': pct(TAUX_NOUS).replace(' ', '') }} /></div>
         </div>
       </div>
-
-      <p className="hero-prix-gain">
-        <b>{t('landing.priceGainStrong', { montant: euros(eux - nous) })}</b> {t('landing.priceGainRest')}
-      </p>
-      <p className="hero-prix-note">{t('landing.priceNote')}</p>
+      {/* La pastille « 8 € de plus pour le resto » et la note sur les taux qui suivaient les deux blocs
+          ont été retirées à la demande du fondateur (2026-09-27) : les étiquettes « hors TVA » /
+          « TVA comprise » de chaque bloc restent, elles portent la précision qui compte. */}
     </section>
   );
 }

@@ -420,7 +420,12 @@ export default function Auth() {
   // espace livreur (où l'attend la vérification d'identité). `replace` : le bouton Retour ne ramène pas au formulaire.
   async function allerApresInscription(user) {
     try { sessionStorage.removeItem(CLE_BROUILLON); } catch { /* sans stockage */ }
-    const cible = user?.role === 'restaurant' ? '/dashboard' : user?.role === 'driver' ? '/driver/onboarding' : '/account';
+    // Exception : un CLIENT arrivé ici depuis une page précise (un commerce cliqué dans la liste, voir
+    // RestaurantCard dans RestaurantList.jsx) y retourne — il s'est inscrit pour voir cette carte-là,
+    // pas pour remplir son profil (fondateur, 2026-09-27).
+    const cible = user?.role === 'restaurant' ? '/dashboard'
+      : user?.role === 'driver' ? '/driver/onboarding'
+      : from !== '/' ? from : '/account';
     await attendrePage(cible);
     navigate(cible, { replace: true });
   }

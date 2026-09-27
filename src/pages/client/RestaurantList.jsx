@@ -78,8 +78,19 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
   const offerLabel = offerLabelFor(r);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t);
   const isClosed = r.hours && !getOpenStatus(r.hours, new Date(), r.closures).isOpen;
+  // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
+  // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
+  // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
+  // La ROUTE /restaurants/:id, elle, reste publique (App.jsx) : un lien partagé, un moteur de
+  // recherche ou la page prérendue y mènent toujours directement. Seul ce clic-ci est filtré.
+  const { user } = useAuth();
+  const fiche = `/restaurants/${r.id}`;
   return (
-    <Link to={`/restaurants/${r.id}`} className="card rest-card" style={{ position: 'relative' }}>
+    <Link
+      to={user ? fiche : '/login?audience=client'}
+      state={user ? undefined : { from: fiche }}
+      className="card rest-card" style={{ position: 'relative' }}
+    >
       <FavoriteHeart
         active={isFavorite}
         onClick={(e) => onToggleFavorite(e, r.id)}
