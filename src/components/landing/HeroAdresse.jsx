@@ -14,8 +14,10 @@ import Icone from '../Icone';
 //
 // CE QUE FAIT LA BARRE, ET RIEN DE PLUS. Elle réutilise la même recherche que AddressSearch.jsx
 // (GET /restaurants/lookup/suggest, publique, limitée côté serveur), déduit la commune du code
-// postal, et ouvre /restaurants déjà filtré sur cette commune — par l'état de navigation, exactement
-// comme la page Recherche le fait (voir `filtresInitiaux` dans RestaurantList.jsx). Elle n'enregistre
+// postal, et ouvre /restaurants avec cette commune en `communeProche` (état de navigation, voir
+// `filtresInitiaux` dans RestaurantList.jsx). Ce n'est PAS un filtre : TOUS les commerces restent
+// affichés, ceux de la commune d'abord puis ceux des communes voisines. Un filtre strict laissait une
+// liste presque vide tant que Fairide a peu de commerces (fondateur, 2026-09-27). Elle n'enregistre
 // AUCUNE adresse : un visiteur n'a pas de compte où la ranger, et c'est le carnet d'adresses
 // (ChoixAdresse.jsx) qui la vérifie et l'enregistre une fois connecté.
 //
@@ -85,7 +87,7 @@ export default function HeroAdresse() {
     setOuvert(false);
     const commune = communeDe(s);
     if (!commune) { setHorsZone(s.city || s.label); return; }
-    navigate('/restaurants', { state: { commune } });
+    navigate('/restaurants', { state: { communeProche: commune } });
   }
 
   // Le bouton flèche et Entrée sans suggestion surlignée prennent la première. Sans aucune
