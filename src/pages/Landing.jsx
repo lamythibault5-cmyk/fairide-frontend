@@ -122,6 +122,16 @@ export default function Landing() {
           <p className="landing-parcourir">
             <Link to="/restaurants">{t('landing.browseAll')} →</Link>
           </p>
+          </div>
+        </div>
+        {/* L'aperçu des commerces (HeroPreview) a cédé cette place à l'exemple des 40 € (2026-09-27) :
+            la vitrine « Découvre », plus bas, montre déjà les mêmes commerces. */}
+        <HeroPrix />
+        {/* LA SUITE DE LA BANNIÈRE, sortie de l'affiche : sur téléphone, l'exemple des 40 € doit
+            arriver juste sous la barre d'adresse, dans le premier écran (fondateur, 2026-09-27). La
+            ligne partenaires et les dates d'ouverture passent donc après lui ; sur écran large, elles
+            restent sous la barre, dans la colonne de gauche (grid-template-areas, styles.css). */}
+        <div className="landing-hero-suite">
           {/* `audience=partner` sans `role` : la page d'inscription propose alors les trois types de
               compte (voir Auth.jsx, la lecture de `audience` et `role`). Une ligne qui dit
               « commerce OU livreur » ne peut pas pointer vers l'un des deux. */}
@@ -130,11 +140,7 @@ export default function Landing() {
           </p>
           <p className="small landing-ouverture landing-ouverture-long"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenNote')}</p>
           <p className="small landing-ouverture landing-ouverture-court"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenCourt')}</p>
-          </div>
         </div>
-        {/* L'aperçu des commerces (HeroPreview) a cédé cette place au ticket de comparaison des prix
-            (2026-09-27) : la vitrine « Découvre », plus bas, montre déjà les mêmes commerces. */}
-        <HeroPrix />
         {/* La bande de chiffres qui fermait la bannière — « 10 % · 19 · 100 % », sous un filet
             blanc — est partie avec sa ligne (demande du fondateur, 2026-09-21). Les deux cartes
             ci-dessous prennent sa place et disent la même chose en toutes lettres. La grille de la

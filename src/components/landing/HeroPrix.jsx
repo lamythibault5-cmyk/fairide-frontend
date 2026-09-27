@@ -1,63 +1,59 @@
 import { useLanguage } from '../../context/LanguageContext';
-import Icone from '../Icone';
 
-// LE TICKET DE COMPARAISON DE LA BANNIÈRE — « wow, c'est moins cher » en un coup d'œil (fondateur,
-// 2026-09-27). Il prend la place de l'aperçu des commerces (HeroPreview), que la vitrine
-// « Découvre » montre de toute façon juste en dessous.
+// L'EXEMPLE DES 40 € DANS LA BANNIÈRE — maquette du fondateur (2026-09-27) : deux blocs côte à côte,
+// ce que prend la plateforme sur une même commande, et l'écart dans une pastille blanche.
+//
+// Il remplace un premier « ticket » qui comparait le prix d'un plat pour le client (13,90 € contre
+// 11 €). Ce ticket-là reposait sur une hausse de 39 % mesurée sur UN seul commerce ; celui-ci repose
+// sur des taux publics, et c'est l'argument que la page porte déjà plus bas (bloc « Où va chaque
+// euro », landing.euro*) : même lecture, 0,10 € contre 0,22 à 0,32 € par euro.
 //
 // D'OÙ VIENNENT LES CHIFFRES — à relire avant d'en changer un.
-// - Fairide : prix en salle + 10 %, c'est la règle de construction des cartes (CLAUDE.md, « Pricing
-//   model », et ../fairide-backend/scripts/prix.js). 10 € en salle = 11 € ici. Pas une estimation.
-// - Grandes plateformes : +39 %, la hausse MOYENNE mesurée entre la carte Uber Eats de Snack Bodrum
-//   et ses prix au comptoir (CLAUDE.md, « Known gaps » n° 5). C'est UNE mesure, sur UN commerce.
-//   Une publicité comparative doit être exacte et vérifiable (CDE VI.17) : avant la mise en ligne,
-//   élargir la mesure à plusieurs commerces, ou garder le « environ » et la note de bas de ticket
-//   qui disent d'où vient le chiffre. Ne pas l'arrondir à la hausse.
-// - Le ticket compare le PRIX DU PLAT, pas le total de la commande : les frais de livraison et de
-//   service varient d'une plateforme à l'autre, et on n'a rien mesuré là-dessus. La note le dit.
-const PRIX_SALLE = 10;
-const MAJORATION_FAIRIDE = 0.10;
-const MAJORATION_PLATEFORMES = 0.39;
+// - 30 % : haut de la fourchette 22-32 % déjà citée partout sur le site, hors TVA.
+// - 10 % : la part de Fairide, TVA COMPRISE — commission + commission_vat (CLAUDE.md, « Pricing
+//   model »). La maquette titrait « Commission hors TVA » : faux pour notre colonne, d'où l'étiquette
+//   par bloc plutôt qu'un sur-titre commun. Comparer du TVAC à du HTVA nous désavantage, jamais
+//   l'inverse : la comparaison reste honnête.
+// - Comme dans le bloc euro, la base est le prix du commerce : 40 € de commande, Fairide en prend 4,
+//   que le client paie en plus (carte à +10 %). Ne pas écrire « le resto ne paie rien » ni
+//   « 100 % au restaurant » (CLAUDE.md).
+const COMMANDE = 40;
+const TAUX_EUX = 0.30;
+const TAUX_NOUS = 0.10;
 
 export default function HeroPrix() {
   const { t, locale } = useLanguage();
-  const euros = (n) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR' }).format(n);
-  const eux = PRIX_SALLE * (1 + MAJORATION_PLATEFORMES);
-  const nous = PRIX_SALLE * (1 + MAJORATION_FAIRIDE);
-  // Les barres se lisent sans les chiffres : la plus longue vaut 100 %, la nôtre sa proportion.
-  const largeurNous = `${Math.round((nous / eux) * 100)}%`;
+  // Montants ronds : « 12 € » se lit d'un coup d'œil, « 12,00 € » non.
+  const euros = (n) => new Intl.NumberFormat(locale, {
+    style: 'currency', currency: 'EUR', maximumFractionDigits: Number.isInteger(n) ? 0 : 2
+  }).format(n);
+  const eux = Math.round(COMMANDE * TAUX_EUX * 100) / 100;
+  const nous = Math.round(COMMANDE * TAUX_NOUS * 100) / 100;
+  const pct = (x) => `${Math.round(x * 100)} %`;
 
   return (
-    <div className="hero-prix" aria-label={t('landing.priceAria')}>
-      <p className="hero-prix-titre">{t('landing.priceTitle')}</p>
+    <section className="hero-prix" aria-label={t('landing.priceAria')}>
+      <h2 className="hero-prix-titre">{t('landing.priceTitle', { montant: euros(COMMANDE) })}</h2>
 
-      <div className="hero-prix-ligne hero-prix-eux">
-        <div className="hero-prix-haut">
-          <span>{t('landing.priceThem')}</span>
-          <s>{t('landing.priceAbout')} {euros(eux)}</s>
+      <div className="hero-prix-blocs">
+        <div className="hero-prix-bloc hero-prix-eux">
+          <span className="hero-prix-nom">{t('landing.priceThem')}</span>
+          <b className="hero-prix-montant">{euros(eux)}</b>
+          <span className="hero-prix-taux">{pct(TAUX_EUX)} · {t('landing.priceExVat')}</span>
+          <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': pct(TAUX_EUX).replace(' ', '') }} /></div>
         </div>
-        <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': '100%' }} /></div>
-      </div>
-
-      <div className="hero-prix-ligne hero-prix-nous">
-        <div className="hero-prix-haut">
-          <span className="wordmark">fairide</span>
-          <b>{euros(nous)}</b>
+        <div className="hero-prix-bloc hero-prix-nous">
+          <span className="hero-prix-nom wordmark">fairide</span>
+          <b className="hero-prix-montant">{euros(nous)}</b>
+          <span className="hero-prix-taux">{pct(TAUX_NOUS)} · {t('landing.priceInclVat')}</span>
+          <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': pct(TAUX_NOUS).replace(' ', '') }} /></div>
         </div>
-        <div className="hero-prix-piste"><div className="hero-prix-barre" style={{ '--w': largeurNous }} /></div>
       </div>
 
-      <div className="hero-prix-gain">
-        <b>−{euros(eux - nous)}</b>
-        <span>{t('landing.priceSaving')}</span>
-      </div>
-
-      <ul className="hero-prix-atouts">
-        <li><Icone nom="maison" taille={18} /> {t('landing.priceLocal')}</li>
-        <li><Icone nom="scooter" taille={18} /> {t('landing.priceCourier')}</li>
-      </ul>
-
-      <p className="hero-prix-note">{t('landing.priceNote', { prix: euros(PRIX_SALLE) })}</p>
-    </div>
+      <p className="hero-prix-gain">
+        <b>{t('landing.priceGainStrong', { montant: euros(eux - nous) })}</b> {t('landing.priceGainRest')}
+      </p>
+      <p className="hero-prix-note">{t('landing.priceNote')}</p>
+    </section>
   );
 }

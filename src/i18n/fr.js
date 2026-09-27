@@ -5637,14 +5637,16 @@ export default {
       addrGo: 'Voir les commerces qui livrent ici',
       addrOutside: 'Fairide ne livre pas encore à {lieu} — pour l\'instant, les 19 communes de Bruxelles.',
       browseAll: 'Ou parcourir tous les commerces',
-      priceAria: 'Comparaison du prix d\'un même plat sur Fairide et sur les grandes plateformes',
-      priceTitle: 'Le même plat, le même restaurant',
+      /* « la plateforme prend » et non « le resto paie » (maquette) : sur Fairide, les 10 % s'ajoutent au prix
+         du commerce, c'est le client qui les paie (CLAUDE.md, « Pricing model »). */
+      priceAria: 'Ce que la plateforme prend sur une commande de 40 €',
+      priceTitle: 'Sur une commande de {montant}, la plateforme prend :',
       priceThem: 'Grandes plateformes',
-      priceAbout: 'env.',
-      priceSaving: 'sur ce seul plat',
-      priceLocal: 'Pas une multinationale américaine : ton argent reste ici',
-      priceCourier: 'Le livreur garde 100 % des frais de livraison',
-      priceNote: 'Exemple : un plat à {prix} au comptoir. Sur Fairide, les cartes sont au prix du comptoir + 10 %. Grandes plateformes : hausse moyenne de 39 % mesurée sur la carte d\'un commerce bruxellois. Prix du plat, hors frais de livraison et de service.',
+      priceExVat: 'hors TVA',
+      priceInclVat: 'TVA comprise',
+      priceGainStrong: '{montant} de plus',
+      priceGainRest: 'pour le resto, à chaque commande',
+      priceNote: 'Grandes plateformes : 22 à 32 % hors TVA selon la plateforme et le contrat. Fairide : 10 % TVA comprise, ajoutés au prix du commerce.',
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
