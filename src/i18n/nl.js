@@ -5599,6 +5599,14 @@ export default {
     landing: {
       title1: 'Betaal je maaltijd,',
       title2: 'niet het platform.',
+      subAdresse: 'Het alternatief van hier voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier, en je geld blijft hier.',
+      addrLabel: 'Leveringsadres',
+      addrPlaceholder: 'Je leveringsadres',
+      addrGo: 'Bekijk de zaken die hier leveren',
+      addrOutside: 'Fairide levert nog niet in {lieu}. Voorlopig: de 19 Brusselse gemeenten.',
+      priceAria: 'Wat het platform neemt op een bestelling van 40 euro',
+      priceTitle: 'Op een bestelling van {montant} euro neemt het platform:',
+      priceThem: 'Grote platformen',
       sub: 'Het Belgische alternatief voor Uber Eats en Deliveroo. 10% commissie in plaats van 22 tot 32%: de zaak houdt meer over, de koerier krijgt 100% van de leveringskosten, en het geld blijft hier.',
       /* Korte versies, enkel op gsm — zie het fr-blok voor de reden. */
       ordersOpenCourt: 'Afhalen vanaf 10 oktober, levering vanaf de 20e',

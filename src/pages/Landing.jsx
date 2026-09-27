@@ -11,7 +11,9 @@ import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
-import HeroPreview, { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
+import { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
+import HeroAdresse from '../components/landing/HeroAdresse';
+import HeroPrix from '../components/landing/HeroPrix';
 import DiscoverSection from '../components/landing/DiscoverSection';
 import Icone from '../components/Icone';
 
@@ -79,10 +81,7 @@ export default function Landing() {
   return (
     <div className="decor-page">
 
-      <div className="landing-hero">
-        {/* Ton sombre : le coin de la bannière est un aplat iris. Voir BelgianMark.jsx. */}
-        <BelgianMark size={84} ton="sombre" title={t('landing.proudlyBelgian')} />
-
+      <div className="landing-hero landing-hero-adresse">
         <div className="landing-hero-text">
           {/* L'AFFICHE : ce qu'on veut voir sans défiler, et rien d'autre. Ce groupe existe pour
               qu'une seule règle CSS puisse lui donner la hauteur du premier écran sur téléphone —
@@ -94,6 +93,10 @@ export default function Landing() {
               Il portait aussi, jusqu'ici, la signature de marque, les trois gages de confiance et
               la liste des quartiers déjà livrés — retirés à la demande du fondateur. */}
           <div className="landing-hero-affiche">
+          {/* Le vélo aux couleurs du drapeau, en grand et sans tuile, AU-DESSUS du titre (fondateur,
+              2026-09-27) — il était auparavant un cachet de 84px dans le coin haut-droit de la
+              bannière. La taille est fixée en CSS (.be-mark), qui l'emporte sur la valeur ci-dessous. */}
+          <BelgianMark width={150} title={t('landing.proudlyBelgian')} />
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
@@ -105,16 +108,25 @@ export default function Landing() {
               descend sous 640px (voir .landing-sub dans styles.css).
               Le couple long/court subsiste pour la ligne d'ouverture juste dessous, qui, elle,
               énumère trois dates et ne peut pas tenir en entier sur un téléphone. */}
-          <p className="landing-sub">{t('landing.sub')}</p>
-          {/* Pas de sélecteur de commune ici : l'intérieur de l'app (liste, carte) est réservé aux comptes.
-              Le visiteur voit la vitrine « Découvre » plus bas, puis crée son compte. */}
-          {/* UN SEUL appel à l'action principal par page et par public (revue de lancement, 2026-09-18) : pour le
-              visiteur de l'accueil, c'est « Commander ». Les entrées commerçant et livreur ne sont plus des boutons
-              concurrents dans la bannière : la ligne juste en dessous, la rangée « Rejoindre » plus bas et le pied de
-              page les portent. Un lien (pas un bouton) : explorable par les robots, ouvrable dans un nouvel onglet. */}
-          <div className="row landing-hero-actions" style={{ gap: 10, flexWrap: 'wrap' }}>
-            <Link to="/login?audience=client" className="btn-gold landing-cta-principal"><Icone nom="sac" taille={18} /> {t('landing.orderNow')}</Link>
+          <p className="landing-sub">{t('landing.subAdresse')}</p>
+          {/* UN SEUL appel à l'action principal par page et par public (revue de lancement, 2026-09-18) : c'est
+              désormais la barre d'adresse, et non plus le bouton « Commander maintenant » qui menait à
+              l'inscription. La liste des commerces est publique (App.jsx) : on peut répondre à « livrez-vous
+              chez moi ? » sans demander de compte ; c'est l'ouverture d'un commerce qui en demande un (voir
+              RestaurantCard dans RestaurantList.jsx). Voir l'en-tête de HeroAdresse.jsx.
+              Le sur-titre « Pas une multinationale » et le lien « Ou parcourir tous les commerces » qui
+              encadraient la barre ont été retirés à la demande du fondateur (2026-09-27). */}
+          <HeroAdresse />
           </div>
+        </div>
+        {/* L'aperçu des commerces (HeroPreview) a cédé cette place à l'exemple des 40 € (2026-09-27) :
+            la vitrine « Découvre », plus bas, montre déjà les mêmes commerces. */}
+        <HeroPrix />
+        {/* LA SUITE DE LA BANNIÈRE, sortie de l'affiche : sur téléphone, l'exemple des 40 € doit
+            arriver juste sous la barre d'adresse, dans le premier écran (fondateur, 2026-09-27). La
+            ligne partenaires et les dates d'ouverture passent donc après lui ; sur écran large, elles
+            restent sous la barre, dans la colonne de gauche (grid-template-areas, styles.css). */}
+        <div className="landing-hero-suite">
           {/* `audience=partner` sans `role` : la page d'inscription propose alors les trois types de
               compte (voir Auth.jsx, la lecture de `audience` et `role`). Une ligne qui dit
               « commerce OU livreur » ne peut pas pointer vers l'un des deux. */}
@@ -123,9 +135,7 @@ export default function Landing() {
           </p>
           <p className="small landing-ouverture landing-ouverture-long"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenNote')}</p>
           <p className="small landing-ouverture landing-ouverture-court"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenCourt')}</p>
-          </div>
         </div>
-        <HeroPreview restaurants={restaurants} />
         {/* La bande de chiffres qui fermait la bannière — « 10 % · 19 · 100 % », sous un filet
             blanc — est partie avec sa ligne (demande du fondateur, 2026-09-21). Les deux cartes
             ci-dessous prennent sa place et disent la même chose en toutes lettres. La grille de la
@@ -162,7 +172,7 @@ export default function Landing() {
           </div>
           <div>
             <div className="euro-row-top">
-              <span className="euro-name euro-name-us">fairide</span>
+              <span className="euro-name euro-name-us wordmark">fairide</span>
               <span className="euro-cut">{t('landing.euroUsCut')}</span>
             </div>
             <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>

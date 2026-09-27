@@ -1,12 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" width="96" height="96">
-  <!-- Déclinaison ≤32px de la marque « Swept plume » (FairRide-logo-spec.md, §« Small-size /
-       favicon mark »). À cette taille les trois traits de vapeur se collent en une bavure : on n'en
-       garde qu'un, et les épaisseurs passent de 6/7 à 9 pour que le dessin survive au sous-pixel.
-       C'est la SEULE simplification approuvée par la spec — ne pas en inventer d'autres. -->
-  <rect width="96" height="96" rx="24" fill="#3B2FB5"/>
-  <g transform="translate(48 50) scale(0.84) translate(-48 -48)" fill="none">
-    <path d="M58 44 C52 26 30 20 12 24" stroke="#C8F03C" stroke-width="9" stroke-linecap="round"/>
-    <path d="M18 64 A32 32 0 0 0 82 64 Z" fill="#C8F03C"/>
-    <path d="M12 64 H88" stroke="#C8F03C" stroke-width="9" stroke-linecap="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 132 132" width="32" height="32">
+  <!-- Favicon Fairide : le vélo « 5a » entier, lime sur tuile iris — fichier du fondateur favicon-lime.svg
+       (« Fairide Logo & Color Brainstorm », 2026-09-27). Pas de version simplifiée en petit. -->
+  <rect width="132" height="132" rx="32" fill="#3B2FB5"></rect>
+  <g transform="translate(28 44)" fill="none" stroke="#C8F03C" stroke-width="5">
+    <circle cx="15" cy="29" r="12.5"></circle>
+    <circle cx="61" cy="29" r="12.5"></circle>
+  </g>
+  <g transform="translate(28 44)" fill="#C8F03C">
+    <rect x="16" y="8" width="44" height="5" rx="2.5"></rect>
+    <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)"></rect>
   </g>
 </svg>

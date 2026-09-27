@@ -1,69 +1,38 @@
-/* Déclinaison belge de la marque — « fairide be 15a ».
+/* Déclinaison belge de la marque — le vélo « 5a » aux couleurs du drapeau, SANS TUILE : roue arrière
+   noire, roue avant rouge, tubes jaunes, sur fond transparent (fichier du fondateur
+   fairide-be-5a-mark-transparent.svg, dossier « Fairide Logo & Color Brainstorm », 2026-09-27).
+   Même géométrie que BrandMark.jsx, au chiffre près.
 
-   C'est le bol de BrandMark, à la géométrie près : même demi-disque r=27 centré en (53; 58), même
-   rebord de 7 unités, même inclinaison de −11° autour de (54; 58), mêmes trois courbes de vapeur.
-   Seules les couleurs changent : la vapeur porte le tricolore dans l'ordre du drapeau — noir, jaune,
-   rouge — au lieu du dégradé d'opacité lime. C'est ce qui remplace le petit drapeau à trois bandes
-   qui flottait dans le coin de la bannière d'accueil : un drapeau générique disait « Belgique »,
-   celui-ci dit « Fairide, et Fairide est belge », en une seule forme.
+   Posée AU-DESSUS du titre de la bannière d'accueil, en grand (Landing.jsx) : elle y ouvre la page
+   au lieu d'être un cachet dans le coin. Elle remplace le bol tricolore (« fairide be 15a »).
 
-   CE DESSIN EST REVENU APRÈS UN DÉTOUR, ET LE DÉTOUR EST LA LEÇON. Le 2026-09-18, la demande était
-   « plus grand, plus propre, plus esthétique, MÊME LOGO ». La refonte a livré trois arcs
-   concentriques posés sur une pastille translucide : plus lisible en petit, certes, mais ce n'était
-   plus le logo — c'était un autre dessin qui citait le drapeau. Le fondateur a demandé le retour à
-   celui-ci le lendemain. Les trois traits balayés SONT la marque ; les remplacer par des arcs
-   réguliers enlève ce qui la rend reconnaissable.
-   Ce qui est gardé de la refonte, parce que c'était la demande d'origine et qu'elle tenait : la
-   taille (84 px dans la bannière, 56 px sur téléphone — voir Landing.jsx et styles.css). La pastille
-   translucide, elle, ne revient pas : elle appartenait au dessin abandonné.
+   CADRAGE : viewBox 26 50 80 40, et non le « 26 50 80 32 » du fichier fourni, qui coupait le bas des
+   roues (roue centrée en y = 44 + 29 = 73, rayon 12,5 + demi-trait 2,5 → bas à 88). Le dessin est
+   en paysage, 2 : 1 — la hauteur vaut la moitié de la largeur.
 
-   Pourquoi un composant à part et non une option de BrandMark : BrandMark prend UNE couleur et la
-   pose partout. Ici il en faut trois, différentes par trait, et la règle « le lime ne vit que sur
-   l'iris » ne s'applique pas — ce ne sont pas les couleurs de la marque mais celles du drapeau.
-   Mélanger les deux logiques dans un même composant rendrait la prop `color` ambiguë.
+   Couleurs du drapeau telles que livrées, PAS les jetons de la charte (--red, --orange…) : ce sont
+   des couleurs de statut qui dérivent avec elle, et un drapeau ne suit pas la charte.
 
-   DEUX TONS, et le choix n'est pas cosmétique — mais il ne porte que sur le bol et son rebord.
-   `sombre` (défaut) les met en blanc, pour les fonds foncés ; `clair` en #141414, pour les fonds
-   clairs. Sur l'iris de la bannière, un bol noir tomberait à ~2:1 de contraste et se lirait comme
-   une tache : c'est pour ça que l'accueil demande `sombre`. Ne pas inverser sans regarder le fond.
+   CONTRASTE, À SAVOIR : sur l'iris, la roue noire est à ~2:1 — le README du fondateur le dit
+   lui-même (« black wheel disappears on dark »). Le jaune et le rouge portent la lecture ; si la
+   roue noire doit ressortir, c'est la version sur tuile qu'il faut, pas un noir éclairci.
 
-   Le premier trait de vapeur, lui, est noir dans les DEUX tons, puisque le noir est la première
-   bande du drapeau (demande du fondateur). Sur l'iris il est donc, lui aussi, à ~2:1 : il se lit
-   comme un trait sombre et non comme un trait coloré. C'est assumé — le jaune et le rouge portent
-   la lecture, le bol blanc porte la forme, et le noir vient fermer le tricolore. Si un jour ce
-   trait doit ressortir sur fond foncé, la sortie n'est pas de l'éclaircir (ce ne serait plus le
-   drapeau) mais de poser la marque sur une pastille claire — c'est d'ailleurs ce qu'avait fait la
-   refonte abandonnée, et c'est la seule chose qu'elle réglait vraiment.
-
-   Pas d'animation ici, volontairement : les classes bm-* de styles.css ne s'activent que sous un
-   parent `.mark-anime`. La marque belge est un cachet posé dans un coin, pas le logo qui s'annonce. */
-
-/* Couleurs officielles du drapeau telles que livrées dans brand/belgian/ — ce ne sont PAS les
-   jetons de la charte (--red, --orange…), qui sont des couleurs de statut et dérivent avec elle.
-   Un drapeau ne suit pas la charte : il est ce qu'il est. */
+   Pas d'animation : c'est un cachet, pas le logo qui s'annonce. */
 const NOIR = '#141414';
 const JAUNE = '#FDDA24';
 const ROUGE = '#EF3340';
 
-export default function BelgianMark({ size = 34, ton = 'sombre', title }) {
-  /* Le bol et son rebord seuls prennent la couleur qui tranche sur le fond. Les trois traits de
-     vapeur, eux, sont noir-jaune-rouge en propre : le troisième ne suit pas le bol. */
-  const corps = ton === 'clair' ? NOIR : '#FFFFFF';
-
+export default function BelgianMark({ width = 120, title }) {
   return (
-    <span className="be-mark" style={{ width: size, height: size }} title={title}>
-      {/* Même cadrage que BrandMark sans tuile : traits compris, le dessin occupe x[13; 88] et
-          y[12; 85], d'où 2 unités de marge sur les quatre côtés. */}
-      <svg viewBox="11 9 79 79" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={title || 'Fairide'} shapeRendering="geometricPrecision">
-        <g fill="none">
-          {/* Noir, jaune, rouge — l'ordre du drapeau, dans l'ordre des trois traits. */}
-          <path d="M52 40 C46 26 30 24 16 28" stroke={NOIR} strokeWidth="6" strokeLinecap="round" />
-          <path d="M66 38 C62 20 42 14 24 15" stroke={JAUNE} strokeWidth="6" strokeLinecap="round" />
-          <path d="M76 42 C76 33 68 27 58 25" stroke={ROUGE} strokeWidth="6" strokeLinecap="round" />
-          <g transform="rotate(-11 54 58)">
-            <path d="M26 58 A27 27 0 0 0 80 58 Z" fill={corps} />
-            <path d="M21 58 H85" stroke={corps} strokeWidth="7" strokeLinecap="round" />
-          </g>
+    <span className="be-mark" style={{ width, height: width / 2 }} title={title}>
+      <svg viewBox="26 50 80 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={title || 'Fairide'} shapeRendering="geometricPrecision">
+        <g transform="translate(28 44)" fill="none" strokeWidth="5">
+          <circle cx="15" cy="29" r="12.5" stroke={NOIR} />
+          <circle cx="61" cy="29" r="12.5" stroke={ROUGE} />
+        </g>
+        <g transform="translate(28 44)" fill={JAUNE}>
+          <rect x="16" y="8" width="44" height="5" rx="2.5" />
+          <rect x="13" y="20" width="28" height="5" rx="2.5" transform="rotate(42 27 22.5)" />
         </g>
       </svg>
     </span>

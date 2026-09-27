@@ -83,7 +83,14 @@ every customer's first load.
 
 `/restaurants` and `/restaurants/:id` are **deliberately public** — no `ProtectedRoute` — so
 they stay indexable and shareable. Only actions (order, favourite) require login. Don't
-"fix" this by wrapping them.
+"fix" this by wrapping them. One click is gated on purpose (2026-09-27): a logged-out visitor who opens
+a business **from the list** (`RestaurantCard` in RestaurantList.jsx) goes to login first, and
+Auth.jsx brings them back to that business after sign-in or client sign-up. The route itself stays
+public — shared links, search engines and prerendered pages still land on it directly.
+
+The landing page's main action is an address bar ([HeroAdresse](src/components/landing/HeroAdresse.jsx)):
+it maps the postal code to one of the 19 communes and opens `/restaurants` filtered on it, without
+saving anything.
 
 Restaurant and admin sections use nested routes under a shared layout
 (`DashboardLayout` / `AdminLayout`) with `<Outlet />`.
@@ -167,6 +174,13 @@ The old names survive as aliases so ~100 call sites keep working: `--gold` = lim
 Fonts: **Space Grotesk** for the whole interface (400/500/700), `@import` at the top of
 `styles.css`. Fraunces was removed — the personality comes from scale and tracking, not from a
 serif/sans pair. Headings are `-0.02em`.
+
+**The logo is the bicycle « 5a »** (two wheels, top tube, seat tube; lime on an iris tile) — back since
+2026-09-27 after nine days as the « Swept plume » bowl. Geometry lives in [BrandMark.jsx](src/components/BrandMark.jsx)
+and is repeated in `public/icons/icon.svg`, `public/favicon.svg`, the splash in [index.html](index.html) and the
+Belgian-colours version [BelgianMark.jsx](src/components/BelgianMark.jsx). The PNG icons and `og-image.png` are
+renders of it: change the drawing, re-render them. `FairRide-logo-spec.md` and `brand/` describe the bowl and are
+out of date.
 
 The one exception is the word `fairide` itself, which is set in **Bricolage Grotesque** (700–800,
 optical sizing on) via the `.wordmark` class — lowercase, `-0.03em`. It is a *logotype* face, loaded
