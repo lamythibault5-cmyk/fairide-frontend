@@ -5590,11 +5590,11 @@ export default {
     landing: {
       title1: 'Pay for your meal,',
       title2: 'not the platform.',
-      subAdresse: 'The local alternative to Uber Eats and Deliveroo. Cheaper for you, fairer for the restaurant and the courier — and your money stays here.',
+      subAdresse: 'The local alternative to Uber Eats and Deliveroo. Cheaper for you, fairer for the restaurant and the courier, and your money stays here.',
       addrLabel: 'Delivery address',
       addrPlaceholder: 'Your delivery address',
       addrGo: 'See businesses that deliver here',
-      addrOutside: 'Fairide doesn\'t deliver to {lieu} yet — for now, the 19 municipalities of Brussels.',
+      addrOutside: 'Fairide doesn\'t deliver to {lieu} yet. For now: the 19 municipalities of Brussels.',
       priceAria: 'What the platform takes on a 40-euro order',
       priceTitle: 'On a {montant}-euro order, the platform takes:',
       priceThem: 'Big platforms',

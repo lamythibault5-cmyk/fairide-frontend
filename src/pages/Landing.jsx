@@ -172,7 +172,7 @@ export default function Landing() {
           </div>
           <div>
             <div className="euro-row-top">
-              <span className="euro-name euro-name-us">fairide</span>
+              <span className="euro-name euro-name-us wordmark">fairide</span>
               <span className="euro-cut">{t('landing.euroUsCut')}</span>
             </div>
             <div className="euro-track"><div className="euro-fill euro-fill-us" /></div>

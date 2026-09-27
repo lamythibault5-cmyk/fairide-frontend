@@ -34,7 +34,7 @@ function Illustration({ t }) {
       <rect x="106" y="66" width="108" height="16" rx="8" fill="#4B3BD6" />
       <rect x="106" y="74" width="108" height="8" fill="#4B3BD6" />
       <circle cx="116" cy="74" r="4" fill="#C6F06B" />
-      <text x="123" y="77.5" fontSize="8" fontWeight="700" fill="#fff" fontFamily="system-ui, sans-serif">Fairide</text>
+      <text x="123" y="77.5" fontSize="8" fontWeight="800" fill="#fff" fontFamily="'Bricolage Grotesque', system-ui, sans-serif">Fairide</text>
       <text x="208" y="77.5" fontSize="7" fill="#fff" textAnchor="end" fontFamily="system-ui, sans-serif">11:23</text>
       <rect x="111" y="88" width="98" height="40" rx="6" fill="#fff" stroke="#E6E2D6" />
       <text x="116" y="99" fontSize="7.5" fontWeight="700" fill="#1F1F24" fontFamily="system-ui, sans-serif">🛵 {t('accountUi.terminalScreenOrder')}</text>

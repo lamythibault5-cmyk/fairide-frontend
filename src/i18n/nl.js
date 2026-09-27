@@ -5590,11 +5590,11 @@ export default {
     landing: {
       title1: 'Betaal je maaltijd,',
       title2: 'niet het platform.',
-      subAdresse: 'Het alternatief van hier voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier — en je geld blijft hier.',
+      subAdresse: 'Het alternatief van hier voor Uber Eats en Deliveroo. Goedkoper voor jou, eerlijker voor de zaak en de koerier, en je geld blijft hier.',
       addrLabel: 'Leveringsadres',
       addrPlaceholder: 'Je leveringsadres',
       addrGo: 'Bekijk de zaken die hier leveren',
-      addrOutside: 'Fairide levert nog niet in {lieu} — voorlopig in de 19 Brusselse gemeenten.',
+      addrOutside: 'Fairide levert nog niet in {lieu}. Voorlopig: de 19 Brusselse gemeenten.',
       priceAria: 'Wat het platform neemt op een bestelling van 40 euro',
       priceTitle: 'Op een bestelling van {montant} euro neemt het platform:',
       priceThem: 'Grote platformen',

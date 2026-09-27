@@ -91,6 +91,9 @@
          `&text=fairide`, qui aurait réduit le fichier à deux kilo-octets : le jour où quelqu'un pose
          .wordmark sur un autre mot, les glyphes manquants retomberaient en silence sur la police de
          repli, sans rien dans la console pour l'expliquer. -->
+    <!-- Le fichier de la police du mot « fairide », servi par nous : l'écran de chargement en a besoin
+         avant toute autre chose (voir le @font-face du #splash plus bas). -->
+    <link rel="preload" href="/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" data-police />
@@ -111,6 +114,17 @@
          le chargement, il ne le prolonge pas. -->
     <div id="splash" aria-hidden="true">
       <style>
+        /* LE MOT « fairide » EN BRICOLAGE, MÊME QUAND L'APPLICATION NE DÉMARRE PAS (2026-09-27).
+           La feuille Google Fonts du <head> reste en media="print" tant que main.jsx ne l'a pas
+           rallumée (voir le long commentaire plus haut). Or l'écran de secours ci-dessous
+           (« Le chargement prend plus de temps que prévu ») n'apparaît QUE quand main.jsx n'a pas
+           tourné : la police n'y était donc jamais chargée, et le mot tombait sur la police système.
+           D'où ce @font-face en ligne, vers un fichier servi par nous (public/fonts, sous-ensemble
+           latin, police sous licence OFL) : une <style> en ligne ne bloque ni le rendu ni les scripts,
+           `font-src 'self'` l'autorise déjà, et le fichier n'est téléchargé que si le mot s'affiche.
+           Même nom de famille que Google Fonts : le reste du site en profite aussi si Google est
+           bloqué, et quand les deux sont là, ce sont les mêmes glyphes. */
+        @font-face { font-family: "Bricolage Grotesque"; font-style: normal; font-weight: 700 800; font-display: swap; src: url("/fonts/bricolage-grotesque-latin.woff2") format("woff2"); }
         #splash { position: fixed; inset: 0; z-index: 1000; background: #3B2FB5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; transition: opacity .2s ease; will-change: opacity; }
         #splash.splash-fin { opacity: 0; pointer-events: none; }
         /* 220px : le vélo est en paysage (82 × 42, soit 220 × 113 ici). Le bol carré, du 2026-09-18
