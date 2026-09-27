@@ -1720,8 +1720,8 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .landing-partner-line a { color: #fff; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
   .landing-ouverture-court { margin-top: 18px; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.85); }
   /* La marque belge au-dessus du titre, grande aussi sur téléphone (fondateur, 2026-09-27 : « tu as
-     la place ») : 140 × 70, presque la taille de l'ordinateur. */
-  .be-mark { width: 140px !important; height: 70px !important; margin-bottom: 0; }
+     la place », puis « encore plus grand ») : 190 × 95, plus grande que sur ordinateur. */
+  .be-mark { width: 190px !important; height: 95px !important; margin-bottom: 0; }
   .landing-hero-adresse .landing-title { margin-top: 6px; }
 }
 
@@ -1866,7 +1866,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    centre sans rien retirer. */
 @media (max-width: 640px) and (max-height: 740px) {
   .landing-hero-adresse { padding-top: 6px; }
-  .be-mark { width: 112px !important; height: 56px !important; }
+  .be-mark { width: 150px !important; height: 75px !important; }
   .landing-hero-adresse .landing-title { font-size: 27px; margin: 8px 0 10px; }
   .landing-hero-adresse .landing-sub { font-size: 14px; line-height: 1.45; margin-bottom: 14px; }
 }
