@@ -1887,10 +1887,11 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   /* Les deux blocs RESTENT côte à côte : c'est la comparaison. Empilés, on ne voit plus l'écart. */
   /* Plus compact que sur ordinateur : l'exemple doit tenir ENTIER dans le premier écran d'un
      téléphone, barres du navigateur comprises (≈ 393 × 660 sur iPhone avec Chrome). */
-  /* 36 / 20 et non 20 / 12 : la ligne « Sur une commande… » collait à la barre d'adresse au-dessus et
-     aux deux cases en dessous (fondateur, 2026-09-27). */
+  /* 36px au-dessus : la ligne « Sur une commande… » collait à la barre d'adresse. 34px en dessous :
+     le MÊME écart qu'entre les cases et la ligne « Commerce ou livreur ? » qui les suit (fondateur,
+     2026-09-27). Si l'un des deux change, changer l'autre. */
   .landing-hero-adresse .hero-prix { margin-top: 36px; }
-  .hero-prix-titre { font-size: 20px; margin-bottom: 20px; }
+  .hero-prix-titre { font-size: 20px; margin-bottom: 34px; }
   .hero-prix-blocs { column-gap: 10px; }
   .hero-prix-bloc { padding: 12px 12px 12px; row-gap: 4px; }
   .hero-prix-nom { font-size: 13px; }
@@ -1909,7 +1910,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .hero-adresse-barre { min-height: 52px; }
   .hero-adresse-go { width: 40px; height: 40px; }
   .landing-hero-adresse .hero-prix { margin-top: 28px; }
-  .hero-prix-titre { font-size: 17px; margin-bottom: 16px; }
+  .hero-prix-titre { font-size: 17px; margin-bottom: 34px; }
   .hero-prix-bloc { padding: 10px 12px; }
   .hero-prix-nom { font-size: 12px; }
   .hero-prix-montant { font-size: 32px; }
