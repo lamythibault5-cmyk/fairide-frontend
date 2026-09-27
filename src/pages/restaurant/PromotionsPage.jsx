@@ -26,6 +26,9 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
   const avantage = restaurant?.fairideAdvantage || null;
   const livraisonOfferte = !!restaurant?.freeDelivery;
   const remiseLivraison = Number(restaurant?.deliveryFeeDiscount || 0);
+  // Livraison offerte dès un minimum de commande (réglée dans Ma fiche → Offre livraison) : c'est aussi une offre active.
+  const minimumOffert = restaurant?.freeDeliveryMinOrder != null ? Number(restaurant.freeDeliveryMinOrder) : null;
+  const livraisonActive = livraisonOfferte || remiseLivraison > 0 || minimumOffert != null;
 
   async function reglerProduits(mode, value) {
     setBusy('produits');
@@ -79,12 +82,12 @@ function AvantageFairide({ restaurant, restoId, token, toast, t, loadDashboard, 
             </>
           )}
         </div>
-        <div className={`avantage-option ${livraisonOfferte || remiseLivraison > 0 ? 'est-actif' : ''}`}>
+        <div className={`avantage-option ${livraisonActive ? 'est-actif' : ''}`}>
           <b>🛵 {t('promosPage.fairideDeliveryTitle')}</b>
           <p className="small" style={{ margin: '4px 0 8px' }}>{t('promosPage.fairideDeliveryHelp')}</p>
-          {livraisonOfferte || remiseLivraison > 0 ? (
+          {livraisonActive ? (
             <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <span className="pill teal">✅ {livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
+              <span className="pill teal">✅ {minimumOffert != null ? `${t('promosPage.fairideDeliveryFree')} · ${t('editResto.offerFromMin', { amount: minimumOffert })}` : livraisonOfferte ? t('promosPage.fairideDeliveryFree') : t('promosPage.fairideDeliveryActive', { v: eur(remiseLivraison) })}</span>
               <button type="button" className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={busy === 'livraison'} onClick={() => reglerLivraison(0)}>{t('promosPage.fairideRemove')}</button>
             </div>
           ) : (
@@ -198,14 +201,14 @@ export default function PromotionsPage() {
           <div className="row" style={{ justifyContent: 'space-between' }}>
             <div>
               <span className="pill teal">🏷️ {p.label}</span>
-              <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? ' · inactive' : ''}</div>
+              <div className="small" style={{ marginTop: 6 }}>{p.itemName || t('promosPage.wholeOrder')}{!p.active ? t('promosPage.inactiveSuffix') : ''}</div>
             </div>
             <div className="row" style={{ gap: 6 }}>
               <button className="btn-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={togglingId === p.id} onClick={() => toggleActive(p)}>
                 {togglingId === p.id ? '...' : p.active ? t('promosPage.disable') : t('promosPage.enable')}
               </button>
               <button className="btn-danger-ghost" style={{ padding: '4px 10px', fontSize: 12 }} disabled={deletingId === p.id} onClick={() => deletePromo(p)}>
-                {deletingId === p.id ? '...' : 'Supprimer'}
+                {deletingId === p.id ? '...' : t('promosPage.deletePromo')}
               </button>
             </div>
           </div>
@@ -247,7 +250,7 @@ export default function PromotionsPage() {
             <div className="field">
               <label htmlFor={idsA11y + '-buyn'}>{t('promosPage.buyN')}</label>
               <select id={idsA11y + '-buyn'} value={bogoN} onChange={(e) => setBogoN(e.target.value)}>
-                {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{v} acheté{v > 1 ? 's' : ''} = 1 offert</option>)}
+                {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{t('promosPage.bogoOption', { n: v })}</option>)}
               </select>
             </div>
           )}

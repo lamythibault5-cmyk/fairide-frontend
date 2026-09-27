@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import * as Sentry from '@sentry/react';
+import { signalerErreur } from '../sentry';
 import { rechargerSiNouveauCode } from '../lazyPage';
 
 // Filet de sécurité global contre l'écran blanc : sans limite d'erreur, une seule exception pendant le
@@ -40,7 +40,7 @@ export default class AppErrorBoundary extends Component {
     if (rechargerSiNouveauCode(error)) return;
     // Sentry n'est initialisé qu'après consentement (voir main.jsx) : sans consentement, captureException
     // est un no-op côté SDK, on peut donc l'appeler sans condition.
-    Sentry.captureException(error, { extra: { componentStack: info?.componentStack } });
+    signalerErreur(error, { componentStack: info?.componentStack });
   }
 
   render() {

@@ -15,17 +15,19 @@ import { SkeletonCards } from './components/Skeleton';
 // restaurateur jamais /driver.
 //
 // Ce qui reste chargé d'emblée (imports statiques ci-dessous) : uniquement le parcours d'arrivée —
-// accueil, connexion, liste et fiche des commerces. Ce sont les seules pages publiques, donc celles
+// accueil, liste et fiche des commerces (la connexion est préchargée au survol). Ce sont les seules pages publiques, donc celles
 // qui décident du temps de premier affichage et du référencement. Tout le reste part en chargement
 // différé.
 import Home from './pages/Home';
-import Auth from './pages/Auth';
 import ResetPassword from './pages/ResetPassword';
 import RestaurantList from './pages/client/RestaurantList';
 import RestaurantMenu from './pages/client/RestaurantMenu';
 import NotFound from './pages/NotFound';
 
 // --- Espace client (au-delà des pages publiques) ---
+// Connexion / inscription : chargée à la demande (≈ 100 Ko de code que la plupart des visiteurs n'ouvrent jamais),
+// préchargée dès le survol d'un lien vers /login (routePrefetch.js).
+const Auth = lazyPage(() => import('./pages/Auth'));
 const SearchPage = lazyPage(() => import('./pages/client/SearchPage'));
 const Checkout = lazyPage(() => import('./pages/client/Checkout'));
 const Favorites = lazyPage(() => import('./pages/client/Favorites'));

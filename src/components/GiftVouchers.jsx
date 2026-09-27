@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import ConfirmDialog from './ConfirmDialog';
 import { useLanguage, getLocale } from '../context/LanguageContext';
-import { dateOuverturePaiements } from '../launch';
+import { dateOuverturePaiementEnLigne } from '../launch';
 import './bons.css';
 
 // Utilitaires repris de l'ancien module Réservations (retiré le 2026-09-25) : les bons cadeaux, eux, restent — ils
@@ -47,7 +47,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
   return (
     <>
       <div className="card" style={{ borderColor: 'var(--gold)' }}>
-        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon', { date: dateOuverturePaiements(getLocale()) })}</p>
+        <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })}</p>
       </div>
 
       <div className="card">
@@ -58,7 +58,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
         </div>
         {creation && <CreationBon restoId={restoId} token={token} toast={toast} restaurant={restaurant} onDone={(v) => { setCreation(false); rafraichir(); setOuvert(v); }} />}
         <div className="resa-outils">
-          <div className="resa-recherche"><input aria-label={t('bons.gvSearchPh')} value={q} placeholder={t('bons.gvSearchPh')} onChange={(e) => setQ(e.target.value)} aria-label={t('bons.gvSearchPh')} /></div>
+          <div className="resa-recherche"><input aria-label={t('bons.gvSearchPh')} value={q} placeholder={t('bons.gvSearchPh')} onChange={(e) => setQ(e.target.value)} /></div>
           <div className="resa-filtres" role="group" aria-label={t('bons.filtersAria')}>
             {STATUTS.map((s) => <button key={s} type="button" className={statut === s ? 'actif' : ''} onClick={() => setStatut(s)}>{t(`bons.gvFilter_${s}`)}</button>)}
           </div>
@@ -175,7 +175,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
   }
   async function changerStatut(status) {
     setEnCours('statut');
-    try { const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { method: 'PATCH', token, body: { status } }); setDetail((d) => ({ ...(d || bon), ...maj })); onChange(maj); toast(status === 'cancelled' ? t('bons.gvCancelled') : t('bons.gvReactivated')); }
+    try { const maj = await api(`/restaurants/${restoId}/gift-vouchers/${bon.id}`, { method: 'PATCH', token, body: { status } }); setDetail((d) => ({ ...(d || bon), ...maj, uses: maj.uses || d?.uses || [] })); onChange(maj); toast(status === 'cancelled' ? t('bons.gvCancelled') : t('bons.gvReactivated')); }
     catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(null); }
   }
   async function envoyer() {
@@ -218,7 +218,7 @@ function DetailBon({ bon, restoId, token, toast, restaurant, onClose, onChange }
 
       <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginTop: 10 }}>
         <button type="button" className="btn-outline" onClick={imprimer}>{t('bons.gvPrint')}</button>
-        <input aria-label={t('bons.gvBuyerEmail')} type="email" value={email} placeholder={t('bons.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} aria-label={t('bons.gvBuyerEmail')} />
+        <input aria-label={t('bons.gvBuyerEmail')} type="email" value={email} placeholder={t('bons.gvBuyerEmail')} maxLength={160} onChange={(e) => setEmail(e.target.value)} style={{ flex: '1 1 180px', maxWidth: 260 }} />
         <button type="button" className="btn-outline" disabled={!email || enCours === 'email'} onClick={envoyer}>{enCours === 'email' ? '…' : t('bons.gvSendByEmail')}</button>
       </div>
 

@@ -204,7 +204,7 @@ export default function Account() {
         setRestoId(list[0].id);
         api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
         // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
-        api(`/restaurants/${list[0].id}`).then(setRestaurant).catch(() => {});
+        api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch(() => {});
       }
     }).catch((e) => toast(e.message, 'erreur'));
   }
@@ -687,7 +687,7 @@ export default function Account() {
         {/* Icône différente de celle de « Mon solde » juste au-dessus : les deux rangées se suivent,
             et le même 💰 sur les deux les faisait lire comme une seule répétée. */}
         {(role === 'restaurant' || role === 'driver') && (
-          <LigneCompte icone="banque" titre={t('account.convert.title')} sous={`${solde}€ disponibles`} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
+          <LigneCompte icone="banque" titre={t('account.convert.title')} sous={t('accountUi.balanceAvailable', { amount: solde })} ouverte={ouvertes.has('convertir')} onClick={() => basculer('convertir')}>
             <p className="small" style={{ margin: '0 0 12px' }}>{t('account.convert.explain')}</p>
             <div className="stat-card highlight" style={{ marginBottom: 14 }}>
               <div className="num">{solde}€</div>
@@ -1114,7 +1114,7 @@ function ContactChangeField({ field, label, currentValue, type, placeholder, req
             <div className="field" style={{ flex: 1, margin: 0, minWidth: 140 }}>
               <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="123456" maxLength={6} />
             </div>
-            <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : 'Confirmer'}</button>
+            <button type="button" className="btn-teal" disabled={confirming} onClick={confirm}>{confirming ? '...' : t('accountUi.confirmCode')}</button>
             <button type="button" className="btn-ghost" disabled={sending} onClick={sendCode}>{t('accountUi.resend')}</button>
             <button type="button" className="btn-ghost" onClick={cancel}>{t('accountUi.cancel')}</button>
           </div>

@@ -7,7 +7,7 @@ import { createRoot } from 'react-dom/client';
    7.19 pourrait retirer cet export et casser TOUT le routage d'un coup, à la première mise en ligne
    suivante, sans que rien dans le code n'ait changé. */
 import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
-import * as Sentry from '@sentry/react';
+import { demarrerSentry } from './sentry';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
@@ -41,7 +41,7 @@ let sentryStarted = false;
 function startSentryIfAllowed() {
   if (sentryStarted || !import.meta.env.VITE_SENTRY_DSN || !hasAcceptedConsent()) return;
   sentryStarted = true;
-  Sentry.init({ dsn: import.meta.env.VITE_SENTRY_DSN, sendDefaultPii: false });
+  demarrerSentry({ dsn: import.meta.env.VITE_SENTRY_DSN, sendDefaultPii: false }).catch(() => { sentryStarted = false; });
 }
 
 startSentryIfAllowed();

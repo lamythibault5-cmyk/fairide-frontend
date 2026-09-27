@@ -21,7 +21,13 @@ export default function OrdersPage() {
   const toast = useToast();
   const { orders, restaurant, restoId, loadDashboard } = useOutletContext();
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  // On garde la commande choisie, mais on affiche toujours sa dernière version (sondage de 15 s, actions) :
+  // un instantané restait « Prête » avec son champ de code après validation, et un second clic échouait.
+  const [commandeChoisie, setSelectedOrder] = useState(null);
+  const selectedOrder = commandeChoisie ? (orders.find((o) => o.id === commandeChoisie.id) || commandeChoisie) : null;
+  // Commande dont une action (accepter, refuser, prête) est en cours : pas de double envoi sur un double appui.
+  const [actionEnCours, setActionEnCours] = useState(null);
+  const [aRefuser, setARefuser] = useState(null);
   // Commande à emporter payée sur place que le client n'est pas venu chercher (confirmation avant de la clore).
   const [pasVenu, setPasVenu] = useState(null);
   const [clotureEnCours, setClotureEnCours] = useState(false);
@@ -79,7 +85,7 @@ export default function OrdersPage() {
     } catch (e) {
       // Refuser le sélecteur d'appareils lève une NotFoundError : ce n'est pas une panne, inutile
       // d'alarmer le restaurateur qui vient simplement de fermer la fenêtre.
-      if (e?.name !== 'NotFoundError') toast(e.message || 'Impression impossible.');
+      if (e?.name !== 'NotFoundError') toast(e.message || t('ordersResto.printFailed'));
       setBtName(btPrinter.connectedDeviceName());
       return false;
     } finally {
@@ -105,11 +111,15 @@ export default function OrdersPage() {
   }, [orders]);
 
   async function orderAction(orderId, action, body) {
+    if (actionEnCours) return;
+    setActionEnCours(orderId);
     try {
       await api(`/orders/${orderId}/${action}`, { method: 'PATCH', token, body });
-      loadDashboard(restoId);
+      await loadDashboard(restoId);
     } catch (e) {
       toast(e.message, 'erreur');
+    } finally {
+      setActionEnCours(null);
     }
   }
 
@@ -205,7 +215,7 @@ export default function OrdersPage() {
         <b>{o.clientName}</b>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
       </div>
-      <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o)}</div>
+      <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
       {o.paymentMode === 'on_site' && (
         <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
           {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
@@ -225,12 +235,12 @@ export default function OrdersPage() {
       <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
         {o.status === 'nouveau' && (
           <>
-            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
-            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'refuse')}>{t('ordersResto.refuse')}</button>
+            <button className="btn-teal" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => (o.allergyRequest ? setAllergieAConfirmer(o) : orderAction(o.id, 'accept'))}>{t('ordersResto.accept')}</button>
+            <button className="btn-outline" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => setARefuser(o)}>{t('ordersResto.refuse')}</button>
           </>
         )}
         {o.status === 'preparation' && (
-          <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
+          <button className="btn-gold" style={{ padding: '8px 14px', fontSize: 13 }} disabled={actionEnCours === o.id} onClick={() => orderAction(o.id, 'ready')}>{t('ordersResto.markReady')}</button>
         )}
         {o.paymentMode === 'on_site' && ['preparation', 'pret'].includes(o.status) && (
           <button className="btn-ghost" style={{ padding: '8px 12px', fontSize: 13, color: 'var(--red)' }} onClick={() => setPasVenu(o)}>🚫 {t('ordersResto.customerNoShow')}</button>
@@ -300,7 +310,7 @@ export default function OrdersPage() {
               <h3 style={{ margin: 0 }}>{t('ordersResto.orderOf', { name: selectedOrder.clientName })}</h3>
               <span className={`status-badge status-${selectedOrder.status}`}>{statusLabel(selectedOrder.status, selectedOrder.orderType, t)}</span>
             </div>
-            <div className={`order-type-badge order-type-badge-${orderTypeColor(selectedOrder)}`} style={{ marginBottom: 8 }}>{orderTypeLabel(selectedOrder)}</div>
+            <div className={`order-type-badge order-type-badge-${orderTypeColor(selectedOrder)}`} style={{ marginBottom: 8 }}>{orderTypeLabel(selectedOrder, t)}</div>
             {(() => {
               const sk = orderStageKey(selectedOrder);
               const stg = ORDER_STAGES.find((s) => s.key === sk);
@@ -340,7 +350,7 @@ export default function OrdersPage() {
             {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}>📞 {selectedOrder.clientPhone}</p>}
             <BandeauAllergie order={selectedOrder} />
             <BadgeAlcool order={selectedOrder} />
-            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions)}</p>}
+            {selectedOrder.deliveryInstructions && <p className="small" style={{ margin: '4px 0' }}>🔑 {deliveryInstructionLabel(selectedOrder.deliveryInstructions, t)}</p>}
             {selectedOrder.deliveryNote && <p className="small" style={{ margin: '4px 0' }}>📝 {selectedOrder.deliveryNote}</p>}
             {selectedOrder.orderType === 'delivery' && selectedOrder.driverName && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.driverLine', { name: selectedOrder.driverName, phone: selectedOrder.driverPhone ? ` · ${selectedOrder.driverPhone}` : '' })}</p>}
             {selectedOrder.status === 'pret' && selectedOrder.orderType === 'pickup' && (
@@ -398,6 +408,12 @@ export default function OrdersPage() {
         loading={clotureEnCours}
         onCancel={() => setPasVenu(null)}
         onConfirm={signalerPasVenu} />
+      <ConfirmDialog open={!!aRefuser} danger
+        title={t('ordersResto.confirmRefuseTitle')}
+        message={t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })}
+        confirmLabel={t('ordersResto.refuse')}
+        onCancel={() => setARefuser(null)}
+        onConfirm={() => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse'); }} />
       {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
       <ConfirmDialog open={!!allergieAConfirmer}
         title={t('conformite.allergyConfirmTitle')}

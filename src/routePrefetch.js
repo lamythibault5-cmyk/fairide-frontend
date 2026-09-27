@@ -3,6 +3,7 @@
 // l'autre remplit le même cache — un module déjà préchargé ici s'affiche instantanément là-bas.
 // Appelé par NavigationFeedback.jsx au survol / toucher / focus d'un lien interne.
 const CHARGEURS = {
+  '/login': () => import('./pages/Auth'),
   '/recherche': () => import('./pages/client/SearchPage'),
   '/checkout': () => import('./pages/client/Checkout'),
   '/favorites': () => import('./pages/client/Favorites'),

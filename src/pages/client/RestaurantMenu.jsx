@@ -247,6 +247,9 @@ export default function RestaurantMenu() {
 
   // La bascule ne s'affiche que si le commerce propose vraiment les deux : un seul mode possible
   // n'est pas un choix, c'est une information — elle tient alors dans le panneau des frais.
+  const emporterSurPlace = !!restaurant.offersPickup && (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) !== 'online';
+  const bandeauOuverture = (restaurant.offersDelivery || restaurant.offersPickup) && !livraisonOuverte(user)
+    && (!commandesOuvertes(user) || restaurant.offersDelivery || !emporterSurPlace);
   const modesPossibles = [restaurant.offersDelivery && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean);
   const modeActif = mode && modesPossibles.includes(mode) ? mode : modesPossibles[0];
 
@@ -483,12 +486,18 @@ export default function RestaurantMenu() {
           </div>
         )}
 
-        {/* Avant le 10 octobre : à emporter et livraison à venir ; du 10 au 20 : seule la livraison attend. */}
-        {(!commandesOuvertes(user) || (restaurant.offersDelivery && !livraisonOuverte(user))) && (
+        {/* Avant le 10 octobre : à emporter et livraison à venir ; du 10 au 20 : seule la livraison (et l'à emporter payé
+            en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
+            n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
+        {bandeauOuverture && (
           <div className="ouverture-bandeau" role="status">
-            {commandesOuvertes(user)
-              ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
-              : t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })}
+            {!emporterSurPlace
+              ? t('restaurantMenu.ordersOpenBannerOnlineOnly', { date: dateOuvertureLivraison(getLocale()) })
+              : commandesOuvertes(user)
+                ? t('restaurantMenu.ordersOpenBannerResaOpen', { date: dateOuvertureLivraison(getLocale()) })
+                : restaurant.offersDelivery
+                  ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
+                  : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
           </div>
         )}
 

@@ -426,18 +426,32 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
     setRecherche('fermee');
     setTimeout(() => document.getElementById('crm-nom')?.focus(), 50);
   }
+  // Valeurs posées par la dernière fiche choisie : en changeant de commerce, un champ encore égal à ce que la fiche
+  // précédente y avait mis est remplacé (même par du vide) ; seul ce que le commercial a tapé lui-même est gardé.
+  // Sans cela, le téléphone et l'e-mail du commerce A restaient sur la fiche du commerce B.
+  const ficheAppliquee = useRef({});
   function appliquerFiche(fiche) {
     if (!fiche) return;
     if (fiche.source === 'manuel' && !fiche.name) { passerEnManuel(); return; }
-    setF((s) => ({
-      ...s,
-      name: fiche.name || s.name,
-      address: [[fiche.street, fiche.number].filter(Boolean).join(' '), [fiche.postalCode, communeDepuisFiche(fiche)].filter(Boolean).join(' ')].filter(Boolean).join(', ') || s.address,
-      commune: communeDepuisFiche(fiche) || s.commune,
-      phone: fiche.phone || s.phone,
-      email: fiche.email || s.email,
-      cuisine: cuisineDepuisFiche(fiche.cuisine) || s.cuisine
-    }));
+    const valeurs = {
+      name: fiche.name || '',
+      address: [[fiche.street, fiche.number].filter(Boolean).join(' '), [fiche.postalCode, communeDepuisFiche(fiche)].filter(Boolean).join(' ')].filter(Boolean).join(', '),
+      commune: communeDepuisFiche(fiche) || '',
+      phone: fiche.phone || '',
+      email: fiche.email || '',
+      cuisine: cuisineDepuisFiche(fiche.cuisine) || ''
+    };
+    const avant = ficheAppliquee.current;
+    ficheAppliquee.current = valeurs;
+    setF((s) => {
+      const suivant = { ...s };
+      for (const [cle, v] of Object.entries(valeurs)) {
+        const tapeALaMain = s[cle] && s[cle] !== avant[cle];
+        if (v) suivant[cle] = v;
+        else if (!tapeALaMain) suivant[cle] = '';
+      }
+      return suivant;
+    });
     setRecherche('remplie');
   }
   async function prendrePosition() {
