@@ -1739,6 +1739,129 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   .be-mark { width: 56px !important; height: 56px !important; top: 14px; right: 14px; }
 }
 
+/* ---------------------------------------------------------------------------
+   LA BANNIÈRE À BARRE D'ADRESSE (2026-09-27) — HeroAdresse.jsx et HeroPrix.jsx.
+
+   Tout est préfixé par .landing-hero-adresse ou porte ses propres classes : rien ici ne touche à la
+   bannière précédente, qu'on retrouve en retirant cette classe de Landing.jsx.
+
+   Les couleurs restent celles du cadre (FairRide-5a-spec.md) : la barre est une pilule BLANCHE sur
+   l'iris, son bouton est IRIS — pas lime, le lime de la vue est déjà au second vers du titre. Le
+   ticket de prix est une carte blanche (le seul autre fond permis), sans ombre : sur l'iris, le
+   contraste blanc/bleu suffit à la détacher.
+   --------------------------------------------------------------------------- */
+/* Contenu calé en HAUT et non centré : la bannière fait 100svh + 130px (voir .landing-hero), donc
+   centré, le bas du ticket passait sous la ligne de flottaison à 1440×900. */
+.landing-hero-adresse {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 40%);
+  align-content: start; padding-top: clamp(40px, 9vh, 96px);
+}
+.landing-eyebrow { display: inline-flex; align-items: center; gap: 7px; }
+
+.hero-adresse { position: relative; max-width: 560px; margin: 4px 0 0; }
+.hero-adresse-barre {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff; color: var(--ink); border-radius: 999px;
+  padding: 7px 7px 7px 20px; min-height: 64px;
+  /* L'anneau lime au focus est un TRAIT sur l'iris, pas sur le blanc : il reste lisible
+     (règle 1 de la spec) et dit clairement où l'on tape. */
+  outline: 3px solid transparent; outline-offset: 3px; transition: outline-color .15s;
+}
+.hero-adresse-barre:focus-within { outline-color: var(--lime); }
+.hero-adresse-barre > svg { color: var(--iris); flex-shrink: 0; }
+/* `input` a un style global (aplat gris, bordure, largeur 100 %) : on le neutralise ici, c'est la
+   pilule entière qui fait office de champ. */
+.hero-adresse-barre input {
+  flex: 1; min-width: 0; border: none; background: transparent; padding: 10px 0;
+  font-size: 17px; color: var(--ink); outline: none; box-shadow: none;
+}
+.hero-adresse-barre input::placeholder { color: var(--ink-soft); }
+.hero-adresse-go {
+  flex-shrink: 0; width: 50px; height: 50px; border-radius: 50%; border: none; cursor: pointer;
+  background: var(--iris); color: #fff; font-size: 22px; line-height: 1;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s, transform .15s;
+}
+.hero-adresse-go:hover { background: var(--iris-deep); transform: translateX(2px); }
+.hero-adresse-spin {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; animation: hero-spin .7s linear infinite;
+}
+@keyframes hero-spin { to { transform: rotate(360deg); } }
+.hero-adresse-liste {
+  position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 8px);
+  margin: 0; padding: 6px; list-style: none; background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-radius: var(--radius); max-height: 300px; overflow-y: auto;
+}
+.hero-adresse-liste li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; }
+.hero-adresse-liste li > svg { color: var(--iris); margin-top: 2px; flex-shrink: 0; }
+.hero-adresse-liste li > span { display: flex; flex-direction: column; gap: 1px; }
+.hero-adresse-liste li .small { color: var(--ink-soft); }
+.hero-adresse-liste li:hover, .hero-adresse-liste li.active { background: var(--cream-dim); }
+.hero-adresse-liste .hero-adresse-vide { cursor: default; color: var(--ink-soft); font-size: 14px; }
+.hero-adresse-hors-zone { margin: 12px 0 0; font-size: 14px; color: #fff; }
+.landing-parcourir { margin: 14px 0 0; font-size: 14.5px; }
+.landing-parcourir a { color: rgba(255,255,255,.88); text-decoration: underline; text-underline-offset: 3px; }
+.landing-parcourir a:hover { color: #fff; }
+
+/* LE TICKET DE PRIX. Deux barres qu'on lit sans lire les chiffres : la grise va au bout, l'iris
+   s'arrête avant. Elles poussent au chargement (une fois) ; sans animation si l'on en a demandé moins. */
+.hero-prix {
+  /* margin-top : la marque belge du coin (84px, en absolu) mordait sur le haut du ticket. */
+  grid-area: preview; margin-top: 56px; background: #fff; color: var(--ink);
+  border-radius: var(--radius); padding: 26px 26px 22px;
+}
+.hero-prix-titre {
+  margin: 0 0 20px; font-size: 12px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.hero-prix-ligne + .hero-prix-ligne { margin-top: 18px; }
+.hero-prix-haut { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.hero-prix-haut span { font-size: 15px; font-weight: 500; }
+.hero-prix-eux .hero-prix-haut s { white-space: nowrap; font-size: 20px; color: var(--ink-faint); font-variant-numeric: tabular-nums; text-decoration-thickness: 2px; }
+.hero-prix-nous .hero-prix-haut .wordmark { font-size: 22px; color: var(--iris); }
+.hero-prix-nous .hero-prix-haut b { font-size: 34px; line-height: 1; font-weight: 700; letter-spacing: -.02em; color: var(--iris); font-variant-numeric: tabular-nums; }
+.hero-prix-piste { height: 14px; border-radius: 999px; background: var(--cream-dim); overflow: hidden; }
+.hero-prix-barre { height: 100%; width: var(--w); border-radius: 999px; animation: hero-barre 1.1s cubic-bezier(.22,.61,.36,1) .25s both; }
+.hero-prix-eux .hero-prix-barre { background: var(--ink-faint); }
+.hero-prix-nous .hero-prix-barre { background: var(--iris); }
+@keyframes hero-barre { from { width: 0; } }
+/* L'écart, en grand : c'est LA phrase du ticket. Iris sur blanc — le lime ne se pose pas sur un fond clair. */
+.hero-prix-gain {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--line);
+}
+.hero-prix-gain b { font-size: clamp(40px, 4.6vw, 56px); line-height: .95; font-weight: 700; letter-spacing: -.03em; color: var(--iris); font-variant-numeric: tabular-nums; }
+.hero-prix-gain span { font-size: 16px; font-weight: 500; color: var(--ink); }
+.hero-prix-atouts { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.hero-prix-atouts li { display: flex; align-items: center; gap: 9px; font-size: 14.5px; font-weight: 500; }
+.hero-prix-atouts li svg { color: var(--iris); flex-shrink: 0; }
+.hero-prix-note { margin: 16px 0 0; font-size: 11.5px; line-height: 1.45; color: var(--ink-soft); }
+@media (prefers-reduced-motion: reduce) {
+  .hero-prix-barre { animation: none; }
+  .hero-adresse-go:hover { transform: none; }
+}
+
+@media (max-width: 860px) {
+  .landing-hero-adresse { grid-template-columns: 1fr; }
+  .landing-hero-adresse .hero-prix { margin-top: 28px; }
+}
+@media (max-width: 640px) {
+  /* Sur téléphone, l'affiche ne prend plus tout le premier écran : ce qui la suit est maintenant le
+     ticket de prix, qu'on VEUT voir arriver en bas d'écran — c'est l'argument. L'ancienne hauteur
+     minimale servait à repousser l'aperçu des commerces sous la ligne de flottaison. */
+  .landing-hero-adresse { padding-top: 34px; }
+  .landing-hero-adresse .landing-hero-affiche { min-height: 0; padding-top: 18px; }
+  /* Le sur-titre passait sous la marque belge du coin (56px, voir .be-mark plus haut). */
+  .landing-hero-adresse .landing-eyebrow { max-width: calc(100% - 70px); line-height: 1.5; }
+  .hero-prix-eux .hero-prix-haut s { font-size: 17px; }
+  .hero-adresse-barre { min-height: 58px; padding-left: 16px; }
+  .hero-adresse-barre input { font-size: 16px; } /* 16px minimum : en dessous, iOS zoome au focus */
+  .hero-adresse-go { width: 44px; height: 44px; }
+  .hero-prix { padding: 22px 18px 18px; }
+  .hero-prix-nous .hero-prix-haut b { font-size: 30px; }
+}
+
 /* Ici vivaient les trois chiffres de la bannière (.stats-bar : « 10 % · 19 · 100 % » en lime, sous
    un filet blanc). Retirés le 2026-09-21 à la demande du fondateur, avec leur filet. Ce qu'ils
    disaient, les deux cartes d'arguments le disent en toutes lettres juste dessous — et un chiffre

@@ -5627,6 +5627,24 @@ export default {
          si. Le sous-titre porte maintenant ces trois-là, dans cet ordre. */
       title1: 'Paie ton repas,',
       title2: 'pas la plateforme.',
+      /* Bannière à barre d'adresse (2026-09-27, voir HeroAdresse.jsx et HeroPrix.jsx). `subAdresse` est plus
+         court que `sub` : les chiffres de la commission sont passés dans le ticket de comparaison à côté.
+         `sub` reste en place, lu par le référencement et par un éventuel retour en arrière. */
+      heroEyebrow: 'Pas une multinationale · 100 % d\'ici',
+      subAdresse: "L'alternative d'ici à Uber Eats et Deliveroo. Moins cher pour toi, plus juste pour le restaurant et le livreur — et ton argent reste ici.",
+      addrLabel: 'Adresse de livraison',
+      addrPlaceholder: 'Ton adresse de livraison',
+      addrGo: 'Voir les commerces qui livrent ici',
+      addrOutside: 'Fairide ne livre pas encore à {lieu} — pour l\'instant, les 19 communes de Bruxelles.',
+      browseAll: 'Ou parcourir tous les commerces',
+      priceAria: 'Comparaison du prix d\'un même plat sur Fairide et sur les grandes plateformes',
+      priceTitle: 'Le même plat, le même restaurant',
+      priceThem: 'Grandes plateformes',
+      priceAbout: 'env.',
+      priceSaving: 'sur ce seul plat',
+      priceLocal: 'Pas une multinationale américaine : ton argent reste ici',
+      priceCourier: 'Le livreur garde 100 % des frais de livraison',
+      priceNote: 'Exemple : un plat à {prix} au comptoir. Sur Fairide, les cartes sont au prix du comptoir + 10 %. Grandes plateformes : hausse moyenne de 39 % mesurée sur la carte d\'un commerce bruxellois. Prix du plat, hors frais de livraison et de service.',
       sub: "L'alternative belge à Uber Eats et Deliveroo. 10 % de commission au lieu de 22 à 32 % : le restaurant garde plus, le livreur touche 100 % des frais de livraison, et l'argent reste ici.",
       /* Les clés « …Court » servent UNIQUEMENT à la bannière sur téléphone (voir Landing.jsx
          et la règle max-width: 640px dans styles.css). Le texte long n'est pas tronqué en CSS : on
