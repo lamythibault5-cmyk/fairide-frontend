@@ -1740,7 +1740,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    centré, le bas du ticket passait sous la ligne de flottaison à 1440×900. */
 .landing-hero-adresse {
   grid-template-columns: minmax(0, 1fr) minmax(320px, 40%);
-  grid-template-areas: "text preview" "suite preview";
+  grid-template-areas: "text preview" "suite preview" "vitrine vitrine";
   align-content: start; padding-top: clamp(40px, 9vh, 96px);
 }
 
@@ -1826,10 +1826,39 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 
 /* La suite (ligne partenaires, dates d'ouverture) sous la barre d'adresse sur écran large ; APRÈS
    l'exemple sur téléphone. Voir .landing-hero-suite dans Landing.jsx. */
+/* « DÉJÀ SUR FAIRIDE » EN BAS DE LA BANNIÈRE, TROIS COMMERCES CÔTE À CÔTE (2026-09-27).
+   Rangée pleine largeur sous les deux colonnes. Chaque carte passe de « photo à gauche » à « photo en
+   haut » : c'est ce qui permet d'en tenir trois de front, y compris sur un téléphone de 390px (une
+   centaine de pixels chacune). Sur téléphone, le nom et la cuisine passent sur deux lignes au lieu
+   d'être coupés : « Snack bod… » ne dit plus quel commerce c'est. */
+.hero-vitrine { grid-area: vitrine; margin-top: 40px; }
+.hero-preview.hero-preview-rangee { align-self: stretch; padding: 18px; }
+.hero-preview-rangee .hero-preview-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.hero-preview-rangee .hero-preview-card { display: flex; flex-direction: column; align-items: stretch; gap: 8px; padding: 8px; }
+.hero-preview-rangee .hero-preview-img { width: 100%; height: auto; aspect-ratio: 16 / 9; }
+.hero-preview-rangee .hero-preview-body { padding: 0 2px; }
+.hero-preview-rangee .hero-preview-side { flex-direction: row; align-items: center; justify-content: space-between; padding: 0 2px 2px; }
+.hero-preview-rangee .hero-preview-lines { padding: 4px 2px; }
+@media (max-width: 640px) {
+  .hero-vitrine { margin-top: 24px; }
+  .hero-preview.hero-preview-rangee { padding: 12px; }
+  .hero-preview-rangee .hero-preview-list { gap: 6px; }
+  .hero-preview-rangee .hero-preview-card { padding: 5px; gap: 6px; }
+  .hero-preview-rangee .hero-preview-img { aspect-ratio: 1; }
+  .hero-preview-rangee .hero-preview-body b,
+  .hero-preview-rangee .hero-preview-meta {
+    white-space: normal; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    overflow-wrap: anywhere; line-height: 1.25;
+  }
+  .hero-preview-rangee .hero-preview-body b { font-size: 12.5px; }
+  .hero-preview-rangee .hero-preview-meta { font-size: 11px; }
+  .hero-preview-rangee .hero-preview-body { flex: 1; }
+  .hero-preview-rangee .hero-preview-open { font-size: 10px; padding: 2px 6px; }
+}
 /* align-self : .landing-hero centre ses enfants (align-items), la suite flottait au milieu de sa rangée. */
 .landing-hero-suite { grid-area: suite; align-self: start; margin-top: 8px; }
 @media (max-width: 860px) {
-  .landing-hero-adresse { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "suite"; }
+  .landing-hero-adresse { grid-template-columns: 1fr; grid-template-areas: "text" "preview" "suite" "vitrine"; }
   .landing-hero-adresse .hero-prix { margin-top: 28px; }
   .landing-hero-suite { margin-top: 18px; }
 }

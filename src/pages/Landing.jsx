@@ -11,7 +11,7 @@ import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd } from '../seo/jsonLd';
-import { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
+import HeroPreview, { useCommercesPublics, useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
 import HeroAdresse from '../components/landing/HeroAdresse';
 import HeroPrix from '../components/landing/HeroPrix';
 import DiscoverSection from '../components/landing/DiscoverSection';
@@ -119,8 +119,8 @@ export default function Landing() {
           <HeroAdresse />
           </div>
         </div>
-        {/* L'aperçu des commerces (HeroPreview) a cédé cette place à l'exemple des 40 € (2026-09-27) :
-            la vitrine « Découvre », plus bas, montre déjà les mêmes commerces. */}
+        {/* La colonne de droite est à l'exemple des 40 € (2026-09-27). L'aperçu des commerces, qui
+            l'occupait, est descendu en bas de la bannière (.hero-vitrine, plus bas). */}
         <HeroPrix />
         {/* LA SUITE DE LA BANNIÈRE, sortie de l'affiche : sur téléphone, l'exemple des 40 € doit
             arriver juste sous la barre d'adresse, dans le premier écran (fondateur, 2026-09-27). La
@@ -136,6 +136,10 @@ export default function Landing() {
           <p className="small landing-ouverture landing-ouverture-long"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenNote')}</p>
           <p className="small landing-ouverture landing-ouverture-court"><Icone nom="reservations" taille={16} /> {t('landing.ordersOpenCourt')}</p>
         </div>
+        {/* « Déjà sur Fairide » revient dans la bannière (fondateur, 2026-09-27), en troisième rangée sur
+            toute la largeur, les trois commerces côte à côte : le bas de la bannière était un aplat vide
+            avant le fondu vers la vidéo. Voir `rangee` dans HeroPreview.jsx. */}
+        <div className="hero-vitrine"><HeroPreview restaurants={restaurants} rangee /></div>
         {/* La bande de chiffres qui fermait la bannière — « 10 % · 19 · 100 % », sous un filet
             blanc — est partie avec sa ligne (demande du fondateur, 2026-09-21). Les deux cartes
             ci-dessous prennent sa place et disent la même chose en toutes lettres. La grille de la

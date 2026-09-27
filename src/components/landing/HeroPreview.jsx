@@ -66,7 +66,11 @@ export function vitrineAccueil(reels, publics, min = 3) {
   return [...reels, ...demos];
 }
 
-export default function HeroPreview({ restaurants }) {
+// `rangee` (2026-09-27) : les trois commerces CÔTE À CÔTE, photo en haut, en bas de la bannière à barre
+// d'adresse (Landing.jsx). Sans elle, la présentation d'origine en liste verticale, photo à gauche.
+// La photo y est affichée à la largeur d'une colonne et non plus à 56px : `imgProps` reçoit donc la
+// largeur réelle, sinon le navigateur agrandirait une vignette et la photo serait floue.
+export default function HeroPreview({ restaurants, rangee = false }) {
   const { t } = useLanguage();
   // Trois commerces avec photo, ouverts de préférence, tirés au sort à chaque visite : la bannière change
   // sans jamais mentir (ce sont de vrais partenaires).
@@ -86,7 +90,7 @@ export default function HeroPreview({ restaurants }) {
   }, [restaurants]);
 
   return (
-    <div className="hero-preview" aria-label={t('landing.heroPreviewTitle2')}>
+    <div className={`hero-preview${rangee ? ' hero-preview-rangee' : ''}`} aria-label={t('landing.heroPreviewTitle2')}>
       <div className="hero-preview-head">
         <span className="hero-preview-dot" aria-hidden="true" />
         <span>{t('landing.heroPreviewTitle2')}</span>
@@ -101,7 +105,7 @@ export default function HeroPreview({ restaurants }) {
         <div className="hero-preview-list">
           {choix.map((r) => (
             <div key={r.id} className="hero-preview-card">
-              <img className="hero-preview-img" {...imgProps(r.coverImageUrl, 56)} width="56" height="56" alt="" loading="eager" fetchPriority="high" decoding="async" onError={cacherImageCassee} />
+              <img className="hero-preview-img" {...(rangee ? imgProps(r.coverImageUrl, 300, '(max-width: 640px) 33vw, 300px') : imgProps(r.coverImageUrl, 56))} width="56" height="56" alt="" loading="eager" fetchPriority="high" decoding="async" onError={cacherImageCassee} />
               <div className="hero-preview-body">
                 <b>{r.name}</b>
                 <span className="hero-preview-meta">{r.cuisine} · {r.commune}</span>
