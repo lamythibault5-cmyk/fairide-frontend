@@ -14,16 +14,15 @@
    la demande à 78 px de large (Layout.jsx) — un vélo de 44 px de large, la taille du bol carré,
    n'y pèserait que 22 px de haut.
 
-   Sous 28 px le tube de selle se colle aux roues : on ne garde que les roues et le tube supérieur,
-   le vélo reste lisible (même règle que public/favicon.svg). À 48 px et plus, les moyeux
-   apparaissent.
+   LE DESSIN EST LE MÊME À TOUTE TAILLE : pas de moyeux (le fondateur les a retirés, 2026-09-27 —
+   « pas de point dans les roues »), et pas de version simplifiée en petit. Ses propres fichiers
+   (« Fairide Logo & Color Brainstorm », favicon 16/32/48 compris) gardent le tube de selle partout ;
+   c'est donc la référence, pas l'ancienne déclinaison « roues + tube supérieur » sous 28 px.
 
    Animation d'apparition, jouée UNE fois (classes bm-* sous .mark-anime, styles.css) : les roues se
-   tracent, puis les tubes, puis les moyeux. `animer={false}` pour un rendu figé. */
+   tracent, puis les tubes. `animer={false}` pour un rendu figé. */
 export default function BrandMark({ size = 34, tile = true, color, animer = true }) {
   const trait = color || (tile ? '#C8F03C' : '#3B2FB5');
-  const petit = size < 28;
-  const grand = size >= 48;
   const hauteur = tile ? size : Math.round((size * 42) / 82);
 
   return (
@@ -39,9 +38,7 @@ export default function BrandMark({ size = 34, tile = true, color, animer = true
             <rect className="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
             {/* Le <g> porte la rotation, le <rect> l'animation : une transformation CSS sur le
                 rect écraserait l'attribut rotate et coucherait le tube à l'horizontale. */}
-            {!petit && <g transform="rotate(42 27 22.5)"><rect className="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>}
-            {grand && <circle className="bm-moyeu" cx="15" cy="29" r="2.4" />}
-            {grand && <circle className="bm-moyeu" cx="61" cy="29" r="2.4" />}
+            <g transform="rotate(42 27 22.5)"><rect className="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
           </g>
         </g>
       </svg>

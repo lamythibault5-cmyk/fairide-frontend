@@ -2,14 +2,14 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <!-- Favicon en data-URI (pas de requête réseau au premier rendu) : déclinaison 24px du vélo
-         « 5a » — les deux roues et le tube supérieur ; à cette taille le tube de selle se colle aux
-         roues. Retour au vélo le 2026-09-27 (voir BrandMark.jsx).
+    <!-- Favicon en data-URI (pas de requête réseau au premier rendu) : le vélo « 5a » entier,
+         comme le favicon-lime.svg du fondateur (pas de version simplifiée en petit, voir BrandMark.jsx).
 
          Les trois fichiers qui suivent viennent du lot SEO de `main` et gardent SES chemins : le .ico
          pour les agrégateurs et les vieux navigateurs, le PNG 32 pour les onglets, l'icône Apple pour
-         l'écran d'accueil iOS. Leur dessin est le vélo, régénéré le 2026-09-27 depuis la tuile du fondateur. -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='6' fill='%233B2FB5'/%3E%3Cg fill='none' stroke='%23C8F03C' stroke-width='2'%3E%3Ccircle cx='7.5' cy='16.5' r='2.5'/%3E%3Ccircle cx='16.5' cy='16.5' r='2.5'/%3E%3C/g%3E%3Crect x='7' y='7' width='10' height='2' rx='1' fill='%23C8F03C'/%3E%3C/svg%3E" />
+         l'écran d'accueil iOS. Le .ico et le PNG 32 sont ceux du dossier du fondateur (2026-09-27) ; l'icône Apple est rendue
+         plein cadre, iOS arrondissant lui-même les coins. -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 132 132'%3E%3Crect width='132' height='132' rx='32' fill='%233B2FB5'/%3E%3Cg transform='translate(28 44)' fill='none' stroke='%23C8F03C' stroke-width='5'%3E%3Ccircle cx='15' cy='29' r='12.5'/%3E%3Ccircle cx='61' cy='29' r='12.5'/%3E%3C/g%3E%3Cg transform='translate(28 44)' fill='%23C8F03C'%3E%3Crect x='16' y='8' width='44' height='5' rx='2.5'/%3E%3Crect x='13' y='20' width='28' height='5' rx='2.5' transform='rotate(42 27 22.5)'/%3E%3C/g%3E%3C/svg%3E" />
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
@@ -120,16 +120,14 @@
            Bricolage Grotesque comme partout où le mot « fairide » est écrit ; la pile de repli sert
            le temps que le fichier arrive, et le fondu de 0,66 s lui laisse justement le temps. */
         #splash .splash-nom { font: 800 34px/1 "Bricolage Grotesque", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.04em; color: #fff; opacity: 0; animation: splash-nom .3s .66s ease forwards; }
-        /* Même séquence que BrandMark.jsx (voir « Logo animé » dans styles.css) : roues, tubes, moyeux. */
+        /* Même séquence que BrandMark.jsx (voir « Logo animé » dans styles.css) : roues, puis tubes. */
         #splash .bm-roue { stroke-dasharray: 79; stroke-dashoffset: 79; animation: bm-roue .5s cubic-bezier(.4, 0, .2, 1) forwards; }
         #splash .bm-roue-avant { animation-delay: .08s; }
         #splash .bm-tube { opacity: 0; transform-box: fill-box; transform-origin: left center; transform: scaleX(0); animation: bm-tube .32s cubic-bezier(.2, .8, .2, 1) forwards; }
         #splash .bm-tube-haut { animation-delay: .38s; }
         #splash .bm-tube-selle { animation-delay: .5s; }
-        #splash .bm-moyeu { transform-box: fill-box; transform-origin: center; transform: scale(0); animation: bm-pop .28s .68s cubic-bezier(.34, 1.56, .64, 1) forwards; }
         @keyframes bm-roue { to { stroke-dashoffset: 0; } }
         @keyframes bm-tube { to { opacity: 1; transform: scaleX(1); } }
-        @keyframes bm-pop { to { transform: scale(1); } }
         @keyframes splash-nom { to { opacity: 1; } }
         /* PORTE DE SORTIE, EN CSS SEUL — parce que tout le reste du filet est en JavaScript.
            L'écran est retiré par main.jsx, avec un plafond de 2,5 s ; lazyPage.js rattrape un
@@ -147,7 +145,7 @@
         #splash .splash-secours a { display: inline-block; background: #C8F03C; color: #14121F; text-decoration: none; font: 700 14px/1 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; padding: 11px 18px; border-radius: 6px; }
         @keyframes splash-secours { to { opacity: 1; } }
         @media (prefers-reduced-motion: reduce) {
-          #splash .bm-roue, #splash .bm-tube, #splash .bm-moyeu { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+          #splash .bm-roue, #splash .bm-tube { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
           #splash .splash-nom { animation: none; opacity: 1; }
         }
       </style>
@@ -159,8 +157,6 @@
         <g fill="#C8F03C">
           <rect class="bm-tube bm-tube-haut" x="16" y="8" width="44" height="5" rx="2.5" />
           <g transform="rotate(42 27 22.5)"><rect class="bm-tube bm-tube-selle" x="13" y="20" width="28" height="5" rx="2.5" /></g>
-          <circle class="bm-moyeu" cx="15" cy="29" r="2.4" />
-          <circle class="bm-moyeu" cx="61" cy="29" r="2.4" />
         </g>
       </svg>
       <span class="splash-nom wordmark">fairide</span>

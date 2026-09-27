@@ -82,9 +82,6 @@ export default function Landing() {
     <div className="decor-page">
 
       <div className="landing-hero landing-hero-adresse">
-        {/* Le vélo aux couleurs du drapeau, sur sa tuile iris. Voir BelgianMark.jsx. */}
-        <BelgianMark size={84} title={t('landing.proudlyBelgian')} />
-
         <div className="landing-hero-text">
           {/* L'AFFICHE : ce qu'on veut voir sans défiler, et rien d'autre. Ce groupe existe pour
               qu'une seule règle CSS puisse lui donner la hauteur du premier écran sur téléphone —
@@ -96,6 +93,10 @@ export default function Landing() {
               Il portait aussi, jusqu'ici, la signature de marque, les trois gages de confiance et
               la liste des quartiers déjà livrés — retirés à la demande du fondateur. */}
           <div className="landing-hero-affiche">
+          {/* Le vélo aux couleurs du drapeau, en grand et sans tuile, AU-DESSUS du titre (fondateur,
+              2026-09-27) — il était auparavant un cachet de 84px dans le coin haut-droit de la
+              bannière. La taille est fixée en CSS (.be-mark), qui l'emporte sur la valeur ci-dessous. */}
+          <BelgianMark width={150} title={t('landing.proudlyBelgian')} />
           <h1 className="landing-title">
             {t('landing.title1')}<br /><em>{t('landing.title2')}</em>
           </h1>
