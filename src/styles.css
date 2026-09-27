@@ -3787,11 +3787,8 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 
 /* Astuce discrète quand le téléphone est tenu à la verticale : on n'impose rien, on suggère. */
 
-/* Aide, liste des commerces, fiche d'un commerce : même fond, mais les cartes restent opaques (pas de flou :
-   une longue liste en paierait le prix sur téléphone). Le montage se voit dans les marges et sous la page. */
-.wrap-fond-doux { position: relative; z-index: 1; }
-.wrap-fond-doux .card { background: rgba(255, 255, 255, .93); }
-@media (prefers-contrast: more) { .wrap-fond-doux .card { background: #fff; } }
+/* Ici vivait .wrap-fond-doux : la vidéo derrière l'aide, la liste des commerces et la fiche d'un commerce,
+   cartes opaques. Retirée le 2026-09-27 — le fond de cuisine ne vit plus que sur l'accueil (Layout.jsx). */
 
 /* Pendant une partie, et dans la vue agrandie carte + jeux : pas de panier flottant par-dessus (demande du
    fondateur, 2026-09-14). Il revient dès la partie terminée ou la vue refermée.

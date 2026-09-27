@@ -134,18 +134,18 @@ export default function Layout() {
   const leanHeader = !user && RESTAURANT_DETAIL_PATH.test(location.pathname);
   // Le fond de cuisine ne vit que sur l accueil PUBLIC : c est la seule page dont le rôle est de
   // donner envie. Ailleurs on vient faire quelque chose, et un fond animé gênerait.
-  // Fond de cuisine : l'accueil, et les pages où l'on flâne — l'aide et la liste des commerces, avec ou
-  // sans compte. Sur ces dernières, les cartes restent opaques (« doux ») : une centaine de cartes
-  // floutées coûterait cher sur téléphone pour un fond qu'on ne verrait que dans les marges.
-  //
   // /login N'EN FAIT PLUS PARTIE (demande du fondateur, 2026-09-21). Elle l'avait au titre de « porte
   // d'entrée du même visiteur », mais ce n'est pas une vitrine : on y vient remplir un formulaire, et
   // le fond s'y révélait au défilement — c'est-à-dire exactement au moment où l'on descend vers les
   // champs. La vidéo se chargeait en prime pour une page qui ne la montre jamais en grand.
   // `!user` prime toujours : quelqu'un de connecté n'a de fond nulle part.
+  //
+  // L'ACCUEIL SEULEMENT, DEPUIS LE 2026-09-27 (demande du fondateur). L'aide, la liste des commerces et
+  // la fiche d'un commerce avaient aussi la vidéo (variante « douce », cartes opaques) et son fondu au
+  // défilement. Retirés : ce sont des pages où l'on vient faire quelque chose, et la vidéo n'y est pas
+  // l'argument. Le raisonnement du paragraphe sur /login ci-dessus vaut désormais pour elles aussi.
   const fondVitrine = !user && location.pathname === '/';
-  const fondDoux = location.pathname === '/aide' || location.pathname === '/restaurants' || RESTAURANT_DETAIL_PATH.test(location.pathname);
-  const fondCuisine = fondVitrine || fondDoux;
+  const fondCuisine = fondVitrine;
 
   // Parcours de commande : la coquille reçoit une classe, et c'est la CSS qui efface les onglets —
   // sous 900px seulement, là où ils flottent par-dessus le contenu. Sur ordinateur la barre latérale
@@ -294,7 +294,7 @@ export default function Layout() {
           </div>
         </div>
       </div>
-      <div className={`wrap${fondVitrine ? ' wrap-fond' : ''}${fondDoux ? ' wrap-fond-doux' : ''}`} style={{ paddingTop: 24 }}>
+      <div className={`wrap${fondVitrine ? ' wrap-fond' : ''}`} style={{ paddingTop: 24 }}>
         {/* <main> manquait sur toute la branche publique, celle qui sert les pages
             indexables. La branche tableau de bord en a une depuis toujours. */}
         <main className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
