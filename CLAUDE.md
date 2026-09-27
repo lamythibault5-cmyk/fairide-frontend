@@ -89,8 +89,8 @@ Auth.jsx brings them back to that business after sign-in or client sign-up. The 
 public — shared links, search engines and prerendered pages still land on it directly.
 
 The landing page's main action is an address bar ([HeroAdresse](src/components/landing/HeroAdresse.jsx)):
-it maps the postal code to one of the 19 communes and opens `/restaurants` filtered on it, without
-saving anything.
+it maps the postal code to one of the 19 communes and opens `/restaurants` with it as `communeProche` —
+all businesses shown, that commune's first, then its neighbours (not a filter) — without saving anything.
 
 Restaurant and admin sections use nested routes under a shared layout
 (`DashboardLayout` / `AdminLayout`) with `<Outlet />`.

@@ -169,10 +169,15 @@ export default function RestaurantList() {
     { name: 'Fairide', path: '/' },
     { name: t('restoListUi.heading'), path: '/restaurants' }
   ]), 'ld-breadcrumb');
-  const homeCommune = matchCommune(user?.addressCity);
   // La page Recherche envoie ici ses résultats « cuisine » et « commune » par l'état de navigation :
   // la liste s'ouvre déjà filtrée, sans que l'URL ne change de forme.
   const filtresInitiaux = useLocation().state || {};
+  // La commune « de chez soi » : celle du compte, sinon celle de l'adresse tapée dans la barre de
+  // l'accueil (`communeProche`, voir HeroAdresse.jsx). Elle ne FILTRE rien : elle range la liste,
+  // sa commune d'abord puis les communes voisines, et nourrit la rangée « près de chez toi ».
+  // L'accueil envoyait un filtre de commune strict ; le fondateur a demandé de tout montrer tant
+  // qu'il y a peu de commerces (2026-09-27).
+  const homeCommune = matchCommune(user?.addressCity) || filtresInitiaux.communeProche || null;
   const [restaurants, setRestaurants] = useState([]);
   /* Apres la declaration de `restaurants`, jamais avant : lu plus haut, le tableau serait dans
      sa zone morte temporelle et la page planterait au montage. */
