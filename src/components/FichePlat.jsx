@@ -3,6 +3,8 @@ import { imgProps } from '../images';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
+import { libellesAllergenes } from '../allergenes';
+import { prixRemise, euros } from '../prixPlat';
 
 // LA FICHE D'UN PLAT. Jusqu'ici, un plat n'avait aucun écran à lui.
 //
@@ -71,7 +73,10 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
     });
   });
   const prixUnite = +(item.price + delta).toFixed(2);
-  const total = +(prixUnite * qty).toFixed(2);
+  const remise = prixRemise(item);
+  // Total affiché = ce que le panier comptera : la remise du plat (Avantage Fairide, promo) s'applique au prix de base,
+  // pas aux suppléments (même règle que CartContext.totals et le serveur).
+  const total = +((prixUnite - (remise !== null ? Math.max(0, item.price - remise) : 0)) * qty).toFixed(2);
   const manquants = groups.filter((g) => g.required && selections[g.id].size === 0);
   const bloque = manquants.length > 0;
 
@@ -101,8 +106,16 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
 
         <div className="plat-corps">
           <h2 className="plat-nom">{item.name}</h2>
-          <div className="plat-prix">{item.price.toFixed(2)}€</div>
+          {/* Prix remisé (Avantage Fairide, promo du plat) comme sur la carte, puis les allergènes déclarés (A1) :
+              c'est ici, avant l'ajout, que le client les lit en entier. */}
+          <div className="plat-prix-ligne">
+            {remise !== null && remise < item.price
+              ? <><span className="plat-prix est-remise">{euros(remise)}</span><s className="plat-prix-avant">{euros(item.price)}</s></>
+              : <span className="plat-prix">{euros(item.price)}</span>}
+          </div>
           {item.desc && <p className="plat-desc">{item.desc}</p>}
+          {item.allergens?.length > 0 && <p className="small plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</p>}
+          {!item.allergens?.length && item.allergensDeclaredNone && <p className="small plat-allergenes">{t('conformite.allergensNone')}</p>}
 
           {groups.map((g) => {
             const choisis = selections[g.id];
@@ -134,7 +147,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                         />
                         <span>{i.name}</span>
                       </span>
-                      {i.priceDelta !== 0 && <span className="plat-option-prix">{i.priceDelta > 0 ? '+' : ''}{i.priceDelta.toFixed(2)}€</span>}
+                      {i.priceDelta !== 0 && <span className="plat-option-prix">{i.priceDelta > 0 ? '+' : ''}{euros(i.priceDelta)}</span>}
                     </label>
                   );
                 })}
@@ -162,7 +175,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
           onClick={() => onConfirm(optionItemIds, snapshot, prixUnite, qty)}
         >
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}
-          {t('platSheet.add', { n: qty })} · {total.toFixed(2)}€
+          {t('platSheet.add', { n: qty })} · {euros(total)}
         </button>
       </div>
       </div>

@@ -6,14 +6,15 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
-import { useLanguage } from '../../context/LanguageContext';
-import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeColor, orderTypeLabel } from '../../orderStatus';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { DeliveryTiming, ProchaineEtape, ProgressBar, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import { StarsInput } from '../../components/Stars';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
 import Icone from '../../components/Icone';
 import VendeurLivraison from '../../components/conformite/VendeurLivraison';
+import { euros } from '../../prixPlat';
 
 // `pourboireSeul` : l'avis est déjà envoyé, il ne reste que le pourboire. Sans ce mode, un client qui
 // abandonnait le paiement du pourboire (ou dont l'envoi échouait après l'avis) ne pouvait plus jamais le
@@ -157,6 +158,12 @@ export default function Orders() {
   const typeFiltre = searchParams.get('type');
   const listeAffichee = typeFiltre ? orders.filter((o) => o.orderType === typeFiltre) : orders;
   const titre = t('orders.title');
+  // En cours d'abord, puis l'historique en cartes compactes (refonte du 2026-09-29) : une commande livrée il y a
+  // trois semaines prenait autant de place que celle qu'on attend.
+  const estPassee = (o) => ['livre', 'annule', 'refuse'].includes(o.status);
+  const enCours = listeAffichee.filter((o) => !estPassee(o));
+  const passees = listeAffichee.filter(estPassee);
+  const quand = (ms) => new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
   if (loading) return <div><h1 className="page-title">{titre}</h1><SkeletonCards count={3} /></div>;
   if (listeAffichee.length === 0) {
@@ -180,17 +187,21 @@ export default function Orders() {
   return (
     <div>
       <h1 className="page-title">{titre}</h1>
-      {listeAffichee.map((o) => (
+      {enCours.length > 0 && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionCurrent')}</h2>}
+      {[...enCours, ...passees].map((o, rang) => (
         <Fragment key={o.id}>
-        <div className={`card order-type-${orderTypeColor(o)}`}>
-          <div className="commande-entete">
-            <b>{o.restaurantName}</b>
+        {rang === enCours.length && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionPast')}</h2>}
+        <div className={`card suivi-carte${estPassee(o) ? ' est-passee' : ''}`}>
+          <div className="suivi-tete">
+            <span className="suivi-tete-texte">
+              <b className="suivi-resto">{o.restaurantName}</b>
+              <span className="suivi-sous">{orderTypeLabel(o, t)} · {quand(o.createdAt)}</span>
+            </span>
             <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t, true)}</span>
           </div>
-          <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
-          <ProgressBar status={o.status} orderType={o.orderType} />
-          <DeliveryTiming order={o} />
-          <ProchaineEtape order={o} />
+          {!estPassee(o) && <ProgressBar status={o.status} orderType={o.orderType} />}
+          {!estPassee(o) && <DeliveryTiming order={o} />}
+          {o.status !== 'livre' && <ProchaineEtape order={o} />}
           {/* UN ARTICLE PAR LIGNE, avec sa quantité dans une case.
               Les articles étaient aplatis en une seule chaîne par .join(', ') : « 2× Maxi Frites
               (Sauce andalouse), 1× L'Ardenne Menu (L'Ardenne, Maxi Frites, Coca Cola 33cl) ». Sur
@@ -198,7 +209,8 @@ export default function Orders() {
               où il fallait chercher les virgules pour savoir ce qu'on avait commandé. La capture
               « Past Orders » met une ligne par article, la quantité dans une case à gauche, et les
               options en gris dessous. C'est la même information, lisible d'un coup d'oeil. */}
-          {o.items.length > 0 && (
+          {estPassee(o) && o.items.length > 0 && <p className="suivi-resume">{o.items.map(formatOrderItem).join(', ')}</p>}
+          {!estPassee(o) && o.items.length > 0 && (
             <ul className="commande-articles">
               {o.items.map((i, n) => (
                 <li key={n}>
@@ -211,11 +223,11 @@ export default function Orders() {
               ))}
             </ul>
           )}
-          {o.orderType === 'pickup' && (
-            <div className="small">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
+          {o.orderType === 'pickup' && !estPassee(o) && (
+            <div className="small suivi-lieu">{t('orders.pickupAt', { name: o.restaurantName, address: o.restaurantAddress ? `, ${o.restaurantAddress}` : '' })}</div>
           )}
-          {o.orderType === 'delivery' && (
-            <div className="small"><Icone nom="position" taille={14} /> {o.address}</div>
+          {o.orderType === 'delivery' && !estPassee(o) && (
+            <div className="small suivi-lieu"><Icone nom="position" taille={14} /> {o.address}</div>
           )}
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
@@ -238,17 +250,17 @@ export default function Orders() {
             </div>
           )}
           {o.paid && o.deliveryCode && o.status !== 'livre' && o.status !== 'refuse' && (
-            <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '8px 0' }}>
-              <div className="small" style={{ marginBottom: 2 }}>
+            <div className="suivi-code">
+              <div className="suivi-code-lib">
                 {o.orderType === 'pickup' && t('orders.codeShowRestaurant')}
                 {o.orderType === 'delivery' && t('orders.codeGiveDriver')}
               </div>
-              <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.deliveryCode}</div>
+              <div className="suivi-code-valeur">{o.deliveryCode}</div>
             </div>
           )}
-          <div className="row" style={{ justifyContent: 'space-between', marginTop: 8 }}>
+          <div className="suivi-total">
             <span className="small">{o.paymentMode === 'on_site' ? (o.pickupNoShow ? t('orders.noShow') : t('orders.payOnSite')) : o.paid ? t('orders.paid') : t('orders.paymentPending')}</span>
-            <b>{o.total.toFixed(2)}€</b>
+            <b>{euros(o.total)}</b>
           </div>
           {o.status === 'nouveau' && (
             <>

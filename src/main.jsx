@@ -19,6 +19,8 @@ import { hasAcceptedConsent, onConsentChange } from './consent';
 import { langueDepuisChemin, PREFIXES, languePreferee } from './i18n/routing';
 import { historiqueLangue } from './i18n/historiqueLangue';
 import './styles.css';
+// Parcours client (liste, fiche, panier, paiement, suivi) — après styles.css pour l'emporter sur les anciens réglages.
+import './client-ui.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 

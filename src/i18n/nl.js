@@ -4144,6 +4144,10 @@ export default {
       peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
     },
     restoListUi: {
+      closedOpensAt: 'Gesloten · opent om {time}',
+      servicePickup: 'Afhalen',
+      serviceDelivery: 'Levering',
+      priceBandTitle: 'Prijsniveau, op basis van de gerechten op de kaart',
       showcaseOnly: '👁️ Enkel de kaart',
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
@@ -4154,6 +4158,8 @@ export default {
       deliveryDiscountPill: '🚴 -€{amount} levering'
     },
     restoMenuUi: {
+      statusOpen: 'Open',
+      statusClosed: 'Gesloten',
       exceptionalClosure: '🏖️ Uitzonderlijke sluiting',
       currentlyClosed: '🔒 Momenteel gesloten',
       orderingNotOpenInfo: '🕐 Online bestellen is bij deze zaak nog niet open. Deze kaart is ter informatie gepubliceerd.',
@@ -5906,6 +5912,11 @@ export default {
       loading: "Laden…"
     },
     checkout: {
+      barCount: '{count} artikel · geschat totaal',
+      barCountPlural: '{count} artikelen · geschat totaal',
+      addMore: '+ Gerecht toevoegen',
+      qtyLess: 'Eén minder',
+      qtyMore: 'Eén meer',
       payOnlineFrom: 'Online (vanaf {date})',
       onlinePaymentOpenSoon: 'Online betalen opent op {date}. Tot dan aanvaardt deze zaak enkel afhaal met betaling ter plaatse, als ze dat aanbiedt.',
       whenLabel: 'Wanneer wil je het?',
@@ -6026,6 +6037,8 @@ export default {
       emptyText: 'Voeg gerechten toe vanaf de kaart van een zaak, ze verschijnen hier.'
     },
     orders: {
+      sectionCurrent: 'Lopend',
+      sectionPast: 'Eerdere bestellingen',
       title: 'Mijn bestellingen',
       empty: 'Nog geen bestellingen',
       emptyHint: 'Alles wat je bestelt verschijnt hier, met live opvolging.',

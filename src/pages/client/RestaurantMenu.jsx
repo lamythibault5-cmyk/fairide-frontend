@@ -408,6 +408,23 @@ export default function RestaurantMenu() {
             {t('restaurantMenu.infoButton')}
           </button>
         </p>
+        {/* ÉTAT D'OUVERTURE EN UNE LIGNE (refonte du 2026-09-29) : un point vert ou rouge, « Ouvert · horaires du jour »
+            ou « Fermé · ouvre dans… ». C'était un grand encadré rouge qui, empilé avec l'offre et l'annonce d'ouverture,
+            repoussait la carte sous la ligne de flottaison. La fermeture exceptionnelle garde son encadré au-dessus. */}
+        {restaurant.hours && !openStatus.isExceptionalClosure && (
+          <p className={`fiche-statut ${openStatus.isOpen ? 'est-ouvert' : 'est-ferme'}`}>
+            <span className="fiche-statut-point" aria-hidden="true" />
+            <b>{openStatus.isOpen ? t('restoMenuUi.statusOpen') : t('restoMenuUi.statusClosed')}</b>
+            <span className="fiche-statut-detail">
+              {openStatus.isOpen
+                ? formatDaySchedule(restaurant.hours, openStatus.todayKey, t)
+                : openStatus.opensToday
+                  ? t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+                  : t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
+            </span>
+          </p>
+        )}
+
         {restaurant.desc && <p className="fiche-desc">{restaurant.desc}</p>}
 
         {/* BASCULE LIVRAISON / À EMPORTER, affichée seulement quand les deux existent. */}
@@ -473,24 +490,13 @@ export default function RestaurantMenu() {
             </p>
           </div>
         )}
-        {restaurant.hours && !openStatus.isExceptionalClosure && !openStatus.isOpen && (
-          <div className="closed-banner">
-            <div className="closed-banner-title">{t('restoMenuUi.currentlyClosed')}</div>
-            {openStatus.opensToday ? (
-              <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.opensIn', { countdown: formatCountdown(openStatus.opensAt - now, t), time: openStatus.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })}</p>
-            ) : (
-              <p className="small" style={{ margin: 0 }}>
-                {t('restoMenuUi.nextOpening', { day: dayLabel(openStatus.opensDayKey, t), schedule: formatDaySchedule(restaurant.hours, openStatus.opensDayKey, t) })}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Avant le 10 octobre : à emporter et livraison à venir ; du 10 au 20 : seule la livraison (et l'à emporter payé
             en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
             n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
         {bandeauOuverture && (
-          <div className="ouverture-bandeau" role="status">
+          <div className="ouverture-bandeau fiche-info" role="status">
+            <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
+            <span>
             {!emporterSurPlace
               ? t('restaurantMenu.ordersOpenBannerOnlineOnly', { date: dateOuvertureLivraison(getLocale()) })
               : commandesOuvertes(user)
@@ -498,16 +504,16 @@ export default function RestaurantMenu() {
                 : restaurant.offersDelivery
                   ? t('restaurantMenu.ordersOpenBanner', { date: dateOuvertureLivraison(getLocale()), dateResa: dateOuvertureEmporter(getLocale()) })
                   : t('restaurantMenu.ordersOpenBannerPickupOnly', { date: dateOuvertureEmporter(getLocale()) })}
+            </span>
           </div>
         )}
 
       </header>
 
       {onlineOrderingDisabled && (
-        <div className="card">
-          <p className="small" style={{ margin: 0 }}>
-            {t('restoMenuUi.orderingNotOpenInfo')}
-          </p>
+        <div className="fiche-info">
+          <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
+          <span>{t('restoMenuUi.orderingNotOpenInfo').replace(/^🕐\s*/, '')}</span>
         </div>
       )}
 
@@ -517,15 +523,16 @@ export default function RestaurantMenu() {
           Le seuil de 8 plats et l'habillage (.recherche-champ, celui de la recherche du site) ne
           changent pas ; seul l'endroit change. */}
 
-      <FicheVendeur restaurant={restaurant} />
-
-      <div className="card">
+      <div className="fiche-carte-plats">
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
           <p className="small" style={{ margin: 0 }}>{t('restaurantMenu.noDishMatch', { q: requete })}</p>
         )}
         <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} hideAdd={onlineOrderingDisabled} />
       </div>
+
+      {/* Vendeur (A8) : toujours affiché avant la commande, désormais sous la carte plutôt qu'entre l'en-tête et les plats. */}
+      <FicheVendeur restaurant={restaurant} />
 
       {reviews && reviews.reviews.length > 0 && (
         <div className="card" style={{ marginTop: 18 }}>

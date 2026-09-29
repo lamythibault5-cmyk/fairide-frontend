@@ -4154,6 +4154,10 @@ export default {
       peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
     },
     restoListUi: {
+      closedOpensAt: 'Fermé · ouvre à {time}',
+      servicePickup: 'À emporter',
+      serviceDelivery: 'Livraison',
+      priceBandTitle: 'Niveau de prix, d\'après les plats de la carte',
       // Commerce vitrine : carte visible, commande impossible (voir `vitrine`, backend).
       showcaseOnly: '👁️ Carte seule',
       closed: '🔒 Fermé',
@@ -4165,6 +4169,8 @@ export default {
       deliveryDiscountPill: '🚴 -{amount}€ livraison'
     },
     restoMenuUi: {
+      statusOpen: 'Ouvert',
+      statusClosed: 'Fermé',
       exceptionalClosure: '🏖️ Fermeture exceptionnelle',
       currentlyClosed: '🔒 Actuellement fermé',
       // Le commerce VEUT la commande en ligne mais ses services ne sont pas encore ouverts. Ne rien
@@ -5951,6 +5957,11 @@ export default {
       loading: "Chargement…"
     },
     checkout: {
+      barCount: '{count} article · total estimé',
+      barCountPlural: '{count} articles · total estimé',
+      addMore: '+ Ajouter un plat',
+      qtyLess: 'Retirer un',
+      qtyMore: 'Ajouter un',
       payOnlineFrom: 'En ligne (dès le {date})',
       onlinePaymentOpenSoon: 'Le paiement en ligne ouvre le {date}. D\'ici là, ce commerce accepte l\'à emporter payé sur place seulement s\'il le propose.',
       whenLabel: 'Quand la recevoir ?',
@@ -6071,6 +6082,8 @@ export default {
       emptyText: "Ajoute des plats depuis la carte d'un commerce, ils apparaîtront ici."
     },
     orders: {
+      sectionCurrent: 'En cours',
+      sectionPast: 'Commandes passées',
       title: 'Mes commandes',
       empty: 'Pas encore de commande',
       emptyHint: 'Tout ce que tu commandes apparaît ici, avec son suivi en direct.',

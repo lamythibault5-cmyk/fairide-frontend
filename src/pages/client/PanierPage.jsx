@@ -8,6 +8,7 @@ import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
 import EnteteFlux from '../../components/EnteteFlux';
 import { computeUpsellSuggestions, LastChanceUpsell } from '../../components/UpsellPanier';
+import { euros } from '../../prixPlat';
 
 // Le panier, sur sa propre page.
 //
@@ -71,12 +72,12 @@ export default function PanierPage() {
               {ligne.optionsSnapshot?.length > 0 && (
                 <span className="small">{ligne.optionsSnapshot.map((o) => o.name).join(', ')}</span>
               )}
-              <span className="panier-ligne-prix">{(ligne.unitPrice * ligne.qty).toFixed(2)}€</span>
+              <span className="panier-ligne-prix">{euros(ligne.unitPrice * ligne.qty)}</span>
             </div>
             <div className="panier-stepper">
-              <button type="button" onClick={() => cart.changeLineQty(cle, -1)} aria-label="−">−</button>
+              <button type="button" onClick={() => cart.changeLineQty(cle, -1)} aria-label={t('checkout.qtyLess')}>−</button>
               <span>{ligne.qty}</span>
-              <button type="button" onClick={() => cart.changeLineQty(cle, 1)} aria-label="+">+</button>
+              <button type="button" onClick={() => cart.changeLineQty(cle, 1)} aria-label={t('checkout.qtyMore')}>+</button>
             </div>
           </div>
         ))}
@@ -87,12 +88,15 @@ export default function PanierPage() {
 
       {totaux && totaux.discountedItems.map((d, i) => (
         <div className="row panier-remise" key={i}>
-          <span className="small">{d.name || d.label}</span><span className="small">-{d.discount.toFixed(2)}€</span>
+          <span className="small">{d.name || d.label}</span><span className="small">-{euros(d.discount)}</span>
         </div>
       ))}
 
-      <div className="cart-bar">
-        <span>{t('common.subtotal')} · <b>{sousTotal.toFixed(2)}€</b></span>
+      <div className="cart-bar co-barre panier-barre">
+        <span className="co-barre-total">
+          <span className="co-barre-montant">{euros(sousTotal)}</span>
+          <span className="co-barre-detail">{t('common.subtotal')}</span>
+        </span>
         <button type="button" className="btn-gold" onClick={() => navigate('/checkout')}>{t('panier.toCheckout')}</button>
       </div>
     </div>

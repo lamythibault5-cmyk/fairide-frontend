@@ -1,0 +1,216 @@
+/* ============================================================================================
+   PARCOURS CLIENT — refonte visuelle du 2026-09-29 (fondateur : « trop simpliste, fais quelque
+   chose de vraiment user-friendly, facile à comprendre et fluide »).
+   Chargée APRÈS styles.css : elle ne redéfinit que les classes nouvelles (rc-*, fiche-*, plat-*,
+   co-*, suivi-*) et quelques réglages qui doivent l'emporter sur les anciens. Règles de la marque
+   inchangées : aplats (iris, lime seulement sur iris ou en badge, blanc, gris doux), pas d'ombre.
+   ============================================================================================ */
+
+/* ---------- Carte d'un commerce (liste, rangées, recherche) ---------- */
+.rest-card.rc {
+  display: flex; flex-direction: column; padding: 0; overflow: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  color: inherit; text-decoration: none; min-width: 0; margin: 0;
+}
+.rest-card.rc:hover { border-color: var(--iris); }
+.rc-media { position: relative; aspect-ratio: 16 / 10; background: var(--surface-soft); overflow: hidden; }
+.rc-photo { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
+.rest-card.rc:hover .rc-photo { transform: scale(1.03); }
+.rc-photo-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); }
+.rc-est-ferme .rc-photo { filter: grayscale(.55) brightness(.92); }
+.rest-card.rc .rc-fav { position: absolute; top: 8px; right: 8px; }
+.rc-offre {
+  position: absolute; top: 8px; left: 8px; max-width: calc(100% - 56px);
+  background: var(--lime); color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.2;
+  padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rc-etat {
+  position: absolute; left: 8px; bottom: 8px; max-width: calc(100% - 16px);
+  background: #fff; color: var(--ink); font-size: 12px; font-weight: 700; line-height: 1.2;
+  padding: 5px 10px; border-radius: var(--radius-pill); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rc-corps { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rest-card.rc .rc-nom { font-size: 16px; font-weight: 800; margin: 0; line-height: 1.25; }
+.rest-card.rc .rc-nom .rest-card-name-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-sous { margin: 0; font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-infos { margin: 2px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 13px; color: var(--ink); }
+.rc-infos > span + span::before { content: none; }
+.rc-note { font-weight: 700; }
+.rc-note > span[aria-hidden] { color: var(--iris); }
+.rc-discret { color: var(--ink-soft); font-weight: 500; }
+.rc-nouveau { background: rgba(59, 47, 181, .10); color: var(--iris); font-weight: 700; font-size: 12px; padding: 2px 8px; border-radius: var(--radius-pill); }
+.rc-livraison { color: var(--iris); font-weight: 700; font-size: 12px; }
+.rc-vitrine { color: var(--red); font-weight: 700; font-size: 12px; }
+/* Rangées défilantes et grilles : les anciens réglages compacts (padding 8px, photo 92px, pastilles 9,5px)
+   ne s'appliquent plus à la nouvelle carte. */
+.rest-grid .rest-card.rc, .rest-grid-loop .rest-card.rc { padding: 0; }
+.auto-scroll-row .rest-card.rc, .rest-grid-scroll .rest-card.rc { flex: 0 0 250px; }
+@media (max-width: 640px) {
+  .auto-scroll-row .rest-card.rc, .rest-grid-scroll .rest-card.rc { flex-basis: min(72vw, 260px); }
+  .rest-grid .rest-card.rc .rc-nom, .rest-grid-loop .rest-card.rc .rc-nom { font-size: 15px; }
+}
+@media (prefers-reduced-motion: reduce) { .rc-photo { transition: none; } .rest-card.rc:hover .rc-photo { transform: none; } }
+
+/* ---------- Fiche d'un commerce ---------- */
+.fiche-statut { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 8px 0 12px; font-size: 14px; }
+.fiche-statut-point { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.fiche-statut.est-ouvert .fiche-statut-point { background: #1F9D55; }
+.fiche-statut.est-ouvert b { color: #1F7A45; }
+.fiche-statut.est-ferme .fiche-statut-point { background: var(--red); }
+.fiche-statut.est-ferme b { color: var(--red); }
+.fiche-statut-detail { color: var(--ink-soft); }
+.fiche-info {
+  display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px;
+  background: var(--surface-soft); border-radius: 12px; font-size: 13px; line-height: 1.45; color: var(--ink); font-weight: 500;
+}
+.fiche-info-icone { color: var(--iris); flex-shrink: 0; margin-top: 1px; display: inline-flex; }
+.ouverture-bandeau.fiche-info { border: none; }
+.fiche-carte-plats { margin: 8px 0 24px; }
+
+/* Sections de la carte : un vrai titre, lisible, avec le nombre de plats. */
+.plats-section-titre { display: flex; align-items: baseline; gap: 8px; font-size: 20px; font-weight: 800; margin: 26px 0 10px; line-height: 1.2; }
+.plats-section-compte { font-size: 13px; font-weight: 600; color: var(--ink-faint); }
+.fiche-carte-plats > div:first-of-type .plats-section-titre { margin-top: 6px; }
+.plats-liste { display: grid; grid-template-columns: 1fr; gap: 0; }
+@media (min-width: 760px) { .plats-liste { grid-template-columns: 1fr 1fr; column-gap: 20px; } }
+
+/* Un plat = une ligne. Texte à gauche, photo carrée à droite, « + » posé sur la photo. */
+.plat {
+  display: flex; align-items: stretch; gap: 14px; width: 100%; text-align: left;
+  padding: 14px 0; margin: 0; background: none; border: none; border-bottom: 1px solid var(--line);
+  border-radius: 0; color: inherit; font: inherit; cursor: default;
+}
+.plat-cliquable { cursor: pointer; }
+.plat-cliquable:hover .plat-nom { color: var(--iris); }
+.plat-cliquable:active { background: var(--surface-softer); }
+.plat-cliquable:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 8px; }
+.plat-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.plat .plat-nom { font-size: 15.5px; font-weight: 700; line-height: 1.3; color: var(--ink); transition: color .15s; }
+.plat .plat-desc { font-size: 13px; line-height: 1.4; color: var(--ink-soft); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.plat .plat-allergenes { font-size: 11.5px; margin: 0; }
+.plat-prix-ligne { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; margin-top: auto; padding-top: 2px; }
+.plat .plat-prix { font-size: 15px; font-weight: 700; color: var(--ink); }
+.plat-prix.est-remise, .plat .plat-prix.est-remise { color: var(--iris); }
+.plat-prix-avant { font-size: 13px; color: var(--ink-faint); }
+.plat-promo { background: var(--lime); color: var(--ink); font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); }
+.plat-visuel { position: relative; flex-shrink: 0; width: 112px; height: 112px; border-radius: 12px; overflow: hidden; background: var(--surface-soft); }
+.plat-visuel .plat-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
+.plat-ajout {
+  position: absolute; right: 6px; bottom: 6px; width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #fff; color: var(--ink); font-size: 22px; font-weight: 600; line-height: 1; border: 1px solid var(--line);
+  transition: background .15s, color .15s, transform .12s;
+}
+.plat-cliquable:hover .plat-ajout { background: var(--iris); color: #fff; border-color: var(--iris); }
+.plat-cliquable:active .plat-ajout { transform: scale(.92); }
+.plat-ajout-seul { position: static; align-self: center; flex-shrink: 0; }
+.plat-indisponible { opacity: .55; }
+@media (max-width: 400px) { .plat-visuel { width: 96px; height: 96px; } .plat .plat-nom { font-size: 15px; } }
+/* Fiche du plat (FichePlat) : prix remisé sur la même ligne que l'ancien prix. */
+.plat-corps .plat-prix-ligne { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.plat-corps .plat-prix-ligne .plat-prix { margin: 0; }
+.plat-corps .plat-allergenes { margin: 6px 0 0; }
+.fiche-statut-detail::before { content: '· '; }
+/* Mode (livraison / à emporter) et frais sur UNE ligne : le panneau gris des frais devient une légende à droite. */
+.fiche-entete .fiche-modes { display: inline-flex; vertical-align: middle; margin: 0 12px 12px 0; }
+.fiche-entete .fiche-panneau { display: inline-flex; flex-direction: column; vertical-align: middle; background: none; padding: 0; margin: 0 0 12px; border: none; }
+.fiche-entete .fiche-panneau b { font-size: 15px; }
+
+/* ---------- Paiement ---------- */
+/* Étapes numérotées : 1 récupération, 2 paiement, 3 quand. Le numéro suit ce qui est affiché. */
+.checkout-form .card { counter-reset: etape; }
+.co-etape { display: flex !important; align-items: center; gap: 10px; font-size: 16px !important; font-weight: 800 !important; color: var(--ink); margin: 18px 0 10px !important; }
+.checkout-form .card > .field:first-child .co-etape { margin-top: 0 !important; }
+.co-etape::before {
+  counter-increment: etape; content: counter(etape);
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--iris); color: #fff; font-size: 13px; font-weight: 800;
+}
+/* Récapitulatif */
+.co-recap-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
+.co-recap-tete h3 { margin: 0; font-size: 17px; font-weight: 800; display: flex; flex-direction: column; }
+.co-recap-resto { font-size: 13px; font-weight: 500; color: var(--ink-soft); margin-top: 2px; }
+.co-ajouter { font-size: 13px; font-weight: 700; color: var(--iris); text-decoration: none; white-space: nowrap; padding-top: 2px; }
+.co-ligne { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.co-ligne-nom { display: flex; flex-direction: column; gap: 2px; font-weight: 600; min-width: 0; }
+.co-ligne-nom .small { font-weight: 400; color: var(--ink-soft); }
+.co-ligne-prix { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.co-qte { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: var(--radius-pill); flex-shrink: 0; }
+.co-qte button { width: 36px; height: 36px; border: none; background: none; font-size: 18px; font-weight: 600; color: var(--ink); cursor: pointer; border-radius: 50%; padding: 0; }
+.co-qte button:hover { background: var(--surface-soft); }
+.co-qte span { min-width: 20px; text-align: center; font-weight: 700; }
+/* Cases à cocher (CGU, âge) : la case et sa phrase sur la même ligne. */
+.co-case { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; margin: 0 0 10px; }
+.co-case input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; margin: 1px 0 0; accent-color: var(--iris); }
+/* Barre d'action : total en grand, détail, bouton. */
+.co-barre { gap: 12px; }
+.co-barre-total { display: flex; flex-direction: column; line-height: 1.2; }
+.co-barre-montant { font-size: 22px; font-weight: 800; }
+.co-barre-detail { font-size: 12.5px; opacity: .85; }
+.co-barre .btn-gold { min-height: 48px; font-size: 16px; font-weight: 800; }
+.co-barre-attente { font-weight: 600; display: inline-flex; align-items: flex-start; gap: 6px; }
+/* Téléphone : la barre reste collée en bas de l'écran pendant tout le formulaire. */
+@media (max-width: 900px) {
+  .checkout-page { padding-bottom: 120px; }
+  .checkout-recap .cart-bar.co-barre {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0; border-radius: 18px 18px 0 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); flex-direction: row; align-items: center; justify-content: space-between;
+  }
+  .checkout-recap .cart-bar.co-barre .btn-gold { flex: 0 0 auto; padding-left: 22px; padding-right: 22px; }
+  .checkout-recap .cart-bar.co-barre .co-barre-attente { flex: 1; text-align: right; justify-content: flex-end; font-size: 12.5px; }
+}
+
+/* ---------- Panier ---------- */
+@media (max-width: 900px) {
+  .panier-page { padding-bottom: 110px; }
+  .panier-page .cart-bar.panier-barre {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; margin: 0; border-radius: 18px 18px 0 0;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); flex-direction: row; align-items: center; justify-content: space-between;
+  }
+}
+.panier-page .cart-bar.panier-barre .btn-gold { min-height: 48px; padding-left: 22px; padding-right: 22px; }
+
+/* ---------- Suivi de commande (Mes commandes) ---------- */
+.suivi-section { font-size: 18px; font-weight: 800; margin: 22px 0 10px; }
+.suivi-carte { border-left: 1px solid var(--line); }
+.suivi-tete { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+.suivi-tete-texte { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.suivi-resto { font-size: 17px; font-weight: 800; line-height: 1.25; }
+.suivi-sous { font-size: 13px; color: var(--ink-soft); }
+/* Côté client, « en attente du commerce » n'est pas une alerte : pastille neutre, pas rouge. */
+.suivi-carte .status-badge { flex-shrink: 0; text-transform: none; letter-spacing: 0; font-size: 12px; }
+.suivi-carte .status-nouveau { background: var(--surface-soft); color: var(--ink); }
+.suivi-carte .status-preparation, .suivi-carte .status-pret, .suivi-carte .status-livraison { background: var(--lime); color: var(--ink); }
+.suivi-carte .status-livre { background: rgba(31, 157, 85, .12); color: #1F7A45; }
+
+/* Étapes : points reliés, l'étape en cours cerclée de lime. */
+.suivi-etapes { list-style: none; display: flex; padding: 0; margin: 14px 0 10px; }
+.suivi-etapes li { flex: 1; position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; min-width: 0; }
+.suivi-etapes li::before { content: ''; position: absolute; top: 11px; left: -50%; width: 100%; height: 3px; background: var(--line); z-index: 0; }
+.suivi-etapes li:first-child::before { content: none; }
+.suivi-etapes li.est-fait::before, .suivi-etapes li.est-actuel::before { background: var(--iris); }
+.suivi-etape-point {
+  position: relative; z-index: 1; width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800;
+  background: #fff; border: 2px solid var(--line); color: #fff;
+}
+.suivi-etapes li.est-fait .suivi-etape-point { background: var(--iris); border-color: var(--iris); }
+.suivi-etapes li.est-actuel .suivi-etape-point { background: var(--iris); border-color: var(--iris); box-shadow: 0 0 0 4px var(--lime); animation: suivi-pouls 1.8s ease-in-out infinite; }
+.suivi-etape-lib { font-size: 11.5px; color: var(--ink-faint); line-height: 1.2; }
+.suivi-etapes li.est-fait .suivi-etape-lib { color: var(--ink-soft); }
+.suivi-etapes li.est-actuel .suivi-etape-lib { color: var(--ink); font-weight: 800; }
+@keyframes suivi-pouls { 0%, 100% { box-shadow: 0 0 0 4px var(--lime); } 50% { box-shadow: 0 0 0 7px rgba(200, 240, 60, .55); } }
+@media (prefers-reduced-motion: reduce) { .suivi-etapes li.est-actuel .suivi-etape-point { animation: none; } }
+
+.suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
+.suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
+.suivi-resume { margin: 0 0 6px; font-size: 13px; color: var(--ink-soft); }
+/* Code de retrait / de livraison : un ticket, lisible de loin au comptoir. */
+.suivi-code { margin: 12px 0; padding: 12px 14px; border: 2px dashed var(--iris); border-radius: 14px; text-align: center; background: rgba(59, 47, 181, .04); }
+.suivi-code-lib { font-size: 12.5px; color: var(--ink-soft); margin-bottom: 4px; }
+.suivi-code-valeur { font-size: 32px; font-weight: 800; letter-spacing: 8px; color: var(--iris); line-height: 1.1; }
+.suivi-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+.suivi-total b { font-size: 17px; }
+.suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
+.suivi-carte.est-passee .suivi-resto { font-size: 16px; }

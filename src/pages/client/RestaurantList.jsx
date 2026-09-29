@@ -17,7 +17,7 @@ import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
-import { useLanguage } from '../../context/LanguageContext';
+import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
@@ -74,58 +74,72 @@ function deliveryOfferLabelFor(r, t) {
   return null;
 }
 
+// CARTE D'UN COMMERCE (refonte du 2026-09-29, fondateur : « trop simpliste, rends-le vraiment user-friendly »).
+// Tout ce qui décide d'un clic tient sur la photo et deux lignes : l'offre et l'état (fermé, ouvre à…) posés SUR la
+// photo, puis le nom, « cuisine · commune », et une ligne d'infos (note ou « Nouveau », prix, services, offre de
+// livraison). Avant : quatre pastilles empilées (commune, quartier, fermé…) et un grand blanc sous le texte.
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
+  const { user } = useAuth();
   const offerLabel = offerLabelFor(r);
   const deliveryOfferLabel = deliveryOfferLabelFor(r, t);
-  const isClosed = r.hours && !getOpenStatus(r.hours, new Date(), r.closures).isOpen;
+  const etat = r.hours ? getOpenStatus(r.hours, new Date(), r.closures) : null;
+  const isClosed = !!etat && !etat.isOpen;
+  const etatTexte = !isClosed ? null
+    : etat.opensToday && etat.opensAt
+      ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
+      : t('restoListUi.closed');
+  const bande = bandePrix(r);
+  const services = [r.offersPickup && t('restoListUi.servicePickup'), r.offersDelivery && t('restoListUi.serviceDelivery')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
   // La ROUTE /restaurants/:id, elle, reste publique (App.jsx) : un lien partagé, un moteur de
   // recherche ou la page prérendue y mènent toujours directement. Seul ce clic-ci est filtré.
-  const { user } = useAuth();
   const fiche = `/restaurants/${r.id}`;
   return (
     <Link
       to={user ? fiche : '/login?audience=client'}
       state={user ? undefined : { from: fiche }}
-      className="card rest-card" style={{ position: 'relative' }}
+      className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
     >
-      <FavoriteHeart
-        active={isFavorite}
-        onClick={(e) => onToggleFavorite(e, r.id)}
-        title={t('restaurantList.addFavorite')}
-        className="rest-card-fav"
-      />
-      {offerLabel && <span className="promo-badge">🏷️ {offerLabel}</span>}
-      {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 100vw, 480px')} alt={r.name} className="cover-banner-sm" onError={cacherImageCassee} />}
-      <div className="pill-row">
-        <span className="pill teal">{r.commune}</span>
-        {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}
-        {deliveryOfferLabel && <span className="pill teal">{deliveryOfferLabel}</span>}
-        {isClosed && <span className="pill closed-pill">{t('restoListUi.closed')}</span>}
-        {/* COMMERCE VITRINE : sa carte est listée, on ne peut pas y commander. Le dire ICI et pas
-            seulement sur sa page — quelqu'un qui parcourt la liste choisit d'après ces vignettes, et
-            découvrir l'impossibilité de commander après avoir composé un panier serait une perte de
-            temps qu'on lui a fait prendre. Voir `vitrine` dans la charge utile publique. */}
-        {r.vitrine && <span className="pill closed-pill">{t('restoListUi.showcaseOnly')}</span>}
+      <div className="rc-media">
+        {r.coverImageUrl
+          ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
+          : <span className="rc-photo rc-photo-vide" aria-hidden="true"><Icone nom="restaurants" taille={28} /></span>}
+        <FavoriteHeart
+          active={isFavorite}
+          onClick={(e) => onToggleFavorite(e, r.id)}
+          title={t('restaurantList.addFavorite')}
+          className="rest-card-fav rc-fav"
+        />
+        {offerLabel && <span className="rc-offre">{offerLabel}</span>}
+        {etatTexte && <span className="rc-etat">{etatTexte}</span>}
       </div>
-      <h3 className="rest-card-name" style={{ margin: '8px 0 4px' }}>
-        <span className="rest-card-name-text">{r.name}</span>
-        {r.certified && <CertifiedBadge />}
-      </h3>
-      <div className="row rest-card-rating" style={{ gap: 6, margin: '2px 0' }}>
-        {/* Pas d'étoiles sans avis : la note par défaut en base (4,5) s'affichait pour tout commerce
-            nouveau — une note que personne n'a donnée, présentée comme un avis (CDE VI.100). */}
-        {r.reviewCount > 0 && <StarsDisplay value={r.rating} />}
-        <span className="small rest-card-reviews">{r.reviewCount > 0 ? `(${r.reviewCount})` : t('restaurantList.newBadge')}</span>
+      <div className="rc-corps">
+        <h3 className="rest-card-name rc-nom">
+          <span className="rest-card-name-text">{r.name}</span>
+          {r.certified && <CertifiedBadge />}
+        </h3>
+        <p className="rc-sous">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.neighborhood || r.commune].filter(Boolean).join(' · ')}</p>
+        <p className="rc-infos">
+          {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
+          {r.reviewCount > 0
+            ? <span className="rc-note"><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} <span className="rc-discret">({r.reviewCount})</span></span>
+            : <span className="rc-nouveau">{t('restaurantList.newBadge')}</span>}
+          {bande && <span className="rc-discret" title={t('restoListUi.priceBandTitle')}>{'€'.repeat(bande)}</span>}
+          {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
+        </p>
+        {(deliveryOfferLabel || r.vitrine) && (
+          <p className="rc-infos">
+            {deliveryOfferLabel && <span className="rc-livraison">{deliveryOfferLabel}</span>}
+            {/* COMMERCE VITRINE : carte listée, commande impossible — dit ICI, avant de composer un panier. */}
+            {r.vitrine && <span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span>}
+          </p>
+        )}
       </div>
-      <p className="small rest-card-desc">{r.desc || ''} {r.cuisine ? `· ${restaurantTypeLabel(r.cuisine, t)}` : ''}</p>
-      <span className="small rest-card-dishes">{t('restaurantList.dishesCount', { count: r.menu.length })}</span>
     </Link>
   );
 }
-
 
 function Section({ title, icon, list, favoriteIds, onToggleFavorite, t, loop, autoplay = false }) {
   if (list.length === 0) return null;

@@ -4144,6 +4144,10 @@ export default {
       peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
     },
     restoListUi: {
+      closedOpensAt: 'Closed · opens at {time}',
+      servicePickup: 'Takeaway',
+      serviceDelivery: 'Delivery',
+      priceBandTitle: 'Price level, based on the dishes on the menu',
       showcaseOnly: '👁️ Menu only',
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
@@ -4154,6 +4158,8 @@ export default {
       deliveryDiscountPill: '🚴 -€{amount} delivery'
     },
     restoMenuUi: {
+      statusOpen: 'Open',
+      statusClosed: 'Closed',
       exceptionalClosure: '🏖️ Exceptional closure',
       currentlyClosed: '🔒 Currently closed',
       orderingNotOpenInfo: '🕐 Online ordering is not open yet at this business. This menu is published for information.',
@@ -5906,6 +5912,11 @@ export default {
       loading: "Loading…"
     },
     checkout: {
+      barCount: '{count} item · estimated total',
+      barCountPlural: '{count} items · estimated total',
+      addMore: '+ Add a dish',
+      qtyLess: 'Remove one',
+      qtyMore: 'Add one',
       payOnlineFrom: 'Online (from {date})',
       onlinePaymentOpenSoon: 'Online payment opens on {date}. Until then, this business only accepts takeaway paid on site, if it offers it.',
       whenLabel: 'When do you want it?',
@@ -6026,6 +6037,8 @@ export default {
       emptyText: 'Add dishes from a shop menu and they will show up here.'
     },
     orders: {
+      sectionCurrent: 'In progress',
+      sectionPast: 'Past orders',
       title: 'My orders',
       empty: "No orders yet",
       emptyHint: 'Everything you order shows up here, with its live tracking.',

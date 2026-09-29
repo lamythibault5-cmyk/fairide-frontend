@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
+import { euros } from '../prixPlat';
 
 // La pilule du panier : « Voir le panier · 2 », posee au-dessus de la barre d'onglets.
 //
@@ -27,7 +28,7 @@ export default function FloatingCart() {
         <span className="panier-pilule-compte">{cart.count}</span>
       </span>
       <span>{t('panier.viewCart')}</span>
-      <b>{cart.rawTotal.toFixed(2)}€</b>
+      <b>{euros(cart.rawTotal)}</b>
     </Link>
   );
 }

@@ -226,18 +226,16 @@ export function ProgressBar({ status, orderType }) {
     ? [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), t('orderStatus.progress.onTheWay'), lastLabel]
     : [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), lastLabel];
   const idx = steps.indexOf(status);
+  // Des points reliés par un trait, l'étape en cours cerclée (refonte du 2026-09-29) : quatre traits de 4 px et des
+  // intitulés en 10 px ne se lisaient pas au premier coup d'œil.
   return (
-    <>
-      <div style={{ display: 'flex', gap: 4, margin: '8px 0 4px' }}>
-        {steps.map((s, i) => (
-          <div key={s} style={{ flex: 1, height: 4, borderRadius: 2, background: i < idx ? 'var(--teal)' : i === idx ? 'var(--gold)' : 'var(--cream-dim)' }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--ink-soft)', marginBottom: 8 }}>
-        {labels.map((l, i) => (
-          <span key={i} style={i === idx ? { color: 'var(--ink)', fontWeight: 600 } : undefined}>{l}</span>
-        ))}
-      </div>
-    </>
+    <ol className="suivi-etapes">
+      {steps.map((s, i) => (
+        <li key={s} className={i < idx ? 'est-fait' : i === idx ? 'est-actuel' : ''} aria-current={i === idx ? 'step' : undefined}>
+          <span className="suivi-etape-point" aria-hidden="true">{i < idx ? '✓' : ''}</span>
+          <span className="suivi-etape-lib">{labels[i]}</span>
+        </li>
+      ))}
+    </ol>
   );
 }

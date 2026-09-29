@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { euros } from '../../prixPlat';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useToast } from '../../context/ToastContext';
@@ -252,7 +253,7 @@ export default function Checkout() {
   }
 
   return (
-    <div>
+    <div className="checkout-page">
       {/* Le retour mène au PANIER, et non plus directement à la carte du commerce : c'est l'écran
           d'où l'on vient, donc celui qu'on s'attend à retrouver en reculant. Revenir à la carte pour
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
@@ -270,7 +271,7 @@ export default function Checkout() {
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
                   les options, au lieu de trois boutons sans contexte. */}
-              <span className="titre-groupe" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
+              <span className="titre-groupe co-etape" id="checkout-fulfillment-label">{t('checkout.howToGet')}</span>
               {/* Des CARTES sélectionnables, pas une rangée de pilules — c'est le motif
                   « Priority / Standard / Schedule » de la capture 3 : une icône, un titre, et
                   l'option retenue cernée d'une arête iris. Trois pilules côte à côte se lisaient
@@ -341,7 +342,7 @@ export default function Checkout() {
                 formulaire. */}
             {fulfillmentType === 'pickup' && modeEmporter === 'both' && (
               <div className="field">
-                <span className="field-intitule">{t('checkout.payWhen')}</span>
+                <span className="field-intitule co-etape">{t('checkout.payWhen')}</span>
                 <ChoixPastilles
                   libelle={t('checkout.payWhen')}
                   valeur={paiementSurPlace || enLigneFerme ? 'sur_place' : 'en_ligne'}
@@ -362,7 +363,7 @@ export default function Checkout() {
                 joli — il n'existe même aucun champ de délai de préparation, ni ici ni au serveur. */}
             {(
               <div className="field">
-                <span className="titre-groupe" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
+                <span className="titre-groupe co-etape" id="checkout-quand-label">{t('checkout.whenLabel')}</span>
                 <div className="choix-cartes" role="group" aria-labelledby="checkout-quand-label">
                   <button
                     type="button"
@@ -417,15 +418,17 @@ export default function Checkout() {
 
           {(
           <aside className="checkout-recap">
-          <div className="cart-bar">
-            <Link to={`/restaurants/${restaurantId}`} className="btn-ghost">{t('checkout.addDish')}</Link>
-            <span>{cart.count > 0 ? t(cart.count > 1 ? 'checkout.itemsCountFromPlural' : 'checkout.itemsCountFrom', { count: cart.count, total: estimatedTotal.toFixed(2) }) : ''}</span>
+          <div className="cart-bar co-barre">
+            <span className="co-barre-total">
+              <span className="co-barre-montant">{euros(estimatedTotal)}</span>
+              <span className="co-barre-detail">{t(cart.count > 1 ? 'checkout.barCountPlural' : 'checkout.barCount', { count: cart.count })}</span>
+            </span>
             {serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : t('checkout.validateInfo')}
               </button>
             ) : (
-              <span className="small" style={{ fontWeight: 600 }}><Icone nom="horloge" taille={14} /> {paiementBloque
+              <span className="small co-barre-attente"><Icone nom="horloge" taille={14} /> {paiementBloque
                 ? t('checkout.onlinePaymentOpenSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })
                 : fulfillmentType === 'delivery'
                   ? t('checkout.deliveryOpenSoon', { date: dateOuverture('delivery', getLocale()) })
@@ -434,50 +437,54 @@ export default function Checkout() {
           </div>
           {cart.count > 0 && (
           <div className="card">
-            <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('checkout.yourOrder')}</h3>
+            <div className="co-recap-tete">
+              <h3>{t('checkout.yourOrder')}<span className="co-recap-resto">{restaurant.name}</span></h3>
+              <Link to={`/restaurants/${restaurantId}`} className="co-ajouter">{t('checkout.addMore')}</Link>
+            </div>
             {Object.entries(cart.lines).map(([lineKey, line]) => {
               const item = restaurant.menu.find((m) => m.id === line.itemId);
               if (!item) return null;
               return (
-                <div key={lineKey} className="row" style={{ justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--cream-dim)' }}>
-                  <span>
-                    {line.qty}× {item.name}
+                <div key={lineKey} className="co-ligne">
+                  <span className="co-ligne-nom">
+                    {item.name}
+                    <span className="co-ligne-prix">{euros(line.unitPrice * line.qty)}</span>
                     {line.optionsSnapshot?.length > 0 && (
                       <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
                     )}
                   </span>
-                  <div className="row" style={{ gap: 8 }}>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, -1)}>−</button>
-                    <span>{line.qty}</span>
-                    <button className="btn-outline" style={{ padding: '4px 10px' }} onClick={() => cart.changeLineQty(lineKey, 1)}>+</button>
+                  <div className="co-qte" role="group" aria-label={item.name}>
+                    <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label={t('checkout.qtyLess')}>−</button>
+                    <span aria-live="polite">{line.qty}</span>
+                    <button type="button" onClick={() => cart.changeLineQty(lineKey, 1)} aria-label={t('checkout.qtyMore')}>+</button>
                   </div>
                 </div>
               );
             })}
             <div className="divider" />
             <div className="breakdown">
-              <div className="line"><span>{t('common.subtotal')}</span><span>{totals.rawSubtotal.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('common.subtotal')}</span><span>{euros(totals.rawSubtotal)}</span></div>
               {totals.discountedItems.map((d, i) => (
-                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{d.discount.toFixed(2)}€</span></div>
+                <div className="line" key={i}><span><Icone nom="etiquette" taille={14} /> {d.name ? `${d.name} (${d.label})` : d.label}</span><span>-{euros(d.discount)}</span></div>
               ))}
               {fulfillmentType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{totals.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')} ({t('checkout.fromPrefix')})</span><span>{euros(totals.deliveryFee)}</span></div>
                   {totals.deliveryDiscount > 0 && (
-                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{totals.deliveryDiscount.toFixed(2)}€</span></div>
+                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(totals.deliveryDiscount)}</span></div>
                   )}
                 </>
               )}
               {/* TVA comprise, comme le total : la somme des lignes doit tomber sur le total affiché juste en dessous.
                   « dès » seulement en livraison, où la distance réelle peut encore faire monter la base. */}
               {fraisServiceEstimes > 0 && (
-                <div className="line"><span>{t('checkout.serviceFeeLine')}{fulfillmentType === 'delivery' ? ` (${t('checkout.fromPrefix')})` : ''}</span><span>{fraisServiceEstimes.toFixed(2)}€</span></div>
+                <div className="line"><span>{t('checkout.serviceFeeLine')}{fulfillmentType === 'delivery' ? ` (${t('checkout.fromPrefix')})` : ''}</span><span>{euros(fraisServiceEstimes)}</span></div>
               )}
               {/* Pas de ligne de commission côté client (demande du fondateur, 2026-09-15) : elle concerne le commerce, pas ce que paie le client. */}
               {soldeUtilise && user.balance > 0 && (
-                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{Math.min(user.balance, estimatedTotalBeforeBalance).toFixed(2)}€</span></div>
+                <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(Math.min(user.balance, estimatedTotalBeforeBalance))}</span></div>
               )}
-              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{estimatedTotal.toFixed(2)}€</span></div>
+              <div className="line total"><span>{t('checkout.estimatedTotal')}</span><span>{euros(estimatedTotal)}</span></div>
             </div>
             {user.balance > 0 && (
               <label className="row" style={{ gap: 8, marginTop: 10, cursor: 'pointer' }}>
@@ -646,20 +653,20 @@ export default function Checkout() {
             <div className="breakdown">
               {/* Trois contrats, trois vendeurs (décision du 23/09/2026, C2) : chaque ligne dit à qui le client
                   achète. Le livreur n'est pas encore connu ici — il sera nommé dès qu'il accepte la course. */}
-              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{pendingOrder.subtotal.toFixed(2)}€</span></div>
-              {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{pendingOrder.promoDiscount.toFixed(2)}€</span></div>}
+              <div className="line"><span>{t('common.subtotal')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerFood', { name: restaurant.name })}</span></span><span>{euros(pendingOrder.subtotal)}</span></div>
+              {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{euros(pendingOrder.promoDiscount)}</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{pendingOrder.deliveryFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(pendingOrder.deliveryFee)}</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
-                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{pendingOrder.deliveryDiscount.toFixed(2)}€</span></div>
+                    <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{pendingOrder.serviceFee.toFixed(2)}€</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee)}</span></div>
                 </>
               )}
-              {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{pendingOrder.giftVoucherDiscount.toFixed(2)}€</span></div>}
-              {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{pendingOrder.balanceUsed.toFixed(2)}€</span></div>}
-              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{pendingOrder.total.toFixed(2)}€</span></div>
+              {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
+              {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
+              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(pendingOrder.total)}</span></div>
             </div>
           )}
 

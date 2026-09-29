@@ -51,14 +51,14 @@ export default function CheckoutConformite({ restaurant, lignes, valeur, onChang
       </details>
 
       {ageRequis && (
-        <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginBottom: 10 }}>
+        <label className="co-case">
           <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!valeur.ageDeclaration} onChange={(e) => maj({ ageDeclaration: e.target.checked })} />
           <span className="small">{t('conformite.ageDeclaration', { age: ageRequis })}</span>
         </label>
       )}
 
       {valeur.termsNeeded && (
-        <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', marginBottom: 10 }}>
+        <label className="co-case">
           <input type="checkbox" style={{ width: 'auto', marginTop: 3 }} checked={!!valeur.acceptTerms} onChange={(e) => maj({ acceptTerms: e.target.checked })} />
           <span className="small">
             {t('conformite.termsAcceptPrefix')} <Link to="/cgv" target="_blank" rel="noopener">{t('conformite.termsLink')}</Link>{valeur.termsVersion ? ` (${valeur.termsVersion})` : ''}.
