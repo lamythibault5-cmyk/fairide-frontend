@@ -1883,6 +1883,7 @@ export default {
       att_incidentsRefunds: '{n} refund(s) today'
     },
     sales: {
+      signedUpOn: 'Signed up on {date}',
       title: 'Sales',
       teamTitle: 'The team',
       teamIntro: '{n} agents · {signed} businesses signed up · {total} earned together. Only first names and sign-ups are visible.',
@@ -2132,6 +2133,7 @@ export default {
       rating_5: 'Very positive'
     },
     adminSales: {
+      colSignedUp: 'Signed up',
       statAgents: 'sales agents',
       statProspects: 'businesses canvassed',
       statWeek: 'added this week',

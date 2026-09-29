@@ -1883,6 +1883,7 @@ export default {
       att_incidentsRefunds: '{n} remboursement(s) aujourd\'hui'
     },
     sales: {
+      signedUpOn: 'Inscrit le {date}',
       title: 'Sales',
       teamTitle: 'L\'équipe',
       teamIntro: '{n} commerciaux · {signed} commerces inscrits · {total} gagnés ensemble. Seuls les prénoms et les inscrits sont visibles.',
@@ -2132,6 +2133,7 @@ export default {
       rating_5: 'Très positif'
     },
     adminSales: {
+      colSignedUp: 'Inscription',
       statAgents: 'commerciaux',
       statProspects: 'commerces démarchés',
       statWeek: 'ajoutés cette semaine',

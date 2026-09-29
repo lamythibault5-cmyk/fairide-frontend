@@ -104,7 +104,7 @@ export default function SalesPage() {
   }
   // Export CSV de mes commerces (Excel/Numbers l'ouvrent tel quel ; BOM pour les accents).
   function exporterCsv() {
-    const col = ['name', 'commune', 'address', 'contactName', 'phone', 'email', 'cuisine', 'stage', 'rating', 'nextActionAt', 'lastEventAt', 'feedback', 'notes'];
+    const col = ['name', 'commune', 'address', 'contactName', 'phone', 'email', 'cuisine', 'stage', 'signedUpAt', 'rating', 'nextActionAt', 'lastEventAt', 'feedback', 'notes'];
     const cell = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
     const lignes = [col.join(';'), ...(prospects || []).map((p) => col.map((c) => cell(c === 'stage' ? t(`sales.stage_${p[c]}`) : /At$/.test(c) && p[c] ? new Date(p[c]).toLocaleString(locale) : p[c])).join(';'))];
     const blob = new Blob(['\ufeff' + lignes.join('\n')], { type: 'text/csv;charset=utf-8' });
@@ -248,6 +248,7 @@ export default function SalesPage() {
               {p.lastEventAt && <span>{t('sales.lastActivity', { date: fmtDate(p.lastEventAt) })}</span>}
               {p.nextActionAt && <span className={p.nextActionAt < Date.now() && !['actif', 'refuse'].includes(p.stage) ? 'crm-retard-texte' : ''}>⏰ {t('sales.nextAction', { date: fmtDate(p.nextActionAt) })}</span>}
               {p.restaurantName && <span>🏪 {t('sales.linkedTo', { name: p.restaurantName })}</span>}
+              {p.signedUpAt && <span>✅ {t('sales.signedUpOn', { date: fmtJour(p.signedUpAt) })}</span>}
             </div>
           </button>
         ))}
@@ -619,6 +620,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
             {/* Lier au commerce inscrit sur Fairide, pour voir s'il est validé et en ligne. */}
             <div className="crm-bloc">
               <b className="crm-bloc-titre">{t('sales.linkTitle')}</b>
+              {p.signedUpAt && <p className="small" style={{ margin: '0 0 6px' }}>✅ <b>{t('sales.signedUpOn', { date: new Date(p.signedUpAt).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })}</b></p>}
               {!p.restaurantId && <p className="small" style={{ margin: '0 0 6px' }}>💶 {t('sales.linkHint')}</p>}
               {p.restaurantId ? (
                 <p className="small" style={{ margin: 0 }}>🏪 {p.restaurantName} · {t(`sales.restoStatus_${p.restaurantStatus || 'pending'}`)} <button type="button" className="btn-ghost" style={{ padding: '2px 6px', fontSize: 12 }} onClick={() => patch({ restaurantId: null })}>{t('sales.unlink')}</button></p>

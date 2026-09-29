@@ -1883,6 +1883,7 @@ export default {
       att_incidentsRefunds: '{n} terugbetaling(en) vandaag'
     },
     sales: {
+      signedUpOn: 'Ingeschreven op {date}',
       title: 'Sales',
       teamTitle: 'Het team',
       teamIntro: '{n} medewerkers · {signed} ingeschreven zaken · {total} samen verdiend. Enkel voornamen en inschrijvingen zijn zichtbaar.',
@@ -2132,6 +2133,7 @@ export default {
       rating_5: 'Erg positief'
     },
     adminSales: {
+      colSignedUp: 'Inschrijving',
       statAgents: 'commerciëlen',
       statProspects: 'benaderde zaken',
       statWeek: 'deze week toegevoegd',
