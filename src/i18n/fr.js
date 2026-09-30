@@ -1598,6 +1598,9 @@ export default {
       stDisabled: 'Peppol désactivé'
     },
     businessSearch: {
+      foundOnWeb: 'Trouvés ailleurs sur internet',
+      searchingWeb: 'Recherche sur internet…',
+      webHint: 'Tape au moins 3 lettres du nom : on cherche aussi sur internet.',
       label: 'Trouve ton commerce sur le web',
       help: 'Tape son nom : on récupère l\'adresse, le téléphone, l\'e-mail, le site et les horaires publiés sur Internet (OpenStreetMap). Tu vérifies, tu corriges si besoin.',
       placeholder: 'Ex : Pizzeria Bella, Le Cèdre Bleu…',
@@ -1883,6 +1886,14 @@ export default {
       att_incidentsRefunds: '{n} remboursement(s) aujourd\'hui'
     },
     sales: {
+      alreadyTitle: 'Ce commerce est-il déjà enregistré ?',
+      alreadyPh: 'Nom, rue ou commune…',
+      alreadySearching: 'Recherche…',
+      alreadyNone: 'Personne n\'a encore enregistré « {q} » : il est libre, fonce !',
+      alreadyMine: 'Dans ta liste',
+      alreadyOthers: 'Déjà enregistré par un autre commercial',
+      alreadyOnFairide: 'Déjà inscrit sur Fairide',
+      alreadySince: 'enregistré le {date}',
       signedUpOn: 'Inscrit le {date}',
       title: 'Sales',
       teamTitle: 'L\'équipe',

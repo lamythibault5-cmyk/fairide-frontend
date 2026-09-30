@@ -1598,6 +1598,9 @@ export default {
       stDisabled: 'Peppol disabled'
     },
     businessSearch: {
+      foundOnWeb: 'Found elsewhere online',
+      searchingWeb: 'Searching online…',
+      webHint: 'Type at least 3 letters of the name: we also search online.',
       label: 'Find your business on the web',
       help: 'Type its name: we fetch the address, phone, e-mail, website and opening hours published online (OpenStreetMap). You check and correct if needed.',
       placeholder: 'E.g. Pizzeria Bella, Le Cèdre Bleu…',
@@ -1883,6 +1886,14 @@ export default {
       att_incidentsRefunds: '{n} refund(s) today'
     },
     sales: {
+      alreadyTitle: 'Is this business already registered?',
+      alreadyPh: 'Name, street or municipality…',
+      alreadySearching: 'Searching…',
+      alreadyNone: 'Nobody has registered “{q}” yet: it\'s free, go for it!',
+      alreadyMine: 'In your list',
+      alreadyOthers: 'Already registered by another salesperson',
+      alreadyOnFairide: 'Already signed up on Fairide',
+      alreadySince: 'registered on {date}',
       signedUpOn: 'Signed up on {date}',
       title: 'Sales',
       teamTitle: 'The team',

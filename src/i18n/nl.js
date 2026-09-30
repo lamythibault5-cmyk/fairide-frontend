@@ -1598,6 +1598,9 @@ export default {
       stDisabled: 'Peppol uitgeschakeld'
     },
     businessSearch: {
+      foundOnWeb: 'Elders online gevonden',
+      searchingWeb: 'Online zoeken…',
+      webHint: 'Typ minstens 3 letters van de naam: we zoeken ook online.',
       label: 'Vind je zaak op het web',
       help: 'Typ de naam: we halen adres, telefoon, e-mail, website en openingsuren op die online staan (OpenStreetMap). Jij controleert en verbetert waar nodig.',
       placeholder: 'Bv. Pizzeria Bella, Le Cèdre Bleu…',
@@ -1883,6 +1886,14 @@ export default {
       att_incidentsRefunds: '{n} terugbetaling(en) vandaag'
     },
     sales: {
+      alreadyTitle: 'Is deze zaak al geregistreerd?',
+      alreadyPh: 'Naam, straat of gemeente…',
+      alreadySearching: 'Zoeken…',
+      alreadyNone: 'Niemand heeft „{q}” al geregistreerd: hij is vrij, ga ervoor!',
+      alreadyMine: 'In jouw lijst',
+      alreadyOthers: 'Al geregistreerd door een andere verkoper',
+      alreadyOnFairide: 'Al ingeschreven op Fairide',
+      alreadySince: 'geregistreerd op {date}',
       signedUpOn: 'Ingeschreven op {date}',
       title: 'Sales',
       teamTitle: 'Het team',

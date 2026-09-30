@@ -139,6 +139,10 @@ export default function SalesPage() {
         </div>
       </div>
 
+      {/* « Déjà enregistré ? » (fondateur, 2026-09-30) : avant de pousser une porte, on tape le nom (ou la rue, la commune) et
+          on voit si le commerce est déjà dans MA liste, chez un autre commercial, ou déjà inscrit sur Fairide. */}
+      <RechercheDejaEnregistre token={token} t={t} stageLabel={stageLabel} fmtJour={fmtJour} onOpen={setOuvert} />
+
       {/* Aujourd'hui : ce qui presse, tout en haut — en retard d'abord, puis ce qui est prévu ce jour. */}
       {aFaire.length > 0 && (
         <div className="card crm-aujourdhui">
@@ -704,6 +708,61 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 // restaurateur, le pitch, les techniques de vente, et la règle d'or — on représente Fairide : si c'est non, on reste
 // pro, on laisse le flyer, on souhaite une bonne journée et on repasse la semaine d'après. Repliable (mémorisé).
 const FLYER_URL = '/docs/flyer-fairide.pdf';
+// Barre « Ce commerce est-il déjà enregistré ? » : ma liste, les autres commerciaux (étape et date, sans leur nom), les
+// commerces déjà inscrits sur Fairide. 2 lettres suffisent, sans accents ni majuscules (GET /sales/lookup?large=1).
+function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen }) {
+  const [q, setQ] = useState('');
+  const [res, setRes] = useState(null);
+  const [enCours, setEnCours] = useState(false);
+  useEffect(() => {
+    const terme = q.trim();
+    if (terme.length < 2) { setRes(null); setEnCours(false); return undefined; }
+    setEnCours(true);
+    let annule = false;
+    const id = setTimeout(() => {
+      api(`/sales/lookup?large=1&q=${encodeURIComponent(terme)}`, { token })
+        .then((r) => { if (!annule) setRes(r); })
+        .catch(() => { if (!annule) setRes({ mine: [], others: [], restaurants: [] }); })
+        .finally(() => { if (!annule) setEnCours(false); });
+    }, 300);
+    return () => { annule = true; clearTimeout(id); };
+  }, [q, token]);
+  const rien = res && !res.mine.length && !res.others.length && !res.restaurants.length;
+  return (
+    <div className="card crm-deja">
+      <label htmlFor="crm-deja-q" className="crm-deja-titre">🔎 {t('sales.alreadyTitle')}</label>
+      <input id="crm-deja-q" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('sales.alreadyPh')} autoComplete="off" />
+      {enCours && <p className="small" style={{ margin: '8px 0 0' }}>{t('sales.alreadySearching')}</p>}
+      {!enCours && rien && <p className="small crm-deja-libre">✅ {t('sales.alreadyNone', { q: q.trim() })}</p>}
+      {!enCours && res && !rien && (
+        <div className="crm-deja-resultats">
+          {res.mine.length > 0 && <p className="crm-deja-groupe">{t('sales.alreadyMine')}</p>}
+          {res.mine.map((p) => (
+            <button type="button" key={`m${p.id}`} className="crm-deja-ligne" onClick={() => onOpen(p.id)}>
+              <span><b>{p.name}</b><span className="small">{[p.address, p.commune].filter(Boolean).join(' · ')}</span></span>
+              <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>
+            </button>
+          ))}
+          {res.others.length > 0 && <p className="crm-deja-groupe">{t('sales.alreadyOthers')}</p>}
+          {res.others.map((p) => (
+            <div key={`o${p.id}`} className="crm-deja-ligne est-autre">
+              <span><b>{p.name}</b><span className="small">{[p.address, p.commune].filter(Boolean).join(' · ')}{p.createdAt ? ` · ${t('sales.alreadySince', { date: fmtJour(p.createdAt) })}` : ''}</span></span>
+              <span className={`crm-badge crm-badge-${p.stage}`}>{stageLabel(p.stage)}</span>
+            </div>
+          ))}
+          {res.restaurants.length > 0 && <p className="crm-deja-groupe">{t('sales.alreadyOnFairide')}</p>}
+          {res.restaurants.map((x) => (
+            <div key={`r${x.id}`} className="crm-deja-ligne est-inscrit">
+              <span><b>{x.name}</b><span className="small">{[x.address, x.commune].filter(Boolean).join(' · ')}{x.createdAt ? ` · ${t('sales.signedUpOn', { date: fmtJour(x.createdAt) })}` : ''}</span></span>
+              <span className="crm-badge crm-badge-inscrit">{t(`sales.restoStatus_${x.adminStatus || 'pending'}`)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function GuideCard({ t }) {
   const [ouvert, setOuvert] = useState(() => { try { return localStorage.getItem('sales_guide') !== 'off'; } catch { return true; } });
   const basculer = () => setOuvert((v) => { try { localStorage.setItem('sales_guide', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });

@@ -57,23 +57,32 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
   }, [cp, cpValide]);
 
   const repli = zone && (zone.unavailable || zone.results.length === 0);
+  // Recherche par nom sur internet dès 3 lettres, même quand la liste de la zone existe (fondateur, 2026-09-30 : « je ne
+  // trouve pas un resto que je trouve sur internet ») : les fiches absentes de la liste s'affichent en dessous.
   useEffect(() => {
-    if (!repli || filtre.trim().length < 3) { setReponseNom(null); return undefined; }
+    if (!zone || filtre.trim().length < 3) { setReponseNom(null); return undefined; }
     let annule = false;
     const timer = setTimeout(() => {
       api(`/restaurants/lookup/business?q=${encodeURIComponent(filtre.trim() + ' ' + cp.trim())}`)
-        .then((r) => { if (!annule) setReponseNom((r.results || []).filter((x) => !x.postalCode || x.postalCode === cp.trim())); })
+        .then((r) => { if (!annule) setReponseNom(r.results || []); })
         .catch(() => { if (!annule) setReponseNom([]); });
     }, 500);
     return () => { annule = true; clearTimeout(timer); };
-  }, [repli, filtre, cp]);
+  }, [zone, filtre, cp]);
 
   const visibles = useMemo(() => {
-    if (!zone || repli) return reponseNom || [];
+    if (!zone || repli) return (reponseNom || []).filter((x) => !x.postalCode || x.postalCode === cp.trim() || x.source === 'google');
     const f = normaliser(filtre.trim());
     if (!f) return zone.results;
     return zone.results.filter((r) => normaliser(`${r.name} ${r.street} ${r.number} ${r.cuisine} ${r.type}`).includes(f));
-  }, [zone, repli, reponseNom, filtre]);
+  }, [zone, repli, reponseNom, filtre, cp]);
+  // Fiches trouvées sur internet mais absentes de la liste de la zone (même identifiant ou même nom = déjà listée).
+  const surInternet = useMemo(() => {
+    if (!zone || repli || !reponseNom) return [];
+    const deja = new Set(zone.results.map((x) => `${x.osmType}-${x.osmId}`));
+    const nomsDeja = new Set(zone.results.map((x) => normaliser(x.name).replace(/[^a-z0-9]+/g, '')));
+    return reponseNom.filter((x) => !deja.has(`${x.osmType}-${x.osmId}`) && !nomsDeja.has(normaliser(x.name).replace(/[^a-z0-9]+/g, '')));
+  }, [zone, repli, reponseNom]);
 
   useEffect(() => { if (listeRef.current) listeRef.current.scrollTop = 0; }, [filtre]);
 
@@ -128,8 +137,8 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
               : t('businessSearch.zoneCount', { count: zone.results.length, cp: cp.trim(), shown: visibles.length })}
           </p>
           <ul className="business-zone-list" role="listbox" ref={listeRef} aria-label={t('businessSearch.postalLabel')}>
-            {visibles.length === 0 && (
-              <li className="business-zone-empty">{repli && filtre.trim().length < 3 ? t('businessSearch.typeName') : t('businessSearch.noMatch')}</li>
+            {visibles.length === 0 && surInternet.length === 0 && (
+              <li className="business-zone-empty">{filtre.trim().length < 3 ? (repli ? t('businessSearch.typeName') : t('businessSearch.noMatch')) : reponseNom === null ? t('businessSearch.searchingWeb') : t('businessSearch.noMatch')}</li>
             )}
             {visibles.map((r) => (
               <li key={`${r.osmType}-${r.osmId}`} role="option" aria-selected={false}>
@@ -146,7 +155,20 @@ export default function BusinessSearch({ onSelect, onPostalCode, compact = false
                 </button>
               </li>
             ))}
+            {surInternet.length > 0 && <li className="business-zone-groupe" aria-hidden="true">🌐 {t('businessSearch.foundOnWeb')}</li>}
+            {surInternet.map((r) => (
+              <li key={`web-${r.osmType}-${r.osmId}`} role="option" aria-selected={false}>
+                <button type="button" onClick={() => choisir(r)}>
+                  <span className="business-zone-emoji" aria-hidden="true">{EMOJI_TYPE[r.type] || '🏪'}</span>
+                  <span className="business-zone-text">
+                    <b>{r.name}</b>
+                    <span className="small">{adresse(r) || t('businessSearch.noAddress')}</span>
+                  </span>
+                </button>
+              </li>
+            ))}
           </ul>
+          {!repli && filtre.trim().length > 0 && filtre.trim().length < 3 && <p className="small" style={{ margin: '4px 0 0' }}>{t('businessSearch.webHint')}</p>}
           <button type="button" className="btn-ghost business-manual" onClick={saisirALaMain}>{libelleManuel || t('businessSearch.notInList')}</button>
         </>
       )}
