@@ -1,0 +1,93 @@
+/* Barre de simulation (components/SimulationBar.jsx) — flotte en bas à gauche, au-dessus des barres fixes du
+   parcours client (panier, paiement) sur téléphone. Encre sombre pour se distinguer du site qu'elle survole. */
+.simu-barre, .simu-pastille {
+  position: fixed; left: 16px; bottom: 20px; z-index: 700;
+  font-family: inherit; color: #fff; background: #14121F;
+  box-shadow: rgba(0, 0, 0, 0.28) 0 8px 28px 0;
+}
+.simu-pastille {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 0 16px;
+  border: 0; border-radius: var(--radius-pill); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.simu-pastille:focus-visible, .simu-barre button:focus-visible, .simu-barre a:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.simu-point { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); flex: none; }
+.simu-barre { width: min(360px, calc(100vw - 32px)); padding: 12px; border-radius: var(--radius); max-height: calc(100vh - 40px); overflow-y: auto; }
+.simu-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.simu-titre { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #D7D4E8; }
+.simu-icone-btn { width: 32px; height: 32px; border: 0; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
+.simu-icone-btn:hover { background: rgba(255, 255, 255, 0.16); }
+
+.simu-profils { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: var(--radius-card-sm); background: rgba(255, 255, 255, 0.06); }
+.simu-profil {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 52px; padding: 6px 2px;
+  border: 0; border-radius: 9px; background: transparent; color: #D7D4E8; font-size: 12px; font-weight: 600; cursor: pointer;
+}
+.simu-profil:hover { background: rgba(255, 255, 255, 0.08); color: #fff; }
+.simu-profil.est-actif { background: var(--lime); color: #14121F; }
+
+.simu-alerte { margin: 10px 0 0; padding: 8px 10px; border-radius: 9px; background: rgba(217, 45, 60, 0.18); color: #FFD5D9; font-size: 13px; }
+
+.simu-actions { display: flex; gap: 6px; margin-top: 10px; }
+.simu-action {
+  flex: 1; min-height: 36px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--radius-pill);
+  background: transparent; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+}
+.simu-action:hover, .simu-action.est-actif { background: rgba(255, 255, 255, 0.12); }
+.simu-quitter { flex: none; color: #D7D4E8; }
+.simu-compteur { margin-left: 4px; font-variant-numeric: tabular-nums; color: var(--lime); }
+
+.simu-panneau { margin-top: 10px; padding: 10px; border-radius: var(--radius-card-sm); background: rgba(255, 255, 255, 0.06); }
+.simu-panneau-titre { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #fff; }
+.simu-etapes { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.simu-etapes li { display: flex; align-items: center; gap: 8px; min-height: 32px; }
+.simu-etapes input { width: 16px; height: 16px; accent-color: var(--lime); flex: none; margin: 0; }
+.simu-etapes a { color: #fff; font-size: 13px; text-decoration: none; }
+.simu-etapes a:hover { text-decoration: underline; }
+.simu-etapes a.est-ici { color: var(--lime); font-weight: 700; }
+.simu-etapes li.est-fait a { color: #9A96B3; text-decoration: line-through; }
+.simu-lien { margin-top: 6px; padding: 4px 0; border: 0; background: none; color: #D7D4E8; font-size: 12px; text-decoration: underline; cursor: pointer; }
+
+.simu-categories { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+.simu-chip { min-height: 28px; padding: 0 10px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: var(--radius-pill); background: transparent; color: #D7D4E8; font-size: 12px; font-weight: 600; cursor: pointer; }
+.simu-chip.est-actif { background: #fff; color: #14121F; border-color: #fff; }
+.simu-panneau textarea {
+  width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid rgba(255, 255, 255, 0.18); border-radius: var(--radius-field);
+  background: rgba(0, 0, 0, 0.25); color: #fff; font: inherit; font-size: 14px; resize: vertical;
+}
+.simu-panneau textarea::placeholder { color: #9A96B3; }
+.simu-contexte { margin: 6px 0 0; font-size: 11px; color: #9A96B3; word-break: break-all; }
+.simu-form-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+.simu-envoyer { min-height: 34px; padding: 0 16px; border: 0; border-radius: var(--radius-pill); font-weight: 700; cursor: pointer; }
+.simu-envoyer:disabled { opacity: .5; cursor: default; }
+
+/* Téléphone : au-dessus de la barre fixe du panier / du paiement (client-ui.css, z-index 60). */
+@media (max-width: 720px) {
+  .simu-barre, .simu-pastille { left: 12px; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
+  .simu-barre { width: calc(100vw - 24px); max-height: calc(100vh - 140px); }
+}
+@media print { .simu-barre, .simu-pastille { display: none; } }
+
+/* Page Admin › Simulation */
+.simu-cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.simu-carte { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--line); border-radius: var(--radius); background: #fff; }
+.simu-carte-tete { display: flex; align-items: center; gap: 10px; }
+.simu-carte-icone { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: var(--surface-soft); color: var(--iris); flex: none; }
+.simu-carte h3 { margin: 0; font-size: 17px; }
+.simu-carte p { margin: 0; color: var(--ink-soft); font-size: 14px; flex: 1; }
+.simu-carte .btn-teal { align-self: flex-start; }
+.simu-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 16px; }
+.simu-liste-sure { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 14px; color: var(--ink-soft); }
+.simu-infos { display: grid; gap: 8px; font-size: 14px; }
+.simu-infos dt { color: var(--ink-faint); font-size: 12px; }
+.simu-infos dd { margin: 0 0 4px; word-break: break-all; }
+.simu-note { padding: 12px 0; border-top: 1px solid var(--line); }
+.simu-note:first-child { border-top: 0; }
+.simu-note-texte { margin: 4px 0 6px; white-space: pre-wrap; font-size: 15px; }
+.simu-note-meta { font-size: 12px; color: var(--ink-faint); }
+.simu-note.est-traitee .simu-note-texte { color: var(--ink-faint); text-decoration: line-through; }
+.simu-note-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.simu-badge { display: inline-block; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--surface-soft); font-size: 12px; font-weight: 600; margin-right: 6px; }
+.simu-filtres { display: flex; gap: 6px; flex-wrap: wrap; }
+.simu-filtres .chip { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink-soft); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.simu-filtres .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
+.simu-mini { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-pill); cursor: pointer; }

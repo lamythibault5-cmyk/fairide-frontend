@@ -26,7 +26,10 @@ export const ADMIN_HUBS = [
   { key: 'money', icon: 'euro', modules: ['dashboard', 'finance', 'payments', 'invoices', 'accounting', 'reports'] },
   // Documents vit ici et pas sous Commerces : il couvre aussi les livreurs. Ses urgences (pièce
   // expirée, à vérifier) remontent de toute façon sur l'accueil, qui pointe directement dessus.
-  { key: 'settings', icon: 'reglages', modules: ['settings', 'team', 'documents', 'compliance', 'automations'] }
+  { key: 'settings', icon: 'reglages', modules: ['settings', 'team', 'documents', 'compliance', 'automations'] },
+  // Simulation (fondateur, 2026-09-30) : parcourir le site comme chaque type d'utilisateur, dans un bac à sable, et noter
+  // ce qui s'affiche mal. Son propre pôle : ce n'est ni un réglage ni une donnée, c'est un outil de contrôle du produit.
+  { key: 'simulation', icon: 'boussole', modules: ['simulation'] }
 ];
 // Gardé pour Équipe & accès, qui range son tableau des droits par famille : les familles sont désormais les pôles.
 export const ADMIN_GROUPS = ADMIN_HUBS.map((h) => h.key);
@@ -68,7 +71,8 @@ export const ADMIN_MODULES = [
   // Les relances Sales dépassées restent visibles sur l'onglet Sales, mais n'entrent pas dans la pastille du pôle
   // « Commerces » : celle-ci ne compte que les vrais restaurants à valider (fondateur, 2026-09-23).
   { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'info') },
-  { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') }
+  { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') },
+  { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 
 // Rôles autorisés par application (Équipe & accès) : absent = tous les membres. Le serveur applique la même
@@ -83,7 +87,8 @@ export const MODULE_ROLES = {
   team: ['owner', 'admin'],
   compliance: ['owner', 'admin', 'finance'],
   messages: ['owner', 'admin', 'ops', 'support'],
-  sales: ['owner', 'admin', 'ops']
+  sales: ['owner', 'admin', 'ops'],
+  simulation: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {
   const roles = MODULE_ROLES[mod.key];

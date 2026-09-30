@@ -12,6 +12,32 @@ const ACT_KEY = 'fairide_session_agir';
 // Casquette active d'un compte qui en porte plusieurs (voir plus bas). Mémorisée pour que l'onglet
 // rouvre sur la même vue, jamais crue sur parole : elle est revalidée contre les rôles du compte.
 const ROLE_ACTIF_KEY = 'fairide_role_actif';
+/* SIMULATION (Admin › Simulation). La console ouvre un onglet avec les sessions de trois comptes de test (client,
+ * restaurateur, livreur) plus le profil « visiteur » (aucune session). Tout vit dans sessionStorage, propre à
+ * l'onglet, et arrive par le fragment #simuler=… : comme pour « Fairide agit comme… », la session admin
+ * (localStorage) des autres onglets n'est jamais touchée. `actif` dit quel profil l'onglet affiche. */
+const SIMU_KEY = 'fairide_simulation';
+export const PROFILS_SIMULATION = ['visitor', 'client', 'restaurant', 'driver'];
+function simulationInitiale() {
+  try {
+    const m = window.location.hash.match(/[#&]simuler=([^&]+)/);
+    if (m) {
+      const s = JSON.parse(decodeURIComponent(atob(m[1])));
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      if (s && s.profiles) {
+        // Un nouveau lancement repart d'une simulation propre (un onglet réutilisé garderait l'ancienne).
+        try { sessionStorage.removeItem(ACT_KEY); } catch { /* sans stockage */ }
+        return { ...s, actif: PROFILS_SIMULATION.includes(s.actif) ? s.actif : 'visitor' };
+      }
+    }
+    const s = JSON.parse(sessionStorage.getItem(SIMU_KEY) || 'null');
+    return s && s.profiles ? s : null;
+  } catch { return null; }
+}
+function sessionDuProfil(simulation) {
+  if (!simulation || simulation.actif === 'visitor') return null;
+  return simulation.profiles?.[simulation.actif] || null;
+}
 function sessionDepuisFragment() {
   try {
     const m = window.location.hash.match(/[#&]agir=([^&]+)/);
@@ -25,7 +51,11 @@ function sessionDepuisFragment() {
 export function AuthProvider({ children }) {
   const { t, language } = useLanguage();
   const toast = useToast();
+  const [simulation, setSimulation] = useState(simulationInitiale);
+  // Onglet de simulation : ni localStorage, ni session d'action — seulement les profils de la simulation.
+  const simuRef = useRef(!!simulation);
   const [session, setSession] = useState(() => {
+    if (simuRef.current) return sessionDuProfil(simulation);
     try {
       const agir = sessionDepuisFragment() || JSON.parse(sessionStorage.getItem(ACT_KEY) || 'null');
       if (agir && agir.token) return { ...agir, actingAs: true };
@@ -47,6 +77,18 @@ export function AuthProvider({ children }) {
   const expiredRef = useRef(false);
 
   useEffect(() => {
+    if (simuRef.current) {
+      // Le profil affiché garde sa session à jour (refreshUser, updateProfile…). Une session vidée (expiration,
+      // déconnexion) ne l'efface pas : la barre de simulation propose alors de relancer depuis la console.
+      if (session) {
+        setSimulation((prev) => {
+          if (!prev || prev.actif === 'visitor' || prev.profiles?.[prev.actif] === session) return prev;
+          return { ...prev, profiles: { ...prev.profiles, [prev.actif]: session } };
+        });
+        expiredRef.current = false;
+      }
+      return;
+    }
     if (session?.actingAs) {
       actingRef.current = true;
       try { sessionStorage.setItem(ACT_KEY, JSON.stringify(session)); } catch { /* sans stockage */ }
@@ -67,6 +109,14 @@ export function AuthProvider({ children }) {
       localStorage.removeItem(STORAGE_KEY);
     }
   }, [session]);
+
+  useEffect(() => {
+    if (!simuRef.current) return;
+    try {
+      if (simulation) sessionStorage.setItem(SIMU_KEY, JSON.stringify(simulation));
+      else sessionStorage.removeItem(SIMU_KEY);
+    } catch { /* sans stockage */ }
+  }, [simulation]);
 
   // La langue choisie suit le compte : le backend l'utilise pour les e-mails envoyés plus tard, hors de
   // toute requête de l'utilisateur (livreur en route, réservation confirmée par le restaurateur...).
@@ -176,7 +226,26 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  /* Simulation : passer d'un profil à l'autre ne touche à aucun compte, c'est un changement de session DANS l'onglet.
+   * Par un rechargement complet, et c'est voulu : changer la session puis naviguer en deux temps laissait la page
+   * protégée du profil précédent se rendre une fois sans session (→ /login), et les caches en mémoire d'un profil
+   * (panier, messages, tableau de bord) auraient survécu dans l'autre. */
+  function changerProfilSimulation(cible, chemin = '/') {
+    if (!simuRef.current || !simulation || !PROFILS_SIMULATION.includes(cible)) return false;
+    try { sessionStorage.setItem(SIMU_KEY, JSON.stringify({ ...simulation, actif: cible })); } catch { /* sans stockage */ }
+    window.location.assign(chemin);
+    return true;
+  }
+
+  // Quitter la simulation : l'onglet revient à la session admin (localStorage), sur la page Simulation.
+  function quitterSimulation() {
+    try { sessionStorage.removeItem(SIMU_KEY); } catch { /* rien */ }
+    window.location.assign('/admin/simulation');
+  }
+
   function logout() {
+    // En simulation, « Se déconnecter » ramène au profil visiteur sans perdre les sessions de test.
+    if (simuRef.current) { changerProfilSimulation('visitor', '/'); return; }
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant
     // ouvrirait sur la vue du précédent (ou sur une vue à laquelle il n'a pas droit, le temps que
@@ -206,7 +275,8 @@ export function AuthProvider({ children }) {
   const roles = session?.user?.roles?.length
     ? session.user.roles
     : (session?.user?.role ? [session.user.role] : []);
-  const roleActif = !session?.actingAs && roleMemorise && roles.includes(roleMemorise)
+  // (En simulation, la casquette mémorisée est celle de l'admin, dans localStorage : elle ne vaut pas ici.)
+  const roleActif = !session?.actingAs && !simuRef.current && roleMemorise && roles.includes(roleMemorise)
     ? roleMemorise
     : (session?.user?.role || null);
 
@@ -222,6 +292,7 @@ export function AuthProvider({ children }) {
   function changerRole(cible) {
     if (!roles.includes(cible)) return false;
     setRoleMemorise(cible);
+    if (simuRef.current) return true; // localStorage appartient à la session admin des autres onglets
     try { localStorage.setItem(ROLE_ACTIF_KEY, cible); } catch { /* sans stockage */ }
     return true;
   }
@@ -236,6 +307,11 @@ export function AuthProvider({ children }) {
     actingAs: !!session?.actingAs,
     actingAdminEmail: session?.user?.actingAdminEmail || '',
     quitterAction,
+    simulation: simulation
+      ? { actif: simulation.actif, restaurantId: simulation.restaurantId || null, restaurantName: simulation.restaurantName || '', expiresAt: simulation.expiresAt || 0, profiles: simulation.profiles }
+      : null,
+    changerProfilSimulation,
+    quitterSimulation,
     login,
     register,
     verifyEmail,

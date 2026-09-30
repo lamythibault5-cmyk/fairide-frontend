@@ -1,4 +1,4 @@
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { lazyPage } from './lazyPage';
 import { Navigate, Route, Routes, useParams } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -6,6 +6,7 @@ import ScrollRestorer from './components/ScrollRestorer';
 import NavigationFeedback from './components/NavigationFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SkeletonCards } from './components/Skeleton';
+import { useAuth } from './context/AuthContext';
 
 // Découpage du bundle par rôle.
 //
@@ -99,6 +100,15 @@ const HelpPage = lazyPage(() => import('./pages/HelpPage'));
 const OurStory = lazyPage(() => import('./pages/OurStory'));
 const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
 const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
+const AdminSimulationPage = lazyPage(() => import('./pages/admin/AdminSimulationPage'));
+
+// Barre de simulation (Admin › Simulation) : chargée seulement dans un onglet de simulation, jamais pour un vrai visiteur.
+const SimulationBar = lazy(() => import('./components/SimulationBar'));
+function BarreSimulation() {
+  const { simulation } = useAuth();
+  if (!simulation) return null;
+  return <Suspense fallback={null}><SimulationBar /></Suspense>;
+}
 
 // Anciens liens de réservation (/reserver/:id, /restaurants/:id/reserver) → la fiche du commerce.
 function RedirectionFiche() {
@@ -111,6 +121,7 @@ export default function App() {
     <>
       <ScrollRestorer />
       <NavigationFeedback />
+      <BarreSimulation />
       {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
           au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
@@ -207,6 +218,7 @@ export default function App() {
           <Route path="compliance" element={<AdminCompliancePage />} />
           <Route path="sales" element={<AdminSalesPage />} />
           <Route path="messages" element={<AdminMessagesPage />} />
+          <Route path="simulation" element={<AdminSimulationPage />} />
         </Route>
 
         <Route path="/mentions-legales" element={<LegalNotice />} />
