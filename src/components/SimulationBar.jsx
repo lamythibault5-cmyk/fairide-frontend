@@ -5,6 +5,7 @@ import { useAuth, PROFILS_SIMULATION } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 import Icone from './Icone';
+import RouleauTickets from './RouleauTickets';
 import '../simulation.css';
 
 // Barre flottante d'un onglet de simulation (Admin › Simulation) : elle dit quel profil l'onglet affiche, passe
@@ -41,11 +42,42 @@ export default function SimulationBar() {
   const location = useLocation();
   // Sur téléphone, la barre dépliée couvrait près de la moitié de l'écran (simulation du 30/09) : elle démarre repliée.
   const [ouverte, setOuverte] = useState(() => lire(CLE_OUVERTE, window.innerWidth > 720));
-  const [panneau, setPanneau] = useState(null); // null | 'etapes' | 'note'
+  const [panneau, setPanneau] = useState(null); // null | 'etapes' | 'note' | 'imprimante'
   const [faites, setFaites] = useState(() => lire(CLE_ETAPES, {}));
   const [texte, setTexte] = useState('');
   const [categorie, setCategorie] = useState('affichage');
   const [envoi, setEnvoi] = useState(false);
+  // Imprimante virtuelle du terminal simulé (backend : GET /simulation/printer). Elle tourne en continu pendant la
+  // simulation : une commande reçue, un livreur qui prend la course… et le ticket « sort », où que l'on soit.
+  const [imprimante, setImprimante] = useState({ tickets: [], nouveaux: [] });
+  const [nonLus, setNonLus] = useState(0);
+  const jetonCommerce = simulation?.profiles?.restaurant?.token || null;
+  useEffect(() => {
+    if (!jetonCommerce) return undefined;
+    let actif = true;
+    const tourner = async () => {
+      try {
+        const r = await api('/simulation/printer', { token: jetonCommerce, logoutOn401: false });
+        if (!actif) return;
+        setImprimante({ tickets: r.tickets || [], nouveaux: r.nouveaux || [] });
+        if (r.nouveaux?.length) {
+          const sortis = (r.tickets || []).filter((x) => r.nouveaux.includes(x.id));
+          toast(t('simulation.printedToast', { what: sortis.map((x) => `${t(`simulation.ticket_${x.kind}`)}${x.orderNumber ? ` #${String(x.orderNumber).padStart(3, '0')}` : ''}`).join(', ') }));
+          setNonLus((n) => n + r.nouveaux.length);
+        }
+      } catch { /* session expirée : la barre le signale déjà */ }
+    };
+    tourner();
+    const i = setInterval(tourner, 5000);
+    return () => { actif = false; clearInterval(i); };
+  }, [jetonCommerce]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (panneau === 'imprimante') setNonLus(0); }, [panneau, imprimante]);
+  async function ticketDeTest() {
+    try {
+      await api(`/restaurants/${simulation.restaurantId}/print-test`, { method: 'POST', token: jetonCommerce, logoutOn401: false });
+      toast(t('simulation.testQueued'));
+    } catch (e) { toast(e.message, 'erreur'); }
+  }
 
   useEffect(() => { ecrire(CLE_OUVERTE, ouverte); }, [ouverte]);
   useEffect(() => { ecrire(CLE_ETAPES, faites); }, [faites]);
@@ -130,6 +162,9 @@ export default function SimulationBar() {
         <button type="button" className={`simu-action${panneau === 'note' ? ' est-actif' : ''}`} onClick={() => setPanneau(panneau === 'note' ? null : 'note')}>
           {t('simulation.bar_note')}
         </button>
+        <button type="button" className={`simu-action${panneau === 'imprimante' ? ' est-actif' : ''}`} onClick={() => setPanneau(panneau === 'imprimante' ? null : 'imprimante')} title={t('simulation.bar_printer')}>
+          🖨{nonLus > 0 && <span className="simu-compteur">{nonLus}</span>}
+        </button>
         <button type="button" className="simu-action simu-quitter" onClick={quitterSimulation}>{t('simulation.bar_quit')}</button>
       </div>
 
@@ -151,6 +186,17 @@ export default function SimulationBar() {
           {cochees.length > 0 && (
             <button type="button" className="simu-lien" onClick={() => setFaites((f) => ({ ...f, [profil]: [] }))}>{t('simulation.steps_reset')}</button>
           )}
+        </div>
+      )}
+
+      {panneau === 'imprimante' && (
+        <div className="simu-panneau">
+          <p className="simu-panneau-titre">{t('simulation.printerTitle')}</p>
+          <p className="simu-contexte" style={{ marginTop: 0 }}>{t('simulation.printerHelp')}</p>
+          <div style={{ maxHeight: '52vh', overflowY: 'auto', padding: '4px 0' }}>
+            <RouleauTickets tickets={imprimante.tickets} nouveaux={imprimante.nouveaux} t={t} max={4} />
+          </div>
+          <button type="button" className="simu-lien" onClick={ticketDeTest}>{t('simulation.testTicket')}</button>
         </div>
       )}
 

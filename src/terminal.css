@@ -1,0 +1,42 @@
+/* Ticket du terminal à l'écran (components/TicketPapier.jsx) : papier thermique 58 mm, police à chasse fixe. */
+.ticket-papier {
+  --cols: 32;
+  box-sizing: content-box; width: calc(var(--cols) * 1ch); max-width: 100%; margin: 0 auto; padding: 14px 12px 18px;
+  background: #fffdf8; color: #111; font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 12.5px; line-height: 1.2; white-space: pre; overflow: hidden;
+  box-shadow: rgba(0, 0, 0, 0.14) 0 2px 10px; border-radius: 2px;
+  /* bord déchiré en bas */
+  -webkit-mask: linear-gradient(#000 0 0) top / 100% calc(100% - 6px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 12px 6px repeat-x;
+          mask: linear-gradient(#000 0 0) top / 100% calc(100% - 6px) no-repeat, conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) bottom / 12px 6px repeat-x;
+}
+.ticket-papier .tp-ligne { overflow: hidden; }
+.ticket-papier .tp-center { text-align: center; }
+.ticket-papier .tp-right { text-align: right; }
+.ticket-papier .tp-gras { font-weight: 800; }
+.ticket-papier .tp-grand { font-size: 2em; line-height: 1.1; }
+.ticket-papier .tp-inverse { background: #111; color: #fffdf8; }
+.ticket-papier .tp-trait { color: #555; overflow: hidden; }
+.ticket-papier .tp-qr { text-align: center; padding: 6px 0 0; }
+.ticket-papier .tp-legende { font-size: 11px; }
+
+/* Rouleau de tickets (imprimante virtuelle de la simulation, historique) */
+.tickets-rouleau { display: grid; gap: 14px; justify-items: center; }
+.ticket-entete { display: flex; justify-content: space-between; gap: 8px; width: 100%; max-width: 420px; font-size: 12px; color: var(--ink-soft); }
+.ticket-arrive { animation: ticket-sort .6s ease-out; }
+@keyframes ticket-sort { from { transform: translateY(-18px); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ticket-arrive { animation: none; } }
+
+/* État d'impression sur les cartes de commande */
+.print-etat { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: var(--radius-pill); }
+.print-etat.ok { background: #E7F6EC; color: #1E7B3F; }
+.print-etat.attente { background: #FFF4E0; color: #9A5A00; }
+.print-etat.erreur { background: #FDE8EA; color: var(--red); }
+
+/* Page Terminal & impression */
+.terminal-liste { display: grid; gap: 10px; }
+.terminal-ligne { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); background: #fff; }
+.terminal-ligne .puces { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.terminal-choix { display: grid; gap: 8px; }
+.terminal-choix label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); cursor: pointer; background: #fff; }
+.terminal-choix label.est-actif { border-color: var(--iris); box-shadow: inset 2px 0 0 var(--iris); }
+.terminal-choix input { width: auto; margin-top: 3px; }

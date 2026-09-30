@@ -101,3 +101,11 @@
   .simu-actions { margin-top: 8px; }
   .simu-action { min-height: 34px; font-size: 12px; padding: 0 8px; }
 }
+
+/* Ordinateur : en bas à DROITE — à gauche, la barre couvrait le profil en bas de la barre latérale du tableau de bord. */
+@media (min-width: 721px) {
+  .simu-barre, .simu-pastille { left: auto; right: 16px; }
+}
+/* Imprimante virtuelle dans le panneau sombre : en-têtes des tickets lisibles. */
+.simu-panneau .ticket-entete { color: #D7D4E8; }
+.simu-panneau .ticket-entete .btn-ghost { color: #D7D4E8; }

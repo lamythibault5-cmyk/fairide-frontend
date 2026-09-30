@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
+import TicketPapier from '../../components/TicketPapier';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
@@ -14,6 +15,17 @@ import {
   ORDER_STAGES, orderStageKey, orderStagePriority, stageColors as couleursEtapes
 } from '../../orderStatus';
 import { useLanguage } from '../../context/LanguageContext';
+
+// Où en est le ticket de la commande sur le terminal Fairide (backend : GET /orders/restaurant/:id → print).
+function EtatImpression({ p, t }) {
+  if (!p) return null;
+  const raison = p.lastError ? t(`terminal.printer_${p.lastError}`, {}) : '';
+  const raisonLisible = raison && !raison.startsWith('terminal.') ? raison : t('terminal.printer_unknown');
+  if (p.failed > 0 && !p.pending) return <span className="print-etat erreur">⚠ {t('ordersResto.printFailedState', { reason: raisonLisible })}</span>;
+  if (p.pending > 0) return <span className={`print-etat ${p.lastError ? 'erreur' : 'attente'}`}>{p.lastError ? `⚠ ${t('ordersResto.printWaitingReason', { reason: raisonLisible })}` : `⏳ ${t('ordersResto.printWaiting')}`}</span>;
+  if (p.printed > 0) return <span className="print-etat ok">🖨 {p.printed > 1 ? t('ordersResto.printedN', { n: p.printed }) : t('ordersResto.printedOnce')}</span>;
+  return null;
+}
 
 export default function OrdersPage() {
   const { t } = useLanguage();
@@ -49,6 +61,37 @@ export default function OrdersPage() {
   // Nombre d'impressions déjà faites par commande (session) : affiché dans le détail, pour savoir si le
   // ticket est déjà sorti et pouvoir le réimprimer sans hésiter quand la première sortie a raté.
   const [impressions, setImpressions] = useState({});
+  // Terminal Fairide : s'il y en a un d'associé, « Imprimer » envoie le ticket au terminal (file d'impression) ;
+  // sinon on garde le secours (Bluetooth, boîte d'impression de l'appareil).
+  const [terminaux, setTerminaux] = useState(null);
+  const [envoiTicket, setEnvoiTicket] = useState(null);
+  const [apercu, setApercu] = useState(null); // { orderId, lines, columns }
+  const chargerTerminaux = useCallback(() => {
+    if (!restoId) return;
+    api(`/restaurants/${restoId}/terminals`, { token }).then((d) => setTerminaux(d.terminals || [])).catch(() => setTerminaux([]));
+  }, [restoId, token]);
+  useEffect(() => { chargerTerminaux(); }, [chargerTerminaux]);
+  const terminauxActifs = (terminaux || []).filter((x) => !x.revokedAt);
+  const aTerminal = terminauxActifs.length > 0;
+  const terminalEnLigne = terminauxActifs.some((x) => x.online);
+
+  // Envoie le ticket au terminal : première impression, ou réimpression d'un ticket mal sorti (papier froissé,
+  // encre pâle…). Tracé côté serveur (réimpression = job à part, jamais confondu avec l'impression automatique).
+  async function imprimerSurTerminal(order) {
+    setEnvoiTicket(order.id);
+    try {
+      await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies: 1 } });
+      toast(terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
+      loadDashboard(restoId);
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
+  }
+  async function voirApercu(order) {
+    if (apercu?.orderId === order.id) { setApercu(null); return; }
+    try {
+      const r = await api(`/orders/${order.id}/ticket?columns=32`, { token });
+      setApercu({ orderId: order.id, lines: r.lines, columns: r.columns });
+    } catch (e) { toast(e.message, 'erreur'); }
+  }
   const [basculeOuverture, setBasculeOuverture] = useState(false);
 
   // OUVERT / EN PAUSE, EN TÊTE DE LA PAGE DE SERVICE (2026-09-23). La case « Restaurant ouvert » vivait
@@ -209,13 +252,14 @@ export default function OrdersPage() {
           {stage.icon} {t(`orderStatus.stage_${stage.key}`)}
         </span>
         <button type="button" className="btn-ghost order-print-btn" title={btName ? t('ordersResto.printTicket') : t('ordersResto.printDeliveryNote')} aria-label={t('ordersResto.printTicket')}
-          onClick={(e) => { e.stopPropagation(); if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
+          disabled={envoiTicket === o.id} onClick={(e) => { e.stopPropagation(); if (aTerminal) imprimerSurTerminal(o); else if (btName) printBluetooth(o); else { setSelectedOrder(o); } }}>🖨️</button>
       </div>
       <div className="row" style={{ justifyContent: 'space-between' }}>
         <b>{o.clientName}</b>
         <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>
       </div>
       <div className={`order-type-badge order-type-badge-${orderTypeColor(o)}`}>{orderTypeLabel(o, t)}</div>
+      {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
       {o.paymentMode === 'on_site' && (
         <div className="small" style={{ margin: '4px 0', fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : 'var(--ink)' }}>
           {o.pickupNoShow ? t('ordersResto.noShowBadge') : t('ordersResto.payOnSiteBadge', { amount: `${o.total.toFixed(2)}€` })}
@@ -297,7 +341,9 @@ export default function OrdersPage() {
           </span>
         </button>
       )}
-      <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}</p>
+      <p className="small service-resume">{t('ordersResto.summary', { current: enCours.length, today: duJour })}
+        {terminaux && <> · <Link to="/dashboard/terminal">{aTerminal ? (terminalEnLigne ? t('ordersResto.terminalOnline') : t('ordersResto.terminalOffline')) : t('ordersResto.terminalNone')}</Link></>}
+      </p>
 
       {enCours.length === 0 && <div className="empty">{orders.length === 0 ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')}</div>}
       {enCours.map(carteCommande)}
@@ -389,15 +435,38 @@ export default function OrdersPage() {
                 (fondateur, 2026-09-22) ; ici ne reste que le secours : l'imprimante Bluetooth si elle est
                 connectée, sinon la boîte d'impression de l'appareil. « Modifier le ticket » et le texte
                 d'explication qui précédaient les boutons sont partis. */}
-            {impressions[selectedOrder.id] > 0 && (
-              <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
+            {aTerminal ? (
+              <>
+                <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 8 }}>
+                  <b className="small">{t('ordersResto.ticketTitle')}</b>
+                  {selectedOrder.print ? <EtatImpression p={selectedOrder.print} t={t} /> : <span className="small" style={{ color: 'var(--ink-faint)' }}>{t('ordersResto.notPrintedYet')}</span>}
+                </div>
+                {selectedOrder.print?.printed > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('ordersResto.reprintHelp')}</p>}
+                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder)}>
+                    {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
+                  </button>
+                  <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
+                  <button className="btn-ghost" onClick={() => printReceipt(selectedOrder)}>{t('ordersResto.printFromDevice')}</button>
+                  <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
+                </div>
+              </>
+            ) : (
+              <>
+                {impressions[selectedOrder.id] > 0 && (
+                  <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
+                )}
+                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
+                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder) : printReceipt(selectedOrder))}>
+                    {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
+                  </button>
+                  <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
+                  <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
+                </div>
+                <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('ordersResto.noTerminalHint')} <Link to="/dashboard/terminal">{t('ordersResto.terminalSettings')}</Link></p>
+              </>
             )}
-            <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
-              <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder) : printReceipt(selectedOrder))}>
-                {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
-              </button>
-              <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
-            </div>
+            {apercu?.orderId === selectedOrder.id && <div style={{ marginTop: 12 }}><TicketPapier lines={apercu.lines} columns={apercu.columns} /></div>}
           </div>
         </div>,
         document.body

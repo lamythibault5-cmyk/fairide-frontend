@@ -779,6 +779,7 @@ export default function Account() {
           {restaurant.terminal && (
             <LigneCompte icone="imprimante" titre={t('accountUi.terminalRow')} sous={t(`accountUi.terminalSub_${restaurant.terminal.status}`, { amount: Number(restaurant.terminal.depositAmount || 80).toFixed(0) })} ouverte={ouvertes.has('terminal')} onClick={() => basculer('terminal')}>
             {ouvertes.has('terminal') && <TerminalFairide terminal={restaurant.terminal} />}
+            {ouvertes.has('terminal') && <p style={{ margin: '10px 0 0' }}><Link to="/dashboard/terminal" className="btn-outline">{t('terminal.openSettings')}</Link></p>}
             </LigneCompte>
           )}
           <div id="section-contrat" />

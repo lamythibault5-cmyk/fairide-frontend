@@ -6,6 +6,7 @@ import { useToast } from '../../context/ToastContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icone from '../../components/Icone';
+import RouleauTickets from '../../components/RouleauTickets';
 import '../../simulation.css';
 
 // Admin › Simulation : parcourir Fairide comme un visiteur, un client, un restaurateur et un livreur, dans un bac
@@ -30,6 +31,24 @@ export default function AdminSimulationPage() {
   const [filtre, setFiltre] = useState('ouverte'); // ouverte | traitee | all
   const [profilNotes, setProfilNotes] = useState('all');
   const [aSupprimer, setASupprimer] = useState(null);
+  // Terminal simulé du commerce fictif : ses tickets « sortent » ici (imprimante virtuelle, relue toutes les 5 s).
+  const [imprimante, setImprimante] = useState({ tickets: [], nouveaux: [], terminal: false });
+  const [impression, setImpression] = useState(false);
+  useEffect(() => {
+    let actif = true;
+    const tourner = () => api('/admin/simulation/printer', { token }).then((r) => { if (actif) setImprimante(r); }).catch(() => {});
+    tourner();
+    const i = setInterval(tourner, 5000);
+    return () => { actif = false; clearInterval(i); };
+  }, [token]);
+  async function imprimer(orderId) {
+    setImpression(true);
+    try {
+      const r = await api('/admin/simulation/print', { method: 'POST', token, body: orderId ? { orderId } : {} });
+      setImprimante(r);
+      toast(orderId ? tr('simulation.reprinted') : tr('simulation.testPrinted'));
+    } catch (e) { toast(e.message, 'erreur'); } finally { setImpression(false); }
+  }
 
   const charger = useCallback(() => {
     api('/admin/simulation', { token }).then(setEtat).catch((e) => toast(e.message, 'erreur'));
@@ -135,6 +154,29 @@ export default function AdminSimulationPage() {
           <ul className="simu-liste-sure">
             {[1, 2, 3, 4, 5].map((i) => <li key={i}>{tr(`simulation.safety${i}`)}</li>)}
           </ul>
+        </div>
+      </div>
+
+      <div className="card" style={{ marginTop: 16 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <h3 style={{ margin: 0 }}>{tr('simulation.printerTitle')}</h3>
+          <button type="button" className="btn-outline" disabled={impression || !etat?.ready} onClick={() => imprimer(null)}>{tr('simulation.testTicket')}</button>
+        </div>
+        <p className="small" style={{ margin: '6px 0 12px', maxWidth: 760 }}>{tr('simulation.printerAdminHelp')}</p>
+        <div className="simu-grille" style={{ marginTop: 0 }}>
+          <div>
+            <h4 style={{ margin: '0 0 8px' }}>{tr('simulation.recentOrders')}</h4>
+            {(!etat?.recentOrders || etat.recentOrders.length === 0) && <p className="small" style={{ margin: 0 }}>{tr('simulation.noOrdersYet')}</p>}
+            {(etat?.recentOrders || []).map((o) => (
+              <div key={o.id} className="simu-note" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                <span className="small"><b>{o.orderNumber ? `#${String(o.orderNumber).padStart(3, '0')}` : '—'}</b> · {tr(o.orderType === 'delivery' ? 'simulation.typeDelivery' : 'simulation.typePickup')} · {tr(`simulation.status_${o.status}`)}</span>
+                <button type="button" className="btn-ghost simu-mini" disabled={impression || !o.paid} onClick={() => imprimer(o.id)}>{tr('simulation.printTicket')}</button>
+              </div>
+            ))}
+          </div>
+          <div style={{ maxHeight: 620, overflowY: 'auto' }}>
+            <RouleauTickets tickets={imprimante.tickets} nouveaux={imprimante.nouveaux || []} t={tr} max={6} onReprint={(id) => imprimer(id)} />
+          </div>
         </div>
       </div>
 
