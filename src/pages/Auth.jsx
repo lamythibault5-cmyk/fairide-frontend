@@ -138,6 +138,10 @@ export default function Auth() {
   // retirables ici comme plus tard dans « Mon commerce ».
   const [phoneSecondary, setPhoneSecondary] = useState('');
   const [phoneSecondaryOuvert, setPhoneSecondaryOuvert] = useState(false);
+  // Restaurateur (fondateur, 2026-09-30) : le numéro SUR PLACE du restaurant (restaurants.phone) est distinct du
+  // numéro du compte, qui est celui du patron / responsable ; d'autres responsables s'ajoutent (manager_contacts).
+  const [restoPhone, setRestoPhone] = useState('');
+  const [responsables, setResponsables] = useState([]);
   const [emailSecondary, setEmailSecondary] = useState('');
   const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
   const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'recherche' | 'trouve' | 'trouveWeb' | 'rien'
@@ -153,6 +157,7 @@ export default function Auth() {
   const [typeDepuisSite, setTypeDepuisSite] = useState(false); // le type affiché vient du site, pas d'un choix
   const [relireSite, setRelireSite] = useState(0);
   const emailDepuisFiche = useRef('');
+  const restoPhoneDepuisFiche = useRef('');
   const cuisineFinale = cuisine === 'Autre' ? (customCuisine.trim() || 'Autre') : cuisine;
   // Dès que le commerce est trouvé dans la recherche : horaires publiés sur son site (schema.org ou texte), et s'il
   // n'a pas de site ou que le site ne les donne pas, recherche web par nom + adresse (site officiel et horaires).
@@ -204,7 +209,9 @@ export default function Auth() {
       openingHours: fiche.openingHours || '',
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       commune: addressCity.trim(), neighborhood: '',
-      phone: phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
+      phone: restoPhone.trim() || phone.trim(), phoneSecondary: phoneSecondaryOuvert ? phoneSecondary.trim() : '',
+      // Le titulaire du compte d'abord (patron / responsable), puis les autres responsables saisis.
+      managerContacts: [{ name: `${firstName} ${lastName}`.trim(), phone: phone.trim(), role: 'owner' }, ...responsables.filter((r) => r.phone.trim()).map((r) => ({ name: r.name.trim(), phone: r.phone.trim(), role: 'manager' }))],
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
@@ -248,8 +255,8 @@ export default function Auth() {
     setAddressNumber(fiche.number || '');
     setAddressPostalCode(fiche.postalCode || '');
     setAddressCity(fiche.city || '');
-    // Le téléphone personnel saisi à l'étape précédente n'est jamais écrasé par celui du commerce.
-    if (fiche.phone && !phone.trim()) setPhone(fiche.phone);
+    // Le numéro de la fiche est celui du restaurant (sur place) : il remplit restoPhone, jamais le numéro personnel.
+    if (fiche.phone && (!restoPhone.trim() || restoPhone === restoPhoneDepuisFiche.current)) { setRestoPhone(fiche.phone); restoPhoneDepuisFiche.current = fiche.phone; }
     const typeDevine = cuisineDepuisOsm(fiche.cuisine, fiche.type);
     if (typeDevine && !cuisine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
     // Horaires publiés sur le web → structure par jour, tant que le restaurateur n'a pas commencé à les régler lui-même.
@@ -365,6 +372,7 @@ export default function Auth() {
     commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
+    restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables],
     emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
     siteTrouve: [siteTrouve, setSiteTrouve], infosVerifiees: [infosVerifiees, setInfosVerifiees], typeDepuisSite: [typeDepuisSite, setTypeDepuisSite],
     // Code de vérification en attente : sans eux, un rechargement renvoyait au formulaire alors que le compte existe.
@@ -452,7 +460,7 @@ export default function Auth() {
      quoi sert une donnée au moment où on la demande évite la question "pourquoi vous voulez ça ?",
      qui est une des raisons pour lesquelles on abandonne un formulaire. */
   const stepCopy = {
-    identity: { title: t('auth.stepIdentityTitle'), sub: t('auth.stepIdentitySub') },
+    identity: { title: t('auth.stepIdentityTitle'), sub: role === 'restaurant' ? t('auth.stepIdentitySubRestaurant') : t('auth.stepIdentitySub') },
     business: { title: t('auth.stepBusinessTitle'), sub: t('auth.stepBusinessSub') },
     documents: { title: t('auth.stepDocsTitle'), sub: t('auth.stepDocsSub') },
     /* POUR UN RESTAURATEUR, CETTE ADRESSE EST CELLE DU COMMERCE.
@@ -502,6 +510,11 @@ export default function Auth() {
       if (!firstName.trim()) e.firstName = required;
       if (!lastName.trim()) e.lastName = required;
       if (!phone.trim()) e.phone = required;
+      if (role === 'restaurant') responsables.forEach((r, i) => {
+        if (!r.name.trim() && !r.phone.trim()) return;
+        if (!r.name.trim()) e[`resp${i}`] = t('auth.errManagerName');
+        else if (r.phone.trim().replace(/\D/g, '').length < 8) e[`resp${i}`] = t('auth.errPhoneInvalid');
+      });
       if (role === 'driver') {
         if (!courierStatus) e.courierStatus = t('auth.errCourierStatus');
         if (!vehicleType) e.vehicleType = t('auth.errVehicle');
@@ -515,8 +528,12 @@ export default function Auth() {
       if (!docRecto) e.docRecto = t('authDocs.errFront');
       if (!docVerso) e.docVerso = t('authDocs.errBack');
     }
-    // « business » ne valide rien : chercher son commerce est une AIDE de saisie, pas une obligation.
-    // Qui ne se trouve pas dans l'annuaire continue et remplit la suite à la main, comme avant.
+    // « business » : chercher son commerce est une AIDE de saisie, pas une obligation — qui ne se trouve pas dans
+    // l'annuaire continue et remplit la suite à la main. Seul le numéro sur place du restaurant y est demandé.
+    if (key === 'business' && role === 'restaurant') {
+      if (!restoPhone.trim()) e.restoPhone = required;
+      else if (restoPhone.trim().replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
+    }
     if (key === 'details') {
       if (!cuisine) e.cuisine = t('auth.errCuisine');
       if (!legalName.trim()) e.legalName = required;
@@ -1073,11 +1090,32 @@ export default function Auth() {
                 </div>
                 )}
                 <div className="field">
-                  <label htmlFor="auth-f-7">{t('auth.phone')}</label>
+                  <label htmlFor="auth-f-7">{role === 'restaurant' ? t('auth.phoneOwner') : t('auth.phone')}</label>
                   {/* Pays (UE, Belgique par défaut) + numéro local : la valeur envoyée est internationale (+32 470…). */}
                   <PhoneInput id="auth-f-7" value={phone} onChange={setPhone} invalid={!!errors.phone} />
+                  {role === 'restaurant' && <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.phoneOwnerHelp')}</p>}
                   {fieldError('phone')}
                 </div>
+                {role === 'restaurant' && (
+                  <div className="field responsables" role="group" aria-labelledby="auth-resp-titre">
+                    <span className="titre-groupe" id="auth-resp-titre">{t('auth.managersTitle')}</span>
+                    <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.managersHelp')}</p>
+                    {responsables.map((r, i) => (
+                      <div key={i} className="contact-second" style={{ marginBottom: 8 }}>
+                        <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+                          <input style={{ flex: 1 }} aria-label={t('auth.managerName')} placeholder={t('auth.managerNamePh')} value={r.name}
+                            onChange={(e) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))} />
+                          <button type="button" className="btn-ghost" style={{ padding: '8px 10px', fontSize: 13 }} onClick={() => setResponsables((l) => l.filter((_, j) => j !== i))}>{t('auth.removeSecond')}</button>
+                        </div>
+                        <div style={{ marginTop: 6 }}><PhoneInput id={`auth-f-resp-${i}`} value={r.phone} onChange={(v) => setResponsables((l) => l.map((x, j) => (j === i ? { ...x, phone: v } : x)))} invalid={!!errors[`resp${i}`]} /></div>
+                        {fieldError(`resp${i}`)}
+                      </div>
+                    ))}
+                    {responsables.length < 4 && (
+                      <button type="button" className="btn-link-plus" onClick={() => setResponsables((l) => [...l, { name: '', phone: '' }])}>＋ {t('auth.addManager')}</button>
+                    )}
+                  </div>
+                )}
                 {role === 'driver' && (
                   <>
                     <div className="field">
@@ -1148,8 +1186,18 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
+                <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--teal, #1F8A70)' }}>🏪 {t('auth.businessInfoNote')}</p>
                 <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} initialFiche={commerceTrouve} />
                 {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
+                <div className="field">
+                  <label htmlFor="auth-f-tel-resto">{t('auth.restoPhoneLabel')}</label>
+                  <PhoneInput id="auth-f-tel-resto" value={restoPhone} onChange={setRestoPhone} invalid={!!errors.restoPhone} />
+                  <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{t('auth.restoPhoneHelp')}</p>
+                  {phone.trim() && restoPhone.trim() !== phone.trim() && (
+                    <button type="button" className="btn-link-plus" onClick={() => setRestoPhone(phone.trim())}>{t('auth.restoPhoneSameAsMine')}</button>
+                  )}
+                  {fieldError('restoPhone')}
+                </div>
               </>
             )}
 
@@ -1175,7 +1223,7 @@ export default function Auth() {
                 <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">
                   <span className="titre-groupe" id="auth-contacts-titre">{t('auth.contactsTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.contactsHelp')}</p>
-                  <p className="small contact-ligne">📞 <b>{phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {t('auth.contactsPhoneFromAccount')}</span></p>
+                  <p className="small contact-ligne">📞 <b>{restoPhone.trim() || phone.trim() || '-'}</b> <span style={{ opacity: 0.75 }}>· {restoPhone.trim() ? t('auth.contactsPhoneOnSite') : t('auth.contactsPhoneFromAccount')}</span></p>
                   {!phoneSecondaryOuvert ? (
                     <button type="button" className="btn-link-plus" onClick={() => setPhoneSecondaryOuvert(true)}>＋ {t('auth.addSecondPhone')}</button>
                   ) : (

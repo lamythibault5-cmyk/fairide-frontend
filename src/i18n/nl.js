@@ -1648,7 +1648,7 @@ export default {
       fCuisinePh: 'Bv. pizza, sushi, frituur…',
       noWebsite: 'geen website gevonden',
       noHours: 'geen openingsuren gevonden (je vult ze net hieronder in)',
-      contactLater: 'De telefoon en e-mail van je account zijn die je net opgaf. Het publieke nummer en de website van de zaak kun je later aanpassen in Mijn zaak.',
+      contactLater: 'Het telefoonnummer ter plaatse van het restaurant vul je hieronder in; het jouwe (eigenaar / verantwoordelijke) is dat van je account. Alles blijft later aanpasbaar in Mijn zaak.',
       correct: 'Fiche corrigeren'
     },
     paiementLivreur: {
@@ -3264,6 +3264,9 @@ export default {
       unlock: 'Ontgrendelen'
     },
     adminRestos: {
+      managers: 'Verantwoordelijken:',
+      managerOwner: 'eigenaar',
+      priceMarkup: 'Prijsverhoging van de zaak: +{p} % (voor de zaak, deel van Fairide ongewijzigd)',
       title: 'Restaurants',
       viewPage: 'Pagina bekijken ↗',
       editInfo: '✏️ Gegevens wijzigen',
@@ -4668,6 +4671,20 @@ export default {
       emptyMenu: 'Je kaart is leeg: importeer ze eerst (foto\'s kunnen ook worden opgehaald tijdens het nalezen van een import).',
     },
     menuPage: {
+      markupTitle: 'Je prijzen op Fairide',
+      markupIntro: 'Standaard betalen je klanten je prijs ter plaatse + {rate} % (het deel van Fairide): jij ontvangt je prijs ter plaatse. Als je wilt, verhoog je je prijzen met de schuifbalk tot 10 % extra: die verhoging is volledig voor jou, het deel van Fairide verandert niet.',
+      markupValueZero: 'Verhoging: 0 % · je prijzen ter plaatse (standaard)',
+      markupValue: 'Verhoging: +{p} %, voor jou',
+      markupMin: 'Prijs ter plaatse',
+      markupExample: 'Voorbeeld: een gerecht van {base} ter plaatse',
+      markupShown: 'Prijs die de klant ziet:',
+      markupYouGet: 'Jij ontvangt:',
+      markupYouGetExtra: '+{amount} voor jou',
+      markupFairide: 'Deel van Fairide:',
+      markupApply: 'Toepassen op mijn kaart ({n} gerechten)',
+      markupDone: 'Verhoging van {p} % toegepast op je {n} gerechten.',
+      markupDoneZero: 'Je kaart staat weer op je prijzen ter plaatse + het deel van Fairide.',
+      markupNote: 'Alle gerechten en supplementen op je kaart volgen, afgerond op € 0,10. Je kunt altijd terug naar 0 %: je kaart krijgt haar vorige prijzen terug.',
       quickStartTitle: '🚀 Start met 1 klik',
       quickStart1: 'Je type zaak is',
       quickStart2: '. Fairide kan meteen een volledig menu genereren, met automatisch toegevoegde foto\'s, kies gerecht per gerecht wat je houdt, sectie per sectie.',
@@ -4838,6 +4855,10 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      phoneOnSite: 'Telefoon van het restaurant (ter plaatse)',
+      managersTitle: 'Eigenaar / verantwoordelijken',
+      managersHelp: 'De mensen die Fairide belt als het nodig is. Nooit zichtbaar voor klanten.',
+      managerOwner: 'eigenaar',
       rowCuisines: 'Andere keukentypes',
       cuisinesNone: 'geen (optioneel)',
       cuisinesHelp: 'Je hoofdtype is "{main}": dat bepaalt je menukaart. Voeg de andere keukens toe die je aanbiedt, zodat klanten je ook via die filters vinden.',
@@ -6325,6 +6346,20 @@ export default {
       failedText: 'We hebben deze betaling niet ontvangen. Je bestelling is niet naar het restaurant gestuurd en er is niets afgeschreven. Je kunt het opnieuw proberen via "Mijn bestellingen".'
     },
     auth: {
+      stepIdentitySubRestaurant: 'Jij, de eigenaar of verantwoordelijke: Fairide belt je als een bestelling vastloopt.',
+      phoneOwner: 'Je nummer (eigenaar / verantwoordelijke)',
+      phoneOwnerHelp: 'Je persoonlijke nummer, niet dat van het restaurant: het nummer ter plaatse vraag je in de volgende stap.',
+      managersTitle: 'Andere verantwoordelijken (optioneel)',
+      managersHelp: 'Een vennoot, een zaalverantwoordelijke… Fairide kan hen bellen als jij niet bereikbaar bent.',
+      managerName: 'Naam van de verantwoordelijke',
+      managerNamePh: 'Voor- en achternaam',
+      addManager: 'Een verantwoordelijke toevoegen',
+      errManagerName: 'Vul de naam van deze verantwoordelijke in.',
+      businessInfoNote: 'Alles hier gaat over het restaurant: de naam, het adres en het telefoonnummer ter plaatse (niet de jouwe).',
+      restoPhoneLabel: 'Telefoon van het restaurant (ter plaatse)',
+      restoPhoneHelp: 'Het nummer om het restaurant tijdens de service te bereiken. Klanten zien het.',
+      restoPhoneSameAsMine: 'Het is hetzelfde als het mijne',
+      contactsPhoneOnSite: 'nummer ter plaatse van het restaurant',
       login: 'Inloggen',
       register: 'Account aanmaken',
       clientSpace: '🛍️ Klantenzone',

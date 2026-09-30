@@ -52,6 +52,13 @@ function ContactCommerce({ r, tr, fiche = false }) {
         {r.restaurantPhoneSecondary && <> · {tel(r.restaurantPhoneSecondary)}</>}
         {r.ownerPhone && r.ownerPhone !== r.restaurantPhone && r.ownerPhone !== r.restaurantPhoneSecondary && <> · {tr('adminRestos.ownerPhoneShort')} {tel(r.ownerPhone)}</>}
       </p>
+      {/* Patron(s) / responsable(s) saisis à l'inscription ou dans Mon commerce › Contact (restaurants.manager_contacts). */}
+      {(r.managerContacts || []).length > 0 && (
+        <p className="small" style={style}>
+          👤 {tr('adminRestos.managers')} {r.managerContacts.map((m, i) => <span key={m.phone}>{i > 0 && ' · '}{m.name || '-'}{m.role === 'owner' ? ` (${tr('adminRestos.managerOwner')})` : ''} {tel(m.phone)}</span>)}
+        </p>
+      )}
+      {fiche && r.priceMarkupPercent > 0 && <p className="small" style={style}>📈 {tr('adminRestos.priceMarkup', { p: r.priceMarkupPercent })}</p>}
       {fiche && (r.restaurantEmail || r.restaurantEmailSecondary) && (
         <p className="small" style={style}>
           ✉️ {[r.restaurantEmail, r.restaurantEmailSecondary].filter(Boolean).map((e, i) => <span key={e}>{i > 0 && ' · '}<a href={`mailto:${e}`} onClick={stop}>{e}</a></span>)}

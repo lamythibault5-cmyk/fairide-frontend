@@ -21,6 +21,7 @@ import MenuConciergeRequest from '../../components/MenuConciergeRequest';
 import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import HaussePrix from '../../components/HaussePrix';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -867,6 +868,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           </button>
         </div>
       )}
+
+      {/* Hausse de prix gardée par le commerce, 0 à 10 % (fondateur, 2026-09-30) ; l'admin la règle aussi pour lui. */}
+      {restaurant.menu.length > 0 && <HaussePrix restoId={restoId} nbPlats={restaurant.menu.length} onChange={() => loadDashboard(restoId)} />}
 
       {restaurant.menu.length > 0 && !modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">

@@ -1648,7 +1648,7 @@ export default {
       fCuisinePh: 'E.g. pizza, sushi, fries…',
       noWebsite: 'no website found',
       noHours: 'no opening hours found (you will fill them in just below)',
-      contactLater: 'Your account phone and e-mail are the ones you just entered. The business\'s public number and website can be changed later in My business.',
+      contactLater: 'The restaurant\'s in-store phone number goes just below; yours (owner / manager) is your account number. Everything can be changed later in My business.',
       correct: 'Correct the details'
     },
     paiementLivreur: {
@@ -3264,6 +3264,9 @@ export default {
       unlock: 'Unlock'
     },
     adminRestos: {
+      managers: 'Managers:',
+      managerOwner: 'owner',
+      priceMarkup: 'Business price increase: +{p} % (kept by the business, Fairide\'s share unchanged)',
       title: 'Restaurants',
       viewPage: 'View page ↗',
       editInfo: '✏️ Edit details',
@@ -4668,6 +4671,20 @@ export default {
       emptyMenu: 'Your menu is empty: import it first (photos can also be picked up while reviewing an import).',
     },
     menuPage: {
+      markupTitle: 'Your prices on Fairide',
+      markupIntro: 'By default, your customers pay your in-store price + {rate} % (Fairide\'s share): you receive your in-store price. If you like, raise your prices by up to 10 % more with the slider: that increase is entirely yours, Fairide\'s share does not change.',
+      markupValueZero: 'Increase: 0 % · your in-store prices (default)',
+      markupValue: 'Increase: +{p} %, for you',
+      markupMin: 'In-store price',
+      markupExample: 'Example: a dish at {base} in store',
+      markupShown: 'Price shown to the customer:',
+      markupYouGet: 'You receive:',
+      markupYouGetExtra: '+{amount} for you',
+      markupFairide: 'Fairide\'s share:',
+      markupApply: 'Apply to my menu ({n} dishes)',
+      markupDone: '{p} % increase applied to your {n} dishes.',
+      markupDoneZero: 'Your menu is back to your in-store prices + Fairide\'s share.',
+      markupNote: 'Every dish and extra on your menu follows, rounded to €0.10. You can go back to 0 % at any time: your menu gets its previous prices back.',
       quickStartTitle: '🚀 Start in 1 click',
       quickStart1: 'Your business type is',
       quickStart2: '. Fairide can generate a complete menu right away, with photos included automatically, choose dish by dish what you keep, section by section.',
@@ -4838,6 +4855,10 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      phoneOnSite: 'Restaurant phone (in store)',
+      managersTitle: 'Owner / managers',
+      managersHelp: 'The people Fairide calls when needed. Never shown to customers.',
+      managerOwner: 'owner',
       rowCuisines: 'Other cuisine types',
       cuisinesNone: 'none (optional)',
       cuisinesHelp: 'Your main type is "{main}": it decides your menu. Add the other cuisines you offer, so customers also find you through these filters.',
@@ -6325,6 +6346,20 @@ export default {
       failedText: 'We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. You can try again from "My orders".'
     },
     auth: {
+      stepIdentitySubRestaurant: 'You, the owner or manager: Fairide calls you if an order gets stuck.',
+      phoneOwner: 'Your number (owner / manager)',
+      phoneOwnerHelp: 'Your personal number, not the restaurant\'s: the in-store number comes in the next step.',
+      managersTitle: 'Other managers (optional)',
+      managersHelp: 'A partner, a floor manager… Fairide can call them if you can\'t be reached.',
+      managerName: 'Manager\'s name',
+      managerNamePh: 'First and last name',
+      addManager: 'Add a manager',
+      errManagerName: 'Enter this manager\'s name.',
+      businessInfoNote: 'Everything here is about the restaurant: its name, its address and its in-store phone number (not yours).',
+      restoPhoneLabel: 'Restaurant phone (in store)',
+      restoPhoneHelp: 'The number to call to reach the restaurant during service. It is shown to customers.',
+      restoPhoneSameAsMine: 'It\'s the same as mine',
+      contactsPhoneOnSite: 'restaurant\'s in-store number',
       login: 'Log in',
       register: 'Create an account',
       clientSpace: '🛍️ Customer area',

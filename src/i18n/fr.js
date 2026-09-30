@@ -1648,7 +1648,7 @@ export default {
       fCuisinePh: 'Ex : pizza, sushi, friterie…',
       noWebsite: 'pas de site web trouvé',
       noHours: 'pas d\'horaires trouvés (tu les rempliras juste en dessous)',
-      contactLater: 'Le téléphone et l\'e-mail de ton compte sont ceux que tu viens de donner. Le numéro public du commerce et son site restent modifiables plus tard dans Mon commerce.',
+      contactLater: 'Le numéro de téléphone sur place du restaurant se renseigne juste en dessous ; le tien (patron / responsable) est celui de ton compte. Tout reste modifiable plus tard dans Mon commerce.',
       correct: 'Corriger la fiche'
     },
     paiementLivreur: {
@@ -3264,6 +3264,9 @@ export default {
       unlock: 'Déverrouiller'
     },
     adminRestos: {
+      managers: 'Responsables :',
+      managerOwner: 'patron',
+      priceMarkup: 'Hausse de prix du commerce : +{p} % (pour lui, part Fairide inchangée)',
       title: 'Restaurants',
       viewPage: 'Voir la page ↗',
       editInfo: '✏️ Modifier les informations',
@@ -4682,6 +4685,20 @@ export default {
       emptyMenu: 'Ta carte est vide : importe-la d\'abord (les photos peuvent aussi être reprises pendant la relecture d\'un import).',
     },
     menuPage: {
+      markupTitle: 'Tes prix sur Fairide',
+      markupIntro: 'Par défaut, tes clients paient ton prix sur place + {rate} % (la part de Fairide) : toi, tu reçois ton prix sur place. Si tu veux, monte tes prix jusqu\'à 10 % de plus avec la barre : cette hausse est entièrement pour toi, la part de Fairide ne change pas.',
+      markupValueZero: 'Hausse : 0 % · tes prix sur place (par défaut)',
+      markupValue: 'Hausse : +{p} %, pour toi',
+      markupMin: 'Prix sur place',
+      markupExample: 'Exemple : un plat à {base} sur place',
+      markupShown: 'Prix affiché au client :',
+      markupYouGet: 'Tu reçois :',
+      markupYouGetExtra: '+{amount} pour toi',
+      markupFairide: 'Part de Fairide :',
+      markupApply: 'Appliquer à ma carte ({n} plats)',
+      markupDone: 'Hausse de {p} % appliquée à tes {n} plats.',
+      markupDoneZero: 'Ta carte est revenue à tes prix sur place + la part de Fairide.',
+      markupNote: 'Tous les plats et suppléments de ta carte suivent, arrondis au 0,10 €. Tu peux revenir à 0 % à tout moment : ta carte retrouve ses prix d\'avant.',
       quickStartTitle: '🚀 Démarrez en 1 clic',
       quickStart1: 'Votre type de commerce est',
       quickStart2: '. Fairide peut générer un menu complet tout de suite, avec photos incluses automatiquement, choisissez plat par plat ce que vous gardez, section par section.',
@@ -4854,6 +4871,10 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      phoneOnSite: 'Téléphone du restaurant (sur place)',
+      managersTitle: 'Patron / responsables',
+      managersHelp: 'Les personnes que Fairide appelle en cas de besoin. Jamais affichées aux clients.',
+      managerOwner: 'patron',
       rowCuisines: 'Autres types de cuisine',
       cuisinesNone: 'aucun (facultatif)',
       cuisinesHelp: 'Ton type principal est « {main} » : c\'est lui qui décide de ta carte. Ajoute les autres cuisines que tu proposes, pour que les clients te trouvent aussi par ces filtres.',
@@ -6370,6 +6391,20 @@ export default {
       failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Tu peux réessayer depuis « Mes commandes »."
     },
     auth: {
+      stepIdentitySubRestaurant: 'Toi, le patron ou le responsable : Fairide t\'appelle si une commande coince.',
+      phoneOwner: 'Ton numéro (patron / responsable)',
+      phoneOwnerHelp: 'Ton numéro personnel, pas celui du restaurant : le numéro sur place se donne à l\'étape suivante.',
+      managersTitle: 'Autres responsables (facultatif)',
+      managersHelp: 'Un associé, un gérant de salle… Fairide peut les appeler si tu n\'es pas joignable.',
+      managerName: 'Nom du responsable',
+      managerNamePh: 'Prénom et nom',
+      addManager: 'Ajouter un responsable',
+      errManagerName: 'Indique le nom de ce responsable.',
+      businessInfoNote: 'Ici, tout concerne le restaurant : son nom, son adresse et son numéro de téléphone sur place (pas les tiens).',
+      restoPhoneLabel: 'Téléphone du restaurant (sur place)',
+      restoPhoneHelp: 'Le numéro qu\'on appelle pour joindre le restaurant pendant le service. Il s\'affiche aux clients.',
+      restoPhoneSameAsMine: 'C\'est le même que le mien',
+      contactsPhoneOnSite: 'numéro sur place du restaurant',
       login: 'Se connecter',
       register: 'Créer un compte',
       clientSpace: '🛍️ Espace client',
