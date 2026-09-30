@@ -39,7 +39,8 @@ export default function SimulationBar() {
   const { t, language } = useLanguage();
   const toast = useToast();
   const location = useLocation();
-  const [ouverte, setOuverte] = useState(() => lire(CLE_OUVERTE, true));
+  // Sur téléphone, la barre dépliée couvrait près de la moitié de l'écran (simulation du 30/09) : elle démarre repliée.
+  const [ouverte, setOuverte] = useState(() => lire(CLE_OUVERTE, window.innerWidth > 720));
   const [panneau, setPanneau] = useState(null); // null | 'etapes' | 'note'
   const [faites, setFaites] = useState(() => lire(CLE_ETAPES, {}));
   const [texte, setTexte] = useState('');

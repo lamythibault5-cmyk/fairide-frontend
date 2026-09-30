@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { SkeletonCards } from './Skeleton';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import PeppolSettings from './PeppolSettings';
+import { euros } from '../prixPlat';
 
 // Archive des factures émises, partagée par le restaurateur (factures de commission) et le livreur
 // (autofacturations). Les deux affichent la même chose — un historique, les montants HT/TVA/TTC, et le
@@ -124,16 +125,16 @@ export default function InvoiceArchive({ endpoint, pdfPath, ublPath, emailPath, 
                       <div className="small">{p.jours}</div>
                     </td>
                     <td>{new Date(inv.issuedAt).toLocaleDateString(getLocale())}</td>
-                    <td className="num">{inv.subtotalHt.toFixed(2)}€</td>
+                    <td className="num">{euros(inv.subtotalHt)}</td>
                     <td className="num">
-                      {inv.vatAmount.toFixed(2)}€
+                      {euros(inv.vatAmount)}
                       {/* En franchise de TVA, un taux à 0 n'est pas une erreur d'affichage mais le régime
                           du livreur : on le nomme, sinon la ligne paraît incomplète. */}
                       {inv.vatStatus === 'franchise'
                         ? <div className="small">{t('invoiceArchive.vatExempt')}</div>
                         : <div className="small">{(inv.vatRate * 100).toFixed(0)}%</div>}
                     </td>
-                    <td className="num"><b>{inv.totalTtc.toFixed(2)}€</b></td>
+                    <td className="num"><b>{euros(inv.totalTtc)}</b></td>
                     <td><span className={st.pill}>{st.texte}</span></td>
                     <td><span className={pp.pill} title={inv.peppolSentAt ? new Date(inv.peppolSentAt).toLocaleString(getLocale()) : ''}>{pp.texte}</span></td>
                     <td className="num" style={{ whiteSpace: 'nowrap' }}>

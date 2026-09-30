@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import FichePlat from './FichePlat';
 import { categoryKind, resolveItemImage } from '../menuCategories';
+import { euros } from '../prixPlat';
 
 // « Un dessert ou une boisson avec ça ? » — les suggestions de fin de panier.
 //
@@ -54,7 +55,7 @@ function UpsellRow({ items, cart, restaurant }) {
           <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
             {image ? <img loading="lazy" src={image} alt="" /> : <span className="upsell-item-emoji">🍽️</span>}
             <span className="upsell-item-name">{item.name}</span>
-            <span className="upsell-item-price">+{item.price.toFixed(2)}€</span>
+            <span className="upsell-item-price">+{euros(item.price)}</span>
           </button>
         );
       })}

@@ -48,7 +48,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
     >
       <strong style={{ fontSize: 15 }}>
         {active
-          ? t('alertBar.toHandle', { n: newCount })
+          ? (newCount === 1 ? t('alertBar.toHandleOne') : t('alertBar.toHandle', { n: newCount }))
           : t('alertBar.nonePending')}
       </strong>
 

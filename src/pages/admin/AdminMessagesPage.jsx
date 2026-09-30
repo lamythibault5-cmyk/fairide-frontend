@@ -56,7 +56,7 @@ function ThreadsTab({ token, tr, toast, broadcastFilter, onClearBroadcast, refre
     api(`/admin/messages/threads?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
     api('/admin/messages/stats', { token }).then(setStats).catch(() => {});
   }, [token, unreadOnly, role, status, q, broadcastFilter?.id, page]);
-  useEffect(load, [load, refreshKey]);
+  useEffect(() => { load(); }, [load, refreshKey]);
   useEffect(() => { setPage(0); }, [unreadOnly, role, status, q, broadcastFilter?.id]);
 
   const columns = useMemo(() => [
@@ -132,7 +132,7 @@ function ThreadDrawer({ id, token, tr, toast, onClose, onChanged }) {
     api(`/admin/messages/threads/${id}`, { token }).then((r) => { setData(r); onChanged?.(); }).catch((e) => setErreur(e.message));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, token]);
-  useEffect(load, [load]);
+  useEffect(() => { load(); }, [load]);
   useEffect(() => { fin.current?.scrollIntoView({ block: 'nearest' }); }, [data?.messages?.length]);
 
   async function envoyer() {
@@ -220,7 +220,7 @@ function BroadcastsTab({ token, tr, refreshKey, onOpenThreads }) {
     setData(null); setErreur(null);
     api('/admin/messages/broadcasts', { token }).then(setData).catch((e) => setErreur(e.message));
   }, [token]);
-  useEffect(load, [load, refreshKey]);
+  useEffect(() => { load(); }, [load, refreshKey]);
 
   if (erreur) return <ErrorCard message={erreur} onRetry={load} />;
   if (!data) return <SkeletonCards count={3} />;

@@ -124,8 +124,8 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif 
   const nbDispo = actif ? disponibles.length : 0;
   useEffect(() => {
     const base = baseTitre.current || 'Fairide';
-    if (nbPretes) document.title = `(${nbPretes}) ${t('driverAlert.titleReady')} · ${base}`;
-    else if (nbDispo) document.title = `(${nbDispo}) ${t('driverAlert.titleAvailable')} · ${base}`;
+    if (nbPretes) document.title = `(${nbPretes}) ${t(nbPretes === 1 ? 'driverAlert.titleReadyOne' : 'driverAlert.titleReady')} · ${base}`;
+    else if (nbDispo) document.title = `(${nbDispo}) ${t(nbDispo === 1 ? 'driverAlert.titleAvailableOne' : 'driverAlert.titleAvailable')} · ${base}`;
     else document.title = base;
     return () => { document.title = base; };
   }, [nbPretes, nbDispo, t]);

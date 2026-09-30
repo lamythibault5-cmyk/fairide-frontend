@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useCart } from '../../context/CartContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Icone from '../../components/Icone';
@@ -24,13 +25,14 @@ export default function PanierPage() {
   const cart = useCart();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { token } = useAuth();
   const [restaurant, setRestaurant] = useState(null);
   const [chargement, setChargement] = useState(true);
 
   useEffect(() => {
     if (!cart.restaurantId) { setChargement(false); return; }
-    api(`/restaurants/${cart.restaurantId}`).then(setRestaurant).catch(() => {}).finally(() => setChargement(false));
-  }, [cart.restaurantId]);
+    api(`/restaurants/${cart.restaurantId}`, { token }).then(setRestaurant).catch(() => {}).finally(() => setChargement(false));
+  }, [cart.restaurantId, token]);
 
   if (cart.count === 0) {
     return (

@@ -1,5 +1,6 @@
 import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import { euros } from '../prixPlat';
 
 function formatDateTime(ms) {
   return new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -45,20 +46,20 @@ export default function OrderReceipt({ order, restaurant }) {
             {i.qty}× {i.name}
             {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
           </span>
-          <span>{(i.price * i.qty - (i.discount || 0)).toFixed(2)}€</span>
+          <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
         </div>
       ))}
       {order.items.length > 0 && <>
       <div className="receipt-divider" />
-      <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{order.subtotal.toFixed(2)}€</span></div>
-      {order.promoDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promo', { label: order.promoLabel })}</span><span>-{order.promoDiscount.toFixed(2)}€</span></div>}
-      {order.orderType === 'delivery' && <div className="receipt-line"><span>{t('receipt.delivery')}</span><span>{order.deliveryFee.toFixed(2)}€</span></div>}
+      <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{euros(order.subtotal)}</span></div>
+      {order.promoDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promo', { label: order.promoLabel })}</span><span>-{euros(order.promoDiscount)}</span></div>}
+      {order.orderType === 'delivery' && <div className="receipt-line"><span>{t('receipt.delivery')}</span><span>{euros(order.deliveryFee)}</span></div>}
       {/* TVA comprise (serviceFee est HTVA, serviceFeeVat sa TVA) : le total la contient, la ligne doit la contenir aussi. */}
-      {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{(order.serviceFee + (order.serviceFeeVat || 0)).toFixed(2)}€</span></div>}
-      {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{order.giftVoucherDiscount.toFixed(2)}€</span></div>}
-      {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{order.balanceUsed.toFixed(2)}€</span></div>}
+      {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{euros((order.serviceFee + (order.serviceFeeVat || 0)))}</span></div>}
+      {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{euros(order.giftVoucherDiscount)}</span></div>}
+      {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{euros(order.balanceUsed)}</span></div>}
       <div className="receipt-divider" />
-      <div className="receipt-line receipt-total"><span>{order.paymentMode === 'on_site' ? t('receipt.toPayOnSite') : t('receipt.totalPaid')}</span><span>{order.total.toFixed(2)}€</span></div>
+      <div className="receipt-line receipt-total"><span>{order.paymentMode === 'on_site' ? t('receipt.toPayOnSite') : t('receipt.totalPaid')}</span><span>{euros(order.total)}</span></div>
       <p className="receipt-center" style={{ margin: '4px 0' }}>{order.paymentMode === 'on_site' ? t('receipt.payOnSiteNote') : order.paid ? t('receipt.paidVia') : t('receipt.unpaid')}</p>
       </>}
       <div className="receipt-divider" />

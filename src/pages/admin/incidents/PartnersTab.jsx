@@ -52,7 +52,7 @@ export default function PartnersTab({ queryString, onPickRestaurant, onPickDrive
     setData(null); setErreur(null);
     api(`/admin/incidents/partners${queryString ? `?${queryString}` : ''}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(charger, [queryString, token]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, [queryString, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erreur) return <ErrorCard message={erreur} onRetry={charger} />;
   if (!data) return <div className="stat-grid"><SkeletonCards count={2} /></div>;

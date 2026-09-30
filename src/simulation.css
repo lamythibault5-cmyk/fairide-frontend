@@ -91,3 +91,13 @@
 .simu-filtres .chip { min-height: 34px; padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink-soft); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
 .simu-filtres .chip.active { background: var(--iris); border-color: var(--iris); color: #fff; }
 .simu-mini { min-height: 32px; padding: 0 12px; font-size: 13px; border-radius: var(--radius-pill); cursor: pointer; }
+
+/* Téléphone (simulation du 30/09) : barre plus basse et plus serrée, pastille discrète. */
+@media (max-width: 720px) {
+  .simu-pastille { min-height: 34px; padding: 0 12px; font-size: 12px; }
+  .simu-barre { padding: 10px; }
+  .simu-tete { margin-bottom: 6px; }
+  .simu-profil { min-height: 44px; font-size: 11px; gap: 2px; }
+  .simu-actions { margin-top: 8px; }
+  .simu-action { min-height: 34px; font-size: 12px; padding: 0 8px; }
+}

@@ -68,15 +68,20 @@ export default function Checkout() {
   const [conformite, setConformite] = useState({ allergyRequest: '', ageDeclaration: false, acceptTerms: false, termsNeeded: false, termsVersion: '' });
   const pendingOrderRef = useRef(null);
   const fulfillmentInitRef = useRef(false);
+  // Commande envoyée : vider le panier ne doit plus renvoyer vers la liste des commerces (effet ci-dessous), sinon le
+  // client payé sur place ou en paiement simulé atterrissait sur /restaurants au lieu du suivi de sa commande.
+  const commandeTermineeRef = useRef(false);
 
   const restaurantId = cart.restaurantId;
 
   useEffect(() => {
+    if (commandeTermineeRef.current) return;
     if (!restaurantId || cart.count === 0) {
       navigate('/restaurants');
       return;
     }
-    api(`/restaurants/${restaurantId}`).then(setRestaurant).catch(() => setNotFound(true));
+    // Avec la session : un commerce que le public ne voit pas encore (le sien, celui de la simulation) reste commandable.
+    api(`/restaurants/${restaurantId}`, { token }).then(setRestaurant).catch(() => setNotFound(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restaurantId]);
 
@@ -170,7 +175,13 @@ export default function Checkout() {
     const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
     const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
-    if (manque) { toast(manque); return; }
+    if (manque) {
+      toast(manque);
+      // Sur téléphone, la case à cocher est tout en bas, loin du bouton : on y amène le client au lieu de le laisser chercher.
+      const caseManquante = [...document.querySelectorAll('.checkout-conformite .co-case input')].find((i) => !i.checked);
+      if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: 'smooth', block: 'center' }); caseManquante.focus({ preventScroll: true }); }
+      return;
+    }
     setPlacing(true);
     try {
       // Les frais de livraison dépendent de la distance réelle et ne sont connus qu'une fois la commande
@@ -211,6 +222,7 @@ export default function Checkout() {
       // Paiement sur place : rien à encaisser en ligne, la commande part au commerce.
       if (pendingOrder.paymentMode === 'on_site') {
         await api(`/orders/${pendingOrder.id}/confirm-on-site`, { method: 'POST', token });
+        commandeTermineeRef.current = true;
         cart.clear();
         toast(t('checkout.toastOnSiteConfirmed'));
         navigate('/orders');
@@ -219,6 +231,7 @@ export default function Checkout() {
       const pay = await api(`/payments/checkout/${pendingOrder.id}`, { method: 'POST', token });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
+        commandeTermineeRef.current = true;
         cart.clear();
         toast(t('checkout.toastOrderPaid'));
         navigate('/orders');
@@ -661,7 +674,7 @@ export default function Checkout() {
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="scooter" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee)}</span></div>
+                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}

@@ -22,6 +22,8 @@ import { estCompteTest, estCompteReel, estCompteSupprime, DeletedBadge, TestBadg
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
+import FicheLivreur from '../../components/admin/FicheLivreur';
+import { DossierDrawer } from './AdminCouriersPage';
 
 const activityLabels = (tr) => ({
   disponible: { label: tr('adminDrivers.available'), color: 'var(--teal-deep)' },
@@ -37,7 +39,7 @@ const VAT_LABELS = (tr) => ({ franchise: tr('adminDrivers.vatFranchise'), assuje
 function courierLine(d, tr) {
   if (!d.courier) return tr('adminDrivers.noCourierFile');
   const c = d.courier;
-  return [c.statusType ? tr(`courierOnboarding.status_${c.statusType}`) : tr('adminDrivers.statusNotChosen'), c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : null, c.zone || null, c.lifecycleStatus ? tr(`courierOnboarding.lifecycle_${c.lifecycleStatus}`) : null].filter(Boolean).join(' · ');
+  return [c.statusType ? tr(`courierOnboarding.status_${c.statusType}`) : tr('adminDrivers.statusNotChosen'), c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : null, c.bagOption ? `${tr('adminDrivers.rowBag')} : ${tr(`auth.bag_${c.bagOption}`)}` : null, c.zone || null, c.lifecycleStatus ? tr(`courierOnboarding.lifecycle_${c.lifecycleStatus}`) : null].filter(Boolean).join(' · ');
 }
 
 export default function AdminDriversPage() {
@@ -72,6 +74,9 @@ export default function AdminDriversPage() {
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [onglet, setOnglet] = useState('apercu');
+  // Dossier coursier du livreur ouvert (statut, véhicule, sac…) et dossier complet ouvert par-dessus.
+  const [dossier, setDossier] = useState(null);
+  const [dossierOuvert, setDossierOuvert] = useState(false);
   const setFiltre = (k) => { const next = Object.fromEntries([...searchParams.entries()]); if (k && k !== 'all') next.status = k; else delete next.status; setSearchParams(next); };
 
   const liste = useServerList('/admin/drivers', { q, sort: triServeur, pageSize: PAGE_SIZE, extra: { adminStatus: ['pending', 'approved', 'blocked'].includes(filtre) ? filtre : '' } });
@@ -86,7 +91,9 @@ export default function AdminDriversPage() {
     setOnglet('apercu');
     setSelected(d);
     setDetail(null);
+    setDossier(null);
     api(`/admin/drivers/${d.id}`, { token }).then(setDetail).catch((e) => toast(e.message, 'erreur'));
+    if (d.courier?.id) chargerDossier(d.courier.id);
     loadDocuments(d.id);
   }
 
@@ -127,6 +134,10 @@ export default function AdminDriversPage() {
     if (!confirmAction) return;
     setBusy(true);
     try { await confirmAction.run(); } finally { setBusy(false); setConfirmAction(null); }
+  }
+
+  function chargerDossier(courierId) {
+    api(`/admin/couriers/${courierId}`, { token }).then(setDossier).catch(() => setDossier(null));
   }
 
   function refreshDetail() {
@@ -293,7 +304,9 @@ export default function AdminDriversPage() {
           {detail && onglet === 'apercu' && (
             <>
               <ProfilLine u={detail} tr={tr} />
-              <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}{detail.courier && <> · <Link to="/admin/couriers" state={{ presetSearch: detail.email }} className="small">{tr('adminDrivers.openCourierFile')}</Link></>}</p>
+              {!dossier && <p className="small" style={{ margin: '2px 0' }}>🛵 {courierLine(detail, tr)}</p>}
+              {dossier && <FicheLivreur dossier={dossier} tr={tr} onOpen={() => setDossierOuvert(true)} />}
+              <div className="divider" />
               <p className="small" style={{ margin: '2px 0' }}>{tr('adminDrivers.registeredStripe', { date: fmtDate(detail.createdAt), status: detail.stripeConnectStatus || '-' })}</p>
               {(detail.payoutIban || detail.payoutAccountHolder) && (
                 <p className="small" style={{ margin: '2px 0' }}>💳 {detail.payoutAccountHolder || tr('adminDrivers.holderMissing')}, {detail.payoutIban || tr('adminDrivers.ibanMissing')}</p>
@@ -375,6 +388,11 @@ export default function AdminDriversPage() {
           )}
         </RecordDrawer>,
         document.body
+      )}
+      {dossierOuvert && detail?.courier?.id && (
+        <DossierDrawer id={detail.courier.id} tr={tr} token={token} toast={toast}
+          onClose={() => setDossierOuvert(false)}
+          onChanged={() => { chargerDossier(detail.courier.id); refreshDetail(); load(); }} />
       )}
       <DecisionDialog open={!!decision} cible={decision?.name} targetType="user" livreur loading={busy}
         onCancel={() => setDecision(null)}

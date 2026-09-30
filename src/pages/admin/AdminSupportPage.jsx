@@ -106,7 +106,7 @@ export default function AdminSupportPage() {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/support/tickets?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [status, priority, category, tag, escalatedOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status, priority, category, tag, escalatedOnly, mine, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [status, priority, category, tag, escalatedOnly, mine, q]);
   // Ouverture directe par l'adresse (?id=…) consommée une seule fois.
   useEffect(() => { if (searchParams.get('id')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -370,11 +370,11 @@ function TicketDrawer({ id, onClose, onChanged, onPickTag }) {
     api(`/admin/notes?targetType=ticket&targetId=${id}`, { token }).then(setNotes).catch(() => {});
     api(`/admin/actions?targetType=ticket&targetId=${id}`, { token }).then(setActions).catch(() => {});
   }
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   function loadCannedReplies() {
     api('/admin/support/canned-replies', { token }).then(setCannedReplies).catch(() => {});
   }
-  useEffect(loadCannedReplies, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadCannedReplies(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startEdit() {
     setForm({ subject: t.subject, category: t.category, priority: t.priority, assignedToEmail: t.assignedToEmail || '', tags: (t.tags || []).join(', ') });

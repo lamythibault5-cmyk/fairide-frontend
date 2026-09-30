@@ -40,7 +40,7 @@ export default function AdminPromotionsPage() {
   const { sort, toggle } = useTableSort('createdAt');
 
   function load() { setErreur(null); api('/admin/promo-codes', { token }).then(setCodes).catch((e) => setErreur(e.message)); }
-  useEffect(load, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtres = useMemo(() => {
     let l = filterBySearch(codes || [], search, (p) => [p.code, p.type]);

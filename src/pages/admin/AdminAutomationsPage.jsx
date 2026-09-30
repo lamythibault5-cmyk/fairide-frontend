@@ -52,8 +52,8 @@ export default function AdminAutomationsPage() {
       .catch((e) => setLogErreur(e.message));
   }
   function load() { loadRules(); loadLog(); }
-  useEffect(loadRules, []); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(loadLog, [page, regleFiltre]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadRules(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadLog(); }, [page, regleFiltre]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [regleFiltre]);
 
   async function runNow() {

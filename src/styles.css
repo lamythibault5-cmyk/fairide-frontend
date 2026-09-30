@@ -4083,6 +4083,7 @@ html.tracking-plein-actif .panier-pilule { display: none !important; }
 }
 .plat-option:last-child { border-bottom: 0; }
 .plat-option--max { opacity: 0.45; cursor: default; }
+.plat-option--tout { font-weight: 700; } /* « Toutes les crudités », en tête du groupe (FichePlat.jsx) */
 .plat-option-gauche { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .plat-option-gauche input { width: auto; flex: 0 0 auto; }
 .plat-option-prix { font-size: 14px; color: var(--ink-soft); white-space: nowrap; }

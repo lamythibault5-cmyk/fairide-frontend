@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
 import InvoiceArchive from '../../components/InvoiceArchive';
+import { euros } from '../../prixPlat';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 
 function currentMonthValue() {
@@ -88,16 +89,16 @@ export default function InvoicesPage() {
                 <tr key={o.id} style={{ borderBottom: '1px solid var(--line)' }}>
                   <td style={{ padding: '6px 4px' }}>{new Date(o.createdAt).toLocaleDateString(getLocale())}</td>
                   <td style={{ padding: '6px 4px' }}>{o.restaurantName}</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{Number(o.driverFee ?? o.deliveryFee).toFixed(2)}€</td>
-                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${o.tipAmount.toFixed(2)}€` : '-'}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{euros(Number(o.driverFee ?? o.deliveryFee))}</td>
+                  <td style={{ padding: '6px 4px', textAlign: 'right' }}>{o.tipAmount > 0 ? `${euros(o.tipAmount)}` : '-'}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr style={{ borderTop: '2px solid var(--line)', fontWeight: 700 }}>
                 <td style={{ padding: '8px 4px' }} colSpan={2}>{t('invoicesDriver.total')}</td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{totals.deliveryFees.toFixed(2)}€</td>
-                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{totals.tips.toFixed(2)}€</td>
+                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{euros(totals.deliveryFees)}</td>
+                <td style={{ padding: '8px 4px', textAlign: 'right' }}>{euros(totals.tips)}</td>
               </tr>
             </tfoot>
           </table>

@@ -78,7 +78,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
   const [aRetirer, setARetirer] = useState(null);
   const { sort, toggle } = useTableSort('activatedAt', 'desc');
   const charger = useCallback(() => { setErreur(null); api('/admin/sales/agents', { token }).then(setAgents).catch((e) => setErreur(e.message)); }, [token]);
-  useEffect(charger, [charger]);
+  useEffect(() => { charger(); }, [charger]);
 
   // Recherche d'un compte client (nom ou e-mail), avec un léger délai pour ne pas interroger à chaque frappe.
   useEffect(() => {
@@ -185,7 +185,7 @@ function ProspectsTab({ token, tr, fmt, stageLabel, toast, retardInitial = false
     api(`/admin/sales/prospects?${params.toString()}`, { token }).then(setRows).catch((e) => setErreur(e.message));
     api('/admin/sales/zones', { token }).then(setZones).catch(() => {});
   }, [token, stage, q]);
-  useEffect(charger, [charger]);
+  useEffect(() => { charger(); }, [charger]);
   const zone = zones.find((z) => z.key === zoneActive) || null;
   // Lignes affichées : filtre « en retard », puis rayon de la zone choisie (les commerces sans position restent, on ne sait pas où ils sont).
   const lignesRetard = (rows || []).filter((p) => (!retard || enRetard(p)) && (!aujourdhui || duJour(p)));
@@ -270,7 +270,7 @@ function DoublonsTab({ token, tr, fmt, stageLabel }) {
   const [erreur, setErreur] = useState(null);
   const [ouvert, setOuvert] = useState(null);
   const charger = useCallback(() => { setErreur(null); api('/admin/sales/duplicates', { token }).then(setGroupes).catch((e) => setErreur(e.message)); }, [token]);
-  useEffect(charger, [charger]);
+  useEffect(() => { charger(); }, [charger]);
   return (
     <div>
       <p className="small" style={{ margin: '0 0 12px' }}>{tr('adminSales.dupIntro')}</p>
@@ -308,7 +308,7 @@ function CommissionsTab({ token, tr, fmt, toast, onChanged, stats }) {
   const locale = getLocale();
   const euros = (n) => new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   const charger = useCallback(() => { setErreur(null); api(`/admin/sales/commissions${statut ? `?status=${statut}` : ''}`, { token }).then(setRows).catch((e) => setErreur(e.message)); }, [token, statut]);
-  useEffect(charger, [charger]);
+  useEffect(() => { charger(); }, [charger]);
   async function changer(c, status) {
     try { await api(`/admin/sales/commissions/${c.id}`, { method: 'PATCH', token, body: { status } }); toast(tr(`adminSales.toastCom_${status}`)); charger(); onChanged(); } catch (err) { toast(err.message, 'erreur'); }
   }

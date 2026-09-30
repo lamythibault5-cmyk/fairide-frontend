@@ -154,7 +154,7 @@ function ViewTabs({ onglet, setOnglet, tr }) {
 
 // Fiche d'un dossier dans le tiroir commun de l'ERP (onglets Dossier / Documents / Gains / Décision /
 // Journal). Toutes les décisions passent par une confirmation, avec motif quand le serveur l'exige.
-function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
+export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -164,7 +164,7 @@ function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   const [motifDialog, setMotifDialog] = useState(null); // { title, message, label, danger, confirmLabel, required, run(reason) }
   const [decisionLivreur, setDecisionLivreur] = useState(false); // suspension motivée (B7, D6)
   const load = () => { setErreur(null); return api(`/admin/couriers/${id}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
   const statut = (x) => (x && STATUTS.includes(x) ? tr(`courierOnboarding.status_${x}`) : x || '-');
   const c = d?.courier; const s = d?.situation;
@@ -360,7 +360,7 @@ function Parametres({ tr, token, toast }) {
   const an = new Date().getFullYear(); const [annee, setAnnee] = useState(an); const [f, setF] = useState(null);
   const [confirmP2p, setConfirmP2p] = useState(false);
   const charger = () => { setErreur(null); Promise.all([api('/admin/fiscal-config', { token }), api('/admin/flags', { token })]).then(([l, fl]) => { setLignes(Array.isArray(l) ? l : (l?.rows ?? [])); setFlags(fl ?? {}); }).catch((e) => setErreur(e.message)); };
-  useEffect(charger, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!lignes) return;
     const l = lignes.find((x) => Number(x.year) === Number(annee));
@@ -424,7 +424,7 @@ function Precompte({ tr, token, toast }) {
   const [annee, setAnnee] = useState(now.getFullYear()); const [mois, setMois] = useState(now.getMonth() + 1);
   const [d, setD] = useState(null); const [erreur, setErreur] = useState(null);
   const charger = () => { setErreur(null); setD(null); api(`/admin/couriers/withholding?year=${annee}&month=${mois}`, { token }).then(setD).catch((e) => setErreur(e.message)); };
-  useEffect(charger, [annee, mois]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, [annee, mois]); // eslint-disable-line react-hooks/exhaustive-deps
   const go = (path, nom) => telecharger(path, token, nom).catch((e) => toast(e.message, 'erreur'));
   const parLivreur = d?.byCourier ?? [];
   const mm = String(mois).padStart(2, '0');
@@ -481,7 +481,7 @@ function Exports({ tr, token, toast }) {
 function JournalAudit({ tr, token }) {
   const [lignes, setLignes] = useState(null); const [erreur, setErreur] = useState(null);
   const charger = () => { setErreur(null); api('/admin/audit-log?limit=200', { token }).then((r) => setLignes(Array.isArray(r) ? r : (r?.rows ?? []))).catch((e) => setErreur(e.message)); };
-  useEffect(charger, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { charger(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const court = (v) => (v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : String(v));
   return (
     <div className="card">

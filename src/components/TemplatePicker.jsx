@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { categoryLabel } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
+import { euros } from '../prixPlat';
 
 function itemKey(category, name) {
   return `${category}::${name}`;
@@ -73,7 +74,7 @@ export default function TemplatePicker({ template, quickItems, onSubmit, onCance
             {items.map((it) => (
               <label key={it.name} className="row" style={{ gap: 8, marginLeft: 24, marginBottom: 4, cursor: 'pointer' }}>
                 <input type="checkbox" style={{ width: 'auto' }} checked={selected.has(itemKey(cat, it.name))} onChange={() => toggle(itemKey(cat, it.name))} />
-                <span className="small">{it.name}, {it.price.toFixed(2)}€</span>
+                <span className="small">{it.name}, {euros(it.price)}</span>
               </label>
             ))}
           </div>

@@ -99,7 +99,7 @@ function RequestsTab({ refreshKey }) {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/compliance/requests?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [status, type, q, page, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status, type, q, page, refreshKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [status, type, q]);
 
   const kpis = data?.kpis;
@@ -349,7 +349,7 @@ function ContractsTab() {
   const { sort, toggle } = useTableSort('name', 'asc');
 
   function load() { setData(null); setErreur(null); api('/admin/compliance/contracts', { token }).then(setData).catch((e) => setErreur(e.message)); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function rappeler() {
     setBusy(true);
@@ -434,7 +434,7 @@ function ExportsTab() {
   const [busy, setBusy] = useState(null);
 
   function load() { setData(null); setErreur(null); api('/admin/compliance/legal-exports', { token }).then(setData).catch((e) => setErreur(e.message)); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function telecharger(item) {
     setBusy(item.key);
@@ -544,7 +544,7 @@ function RegistreTab() {
   const [ouvert, setOuvert] = useState(null);
 
   function load() { setData(null); setErreur(null); api('/admin/compliance/registre', { token }).then(setData).catch((e) => setErreur(e.message)); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function telecharger() {
     setBusy(true);
@@ -685,7 +685,7 @@ function DossierTab() {
   const [erreur, setErreur] = useState(null);
 
   function load() { setData(null); setErreur(null); api('/admin/compliance/dossier', { token }).then(setData).catch((e) => setErreur(e.message)); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div>
@@ -741,7 +741,7 @@ function RetentionTab() {
   const [erreur, setErreur] = useState(null);
 
   function load() { setData(null); setErreur(null); api('/admin/compliance/retention', { token }).then(setData).catch((e) => setErreur(e.message)); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lignes = data ? [
     // En tête : c'est la donnée la plus sensible du système et la seule réellement purgée en continu.

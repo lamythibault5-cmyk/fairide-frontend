@@ -8,7 +8,7 @@ export default function AlerteLivreurBar({ sonActif, setSonActif, permission, de
   return (
     <div className="card alerte-livreur" style={{ borderLeft: `4px solid ${urgent ? 'var(--red)' : nbDispo ? 'var(--gold-deep, #B8860B)' : 'var(--line)'}` }}>
       <strong>
-        {urgent ? t('driverAlert.readyWaiting', { n: nbPretes }) : nbDispo ? t('driverAlert.available', { n: nbDispo }) : t('driverAlert.none')}
+        {urgent ? (nbPretes === 1 ? t('driverAlert.readyWaitingOne') : t('driverAlert.readyWaiting', { n: nbPretes })) : nbDispo ? (nbDispo === 1 ? t('driverAlert.availableOne') : t('driverAlert.available', { n: nbDispo })) : t('driverAlert.none')}
       </strong>
       <span className="small alerte-livreur-aide">
         {permission === 'granted' ? t('driverAlert.helpGranted') : t('driverAlert.helpDefault')}

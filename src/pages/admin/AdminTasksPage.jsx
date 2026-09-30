@@ -58,7 +58,7 @@ export default function AdminTasksPage() {
   function loadOverview() {
     api('/admin/tasks/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
-  useEffect(loadOverview, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id') || searchParams.get('new')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; delete next.new; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function load() {
@@ -74,7 +74,7 @@ export default function AdminTasksPage() {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/tasks?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [status, priority, due, myTasksOnly, assignee, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [status, priority, due, myTasksOnly, assignee, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [status, priority, due, myTasksOnly, assignee, q]);
 
   function refreshAll() { load(); loadOverview(); }
@@ -300,7 +300,7 @@ function TaskDrawer({ id, onClose, onChanged }) {
     setErreur(null);
     api(`/admin/tasks/${id}`, { token }).then(setT).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startEdit() {
     setForm({

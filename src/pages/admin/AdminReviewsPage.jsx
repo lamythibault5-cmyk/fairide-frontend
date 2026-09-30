@@ -59,7 +59,7 @@ export default function AdminReviewsPage() {
       .then(({ data, headers }) => { const l = Array.isArray(data) ? data : (data?.rows || []); setReviews(l); setTotal(totalDepuisEntetes(headers, l)); })
       .catch((e) => setErreur(e.message));
   }
-  useEffect(load, [token, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [token, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtres = useMemo(() => {
     let l = filterBySearch(reviews || [], search, (r) => [r.clientName, r.restaurantName, r.foodComment, r.deliveryComment]);

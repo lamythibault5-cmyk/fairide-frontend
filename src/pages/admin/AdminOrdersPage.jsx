@@ -117,7 +117,7 @@ export default function AdminOrdersPage() {
     api(`/admin/orders?${params.toString()}`, { token }).then((r) => { setOrders(r.rows); setTotal(r.total); }).catch((e) => setErreur(e.message));
   }
 
-  useEffect(load, [searchParams.toString(), q, page, triServeur]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [searchParams.toString(), q, page, triServeur]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [searchParams.toString(), q, triServeur]);
   // `?id=` (lien depuis un ticket, une tâche, un document…) : ouvre directement cette commande, puis
   // retire le paramètre pour qu'un rechargement ne la rouvre pas.

@@ -250,6 +250,9 @@ export default function OrdersPage() {
         <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
           <input aria-label={t('ordersResto.phCustomerCode')}
             placeholder={t('ordersResto.phCustomerCode')}
+            // Codes à chiffres : pavé numérique sur téléphone, Entrée valide (simulation du 30/09).
+            inputMode="numeric" autoComplete="off"
+            onKeyDown={(e) => { if (e.key === 'Enter') confirmTakeaway(o); }}
             style={{ maxWidth: 140 }}
             value={pickupCodeInputs[o.id] || ''}
             onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
@@ -263,6 +266,8 @@ export default function OrdersPage() {
         <div className="row" style={{ marginTop: 10, gap: 8 }} onClick={(e) => e.stopPropagation()}>
           <input aria-label={t('ordersResto.phDriverCode')}
             placeholder={t('ordersResto.phDriverCode')}
+            inputMode="numeric" autoComplete="off"
+            onKeyDown={(e) => { if (e.key === 'Enter') confirmPickup(o.id); }}
             style={{ maxWidth: 140 }}
             value={pickupCodeInputs[o.id] || ''}
             onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}

@@ -6,6 +6,7 @@ import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
 import { DELIVERY_FEE } from '../context/CartContext';
 import { fraisService } from '../fraisService';
+import { euros } from '../prixPlat';
 
 function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
@@ -117,14 +118,14 @@ export default function RestaurantPreview({ restaurant }) {
           })}
           <div className="divider" />
           <div className="breakdown">
-            <div className="line"><span>{t('restoPreview.subtotal')}</span><span>{subtotal.toFixed(2)}€</span></div>
+            <div className="line"><span>{t('restoPreview.subtotal')}</span><span>{euros(subtotal)}</span></div>
             {fulfillmentType === 'delivery' ? (
-              <div className="line"><span>{t('restoPreview.deliveryExample')}</span><span>{deliveryFee.toFixed(2)}€</span></div>
+              <div className="line"><span>{t('restoPreview.deliveryExample')}</span><span>{euros(deliveryFee)}</span></div>
             ) : (
               <div className="line"><span>{t('restoPreview.takeawayNoFee')}</span><span>0.00€</span></div>
             )}
-            <div className="line"><span>{t('restoPreview.systemFeeExample')}</span><span>{serviceFee.toFixed(2)}€</span></div>
-            <div className="line total"><span>{t('restoPreview.totalExample')}</span><span>{total.toFixed(2)}€</span></div>
+            <div className="line"><span>{t('restoPreview.systemFeeExample')}</span><span>{euros(serviceFee)}</span></div>
+            <div className="line total"><span>{t('restoPreview.totalExample')}</span><span>{euros(total)}</span></div>
           </div>
           <div className="cart-bar" style={{ marginTop: 12 }}>
             <span>{t('restoPreview.itemsPreviewOnly', { count })}</span>

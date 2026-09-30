@@ -57,7 +57,7 @@ export default function AdminDocumentsPage() {
   function loadOverview() {
     api('/admin/documents/overview', { token }).then(setOverview).catch((e) => toast(e.message, 'erreur'));
   }
-  useEffect(loadOverview, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadOverview(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function load() {
@@ -72,7 +72,7 @@ export default function AdminDocumentsPage() {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/documents?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [targetType, documentType, verificationStatus, expiry, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [targetType, documentType, verificationStatus, expiry, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [targetType, documentType, verificationStatus, expiry, q]);
 
   function refreshAll() { load(); loadOverview(); }
@@ -304,7 +304,7 @@ function DocumentDrawer({ id, onClose, onChanged }) {
     setErreur(null);
     api(`/admin/documents/${id}`, { token }).then(setD).catch((e) => setErreur(e.message));
   }
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startEdit() {
     setForm({ title: d.title, documentType: d.documentType, expiresAt: d.expiresAt ? new Date(d.expiresAt).toISOString().slice(0, 10) : '', notes: d.notes || '' });

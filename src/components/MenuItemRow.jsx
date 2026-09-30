@@ -8,6 +8,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { OptionGroupForm } from './OptionGroupManager';
 import GalleryPickerModal from './GalleryPickerModal';
 import { galleryForSection } from '../menuCategories';
+import { euros } from '../prixPlat';
 
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
@@ -313,7 +314,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
       </div>
       <div className="bottom-row">
-        <span className="price">{item.price.toFixed(2)}€</span>
+        <span className="price">{euros(item.price)}</span>
         {!reorderMode && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
       </div>
     </div>

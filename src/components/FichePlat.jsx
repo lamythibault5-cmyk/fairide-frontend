@@ -60,10 +60,32 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
     });
   }
 
+  // « Toutes les crudités » (fondateur, 2026-09-30) : la plupart des clients prennent tout, et cocher dix cases une à
+  // une est le geste le plus long de la commande d'un kebab ou d'un sandwich. Proposé EN PREMIER dans tout groupe
+  // à choix multiple de crudités, sans limite de choix plus petite que la liste. Côté serveur rien ne change : ce
+  // sont les mêmes options cochées, le commerce lit la liste complète sur son ticket.
+  function toutesCrudites(g) {
+    return g.type === 'multiple' && g.items.length > 1 && /crudit|rauwkost|raw veg/i.test(g.name || '')
+      && (!g.maxSelections || g.maxSelections >= g.items.length);
+  }
+  function basculerTout(g) {
+    setSelections((prev) => {
+      const tout = g.items.every((i) => prev[g.id].has(i.id));
+      return { ...prev, [g.id]: tout ? new Set() : new Set(g.items.map((i) => i.id)) };
+    });
+  }
+
   let delta = 0;
   const snapshot = [];
   const optionItemIds = [];
   groups.forEach((g) => {
+    // Toutes cochées (et gratuites) : une seule ligne « Toutes les crudités » dans le panier, comme sur le ticket du
+    // commerce (routes/orders.js resolveOptions) ; les identifiants envoyés restent ceux de chaque crudité.
+    if (toutesCrudites(g) && g.items.every((i) => selections[g.id].has(i.id) && !i.priceDelta)) {
+      snapshot.push({ groupName: g.name, name: t('platSheet.allCrudites'), priceDelta: 0 });
+      g.items.forEach((i) => optionItemIds.push(i.id));
+      return;
+    }
     g.items.forEach((i) => {
       if (selections[g.id].has(i.id)) {
         delta += i.priceDelta;
@@ -132,6 +154,14 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
                 </div>
                 {g.type === 'multiple' && g.maxSelections && (
                   <p className="plat-groupe-aide">{t('optionsPicker.maxChoices', { max: g.maxSelections, plural: g.maxSelections > 1 ? 's' : '' })}</p>
+                )}
+                {toutesCrudites(g) && (
+                  <label className="plat-option plat-option--tout">
+                    <span className="plat-option-gauche">
+                      <input type="checkbox" checked={g.items.every((i) => choisis.has(i.id))} onChange={() => basculerTout(g)} />
+                      <span>{t('platSheet.allCrudites')}</span>
+                    </span>
+                  </label>
                 )}
                 {g.items.map((i) => {
                   const auMax = g.type === 'multiple' && g.maxSelections && choisis.size >= g.maxSelections && !choisis.has(i.id);

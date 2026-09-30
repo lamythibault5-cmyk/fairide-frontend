@@ -68,7 +68,7 @@ export default function AdminCrmPage() {
       .then(({ data, headers }) => { const rows = data?.rows || (Array.isArray(data) ? data : []); setProspects(rows); setTotal(totalDepuisEntetes(headers, rows) || data?.total || rows.length); })
       .catch((e) => setErreur(e.message));
   }
-  useEffect(load, [q, stage, owner, page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [q, stage, owner, page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [q, stage, owner]);
 
   useEffect(() => {
@@ -332,7 +332,7 @@ function ProspectDrawer({ id, onClose, onChanged, onDeleted, onLoss, linkedResta
     api(`/admin/actions?targetType=crm_prospect&targetId=${id}`, { token }).then(setActions).catch(() => {});
     api(`/admin/tasks?targetType=crm_prospect&targetId=${id}&limit=10`, { token }).then((r) => setTasks(r.rows)).catch(() => setTasks([]));
   }
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function startEdit() {
     setForm({

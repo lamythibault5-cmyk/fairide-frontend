@@ -34,7 +34,7 @@ function PeppolStatusCard({ token, toast, tr }) {
   const [etat, setEtat] = useState(null);
   const [busy, setBusy] = useState(false);
   function load() { api('/admin/peppol/status', { token }).then(setEtat).catch((e) => toast(e.message, 'erreur')); }
-  useEffect(load, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
   async function process() {
     setBusy(true);
     try { const r = await api('/admin/peppol/process', { method: 'POST', token }); toast(tr('adminInvoices.peppolProcessed', { sent: r.envoyes || 0, errors: r.erreurs || 0, skipped: r.ignores || 0 })); load(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
@@ -330,7 +330,7 @@ function InvoiceDetailModal({ id, onClose, onChanged }) {
   function load() {
     api(`/admin/invoices/${id}`, { token }).then(setInv).catch((e) => toast(e.message, 'erreur'));
   }
-  useEffect(load, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function changeStatus(status) {
     setBusy(true);
@@ -521,7 +521,7 @@ function DriverStatementsTab({ token, toast }) {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/driver-statements?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message, 'erreur'));
   }
-  useEffect(load, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function downloadStatementPdf(st) {
     try {
@@ -633,7 +633,7 @@ function SelfBillingTab({ token, toast }) {
     params.set('offset', page * PAGE_SIZE);
     api(`/admin/self-billing-invoices?${params.toString()}`, { token }).then(setData).catch((e) => toast(e.message, 'erreur'));
   }
-  useEffect(load, [page]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function downloadInvoicePdf(inv) {
     try {

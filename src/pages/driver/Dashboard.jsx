@@ -9,6 +9,9 @@ import LigneCompte from '../../components/LigneCompte';
 import Icone from '../../components/Icone';
 import { DeliveryTiming, deliveryInstructionLabel, formatOrderItem } from '../../orderStatus';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+
+// Montants et distances au format de la langue (« 4,50 », « 0,3 ») : toFixed écrivait « 4.50 € » en français.
+const dec = (v, n = 2) => Number(v || 0).toLocaleString(getLocale(), { minimumFractionDigits: n, maximumFractionDigits: n });
 import { dateOuverturePaiements } from '../../launch';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
@@ -264,8 +267,8 @@ export default function DriverDashboard() {
   const aujourdhui = new Date().toDateString();
   const livreesAujourdhui = mine.filter((o) => o.status === 'livre' && new Date(o.deliveredAt || o.updatedAt || o.createdAt).toDateString() === aujourdhui);
   const ligneGain = (o) => (o.driverEarning && o.driverEarning.gross != null
-    ? t('dashDriver.earningLine', { gross: Number(o.driverEarning.gross).toFixed(2), withholding: Number(o.driverEarning.withholding ?? 0).toFixed(2), net: Number(o.driverEarning.net ?? (o.driverEarning.gross - (o.driverEarning.withholding || 0))).toFixed(2) })
-    : t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) }));
+    ? t('dashDriver.earningLine', { gross: dec(o.driverEarning.gross), withholding: dec(o.driverEarning.withholding ?? 0), net: dec(o.driverEarning.net ?? (o.driverEarning.gross - (o.driverEarning.withholding || 0))) })
+    : t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) }));
 
   const approuve = user?.adminStatus === 'approved';
   const peutRouler = approuve && user?.stripeConnectStatus === 'active';
@@ -282,9 +285,9 @@ export default function DriverDashboard() {
       <div className="small" style={{ margin: '4px 0' }}>{o.items.map(formatOrderItem).join(', ')}</div>
       {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
-      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
+      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
       <DeliveryTiming order={o} />
-      <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
+      <div className="small" style={{ marginTop: 4 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
       <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: '10px 14px', textAlign: 'center', margin: '10px 0' }}>
         <div className="small" style={{ marginBottom: 2 }}>{t('dashDriver.codeForRestaurant')}</div>
         <div style={{ fontWeight: 700, fontSize: 26, letterSpacing: 6, color: 'var(--ink)' }}>{o.pickupCode}</div>
@@ -368,17 +371,18 @@ export default function DriverDashboard() {
             <BadgeAlcool order={o} />
             {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
             <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
-            {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
+            {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
             {o.deliveryInstructions && (
               <div className="small" style={{ fontWeight: 600 }}>{deliveryInstructionLabel(o.deliveryInstructions)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
             )}
             <DeliveryTiming order={o} />
-            <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</div>
+            <div className="small" style={{ marginTop: 2 }}>{t('dashDriver.rideFee', { fee: dec(o.driverFee ?? o.deliveryFee) })}</div>
             {o.clientPhone && <div className="small">📞 <a href={`tel:${o.clientPhone}`}>{o.clientPhone}</a></div>}
             <div className="row" style={{ marginTop: 8, gap: 8 }}>
               <input aria-label={t('dashDriver.phCustomerCode')}
                 placeholder={t('dashDriver.phCustomerCode')}
-                inputMode="numeric"
+                inputMode="numeric" autoComplete="off"
+                onKeyDown={(e) => { if (e.key === 'Enter') deliver(o); }}
                 style={{ maxWidth: 140 }}
                 value={codeInputs[o.id] || ''}
                 onChange={(e) => setCodeInputs((prev) => ({ ...prev, [o.id]: e.target.value }))}
@@ -406,7 +410,7 @@ export default function DriverDashboard() {
           {vehicule?.type && (
             <p className="small" style={{ margin: '-6px 0 10px' }}>
               {['velo', 'velo_electrique'].includes(vehicule.type) ? t('dashDriver.bikeRule', { km: vehicule.bikeMaxKm }) : t('dashDriver.motorRule', { km: vehicule.bikeMaxKm })}
-              {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: Number(vehicule.base || 0).toFixed(2), baseKm: vehicule.baseKm, rate: Number(vehicule.rate || 0).toFixed(2) })}</>}
+              {vehicule.rate !== undefined && <> {t('dashDriver.rateRule', { base: dec(vehicule.base || 0), baseKm: vehicule.baseKm, rate: dec(vehicule.rate || 0) })}</>}
             </p>
           )}
           {available.length === 0 && <div className="empty">{t('dashDriver.noneAvailable')}</div>}
@@ -415,7 +419,7 @@ export default function DriverDashboard() {
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <b>{o.restaurantName}</b>
                 <span className="row" style={{ gap: 6 }}>
-                  {o.distanceKm != null && <span className={`pill${o.longDistance ? ' gold' : ''}`}>{o.longDistance ? t('dashDriver.longDistance', { km: o.distanceKm }) : t('dashDriver.shortDistance', { km: o.distanceKm })}</span>}
+                  {o.distanceKm != null && <span className={`pill${o.longDistance ? ' gold' : ''}`}>{o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })}</span>}
                   <span className="pill teal">{o.commune}</span>
                 </span>
               </div>
@@ -426,12 +430,12 @@ export default function DriverDashboard() {
               {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
               {/* Adresse sans numéro ni nom du client avant la prise (le serveur ne les envoie pas). */}
               <div className="small" style={{ marginBottom: 4 }}>{t('dashDriver.deliveryAt', { address: o.address })} <span style={{ color: 'var(--ink-soft)' }}>({t('conformite.offerApproxAddress')})</span></div>
-              {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${o.distanceKm} km)` : '' })}</div>}
+              {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
               <DeliveryTiming order={o} />
               <div className="row" style={{ justifyContent: 'space-between', marginTop: 6 }}>
                 <span className="small">
-                  <b>{t('conformite.offerPrice', { fee: Number(o.driverFee ?? o.deliveryFee).toFixed(2) })}</b>
-                  {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: (o.bonusCents / 100).toFixed(2) })}</span>}
+                  <b>{t('conformite.offerPrice', { fee: dec(o.driverFee ?? o.deliveryFee) })}</b>
+                  {o.bonusCents > 0 && <span style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</span>}
                 </span>
                 <span className="row" style={{ gap: 6 }}>
                   <button className="btn-outline" style={{ padding: '8px 12px', fontSize: 13 }} onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
