@@ -2314,7 +2314,10 @@ export default {
       messages_help: 'Write a message and choose who receives it (by account type, commune or specific account): each one sees it in My account › Messages, with a notification, and can reply or react. Replies land here, in one conversation per person.',
       simulation: 'Simulation',
       simulation_desc: 'Walk through the site as a visitor, a customer, a restaurant owner or a courier, without touching real accounts.',
-      simulation_help: 'Launch a profile: a new tab opens with all four profiles. Switch between them with the bar at the bottom of the screen, tick the points to check and note what looks wrong. Notes land here.'
+      simulation_help: 'Launch a profile: a new tab opens with all four profiles. Switch between them with the bar at the bottom of the screen, tick the points to check and note what looks wrong. Notes land here.',
+      terminals: 'Terminals',
+      terminals_desc: 'The Fairide terminal fleet: online, printer, battery, tickets waiting or failed.',
+      terminals_help: 'One row per terminal paired with a business. "Needs attention" groups offline terminals, printer issues (paper, cover…) and failed tickets. Open a terminal to send a test ticket, retry a failed ticket or remove the terminal.'
     },
     hours: {
       mon: 'Monday',
@@ -5983,6 +5986,9 @@ export default {
       loading: "Loading…"
     },
     checkout: {
+      simulationTitle: '🧪 Simulation: fictitious payment',
+      simulationText: 'Nothing is charged and no card is asked for: the order is marked as paid and sent to Le Comptoir, which prints it on its simulated terminal.',
+      confirmAndPaySimulated: 'Order and pay (fictitious)',
       barCount: '{count} item · estimated total',
       barCountPlural: '{count} items · estimated total',
       addMore: '+ Add a dish',
@@ -6883,6 +6889,8 @@ export default {
       joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status'
     },
     simulation: {
+      printPaper: '🖨 Paper',
+      printPaperHelp: 'Print this ticket on paper from this device (58 mm format)',
       printerEmpty: 'No ticket printed yet. Place an order as the customer: the ticket will come out here.',
       ticket_auto: 'Order ticket',
       ticket_reprint: 'Reprint',
@@ -7056,5 +7064,52 @@ export default {
       printer_low_battery: 'low battery',
       printer_unknown: 'unknown issue',
       printer_render_error: 'print error'
+    },
+    adminTerminals: {
+      refresh: 'Refresh',
+      kpiActive: 'Active terminals',
+      kpiOnline: 'Online',
+      kpiIssues: 'Printer issues',
+      kpiFailed: 'Failed tickets (7 d)',
+      filter_problems: 'Needs attention',
+      filter_real: 'Active',
+      filter_offline: 'Offline',
+      filter_simulated: 'Simulated',
+      filter_revoked: 'Removed',
+      filter_all: 'All',
+      noProblem: 'Nothing to handle: all terminals are online and printing normally.',
+      empty: 'No terminal here.',
+      colRestaurant: 'Business',
+      colTerminal: 'Terminal',
+      colState: 'State',
+      colBattery: 'Battery',
+      colTickets: 'Tickets printed',
+      colApp: 'App version',
+      waiting: '{n} waiting',
+      failed: '{n} failed',
+      revoked: 'removed',
+      testSent: 'Test ticket sent to the terminal.',
+      retried: 'Ticket retried: it is sent to the terminal again.',
+      lastSeen: 'Last connection',
+      charging: 'charging',
+      network: 'Network',
+      playServices: 'Google Play services',
+      yes: 'yes',
+      no: 'no',
+      paper: 'Paper',
+      columns: '{n} columns',
+      pairedAt: 'Paired on',
+      deposit: 'Deposit / handover',
+      lastPrinted: 'Last ticket printed',
+      lastError: 'Last issue',
+      openRestaurant: 'See the business',
+      jobsTitle: 'Latest tickets of the business',
+      noJobs: 'No ticket yet.',
+      retry: 'Retry',
+      job_pending: 'waiting',
+      job_sent: 'sent',
+      job_printed: 'printed',
+      job_failed: 'failed',
+      job_cancelled: 'cancelled'
     }
 };

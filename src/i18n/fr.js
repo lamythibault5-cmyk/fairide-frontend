@@ -2314,7 +2314,10 @@ export default {
       messages_help: 'Écris un message et choisis qui le reçoit (par type de compte, commune ou compte précis) : chacun le voit dans Mon compte › Messages, avec une notification, et peut te répondre ou réagir. Les réponses arrivent ici, dans une conversation par personne.',
       simulation: 'Simulation',
       simulation_desc: 'Parcours le site comme un visiteur, un client, un restaurateur ou un livreur, sans toucher aux vrais comptes.',
-      simulation_help: 'Lance un profil : un nouvel onglet s\'ouvre avec les quatre profils. Passe de l\'un à l\'autre avec la barre en bas de l\'écran, coche les points à vérifier et note ce qui s\'affiche mal. Les notes arrivent ici.'
+      simulation_help: 'Lance un profil : un nouvel onglet s\'ouvre avec les quatre profils. Passe de l\'un à l\'autre avec la barre en bas de l\'écran, coche les points à vérifier et note ce qui s\'affiche mal. Les notes arrivent ici.',
+      terminals: 'Terminaux',
+      terminals_desc: 'Le parc des terminaux Fairide : en ligne, imprimante, batterie, tickets en attente ou en échec.',
+      terminals_help: 'Une ligne par terminal associé à un commerce. « À traiter » regroupe les terminaux hors ligne, les incidents d\'imprimante (papier, capot…) et les tickets en échec. Ouvre un terminal pour envoyer un ticket de test, relancer un ticket en échec ou retirer le terminal.'
     },
     hours: {
       mon: 'Lundi',
@@ -6028,6 +6031,9 @@ export default {
       loading: "Chargement…"
     },
     checkout: {
+      simulationTitle: '🧪 Simulation : paiement fictif',
+      simulationText: 'Rien n\'est débité et aucune carte n\'est demandée : la commande est marquée payée et part au Comptoir, qui l\'imprime sur son terminal simulé.',
+      confirmAndPaySimulated: 'Commander et payer (fictif)',
       barCount: '{count} article · total estimé',
       barCountPlural: '{count} articles · total estimé',
       addMore: '+ Ajouter un plat',
@@ -6930,6 +6936,8 @@ export default {
       joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut'
     },
     simulation: {
+      printPaper: '🖨 Papier',
+      printPaperHelp: 'Imprimer ce ticket sur papier depuis cet appareil (format 58 mm)',
       printerEmpty: 'Aucun ticket imprimé pour l\'instant. Passe une commande en client : le ticket sortira ici.',
       ticket_auto: 'Ticket de commande',
       ticket_reprint: 'Réimpression',
@@ -7103,5 +7111,52 @@ export default {
       printer_low_battery: 'batterie faible',
       printer_unknown: 'incident inconnu',
       printer_render_error: 'erreur d\'impression'
+    },
+    adminTerminals: {
+      refresh: 'Actualiser',
+      kpiActive: 'Terminaux actifs',
+      kpiOnline: 'En ligne',
+      kpiIssues: 'Incidents d\'imprimante',
+      kpiFailed: 'Tickets en échec (7 j)',
+      filter_problems: 'À traiter',
+      filter_real: 'Actifs',
+      filter_offline: 'Hors ligne',
+      filter_simulated: 'Simulés',
+      filter_revoked: 'Retirés',
+      filter_all: 'Tous',
+      noProblem: 'Rien à traiter : tous les terminaux sont en ligne et impriment normalement.',
+      empty: 'Aucun terminal ici.',
+      colRestaurant: 'Commerce',
+      colTerminal: 'Terminal',
+      colState: 'État',
+      colBattery: 'Batterie',
+      colTickets: 'Tickets imprimés',
+      colApp: 'Version de l\'app',
+      waiting: '{n} en attente',
+      failed: '{n} en échec',
+      revoked: 'retiré',
+      testSent: 'Ticket de test envoyé au terminal.',
+      retried: 'Ticket relancé : il repart vers le terminal.',
+      lastSeen: 'Dernière connexion',
+      charging: 'en charge',
+      network: 'Réseau',
+      playServices: 'Services Google Play',
+      yes: 'oui',
+      no: 'non',
+      paper: 'Papier',
+      columns: '{n} colonnes',
+      pairedAt: 'Associé le',
+      deposit: 'Caution / remise',
+      lastPrinted: 'Dernier ticket imprimé',
+      lastError: 'Dernier incident',
+      openRestaurant: 'Voir le commerce',
+      jobsTitle: 'Derniers tickets du commerce',
+      noJobs: 'Aucun ticket pour l\'instant.',
+      retry: 'Relancer',
+      job_pending: 'en attente',
+      job_sent: 'envoyé',
+      job_printed: 'imprimé',
+      job_failed: 'échec',
+      job_cancelled: 'annulé'
     }
 };

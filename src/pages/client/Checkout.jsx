@@ -272,6 +272,9 @@ export default function Checkout() {
           ajouter un plat reste possible — c'est « Ajouter un plat », dans la barre de récapitulatif
           plus bas, qui garde ce rôle. */}
       <EnteteFlux vers="/panier" titre={t('checkout.headerTitle')} libelle={t('panier.title')} />
+      {/* Simulation (Admin › Simulation) : le paiement est fictif (backend payments.js, commerce de simulation) — on le
+          dit clairement, pour que l'équipe puisse aller jusqu'au bout du parcours sans craindre un débit. */}
+      {user?.simulation && <div className="card" style={{ borderLeft: '4px solid var(--lime)', background: '#14121F', color: '#fff', margin: '0 0 12px' }}><b>{t('checkout.simulationTitle')}</b><p className="small" style={{ margin: '4px 0 0', color: '#D7D4E8' }}>{t('checkout.simulationText')}</p></div>}
 
 
       {!pendingOrder && (
@@ -696,7 +699,7 @@ export default function Checkout() {
             <button className="btn-gold" disabled={paying || cancelling || !deliveryConfirmed} onClick={confirmAndPay}>
               {paying ? '...'
                 : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite')
-                : t('checkout.confirmAndPay')}
+                : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
             </button>
             <button className="btn-ghost" disabled={paying || cancelling} onClick={cancelOrder}>{cancelling ? '...' : t('common.cancel')}</button>
           </div>

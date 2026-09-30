@@ -19,7 +19,7 @@ export const ADMIN_HUBS = [
   { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents', 'reviews'] },
   // Fondateur, 2026-09-23 : la pastille « Commerces » montre le NOMBRE DE VRAIS COMMERCES inscrits (ni démo, ni test), pas
   // ce qui attend une action ; les restaurants à valider gardent leur propre pastille sur l'onglet Restaurants.
-  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
+  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
   { key: 'couriers', icon: 'scooter', modules: ['drivers', 'couriers', 'logistics'] },
   { key: 'customers', icon: 'personnes', modules: ['clients', 'promotions', 'marketing'] },
   { key: 'inbox', icon: 'bulle', modules: ['support', 'messages', 'tasks'] },
@@ -72,6 +72,8 @@ export const ADMIN_MODULES = [
   // « Commerces » : celle-ci ne compte que les vrais restaurants à valider (fondateur, 2026-09-23).
   { key: 'sales', path: '/admin/sales', icon: 'mallette', hub: 'partners', badge: (o) => pastille(o.sales?.overdue || 0, 'info') },
   { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') },
+  // Terminaux Fairide (2026-09-30) : parc, en ligne, papier, tickets en échec. Pastille = ce qui demande une intervention.
+  { key: 'terminals', path: '/admin/terminals', icon: 'imprimante', hub: 'partners', badge: (o) => pastille(n(o.terminals?.offline) + n(o.terminals?.issues) + n(o.terminals?.failed), n(o.terminals?.issues) + n(o.terminals?.failed) > 0 ? 'danger' : 'warn') },
   { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 
@@ -88,7 +90,8 @@ export const MODULE_ROLES = {
   compliance: ['owner', 'admin', 'finance'],
   messages: ['owner', 'admin', 'ops', 'support'],
   sales: ['owner', 'admin', 'ops'],
-  simulation: ['owner', 'admin', 'ops', 'support']
+  simulation: ['owner', 'admin', 'ops', 'support'],
+  terminals: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {
   const roles = MODULE_ROLES[mod.key];

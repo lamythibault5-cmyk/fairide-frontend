@@ -2314,7 +2314,10 @@ export default {
       messages_help: 'Schrijf een bericht en kies wie het ontvangt (per accounttype, gemeente of specifiek account): iedereen ziet het in Mijn account › Berichten, met een melding, en kan antwoorden of reageren. Antwoorden komen hier terecht, in één gesprek per persoon.',
       simulation: 'Simulatie',
       simulation_desc: 'Doorloop de site als bezoeker, klant, restauranthouder of koerier, zonder echte accounts aan te raken.',
-      simulation_help: 'Start een profiel: er opent een nieuw tabblad met de vier profielen. Wissel ertussen met de balk onderaan het scherm, vink de te controleren punten af en noteer wat niet goed wordt weergegeven. De notities komen hier terecht.'
+      simulation_help: 'Start een profiel: er opent een nieuw tabblad met de vier profielen. Wissel ertussen met de balk onderaan het scherm, vink de te controleren punten af en noteer wat niet goed wordt weergegeven. De notities komen hier terecht.',
+      terminals: 'Terminals',
+      terminals_desc: 'Het park van Fairide-terminals: online, printer, batterij, tickets in wacht of mislukt.',
+      terminals_help: 'Eén rij per terminal gekoppeld aan een zaak. "Te behandelen" groepeert terminals die offline zijn, printerproblemen (papier, klep…) en mislukte tickets. Open een terminal om een testticket te sturen, een mislukt ticket opnieuw te proberen of de terminal te verwijderen.'
     },
     hours: {
       mon: 'Maandag',
@@ -5983,6 +5986,9 @@ export default {
       loading: "Laden…"
     },
     checkout: {
+      simulationTitle: '🧪 Simulatie: fictieve betaling',
+      simulationText: 'Er wordt niets aangerekend en geen kaart gevraagd: de bestelling wordt als betaald gemarkeerd en gaat naar Le Comptoir, dat ze afdrukt op zijn gesimuleerde terminal.',
+      confirmAndPaySimulated: 'Bestellen en betalen (fictief)',
       barCount: '{count} artikel · geschat totaal',
       barCountPlural: '{count} artikelen · geschat totaal',
       addMore: '+ Gerecht toevoegen',
@@ -6883,6 +6889,8 @@ export default {
       joinDriverP2NoP2p: 'Student-zelfstandige of zelfstandige: jij kiest je statuut'
     },
     simulation: {
+      printPaper: '🖨 Papier',
+      printPaperHelp: 'Dit ticket op papier afdrukken vanaf dit toestel (formaat 58 mm)',
       printerEmpty: 'Nog geen ticket afgedrukt. Plaats een bestelling als klant: het ticket komt hier uit.',
       ticket_auto: 'Bestelticket',
       ticket_reprint: 'Herdruk',
@@ -7056,5 +7064,52 @@ export default {
       printer_low_battery: 'batterij bijna leeg',
       printer_unknown: 'onbekend probleem',
       printer_render_error: 'afdrukfout'
+    },
+    adminTerminals: {
+      refresh: 'Vernieuwen',
+      kpiActive: 'Actieve terminals',
+      kpiOnline: 'Online',
+      kpiIssues: 'Printerproblemen',
+      kpiFailed: 'Mislukte tickets (7 d)',
+      filter_problems: 'Te behandelen',
+      filter_real: 'Actief',
+      filter_offline: 'Offline',
+      filter_simulated: 'Gesimuleerd',
+      filter_revoked: 'Verwijderd',
+      filter_all: 'Alle',
+      noProblem: 'Niets te behandelen: alle terminals zijn online en drukken normaal af.',
+      empty: 'Geen terminal hier.',
+      colRestaurant: 'Zaak',
+      colTerminal: 'Terminal',
+      colState: 'Toestand',
+      colBattery: 'Batterij',
+      colTickets: 'Afgedrukte tickets',
+      colApp: 'App-versie',
+      waiting: '{n} in wacht',
+      failed: '{n} mislukt',
+      revoked: 'verwijderd',
+      testSent: 'Testticket naar de terminal gestuurd.',
+      retried: 'Ticket opnieuw gestart: het gaat opnieuw naar de terminal.',
+      lastSeen: 'Laatste verbinding',
+      charging: 'aan het laden',
+      network: 'Netwerk',
+      playServices: 'Google Play-services',
+      yes: 'ja',
+      no: 'nee',
+      paper: 'Papier',
+      columns: '{n} kolommen',
+      pairedAt: 'Gekoppeld op',
+      deposit: 'Waarborg / overhandiging',
+      lastPrinted: 'Laatst afgedrukt ticket',
+      lastError: 'Laatste probleem',
+      openRestaurant: 'De zaak bekijken',
+      jobsTitle: 'Laatste tickets van de zaak',
+      noJobs: 'Nog geen ticket.',
+      retry: 'Opnieuw proberen',
+      job_pending: 'in wacht',
+      job_sent: 'verzonden',
+      job_printed: 'afgedrukt',
+      job_failed: 'mislukt',
+      job_cancelled: 'geannuleerd'
     }
 };
