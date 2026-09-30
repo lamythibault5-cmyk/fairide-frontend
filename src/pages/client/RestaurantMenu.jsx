@@ -490,7 +490,7 @@ export default function RestaurantMenu() {
             </p>
           </div>
         )}
-        {/* Avant le 10 octobre : à emporter et livraison à venir ; du 10 au 20 : seule la livraison (et l'à emporter payé
+        {/* Avant le 1er novembre : à emporter et livraison à venir ; du 1er au 10 novembre : seule la livraison (et l'à emporter payé
             en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
             n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
         {bandeauOuverture && (

@@ -97,7 +97,7 @@ export default function Checkout() {
       navigate(`/restaurants/${restaurantId}`);
       return;
     }
-    // Livraison pas encore ouverte (avant le 20 octobre) : l'à emporter est proposé d'abord.
+    // Livraison pas encore ouverte (avant le 10 novembre) : l'à emporter est proposé d'abord.
     if (!restaurant.offersDelivery || (!serviceOuvert('delivery', user) && restaurant.offersPickup)) { setFulfillmentType('pickup'); return; }
     // Sinon, le mode choisi sur la fiche du commerce (RestaurantMenu, sessionStorage) est repris.
     let choisi = null;
@@ -120,7 +120,7 @@ export default function Checkout() {
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
-  // Avant le 20 octobre, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
+  // Avant le 10 novembre, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
   const surPlaceChoisi = fulfillmentType === 'pickup' && (modeEmporter === 'on_site' || (modeEmporter === 'both' && (paiementSurPlace || enLigneFerme)));
