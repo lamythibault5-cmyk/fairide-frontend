@@ -12,6 +12,8 @@ import EcranLegal from '../../components/commerce/EcranLegal';
 import EcranLivreurs from '../../components/commerce/EcranLivreurs';
 import EcranOffreLivraison from '../../components/commerce/EcranOffreLivraison';
 import EcranTypeCommerce from '../../components/commerce/EcranTypeCommerce';
+import EcranCuisines from '../../components/commerce/EcranCuisines';
+import { restaurantTypeLabel } from '../../menuCategories';
 import EcranSuppression from '../../components/commerce/EcranSuppression';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
@@ -29,7 +31,7 @@ import EcranSuppression from '../../components/commerce/EcranSuppression';
 const ECRANS = {
   identite: EcranIdentite, contact: EcranContact, adresse: EcranAdresse, horaires: EcranHoraires,
   fermetures: EcranFermetures, legal: EcranLegal, livraison: EcranLivreurs, offre: EcranOffreLivraison,
-  type: EcranTypeCommerce, suppression: EcranSuppression
+  type: EcranTypeCommerce, cuisines: EcranCuisines, suppression: EcranSuppression
 };
 
 function aujourdhuiIso() {
@@ -78,6 +80,7 @@ export default function EditPage() {
       <div className="card account-groupe" aria-label={t('editResto.rowLegal')}>
         {ligne('legal', { icone: 'document', titre: t('editResto.rowLegal'), sous: legalManquant ? aCompleter : `BCE ${r.companyNumber}`, accent: legalManquant ? 'warn' : undefined })}
         {ligne('type', { icone: 'restaurants', titre: t('editResto.rowType'), sous: r.cuisine })}
+        {ligne('cuisines', { icone: 'restaurants', titre: t('editResto.rowCuisines'), sous: (r.extraCuisines || []).length ? (r.extraCuisines || []).map((c) => restaurantTypeLabel(c, t) || c).join(', ') : t('editResto.cuisinesNone') })}
         {ligne('suppression', { icone: 'interdit', titre: t('editResto.deleteTitle'), danger: true })}
       </div>
 

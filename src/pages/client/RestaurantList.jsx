@@ -120,7 +120,8 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           <span className="rest-card-name-text">{r.name}</span>
           {r.certified && <CertifiedBadge />}
         </h3>
-        <p className="rc-sous">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.neighborhood || r.commune].filter(Boolean).join(' · ')}</p>
+        {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
+        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
           {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -138,6 +139,25 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
         )}
       </div>
     </Link>
+  );
+}
+
+// Un vrai commerce déjà inscrit, pas encore ouvert aux commandes (fiche pas encore publiée par Fairide) : montré pour
+// ce qu'il est — un commerce qui arrive —, sans lien vers une fiche qui ne s'ouvrirait pas.
+function CarteBientot({ r, t }) {
+  return (
+    <div className="rest-card rc rc-bientot" aria-label={r.name}>
+      <div className="rc-media">
+        {r.coverImageUrl
+          ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
+          : <span className="rc-photo rc-photo-vide" aria-hidden="true"><Icone nom="restaurants" taille={28} /></span>}
+        <span className="rc-offre">{t('restaurantList.soonBadge')}</span>
+      </div>
+      <div className="rc-corps">
+        <h3 className="rest-card-name rc-nom"><span className="rest-card-name-text">{r.name}</span><CertifiedBadge /></h3>
+        <p className="rc-sous">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</p>
+      </div>
+    </div>
   );
 }
 
@@ -210,10 +230,14 @@ export default function RestaurantList() {
   const [emporter, setEmporter] = useState(false);
   const [tri, setTri] = useState('recommande');
   const [panneau, setPanneau] = useState(null);
+  // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
+  // les démos restent dessous, pour montrer l'étendue de l'offre.
+  const [inscrits, setInscrits] = useState([]);
   const toast = useToast();
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
+    api('/restaurants/landing').then((l) => setInscrits((l || []).filter((r) => r.menuComplete))).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
@@ -267,7 +291,7 @@ export default function RestaurantList() {
   const list = restaurants
     .filter((r) => {
       if (commune && r.commune !== commune) return false;
-      if (cuisine && r.cuisine !== cuisine) return false;
+      if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
       if (bio && !restoBio(r)) return false;
       if (vegan && !restoVegan(r)) return false;
       if (search && !`${r.name} ${r.desc} ${r.cuisine}`.toLowerCase().includes(search.toLowerCase())) return false;
@@ -488,6 +512,20 @@ export default function RestaurantList() {
       )}
       {!loading && !hasActiveFilter && (
         <>
+          {inscrits.length > 0 && (
+            <div className="liste-section">
+              <h3 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} />{inscrits.length === 1 ? t('restaurantList.sectionRegisteredOne') : t('restaurantList.sectionRegistered', { n: inscrits.length })}</h3>
+              <div className="rest-grid rest-grid-scroll">
+                {inscrits.map((x) => {
+                  // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».
+                  const complet = restaurants.find((r) => r.id === x.id);
+                  return complet
+                    ? <RestaurantCard key={x.id} r={complet} isFavorite={favoriteIds.has(x.id)} onToggleFavorite={toggleFavorite} t={t} />
+                    : <CarteBientot key={x.id} r={x} t={t} />;
+                })}
+              </div>
+            </div>
+          )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />

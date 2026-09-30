@@ -1,9 +1,9 @@
 // Calendrier de lancement côté client (miroir des verrous serveur, voir routes/orders.js et routes/restaurants.js).
-// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 6 octobre 2026 ;
+// Décision du fondateur (2026-09-15) : première campagne sur les réseaux sociaux le 16 octobre 2026 (fondateur, 2026-09-30) ;
 // commandes à emporter à partir du 1er novembre ; livraison (livreurs) à partir du 10 novembre. Tout le reste
 // est visible et utilisable avant. Les administrateurs passent (essais). L'application native (App Store / Google
 // Play) arrive le 6 octobre 2026.
-export const CAMPAGNE_RESEAUX = new Date('2026-10-06T00:00:00+02:00');
+export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
 export const OUVERTURE_EMPORTER = new Date('2026-11-01T00:00:00+01:00');
 export const OUVERTURE_LIVRAISON = new Date('2026-11-10T00:00:00+01:00');

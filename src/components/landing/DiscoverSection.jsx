@@ -19,7 +19,7 @@ export default function DiscoverSection({ restaurants }) {
     return [...compte.entries()].sort((a, b) => b[1] - a[1]).slice(0, 7).map(([c]) => c);
   }, [restaurants]);
   const cartes = useMemo(() => {
-    const base = restaurants.filter((r) => r.coverImageUrl && (!filtre || r.cuisine === filtre));
+    const base = restaurants.filter((r) => r.coverImageUrl && (!filtre || r.cuisine === filtre || (r.extraCuisines || []).includes(filtre)));
     const melange = [...base].sort(() => Math.random() - 0.5);
     // Une photo ne sert qu'une fois ; sans filtre, un type de commerce n'apparaît qu'une fois tant qu'il en reste d'autres.
     const idPhoto = (u, r) => (r && r.reel ? `reel-${r.id}` : (String(u || '').match(/photo-[0-9a-f-]+/) || [u])[0]);

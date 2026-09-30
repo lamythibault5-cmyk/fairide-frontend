@@ -1,11 +1,11 @@
 import { useLanguage, getLocale } from '../context/LanguageContext';
 
 // Le terminal Fairide, expliqué clairement (fondateur, 2026-09-21) : une image de ce que c'est, comment ça marche en
-// quatre étapes, et les conditions — offert aux 50 premiers restaurants qui créent leur compte AVANT le 5 octobre 2026,
+// quatre étapes, et les conditions — offert aux 50 premiers restaurants qui créent leur compte AVANT le 16 octobre 2026,
 // ensuite caution de 80 € rendue au départ de Fairide si le terminal fonctionne toujours. Utilisé à l'inscription
 // (OffreFormules, sans état) et dans Mon compte (rangée « Mon terminal Fairide », avec l'état tenu par l'admin).
 // `terminal` : l'objet `restaurant.terminal` du serveur (formules.etatTerminal), ou null avant inscription.
-const OFFRE_JUSQUAU_DEFAUT = Date.UTC(2026, 9, 4, 22); // 5 octobre 2026, minuit à Bruxelles (voir formules.js)
+const OFFRE_JUSQUAU_DEFAUT = Date.UTC(2026, 9, 15, 22); // 16 octobre 2026, minuit à Bruxelles (voir formules.js)
 const OFFRE_PREMIERS = 50;
 const CAUTION = 80;
 

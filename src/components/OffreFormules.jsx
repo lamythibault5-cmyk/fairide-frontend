@@ -38,7 +38,7 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
       </div>
       {/* Le terminal : ce que c'est (image), comment ça marche, et à quelles conditions (offert aux 50 premiers avant le
-          5 octobre, puis caution). */}
+          16 octobre, puis caution). */}
       <div className="offre-terminal"><TerminalFairide compact /></div>
       {inscription && payant && <p className="small offre-note">✅ {t('accountUi.offre_signupComplete')}</p>}
       {onActiver && payant && !essai && !actif && (

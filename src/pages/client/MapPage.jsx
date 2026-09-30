@@ -78,7 +78,7 @@ export default function MapPage() {
     const nom = recherche.trim().toLowerCase();
     const filtres = restaurants.filter((r) => {
       if (promosSeules && !r.hasPromo) return false;
-      if (cuisine && r.cuisine !== cuisine) return false;
+      if (cuisine && r.cuisine !== cuisine && !(r.extraCuisines || []).includes(cuisine)) return false; // type principal ou secondaire
       if (prix && bandePrix(r) !== prix) return false;
       if (ouvertsSeuls && r.hours && !getOpenStatus(r.hours, maintenant, r.closures).isOpen) return false;
       if (nom && !(r.name || '').toLowerCase().includes(nom)) return false;

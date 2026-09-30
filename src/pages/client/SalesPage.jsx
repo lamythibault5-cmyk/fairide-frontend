@@ -22,7 +22,7 @@ const KINDS = ['visite', 'appel', 'message', 'note'];
 const STAGE_ICONES = { a_contacter: '📋', contacte: '📞', interesse: '💡', rdv: '📅', inscrit: '✍️', carte_en_ligne: '🍽️', actif: '✅', plus_tard: '⏳', refuse: '✖️' };
 const KIND_ICONES = { visite: '🚶', appel: '📞', message: '💬', note: '📝', etape: '🔀' };
 
-const vide = { name: '', address: '', commune: '', phone: '', contactName: '', email: '', cuisine: '', stage: 'a_contacter', notes: '', firstNote: '' };
+const vide = { name: '', address: '', commune: '', phone: '', contactName: '', email: '', cuisine: '', stage: 'contacte', notes: '', firstNote: '' };
 // Position du téléphone (bouton « je suis devant le commerce »). Promesse → { lat, lng } ou erreur.
 function maPosition() {
   return new Promise((resolve, reject) => {
@@ -141,7 +141,7 @@ export default function SalesPage() {
 
       {/* « Déjà enregistré ? » (fondateur, 2026-09-30) : avant de pousser une porte, on tape le nom (ou la rue, la commune) et
           on voit si le commerce est déjà dans MA liste, chez un autre commercial, ou déjà inscrit sur Fairide. */}
-      <RechercheDejaEnregistre token={token} t={t} stageLabel={stageLabel} fmtJour={fmtJour} onOpen={setOuvert} />
+      <RechercheDejaEnregistre token={token} t={t} stageLabel={stageLabel} fmtJour={fmtJour} onOpen={setOuvert} onRegister={(x) => setCreation(x)} />
 
       {/* Aujourd'hui : ce qui presse, tout en haut — en retard d'abord, puis ce qui est prévu ce jour. */}
       {aFaire.length > 0 && (
@@ -259,7 +259,7 @@ export default function SalesPage() {
       </div>
 
       {photo && <PhotoProspect token={token} t={t} toast={toast} zones={zones} onClose={() => setPhoto(false)} onSaved={(p) => { setPhoto(false); charger(); setOuvert(p.id); }} />}
-      {creation && <ProspectForm token={token} t={t} toast={toast} onClose={() => setCreation(false)} onSaved={(p) => { setCreation(false); charger(); setOuvert(p.id); }} />}
+      {creation && <ProspectForm token={token} t={t} toast={toast} ficheWeb={creation?.web || null} nomInitial={creation?.nom || ''} onClose={() => setCreation(false)} onSaved={(p) => { setCreation(false); charger(); setOuvert(p.id); }} />}
       {ouvert && <ProspectDetail id={ouvert} token={token} t={t} toast={toast} locale={locale} stageLabel={stageLabel} onClose={() => { setOuvert(null); charger(); }} onDeleted={() => { setOuvert(null); charger(); }} />}
     </div>
   );
@@ -402,7 +402,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
 }
 
 // ----------------------------------------------------------------------------------------------- création
-function ProspectForm({ token, t, toast, onClose, onSaved }) {
+function ProspectForm({ token, t, toast, onClose, onSaved, ficheWeb = null, nomInitial = '' }) {
   const [f, setF] = useState(vide);
   // Doublons : dès trois lettres, on cherche le nom dans ma liste, chez les autres commerciaux et parmi les commerces
   // inscrits sur Fairide. On prévient, on ne bloque pas — deux « Chez Momo » peuvent exister dans deux communes.
@@ -459,6 +459,22 @@ function ProspectForm({ token, t, toast, onClose, onSaved }) {
     });
     setRecherche('remplie');
   }
+  // Ouvert depuis la barre « déjà enregistré ? » (fondateur, 2026-09-30) : commerce trouvé sur internet → fiche reprise
+  // (coordonnées demandées au besoin) ; pas trouvé → saisie à la main avec le nom déjà tapé. Tout reste modifiable.
+  useEffect(() => {
+    if (ficheWeb) {
+      (async () => {
+        let fiche = { street: '', number: '', postalCode: '', city: '', phone: '', email: '', cuisine: '', ...ficheWeb };
+        if (ficheWeb.phone === undefined && ficheWeb.osmType && ficheWeb.osmId) {
+          try { fiche = { ...fiche, ...(await api(`/restaurants/lookup/business-details?type=${encodeURIComponent(ficheWeb.osmType)}&id=${encodeURIComponent(ficheWeb.osmId)}`)) }; } catch { /* l'adresse suffit */ }
+        }
+        appliquerFiche({ ...fiche, name: ficheWeb.name, source: 'web' });
+      })();
+    } else if (nomInitial) {
+      setF((x) => ({ ...x, name: nomInitial }));
+      passerEnManuel();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   async function prendrePosition() {
     setGeoEnCours(true);
     try { setPosition(await maPosition()); toast(t('sales.positionSet')); } catch { toast(t('sales.positionError'), 'erreur'); } finally { setGeoEnCours(false); }
@@ -710,7 +726,7 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 const FLYER_URL = '/docs/flyer-fairide.pdf';
 // Barre « Ce commerce est-il déjà enregistré ? » : ma liste, les autres commerciaux (étape et date, sans leur nom), les
 // commerces déjà inscrits sur Fairide. 2 lettres suffisent, sans accents ni majuscules (GET /sales/lookup?large=1).
-function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen }) {
+function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegister }) {
   const [q, setQ] = useState('');
   const [res, setRes] = useState(null);
   const [enCours, setEnCours] = useState(false);
@@ -728,6 +744,21 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen }) {
     return () => { annule = true; clearTimeout(id); };
   }, [q, token]);
   const rien = res && !res.mine.length && !res.others.length && !res.restaurants.length;
+  // Sur internet (même recherche que l'inscription des commerces) : dès trois lettres, pour enregistrer d'un clic un
+  // commerce que personne n'a encore dans Fairide (fondateur, 2026-09-30).
+  const [web, setWeb] = useState(null);
+  useEffect(() => {
+    const terme = q.trim();
+    if (terme.length < 3) { setWeb(null); return undefined; }
+    let annule = false;
+    const id = setTimeout(() => {
+      api(`/restaurants/lookup/business?q=${encodeURIComponent(terme)}`)
+        .then((r) => { if (!annule) setWeb((r.results || []).filter((x) => x.name).slice(0, 6)); })
+        .catch(() => { if (!annule) setWeb([]); });
+    }, 500);
+    return () => { annule = true; clearTimeout(id); };
+  }, [q]);
+  const adresseWeb = (r) => [[r.street, r.number].filter(Boolean).join(' '), [r.postalCode, r.city].filter(Boolean).join(' ')].filter(Boolean).join(', ') || r.address || '';
   return (
     <div className="card crm-deja">
       <label htmlFor="crm-deja-q" className="crm-deja-titre">🔎 {t('sales.alreadyTitle')}</label>
@@ -757,6 +788,19 @@ function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen }) {
               <span className="crm-badge crm-badge-inscrit">{t(`sales.restoStatus_${x.adminStatus || 'pending'}`)}</span>
             </div>
           ))}
+        </div>
+      )}
+      {q.trim().length >= 3 && web && (
+        <div className="crm-deja-resultats">
+          <p className="crm-deja-groupe">🌐 {t('sales.webTitle')}</p>
+          {web.length === 0 && <p className="small" style={{ margin: '4px 0' }}>{t('sales.webNone')}</p>}
+          {web.map((r) => (
+            <div key={`w${r.osmType || ''}${r.osmId || r.name}`} className="crm-deja-ligne">
+              <span><b>{r.name}</b><span className="small">{adresseWeb(r) || '—'}{r.dejaInscrit ? ` · ${t('sales.webAlreadyOnFairide')}` : ''}</span></span>
+              <button type="button" className="btn-teal" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => onRegister?.({ web: r })}>{t('sales.webRegister')}</button>
+            </div>
+          ))}
+          <button type="button" className="btn-ghost" style={{ marginTop: 6 }} onClick={() => onRegister?.({ nom: q.trim() })}>✍️ {t('sales.webManual')}</button>
         </div>
       )}
     </div>

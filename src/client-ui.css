@@ -214,3 +214,7 @@
 .suivi-total b { font-size: 17px; }
 .suivi-carte.est-passee { padding-top: 16px; padding-bottom: 16px; }
 .suivi-carte.est-passee .suivi-resto { font-size: 16px; }
+
+/* Liste client : vrai commerce inscrit, pas encore ouvert aux commandes (RestaurantList.jsx, CarteBientot). */
+.rc-bientot { cursor: default; }
+.rc-bientot .rc-photo { filter: saturate(.85); }
