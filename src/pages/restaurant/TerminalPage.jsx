@@ -7,6 +7,16 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { dansTerminal, infosAppareil, etatImprimante, terminalAssocie, transmettreJeton } from '../../terminalBridge';
 import '../../terminal.css';
+import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
+import { abonnerTerminalNavigateur, associerTerminalNavigateur, oublierTerminalNavigateur } from '../../terminalNavigateur';
+
+// Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
+// imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
+function ticketTestLocal(t, nom) {
+  const x = (text, st = {}) => ({ t: 'text', text, align: st.align || 'center', size: st.size || 1, bold: !!st.bold, inverse: !!st.inverse });
+  return [x('fairide.be', { bold: true }), x(nom || ''), { t: 'rule', char: '-' }, x(t('terminal.webTestTitle'), { size: 2, bold: true, inverse: true }),
+    x('é è à ç ô ü € — ÉÈÀÇ'), x(new Date().toLocaleString()), { t: 'rule', char: '-' }, { t: 'feed', lines: 3 }];
+}
 
 // Terminal Fairide & impression (restaurateur) : les terminaux du commerce et leur état, l'association de CE terminal
 // (quand la page tourne dans la coque Android), le moment d'impression et le nombre de copies, et le ticket de test
@@ -22,6 +32,12 @@ export default function TerminalPage() {
   const [busy, setBusy] = useState(false);
   const [aRetirer, setARetirer] = useState(null);
   const [ici, setIci] = useState(() => ({ terminal: dansTerminal(), associe: terminalAssocie(), imprimante: etatImprimante() }));
+  // Goodcom utilisé depuis le navigateur (sans coque Android) : service d'impression détecté ? appareil associé ?
+  const [goodcom, setGoodcom] = useState(null); // null = test en cours, true / false
+  const [web, setWeb] = useState(null);
+  const detecter = useCallback(() => { setGoodcom(null); serviceGoodcomDisponible({ forcer: true }).then(setGoodcom); }, []);
+  useEffect(() => { if (!dansTerminal()) detecter(); }, [detecter]);
+  useEffect(() => abonnerTerminalNavigateur(setWeb), []);
 
   const charger = useCallback(() => {
     if (!restoId) return;
@@ -73,6 +89,32 @@ export default function TerminalPage() {
     } catch (e) { toast(e.message, 'erreur'); }
   }
 
+  async function testDirect() {
+    setBusy(true);
+    try { await imprimerSurGoodcom(ticketTestLocal(t, donnees?.terminals?.[0]?.restaurantName || ''), 32); toast(t('terminal.webDirectOk')); }
+    catch (e) { toast(t('terminal.webDirectFail', { reason: t(`terminal.printer_${e.code || 'unknown'}`) }), 'erreur'); }
+    finally { setBusy(false); }
+  }
+  async function associerNavigateur() {
+    setBusy(true);
+    try {
+      const r = await api(`/restaurants/${restoId}/terminals`, { method: 'POST', token, body: { label: t('terminal.webLabel'), model: 'Goodcom GT81H', appVersion: 'web-1', paperColumns: 32 } });
+      associerTerminalNavigateur({ token: r.token, terminalId: r.terminal.id, restaurantId: restoId });
+      toast(t('terminal.webPaired'));
+      charger();
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+  }
+  async function dissocierNavigateur() {
+    const id = web?.config?.terminalId;
+    setBusy(true);
+    try {
+      if (id) await api(`/restaurants/${restoId}/terminals/${id}`, { method: 'DELETE', token }).catch(() => {});
+      oublierTerminalNavigateur();
+      toast(t('terminal.webUnpaired'));
+      charger();
+    } finally { setBusy(false); }
+  }
+
   const quand = (d) => (d ? new Date(d).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
 
   return (
@@ -88,6 +130,35 @@ export default function TerminalPage() {
             {ici.imprimante ? ` · ${t('terminal.printerLabel')} : ${t(`terminal.printer_${ici.imprimante}`)}` : ''}
           </p>
           {!ici.associe && <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={associerCeTerminal}>{t('terminal.pairThis')}</button>}
+        </div>
+      )}
+
+      {!ici.terminal && (
+        <div className="card">
+          <h3 style={{ marginTop: 0 }}>{t('terminal.webTitle')}</h3>
+          <p className="small" style={{ marginTop: 0, maxWidth: 680 }}>{t('terminal.webHelp')}</p>
+          <p className="small" style={{ margin: '0 0 10px' }}>
+            {goodcom === null ? '…' : goodcom
+              ? <span className="print-etat ok">✓ {t('terminal.webDetected')}</span>
+              : <span className="print-etat attente">{t('terminal.webNotDetected')}</span>}
+            {goodcom === false && <button type="button" className="btn-ghost" onClick={detecter}>{t('terminal.webRetry')}</button>}
+          </p>
+          {web?.config ? (
+            <>
+              <p className="small" style={{ margin: '0 0 10px' }}>
+                <span className={`print-etat ${web.imprimante === 'ok' ? 'ok' : 'attente'}`}>{t('terminal.webActive')}</span>
+                {' '}{t('terminal.printerLabel')} : {t(`terminal.printer_${web.imprimante || 'unknown'}`)}
+                {web.dernierTicket ? ` · ${t('terminal.webLastTicket', { date: quand(web.dernierTicket) })}` : ''}
+                {web.derniereErreur ? ` · ⚠ ${t(`terminal.printer_${web.derniereErreur}`)}` : ''}
+              </p>
+              <p className="small" style={{ margin: '0 0 10px', color: 'var(--ink-faint)' }}>{t('terminal.webLimit')}</p>
+            </>
+          ) : null}
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {goodcom && <button type="button" className="btn-outline" disabled={busy} onClick={testDirect}>{t('terminal.webDirectTest')}</button>}
+            {goodcom && !web?.config && <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={associerNavigateur}>{t('terminal.webPair')}</button>}
+            {web?.config && <button type="button" className="btn-ghost" disabled={busy} onClick={dissocierNavigateur}>{t('terminal.webUnpair')}</button>}
+          </div>
         </div>
       )}
 

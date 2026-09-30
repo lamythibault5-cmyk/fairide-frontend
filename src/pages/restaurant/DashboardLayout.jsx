@@ -15,6 +15,7 @@ import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
 import { cuisineDepuisOsm } from '../../osmCuisine';
+import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 
 // Charge une seule fois restaurant/orders/reviews/drivers et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
@@ -66,6 +67,9 @@ export default function DashboardLayout() {
   // vérifier. Le nombre de commandes en cours et du jour est maintenant en tête de la page Commandes ;
   // les avis sont dans Mon compte.
 
+  // Terminal « navigateur » (Goodcom sans coque Android) : si CET appareil est associé au commerce, il imprime les
+  // tickets de la file d'impression tant que le tableau de bord est ouvert (voir terminalNavigateur.js).
+  useEffect(() => { demarrerTerminalNavigateur(); }, []);
   useEffect(() => {
     api('/restaurants/mine/dashboard', { token }).then((list) => {
       setMyRestos(list);

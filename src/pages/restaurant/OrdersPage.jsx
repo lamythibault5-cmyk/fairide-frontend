@@ -7,6 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import OrderReceipt from '../../components/OrderReceipt';
 import TicketPapier from '../../components/TicketPapier';
 import { imprimerTicketPapier } from '../../impressionPapier';
+import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
@@ -234,6 +235,13 @@ export default function OrdersPage() {
   async function printReceipt(order) {
     try {
       const r = await api(`/orders/${order.id}/ticket?columns=32`, { token });
+      // Sur un terminal Goodcom (service d'impression détecté) : directement sur son imprimante, sans boîte de dialogue.
+      if (await serviceGoodcomDisponible()) {
+        await imprimerSurGoodcom(r.lines, r.columns);
+        setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
+        toast(t('ordersResto.ticketSentTerminal'));
+        return;
+      }
       imprimerTicketPapier(r.lines, r.columns, `Fairide ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
       setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
     } catch (e) { toast(e.message, 'erreur'); }
