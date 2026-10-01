@@ -3997,6 +3997,10 @@ export default {
       submit: 'Mijn wachtwoord herstellen'
     },
     alertBar: {
+      ringtone_marimba: '🪘 Marimba',
+      ringtone_velo: '🚲 Fietsbel',
+      ringtone_melodie: '🎶 Kort deuntje',
+      volume: 'Volume van de melding',
       ringtone: 'Beltoon',
       ringtone_carillon: '🎵 Klokkenspel',
       ringtone_cloche: '🔔 Bel',
@@ -6422,6 +6426,13 @@ export default {
       admin: 'afhalen op {pickup}, levering op {delivery} (serverslotten en launch.js).',
       adminPickupOpen: 'afhalen open; levering op {delivery}.'
     },
+    newOrder: {
+      title: 'Nieuwe bestelling!',
+      total: 'Totaal:',
+      reprint: 'Ticket afdrukken',
+      open: 'Bekijken en aanvaarden',
+      later: 'Later'
+    },
     auth: {
       extraCuisinesTitle: 'Je biedt ook aan… (optioneel)',
       extraCuisinesHelp: 'Vink de andere keukens op je kaart aan: klanten vinden je dan ook via die filters. {max} types in totaal, je hoofdtype inbegrepen.',
@@ -7018,6 +7029,13 @@ export default {
       joinDriverP2NoP2p: 'Student-zelfstandige of zelfstandige: jij kiest je statuut'
     },
     simulation: {
+      orderCreateButton: 'Een bestelling maken en afdrukken',
+      orderCreateHelp: 'Stel een bestelling samen uit de kaart van {name}: ze wordt als betaald geregistreerd (simulatieklant) en het ticket komt meteen rechts uit. Het simulatierestaurant ontvangt ze als een echte bestelling.',
+      orderPickOne: 'Kies minstens één gerecht.',
+      orderNotePh: 'Opmerking van de klant (optioneel)',
+      orderCreateAndPrint: 'Maken en afdrukken · {total}',
+      orderClose: 'Sluiten',
+      orderCreated: 'Bestelling {n} aangemaakt ({total}): het ticket komt uit de virtuele printer.',
       chooseTitle: 'Welke zaak simuleren?',
       chooseCurrent: 'Simulatiezaak:',
       chooseCopy: 'kopie van een echte zaak',
@@ -7210,7 +7228,7 @@ export default {
       trigger_manuel: 'Alleen als ik erom vraag',
       trigger_manuel_help: 'Geen automatisch afdrukken: druk af vanuit de bestelling met de knop 🖨️.',
       copiesTitle: 'Aantal kopieën',
-      copiesHelp: 'Bijvoorbeeld een voor de keuken en een voor de zak.',
+      copiesHelp: 'Aantal tickets per bestelling (1 tot 5): één voor de keuken, één voor de toonbank, één voor de koerier… Voor een bepaalde bestelling kies je het aantal bij het herafdrukken.',
       copies: '{n} kopie(ën)',
       testTitle: 'Afdruktest',
       testHelp: 'Drukt een testticket af om het papier, de accenten en de breedte te controleren. Doe het bij de installatie van de terminal.',

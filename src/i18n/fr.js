@@ -4007,6 +4007,10 @@ export default {
       submit: 'Réinitialiser mon mot de passe'
     },
     alertBar: {
+      ringtone_marimba: '🪘 Marimba',
+      ringtone_velo: '🚲 Sonnette de vélo',
+      ringtone_melodie: '🎶 Petite mélodie',
+      volume: 'Volume de l\'alerte',
       ringtone: 'Sonnerie',
       ringtone_carillon: '🎵 Carillon',
       ringtone_cloche: '🔔 Cloche',
@@ -6467,6 +6471,13 @@ export default {
       admin: 'à emporter le {pickup}, livraison le {delivery} (verrous serveur et launch.js).',
       adminPickupOpen: 'à emporter ouvert ; livraison le {delivery}.'
     },
+    newOrder: {
+      title: 'Nouvelle commande !',
+      total: 'Total :',
+      reprint: 'Imprimer le ticket',
+      open: 'Voir et accepter',
+      later: 'Plus tard'
+    },
     auth: {
       extraCuisinesTitle: 'Tu proposes aussi… (facultatif)',
       extraCuisinesHelp: 'Coche les autres cuisines de ta carte : les clients te trouveront aussi par ces filtres. {max} types au total, ton type principal compris.',
@@ -7065,6 +7076,13 @@ export default {
       joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut'
     },
     simulation: {
+      orderCreateButton: 'Créer une commande et l\'imprimer',
+      orderCreateHelp: 'Compose une commande sur la carte de {name} : elle est enregistrée payée (client de simulation) et son ticket sort tout de suite à droite. Le restaurateur de simulation la reçoit comme une vraie commande.',
+      orderPickOne: 'Choisis au moins un plat.',
+      orderNotePh: 'Note du client (facultatif)',
+      orderCreateAndPrint: 'Créer et imprimer · {total}',
+      orderClose: 'Fermer',
+      orderCreated: 'Commande {n} créée ({total}) : son ticket sort sur l\'imprimante virtuelle.',
       chooseTitle: 'Quel commerce simuler ?',
       chooseCurrent: 'Commerce de la simulation :',
       chooseCopy: 'copie d\'un vrai commerce',
@@ -7257,7 +7275,7 @@ export default {
       trigger_manuel: 'Seulement quand je le demande',
       trigger_manuel_help: 'Aucune impression automatique : tu imprimes depuis la commande, avec le bouton 🖨️.',
       copiesTitle: 'Nombre de copies',
-      copiesHelp: 'Par exemple une pour la cuisine et une pour le sac.',
+      copiesHelp: 'Nombre de tickets imprimés à chaque commande (1 à 5) : un pour la cuisine, un pour le comptoir, un pour le livreur… Pour une commande précise, tu choisis le nombre au moment de réimprimer.',
       copies: '{n} copie(s)',
       testTitle: 'Test d\'impression',
       testHelp: 'Imprime un ticket de test pour vérifier le papier, les accents et la largeur. À faire à l\'installation du terminal.',

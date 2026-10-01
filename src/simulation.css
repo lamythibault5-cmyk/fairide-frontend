@@ -117,3 +117,9 @@
 .simu-sources-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .simu-sources-texte b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .simu-parcours { margin: 12px 0 0; padding-left: 20px; display: grid; gap: 3px; color: var(--ink-soft); }
+
+/* Créer une commande et l'imprimer (CommandeTestAdmin). */
+.simu-commande { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+.simu-commande-carte { display: grid; gap: 10px; max-height: 320px; overflow-y: auto; }
+.simu-commande-plat { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
+.simu-commande-nom { flex: 1; min-width: 0; font-size: 14px; }

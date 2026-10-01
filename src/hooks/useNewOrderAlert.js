@@ -19,6 +19,7 @@ import { useToast } from '../context/ToastContext';
 // en tête de GuidePage.jsx.
 const SOUND_KEY = 'fairide_new_order_sound';
 const SONNERIE_KEY = 'fairide_new_order_ringtone';
+const VOLUME_KEY = 'fairide_new_order_volume';
 const REPEAT_MS = 15000;
 
 function loadSoundPref() {
@@ -33,7 +34,7 @@ function loadSoundPref() {
 
 // Carillon synthétisé plutôt qu'un fichier audio : rien à télécharger, rien à héberger, et le son
 // fonctionne même hors ligne. Trois notes montantes, assez distinctes du reste des sons d'un comptoir.
-export function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
+export function playChime(ctx, notes = [880, 1108.73, 1318.51], dest = ctx.destination) {
   const now = ctx.currentTime;
   notes.forEach((freq, i) => {
     const osc = ctx.createOscillator();
@@ -45,7 +46,7 @@ export function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
     gain.gain.setValueAtTime(0, start);
     gain.gain.linearRampToValueAtTime(0.22, start + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.42);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(dest);
     osc.start(start);
     osc.stop(start + 0.45);
   });
@@ -55,8 +56,11 @@ export function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
 //   - carillon : les trois notes montantes d'origine, douces ;
 //   - cloche   : deux coups de cloche (onde triangle et harmonique), qui portent dans une cuisine bruyante ;
 //   - alarme   : deux tons alternés et répétés, pour un comptoir où l'on ne doit RIEN rater.
-export const SONNERIES = ['carillon', 'cloche', 'alarme'];
-function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22 }) {
+//   - marimba  : arpège en bois, chaleureux, cinq notes qui montent puis redescendent ;
+//   - velo     : la sonnette d'un vélo, deux « dring » — c'est le son de Fairide ;
+//   - melodie  : une petite ritournelle de quatre notes, comme un jingle de bonne nouvelle.
+export const SONNERIES = ['carillon', 'cloche', 'marimba', 'velo', 'melodie', 'alarme'];
+function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22, dest = ctx.destination }) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -64,25 +68,46 @@ function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22 }) {
   gain.gain.setValueAtTime(0, start);
   gain.gain.linearRampToValueAtTime(volume, start + 0.015);
   gain.gain.exponentialRampToValueAtTime(0.0001, start + duree);
-  osc.connect(gain).connect(ctx.destination);
+  osc.connect(gain).connect(dest);
   osc.start(start);
   osc.stop(start + duree + 0.02);
 }
-export function jouerSonnerie(ctx, nom = 'carillon') {
+export function jouerSonnerie(ctx, nom = 'carillon', dest = ctx.destination) {
   const t0 = ctx.currentTime;
+  if (nom === 'marimba') {
+    [523.25, 659.25, 783.99, 1046.5, 783.99, 659.25].forEach((f, i) => {
+      note(ctx, { freq: f, start: t0 + i * 0.11, duree: 0.28, type: 'triangle', volume: 0.3, dest });
+      note(ctx, { freq: f * 2, start: t0 + i * 0.11, duree: 0.12, type: 'sine', volume: 0.08, dest });
+    });
+    return;
+  }
+  if (nom === 'velo') {
+    for (const d of [0, 0.5]) for (let k = 0; k < 8; k++) note(ctx, { freq: k % 2 ? 2793 : 2637, start: t0 + d + k * 0.04, duree: 0.1, type: 'sine', volume: 0.14, dest });
+    return;
+  }
+  if (nom === 'melodie') {
+    [[659.25, 0.16], [783.99, 0.16], [880, 0.16], [1318.5, 0.55]].forEach(([f, dur], i) => {
+      note(ctx, { freq: f, start: t0 + i * 0.17, duree: dur, type: 'sine', volume: 0.22, dest });
+      note(ctx, { freq: f / 2, start: t0 + i * 0.17, duree: dur, type: 'triangle', volume: 0.08, dest });
+    });
+    return;
+  }
   if (nom === 'cloche') {
     for (const decalage of [0, 0.7]) {
-      note(ctx, { freq: 784, start: t0 + decalage, duree: 1.1, type: 'triangle', volume: 0.3 });
-      note(ctx, { freq: 1568, start: t0 + decalage, duree: 0.6, type: 'sine', volume: 0.12 });
-      note(ctx, { freq: 2352, start: t0 + decalage, duree: 0.35, type: 'sine', volume: 0.06 });
+      note(ctx, { freq: 784, start: t0 + decalage, duree: 1.1, type: 'triangle', volume: 0.3, dest });
+      note(ctx, { freq: 1568, start: t0 + decalage, duree: 0.6, type: 'sine', volume: 0.12, dest });
+      note(ctx, { freq: 2352, start: t0 + decalage, duree: 0.35, type: 'sine', volume: 0.06, dest });
     }
     return;
   }
   if (nom === 'alarme') {
-    for (let i = 0; i < 6; i++) note(ctx, { freq: i % 2 ? 740 : 988, start: t0 + i * 0.18, duree: 0.16, type: 'square', volume: 0.12 });
+    for (let i = 0; i < 6; i++) note(ctx, { freq: i % 2 ? 740 : 988, start: t0 + i * 0.18, duree: 0.16, type: 'square', volume: 0.12, dest });
     return;
   }
-  playChime(ctx);
+  playChime(ctx, undefined, dest);
+}
+function loadVolume() {
+  try { const v = Number(localStorage.getItem(VOLUME_KEY)); return Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null ? v : 80; } catch { return 80; }
 }
 function loadSonnerie() {
   try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'carillon'; } catch { return 'carillon'; }
@@ -98,6 +123,9 @@ export default function useNewOrderAlert(orders, ready) {
   const toast = useToast();
   const [soundEnabled, setSoundEnabledState] = useState(loadSoundPref);
   const [sonnerie, setSonnerieState] = useState(loadSonnerie);
+  // Volume (0 à 100) : un étage de gain commun à toutes les sonneries, réglé depuis la barre d'alerte.
+  const [volume, setVolumeState] = useState(loadVolume);
+  const gainRef = useRef(null);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
   );
@@ -113,6 +141,12 @@ export default function useNewOrderAlert(orders, ready) {
     try { localStorage.setItem(SOUND_KEY, value ? 'on' : 'off'); } catch { /* stockage indisponible */ }
   }, []);
 
+  const setVolume = useCallback((value) => {
+    const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+    setVolumeState(v);
+    if (gainRef.current) gainRef.current.gain.value = (v / 100) ** 2;
+    try { localStorage.setItem(VOLUME_KEY, String(v)); } catch { /* stockage indisponible */ }
+  }, []);
   const setSonnerie = useCallback((value) => {
     if (!SONNERIES.includes(value)) return;
     setSonnerieState(value);
@@ -124,7 +158,7 @@ export default function useNewOrderAlert(orders, ready) {
   const testerAlarme = useCallback(async (nom) => {
     const ctx = ctxRef.current;
     if (!ctx) return false;
-    try { if (ctx.state === 'suspended') await ctx.resume(); jouerSonnerie(ctx, nom || sonnerie); return true; } catch { return false; }
+    try { if (ctx.state === 'suspended') await ctx.resume(); jouerSonnerie(ctx, nom || sonnerie, gainRef.current || ctx.destination); return true; } catch { return false; }
   }, [sonnerie]);
 
   const requestPermission = useCallback(async () => {
@@ -145,6 +179,11 @@ export default function useNewOrderAlert(orders, ready) {
     // d'usage visé. Il démarre "suspended", ce qui est sans effet tant qu'on ne joue rien.
     const ctx = new Ctor();
     ctxRef.current = ctx;
+    // Étage de volume : courbe quadratique, plus naturelle à l'oreille qu'une droite.
+    const gain = ctx.createGain();
+    gain.gain.value = (loadVolume() / 100) ** 2;
+    gain.connect(ctx.destination);
+    gainRef.current = gain;
 
     // Les navigateurs interdisent de produire du son avant une interaction : on lève la suspension au
     // premier geste, quel qu'il soit.
@@ -167,7 +206,7 @@ export default function useNewOrderAlert(orders, ready) {
     if (!soundEnabled) return;
     const ctx = ctxRef.current;
     if (!ctx || ctx.state !== 'running') return;
-    try { jouerSonnerie(ctx, sonnerie); } catch { /* contexte audio fermé par le navigateur */ }
+    try { jouerSonnerie(ctx, sonnerie, gainRef.current || ctx.destination); } catch { /* contexte audio fermé par le navigateur */ }
   }, [soundEnabled, sonnerie]);
 
   // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevCountRef démarre à
@@ -215,7 +254,7 @@ export default function useNewOrderAlert(orders, ready) {
     const annulees = orders.filter((o) => o.status === 'annule' && prev.has(o.id) && !['annule', 'refuse'].includes(prev.get(o.id)));
     if (!annulees.length) return;
     const ctx = ctxRef.current;
-    if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440]); } catch { /* contexte fermé */ } }
+    if (soundEnabled && ctx && ctx.state === 'running') { try { playChime(ctx, [660, 440], gainRef.current || ctx.destination); } catch { /* contexte fermé */ } }
     toast(annulees.length > 1 ? t('alertBar.cancelToastMany', { n: annulees.length }) : t('alertBar.cancelToastOne', { client: annulees[0].clientName || '' }));
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       try {
@@ -250,5 +289,5 @@ export default function useNewOrderAlert(orders, ready) {
     return () => { document.title = base; };
   }, [newCount]);
 
-  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme };
+  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume };
 }

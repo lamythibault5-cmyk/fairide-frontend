@@ -4336,3 +4336,12 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .exemplaires { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border: 1px solid var(--line); border-radius: var(--radius-pill); }
 .exemplaires button { min-width: 36px; min-height: 36px; padding: 0; font-size: 18px; }
 .exemplaires b { min-width: 16px; text-align: center; }
+
+/* Fenêtre « nouvelle commande » (NouvelleCommandeModale) et volume de l'alerte (NewOrderAlertBar). */
+.nouvelle-commande { display: flex; flex-direction: column; gap: 6px; }
+.nouvelle-commande-tete { margin: 0; font-size: 15px; }
+.nouvelle-commande-plats { margin: 4px 0; padding-left: 18px; display: grid; gap: 3px; font-size: 15px; }
+.nouvelle-commande-note { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--cream-dim); }
+.nouvelle-commande-total { margin: 6px 0 0; font-size: 16px; }
+.alerte-volume { display: inline-flex; align-items: center; gap: 6px; }
+.alerte-volume input[type=range] { width: 90px; accent-color: var(--teal, #1F8A70); }

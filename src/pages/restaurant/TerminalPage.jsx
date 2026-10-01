@@ -199,7 +199,7 @@ export default function TerminalPage() {
         <h3>{t('terminal.copiesTitle')}</h3>
         <p className="small" style={{ marginTop: 0 }}>{t('terminal.copiesHelp')}</p>
         <div className="row" style={{ gap: 8 }}>
-          {[1, 2, 3].map((n) => (
+          {[1, 2, 3, 4, 5].map((n) => (
             <button key={n} type="button" className={reglages.printCopies === n ? 'btn-teal' : 'btn-outline'} disabled={busy} onClick={() => enregistrer({ printCopies: n })}>
               {t('terminal.copies', { n })}
             </button>

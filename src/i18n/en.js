@@ -3997,6 +3997,10 @@ export default {
       submit: 'Reset my password'
     },
     alertBar: {
+      ringtone_marimba: '🪘 Marimba',
+      ringtone_velo: '🚲 Bike bell',
+      ringtone_melodie: '🎶 Little melody',
+      volume: 'Alert volume',
       ringtone: 'Ringtone',
       ringtone_carillon: '🎵 Chime',
       ringtone_cloche: '🔔 Bell',
@@ -6422,6 +6426,13 @@ export default {
       admin: 'pickup on {pickup}, delivery on {delivery} (server locks and launch.js).',
       adminPickupOpen: 'pickup open; delivery on {delivery}.'
     },
+    newOrder: {
+      title: 'New order!',
+      total: 'Total:',
+      reprint: 'Print the ticket',
+      open: 'View and accept',
+      later: 'Later'
+    },
     auth: {
       extraCuisinesTitle: 'You also serve… (optional)',
       extraCuisinesHelp: 'Tick the other cuisines on your menu: customers will also find you through these filters. {max} types in total, your main type included.',
@@ -7018,6 +7029,13 @@ export default {
       joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status'
     },
     simulation: {
+      orderCreateButton: 'Create an order and print it',
+      orderCreateHelp: 'Compose an order from {name}\'s menu: it is recorded as paid (simulation customer) and its ticket prints right away on the right. The simulation restaurant receives it like a real order.',
+      orderPickOne: 'Pick at least one dish.',
+      orderNotePh: 'Customer note (optional)',
+      orderCreateAndPrint: 'Create and print · {total}',
+      orderClose: 'Close',
+      orderCreated: 'Order {n} created ({total}): its ticket is printing on the virtual printer.',
       chooseTitle: 'Which business to simulate?',
       chooseCurrent: 'Simulation business:',
       chooseCopy: 'copy of a real business',
@@ -7210,7 +7228,7 @@ export default {
       trigger_manuel: 'Only when I ask',
       trigger_manuel_help: 'No automatic printing: print from the order with the 🖨️ button.',
       copiesTitle: 'Number of copies',
-      copiesHelp: 'For example one for the kitchen and one for the bag.',
+      copiesHelp: 'Number of tickets printed for each order (1 to 5): one for the kitchen, one for the counter, one for the courier… For a given order, you choose the number when reprinting.',
       copies: '{n} cop(ies)',
       testTitle: 'Print test',
       testHelp: 'Prints a test ticket to check the paper, accents and width. Do it when installing the terminal.',

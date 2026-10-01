@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Link, useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -38,6 +38,15 @@ export default function OrdersPage() {
   // On garde la commande choisie, mais on affiche toujours sa dernière version (sondage de 15 s, actions) :
   // un instantané restait « Prête » avec son champ de code après validation, et un second clic échouait.
   const [commandeChoisie, setSelectedOrder] = useState(null);
+  // ?commande=<id> : ouvre cette commande dès qu'elle est chargée (fenêtre « nouvelle commande », lien d'un e-mail).
+  const [params, setParams] = useSearchParams();
+  const commandeDemandee = params.get('commande');
+  useEffect(() => {
+    if (!commandeDemandee || !orders.length) return;
+    const o = orders.find((x) => x.id === commandeDemandee);
+    if (o) { setSelectedOrder(o); setParams({}, { replace: true }); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commandeDemandee, orders.length]);
   const selectedOrder = commandeChoisie ? (orders.find((o) => o.id === commandeChoisie.id) || commandeChoisie) : null;
   // Commande dont une action (accepter, refuser, prête) est en cours : pas de double envoi sur un double appui.
   const [actionEnCours, setActionEnCours] = useState(null);
@@ -235,14 +244,16 @@ export default function OrdersPage() {
 
   // Impression depuis CET appareil (boîte d'impression du système) : le même ticket que le terminal, en colonne de
   // 58 mm. Secours sans terminal, ou pour un double sur une autre imprimante.
-  async function printReceipt(order) {
+  async function printReceipt(order, copies = 1) {
     try {
       const r = await api(`/orders/${order.id}/ticket?columns=32`, { token });
-      // Sur un terminal Goodcom (service d'impression détecté) : directement sur son imprimante, sans boîte de dialogue.
+      // Sur un terminal Goodcom (service d'impression détecté) : directement sur son imprimante, sans boîte de dialogue,
+      // autant de fois que d'exemplaires demandés.
       if (await serviceGoodcomDisponible()) {
-        await imprimerSurGoodcom(r.lines, r.columns);
-        setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + 1 }));
-        toast(t('ordersResto.ticketSentTerminal'));
+        const n = Math.max(1, copies);
+        for (let i = 0; i < n; i++) await imprimerSurGoodcom(r.lines, r.columns);
+        setImpressions((m) => ({ ...m, [order.id]: (m[order.id] || 0) + n }));
+        toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : t('ordersResto.ticketSentTerminal'));
         return;
       }
       imprimerTicketPapier(r.lines, r.columns, `Fairide ${order.orderNumber ? `#${String(order.orderNumber).padStart(3, '0')}` : String(order.id).slice(0, 8)}`);
@@ -462,7 +473,7 @@ export default function OrdersPage() {
                     {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
                   </button>
                   <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
-                  <button className="btn-ghost" onClick={() => printReceipt(selectedOrder)}>{t('ordersResto.printFromDevice')}</button>
+                  <button className="btn-ghost" onClick={() => printReceipt(selectedOrder, exemplaires)}>{t('ordersResto.printFromDevice')}</button>
                   <button className="btn-ghost" onClick={() => setSelectedOrder(null)}>{t('ordersResto.close')}</button>
                 </div>
               </>
@@ -472,8 +483,8 @@ export default function OrdersPage() {
                   <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
                 )}
                 <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                  {btName && <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />}
-                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder))}>
+                  <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
+                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder, exemplaires))}>
                     {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
                   </button>
                   <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>

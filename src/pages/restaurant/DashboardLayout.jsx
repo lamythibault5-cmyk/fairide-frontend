@@ -9,6 +9,7 @@ import CreationCommerce from '../../components/commerce/CreationCommerce';
 import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
+import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
@@ -346,6 +347,8 @@ export default function DashboardLayout() {
       {/* Placée au niveau du layout, pas de la page Commandes : le restaurateur doit être alerté même
           s'il est en train de modifier son menu ou de consulter ses avis. */}
       {restaurant && <NewOrderAlertBar {...orderAlert} push={push} />}
+      {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
+      {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} />}
 
       {!restaurant && myRestos.length > 0 && (
         /* La carte d'échec est celle de components/ErrorCard.jsx, commune aux quatre espaces :

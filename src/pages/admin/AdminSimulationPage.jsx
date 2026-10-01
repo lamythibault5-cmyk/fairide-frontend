@@ -8,6 +8,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import Icone from '../../components/Icone';
 import RouleauTickets from '../../components/RouleauTickets';
 import ChoixCommerceSimule from '../../components/admin/ChoixCommerceSimule';
+import CommandeTestAdmin from '../../components/admin/CommandeTestAdmin';
 import '../../simulation.css';
 
 // Admin › Simulation : parcourir Fairide comme un visiteur, un client, un restaurateur et un livreur, dans un bac
@@ -165,6 +166,9 @@ export default function AdminSimulationPage() {
           <button type="button" className="btn-outline" disabled={impression || !etat?.ready} onClick={() => imprimer(null)}>{tr('simulation.testTicket')}</button>
         </div>
         <p className="small" style={{ margin: '6px 0 12px', maxWidth: 760 }}>{tr('simulation.printerAdminHelp')}</p>
+        <div style={{ margin: '0 0 14px' }}>
+          <CommandeTestAdmin pret={!!etat?.ready} onCree={(r) => { if (r.printer) setImprimante(r.printer); charger(); }} />
+        </div>
         <div className="simu-grille" style={{ marginTop: 0 }}>
           <div>
             <h4 style={{ margin: '0 0 8px' }}>{tr('simulation.recentOrders')}</h4>

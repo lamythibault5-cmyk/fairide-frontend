@@ -15,7 +15,7 @@ import { useToast } from '../context/ToastContext';
 
 import { SONNERIES } from '../hooks/useNewOrderAlert';
 
-export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme }) {
+export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -74,6 +74,12 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
             onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
             {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
           </select>
+        )}
+        {setVolume && (
+          <label className="alerte-volume" title={t('alertBar.volume')}>
+            <span aria-hidden="true">{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</span>
+            <input type="range" min="0" max="100" step="5" value={volume} aria-label={t('alertBar.volume')} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()} onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
+          </label>
         )}
         {testerAlarme && (
           <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }}
