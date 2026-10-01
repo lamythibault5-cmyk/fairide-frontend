@@ -17,7 +17,9 @@ export const OUVERTURE_COMMANDES = OUVERTURE_PAIEMENT_EN_LIGNE;
 const OUVERTURES = { pickup: OUVERTURE_EMPORTER, delivery: OUVERTURE_LIVRAISON };
 
 function formater(date, locale) {
-  return date.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
+  const texte = date.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
+  // En français, le premier du mois s'écrit « 1er novembre », pas « 1 novembre ».
+  return String(locale).startsWith('fr') ? texte.replace(/^1 /, '1er ') : texte;
 }
 
 // type : 'pickup' | 'delivery'.

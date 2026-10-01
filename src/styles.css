@@ -3892,6 +3892,8 @@ html.tracking-plein-actif .panier-pilule { display: none !important; }
   white-space: nowrap;
 }
 .panier-pilule b { font-weight: 700; }
+/* Place réservée sous le contenu tant que la pilule est affichée (FloatingCart). */
+html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
 .panier-pilule-icone { position: relative; display: flex; align-items: center; }
 /* Le compteur mord sur l'icone : c'est ce qui le fait lire comme « ce panier contient 2 » plutot
    que comme un nombre pose a cote. */

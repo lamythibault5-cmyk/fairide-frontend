@@ -6346,6 +6346,8 @@ export default {
       failedText: 'We hebben deze betaling niet ontvangen. Je bestelling is niet naar het restaurant gestuurd en er is niets afgeschreven. Je kunt het opnieuw proberen via "Mijn bestellingen".'
     },
     auth: {
+      extraCuisinesTitle: 'Je biedt ook aan… (optioneel)',
+      extraCuisinesHelp: 'Vink de andere keukens op je kaart aan: klanten vinden je dan ook via die filters. {max} types in totaal, je hoofdtype inbegrepen.',
       stepIdentitySubRestaurant: 'Jij, de eigenaar of verantwoordelijke: Fairide belt je als een bestelling vastloopt.',
       phoneOwner: 'Je nummer (eigenaar / verantwoordelijke)',
       phoneOwnerHelp: 'Je persoonlijke nummer, niet dat van het restaurant: het nummer ter plaatse vraag je in de volgende stap.',

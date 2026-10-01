@@ -6346,6 +6346,8 @@ export default {
       failedText: 'We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. You can try again from "My orders".'
     },
     auth: {
+      extraCuisinesTitle: 'You also serve… (optional)',
+      extraCuisinesHelp: 'Tick the other cuisines on your menu: customers will also find you through these filters. {max} types in total, your main type included.',
       stepIdentitySubRestaurant: 'You, the owner or manager: Fairide calls you if an order gets stuck.',
       phoneOwner: 'Your number (owner / manager)',
       phoneOwnerHelp: 'Your personal number, not the restaurant\'s: the in-store number comes in the next step.',

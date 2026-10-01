@@ -15,7 +15,8 @@ import PhoneInput from '../components/PhoneInput';
 import EmailDomainChips from '../components/EmailDomainChips';
 import AddressSearch from '../components/AddressSearch';
 import PasswordInput from '../components/PasswordInput';
-import { RESTAURANT_TYPES } from '../menuCategories';
+import { RESTAURANT_TYPES, restaurantTypeLabel } from '../menuCategories';
+import { MAX_CUISINES } from '../components/commerce/EcranCuisines';
 import { cuisineDepuisOsm } from '../osmCuisine';
 import { horairesDepuisOsm, horairesNonVides } from '../osmHours';
 import OpeningHoursEditor from '../components/OpeningHoursEditor';
@@ -142,6 +143,8 @@ export default function Auth() {
   // numéro du compte, qui est celui du patron / responsable ; d'autres responsables s'ajoutent (manager_contacts).
   const [restoPhone, setRestoPhone] = useState('');
   const [responsables, setResponsables] = useState([]);
+  // Autres types de cuisine dès l'inscription (fondateur, 2026-10-01) : 6 au plus, 7 avec le type principal.
+  const [extraCuisines, setExtraCuisines] = useState([]);
   const [emailSecondary, setEmailSecondary] = useState('');
   const [emailSecondaryOuvert, setEmailSecondaryOuvert] = useState(false);
   const [horairesSiteEtat, setHorairesSiteEtat] = useState(''); // '' | 'lecture' | 'recherche' | 'trouve' | 'trouveWeb' | 'rien'
@@ -206,6 +209,7 @@ export default function Auth() {
     const fiche = commerceTrouve || {};
     return {
       name: fiche.name || legalName.trim(), cuisine: cuisineFinale, hours,
+      extraCuisines: extraCuisines.filter((c) => c !== cuisineFinale).slice(0, MAX_CUISINES - 1),
       openingHours: fiche.openingHours || '',
       addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim(),
       commune: addressCity.trim(), neighborhood: '',
@@ -372,7 +376,7 @@ export default function Auth() {
     commerceTrouve: [commerceTrouve, setCommerceTrouve], services: [services, setServices],
     cuisine: [cuisine, setCuisine], customCuisine: [customCuisine, setCustomCuisine], hours: [hours, setHours], hoursDepuisWeb: [hoursDepuisWeb, setHoursDepuisWeb],
     phoneSecondary: [phoneSecondary, setPhoneSecondary], phoneSecondaryOuvert: [phoneSecondaryOuvert, setPhoneSecondaryOuvert],
-    restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables],
+    restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables], extraCuisines: [extraCuisines, setExtraCuisines],
     emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
     siteTrouve: [siteTrouve, setSiteTrouve], infosVerifiees: [infosVerifiees, setInfosVerifiees], typeDepuisSite: [typeDepuisSite, setTypeDepuisSite],
     // Code de vérification en attente : sans eux, un rechargement renvoyait au formulaire alors que le compte existe.
@@ -1218,6 +1222,25 @@ export default function Auth() {
                   <p className="small" style={{ margin: '4px 0 0', opacity: 0.8 }}>{typeDepuisSite && cuisine ? `✅ ${t('auth.cuisineFromSite')}` : t('auth.cuisineHelp')}</p>
                   {fieldError('cuisine')}
                 </div>
+                {cuisine && cuisine !== 'Autre' && (
+                  <div className="field" role="group" aria-labelledby="auth-cuisines-titre">
+                    <span className="titre-groupe" id="auth-cuisines-titre">{t('auth.extraCuisinesTitle')}</span>
+                    <p className="small" style={{ margin: '0 0 6px', opacity: 0.8 }}>{t('auth.extraCuisinesHelp', { max: MAX_CUISINES })}</p>
+                    <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                      {RESTAURANT_TYPES.filter((rt) => rt.value !== cuisine && rt.value !== 'Autre').map((rt) => {
+                        const actif = extraCuisines.includes(rt.value);
+                        const plein = extraCuisines.filter((c) => c !== cuisine).length >= MAX_CUISINES - 1;
+                        return (
+                          <button key={rt.value} type="button" className={`cuisine-chip${actif ? ' active' : ''}`} aria-pressed={actif} disabled={!actif && plein}
+                            onClick={() => setExtraCuisines((l) => (l.includes(rt.value) ? l.filter((x) => x !== rt.value) : [...l, rt.value]))}>
+                            <span className="emoji">{rt.emoji}</span><span>{restaurantTypeLabel(rt.value, t)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {extraCuisines.length > 0 && <p className="small" style={{ margin: '6px 0 0', fontWeight: 700 }}>{t('editResto.cuisinesCount', { n: extraCuisines.filter((c) => c !== cuisine).length + 1, max: MAX_CUISINES })}</p>}
+                  </div>
+                )}
                 {/* Plus de question sur la carte ici : elle se crée après l'inscription, dans « Mon menu »
                     (fondateur, 2026-09-14). L'inscription reste courte : le commerce, ses horaires, ses services. */}
                 <div className="field contacts-commerce" role="group" aria-labelledby="auth-contacts-titre">

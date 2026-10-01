@@ -105,7 +105,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       <div className="rc-media">
         {r.coverImageUrl
           ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
-          : <span className="rc-photo rc-photo-vide" aria-hidden="true"><Icone nom="restaurants" taille={28} /></span>}
+          : <PhotoVide cuisine={r.cuisine} />}
         <FavoriteHeart
           active={isFavorite}
           onClick={(e) => onToggleFavorite(e, r.id)}
@@ -144,13 +144,24 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
 
 // Un vrai commerce déjà inscrit, pas encore ouvert aux commandes (fiche pas encore publiée par Fairide) : montré pour
 // ce qu'il est — un commerce qui arrive —, sans lien vers une fiche qui ne s'ouvrirait pas.
+// Commerce sans photo de couverture : l'emoji de sa cuisine sur un fond doux, plutôt qu'un bloc gris vide
+// qui ressemble à une image qui ne charge pas.
+function PhotoVide({ cuisine }) {
+  const emoji = RESTAURANT_TYPES.find((c) => c.value === cuisine)?.emoji;
+  return (
+    <span className="rc-photo rc-photo-vide" aria-hidden="true">
+      {emoji ? <span className="rc-photo-emoji">{emoji}</span> : <Icone nom="restaurants" taille={28} />}
+    </span>
+  );
+}
+
 function CarteBientot({ r, t }) {
   return (
     <div className="rest-card rc rc-bientot" aria-label={r.name}>
       <div className="rc-media">
         {r.coverImageUrl
           ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
-          : <span className="rc-photo rc-photo-vide" aria-hidden="true"><Icone nom="restaurants" taille={28} /></span>}
+          : <PhotoVide cuisine={r.cuisine} />}
         <span className="rc-offre">{t('restaurantList.soonBadge')}</span>
       </div>
       <div className="rc-corps">

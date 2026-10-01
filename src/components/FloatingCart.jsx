@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -17,7 +18,15 @@ import { euros } from '../prixPlat';
 export default function FloatingCart() {
   const cart = useCart();
   const { t } = useLanguage();
-  if (cart.count === 0) return null;
+  const visible = cart.count > 0;
+  // La pilule est fixe : sans place réservée en bas de page, elle recouvrait le dernier plat de la carte
+  // (nom et prix illisibles sur une carte courte). La classe ajoute cette marge tant qu'elle est affichée.
+  useEffect(() => {
+    if (!visible) return undefined;
+    document.documentElement.classList.add('avec-pilule-panier');
+    return () => document.documentElement.classList.remove('avec-pilule-panier');
+  }, [visible]);
+  if (!visible) return null;
 
   return (
     <Link to="/panier" className="panier-pilule">

@@ -6391,6 +6391,8 @@ export default {
       failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Tu peux réessayer depuis « Mes commandes »."
     },
     auth: {
+      extraCuisinesTitle: 'Tu proposes aussi… (facultatif)',
+      extraCuisinesHelp: 'Coche les autres cuisines de ta carte : les clients te trouveront aussi par ces filtres. {max} types au total, ton type principal compris.',
       stepIdentitySubRestaurant: 'Toi, le patron ou le responsable : Fairide t\'appelle si une commande coince.',
       phoneOwner: 'Ton numéro (patron / responsable)',
       phoneOwnerHelp: 'Ton numéro personnel, pas celui du restaurant : le numéro sur place se donne à l\'étape suivante.',
