@@ -1,4 +1,5 @@
 import { useLanguage, getLocale } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { OUVERTURE_EMPORTER, OUVERTURE_LIVRAISON, dateOuvertureEmporter, dateOuvertureLivraison } from '../launch';
 import Icone from './Icone';
 
@@ -10,7 +11,10 @@ import Icone from './Icone';
 //   role : 'restaurant' | 'driver' | 'client' | 'admin'
 export default function BandeauOuverture({ role = 'client', style }) {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const maintenant = Date.now();
+  // En simulation (Admin › Simulation), tout est ouvert : annoncer une ouverture à venir contredirait ce qu'on teste.
+  if (user?.simulation) return null;
   const emporterOuvert = maintenant >= OUVERTURE_EMPORTER.getTime();
   const livraisonOuverte = maintenant >= OUVERTURE_LIVRAISON.getTime();
   if (livraisonOuverte) return null;

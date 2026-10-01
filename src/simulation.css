@@ -1,7 +1,7 @@
 /* Barre de simulation (components/SimulationBar.jsx) — flotte en bas à gauche, au-dessus des barres fixes du
    parcours client (panier, paiement) sur téléphone. Encre sombre pour se distinguer du site qu'elle survole. */
 .simu-barre, .simu-pastille {
-  position: fixed; left: 16px; bottom: 20px; z-index: 700;
+  position: fixed; left: 16px; bottom: 20px; z-index: 80; /* au-dessus des onglets (50) et des barres fixes (60), SOUS les fenêtres et la fiche plat (100, 300) : la pastille cachait le nom du plat */
   font-family: inherit; color: #fff; background: #14121F;
   box-shadow: rgba(0, 0, 0, 0.28) 0 8px 28px 0;
 }

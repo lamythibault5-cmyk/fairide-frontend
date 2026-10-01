@@ -10,6 +10,7 @@
 // tout le monde : sur iPhone et iPad il n'arrive que si le site a été ajouté à l'écran d'accueil, et
 // dans Safari ordinaire il n'existe pas du tout. La phrase affichée suit donc l'état réel de CE
 // navigateur — abonné, abonnable, ou hors de portée — plutôt que de promettre partout la même chose.
+import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
@@ -19,6 +20,9 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
+  // Les réglages (sonnerie, répétitions, volume, test) sont repliés : dépliés, ils prenaient tout l'écran d'un téléphone
+  // et poussaient la commande à traiter sous la ligne de flottaison (simulation du 2026-10-01).
+  const [reglagesOuverts, setReglagesOuverts] = useState(false);
 
   async function basculerPush() {
     if (push.abonne) {
@@ -70,13 +74,18 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
         {/* Sonnerie au choix (3) et test de l'alarme (fondateur, 2026-10-01) : on entend tout de suite ce qui sonnera
             à la prochaine commande. Choisir une sonnerie la fait aussi entendre. */}
         {setSonnerie && (
+          <button type="button" className="btn-ghost" style={{ padding: '6px 10px', fontSize: 13 }} aria-expanded={reglagesOuverts} onClick={() => setReglagesOuverts((v) => !v)}>
+            ⚙️ {t('alertBar.settings')}
+          </button>
+        )}
+        {reglagesOuverts && setSonnerie && (
           <select aria-label={t('alertBar.ringtone')} value={sonnerie} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }}
             onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
             {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
           </select>
         )}
         {/* Combien de fois l'alarme sonne par commande (fondateur, 2026-10-01), et un bouton pour la couper tout de suite. */}
-        {setRepetitions && (
+        {reglagesOuverts && setRepetitions && (
           <select aria-label={t('alertBar.repeats')} value={repetitions} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }} onChange={(e) => setRepetitions(e.target.value)}>
             {REPETITIONS.map((n) => <option key={n} value={n}>{n === 0 ? t('alertBar.repeatsForever') : t('alertBar.repeatsN', { n })}</option>)}
           </select>
@@ -84,13 +93,13 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
         {alarmeEnCours && couperAlarme && (
           <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={couperAlarme}>🔕 {t('alertBar.stopAlarm')}</button>
         )}
-        {setVolume && (
+        {reglagesOuverts && setVolume && (
           <label className="alerte-volume" title={t('alertBar.volume')}>
             <span aria-hidden="true">{volume === 0 ? '🔇' : volume < 50 ? '🔉' : '🔊'}</span>
             <input type="range" min="0" max="100" step="5" value={volume} aria-label={t('alertBar.volume')} onChange={(e) => setVolume(e.target.value)} onPointerUp={() => testerAlarme?.()} onKeyUp={(e) => { if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) testerAlarme?.(); }} />
           </label>
         )}
-        {testerAlarme && (
+        {reglagesOuverts && testerAlarme && (
           <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }}
             onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
             🔔 {t('alertBar.testAlarm')}

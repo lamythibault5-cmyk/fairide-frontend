@@ -446,6 +446,7 @@ export default function OrdersPage() {
               <div className="row" style={{ marginTop: 10, gap: 8 }}>
                 <input aria-label={t('ordersResto.phDriverCode')}
                   placeholder={t('ordersResto.phDriverCode')}
+                  inputMode="numeric" autoComplete="off"
                   style={{ maxWidth: 140 }}
                   value={pickupCodeInputs[selectedOrder.id] || ''}
                   onChange={(e) => setPickupCodeInputs((prev) => ({ ...prev, [selectedOrder.id]: e.target.value }))}
