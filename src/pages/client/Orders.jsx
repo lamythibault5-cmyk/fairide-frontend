@@ -1,3 +1,4 @@
+import { allerAuPaiement } from '../../natif';
 import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
@@ -57,7 +58,7 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
           toast(t('review.toastThanksTip'));
           onDone();
         } else {
-          window.location.href = pay.checkoutUrl;
+          await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
         }
         return;
       }

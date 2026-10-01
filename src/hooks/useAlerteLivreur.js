@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { playChime } from './useNewOrderAlert';
+import { vibrer } from '../gestes';
 
 // Alertes du livreur. Jusqu'ici, une course disponible n'était signalée par RIEN : ni son, ni notification — le
 // livreur devait fixer son écran. Même principe que l'alerte du restaurateur (useNewOrderAlert.js), sur ses
@@ -21,9 +22,6 @@ function sonActifMemorise() {
   try { return localStorage.getItem(CLE_SON) !== 'off'; } catch { return true; }
 }
 
-function vibrer(motif) {
-  try { navigator.vibrate?.(motif); } catch { /* non pris en charge */ }
-}
 
 export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif }) {
   const { t } = useLanguage();

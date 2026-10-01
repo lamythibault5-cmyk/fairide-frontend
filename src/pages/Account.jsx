@@ -1,3 +1,4 @@
+import { allerAuPaiement } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../api';
@@ -275,7 +276,7 @@ export default function Account() {
     setSubscribing(true);
     try {
       const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token, body: { promoCode: promoCodeInput.trim() || undefined } });
-      window.location.href = r.checkoutUrl;
+      await allerAuPaiement(r.checkoutUrl, { retour: '/account' });
     } catch (e) {
       toast(e.message, 'erreur');
       setSubscribing(false);

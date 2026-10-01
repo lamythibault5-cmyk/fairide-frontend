@@ -23,6 +23,8 @@ import './styles.css';
 import './client-ui.css';
 import { rechargerSiNouveauCode } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
+import { estNatif, demarrerNatif, retirerEcranLancementNatif } from './natif';
+import { ecouterNotificationsNatives } from './pushNatif';
 
 // POLICES : on rallume la feuille laissée en `media="print"` par index.html (voir le commentaire
 // détaillé là-bas). Deux contraintes se croisent et cette ligne est le seul point où elles tiennent
@@ -61,7 +63,9 @@ onConsentChange(startSentryIfAllowed);
 // cache). Échec silencieux voulu : navigateur trop ancien, page servie en http hors localhost,
 // navigation privée — dans tous ces cas l'application doit continuer de fonctionner exactement
 // comme avant, sans notification et sans message d'erreur adressé à quelqu'un qui n'a rien demandé.
-if ('serviceWorker' in navigator) {
+// Dans l'application native (Capacitor), la page est servie localement et les notifications passent par
+// APNs/FCM (pushNatif.js) : pas de service worker, il n'aurait rien à faire.
+if ('serviceWorker' in navigator && !estNatif()) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
@@ -104,6 +108,7 @@ function retirerEcranChargement() {
     if (prete() || performance.now() - debut > 2500) {
       splash.classList.add('splash-fin');
       setTimeout(() => splash.remove(), 220);
+      retirerEcranLancementNatif();
       return;
     }
     setTimeout(sonder, 40);
@@ -111,6 +116,10 @@ function retirerEcranChargement() {
   sonder();
 }
 setTimeout(retirerEcranChargement, 0);
+
+// Coque iOS / Android : bouton Retour, liens universels, barre d'état, clavier (voir natif.js).
+demarrerNatif(historiqueLangue);
+if (estNatif()) ecouterNotificationsNatives(historiqueLangue);
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

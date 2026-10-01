@@ -11,7 +11,7 @@
 }
 .simu-pastille:focus-visible, .simu-barre button:focus-visible, .simu-barre a:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
 .simu-point { width: 8px; height: 8px; border-radius: 50%; background: var(--lime); flex: none; }
-.simu-barre { width: min(360px, calc(100vw - 32px)); padding: 12px; border-radius: var(--radius); max-height: calc(100vh - 40px); overflow-y: auto; }
+.simu-barre { width: min(360px, calc(100vw - 32px)); padding: 12px; border-radius: var(--radius); max-height: calc(100dvh - 40px); overflow-y: auto; }
 .simu-tete { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
 .simu-titre { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: #D7D4E8; }
 .simu-icone-btn { width: 32px; height: 32px; border: 0; border-radius: var(--radius-pill); background: rgba(255, 255, 255, 0.08); color: #fff; font-size: 18px; line-height: 1; cursor: pointer; }
@@ -63,7 +63,7 @@
 /* Téléphone : au-dessus de la barre fixe du panier / du paiement (client-ui.css, z-index 60). */
 @media (max-width: 720px) {
   .simu-barre, .simu-pastille { left: 12px; bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }
-  .simu-barre { width: calc(100vw - 24px); max-height: calc(100vh - 140px); }
+  .simu-barre { width: calc(100vw - 24px); max-height: calc(100dvh - 140px); }
 }
 @media print { .simu-barre, .simu-pastille { display: none; } }
 

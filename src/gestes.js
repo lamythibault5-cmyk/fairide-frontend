@@ -7,8 +7,13 @@ export function mouvementReduit() {
 }
 
 // Un « tic » sous le doigt, comme un bouton physique. Android seulement ; muet ailleurs.
+import { estNatif, vibrerNatif } from './natif';
+
 export function vibrer(motif = 12) {
-  try { if (!mouvementReduit()) navigator.vibrate?.(motif); } catch { /* non pris en charge */ }
+  if (mouvementReduit()) return;
+  // Application native : le moteur haptique (Taptic Engine sur iPhone, où navigator.vibrate n'existe pas).
+  if (estNatif()) { vibrerNatif(motif).catch(() => {}); return; }
+  try { navigator.vibrate?.(motif); } catch { /* non pris en charge */ }
 }
 
 // Où atterrit un ajout : la pilule du panier si elle est affichée, sinon l'endroit où elle va apparaître

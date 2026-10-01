@@ -11,6 +11,8 @@
 // qu'elle ne peut pas tenir.
 
 import { api } from './api';
+import { estNatif } from './natif';
+import { abonnerNatif, desabonnerNatif, jetonNatifCourant } from './pushNatif';
 
 // La clé publique VAPID arrive en base64url ; l'API du navigateur veut un tableau d'octets.
 function base64UrlVersOctets(base64) {
@@ -21,6 +23,7 @@ function base64UrlVersOctets(base64) {
 }
 
 export function estSupporte() {
+  if (estNatif()) return true;
   return typeof window !== 'undefined'
     && 'serviceWorker' in navigator
     && 'PushManager' in window
@@ -29,6 +32,7 @@ export function estSupporte() {
 
 // L'abonnement déjà en place sur CE navigateur, ou null.
 export async function abonnementCourant() {
+  if (estNatif()) return jetonNatifCourant() ? { natif: true } : null;
   if (!estSupporte()) return null;
   try {
     const enregistrement = await navigator.serviceWorker.ready;
@@ -44,6 +48,7 @@ export async function abonnementCourant() {
 // Renvoie 'ok', 'refuse' (permission refusée), 'indisponible' (pas de clé côté serveur, ou
 // navigateur sans push) ou 'erreur'.
 export async function abonner(token) {
+  if (estNatif()) return abonnerNatif(token);
   if (!estSupporte()) return 'indisponible';
 
   const { enabled, key } = await api('/push/key').catch(() => ({ enabled: false }));
@@ -73,6 +78,7 @@ export async function abonner(token) {
 }
 
 export async function desabonner(token) {
+  if (estNatif()) return desabonnerNatif(token);
   const abonnement = await abonnementCourant();
   if (!abonnement) return true;
   // Le serveur d'abord : si le navigateur oublie l'abonnement mais que la ligne reste en base, on

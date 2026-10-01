@@ -1,3 +1,4 @@
+import { allerAuPaiement } from '../../natif';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -243,7 +244,7 @@ export default function Checkout() {
         // sur la page de retour. La copie mise de côté est restaurée ou supprimée par OrderResult.jsx,
         // une fois l'issue réellement connue.
         cart.stashForPayment();
-        window.location.href = pay.checkoutUrl;
+        await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
       }
     } catch (e) {
       toast(e.message, 'erreur');

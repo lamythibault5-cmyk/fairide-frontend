@@ -1,5 +1,6 @@
 import { api } from './api';
 import urlSure from './urlSure';
+import { estNatif, ouvrirLienExterne } from './natif';
 
 /* Ouvre une pièce jointe dont l'adresse n'est pas publique.
  *
@@ -21,7 +22,17 @@ export default async function ouvrirDocument({ url, lien, token, toast, messageE
   // Pièce d'avant la migration : encore publique, le serveur rend son adresse directement.
   if (url) {
     const sure = urlSure(url);
-    if (sure) window.open(sure, '_blank', 'noopener,noreferrer');
+    if (sure) ouvrirLienExterne(sure);
+    return;
+  }
+  // Application native : pas d'onglet à pré-ouvrir, le navigateur intégré s'ouvre après la réponse.
+  if (estNatif()) {
+    try {
+      const r = await api(lien, { token });
+      const sure = urlSure(r?.url);
+      if (!sure) throw new Error(messageErreur || 'Document indisponible.');
+      await ouvrirLienExterne(sure);
+    } catch (e) { toast?.(e.message || messageErreur || 'Document indisponible.'); }
     return;
   }
   const onglet = window.open('', '_blank', 'noopener,noreferrer');

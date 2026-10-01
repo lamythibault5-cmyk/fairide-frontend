@@ -1,3 +1,4 @@
+import { ouvrirPdfBlob } from '../../natif';
 import { useEffect, useMemo, useRef, useState, useId, cloneElement, isValidElement } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { api, apiUpload, API_BASE } from '../../api';
@@ -47,7 +48,7 @@ async function ouvrirPdf(url, token, messageErreur) {
   try {
     const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(messageErreur);
-    const blob = await res.blob(); window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+    const blob = await res.blob(); await ouvrirPdfBlob(blob);
   } catch (e) { alert(e.message); }
 }
 

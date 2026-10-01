@@ -810,7 +810,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   background: #fff; border: none; border-radius: var(--radius);
   box-shadow: var(--shadow-2);
   max-width: 480px; width: 100%; padding: 24px;
-  max-height: calc(100vh - 80px); overflow-y: auto;
+  max-height: calc(100dvh - 80px); overflow-y: auto;
   animation: modal-apparait .18s cubic-bezier(.22,.61,.36,1) both;
 }
 @keyframes modal-apparait { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -2245,7 +2245,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 /* Coquille "app connectée" (client/livreur/restaurateur) : barre latérale + colonne centrale +
    colonne de droite optionnelle. Remplace la nav du haut (.hero/.role-nav) sur les pages
    authentifiées seulement — les pages publiques gardent .hero tel quel (voir Layout.jsx). */
-.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main" "sidebar footer"; min-height: 100vh; align-items: start; }
+.dashboard-shell { display: grid; grid-template-columns: 240px 1fr; grid-template-areas: "sidebar main" "sidebar footer"; min-height: 100dvh; align-items: start; }
 .dashboard-shell.has-right { grid-template-columns: 240px 1fr 300px; grid-template-areas: "sidebar main right" "sidebar footer footer"; }
 .dashboard-shell .dashboard-sidebar { grid-area: sidebar; }
 .dashboard-shell .dashboard-main { grid-area: main; }
@@ -2255,7 +2255,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .dashboard-shell .dashboard-footer-links { grid-area: footer; }
 
 .dashboard-sidebar {
-  position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+  position: sticky; top: 0; height: 100dvh; display: flex; flex-direction: column;
   background: #fff; border-right: 1px solid var(--line); padding: 20px 14px;
   /* La console admin compte une vingtaine d'entrées : plus haut qu'un écran de portable. La barre défile
      donc d'elle-même (roulette, trackpad), la marque en haut et la carte profil en bas restent visibles
@@ -4366,3 +4366,27 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 @keyframes photo-apparait { from { opacity: 0; } to { opacity: 1; } }
 .rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: photo-apparait .35s ease-out both; }
 @media (prefers-reduced-motion: reduce) { .rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: none; } }
+
+/* ---------- Application installée / coque native (Capacitor, voir src/natif.js) ----------
+   env(safe-area-inset-*) vaut 0 dans un navigateur classique : ces règles ne changent rien sur le web et
+   écartent le contenu de l'encoche et de la barre d'état quand la page est en plein écran (viewport-fit=cover,
+   apple-mobile-web-app-status-bar-style=black-translucent, WebView iOS). */
+.hero { padding-top: calc(12px + env(safe-area-inset-top)); }
+.hero-inner { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+@media (max-width: 900px) {
+  .dashboard-main { padding-top: calc(16px + env(safe-area-inset-top)); }
+}
+/* Dans l'application : pas de « rebond » de la page entière, pas de menu contextuel sur les boutons, et le
+   texte des commandes ne se sélectionne pas quand on appuie un peu longtemps sur une pastille. */
+html.natif, html.natif body { overscroll-behavior: none; }
+html.natif button, html.natif a, html.natif .dashboard-sidebar, html.natif .panier-pilule { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+/* Clavier ouvert (événement natif, voir natif.js) : les barres fixes du bas se rangent plutôt que de
+   remonter au-dessus des touches et masquer le champ. */
+html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html.clavier-ouvert .cart-bar.co-barre, html.clavier-ouvert .cart-bar.panier-barre { display: none !important; }
+/* iOS seul (-webkit-touch-callout n'existe que là) : Safari zoome sur tout champ dont la police fait moins
+   de 16px, et ne dézoome pas toujours en sortant. Les champs gardent leur taille là où elle est déjà ≥ 16px. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 900px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), select, textarea { font-size: max(16px, 1em); }
+  }
+}

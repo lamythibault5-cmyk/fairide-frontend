@@ -1,0 +1,17 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID_APPLE.be.fairide.app"],
+        "components": [
+          { "/": "/order-success*", "comment": "Retour de paiement Stripe" },
+          { "/": "/order-cancelled*", "comment": "Paiement abandonné" },
+          { "/": "/orders*", "comment": "Suivi, pourboire payé" },
+          { "/": "/account*", "comment": "Abonnement, Stripe Connect" },
+          { "/": "/restaurants*", "comment": "Fiche partagée" },
+          { "/": "/reset-password*", "comment": "Lien du courriel de mot de passe oublié" }
+        ]
+      }
+    ]
+  }
+}
