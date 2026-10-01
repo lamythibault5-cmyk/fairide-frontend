@@ -2239,6 +2239,9 @@ export default {
       toastZoneFreed: 'Area released.',
     },
     adminModules: {
+      sponsors: 'Partnerships / sponsoring',
+      sponsors_desc: 'The site spots reserved for a partner\'s logo, and the file uploaded for each.',
+      sponsors_help: 'Four spots (home, business list, order tracking, restaurant dashboard). Nobody sees them but the team until "Visible to the public" is ticked.',
       dashboard: 'Dashboard',
       dashboard_desc: 'Key figures, trends and platform alerts.',
       dashboard_help: 'Pick a period at the top. Each indicator is compared with the previous period. Red alerts open the already-filtered list.',
@@ -6451,6 +6454,31 @@ export default {
       reprint: 'Print the ticket',
       open: 'View and accept',
       later: 'Later'
+    },
+    sponsor: {
+      partner: 'Partner',
+      mention: 'Supported by',
+      emptyAdmin: 'Partner slot (team only): {label}. Upload a logo in Admin › Partnerships / sponsoring.',
+      adminOnly: 'Team only'
+    },
+    sponsors: {
+      intro: 'Four spots on the site can host a partner company\'s logo: this kind of partnership helps Fairide grow. For now, nobody sees them but the team: upload a different file for each spot and check the result on the site (logged in as admin). A spot is shown to the public only when you tick "Visible to the public".',
+      format: 'Recommended format: {format}',
+      public: 'Visible to the public',
+      adminOnly: 'Team only',
+      empty: 'No logo uploaded.',
+      upload: 'Upload a logo',
+      replace: 'Replace the logo',
+      remove: 'Remove',
+      removeConfirm: 'Remove the logo from the "{label}" spot?',
+      namePh: 'Partner name (optional)',
+      linkPh: 'Partner link',
+      saveDetails: 'Save',
+      visibleToggle: 'Visible to the public (otherwise only the team sees it)',
+      updatedAt: 'Updated on {date}',
+      uploaded: 'Logo uploaded for "{label}".',
+      saved: 'Saved.',
+      removed: 'Logo removed.'
     },
     auth: {
       extraCuisinesTitle: 'You also serve… (optional)',

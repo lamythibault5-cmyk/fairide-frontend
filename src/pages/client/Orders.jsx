@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
+import EmplacementSponsor from '../../components/EmplacementSponsor';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
@@ -299,6 +300,7 @@ export default function Orders() {
         </div>
         </Fragment>
       ))}
+      <EmplacementSponsor cle="suivi" style={{ marginTop: 16 }} />
     </div>
   );
 }

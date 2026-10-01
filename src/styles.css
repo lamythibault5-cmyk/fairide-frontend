@@ -4349,3 +4349,15 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Carte gérée avec Fairide (MenuPage, restaurateur) et demande de hausse de prix (HaussePrix). */
 .carte-verrou { border-left: 4px solid var(--iris); }
 .hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: #FFF4D6; color: #5A4300; }
+
+/* Emplacements sponsor (EmplacementSponsor.jsx) et Admin › Collaborations / sponsoring. */
+.sponsor-emplacement { position: relative; margin: 18px 0; padding: 10px 12px; border-radius: 14px; background: var(--cream-dim); display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.sponsor-emplacement--prive { border: 2px dashed var(--iris); background: #F4F2FF; }
+.sponsor-emplacement--vide { min-height: 90px; justify-content: center; }
+.sponsor-mention { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); align-self: flex-start; }
+.sponsor-image { max-width: 100%; max-height: 160px; object-fit: contain; display: block; }
+.sponsor-vide { color: var(--iris); text-align: center; }
+.sponsor-prive-badge { position: absolute; top: 8px; right: 10px; font-size: 11px; font-weight: 700; color: #fff; background: var(--iris); padding: 2px 8px; border-radius: 99px; }
+.sponsors-grille { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+.sponsor-apercu { margin: 10px 0; min-height: 110px; border: 1px dashed var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #fff; padding: 8px; }
+.sponsor-apercu img { max-width: 100%; max-height: 180px; object-fit: contain; }

@@ -2239,6 +2239,9 @@ export default {
       toastZoneFreed: 'Zone libérée.',
     },
     adminModules: {
+      sponsors: 'Collaborations / sponsoring',
+      sponsors_desc: 'Les emplacements du site réservés au logo d\'un partenaire, et le fichier chargé pour chacun.',
+      sponsors_help: 'Quatre emplacements (accueil, liste des commerces, suivi de commande, tableau de bord restaurateur). Personne ne les voit à part l\'équipe tant que « Visible du public » n\'est pas coché.',
       dashboard: 'Tableau de bord',
       dashboard_desc: 'Chiffres clés, tendances et alertes de la plateforme.',
       dashboard_help: 'Choisis une période en haut. Chaque indicateur se compare à la période précédente. Les alertes rouges renvoient vers la liste déjà filtrée.',
@@ -6496,6 +6499,31 @@ export default {
       reprint: 'Imprimer le ticket',
       open: 'Voir et accepter',
       later: 'Plus tard'
+    },
+    sponsor: {
+      partner: 'Partenaire',
+      mention: 'Avec le soutien de',
+      emptyAdmin: 'Emplacement partenaire (vu de l\'équipe seulement) : {label}. Charge un logo dans Admin › Collaborations / sponsoring.',
+      adminOnly: 'Équipe seule'
+    },
+    sponsors: {
+      intro: 'Quatre emplacements du site peuvent accueillir le logo d\'une société partenaire : ce type de collaboration aide Fairide à se développer. Pour l\'instant, personne ne les voit à part l\'équipe : charge un fichier différent pour chaque emplacement et regarde le rendu sur le site (connecté en admin). Un emplacement n\'est montré au public que si tu coches « Visible du public ».',
+      format: 'Format conseillé : {format}',
+      public: 'Visible du public',
+      adminOnly: 'Équipe seule',
+      empty: 'Aucun logo chargé.',
+      upload: 'Charger un logo',
+      replace: 'Remplacer le logo',
+      remove: 'Retirer',
+      removeConfirm: 'Retirer le logo de l\'emplacement « {label} » ?',
+      namePh: 'Nom du partenaire (facultatif)',
+      linkPh: 'Lien du partenaire',
+      saveDetails: 'Enregistrer',
+      visibleToggle: 'Visible du public (sinon, l\'équipe seule le voit)',
+      updatedAt: 'Mis à jour le {date}',
+      uploaded: 'Logo chargé pour « {label} ».',
+      saved: 'Enregistré.',
+      removed: 'Logo retiré.'
     },
     auth: {
       extraCuisinesTitle: 'Tu proposes aussi… (facultatif)',

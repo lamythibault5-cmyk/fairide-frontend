@@ -26,7 +26,7 @@ export const ADMIN_HUBS = [
   { key: 'money', icon: 'euro', modules: ['dashboard', 'finance', 'payments', 'invoices', 'accounting', 'reports'] },
   // Documents vit ici et pas sous Commerces : il couvre aussi les livreurs. Ses urgences (pièce
   // expirée, à vérifier) remontent de toute façon sur l'accueil, qui pointe directement dessus.
-  { key: 'settings', icon: 'reglages', modules: ['settings', 'team', 'documents', 'compliance', 'automations'] },
+  { key: 'settings', icon: 'reglages', modules: ['settings', 'team', 'documents', 'compliance', 'sponsors', 'automations'] },
   // Simulation (fondateur, 2026-09-30) : parcourir le site comme chaque type d'utilisateur, dans un bac à sable, et noter
   // ce qui s'affiche mal. Son propre pôle : ce n'est ni un réglage ni une donnée, c'est un outil de contrôle du produit.
   { key: 'simulation', icon: 'boussole', modules: ['simulation'] }
@@ -74,6 +74,8 @@ export const ADMIN_MODULES = [
   { key: 'compliance', path: '/admin/compliance', icon: 'bouclier', hub: 'settings', badge: (o) => pastille((o.compliance?.privacyOpen || 0) + (o.compliance?.privacyOverdue || 0), (o.compliance?.privacyOverdue || 0) > 0 ? 'danger' : 'warn') },
   // Terminaux Fairide (2026-09-30) : parc, en ligne, papier, tickets en échec. Pastille = ce qui demande une intervention.
   { key: 'terminals', path: '/admin/terminals', icon: 'imprimante', hub: 'partners', badge: (o) => pastille(n(o.terminals?.offline) + n(o.terminals?.issues) + n(o.terminals?.failed), n(o.terminals?.issues) + n(o.terminals?.failed) > 0 ? 'danger' : 'warn') },
+  // Collaborations / sponsoring (2026-10-01) : les emplacements de logo partenaire et leurs fichiers.
+  { key: 'sponsors', path: '/admin/sponsors', icon: 'mallette', hub: 'settings', badge: aucun },
   { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 
@@ -91,6 +93,7 @@ export const MODULE_ROLES = {
   messages: ['owner', 'admin', 'ops', 'support'],
   sales: ['owner', 'admin', 'ops'],
   simulation: ['owner', 'admin', 'ops', 'support'],
+  sponsors: ['owner', 'admin'],
   terminals: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {

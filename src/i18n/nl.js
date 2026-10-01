@@ -2239,6 +2239,9 @@ export default {
       toastZoneFreed: 'Zone vrijgegeven.',
     },
     adminModules: {
+      sponsors: 'Samenwerkingen / sponsoring',
+      sponsors_desc: 'De plaatsen op de site voor het logo van een partner, en het bestand dat voor elk is opgeladen.',
+      sponsors_help: 'Vier plaatsen (home, lijst van zaken, opvolging van bestellingen, dashboard van de zaak). Niemand ziet ze behalve het team tot "Zichtbaar voor het publiek" is aangevinkt.',
       dashboard: 'Dashboard',
       dashboard_desc: 'Kerncijfers, trends en meldingen van het platform.',
       dashboard_help: 'Kies bovenaan een periode. Elke indicator wordt vergeleken met de vorige periode. Rode meldingen openen de al gefilterde lijst.',
@@ -6451,6 +6454,31 @@ export default {
       reprint: 'Ticket afdrukken',
       open: 'Bekijken en aanvaarden',
       later: 'Later'
+    },
+    sponsor: {
+      partner: 'Partner',
+      mention: 'Met de steun van',
+      emptyAdmin: 'Partnerplaats (enkel team): {label}. Laad een logo op in Admin › Samenwerkingen / sponsoring.',
+      adminOnly: 'Enkel team'
+    },
+    sponsors: {
+      intro: 'Vier plaatsen op de site kunnen het logo van een partnerbedrijf tonen: zo\'n samenwerking helpt Fairide groeien. Voorlopig ziet niemand ze behalve het team: laad per plaats een ander bestand op en bekijk het resultaat op de site (ingelogd als admin). Een plaats wordt pas aan het publiek getoond als je "Zichtbaar voor het publiek" aanvinkt.',
+      format: 'Aanbevolen formaat: {format}',
+      public: 'Zichtbaar voor het publiek',
+      adminOnly: 'Enkel team',
+      empty: 'Geen logo opgeladen.',
+      upload: 'Logo opladen',
+      replace: 'Logo vervangen',
+      remove: 'Verwijderen',
+      removeConfirm: 'Het logo van de plaats "{label}" verwijderen?',
+      namePh: 'Naam van de partner (optioneel)',
+      linkPh: 'Link van de partner',
+      saveDetails: 'Bewaren',
+      visibleToggle: 'Zichtbaar voor het publiek (anders ziet enkel het team het)',
+      updatedAt: 'Bijgewerkt op {date}',
+      uploaded: 'Logo opgeladen voor "{label}".',
+      saved: 'Bewaard.',
+      removed: 'Logo verwijderd.'
     },
     auth: {
       extraCuisinesTitle: 'Je biedt ook aan… (optioneel)',

@@ -10,6 +10,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import ErrorCard from '../../components/ErrorCard';
 import NewOrderAlertBar from '../../components/NewOrderAlertBar';
 import NouvelleCommandeModale from '../../components/NouvelleCommandeModale';
+import EmplacementSponsor from '../../components/EmplacementSponsor';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
@@ -367,6 +368,7 @@ export default function DashboardLayout() {
       {restaurant && (
         <div className="page-fade" key={chemin}>
           <Outlet context={{ restaurant: restaurant || null, orders, reviews, drivers, restoId, loadDashboard }} />
+          {restaurant && <EmplacementSponsor cle="tableau_commerce" style={{ marginTop: 16 }} />}
         </div>
       )}
     </div>

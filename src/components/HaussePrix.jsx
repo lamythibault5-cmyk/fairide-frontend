@@ -35,6 +35,8 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   const partFairide = EXEMPLE_SUR_PLACE * r;
   const partFairideHt = EXEMPLE_SUR_PLACE * (etat.fairideRateHt ?? r);
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
+  // Pourcentages à une décimale, dans la langue de l'écran (12,1 / 12.1).
+  const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
 
@@ -46,12 +48,12 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       if (res.pending) {
         setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested }));
         setValeur(res.percent);
-        toast(t('menuPage.markupRequestSent', { p: res.requested }));
+        toast(t('menuPage.markupRequestSent', { p: pct(res.requested) }));
         return;
       }
       setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested ?? null }));
       await onChange?.();
-      toast(res.percent === 0 ? t('menuPage.markupDoneZero') : t('menuPage.markupDone', { p: res.percent, n: res.items }));
+      toast(res.percent === 0 ? t('menuPage.markupDoneZero') : t('menuPage.markupDone', { p: pct(res.percent), n: res.items }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
 
@@ -69,13 +71,13 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📈 {t('menuPage.markupTitle')}</h3>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche })}</p>
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
-        {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: valeur })}
+        {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}
       </label>
-      <input id="hausse-prix-barre" type="range" min="0" max={etat.max} step="1" value={valeur}
-        onChange={(e) => setValeur(Number(e.target.value))} style={{ width: '100%', accentColor: 'var(--teal, #1F8A70)' }}
-        aria-valuetext={`+${valeur} %`} />
+      <input id="hausse-prix-barre" type="range" min="0" max={etat.max} step="0.1" value={valeur}
+        onChange={(e) => setValeur(Math.round(Number(e.target.value) * 10) / 10)} style={{ width: '100%', accentColor: 'var(--teal, #1F8A70)' }}
+        aria-valuetext={`+${pct(valeur)} %`} />
       <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7, marginTop: -2 }}>
-        <span>{t('menuPage.markupMin')}</span><span>+{etat.max} %</span>
+        <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>
       </div>
       <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-2, rgba(31,138,112,0.07))' }}>
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
@@ -85,16 +87,16 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       </div>
       {demande !== null && (
         <div className="hausse-prix-demande" role="status">
-          <b>{modeAdmin ? t('menuPage.markupRequestedAdmin', { p: demande }) : t('menuPage.markupRequestedPending', { p: demande })}</b>
+          <b>{modeAdmin ? t('menuPage.markupRequestedAdmin', { p: pct(demande) }) : t('menuPage.markupRequestedPending', { p: pct(demande) })}</b>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            {modeAdmin && <button type="button" className="btn-teal" disabled={enCours} onClick={() => { setValeur(demande); setTimeout(appliquer, 0); }}>{t('menuPage.markupApplyRequest', { p: demande })}</button>}
+            {modeAdmin && <button type="button" className="btn-teal" disabled={enCours} onClick={() => { setValeur(demande); setTimeout(appliquer, 0); }}>{t('menuPage.markupApplyRequest', { p: pct(demande) })}</button>}
             <button type="button" className="btn-outline" disabled={enCours} onClick={retirerDemande}>{modeAdmin ? t('menuPage.markupRefuseRequest') : t('menuPage.markupWithdraw')}</button>
           </div>
         </div>
       )}
       {change && (
         <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={appliquer}>
-          {enCours ? '…' : modeAdmin ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: valeur })}
+          {enCours ? '…' : modeAdmin ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: pct(valeur) })}
         </button>
       )}
       <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{modeAdmin ? t('menuPage.markupNote') : t('menuPage.markupNoteLocked')}</p>

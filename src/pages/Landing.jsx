@@ -1,3 +1,4 @@
+import EmplacementSponsor from '../components/EmplacementSponsor';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
@@ -157,6 +158,7 @@ export default function Landing() {
       </div>
 
       <DiscoverSection restaurants={restaurants} />
+      <EmplacementSponsor cle="accueil" />
 
       {/* L'argument central de Fairide — la commission plafonnée — n'existait jusqu'ici que sous
           forme de phrase noyée dans le paragraphe d'accroche. Il devient ici une comparaison

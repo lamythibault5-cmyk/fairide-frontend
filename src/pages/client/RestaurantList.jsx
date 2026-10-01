@@ -20,6 +20,7 @@ import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, r
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { tarifLivraison, eurosCourts } from '../../livraison';
+import EmplacementSponsor from '../../components/EmplacementSponsor';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
@@ -562,6 +563,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferte} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: '3 €' })} icon="scooter" list={livraisonPasCher} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <EmplacementSponsor cle="liste" />
           <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
