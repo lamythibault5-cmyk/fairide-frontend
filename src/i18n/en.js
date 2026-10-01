@@ -3997,6 +3997,10 @@ export default {
       submit: 'Reset my password'
     },
     alertBar: {
+      repeats: 'Alarm repeats',
+      repeatsN: 'Ring {n} times',
+      repeatsForever: 'Ring until handled',
+      stopAlarm: 'Stop the alarm',
       ringtone_marimba: '🪘 Marimba',
       ringtone_velo: '🚲 Bike bell',
       ringtone_melodie: '🎶 Little melody',

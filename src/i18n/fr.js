@@ -4007,6 +4007,10 @@ export default {
       submit: 'Réinitialiser mon mot de passe'
     },
     alertBar: {
+      repeats: 'Répétitions de l\'alarme',
+      repeatsN: 'Sonne {n} fois',
+      repeatsForever: 'Sonne jusqu\'au traitement',
+      stopAlarm: 'Couper l\'alarme',
       ringtone_marimba: '🪘 Marimba',
       ringtone_velo: '🚲 Sonnette de vélo',
       ringtone_melodie: '🎶 Petite mélodie',

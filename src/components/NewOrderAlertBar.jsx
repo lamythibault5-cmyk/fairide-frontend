@@ -13,9 +13,9 @@
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
-import { SONNERIES } from '../hooks/useNewOrderAlert';
+import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 
-export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume }) {
+export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -74,6 +74,15 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
             onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
             {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
           </select>
+        )}
+        {/* Combien de fois l'alarme sonne par commande (fondateur, 2026-10-01), et un bouton pour la couper tout de suite. */}
+        {setRepetitions && (
+          <select aria-label={t('alertBar.repeats')} value={repetitions} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }} onChange={(e) => setRepetitions(e.target.value)}>
+            {REPETITIONS.map((n) => <option key={n} value={n}>{n === 0 ? t('alertBar.repeatsForever') : t('alertBar.repeatsN', { n })}</option>)}
+          </select>
+        )}
+        {alarmeEnCours && couperAlarme && (
+          <button type="button" className="btn-gold" style={{ padding: '6px 12px', fontSize: 13 }} onClick={couperAlarme}>🔕 {t('alertBar.stopAlarm')}</button>
         )}
         {setVolume && (
           <label className="alerte-volume" title={t('alertBar.volume')}>

@@ -20,6 +20,10 @@ import { useToast } from '../context/ToastContext';
 const SOUND_KEY = 'fairide_new_order_sound';
 const SONNERIE_KEY = 'fairide_new_order_ringtone';
 const VOLUME_KEY = 'fairide_new_order_volume';
+// Nombre de sonneries par commande (fondateur, 2026-10-01) : 1, 2, 3, 5, 10, ou 0 = tant que la commande n'est pas
+// traitée (ou que l'alarme n'est pas coupée à la main). Une sonnerie toutes les REPEAT_MS.
+const REPETITIONS_KEY = 'fairide_new_order_repeats';
+export const REPETITIONS = [1, 2, 3, 5, 10, 0];
 const REPEAT_MS = 15000;
 
 function loadSoundPref() {
@@ -109,6 +113,9 @@ export function jouerSonnerie(ctx, nom = 'carillon', dest = ctx.destination) {
 function loadVolume() {
   try { const v = Number(localStorage.getItem(VOLUME_KEY)); return Number.isFinite(v) && v >= 0 && v <= 100 && localStorage.getItem(VOLUME_KEY) !== null ? v : 80; } catch { return 80; }
 }
+function loadRepetitions() {
+  try { const v = Number(localStorage.getItem(REPETITIONS_KEY)); return localStorage.getItem(REPETITIONS_KEY) !== null && REPETITIONS.includes(v) ? v : 0; } catch { return 0; }
+}
 function loadSonnerie() {
   try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'carillon'; } catch { return 'carillon'; }
 }
@@ -125,6 +132,10 @@ export default function useNewOrderAlert(orders, ready) {
   const [sonnerie, setSonnerieState] = useState(loadSonnerie);
   // Volume (0 à 100) : un étage de gain commun à toutes les sonneries, réglé depuis la barre d'alerte.
   const [volume, setVolumeState] = useState(loadVolume);
+  const [repetitions, setRepetitionsState] = useState(loadRepetitions);
+  // Sonneries déjà jouées pour les commandes en attente, et alarme coupée à la main (jusqu'à la prochaine arrivée).
+  const [jouees, setJouees] = useState(0);
+  const [coupee, setCoupee] = useState(false);
   const gainRef = useRef(null);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
@@ -141,6 +152,14 @@ export default function useNewOrderAlert(orders, ready) {
     try { localStorage.setItem(SOUND_KEY, value ? 'on' : 'off'); } catch { /* stockage indisponible */ }
   }, []);
 
+  const setRepetitions = useCallback((value) => {
+    const v = Number(value);
+    if (!REPETITIONS.includes(v)) return;
+    setRepetitionsState(v);
+    setJouees(0);
+    try { localStorage.setItem(REPETITIONS_KEY, String(v)); } catch { /* stockage indisponible */ }
+  }, []);
+  const couperAlarme = useCallback(() => setCoupee(true), []);
   const setVolume = useCallback((value) => {
     const v = Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
     setVolumeState(v);
@@ -219,6 +238,9 @@ export default function useNewOrderAlert(orders, ready) {
     const prev = prevCountRef.current;
     prevCountRef.current = newCount;
     if (prev === null || newCount <= prev) return;
+    // Nouvelle arrivée : le compte des sonneries repart, et une alarme coupée se rallume.
+    setJouees(1);
+    setCoupee(false);
     ring();
 
     if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
@@ -266,11 +288,14 @@ export default function useNewOrderAlert(orders, ready) {
 
   // Rappel tant que la commande n'est pas traitée : c'est ce qui rattrape le restaurateur parti en
   // cuisine au moment du premier son.
+  // Limitée au nombre de répétitions choisi (0 = sans limite), et coupée d'un geste (couperAlarme).
+  const alarmeEnCours = newCount > 0 && !coupee && (repetitions === 0 || jouees < repetitions);
   useEffect(() => {
-    if (newCount === 0) return undefined;
-    const interval = setInterval(ring, REPEAT_MS);
+    if (newCount === 0) { setJouees(0); setCoupee(false); return undefined; }
+    if (!alarmeEnCours) return undefined;
+    const interval = setInterval(() => { setJouees((n) => n + 1); ring(); }, REPEAT_MS);
     return () => clearInterval(interval);
-  }, [newCount, ring]);
+  }, [newCount, ring, alarmeEnCours]);
 
   // Compteur dans le titre de l'onglet : le seul canal visible quand la page n'est pas au premier plan.
   //
@@ -289,5 +314,5 @@ export default function useNewOrderAlert(orders, ready) {
     return () => { document.title = base; };
   }, [newCount]);
 
-  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume };
+  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme };
 }

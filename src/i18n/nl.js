@@ -3997,6 +3997,10 @@ export default {
       submit: 'Mijn wachtwoord herstellen'
     },
     alertBar: {
+      repeats: 'Herhalingen van het alarm',
+      repeatsN: '{n} keer bellen',
+      repeatsForever: 'Bellen tot behandeld',
+      stopAlarm: 'Alarm stoppen',
       ringtone_marimba: '🪘 Marimba',
       ringtone_velo: '🚲 Fietsbel',
       ringtone_melodie: '🎶 Kort deuntje',
