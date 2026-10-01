@@ -11,7 +11,7 @@ import { useLanguage } from '../context/LanguageContext';
 const EXEMPLE_SUR_PLACE = 10;
 const euros = (v, locale) => v.toLocaleString(locale, { style: 'currency', currency: 'EUR' });
 
-export default function HaussePrix({ restoId, nbPlats, onChange }) {
+export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = false }) {
   const { t, locale } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
@@ -36,14 +36,31 @@ export default function HaussePrix({ restoId, nbPlats, onChange }) {
   const partFairideHt = EXEMPLE_SUR_PLACE * (etat.fairideRateHt ?? r);
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
+  const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
 
   async function appliquer() {
     setEnCours(true);
     try {
       const res = await api(`/restaurants/${restoId}/price-markup`, { method: 'PUT', token, body: { percent: valeur } });
-      setEtat((e) => ({ ...e, percent: res.percent }));
+      // Le commerce DEMANDE (202, pending) ; l'équipe applique. Ses prix ne changent jamais sans validation.
+      if (res.pending) {
+        setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested }));
+        setValeur(res.percent);
+        toast(t('menuPage.markupRequestSent', { p: res.requested }));
+        return;
+      }
+      setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested ?? null }));
       await onChange?.();
       toast(res.percent === 0 ? t('menuPage.markupDoneZero') : t('menuPage.markupDone', { p: res.percent, n: res.items }));
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
+  }
+
+  async function retirerDemande() {
+    setEnCours(true);
+    try {
+      const res = await api(`/restaurants/${restoId}/price-markup/request`, { method: 'DELETE', token });
+      setEtat((e) => ({ ...e, requested: null, percent: res.percent }));
+      toast(modeAdmin ? t('menuPage.markupRequestRefused') : t('menuPage.markupRequestWithdrawn'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnCours(false); }
   }
 
@@ -66,12 +83,21 @@ export default function HaussePrix({ restoId, nbPlats, onChange }) {
         <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{valeur > 0 && <> ({t('menuPage.markupYouGetExtra', { amount: euros(recu - EXEMPLE_SUR_PLACE, locale) })})</>}</div>
         <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span></div>
       </div>
+      {demande !== null && (
+        <div className="hausse-prix-demande" role="status">
+          <b>{modeAdmin ? t('menuPage.markupRequestedAdmin', { p: demande }) : t('menuPage.markupRequestedPending', { p: demande })}</b>
+          <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+            {modeAdmin && <button type="button" className="btn-teal" disabled={enCours} onClick={() => { setValeur(demande); setTimeout(appliquer, 0); }}>{t('menuPage.markupApplyRequest', { p: demande })}</button>}
+            <button type="button" className="btn-outline" disabled={enCours} onClick={retirerDemande}>{modeAdmin ? t('menuPage.markupRefuseRequest') : t('menuPage.markupWithdraw')}</button>
+          </div>
+        </div>
+      )}
       {change && (
         <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={appliquer}>
-          {enCours ? '…' : t('menuPage.markupApply', { n: nbPlats })}
+          {enCours ? '…' : modeAdmin ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: valeur })}
         </button>
       )}
-      <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{t('menuPage.markupNote')}</p>
+      <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{modeAdmin ? t('menuPage.markupNote') : t('menuPage.markupNoteLocked')}</p>
     </div>
   );
 }

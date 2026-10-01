@@ -13,7 +13,7 @@ import { euros } from '../prixPlat';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations, onStock }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations, onStock, lectureSeule = false }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -118,7 +118,9 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     }
   }
 
-  if (editing && !reorderMode && !selectMode) {
+  // lectureSeule (fondateur, 2026-10-01) : le commerce ne modifie plus ses plats lui-même ; il les met en rupture ou
+  // demande la modification à Fairide. La carte reste affichée, sans crayon ni fiche d'édition.
+  if (editing && !reorderMode && !selectMode && !lectureSeule) {
     return (
       <div className="card" style={{ marginBottom: 10, gridColumn: '1 / -1' }}>
         <div className="field"><label htmlFor={idsA11y + '-name'}>{t('menuItem.name')}</label><input id={idsA11y + '-name'} value={name} onChange={(e) => setName(e.target.value)} /></div>
@@ -284,13 +286,13 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
       ref={setNodeRef}
       className={`menu-item-card${image ? '' : ' menu-item-card-sans-photo'}${reorderMode ? ' menu-item-card-reordering' : ''}${selectMode && selected ? ' menu-item-card-selected' : ''}`}
       style={{
-        cursor: reorderMode ? 'default' : 'pointer',
+        cursor: reorderMode || lectureSeule ? 'default' : 'pointer',
         position: 'relative',
         ...sortableStyle,
         ...(item.available === false ? { opacity: item.outOfStockToday ? 0.8 : 0.5 } : {})
       }}
-      onClick={reorderMode ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
-      title={reorderMode ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
+      onClick={reorderMode || lectureSeule ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
+      title={reorderMode || lectureSeule ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
     >
       {reorderMode && (
         <button
@@ -330,7 +332,7 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
             {stockEnCours ? '…' : item.outOfStockToday ? `↩︎ ${t('menuItem.stockBack')}` : `⛔ ${t('menuItem.stockOut')}`}
           </button>
         )}
-        {!reorderMode && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
+        {!reorderMode && !lectureSeule && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
       </div>
     </div>
   );

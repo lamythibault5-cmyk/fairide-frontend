@@ -44,7 +44,9 @@ export default function EcranTypeCommerce({ restaurant, restoId, loadDashboard, 
       await api(`/restaurants/${restoId}/cuisine`, { method: 'PATCH', token, body: { cuisine: final, code, wipeMenu: carte === 'replace' } });
       if (carte === 'replace') {
         const items = fullTemplateItems(final);
-        if (items.length) await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } });
+        // La carte est gérée avec Fairide (verrou, 2026-10-01) : les plats types ne s'ajoutent plus d'eux-mêmes pour le
+        // commerce (MENU_LOCKED ignoré) ; l'équipe les ajoute depuis la console si le commerce le demande.
+        if (items.length) await api(`/restaurants/${restoId}/menu/bulk`, { method: 'POST', token, body: { items } }).catch((e) => { if (e.code !== 'MENU_LOCKED') throw e; });
       }
       await loadDashboard(restoId);
       toast(t('editResto.toastTypeUpdated'));

@@ -605,19 +605,25 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         </div>
       </div>
       {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
+      {!modeAdmin && restaurant.menu.length > 0 && (
+        <div className="card carte-verrou" role="note">
+          <b>🔒 {t('menuPage.lockedTitle')}</b>
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('menuPage.lockedText')}</p>
+        </div>
+      )}
       {!modeAdmin && restaurant.menu.length > 0 && <DemandeModifCarte restoId={restoId} />}
       <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>
-          {!reorderSectionId && !selectSectionId && !creatingSection && (
+          {modeAdmin && !reorderSectionId && !selectSectionId && !creatingSection && (
             <button type="button" className="btn-teal menu-plus" onClick={() => setCreatingSection(true)} title={t('menuPage.newSection')} aria-label={t('menuPage.newSection')}>＋ <span>{t('menuPage.newSectionShort')}</span></button>
           )}
         </div>
-        <p className="small" style={{ margin: '0 0 8px' }}>{t('menuPage.afterCreateHelp')}</p>
-        <details className="menu-legende">
+        <p className="small" style={{ margin: '0 0 8px' }}>{t(modeAdmin ? 'menuPage.afterCreateHelp' : 'menuPage.afterCreateHelpLocked')}</p>
+        {modeAdmin && <details className="menu-legende">
           <summary className="small">{t('menuPage.iconsLegend')}</summary>
           <p className="small" style={{ margin: '6px 0 0' }}>{t('menuPage.menuHelp')}</p>
-        </details>
+        </details>}
         {restaurant.menu.length === 0 && (restaurant.sections || []).length === 0 && startChoiceMade && (
           <div className="small" style={{ marginBottom: 10 }}>{t('menuPage.noSection')}</div>
         )}
@@ -650,7 +656,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                       <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleReorderSection(section.id)}>{t('menuPage.doneCheck')}</button>
                     ) : selectSectionId === section.id ? (
                       <button type="button" className="btn-teal" style={{ padding: '4px 10px', fontSize: 12 }} onClick={() => toggleSelectSection(section.id)}>{t('menuPage.doneCheck')}</button>
-                    ) : !reorderSectionId && !selectSectionId && (
+                    ) : modeAdmin && !reorderSectionId && !selectSectionId && (
                       <>
                         <button type="button" className="btn-teal menu-plus" onClick={() => openAddItemTile(section)} title={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })} aria-label={t('menuPage.addItemTo', { section: categoryLabel(section.name, t) })}>＋</button>
                         <button type="button" className="btn-ghost" style={{ padding: '4px 8px' }} onClick={() => toggleSelectSection(section.id)} title={t('menuPage.selectSeveral')}>☑️</button>
@@ -704,6 +710,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                               existingSubsections={sectionSubsections}
                               onSaveTranslations={saveMenuItemTranslation}
                               onStock={changerStock}
+                              lectureSeule={!modeAdmin}
                             />
                           ))}
                         </div>
@@ -747,7 +754,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                       />
                     )}
                   </div>
-                ) : (
+                ) : modeAdmin && (
                   <button type="button" className="menu-item-card menu-item-card-add" onClick={() => openAddItemTile(section)}>
                     <span className="menu-item-card-add-plus" aria-hidden="true">＋</span>
                     {t('menuPage.addItem').replace(/^\+\s*/, '')}
@@ -757,7 +764,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
             </div>
           );
         })}
-        {!reorderSectionId && !selectSectionId && (creatingSection ? (
+        {modeAdmin && !reorderSectionId && !selectSectionId && (creatingSection ? (
           <div className="row" style={{ gap: 8 }}>
             <input style={{ flex: 1 }} value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} placeholder={t('menuPage.phSectionName')} />
             <button className="btn-teal" style={{ padding: '4px 10px' }} onClick={handleSectionCreate}>{t('menuPage.create')}</button>
@@ -822,12 +829,12 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
         document.body
       )}
 
-      <OptionGroupManager
+      {modeAdmin && <OptionGroupManager
         groups={restaurant.optionGroups || []}
         onCreate={createOptionGroup}
         onUpdate={updateOptionGroup}
         onDelete={deleteOptionGroup}
-      />
+      />}
 
       {/* Raccourcis de construction (boissons / desserts « classiques », plats types de la cuisine) :
           seulement pendant qu'on monte une carte à la main (startChoiceMade). Ils s'affichaient sous
@@ -883,9 +890,9 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       )}
 
       {/* Hausse de prix gardée par le commerce, 0 à 10 % (fondateur, 2026-09-30) ; l'admin la règle aussi pour lui. */}
-      {restaurant.menu.length > 0 && <HaussePrix restoId={restoId} nbPlats={restaurant.menu.length} onChange={() => loadDashboard(restoId)} />}
+      {restaurant.menu.length > 0 && <HaussePrix restoId={restoId} nbPlats={restaurant.menu.length} modeAdmin={modeAdmin} onChange={() => loadDashboard(restoId)} />}
 
-      {restaurant.menu.length > 0 && !modeAdmin && (
+      {restaurant.menu.length > 0 && modeAdmin && (
         <div className="card geste-prix-carte" id="menu-geste-prix">
           <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>💚 {t('menuPage.adjustTitle')}</h3>
           <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.adjustIntro')}</p>

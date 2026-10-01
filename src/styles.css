@@ -4345,3 +4345,7 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .nouvelle-commande-total { margin: 6px 0 0; font-size: 16px; }
 .alerte-volume { display: inline-flex; align-items: center; gap: 6px; }
 .alerte-volume input[type=range] { width: 90px; accent-color: var(--teal, #1F8A70); }
+
+/* Carte gérée avec Fairide (MenuPage, restaurateur) et demande de hausse de prix (HaussePrix). */
+.carte-verrou { border-left: 4px solid var(--iris); }
+.hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: #FFF4D6; color: #5A4300; }
