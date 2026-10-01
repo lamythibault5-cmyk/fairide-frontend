@@ -403,7 +403,7 @@ export default function DriverDashboard() {
         <>
           <AlerteLivreurBar {...alerte} />
           {sac?.option === 'fairide' && sac.depositStatus !== 'refunded' && (
-            <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--teal, #1E8A7A)' }}>
+            <div className="card sac-fairide" style={{ borderLeft: '4px solid var(--iris)' }}>
               <b>🟢 {t('dashDriver.bagTitle')}</b>
               <p className="small" style={{ margin: '4px 0 0' }}>{t(`dashDriver.bag_${sac.depositStatus}`, { amount: Number(sac.depositAmount || 40).toFixed(0) })}</p>
             </div>

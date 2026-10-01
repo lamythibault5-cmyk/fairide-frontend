@@ -94,7 +94,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
             <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('editResto.capacityToday', { n: etat.ordersToday })}</p>
           </div>
 
-          <p className="small" style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)' }}>
+          <p className="small" style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--surface-soft)' }}>
             🥡 {t('editResto.capacityStockHint')} <Link to="/dashboard/menu" onClick={onFermer}>{t('editResto.capacityStockLink')}</Link>
           </p>
         </>

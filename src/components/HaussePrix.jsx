@@ -79,7 +79,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7, marginTop: -2 }}>
         <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>
       </div>
-      <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-2, rgba(31,138,112,0.07))' }}>
+      <div className="hausse-prix-exemple small" style={{ margin: '10px 0', padding: 10, borderRadius: 10, background: 'var(--surface-soft)' }}>
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
         <div>👀 {t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
         <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{valeur > 0 && <> ({t('menuPage.markupYouGetExtra', { amount: euros(recu - EXEMPLE_SUR_PLACE, locale) })})</>}</div>

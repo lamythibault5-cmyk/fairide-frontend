@@ -3621,7 +3621,7 @@ button.doc-slot-vide { border: 0; cursor: pointer; font-family: inherit; }
 .hero-preview-rating { display: inline-flex; align-items: center; gap: 3px; font-size: 12.5px; font-weight: 700; color: var(--ink); }
 .hero-preview-open { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-pill); background: var(--lime); color: var(--ink); white-space: nowrap; }
 .hero-preview-open.ferme { background: var(--cream-dim); color: var(--ink-soft); }
-.hero-preview-open.hero-preview-bientot { background: #F5B800; color: var(--ink); }
+.hero-preview-open.hero-preview-bientot { background: var(--iris); color: #fff; }
 .hero-preview-skeleton { pointer-events: none; }
 .hero-preview-skeleton .hero-preview-img { animation: shimmer 1.4s ease infinite; background: linear-gradient(90deg, var(--cream-dim) 25%, #fff 37%, var(--cream-dim) 63%); background-size: 400px 100%; }
 .hero-preview-lines { display: flex; flex-direction: column; gap: 6px; }
@@ -4022,8 +4022,8 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
 .terminal-titre { font-size: 15px; }
 .terminal-etapes { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 3px; }
 .terminal-conditions { margin-top: 10px; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--line); background: #fff; }
-.terminal-cond-offert { border-color: #F5B800; background: #FFFBEA; }
-.terminal-cond-caution { background: #F7F7F7; }
+.terminal-cond-offert { border-color: var(--lime); background: var(--surface-soft); }
+.terminal-cond-caution { background: var(--surface-soft); }
 @media (max-width: 560px) { .terminal-haut { flex-direction: column; align-items: flex-start; } .terminal-illu, .terminal-compact .terminal-illu { width: 100%; max-width: 260px; } }
 /* « Fairide crée ma carte » : trois blocs numérotés, fichiers joints, ce qui se passe ensuite. */
 .concierge-bloc { padding: 10px 12px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: var(--radius-field); background: #fff; }
@@ -4031,7 +4031,7 @@ html.avec-pilule-panier main { padding-bottom: calc(76px + env(safe-area-inset-b
 .concierge-fichiers { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 4px; }
 .concierge-fichiers li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 8px; border: 1px dashed var(--line); border-radius: 8px; font-size: 13px; overflow-wrap: anywhere; }
 .concierge-ensuite { margin: 6px 0 0; padding-left: 20px; display: grid; gap: 4px; }
-.concierge-photos-source { padding: 8px 10px; border-radius: 8px; background: #F4F2FF; border: 1px solid var(--iris); }
+.concierge-photos-source { padding: 8px 10px; border-radius: 8px; background: var(--surface-soft); border: 1px solid var(--iris); }
 
 /* Inscription : « Créer mon compte » avec une étape incomplète — le rappel au-dessus des boutons (Auth.jsx). */
 .auth-incomplet { margin: 0 0 10px; padding: 10px 12px; border-radius: var(--radius-field); background: #FFF1F1; border: 1px solid #F3B4B4; color: #8A1C1C; font-size: 13px; line-height: 1.4; }
@@ -4252,12 +4252,12 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Critères du mot de passe à l'inscription, cochés pendant la frappe (Auth.jsx). */
 .mdp-criteres { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--ink-soft, #6b6880); }
 .mdp-criteres li { display: inline-flex; align-items: center; gap: 5px; }
-.mdp-criteres li.ok { color: var(--green, #1f8a4c); font-weight: 600; }
+.mdp-criteres li.ok { color: var(--iris); font-weight: 600; }
 
 /* Rupture du jour (Ma carte) : bouton à côté du prix de chaque plat ; rouge doux quand le plat est en rupture. */
 .menu-item-card .btn-stock { margin-left: auto; padding: 4px 10px; min-height: 30px; line-height: 1.2; box-shadow: none; border-radius: var(--radius-pill); border: 1px solid var(--line); background: var(--surface, #fff); color: var(--ink); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .menu-item-card .btn-stock:hover { border-color: var(--ink-faint); }
-.menu-item-card .btn-stock-rupture { background: #FDECEC; border-color: #E8A3A3; color: #9B1C1C; opacity: 1; }
+.menu-item-card .btn-stock-rupture { background: rgba(217, 45, 60, 0.1); border-color: var(--red); color: var(--red); opacity: 1; }
 /* Le bouton ne doit jamais élargir la carte : la grille débordait de l'écran sur téléphone. */
 .menu-item-card { min-width: 0; }
 .menu-item-card .bottom-row { flex-wrap: wrap; gap: 6px; }
@@ -4317,7 +4317,7 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 }
 
 /* Calendrier d'ouverture (BandeauOuverture.jsx) : même encart pour les quatre rôles. */
-.bandeau-ouverture { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--radius-field, 12px); background: #F4F2FF; border: 1px solid rgba(76, 61, 216, .25); color: var(--ink); font-size: 14px; line-height: 1.45; }
+.bandeau-ouverture { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--radius-field, 12px); background: var(--surface-soft); border-left: 4px solid var(--iris); color: var(--ink); font-size: 14px; line-height: 1.45; }
 .bandeau-ouverture-icone { color: var(--iris); flex: 0 0 auto; margin-top: 1px; }
 
 /* Demande de modification de carte (DemandeModifCarte.jsx). */
@@ -4327,10 +4327,10 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .modif-carte-texte { font-size: 13px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .modif-carte-quand { grid-column: 2; color: var(--ink-faint); }
 .modif-statut { font-size: 11px; white-space: nowrap; }
-.modif-statut--en_attente { background: #FFF4D6; color: #7A5B00; }
-.modif-statut--en_cours { background: #E8E5FF; color: var(--iris); }
-.modif-statut--terminee { background: #E3F5EC; color: #1F7A4D; }
-.modif-statut--refusee { background: #FDECEC; color: #9B1C1C; }
+.modif-statut--en_attente { background: var(--surface-soft); color: var(--ink-soft); }
+.modif-statut--en_cours { background: var(--iris); color: #fff; }
+.modif-statut--terminee { background: var(--lime); color: var(--ink); }
+.modif-statut--refusee { background: rgba(217, 45, 60, 0.1); color: var(--red); }
 
 /* Nombre d'exemplaires d'un ticket (OrdersPage). */
 .exemplaires { display: inline-flex; align-items: center; gap: 6px; padding: 2px 6px; border: 1px solid var(--line); border-radius: var(--radius-pill); }
@@ -4344,15 +4344,15 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .nouvelle-commande-note { margin: 0; padding: 8px 10px; border-radius: 8px; background: var(--cream-dim); }
 .nouvelle-commande-total { margin: 6px 0 0; font-size: 16px; }
 .alerte-volume { display: inline-flex; align-items: center; gap: 6px; }
-.alerte-volume input[type=range] { width: 90px; accent-color: var(--teal, #1F8A70); }
+.alerte-volume input[type=range] { width: 90px; accent-color: var(--iris); }
 
 /* Carte gérée avec Fairide (MenuPage, restaurateur) et demande de hausse de prix (HaussePrix). */
 .carte-verrou { border-left: 4px solid var(--iris); }
-.hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: #FFF4D6; color: #5A4300; }
+.hausse-prix-demande { margin: 10px 0 4px; padding: 10px 12px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); border-left: 4px solid var(--iris); }
 
 /* Emplacements sponsor (EmplacementSponsor.jsx) et Admin › Collaborations / sponsoring. */
 .sponsor-emplacement { position: relative; margin: 18px 0; padding: 10px 12px; border-radius: 14px; background: var(--cream-dim); display: flex; flex-direction: column; gap: 6px; align-items: center; }
-.sponsor-emplacement--prive { border: 2px dashed var(--iris); background: #F4F2FF; }
+.sponsor-emplacement--prive { border: 2px dashed var(--iris); background: var(--surface-soft); }
 .sponsor-emplacement--vide { min-height: 90px; justify-content: center; }
 .sponsor-mention { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); align-self: flex-start; }
 .sponsor-image { max-width: 100%; max-height: 160px; object-fit: contain; display: block; }
@@ -4361,3 +4361,8 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .sponsors-grille { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
 .sponsor-apercu { margin: 10px 0; min-height: 110px; border: 1px dashed var(--line); border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #fff; padding: 8px; }
 .sponsor-apercu img { max-width: 100%; max-height: 180px; object-fit: contain; }
+
+/* Fondu d'apparition des photos (cartes, plats, fiche) : une image qui surgit d'un bloc gris saute à l'œil. */
+@keyframes photo-apparait { from { opacity: 0; } to { opacity: 1; } }
+.rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: photo-apparait .35s ease-out both; }
+@media (prefers-reduced-motion: reduce) { .rc-photo, .plat-photo img, .dish-thumb-lg, .plat-visuel .plat-photo { animation: none; } }

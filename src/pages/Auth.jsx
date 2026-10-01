@@ -1190,9 +1190,9 @@ export default function Auth() {
 
             {stepKey === 'business' && (
               <>
-                <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--teal, #1F8A70)' }}>🏪 {t('auth.businessInfoNote')}</p>
+                <p className="small infos-resto-note" style={{ margin: '0 0 10px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)', borderLeft: '3px solid var(--iris)' }}>🏪 {t('auth.businessInfoNote')}</p>
                 <BusinessSearch onSelect={(f) => { if (!f) { setSiteTrouve(''); setInfosVerifiees(false); } appliquerCommerce(f); }} onPostalCode={(cp) => setAddressPostalCode((v) => v || cp)} initialPostalCode={addressPostalCode} siteTrouve={siteTrouve} initialFiche={commerceTrouve} />
-                {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--teal-deep, #1F8A70)' }}>✅ {t('auth.addressFromFiche')}</p>}
+                {adresseDepuisFiche && <p className="small" style={{ margin: '-6px 0 12px', color: 'var(--iris)' }}>✅ {t('auth.addressFromFiche')}</p>}
                 <div className="field">
                   <label htmlFor="auth-f-tel-resto">{t('auth.restoPhoneLabel')}</label>
                   <PhoneInput id="auth-f-tel-resto" value={restoPhone} onChange={setRestoPhone} invalid={!!errors.restoPhone} />

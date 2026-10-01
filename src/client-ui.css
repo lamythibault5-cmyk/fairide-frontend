@@ -16,7 +16,7 @@
 .rc-media { position: relative; aspect-ratio: 16 / 10; background: var(--surface-soft); overflow: hidden; }
 .rc-photo { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .35s ease; }
 .rest-card.rc:hover .rc-photo { transform: scale(1.03); }
-.rc-photo-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); background: radial-gradient(circle at 30% 25%, rgba(201, 162, 39, 0.18), transparent 60%), linear-gradient(135deg, rgba(31, 138, 112, 0.12), rgba(31, 138, 112, 0.04)); }
+.rc-photo-vide { display: flex; align-items: center; justify-content: center; color: var(--ink-faint); background: var(--surface-soft); }
 .rc-photo-emoji { font-size: 56px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.12)); }
 .rc-est-ferme .rc-photo { filter: grayscale(.55) brightness(.92); }
 .rest-card.rc .rc-fav { position: absolute; top: 8px; right: 8px; }
@@ -55,8 +55,8 @@
 /* ---------- Fiche d'un commerce ---------- */
 .fiche-statut { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; margin: 8px 0 12px; font-size: 14px; }
 .fiche-statut-point { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.fiche-statut.est-ouvert .fiche-statut-point { background: #1F9D55; }
-.fiche-statut.est-ouvert b { color: #1F7A45; }
+.fiche-statut.est-ouvert .fiche-statut-point { background: var(--iris); }
+.fiche-statut.est-ouvert b { color: var(--iris); }
 .fiche-statut.est-ferme .fiche-statut-point { background: var(--red); }
 .fiche-statut.est-ferme b { color: var(--red); }
 .fiche-statut-detail { color: var(--ink-soft); }
@@ -190,7 +190,7 @@
 .suivi-carte .status-badge { flex-shrink: 0; text-transform: none; letter-spacing: 0; font-size: 12px; }
 .suivi-carte .status-nouveau { background: var(--surface-soft); color: var(--ink); }
 .suivi-carte .status-preparation, .suivi-carte .status-pret, .suivi-carte .status-livraison { background: var(--lime); color: var(--ink); }
-.suivi-carte .status-livre { background: rgba(31, 157, 85, .12); color: #1F7A45; }
+.suivi-carte .status-livre { background: var(--lime); color: var(--ink); }
 
 /* Étapes : points reliés, l'étape en cours cerclée de lime. */
 .suivi-etapes { list-style: none; display: flex; padding: 0; margin: 14px 0 10px; }

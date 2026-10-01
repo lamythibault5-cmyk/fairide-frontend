@@ -569,7 +569,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
           {/* D'où vient la fiche remplie à l'inscription. Un commerce saisi à la main est un commerce
               comme un autre — c'est juste qu'aucune source extérieure ne confirme son nom et son adresse. */}
           {detail.signupBusinessSource === 'manuel' && (
-            <p className="small" style={{ margin: '2px 0', color: 'var(--gold-dark, #8a6d1f)' }}>{tr('adminRestos.sourceManual')}</p>
+            <p className="small" style={{ margin: '2px 0', color: 'var(--ink-soft)' }}>{tr('adminRestos.sourceManual')}</p>
           )}
           {detail.signupBusinessSource === 'recherche' && (
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
@@ -603,7 +603,7 @@ function RestaurantDetailModal({ selected, detail, orders, onClose, onSuspend, o
               <span className="small">{tr('adminRestos.landingRankHelp')}</span>
             </div>
           )}
-          <div className="drawer-section" style={{ margin: '10px 0', padding: '10px 12px', background: 'var(--cream-dim, #f6f3ec)', borderRadius: 10 }}>
+          <div className="drawer-section" style={{ margin: '10px 0', padding: '10px 12px', background: 'var(--surface-soft)', borderRadius: 10 }}>
             <p className="small" style={{ margin: 0 }}><b>🍽️ {tr('adminRestos.menuTitle')}</b> · {detail.menuItemCount !== null && detail.menuItemCount !== undefined ? tr('adminRestos.menuLine', { n: detail.menuItemCount }) : ''}</p>
             {detail.concierge && (
               <p className="small" style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap' }}>
