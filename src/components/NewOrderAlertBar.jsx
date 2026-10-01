@@ -13,7 +13,9 @@
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
 
-export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push }) {
+import { SONNERIES } from '../hooks/useNewOrderAlert';
+
+export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme }) {
   const { t } = useLanguage();
   const toast = useToast();
   const active = newCount > 0;
@@ -64,6 +66,21 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
         >
           {soundEnabled ? t('alertBar.soundOn') : t('alertBar.soundOff')}
         </button>
+
+        {/* Sonnerie au choix (3) et test de l'alarme (fondateur, 2026-10-01) : on entend tout de suite ce qui sonnera
+            à la prochaine commande. Choisir une sonnerie la fait aussi entendre. */}
+        {setSonnerie && (
+          <select aria-label={t('alertBar.ringtone')} value={sonnerie} style={{ width: 'auto', padding: '6px 10px', fontSize: 13 }}
+            onChange={(e) => { setSonnerie(e.target.value); testerAlarme?.(e.target.value); }}>
+            {SONNERIES.map((s) => <option key={s} value={s}>{t(`alertBar.ringtone_${s}`)}</option>)}
+          </select>
+        )}
+        {testerAlarme && (
+          <button type="button" className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }}
+            onClick={async () => { if (!(await testerAlarme())) toast(t('alertBar.testFailed'), 'erreur'); }}>
+            🔔 {t('alertBar.testAlarm')}
+          </button>
+        )}
 
         {/* Le bouton du push ne s'affiche que là où il peut tenir sa promesse : navigateur capable
             ET clés VAPID configurées côté serveur. Ailleurs, rien — plutôt qu'un bouton qui échoue.

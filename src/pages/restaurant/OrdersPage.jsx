@@ -79,11 +79,14 @@ export default function OrdersPage() {
 
   // Envoie le ticket au terminal : première impression, ou réimpression d'un ticket mal sorti (papier froissé,
   // encre pâle…). Tracé côté serveur (réimpression = job à part, jamais confondu avec l'impression automatique).
-  async function imprimerSurTerminal(order) {
+  // Nombre d'exemplaires d'une (ré)impression (fondateur, 2026-10-01) : un pour la cuisine, un pour le comptoir, un pour
+  // le livreur… 1 à 5, choisi juste à côté du bouton.
+  const [exemplaires, setExemplaires] = useState(1);
+  async function imprimerSurTerminal(order, copies = 1) {
     setEnvoiTicket(order.id);
     try {
-      await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies: 1 } });
-      toast(terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
+      await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies } });
+      toast(copies > 1 ? t('ordersResto.toastTicketSentN', { n: copies }) : terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
       loadDashboard(restoId);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
   }
@@ -453,8 +456,9 @@ export default function OrdersPage() {
                   {selectedOrder.print ? <EtatImpression p={selectedOrder.print} t={t} /> : <span className="small" style={{ color: 'var(--ink-faint)' }}>{t('ordersResto.notPrintedYet')}</span>}
                 </div>
                 {selectedOrder.print?.printed > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{t('ordersResto.reprintHelp')}</p>}
-                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder)}>
+                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />
+                  <button className="btn-teal" disabled={envoiTicket === selectedOrder.id} onClick={() => imprimerSurTerminal(selectedOrder, exemplaires)}>
                     {envoiTicket === selectedOrder.id ? t('ordersResto.printing') : selectedOrder.print?.printed > 0 ? t('ordersResto.reprintTerminal') : t('ordersResto.printTerminal')}
                   </button>
                   <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
@@ -467,8 +471,9 @@ export default function OrdersPage() {
                 {impressions[selectedOrder.id] > 0 && (
                   <p className="small" style={{ margin: '0 0 8px' }}>✅ {t('ordersResto.printedTimes', { n: impressions[selectedOrder.id] })}</p>
                 )}
-                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap' }}>
-                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder) : printReceipt(selectedOrder))}>
+                <div className="row" style={{ marginTop: 4, gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {btName && <Exemplaires valeur={exemplaires} onChange={setExemplaires} t={t} />}
+                  <button className="btn-teal" disabled={printing} onClick={() => (btName ? printBluetooth(selectedOrder, { copies: exemplaires }) : printReceipt(selectedOrder))}>
                     {printing ? t('ordersResto.printing') : impressions[selectedOrder.id] ? t('ordersResto.printAgain') : t('ordersResto.printTicket')}
                   </button>
                   <button className="btn-outline" onClick={() => voirApercu(selectedOrder)}>{apercu?.orderId === selectedOrder.id ? t('ordersResto.hidePreview') : t('ordersResto.showPreview')}</button>
@@ -511,5 +516,17 @@ export default function OrdersPage() {
         onVerifie={() => { const o = ageAVerifier; setAgeAVerifier(null); confirmTakeaway(o, true); }}
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
     </div>
+  );
+}
+
+// Sélecteur du nombre d'exemplaires d'un ticket (1 à 5) : « − 2 + », assez grand pour le doigt.
+function Exemplaires({ valeur, onChange, t }) {
+  return (
+    <span className="exemplaires" role="group" aria-label={t('ordersResto.copiesLabel')}>
+      <span className="small">{t('ordersResto.copiesLabel')}</span>
+      <button type="button" className="btn-ghost" disabled={valeur <= 1} onClick={() => onChange(Math.max(1, valeur - 1))} aria-label="−">−</button>
+      <b aria-live="polite">{valeur}</b>
+      <button type="button" className="btn-ghost" disabled={valeur >= 5} onClick={() => onChange(Math.min(5, valeur + 1))} aria-label="+">+</button>
+    </span>
   );
 }

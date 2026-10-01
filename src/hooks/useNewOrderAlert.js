@@ -18,6 +18,7 @@ import { useToast } from '../context/ToastContext';
 // du Web Push (donc des clés VAPID et un stockage des abonnements côté serveur) — voir le TODO n°1
 // en tête de GuidePage.jsx.
 const SOUND_KEY = 'fairide_new_order_sound';
+const SONNERIE_KEY = 'fairide_new_order_ringtone';
 const REPEAT_MS = 15000;
 
 function loadSoundPref() {
@@ -50,6 +51,43 @@ export function playChime(ctx, notes = [880, 1108.73, 1318.51]) {
   });
 }
 
+// TROIS SONNERIES AU CHOIX (fondateur, 2026-10-01), toutes synthétisées comme le carillon : rien à télécharger.
+//   - carillon : les trois notes montantes d'origine, douces ;
+//   - cloche   : deux coups de cloche (onde triangle et harmonique), qui portent dans une cuisine bruyante ;
+//   - alarme   : deux tons alternés et répétés, pour un comptoir où l'on ne doit RIEN rater.
+export const SONNERIES = ['carillon', 'cloche', 'alarme'];
+function note(ctx, { freq, start, duree, type = 'sine', volume = 0.22 }) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, start);
+  gain.gain.linearRampToValueAtTime(volume, start + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duree);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duree + 0.02);
+}
+export function jouerSonnerie(ctx, nom = 'carillon') {
+  const t0 = ctx.currentTime;
+  if (nom === 'cloche') {
+    for (const decalage of [0, 0.7]) {
+      note(ctx, { freq: 784, start: t0 + decalage, duree: 1.1, type: 'triangle', volume: 0.3 });
+      note(ctx, { freq: 1568, start: t0 + decalage, duree: 0.6, type: 'sine', volume: 0.12 });
+      note(ctx, { freq: 2352, start: t0 + decalage, duree: 0.35, type: 'sine', volume: 0.06 });
+    }
+    return;
+  }
+  if (nom === 'alarme') {
+    for (let i = 0; i < 6; i++) note(ctx, { freq: i % 2 ? 740 : 988, start: t0 + i * 0.18, duree: 0.16, type: 'square', volume: 0.12 });
+    return;
+  }
+  playChime(ctx);
+}
+function loadSonnerie() {
+  try { const v = localStorage.getItem(SONNERIE_KEY); return SONNERIES.includes(v) ? v : 'carillon'; } catch { return 'carillon'; }
+}
+
 // `ready` : le tableau de bord a-t-il terminé au moins un chargement ? Indispensable et pas cosmétique.
 // `orders` vaut [] avant la première réponse du serveur, donc l'arrivée des données est vue comme un
 // passage de 0 à N — et sans ce drapeau, le carillon et la notification système se déclenchaient à
@@ -59,6 +97,7 @@ export default function useNewOrderAlert(orders, ready) {
   const { t } = useLanguage();
   const toast = useToast();
   const [soundEnabled, setSoundEnabledState] = useState(loadSoundPref);
+  const [sonnerie, setSonnerieState] = useState(loadSonnerie);
   const [permission, setPermission] = useState(
     () => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission)
   );
@@ -73,6 +112,20 @@ export default function useNewOrderAlert(orders, ready) {
     setSoundEnabledState(value);
     try { localStorage.setItem(SOUND_KEY, value ? 'on' : 'off'); } catch { /* stockage indisponible */ }
   }, []);
+
+  const setSonnerie = useCallback((value) => {
+    if (!SONNERIES.includes(value)) return;
+    setSonnerieState(value);
+    try { localStorage.setItem(SONNERIE_KEY, value); } catch { /* stockage indisponible */ }
+  }, []);
+
+  // « Tester l'alarme » : joue la sonnerie demandée (ou celle choisie) même son coupé — c'est un geste de
+  // l'utilisateur, donc le navigateur autorise le son ; on réveille le contexte audio au passage.
+  const testerAlarme = useCallback(async (nom) => {
+    const ctx = ctxRef.current;
+    if (!ctx) return false;
+    try { if (ctx.state === 'suspended') await ctx.resume(); jouerSonnerie(ctx, nom || sonnerie); return true; } catch { return false; }
+  }, [sonnerie]);
 
   const requestPermission = useCallback(async () => {
     if (typeof Notification === 'undefined') return 'unsupported';
@@ -114,8 +167,8 @@ export default function useNewOrderAlert(orders, ready) {
     if (!soundEnabled) return;
     const ctx = ctxRef.current;
     if (!ctx || ctx.state !== 'running') return;
-    try { playChime(ctx); } catch { /* contexte audio fermé par le navigateur */ }
-  }, [soundEnabled]);
+    try { jouerSonnerie(ctx, sonnerie); } catch { /* contexte audio fermé par le navigateur */ }
+  }, [soundEnabled, sonnerie]);
 
   // Sonne + notifie à chaque NOUVELLE commande, pas à chaque rafraîchissement. prevCountRef démarre à
   // null pour distinguer le tout premier chargement (où l'on ne veut pas sonner pour des commandes
@@ -197,5 +250,5 @@ export default function useNewOrderAlert(orders, ready) {
     return () => { document.title = base; };
   }, [newCount]);
 
-  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission };
+  return { newCount, soundEnabled, setSoundEnabled, permission, requestPermission, sonnerie, setSonnerie, testerAlarme };
 }

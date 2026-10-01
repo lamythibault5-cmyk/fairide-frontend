@@ -3997,6 +3997,12 @@ export default {
       submit: 'Reset my password'
     },
     alertBar: {
+      ringtone: 'Ringtone',
+      ringtone_carillon: '🎵 Chime',
+      ringtone_cloche: '🔔 Bell',
+      ringtone_alarme: '🚨 Loud alarm',
+      testAlarm: 'Test the alarm',
+      testFailed: 'Sound cannot be played on this device: check the volume and that the tab is not muted.',
       enableNotifications: 'Enable notifications',
       blocked: 'Notifications blocked by the browser',
       toHandle: '{n} orders to handle',
@@ -5069,6 +5075,7 @@ export default {
       removeSecond: 'Remove'
     },
     ordersResto: {
+      copiesLabel: 'Copies',
       printFailedState: 'print failed ({reason})',
       printWaitingReason: 'waiting: {reason}',
       printWaiting: 'ticket waiting to print',

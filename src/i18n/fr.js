@@ -4007,6 +4007,12 @@ export default {
       submit: 'Réinitialiser mon mot de passe'
     },
     alertBar: {
+      ringtone: 'Sonnerie',
+      ringtone_carillon: '🎵 Carillon',
+      ringtone_cloche: '🔔 Cloche',
+      ringtone_alarme: '🚨 Alarme forte',
+      testAlarm: 'Tester l\'alarme',
+      testFailed: 'Le son ne peut pas être joué sur cet appareil : vérifie le volume et que l\'onglet n\'est pas en sourdine.',
       enableNotifications: 'Activer les notifications',
       blocked: 'Notifications bloquées par le navigateur',
       toHandle: '{n} commandes à traiter',
@@ -5085,6 +5091,7 @@ export default {
       removeSecond: 'Retirer'
     },
     ordersResto: {
+      copiesLabel: 'Exemplaires',
       printFailedState: 'impression échouée ({reason})',
       printWaitingReason: 'en attente : {reason}',
       printWaiting: 'ticket en attente d\'impression',

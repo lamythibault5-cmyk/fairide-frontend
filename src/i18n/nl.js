@@ -3997,6 +3997,12 @@ export default {
       submit: 'Mijn wachtwoord herstellen'
     },
     alertBar: {
+      ringtone: 'Beltoon',
+      ringtone_carillon: '🎵 Klokkenspel',
+      ringtone_cloche: '🔔 Bel',
+      ringtone_alarme: '🚨 Luid alarm',
+      testAlarm: 'Alarm testen',
+      testFailed: 'Het geluid kan niet afgespeeld worden op dit toestel: controleer het volume en of het tabblad niet gedempt is.',
       enableNotifications: 'Meldingen inschakelen',
       blocked: 'Meldingen geblokkeerd door de browser',
       toHandle: '{n} bestellingen te behandelen',
@@ -5069,6 +5075,7 @@ export default {
       removeSecond: 'Verwijderen'
     },
     ordersResto: {
+      copiesLabel: 'Exemplaren',
       printFailedState: 'afdrukken mislukt ({reason})',
       printWaitingReason: 'wacht: {reason}',
       printWaiting: 'ticket wacht op afdrukken',
