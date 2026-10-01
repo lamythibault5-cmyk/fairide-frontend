@@ -7,6 +7,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import Icone from '../../components/Icone';
 import RouleauTickets from '../../components/RouleauTickets';
+import ChoixCommerceSimule from '../../components/admin/ChoixCommerceSimule';
 import '../../simulation.css';
 
 // Admin › Simulation : parcourir Fairide comme un visiteur, un client, un restaurateur et un livreur, dans un bac
@@ -110,6 +111,7 @@ export default function AdminSimulationPage() {
     <div>
       <AdminPageHeader module="simulation" />
       <p className="small" style={{ margin: '0 0 16px', maxWidth: 760 }}>{tr('simulation.intro')}</p>
+      <ChoixCommerceSimule etat={etat} onChange={charger} />
 
       <div className="simu-cartes">
         {PROFILS.map((p) => (
