@@ -28,10 +28,13 @@ export default function HaussePrix({ restoId, nbPlats, onChange }) {
   }, [restoId, token]);
 
   if (!etat) return null;
+  // fairideRate = commission HTVA + sa TVA (10 % + 21 % de TVA = 12,1 %) ; fairideRateHt = la commission seule.
   const r = etat.fairideRate;
   const affiche = EXEMPLE_SUR_PLACE * (1 + r + valeur / 100);
   const recu = EXEMPLE_SUR_PLACE * (1 + valeur / 100);
   const partFairide = EXEMPLE_SUR_PLACE * r;
+  const partFairideHt = EXEMPLE_SUR_PLACE * (etat.fairideRateHt ?? r);
+  const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
 
   async function appliquer() {
@@ -47,7 +50,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange }) {
   return (
     <div className="card hausse-prix" id="menu-hausse-prix">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>📈 {t('menuPage.markupTitle')}</h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: Math.round(r * 100) })}</p>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche })}</p>
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: valeur })}
       </label>
@@ -61,7 +64,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange }) {
         <div>{t('menuPage.markupExample', { base: euros(EXEMPLE_SUR_PLACE, locale) })}</div>
         <div>👀 {t('menuPage.markupShown')} <b>{euros(affiche, locale)}</b></div>
         <div>💚 {t('menuPage.markupYouGet')} <b>{euros(recu, locale)}</b>{valeur > 0 && <> ({t('menuPage.markupYouGetExtra', { amount: euros(recu - EXEMPLE_SUR_PLACE, locale) })})</>}</div>
-        <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b></div>
+        <div>🟢 {t('menuPage.markupFairide')} <b>{euros(partFairide, locale)}</b> <span className="small">{t('menuPage.markupFairideDetail', { ht: euros(partFairideHt, locale), tva: euros(partFairide - partFairideHt, locale) })}</span></div>
       </div>
       {change && (
         <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={appliquer}>
