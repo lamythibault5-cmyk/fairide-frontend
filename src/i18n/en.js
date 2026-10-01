@@ -4202,6 +4202,7 @@ export default {
       peppolNote: 'Ordering for a business? The Stripe invoices below are enough for an individual. For an invoice in your company\'s name delivered via Peppol (B2B e-invoicing), write to contact@fairide.be with your company number.'
     },
     restoListUi: {
+      deliveryFromPill: '🚴 Delivery from {amount}',
       closedOpensAt: 'Closed · opens at {time}',
       servicePickup: 'Takeaway',
       serviceDelivery: 'Delivery',
@@ -4209,7 +4210,7 @@ export default {
       showcaseOnly: '👁️ Menu only',
       closed: '🔒 Closed',
       supermarket: 'Supermarket',
-      freeFrom: '🚴 Free from €{min}',
+      freeFrom: '🚴 Free delivery from {min}',
       heading: 'Restaurants and businesses in Brussels',
       pageTitle: 'Restaurants and businesses in Brussels · Fairide',
       freeDeliveryPill: '🚴 Free delivery',
@@ -4889,6 +4890,10 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      ownFeeLabel: 'Your delivery fee (you deliver yourself)',
+      ownFeeHelp: 'You deliver: you set your fee, 100 %. This fixed amount replaces the Fairide rate (base fee + distance). Leave empty to keep the Fairide rate.',
+      ownFeeInvalid: 'Delivery fee between €0 and €20.',
+      offerHowItWorks: 'Delivery costs the customer €4.50 to start (plus distance). If you offer part of it (e.g. €1.50 → delivery from €3) or all of it, the customer does not pay it: you receive it less on your payout, and the courier always gets the full fee. Your business then appears in the "Delivery from €3" or "Free delivery" sections.',
       capacitySubCap: '{n} orders/day max',
       rowCapacity: 'Orders and capacity',
       capacitySubRadius: 'Delivery up to {km} km',
@@ -5886,6 +5891,8 @@ export default {
       vegan: 'Vegan dish'
     },
     restaurantList: {
+      sectionFreeDelivery: 'Free delivery',
+      sectionDeliveryFrom: 'Delivery from {amount}',
       sectionRegistered: 'Already on Fairide · {n} businesses signed up',
       sectionRegisteredOne: 'Already on Fairide · 1 business signed up',
       soonBadge: 'Coming soon on Fairide',

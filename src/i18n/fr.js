@@ -4212,6 +4212,7 @@ export default {
       peppolNote: 'Tu commandes pour une entreprise ? Les factures Stripe ci-dessous suffisent pour un particulier. Pour une facture au nom de ta société transmise via Peppol (facturation électronique B2B), écris-nous à contact@fairide.be avec ton numéro d\'entreprise.'
     },
     restoListUi: {
+      deliveryFromPill: '🚴 Livraison dès {amount}',
       closedOpensAt: 'Fermé · ouvre à {time}',
       servicePickup: 'À emporter',
       serviceDelivery: 'Livraison',
@@ -4220,7 +4221,7 @@ export default {
       showcaseOnly: '👁️ Carte seule',
       closed: '🔒 Fermé',
       supermarket: 'Supermarché',
-      freeFrom: '🚴 Offerte dès {min}€',
+      freeFrom: '🚴 Livraison offerte dès {min}',
       heading: 'Restaurants et commerces à Bruxelles',
       pageTitle: 'Restaurants et commerces à Bruxelles · Fairide',
       freeDeliveryPill: '🚴 Livraison offerte',
@@ -4905,6 +4906,10 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      ownFeeLabel: 'Tes frais de livraison (tu livres toi-même)',
+      ownFeeHelp: 'C\'est toi qui livres : tu décides de tes frais, à 100 %. Ce montant fixe remplace le tarif Fairide (forfait + distance). Laisse vide pour garder le tarif Fairide.',
+      ownFeeInvalid: 'Frais de livraison entre 0 € et 20 €.',
+      offerHowItWorks: 'La livraison coûte au client 4,50 € au départ (plus la distance). Si tu en offres une part (par exemple 1,50 € → livraison dès 3 €) ou la totalité, le client ne la paie pas : tu la reçois en moins sur ton virement, et le livreur touche toujours ses frais complets. Ton commerce apparaît alors dans les rubriques « Livraison dès 3 € » ou « Livraison offerte ».',
       capacitySubCap: '{n} commandes/jour max',
       rowCapacity: 'Commandes et capacité',
       capacitySubRadius: 'Livraison jusqu\'à {km} km',
@@ -5931,6 +5936,8 @@ export default {
       vegan: 'Plat vegan'
     },
     restaurantList: {
+      sectionFreeDelivery: 'Livraison offerte',
+      sectionDeliveryFrom: 'Livraison dès {amount}',
       sectionRegistered: 'Déjà sur Fairide · {n} commerces inscrits',
       sectionRegisteredOne: 'Déjà sur Fairide · 1 commerce inscrit',
       soonBadge: 'Bientôt sur Fairide',

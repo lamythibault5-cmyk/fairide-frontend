@@ -723,7 +723,8 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
 // Le guide du commercial (fondateur, 2026-09-21) : le flyer Fairide qu'il doit toujours avoir avec lui et laisser au
 // restaurateur, le pitch, les techniques de vente, et la règle d'or — on représente Fairide : si c'est non, on reste
 // pro, on laisse le flyer, on souhaite une bonne journée et on repasse la semaine d'après. Repliable (mémorisé).
-const FLYER_URL = '/docs/flyer-fairide.pdf';
+// ?v= : le flyer a changé le 2026-10-01 (version du fondateur) ; sans paramètre, un navigateur garderait l'ancien en cache.
+const FLYER_URL = '/docs/flyer-fairide.pdf?v=2026-10-01';
 // Barre « Ce commerce est-il déjà enregistré ? » : ma liste, les autres commerciaux (étape et date, sans leur nom), les
 // commerces déjà inscrits sur Fairide. 2 lettres suffisent, sans accents ni majuscules (GET /sales/lookup?large=1).
 function RechercheDejaEnregistre({ token, t, stageLabel, fmtJour, onOpen, onRegister }) {

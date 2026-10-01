@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { fraisService } from '../fraisService';
+import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
 
 const CartContext = createContext(null);
 // Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
 // deux écrans qui affichent le même chiffre doivent le lire au même endroit, sinon l'un des deux
 // finit par mentir le jour où le tarif bouge.
-export const DELIVERY_FEE = 4.5; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
+export const DELIVERY_FEE = FORFAIT_LIVRAISON; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const STORAGE_KEY = 'fairide_cart';
 // Copie du panier mise de côté pendant un paiement en cours — voir stashForPayment() plus bas.
 const PENDING_KEY = 'fairide_cart_pending';
@@ -207,16 +208,18 @@ export function CartProvider({ children }) {
     // Estimation avant checkout (frais réels calculés côté serveur à la commande, selon la distance
     // réelle — voir routes/orders.js) : même règle de plafonnement que le calcul serveur, pour que ce
     // qui s'affiche ici corresponde à ce que la commande facturera vraiment.
+    // Base : le forfait Fairide, ou les frais fixés par le commerce s'il livre lui-même (livraison.js).
+    const baseLivraison = tarifLivraison(deliveryOffer).base;
     const qualifiesForThresholdFreeDelivery = deliveryOffer?.freeDeliveryMinOrder != null && subtotal >= Number(deliveryOffer.freeDeliveryMinOrder);
     const deliveryDiscount = (deliveryOffer?.freeDelivery || qualifiesForThresholdFreeDelivery)
-      ? DELIVERY_FEE
-      : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, DELIVERY_FEE);
-    const clientDeliveryFee = +(DELIVERY_FEE - deliveryDiscount).toFixed(2);
+      ? baseLivraison
+      : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, baseLivraison);
+    const clientDeliveryFee = +(baseLivraison - deliveryDiscount).toFixed(2);
     // Frais de service sur la livraison seulement, calculés sur le tarif complet (même règle que routes/orders.js :
     // ce que le commerce offre de la livraison ne réduit pas la part de Fairide). À emporter : aucun.
-    const serviceFee = fraisService(DELIVERY_FEE);
+    const serviceFee = fraisService(baseLivraison);
     const total = +(subtotal + clientDeliveryFee + serviceFee).toFixed(2);
-    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: DELIVERY_FEE, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
+    return { rawSubtotal: +rawSubtotal.toFixed(2), promoDiscount, discountedItems, subtotal, deliveryFee: baseLivraison, deliveryDiscount: +deliveryDiscount.toFixed(2), serviceFee, total };
   }
 
   // Estimation sans remises, utilisable sans connaître le menu complet du restaurant (le panier flottant

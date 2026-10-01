@@ -19,6 +19,7 @@ import AutoScrollRow from '../../components/AutoScrollRow';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
+import { tarifLivraison, eurosCourts } from '../../livraison';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
@@ -67,10 +68,14 @@ function offerLabelFor(r) {
 // Le restaurant peut prendre à sa charge tout ou partie des frais de livraison (voir "🏷️ Frais de
 // livraison" dans son dashboard) — affiché comme un pill à côté de la commune, pas confondu avec le
 // badge promo (🏷️ en haut de la photo) qui porte sur le contenu du panier, pas la livraison.
+// Le prix de la livraison sur la carte du commerce (livraison.js) : offerte, offerte dès X €, ou « dès X € » quand il
+// est plus bas que le forfait (le commerce en offre une part, ou livre lui-même à ses frais).
 function deliveryOfferLabelFor(r, t) {
-  if (r.freeDelivery) return t('restoListUi.freeDeliveryPill');
-  if (r.freeDeliveryMinOrder != null) return t('restoListUi.freeFrom', { min: r.freeDeliveryMinOrder.toFixed(2) });
-  if (r.deliveryFeeDiscount > 0) return t('restoListUi.deliveryDiscountPill', { amount: r.deliveryFeeDiscount.toFixed(2) });
+  if (r.offersDelivery === false) return null;
+  const tarif = tarifLivraison(r);
+  if (tarif.offerte) return t('restoListUi.freeDeliveryPill');
+  if (tarif.offerteDes != null) return t('restoListUi.freeFrom', { min: eurosCourts(tarif.offerteDes) });
+  if (tarif.reduite || tarif.propre) return t('restoListUi.deliveryFromPill', { amount: eurosCourts(tarif.depart) });
   return null;
 }
 
@@ -121,7 +126,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           {r.certified && <CertifiedBadge />}
         </h3>
         {/* Type principal + le premier type secondaire (7 types possibles, voir EcranCuisines) : deux, pour rester lisible. */}
-        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune].filter(Boolean).join(' · ')}</p>
+        <p className="rc-sous">{[[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 2).map((c) => restaurantTypeLabel(c, t) || c).join(', '), r.neighborhood || r.commune, r.distanceKm != null && `${r.distanceKm < 10 ? r.distanceKm.toFixed(1).replace('.', ',') : Math.round(r.distanceKm)} km`].filter(Boolean).join(' · ')}</p>
         <p className="rc-infos">
           {/* Pas d'étoiles sans avis : une note que personne n'a donnée n'est pas un avis (CDE VI.100). */}
           {r.reviewCount > 0
@@ -346,7 +351,23 @@ export default function RestaurantList() {
   };
   const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
   const groceryList = completer(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)));
-  const nearbyList = completer(homeCommune ? nonGrocery.filter((r) => r.commune === homeCommune) : []);
+  // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
+  // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
+  // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
+  const PROCHES_MAX = 15;
+  const parDistance = nonGrocery.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
+  const nearbyList = completer(parDistance.length
+    ? parDistance.slice(0, PROCHES_MAX)
+    : homeCommune ? [...nonGrocery].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : []);
+  // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
+  const SEUIL_PAS_CHER = 3;
+  const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
+  const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
+    .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
+    .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);
+  const livraisonOfferte = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
+    .filter(({ tarif }) => tarif.offerte || tarif.offerteDes != null)
+    .sort((a, b) => (a.tarif.offerte ? 0 : a.tarif.offerteDes) - (b.tarif.offerte ? 0 : b.tarif.offerteDes)).map(({ r }) => r);
   const offersList = completer(restaurants.filter((r) => r.hasPromo));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
@@ -538,6 +559,8 @@ export default function RestaurantList() {
             </div>
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferte} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: '3 €' })} icon="scooter" list={livraisonPasCher} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />

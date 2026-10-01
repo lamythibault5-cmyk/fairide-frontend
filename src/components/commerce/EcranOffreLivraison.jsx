@@ -20,6 +20,9 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
   const [aPartirDe, setAPartirDe] = useState(restaurant.freeDeliveryMinOrder != null);
   const [minimum, setMinimum] = useState(restaurant.freeDeliveryMinOrder != null ? String(restaurant.freeDeliveryMinOrder) : '20');
   const [enCours, setEnCours] = useState(false);
+  // Commerce qui livre lui-même : il fixe ses frais à 100 % (vide = tarif Fairide, forfait + distance).
+  const livreLuiMeme = restaurant.deliveryMode === 'own';
+  const [fraisPropres, setFraisPropres] = useState(restaurant.ownDeliveryFee != null ? String(restaurant.ownDeliveryFee) : '');
 
   async function valider() {
     const montant = Number(remise);
@@ -29,11 +32,13 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
       min = Number(minimum);
       if (Number.isNaN(min) || min < 5 || min > 200) { toast(t('editResto.toastAmount5_200')); return; }
     }
+    const propre = fraisPropres.trim() === '' ? null : Number(fraisPropres.replace(',', '.'));
+    if (livreLuiMeme && propre !== null && (Number.isNaN(propre) || propre < 0 || propre > 20)) { toast(t('editResto.ownFeeInvalid')); return; }
     setEnCours(true);
     try {
       await api(`/restaurants/${restoId}/delivery-discount`, {
         method: 'PATCH', token,
-        body: { freeDelivery: gratuite, deliveryFeeDiscount: gratuite ? 0 : montant, freeDeliveryMinOrder: min }
+        body: { freeDelivery: gratuite, deliveryFeeDiscount: gratuite ? 0 : montant, freeDeliveryMinOrder: min, ...(livreLuiMeme ? { ownDeliveryFee: propre } : {}) }
       });
       await loadDashboard(restoId);
       toast(t('editResto.toastOfferUpdated'));
@@ -47,6 +52,15 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
 
   return (
     <SousEcran titre={t('editResto.rowDeliveryOffer')} onFermer={onFermer} pied={<BoutonEnregistrer enCours={enCours} onClick={valider} />}>
+      {livreLuiMeme ? (
+        <div className="field" style={{ maxWidth: 280 }}>
+          <label htmlFor={ids + '-propres'}>{t('editResto.ownFeeLabel')}</label>
+          <input id={ids + '-propres'} type="number" inputMode="decimal" min="0" max="20" step="0.5" value={fraisPropres} onChange={(e) => setFraisPropres(e.target.value)} placeholder="4,50" />
+          <p className="small" style={{ margin: '4px 0 0' }}>{t('editResto.ownFeeHelp')}</p>
+        </div>
+      ) : (
+        <p className="small" style={{ margin: '0 0 12px', padding: '8px 10px', borderRadius: 8, background: 'var(--cream-dim)' }}>{t('editResto.offerHowItWorks')}</p>
+      )}
       <label className="row" style={{ gap: 8, marginBottom: 12, cursor: 'pointer' }}>
         <input type="checkbox" style={{ width: 'auto' }} checked={gratuite} onChange={(e) => setGratuite(e.target.checked)} />
         <span>{t('editResto.freeDelivery')}</span>

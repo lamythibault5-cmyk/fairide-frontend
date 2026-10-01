@@ -4,7 +4,8 @@ import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
-import { useCart, DELIVERY_FEE } from '../../context/CartContext';
+import { useCart } from '../../context/CartContext';
+import { tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
 import { useToast } from '../../context/ToastContext';
@@ -265,8 +266,8 @@ export default function RestaurantMenu() {
     try { sessionStorage.setItem(`fairide_mode_${id}`, m); } catch { /* navigation privée : le paiement reprendra son défaut */ }
   }
 
-  // Frais annoncés sur la fiche. DELIVERY_FEE (CartContext) est une ESTIMATION forfaitaire côté
-  // client — le montant réel dépend de la distance et se calcule au serveur — d'où le « dès ».
+  // Frais annoncés sur la fiche : le prix de DÉPART (livraison.js) — forfait ou frais propres du commerce, moins ce
+  // qu'il offre. Le montant réel dépend de la distance et se calcule au serveur — d'où le « dès ».
   const q = requete.trim().toLowerCase();
   const menuFiltre = q
     ? restaurant.menu.filter((i) => {
@@ -473,7 +474,7 @@ export default function RestaurantMenu() {
               ? t('restaurantMenu.feePickup')
               : restaurant.freeDelivery
                 ? t('restaurantMenu.feeFree')
-                : t('restaurantMenu.feeFrom', { amount: DELIVERY_FEE.toFixed(2).replace('.', ',') })}</b>
+                : t('restaurantMenu.feeFrom', { amount: tarifLivraison(restaurant).depart.toFixed(2).replace('.', ',') })}</b>
             <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
             {/* Distance choisie par le commerce (Mon commerce › Commandes et capacité). */}
             {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (

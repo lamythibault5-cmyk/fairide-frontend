@@ -4202,6 +4202,7 @@ export default {
       peppolNote: 'Bestel je voor een bedrijf? De Stripe-facturen hieronder volstaan voor een particulier. Voor een factuur op naam van je vennootschap via Peppol (B2B e-facturatie), mail naar contact@fairide.be met je ondernemingsnummer.'
     },
     restoListUi: {
+      deliveryFromPill: '🚴 Levering vanaf {amount}',
       closedOpensAt: 'Gesloten · opent om {time}',
       servicePickup: 'Afhalen',
       serviceDelivery: 'Levering',
@@ -4209,7 +4210,7 @@ export default {
       showcaseOnly: '👁️ Enkel de kaart',
       closed: '🔒 Gesloten',
       supermarket: 'Supermarkt',
-      freeFrom: '🚴 Gratis vanaf €{min}',
+      freeFrom: '🚴 Gratis levering vanaf {min}',
       heading: 'Restaurants en zaken in Brussel',
       pageTitle: 'Restaurants en zaken in Brussel · Fairide',
       freeDeliveryPill: '🚴 Gratis levering',
@@ -4889,6 +4890,10 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      ownFeeLabel: 'Je leveringskosten (je levert zelf)',
+      ownFeeHelp: 'Jij levert: jij bepaalt je kosten, 100 %. Dit vaste bedrag vervangt het Fairide-tarief (basisbedrag + afstand). Laat leeg om het Fairide-tarief te houden.',
+      ownFeeInvalid: 'Leveringskosten tussen € 0 en € 20.',
+      offerHowItWorks: 'Levering kost de klant € 4,50 om te beginnen (plus de afstand). Bied je een deel aan (bv. € 1,50 → levering vanaf € 3) of alles, dan betaalt de klant het niet: je ontvangt het minder op je uitbetaling, en de koerier krijgt altijd zijn volledige vergoeding. Je zaak verschijnt dan in de rubrieken "Levering vanaf € 3" of "Gratis levering".',
       capacitySubCap: 'max. {n} bestellingen/dag',
       rowCapacity: 'Bestellingen en capaciteit',
       capacitySubRadius: 'Levering tot {km} km',
@@ -5886,6 +5891,8 @@ export default {
       vegan: 'Veganistisch gerecht'
     },
     restaurantList: {
+      sectionFreeDelivery: 'Gratis levering',
+      sectionDeliveryFrom: 'Levering vanaf {amount}',
       sectionRegistered: 'Al op Fairide · {n} zaken ingeschreven',
       sectionRegisteredOne: 'Al op Fairide · 1 zaak ingeschreven',
       soonBadge: 'Binnenkort op Fairide',
