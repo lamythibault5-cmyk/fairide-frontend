@@ -9,6 +9,7 @@ import CrmMap, { distanceM } from '../../components/CrmMap';
 
 import '../../crm.css';
 import BusinessSearch from '../../components/BusinessSearch';
+import { communeDepuisCodePostal } from '../../menuCategories';
 
 // Page « Sales » des commerciaux : la personne à qui l'admin a donné l'accès (Admin › Sales) enregistre ici les
 // commerces qu'elle démarche, et où ils en sont — étape, visites, appels, notes datées, avis du restaurateur,
@@ -45,7 +46,7 @@ const COMMUNE_PAR_CP = {
 // Cuisine OpenStreetMap (anglais, ex. « italian;pizza ») → le libellé qu'on utilise dans Sales.
 const CUISINE_OSM = { italian: 'Italien', pizza: 'Pizza', burger: 'Burgers', kebab: 'Kebab & Grill', sushi: 'Sushi', japanese: 'Japonais', chinese: 'Chinois', thai: 'Thaïlandais', vietnamese: 'Vietnamien', indian: 'Indien', lebanese: 'Libanais', moroccan: 'Marocain', turkish: 'Turc', greek: 'Grec', mexican: 'Mexicain', african: 'Africain', asian: 'Asiatique', korean: 'Coréen', belgian: 'Belge', french: 'Français', spanish: 'Espagnol', portuguese: 'Portugais', friture: 'Friterie', chicken: 'Fried Chicken', sandwich: 'Sandwichs & Salades', bagel: 'Sandwichs & Salades', coffee_shop: 'Coffee Shop', ice_cream: 'Desserts & Glaces', seafood: 'Poisson & Fruits de mer', vegetarian: 'Végétarien', vegan: 'Végétarien', ramen: 'Ramen', poke: 'Poke Bowl', bubble_tea: 'Bubble Tea', breakfast: 'Petit-déjeuner & Brunch' };
 const cuisineDepuisFiche = (c) => { const v = String(c || '').split(/[;,]/)[0].trim().toLowerCase(); return CUISINE_OSM[v] || (v ? v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, ' ') : ''); };
-const communeDepuisFiche = (fiche) => COMMUNE_PAR_CP[Number(fiche.postalCode)] || String(fiche.city || '').split(' - ')[0].trim();
+const communeDepuisFiche = (fiche) => COMMUNE_PAR_CP[Number(fiche.postalCode)] || communeDepuisCodePostal(fiche.postalCode) || String(fiche.city || '').split(' - ')[0].trim();
 
 export default function SalesPage() {
   const { t } = useLanguage();

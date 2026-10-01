@@ -3,7 +3,7 @@ import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
+import { COMMUNES_SUGGEREES, communeAcceptee, RESTAURANT_TYPES } from '../../menuCategories';
 import { formatFullSchedule } from '../../openingHours';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import AddressSearch from '../AddressSearch';
@@ -39,7 +39,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
   const [name, setName] = useState('');
   const [cuisine, setCuisine] = useState(RESTAURANT_TYPES[0].value);
   const [customCuisine, setCustomCuisine] = useState('');
-  const [commune, setCommune] = useState(COMMUNES[0]);
+  const [commune, setCommune] = useState('');
   const [neighborhood, setNeighborhood] = useState('');
   const [addressStreet, setAddressStreet] = useState('');
   const [addressNumber, setAddressNumber] = useState('');
@@ -89,14 +89,14 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
             setHours((v) => (horairesRemplis(v) ? v : e.hours));
             setHorairesDepuisInscription(true);
           }
-          if (e.city && COMMUNES.includes(e.city) && !COMMUNES.includes(h.commune)) setCommune(e.city);
+          if (e.city && communeAcceptee(e.city) && !communeAcceptee(h.commune)) setCommune(e.city);
         }).catch(() => { /* enrichissement facultatif */ });
       }
       if (h.services) {
         setOffersDelivery(!!h.services.delivery); setOffersPickup(!!h.services.pickup);
         if (h.services.deliveryMode === 'own' || h.services.deliveryMode === 'fairide') setDeliveryModePref(h.services.deliveryMode);
       }
-      if (h.commune && COMMUNES.includes(h.commune)) setCommune(h.commune);
+      if (h.commune && communeAcceptee(h.commune)) setCommune(h.commune);
       if (h.neighborhood) setNeighborhood((v) => v || h.neighborhood);
       if (h.street) setAddressStreet((v) => v || h.street);
       if (h.number) setAddressNumber((v) => v || h.number);
@@ -176,7 +176,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
             if (f.name) setName(f.name);
             const typeDevine = cuisineDepuisOsm(f.cuisine, f.type); if (typeDevine && RESTAURANT_TYPES.some((rt) => rt.value === typeDevine)) setCuisine(typeDevine);
             if (f.street) setAddressStreet(f.street); if (f.number) setAddressNumber(f.number); if (f.postalCode) setAddressPostalCode(f.postalCode);
-            if (f.city && COMMUNES.includes(f.city)) setCommune(f.city);
+            if (f.city && communeAcceptee(f.city)) setCommune(f.city);
             if (f.openingHours) setOpeningHoursTexte(f.openingHours);
           }} />}
           <div className="field"><label htmlFor={ids + '-nom'}>{t('dashResto.businessName')}</label><input id={ids + '-nom'} value={name} onChange={(e) => setName(e.target.value)} placeholder={t('dashResto.phName')} /></div>
@@ -194,7 +194,7 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
 
       {cle === 'adresse' && (
         <>
-          <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && COMMUNES.includes(a.city)) setCommune(a.city); }} />
+          <AddressSearch compact onSelect={(a) => { setAddressStreet(a.street); if (a.number) setAddressNumber(a.number); if (a.postalCode) setAddressPostalCode(a.postalCode); if (a.city && communeAcceptee(a.city)) setCommune(a.city); }} />
           <div className="field"><label htmlFor={ids + '-rue'}>{t('dashResto.street')}</label><input id={ids + '-rue'} value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder={t('dashResto.phStreet')} /></div>
           <div className="row" style={{ gap: 8 }}>
             <div className="field" style={{ flex: 1 }}>
@@ -208,13 +208,15 @@ export default function CreationCommerce({ fondateur, onCree, ouvrirDemandeCarte
           </div>
           <div className="field">
             <label htmlFor={ids + '-commune'}>{t('dashResto.municipality')}</label>
-            <select id={ids + '-commune'} value={commune} onChange={(e) => setCommune(e.target.value)}>
-              {COMMUNES.map((c) => <option key={c}>{c}</option>)}
-            </select>
+            {/* Champ libre avec suggestions (19 communes + périphérie) : Tervuren n'est plus enregistré comme Anderlecht. */}
+            <input id={ids + '-commune'} list={ids + '-communes'} value={commune} onChange={(e) => setCommune(e.target.value)} placeholder="Ixelles, Tervuren…" autoComplete="address-level2" />
+            <datalist id={ids + '-communes'}>
+              {COMMUNES_SUGGEREES.map((c) => <option key={c} value={c} />)}
+            </datalist>
           </div>
           <AddressRecognition
             street={addressStreet} number={addressNumber} postalCode={addressPostalCode} city={commune} compact discret
-            onResult={(r) => { if (r.commune && COMMUNES.includes(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
+            onResult={(r) => { if (r.commune && communeAcceptee(r.commune)) setCommune(r.commune); if (r.neighborhood) setNeighborhood((v) => v || r.neighborhood); }}
             onStatus={setRecoEtat} onConfirm={setAdresseConfirmee}
           />
           {fondateur && <p className="small" style={{ margin: '0 0 10px' }}>🛠️ {t('dashResto.founderHint')}</p>}

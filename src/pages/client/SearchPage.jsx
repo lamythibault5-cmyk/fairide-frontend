@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { platBio, platVegan, restoBio, restoVegan } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
-import { COMMUNES, RESTAURANT_TYPES } from '../../menuCategories';
+import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -108,7 +108,8 @@ export default function SearchPage() {
     }
 
     const cuisines = q.length < 2 ? [] : RESTAURANT_TYPES.filter((c) => contient(c.value, q)).slice(0, MAX_PAR_GROUPE);
-    const communes = q.length < 2 ? [] : COMMUNES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
+    // La recherche trouve aussi la périphérie (Tervuren…) ; les puces « Par commune » restent les 19.
+    const communes = q.length < 2 ? [] : COMMUNES_SUGGEREES.filter((c) => contient(c, q)).slice(0, MAX_PAR_GROUPE);
     const aide = q.length < 2 ? [] : sujetsAide(t).filter((s) => contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)).slice(0, MAX_PAR_GROUPE);
     const rubriques = rubriquesCompte(t)
       .filter((s) => q.length >= 2 && (!s.connecte || user) && (contient(s.titre, q) || contient(s.sous, q) || contient(s.mots, q)))

@@ -4906,6 +4906,7 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      toastCommuneRequired: 'Indique la commune du commerce (par exemple Ixelles ou Tervuren).',
       ownFeeLabel: 'Tes frais de livraison (tu livres toi-même)',
       ownFeeHelp: 'C\'est toi qui livres : tu décides de tes frais, à 100 %. Ce montant fixe remplace le tarif Fairide (forfait + distance). Laisse vide pour garder le tarif Fairide.',
       ownFeeInvalid: 'Frais de livraison entre 0 € et 20 €.',

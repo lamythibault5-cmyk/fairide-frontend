@@ -154,6 +154,31 @@ export const COMMUNES = [
   'Woluwe-Saint-Lambert', 'Woluwe-Saint-Pierre'
 ];
 
+// COMMUNES DE LA PÉRIPHÉRIE (fondateur, 2026-10-01) : Tervuren, Zaventem, Vilvoorde… peuvent s'inscrire, être listées,
+// commander et être livrées. L'accueil n'en parle pas (il reste « les 19 communes ») : elles n'apparaissent que là où
+// l'on saisit une adresse (suggestions) — miroir de communesPeripherie.js côté serveur.
+export const COMMUNES_PERIPHERIE = [
+  'Asse', 'Beersel', 'Braine-l\'Alleud', 'Dilbeek', 'Drogenbos', 'Grimbergen', 'Hoeilaart', 'Kraainem', 'La Hulpe', 'Lasne',
+  'Linkebeek', 'Machelen', 'Overijse', 'Rhode-Saint-Genèse', 'Rixensart', 'Sint-Pieters-Leeuw', 'Tervuren', 'Vilvoorde',
+  'Waterloo', 'Wavre', 'Wemmel', 'Wezembeek-Oppem', 'Zaventem', 'Zellik'
+];
+// Suggestions d'un champ « Commune » : les 19, puis la périphérie. Le champ reste libre (une commune absente passe).
+export const COMMUNES_SUGGEREES = [...COMMUNES, ...COMMUNES_PERIPHERIE];
+const COMMUNE_PAR_CP = {
+  1000: 'Bruxelles', 1020: 'Bruxelles', 1030: 'Schaerbeek', 1040: 'Etterbeek', 1050: 'Ixelles', 1060: 'Saint-Gilles', 1070: 'Anderlecht',
+  1080: 'Molenbeek-Saint-Jean', 1081: 'Koekelberg', 1082: 'Berchem-Sainte-Agathe', 1083: 'Ganshoren', 1090: 'Jette', 1120: 'Bruxelles',
+  1130: 'Bruxelles', 1140: 'Evere', 1150: 'Woluwe-Saint-Pierre', 1160: 'Auderghem', 1170: 'Watermael-Boitsfort', 1180: 'Uccle',
+  1190: 'Forest', 1200: 'Woluwe-Saint-Lambert', 1210: 'Saint-Josse-ten-Noode',
+  1300: 'Wavre', 1310: 'La Hulpe', 1330: 'Rixensart', 1380: 'Lasne', 1410: 'Waterloo', 1420: 'Braine-l\'Alleud', 1560: 'Hoeilaart',
+  1600: 'Sint-Pieters-Leeuw', 1620: 'Drogenbos', 1630: 'Linkebeek', 1640: 'Rhode-Saint-Genèse', 1650: 'Beersel', 1700: 'Dilbeek',
+  1730: 'Asse', 1731: 'Zellik', 1780: 'Wemmel', 1800: 'Vilvoorde', 1830: 'Machelen', 1850: 'Grimbergen', 1930: 'Zaventem',
+  1950: 'Kraainem', 1970: 'Wezembeek-Oppem', 3080: 'Tervuren', 3090: 'Overijse'
+};
+// Commune déduite d'un code postal (Région + périphérie) ; '' si inconnu.
+export function communeDepuisCodePostal(cp) { return COMMUNE_PAR_CP[String(cp || '').trim()] || ''; }
+// Une commune est acceptée dès qu'elle est renseignée : on ne remplace plus une ville hors des 19 par « Anderlecht ».
+export const communeAcceptee = (c) => !!String(c || '').trim();
+
 // Communes limitrophes (les 19 communes de la Région de Bruxelles-Capitale) — sert à afficher
 // d'abord les commerces de la commune du client, puis ceux des communes voisines, de proche en
 // proche (voir communeRingDistance ci-dessous).

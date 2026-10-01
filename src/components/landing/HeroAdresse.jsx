@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api';
-import { COMMUNES } from '../../menuCategories';
+import { COMMUNES, communeDepuisCodePostal } from '../../menuCategories';
 import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../Icone';
 
@@ -85,7 +85,9 @@ export default function HeroAdresse() {
     ignorerProchaine.current = true;
     setQ(s.label);
     setOuvert(false);
-    const commune = communeDe(s);
+    // Périphérie (Tervuren, Zaventem…, fondateur 2026-10-01) : on mène à la liste sans rien annoncer ; l'accueil continue
+    // de parler des 19 communes. Seule une adresse vraiment hors zone reçoit le message « pas encore ».
+    const commune = communeDe(s) || communeDepuisCodePostal(s.postalCode);
     if (!commune) { setHorsZone(s.city || s.label); return; }
     navigate('/restaurants', { state: { communeProche: commune } });
   }

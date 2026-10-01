@@ -4890,6 +4890,7 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      toastCommuneRequired: 'Vul de gemeente van de zaak in (bv. Elsene of Tervuren).',
       ownFeeLabel: 'Je leveringskosten (je levert zelf)',
       ownFeeHelp: 'Jij levert: jij bepaalt je kosten, 100 %. Dit vaste bedrag vervangt het Fairide-tarief (basisbedrag + afstand). Laat leeg om het Fairide-tarief te houden.',
       ownFeeInvalid: 'Leveringskosten tussen € 0 en € 20.',

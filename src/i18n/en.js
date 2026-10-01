@@ -4890,6 +4890,7 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      toastCommuneRequired: 'Enter the municipality of the business (e.g. Ixelles or Tervuren).',
       ownFeeLabel: 'Your delivery fee (you deliver yourself)',
       ownFeeHelp: 'You deliver: you set your fee, 100 %. This fixed amount replaces the Fairide rate (base fee + distance). Leave empty to keep the Fairide rate.',
       ownFeeInvalid: 'Delivery fee between €0 and €20.',
