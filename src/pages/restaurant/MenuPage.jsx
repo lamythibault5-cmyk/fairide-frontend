@@ -221,6 +221,15 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
     }
   }
 
+  // Rupture du jour d'un plat : bouton à côté de chaque produit, levée automatiquement le lendemain.
+  async function changerStock(itemId, outOfStock) {
+    try {
+      await api(`/restaurants/${restoId}/menu/${itemId}/stock`, { method: 'POST', token, body: { outOfStock } });
+      await loadDashboard(restoId);
+      toast(outOfStock ? t('menuItem.stockOutDone') : t('menuItem.stockBackDone'));
+    } catch (e) { toast(e.message, 'erreur'); throw e; }
+  }
+
   async function saveMenuItemOptionGroups(itemId, groupIds) {
     try {
       await api(`/restaurants/${restoId}/menu/${itemId}/option-groups`, { method: 'PATCH', token, body: { groupIds } });
@@ -691,6 +700,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
                               selectMode={selectSectionId === section.id} selected={selectedIds.has(item.id)} onToggleSelect={toggleItemSelected}
                               existingSubsections={sectionSubsections}
                               onSaveTranslations={saveMenuItemTranslation}
+                              onStock={changerStock}
                             />
                           ))}
                         </div>

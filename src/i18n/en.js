@@ -4216,6 +4216,10 @@ export default {
       deliveryDiscountPill: '🚴 -€{amount} delivery'
     },
     restoMenuUi: {
+      toastFullToday: 'This business has received all the orders it can prepare today. Come back tomorrow!',
+      fullTodayTitle: 'Fully booked today',
+      fullTodayText: '{name} has reached its number of orders for today. You can browse the menu and come back tomorrow.',
+      deliversUpTo: 'Delivers up to {km} km',
       statusOpen: 'Open',
       statusClosed: 'Closed',
       exceptionalClosure: '🏖️ Exceptional closure',
@@ -4601,6 +4605,20 @@ export default {
       requiredShort: ', required'
     },
     menuItem: {
+      save: 'Save',
+      delete: 'Delete',
+      makeAvailable: 'Make available',
+      markUnavailable: 'Remove from menu',
+      unavailable: 'Unavailable',
+      clickEdit: 'Click to edit',
+      clickSelect: 'Click to select',
+      stockOut: 'Sold out',
+      stockBack: 'Restock',
+      stockOutToday: 'Sold out today · back tomorrow automatically',
+      stockOutHelp: 'Nothing left to make it today? The dish is hidden from customers until tomorrow.',
+      stockBackHelp: 'You can make it again: put it back on sale now.',
+      stockOutDone: 'Dish sold out for today. It comes back on its own tomorrow.',
+      stockBackDone: 'Dish back on sale.',
       name: 'Name',
       description: 'Description',
       price: 'Price (€)',
@@ -4855,6 +4873,22 @@ export default {
       stepMoreHelp: 'Optional: translate your menu for English- and Dutch-speaking customers, or make a gesture on your prices.'
     },
     editResto: {
+      capacitySubCap: '{n} orders/day max',
+      rowCapacity: 'Orders and capacity',
+      capacitySubRadius: 'Delivery up to {km} km',
+      capacitySubNone: 'Distance and orders per day: no limit',
+      capacityRadiusTitle: 'Delivery distance',
+      capacityRadiusHelp: 'How far do you want to receive delivery orders? Beyond that, customers can still pick up.',
+      capacityNoLimit: 'No limit (default)',
+      capacityRadiusValue: 'Up to {km} km',
+      capacityCapTitle: 'Orders per day (maximum)',
+      capacityCapHelp: 'Worried about running out of food? Set a maximum: once reached, your business shows as "fully booked today". The counter resets every day.',
+      capacityPerDay: 'orders per day',
+      capacityToday: 'Today: {n} order(s) received.',
+      capacityCapInvalid: 'Enter a number of orders of at least 1.',
+      capacitySaved: 'Order settings saved.',
+      capacityStockHint: 'Nothing left to make a specific dish? Mark it sold out from your menu: it comes back on its own the next day.',
+      capacityStockLink: 'Go to my menu',
       phoneOnSite: 'Restaurant phone (in store)',
       managersTitle: 'Owner / managers',
       managersHelp: 'The people Fairide calls when needed. Never shown to customers.',
@@ -5814,6 +5848,7 @@ export default {
       discoverInfoJoin: 'List my business'
     },
     menuCategories: {
+      soldOutToday: 'Sold out today · back tomorrow',
       category: { entree: 'Starters', plat: 'Mains', dessert: 'Desserts', boisson: 'Drinks' },
       boisson: { froide: 'Cold drinks', chaude: 'Hot drinks', alcool: 'Alcohol' },
       cuisine: {

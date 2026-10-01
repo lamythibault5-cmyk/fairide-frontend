@@ -41,7 +41,7 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
           {/* Alcool : l'âge exigé à la remise, annoncé avant l'ajout au panier (backlog C3). */}
           {item.isAlcohol && <span className="plat-age" title={t('conformite.alcoholBadgeTitle', { age: Math.max(18, item.minAge || 18) })}> {Math.max(18, item.minAge || 18)}+</span>}
         </span>
-        {(indisponible || desc) && <span className="plat-desc">{indisponible ? t('menuCategories.unavailable') : desc}</span>}
+        {(indisponible || desc) && <span className="plat-desc">{indisponible ? (item.outOfStockToday ? t('menuCategories.soldOutToday') : t('menuCategories.unavailable')) : desc}</span>}
         {/* Allergènes déclarés (A1, palier 2) : listés sur la ligne quand il y en a ; « aucun des 14 » reste dans la fiche du plat. */}
         {item.allergens?.length > 0 && <span className="plat-allergenes">{t('conformite.allergensLine', { list: libellesAllergenes(item.allergens, t).join(', ') })}</span>}
         <span className="plat-prix-ligne">

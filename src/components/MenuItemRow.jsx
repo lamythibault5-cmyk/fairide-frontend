@@ -13,7 +13,7 @@ import { euros } from '../prixPlat';
 // La carte fermée reprend exactement le style des cartes vues par le client (image, nom, prix) — cliquer
 // dessus ouvre l'édition. Plus simple visuellement pour un restaurateur : il gère son menu en regardant
 // la même chose que ses clients, pas une liste administrative séparée.
-export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations }) {
+export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = [], onSetOptionGroups, onCreateOptionGroup, sections = [], reorderMode = false, restoId, selectMode = false, selected = false, onToggleSelect, existingSubsections = [], cuisine = '', onSaveTranslations, onStock }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
@@ -98,6 +98,15 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
     } finally {
       setTogglingAvailable(false);
     }
+  }
+
+  // Rupture du jour (fondateur, 2026-10-01) : un geste depuis la carte, sans ouvrir le plat. Il revient tout seul
+  // le lendemain (routes/restaurants.js remettreRupturesDuJour).
+  const [stockEnCours, setStockEnCours] = useState(false);
+  async function basculerStock(e) {
+    e.stopPropagation();
+    setStockEnCours(true);
+    try { await onStock(item.id, !item.outOfStockToday); } catch { /* message déjà affiché */ } finally { setStockEnCours(false); }
   }
 
   async function remove() {
@@ -253,11 +262,11 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         )}
 
         <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-          <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : 'Enregistrer'}</button>
+          <button className="btn-teal" disabled={saving} onClick={save}>{saving ? '...' : t('menuItem.save')}</button>
           <button className="btn-ghost" disabled={togglingAvailable} onClick={toggleAvailable}>
-            {togglingAvailable ? '...' : item.available === false ? '✅ Rendre disponible' : '🚫 Marquer indisponible'}
+            {togglingAvailable ? '...' : item.available === false ? `✅ ${t('menuItem.makeAvailable')}` : `🚫 ${t('menuItem.markUnavailable')}`}
           </button>
-          <button className="btn-danger-ghost" disabled={deleting} onClick={remove}>{deleting ? '...' : 'Supprimer'}</button>
+          <button className="btn-danger-ghost" disabled={deleting} onClick={remove}>{deleting ? '...' : t('menuItem.delete')}</button>
           <button className="btn-ghost" onClick={() => setEditing(false)}>{t('menuItem.close')}</button>
         </div>
       </div>
@@ -278,10 +287,10 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         cursor: reorderMode ? 'default' : 'pointer',
         position: 'relative',
         ...sortableStyle,
-        ...(item.available === false ? { opacity: 0.5 } : {})
+        ...(item.available === false ? { opacity: item.outOfStockToday ? 0.8 : 0.5 } : {})
       }}
       onClick={reorderMode ? undefined : selectMode ? () => onToggleSelect(item.id) : () => setEditing(true)}
-      title={reorderMode ? '' : selectMode ? 'Cliquer pour sélectionner' : 'Cliquer pour modifier'}
+      title={reorderMode ? '' : selectMode ? t('menuItem.clickSelect') : t('menuItem.clickEdit')}
     >
       {reorderMode && (
         <button
@@ -311,10 +320,16 @@ export default function MenuItemRow({ item, onSave, onDelete, allOptionGroups = 
         {item.vegan && <span className="dish-healthy" title={t('menuCategories.vegan')} aria-label={t('menuCategories.vegan')} role="img">{'\u00A0'}🌱</span>}
       </div>
       <div className="small desc">
-        {item.available === false ? 'Indisponible' : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
+        {item.outOfStockToday ? t('menuItem.stockOutToday') : item.available === false ? t('menuItem.unavailable') : (item.optionGroups?.length > 0 ? item.optionGroups.map((g) => g.name).join(', ') : '')}
       </div>
       <div className="bottom-row">
         <span className="price">{euros(item.price)}</span>
+        {onStock && !reorderMode && !selectMode && (item.available !== false || item.outOfStockToday) && (
+          <button type="button" className={`btn-stock${item.outOfStockToday ? ' btn-stock-rupture' : ''}`} disabled={stockEnCours} onClick={basculerStock}
+            aria-pressed={!!item.outOfStockToday} title={item.outOfStockToday ? t('menuItem.stockBackHelp') : t('menuItem.stockOutHelp')}>
+            {stockEnCours ? '…' : item.outOfStockToday ? `↩︎ ${t('menuItem.stockBack')}` : `⛔ ${t('menuItem.stockOut')}`}
+          </button>
+        )}
         {!reorderMode && <span className="btn-ghost" style={{ padding: '6px 12px' }}>✏️</span>}
       </div>
     </div>

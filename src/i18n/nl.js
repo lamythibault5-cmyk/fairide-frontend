@@ -4216,6 +4216,10 @@ export default {
       deliveryDiscountPill: '🚴 -€{amount} levering'
     },
     restoMenuUi: {
+      toastFullToday: 'Deze zaak heeft alle bestellingen ontvangen die ze vandaag kan klaarmaken. Kom morgen terug!',
+      fullTodayTitle: 'Vandaag volzet',
+      fullTodayText: '{name} heeft het aantal bestellingen van vandaag bereikt. Je kunt de kaart bekijken en morgen terugkomen.',
+      deliversUpTo: 'Levert tot {km} km',
       statusOpen: 'Open',
       statusClosed: 'Gesloten',
       exceptionalClosure: '🏖️ Uitzonderlijke sluiting',
@@ -4601,6 +4605,20 @@ export default {
       requiredShort: ', verplicht'
     },
     menuItem: {
+      save: 'Bewaren',
+      delete: 'Verwijderen',
+      makeAvailable: 'Beschikbaar maken',
+      markUnavailable: 'Van de kaart halen',
+      unavailable: 'Niet beschikbaar',
+      clickEdit: 'Klik om te bewerken',
+      clickSelect: 'Klik om te selecteren',
+      stockOut: 'Uitverkocht',
+      stockBack: 'Terugzetten',
+      stockOutToday: 'Vandaag uitverkocht · morgen automatisch terug',
+      stockOutHelp: 'Niets meer om het vandaag te maken? Het gerecht is verborgen voor klanten tot morgen.',
+      stockBackHelp: 'Je kunt het weer maken: zet het meteen terug in de verkoop.',
+      stockOutDone: 'Gerecht uitverkocht voor vandaag. Het komt morgen vanzelf terug.',
+      stockBackDone: 'Gerecht weer te koop.',
       name: 'Naam',
       description: 'Beschrijving',
       price: 'Prijs (€)',
@@ -4855,6 +4873,22 @@ export default {
       stepMoreHelp: 'Optioneel: je kaart vertalen voor Engels- en Nederlandstalige klanten, of een gebaar op je prijzen doen.'
     },
     editResto: {
+      capacitySubCap: 'max. {n} bestellingen/dag',
+      rowCapacity: 'Bestellingen en capaciteit',
+      capacitySubRadius: 'Levering tot {km} km',
+      capacitySubNone: 'Afstand en bestellingen per dag: geen limiet',
+      capacityRadiusTitle: 'Leverafstand',
+      capacityRadiusHelp: 'Tot waar wil je leverbestellingen ontvangen? Verder kunnen klanten nog altijd afhalen.',
+      capacityNoLimit: 'Geen limiet (standaard)',
+      capacityRadiusValue: 'Tot {km} km',
+      capacityCapTitle: 'Bestellingen per dag (maximum)',
+      capacityCapHelp: 'Bang om zonder eten te vallen? Stel een maximum in: eens bereikt, staat je zaak als "vandaag volzet". De teller begint elke dag opnieuw.',
+      capacityPerDay: 'bestellingen per dag',
+      capacityToday: 'Vandaag: {n} bestelling(en) ontvangen.',
+      capacityCapInvalid: 'Vul minstens 1 bestelling in.',
+      capacitySaved: 'Instellingen voor bestellingen bewaard.',
+      capacityStockHint: 'Niets meer om een bepaald gerecht te maken? Zet het op uitverkocht vanuit je kaart: het komt de volgende dag vanzelf terug.',
+      capacityStockLink: 'Naar mijn kaart',
       phoneOnSite: 'Telefoon van het restaurant (ter plaatse)',
       managersTitle: 'Eigenaar / verantwoordelijken',
       managersHelp: 'De mensen die Fairide belt als het nodig is. Nooit zichtbaar voor klanten.',
@@ -5814,6 +5848,7 @@ export default {
       discoverInfoJoin: 'Mijn zaak inschrijven'
     },
     menuCategories: {
+      soldOutToday: 'Vandaag uitverkocht · morgen terug',
       category: { entree: 'Voorgerechten', plat: 'Hoofdgerechten', dessert: 'Desserts', boisson: 'Dranken' },
       boisson: { froide: 'Koude dranken', chaude: 'Warme dranken', alcool: 'Alcohol' },
       cuisine: {

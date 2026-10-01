@@ -13,6 +13,7 @@ import EcranLivreurs from '../../components/commerce/EcranLivreurs';
 import EcranOffreLivraison from '../../components/commerce/EcranOffreLivraison';
 import EcranTypeCommerce from '../../components/commerce/EcranTypeCommerce';
 import EcranCuisines from '../../components/commerce/EcranCuisines';
+import EcranCapacite from '../../components/commerce/EcranCapacite';
 import { restaurantTypeLabel } from '../../menuCategories';
 import EcranSuppression from '../../components/commerce/EcranSuppression';
 
@@ -31,7 +32,7 @@ import EcranSuppression from '../../components/commerce/EcranSuppression';
 const ECRANS = {
   identite: EcranIdentite, contact: EcranContact, adresse: EcranAdresse, horaires: EcranHoraires,
   fermetures: EcranFermetures, legal: EcranLegal, livraison: EcranLivreurs, offre: EcranOffreLivraison,
-  type: EcranTypeCommerce, cuisines: EcranCuisines, suppression: EcranSuppression
+  type: EcranTypeCommerce, cuisines: EcranCuisines, suppression: EcranSuppression, capacite: EcranCapacite
 };
 
 function aujourdhuiIso() {
@@ -75,6 +76,8 @@ export default function EditPage() {
       <div className="card account-groupe" aria-label={t('editResto.delivery')}>
         {ligne('livraison', { icone: 'scooter', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.length }) : t('editResto.deliveryPool') })}
         {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
+        {/* Distance de livraison et plafond de commandes par jour (fondateur, 2026-10-01) : pas de limite par défaut. */}
+        {ligne('capacite', { icone: 'reglages', titre: t('editResto.rowCapacity'), sous: r.deliveryRadiusKm == null && r.maxOrdersPerDay == null ? t('editResto.capacitySubNone') : [r.deliveryRadiusKm != null && t('editResto.capacitySubRadius', { km: String(r.deliveryRadiusKm).replace('.', ',') }), r.maxOrdersPerDay != null && t('editResto.capacitySubCap', { n: r.maxOrdersPerDay })].filter(Boolean).join(' · ') })}
       </div>
 
       <div className="card account-groupe" aria-label={t('editResto.rowLegal')}>

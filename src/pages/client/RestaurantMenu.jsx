@@ -36,6 +36,8 @@ import FicheVendeur from '../../components/conformite/FicheVendeur';
 export default function RestaurantMenu() {
   const { id } = useParams();
   const [restaurant, setRestaurant] = useState(null);
+  // Plafond de commandes du jour atteint (réglé par le commerce) : on le dit avant le panier, pas au paiement.
+  const [complet, setComplet] = useState(false);
   const [erreur, setErreur] = useState(null);
   // Incrémenté par « Réessayer » : il suffit qu'il change pour que l'effet de chargement reparte.
   const [essai, setEssai] = useState(0);
@@ -137,6 +139,7 @@ export default function RestaurantMenu() {
        souvent la première de Fairide qu'un client voit. */
     setErreur(null);
     api(`/restaurants/${id}`, { token }).then(setRestaurant).catch(setErreur);
+    api(`/restaurants/${id}/capacity`).then((c) => setComplet(!!c.full)).catch(() => {});
     api(`/restaurants/${id}/reviews`).then(setReviews).catch(() => {});
     api('/restaurants').then((all) => setDiscover(all.filter((r) => r.id !== id).sort(() => Math.random() - 0.5).slice(0, 8))).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — inutile pour un visiteur anonyme.
@@ -284,6 +287,10 @@ export default function RestaurantMenu() {
     }
     if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
       toast(t('restoMenuUi.toastClosed'));
+      return;
+    }
+    if (complet) {
+      toast(t('restoMenuUi.toastFullToday'));
       return;
     }
     if (cart.hasConflict(id)) {
@@ -451,6 +458,10 @@ export default function RestaurantMenu() {
                 ? t('restaurantMenu.feeFree')
                 : t('restaurantMenu.feeFrom', { amount: DELIVERY_FEE.toFixed(2).replace('.', ',') })}</b>
             <span className="fiche-panneau-cle">{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</span>
+            {/* Distance choisie par le commerce (Mon commerce › Commandes et capacité). */}
+            {modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
+              <span className="fiche-panneau-cle">{t('restoMenuUi.deliversUpTo', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</span>
+            )}
           </div>
         )}
 
@@ -479,6 +490,12 @@ export default function RestaurantMenu() {
           </div>
         )}
 
+        {complet && (
+          <div className="closed-banner" role="status">
+            <div className="closed-banner-title">{t('restoMenuUi.fullTodayTitle')}</div>
+            <p className="small" style={{ margin: 0 }}>{t('restoMenuUi.fullTodayText', { name: restaurant.name })}</p>
+          </div>
+        )}
         {/* La fermeture reste seule en alerte : c'est la seule information qui empêche de commander.
             Les sept lignes d'horaires qu'elle dépliait sont maintenant dans « Infos ». */}
         {restaurant.hours && openStatus.isExceptionalClosure && (

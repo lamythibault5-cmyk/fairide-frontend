@@ -4227,6 +4227,10 @@ export default {
       deliveryDiscountPill: '🚴 -{amount}€ livraison'
     },
     restoMenuUi: {
+      toastFullToday: 'Ce commerce a reçu toutes les commandes qu\'il peut préparer aujourd\'hui. Reviens demain !',
+      fullTodayTitle: 'Complet pour aujourd\'hui',
+      fullTodayText: '{name} a atteint son nombre de commandes du jour. Tu peux regarder la carte et revenir demain.',
+      deliversUpTo: 'Livre jusqu\'à {km} km',
       statusOpen: 'Ouvert',
       statusClosed: 'Fermé',
       exceptionalClosure: '🏖️ Fermeture exceptionnelle',
@@ -4615,6 +4619,20 @@ export default {
       requiredShort: ', obligatoire'
     },
     menuItem: {
+      save: 'Enregistrer',
+      delete: 'Supprimer',
+      makeAvailable: 'Rendre disponible',
+      markUnavailable: 'Retirer de la carte',
+      unavailable: 'Indisponible',
+      clickEdit: 'Cliquer pour modifier',
+      clickSelect: 'Cliquer pour sélectionner',
+      stockOut: 'Rupture',
+      stockBack: 'Remettre',
+      stockOutToday: 'En rupture aujourd\'hui · revient demain automatiquement',
+      stockOutHelp: 'Plus de quoi le préparer aujourd\'hui ? Le plat est masqué aux clients jusqu\'à demain.',
+      stockBackHelp: 'Tu peux de nouveau le préparer : le remettre en vente tout de suite.',
+      stockOutDone: 'Plat en rupture pour aujourd\'hui. Il revient tout seul demain.',
+      stockBackDone: 'Plat remis en vente.',
       name: 'Nom',
       description: 'Description',
       price: 'Prix (€)',
@@ -4871,6 +4889,22 @@ export default {
       stepMoreHelp: 'Facultatif : traduire ta carte pour les clients anglophones et néerlandophones, ou faire un geste sur tes prix.'
     },
     editResto: {
+      capacitySubCap: '{n} commandes/jour max',
+      rowCapacity: 'Commandes et capacité',
+      capacitySubRadius: 'Livraison jusqu\'à {km} km',
+      capacitySubNone: 'Distance et commandes par jour : pas de limite',
+      capacityRadiusTitle: 'Distance de livraison',
+      capacityRadiusHelp: 'Jusqu\'où veux-tu recevoir des commandes en livraison ? Au-delà, les clients peuvent toujours venir chercher à emporter.',
+      capacityNoLimit: 'Pas de limite (par défaut)',
+      capacityRadiusValue: 'Jusqu\'à {km} km',
+      capacityCapTitle: 'Commandes par jour (maximum)',
+      capacityCapHelp: 'Peur de manquer de nourriture ? Fixe un maximum : une fois atteint, ton commerce s\'affiche « complet pour aujourd\'hui ». Le compteur repart de zéro chaque jour.',
+      capacityPerDay: 'commandes par jour',
+      capacityToday: 'Aujourd\'hui : {n} commande(s) reçue(s).',
+      capacityCapInvalid: 'Indique un nombre de commandes d\'au moins 1.',
+      capacitySaved: 'Réglages des commandes enregistrés.',
+      capacityStockHint: 'Plus de quoi préparer un plat précis ? Mets-le en rupture depuis ta carte : il revient tout seul le lendemain.',
+      capacityStockLink: 'Aller à ma carte',
       phoneOnSite: 'Téléphone du restaurant (sur place)',
       managersTitle: 'Patron / responsables',
       managersHelp: 'Les personnes que Fairide appelle en cas de besoin. Jamais affichées aux clients.',
@@ -5859,6 +5893,7 @@ export default {
       discoverInfoJoin: 'Inscrire mon commerce'
     },
     menuCategories: {
+      soldOutToday: 'Épuisé aujourd\'hui · de retour demain',
       category: { entree: 'Entrées', plat: 'Plats', dessert: 'Desserts', boisson: 'Boissons' },
       boisson: { froide: 'Boissons froides', chaude: 'Boissons chaudes', alcool: 'Alcool' },
       cuisine: {
