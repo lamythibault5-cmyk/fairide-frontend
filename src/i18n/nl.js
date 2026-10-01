@@ -6136,7 +6136,7 @@ export default {
       timePlaceholder: 'Uur...',
       noSlotsToday: 'Geen tijdslots meer beschikbaar voor deze dag.',
       noteColon: 'Je wens:',
-      scheduleLater: 'Voor later plannen',
+      scheduleLater: 'Inplannen',
       scheduledPreview: '🕐 Bestelling gepland voor: {preview}',
       addDish: '← Een gerecht toevoegen',
       itemsCountFrom: '{count} artikel · vanaf €{total}',

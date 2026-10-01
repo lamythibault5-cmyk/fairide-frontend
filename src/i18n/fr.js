@@ -6181,7 +6181,7 @@ export default {
       timePlaceholder: 'Heure...',
       noSlotsToday: 'Plus aucun créneau disponible pour ce jour.',
       noteColon: 'Ta demande :',
-      scheduleLater: 'Programmer pour plus tard',
+      scheduleLater: 'Programmer',
       scheduledPreview: '🕐 Commande programmée pour : {preview}',
       addDish: '← Ajouter un plat',
       itemsCountFrom: '{count} article · à partir de {total}€',

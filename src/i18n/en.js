@@ -6136,7 +6136,7 @@ export default {
       timePlaceholder: 'Time...',
       noSlotsToday: 'No more slots available for this day.',
       noteColon: 'Your request:',
-      scheduleLater: 'Schedule for later',
+      scheduleLater: 'Schedule',
       scheduledPreview: '🕐 Order scheduled for: {preview}',
       addDish: '← Add a dish',
       itemsCountFrom: '{count} item · from €{total}',
