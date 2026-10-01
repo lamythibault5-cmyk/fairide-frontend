@@ -761,6 +761,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
 .category-quicknav-sections {
   display: flex; flex-direction: row; align-items: center; gap: 6px; min-width: 0; flex: 1 1 auto;
   overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none;
+  position: relative; /* repère des offsetLeft des boutons (CategoryQuickNav recentre la rangée) */
 }
 .category-quicknav-sections::-webkit-scrollbar { display: none; }
 /* Navigation entre les sections de la carte : des pilules, et la section courante en IRIS.
@@ -4260,3 +4261,73 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Le bouton ne doit jamais élargir la carte : la grille débordait de l'écran sur téléphone. */
 .menu-item-card { min-width: 0; }
 .menu-item-card .bottom-row { flex-wrap: wrap; gap: 6px; }
+
+/* ── GESTES (gestes.js, 2026-10-01) ─────────────────────────────────────────────────────────────
+   Entrée et sortie de la fiche plat, glisser pour fermer, envol vers le panier, rebond de la pilule.
+   Tout est neutralisé par prefers-reduced-motion (bloc en fin de section). */
+@keyframes plat-monte { from { transform: translateY(100%); } to { transform: translateY(0); } }
+@keyframes plat-descend { from { transform: translateY(0); } to { transform: translateY(100%); } }
+@keyframes plat-apparait { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes plat-disparait { from { opacity: 1; } to { opacity: 0; transform: translateY(10px) scale(.98); } }
+@keyframes fond-apparait { from { background-color: rgba(20, 18, 31, 0); } }
+.plat-panneau { animation: plat-monte .32s cubic-bezier(.2, .9, .25, 1) both; transition: transform .25s cubic-bezier(.2, .9, .25, 1); will-change: transform; }
+.plat-feuille--ferme .plat-panneau { animation: plat-descend .23s cubic-bezier(.4, 0, 1, 1) both; }
+.plat-defile { overscroll-behavior: contain; }
+.plat-poignee { display: none; }
+@media (max-width: 900px) {
+  .plat-feuille { background: transparent; }
+  .plat-panneau { background: #fff; border-radius: 0; }
+  .plat-poignee {
+    display: block; position: absolute; z-index: 3; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+    width: 40px; height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .85); box-shadow: 0 1px 4px rgba(0, 0, 0, .25);
+  }
+  .plat-panneau { position: relative; }
+}
+@media (min-width: 901px) {
+  .plat-feuille { animation: fond-apparait .25s ease both; }
+  .plat-panneau { animation-name: plat-apparait; animation-duration: .26s; }
+  .plat-feuille--ferme { opacity: 0; transition: opacity .22s ease; }
+  .plat-feuille--ferme .plat-panneau { animation-name: plat-disparait; }
+}
+@keyframes chiffre-saute { 0% { transform: scale(.6); opacity: .4; } 60% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
+.plat-quantite-chiffre { display: inline-block; animation: chiffre-saute .22s ease-out; }
+
+.envol-panier {
+  position: fixed; z-index: 400; width: 56px; height: 56px; border-radius: 50%; overflow: hidden; pointer-events: none;
+  background: var(--lime); color: var(--ink); font-weight: 800; font-size: 18px;
+  display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 22px rgba(20, 18, 31, .28); border: 3px solid #fff;
+}
+.envol-panier img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+@keyframes pilule-arrive { from { transform: translate(-50%, 140%); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+@keyframes pilule-rebond { 0% { transform: translate(-50%, 0) scale(1); } 35% { transform: translate(-50%, 0) scale(1.08); } 65% { transform: translate(-50%, 0) scale(.97); } 100% { transform: translate(-50%, 0) scale(1); } }
+@keyframes compte-saute { 0% { transform: scale(.4); } 60% { transform: scale(1.35); } 100% { transform: scale(1); } }
+.panier-pilule { animation: pilule-arrive .35s cubic-bezier(.2, .9, .25, 1.15) both; }
+.panier-pilule--rebond { animation: pilule-rebond .45s cubic-bezier(.3, .7, .4, 1.4) both; }
+.panier-pilule-compte { animation: compte-saute .35s ease-out both; }
+@media (min-width: 901px) {
+  @keyframes pilule-arrive-d { from { transform: translateY(140%); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes pilule-rebond-d { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.08); } 65% { transform: scale(.97); } }
+  .panier-pilule { animation-name: pilule-arrive-d; }
+  .panier-pilule--rebond { animation-name: pilule-rebond-d; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .plat-panneau, .plat-feuille--ferme .plat-panneau, .plat-feuille, .plat-quantite-chiffre,
+  .panier-pilule, .panier-pilule--rebond, .panier-pilule-compte { animation: none !important; transition: none !important; }
+}
+
+/* Calendrier d'ouverture (BandeauOuverture.jsx) : même encart pour les quatre rôles. */
+.bandeau-ouverture { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; padding: 12px 14px; border-radius: var(--radius-field, 12px); background: #F4F2FF; border: 1px solid rgba(76, 61, 216, .25); color: var(--ink); font-size: 14px; line-height: 1.45; }
+.bandeau-ouverture-icone { color: var(--iris); flex: 0 0 auto; margin-top: 1px; }
+
+/* Demande de modification de carte (DemandeModifCarte.jsx). */
+.modif-carte textarea { font: inherit; padding: 10px 12px; border-radius: var(--radius-field, 12px); border: 1px solid var(--line); min-height: 76px; }
+.modif-carte-liste { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 8px; }
+.modif-carte-liste li { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; }
+.modif-carte-texte { font-size: 13px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.modif-carte-quand { grid-column: 2; color: var(--ink-faint); }
+.modif-statut { font-size: 11px; white-space: nowrap; }
+.modif-statut--en_attente { background: #FFF4D6; color: #7A5B00; }
+.modif-statut--en_cours { background: #E8E5FF; color: var(--iris); }
+.modif-statut--terminee { background: #E3F5EC; color: #1F7A4D; }
+.modif-statut--refusee { background: #FDECEC; color: #9B1C1C; }

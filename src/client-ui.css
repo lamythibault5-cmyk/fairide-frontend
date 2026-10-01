@@ -102,9 +102,16 @@
   background: #fff; color: var(--ink); font-size: 22px; font-weight: 600; line-height: 1; border: 1px solid var(--line);
   transition: background .15s, color .15s, transform .12s;
 }
-.plat-cliquable:hover .plat-ajout { background: var(--iris); color: #fff; border-color: var(--iris); }
-.plat-cliquable:active .plat-ajout { transform: scale(.92); }
-.plat-ajout-seul { position: static; align-self: center; flex-shrink: 0; }
+/* Le « + » est un bouton à part, frère du plat (MenuCategorySections.jsx) : posé sur le coin de la photo. */
+.plat-ligne { position: relative; }
+.plat-ligne > .plat-ajout { right: 6px; bottom: 20px; width: 40px; height: 40px; cursor: pointer; z-index: 1; box-shadow: 0 2px 6px rgba(20, 18, 31, .12); padding: 0; }
+.plat-ligne > .plat-ajout:hover { background: var(--iris); color: #fff; border-color: var(--iris); }
+.plat-ligne > .plat-ajout:active { transform: scale(.88); background: var(--lime); color: var(--ink); }
+.plat-ligne > .plat-ajout:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+/* Sans photo : le « + » se place à droite, centré, et le texte lui laisse la place. */
+.plat-ligne-sans-photo > .plat-ajout { bottom: auto; top: 50%; right: 0; transform: translateY(-50%); }
+.plat-ligne-sans-photo > .plat-ajout:active { transform: translateY(-50%) scale(.88); }
+.plat-ligne-sans-photo > .plat { padding-right: 52px; }
 .plat-indisponible { opacity: .55; }
 @media (max-width: 400px) { .plat-visuel { width: 96px; height: 96px; } .plat .plat-nom { font-size: 15px; } }
 /* Fiche du plat (FichePlat) : prix remisé sur la même ligne que l'ancien prix. */

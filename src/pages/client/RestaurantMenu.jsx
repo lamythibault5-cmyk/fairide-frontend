@@ -16,6 +16,7 @@ import { StarsDisplay } from '../../components/Stars';
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FichePlat from '../../components/FichePlat';
+import { envolerVersPanier, vibrer } from '../../gestes';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
@@ -275,7 +276,8 @@ export default function RestaurantMenu() {
     : restaurant.menu;
   const sectionsFiltrees = (restaurant.sections || []).filter((s) => menuFiltre.some((i) => (i.category || 'plat') === s.name));
 
-  function addToCart(item) {
+  // Contrôles communs à l'ouverture de la fiche et à l'ajout direct par le « + ». Renvoie false si l'ajout est bloqué.
+  function peutAjouter(item) {
     if (!user) {
       toast(t('restoMenuUi.toastLogin'));
       navigate('/login?audience=client', { state: { from: location.pathname } });
@@ -297,10 +299,25 @@ export default function RestaurantMenu() {
       setConflictItem(item);
       return;
     }
-    // TOUT plat ouvre sa fiche, avec ou sans options. Avant, un plat sans option partait au panier
-    // au premier contact : on ne pouvait ni lire sa description, ni voir la photo, ni en prendre
-    // deux. La fiche est l'écran du plat, pas un formulaire d'options (voir FichePlat.jsx).
+    return true;
+  }
+
+  function addToCart(item) {
+    if (!peutAjouter(item)) return;
+    // Toucher le PLAT ouvre sa fiche (photo en grand, description, options, quantité — voir FichePlat.jsx).
+    // Le « + » posé dessus, lui, ajoute directement (ajoutDirect ci-dessous).
     setPickerItem(item);
+  }
+
+  // LE « + » AJOUTE TOUT DE SUITE (fondateur, 2026-10-01) : une unité, sans options, et le plat s'envole vers le
+  // panier. Seule exception : un plat avec un choix OBLIGATOIRE (taille, sauce…) ouvre sa fiche — l'ajouter sans
+  // ce choix donnerait une commande que le commerce ne peut pas préparer (le serveur la refuserait).
+  function ajoutDirect(item, depuis, image) {
+    if (!peutAjouter(item)) return;
+    if ((item.optionGroups || []).some((g) => g.required)) { setPickerItem(item); return; }
+    vibrer(14);
+    envolerVersPanier({ depuis, image });
+    cart.addOne({ restaurantId: id, restaurantName: restaurant.name, itemId: item.id, name: localizedItem(item, language).name, imageUrl: resolveItemImage(item, restaurant.sections), unitPrice: item.price, optionItemIds: [], optionsSnapshot: [], qty: 1 });
   }
 
   // L'utilisateur a confirmé vouloir vider son panier (d'un autre commerce) pour continuer ici —
@@ -545,7 +562,7 @@ export default function RestaurantMenu() {
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
           <p className="small" style={{ margin: 0 }}>{t('restaurantMenu.noDishMatch', { q: requete })}</p>
         )}
-        <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} hideAdd={onlineOrderingDisabled} />
+        <MenuCategorySections menu={menuFiltre} sections={sectionsFiltrees} onAdd={addToCart} onQuickAdd={ajoutDirect} hideAdd={onlineOrderingDisabled} />
       </div>
 
       {/* Vendeur (A8) : toujours affiché avant la commande, désormais sous la carte plutôt qu'entre l'en-tête et les plats. */}

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
+import BandeauOuverture from '../../components/BandeauOuverture';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -170,6 +171,7 @@ export default function Orders() {
     return (
       <div>
         <h1 className="page-title">{titre}</h1>
+        <BandeauOuverture role="client" />
         {/* Le vide occupe toute la page ici : une ligne grise dans un cadre en pointillés y
             ressemblait à une panne. On nomme ce qui manque, et on donne le seul geste qui le
             remplit — parcourir les commerces. */}

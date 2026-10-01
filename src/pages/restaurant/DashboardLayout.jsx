@@ -14,6 +14,7 @@ import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { dateOuverturePaiements } from '../../launch';
+import BandeauOuverture from '../../components/BandeauOuverture';
 import { cuisineDepuisOsm } from '../../osmCuisine';
 import { demarrerTerminalNavigateur } from '../../terminalNavigateur';
 
@@ -290,6 +291,8 @@ export default function DashboardLayout() {
           )}
         </div>
       )}
+      {/* Les vraies dates d'ouverture des commandes (à emporter, livraison), en tête de l'accueil du commerce. */}
+      {restaurant && surAccueil && <BandeauOuverture role="restaurant" />}
       {newRestoOpen && surAccueil && <CreationCommerce fondateur={fondateur} onCree={commerceCree} ouvrirDemandeCarte={ouvrirDemandeCarte} />}
 
       {/* Ce qui bloque encore le commerce, en rangées du même dessin que Mon compte (LigneCompte) : la

@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import useDialogue from '../hooks/useDialogue';
 import { libellesAllergenes } from '../allergenes';
 import { prixRemise, euros } from '../prixPlat';
+import { envolerVersPanier, mouvementReduit, vibrer } from '../gestes';
 
 // LA FICHE D'UN PLAT. Jusqu'ici, un plat n'avait aucun écran à lui.
 //
@@ -37,13 +38,50 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   });
   const [qty, setQty] = useState(1);
   const racine = useRef(null);
+  const panneau = useRef(null);
+  const defile = useRef(null);
+  const boutonAjouter = useRef(null);
+  const [ferme, setFerme] = useState(false);
+
+  // SORTIE ANIMÉE : la feuille redescend avant de disparaître (et s'efface sur ordinateur), au lieu de s'éteindre
+  // d'un coup. `apres` part une fois l'animation finie ; sans mouvement, tout de suite.
+  function fermer(apres) {
+    if (ferme) return;
+    if (mouvementReduit()) { apres(); return; }
+    setFerme(true);
+    setTimeout(apres, 230);
+  }
+  const annuler = () => fermer(onCancel);
+
+  // GLISSER VERS LE BAS POUR FERMER (téléphone) : le geste natif d'une feuille. Il ne démarre que si la fiche est
+  // tout en haut — sinon on fait simplement défiler les options. Au-delà de 110px, ou lancé vite, la fiche part ;
+  // en deçà, elle revient en place.
+  const glisse = useRef(null);
+  function debutGlisse(e) {
+    if (window.innerWidth > 900 || (defile.current && defile.current.scrollTop > 0)) return;
+    glisse.current = { y0: e.touches[0].clientY, t0: Date.now(), dy: 0 };
+  }
+  function suiteGlisse(e) {
+    const g = glisse.current; if (!g || !panneau.current) return;
+    g.dy = Math.max(0, e.touches[0].clientY - g.y0);
+    if (g.dy > 0 && defile.current && defile.current.scrollTop <= 0) {
+      panneau.current.style.transition = 'none';
+      panneau.current.style.transform = `translateY(${g.dy}px)`;
+    }
+  }
+  function finGlisse() {
+    const g = glisse.current; glisse.current = null; if (!g || !panneau.current) return;
+    const vitesse = g.dy / Math.max(1, Date.now() - g.t0);
+    panneau.current.style.transition = '';
+    if (g.dy > 110 || (g.dy > 40 && vitesse > 0.6)) { vibrer(8); annuler(); } else panneau.current.style.transform = '';
+  }
 
   // Échap ferme, le fond de page ne défile plus derrière la feuille — même geste que la vue agrandie
   // du suivi (CarteSuivi.jsx), pour que la fermeture s'apprenne une seule fois. Le hook ajoute
   // ce qui manquait : le focus reste DANS la feuille tant qu'elle est ouverte, et revient au plat
   // qu'on venait d'ouvrir quand elle se ferme. La séparation en effets distincts — dont la raison
   // était notée ici — est reprise telle quelle dans le hook.
-  useDialogue(racine, onCancel);
+  useDialogue(racine, annuler);
 
   function choisirUnique(groupId, optionId) {
     setSelections((prev) => ({ ...prev, [groupId]: new Set([optionId]) }));
@@ -103,11 +141,13 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
   const bloque = manquants.length > 0;
 
   return createPortal(
-    <div className="plat-feuille" role="dialog" aria-modal="true" aria-label={item.name} ref={racine} tabIndex={-1}>
+    <div className={`plat-feuille${ferme ? ' plat-feuille--ferme' : ''}`} role="dialog" aria-modal="true" aria-label={item.name} ref={racine} tabIndex={-1}>
       {/* Le panneau : plein écran sur téléphone, encadré et centré au-dessus de la page sur
           ordinateur (voir styles.css). Sans lui, la fiche s'étalait sur 1400px pour un plat. */}
-      <div className="plat-panneau">
-      <div className="plat-defile">
+      <div className="plat-panneau" ref={panneau} onTouchStart={debutGlisse} onTouchMove={suiteGlisse} onTouchEnd={finGlisse} onTouchCancel={finGlisse}>
+      {/* Poignée : sur téléphone, elle dit qu'on peut tirer la fiche vers le bas pour la fermer. */}
+      <span className="plat-poignee" aria-hidden="true" />
+      <div className="plat-defile" ref={defile}>
         {/* La photo d'abord, en grand : c'est ce qu'on vient voir. Sans photo, pas de cadre vide —
             l'écran commence simplement au nom. */}
         {imageUrl && (
@@ -120,7 +160,7 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
         <button
           type="button"
           className={`plat-fermer${imageUrl ? ' plat-fermer--sur-photo' : ''}`}
-          onClick={onCancel}
+          onClick={annuler}
           aria-label={t('common.close')}
         >
           <span aria-hidden="true">×</span>
@@ -194,15 +234,21 @@ export default function FichePlat({ item, imageUrl, onConfirm, onCancel }) {
             moindre explication, exactement ce qu'on cherchait à éviter. */}
         {bloque && <p className="plat-bloque">{t('platSheet.chooseRequired', { groupe: manquants[0].name })}</p>}
         <div className="plat-quantite" role="group" aria-label={t('platSheet.quantity')}>
-          <button type="button" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
-          <span aria-live="polite">{qty}</span>
-          <button type="button" onClick={() => setQty((q) => Math.min(99, q + 1))} disabled={qty >= 99} aria-label={t('platSheet.more')}>+</button>
+          <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.max(1, q - 1)); }} disabled={qty <= 1} aria-label={t('platSheet.less')}>−</button>
+          <span aria-live="polite" key={qty} className="plat-quantite-chiffre">{qty}</span>
+          <button type="button" onClick={() => { vibrer(6); setQty((q) => Math.min(99, q + 1)); }} disabled={qty >= 99} aria-label={t('platSheet.more')}>+</button>
         </div>
         <button
           type="button"
           className="btn-gold plat-ajouter"
-          disabled={bloque}
-          onClick={() => onConfirm(optionItemIds, snapshot, prixUnite, qty)}
+          ref={boutonAjouter}
+          disabled={bloque || ferme}
+          onClick={() => {
+            // Le plat s'envole vers le panier pendant que la fiche redescend : on voit où il est parti.
+            vibrer(14);
+            envolerVersPanier({ depuis: boutonAjouter.current?.getBoundingClientRect(), image: imageUrl, quantite: qty });
+            fermer(() => onConfirm(optionItemIds, snapshot, prixUnite, qty));
+          }}
         >
           {/* Le libellé annonce la quantité ET le prix : on sait ce qu'on ajoute sans remonter. */}
           {t('platSheet.add', { n: qty })} · {euros(total)}

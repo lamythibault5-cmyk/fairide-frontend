@@ -22,6 +22,7 @@ import ConformiteCarte from '../../components/conformite/ConformiteCarte';
 import MenuReadiness from '../../components/MenuReadiness';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import HaussePrix from '../../components/HaussePrix';
+import DemandeModifCarte from '../../components/DemandeModifCarte';
 
 // `contexte` remplace le contexte de l'Outlet quand la page est montée ailleurs que dans le tableau de bord
 // (console admin : AdminMenuPage) ; `modeAdmin` retire la demande « Fairide s'en occupe », sans objet pour l'équipe.
@@ -603,6 +604,8 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
           <p className="small" style={{ margin: 0 }}>{t('menuPage.stepEditHelp')}</p>
         </div>
       </div>
+      {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
+      {!modeAdmin && restaurant.menu.length > 0 && <DemandeModifCarte restoId={restoId} />}
       <div className="card" id="menu-liste">
         <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 15 }}>{t('menuPage.yourMenu')}</h3>

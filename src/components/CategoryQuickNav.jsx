@@ -34,6 +34,10 @@ export default function CategoryQuickNav({ categories }) {
   categoriesRef.current = categories;
   const buttonRefs = useRef(new Map());
   const barreRef = useRef(null);
+  const rangeeRef = useRef(null);
+  // Pendant le défilement lancé par un clic, le suivi est suspendu : la barre ne s'allume pas sur chaque section
+  // traversée, elle reste sur celle qu'on a demandée (voir jumpTo).
+  const verrou = useRef(0);
 
   useEffect(() => {
     // Scroll-spy par position plutôt que par IntersectionObserver : la section active est la DERNIÈRE
@@ -45,6 +49,7 @@ export default function CategoryQuickNav({ categories }) {
     let ticking = false;
     function computeActive() {
       ticking = false;
+      if (Date.now() < verrou.current) return;
       const bas = barreRef.current?.getBoundingClientRect().bottom;
       const seuil = (bas > 0 ? bas : SEUIL_REPLI_PX) + MARGE_SEUIL_PX;
       let current = categoriesRef.current[0]?.id;
@@ -78,21 +83,36 @@ export default function CategoryQuickNav({ categories }) {
   // serait sinon resté hors champ à droite tant qu'on n'a pas fait glisser la barre à la main).
   // block: 'nearest' pour ne jamais provoquer de scroll VERTICAL de la page en plus (le bouton est déjà
   // visible verticalement puisque la barre est sticky en haut) — seul le défilement horizontal compte ici.
+  //
+  // PLUS DE scrollIntoView ICI (2026-10-01). Même en « nearest », il fait défiler TOUS les ancêtres — et Chrome
+  // comme Safari interrompent alors le défilement doux de la page en cours : en touchant « Desserts » au bout de la
+  // carte, la page s'arrêtait à mi-chemin, sur la première section traversée. On ne fait défiler que la rangée.
   useEffect(() => {
     const btn = buttonRefs.current.get(active);
-    if (btn) btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    const rangee = rangeeRef.current;
+    if (!btn || !rangee) return;
+    const cible = btn.offsetLeft - (rangee.clientWidth - btn.offsetWidth) / 2;
+    rangee.scrollTo({ left: Math.max(0, cible), behavior: 'smooth' });
   }, [active]);
 
   function jumpTo(id) {
     const el = document.getElementById(`menu-cat-${id}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!el) return;
+    const doux = !window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    // La section demandée s'allume tout de suite ; le suivi reprend une fois le défilement fini (scrollend), ou
+    // au plus tard après 1,2 s pour les navigateurs qui n'ont pas cet événement.
+    setActive(id);
+    verrou.current = Date.now() + 1200;
+    const liberer = () => { verrou.current = 0; window.removeEventListener('scrollend', liberer); };
+    window.addEventListener('scrollend', liberer);
+    el.scrollIntoView({ behavior: doux ? 'smooth' : 'auto', block: 'start' });
   }
 
   if (categories.length < 2) return null;
 
   return (
     <div className="category-quicknav" ref={barreRef}>
-      <div className="category-quicknav-sections">
+      <div className="category-quicknav-sections" ref={rangeeRef}>
         {categories.map((c) => (
           <button
             key={c.id}

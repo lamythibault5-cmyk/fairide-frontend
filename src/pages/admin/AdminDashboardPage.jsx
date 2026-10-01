@@ -1,3 +1,4 @@
+import BandeauOuverture from '../../components/BandeauOuverture';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -85,6 +86,7 @@ export default function AdminDashboardPage() {
   return (
     <div>
       {entete}
+      <BandeauOuverture role="admin" style={{ marginBottom: 12 }} />
       <p className="small" style={{ marginTop: -8, marginBottom: 12 }}>
         {tr('adminDash.ratesLine', { rate: (data.commissionRate * 100).toFixed(0), share: ((data.deliveryFairideRate ?? 0.1) * 100).toFixed(0) })}
       </p>

@@ -13,6 +13,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 // Montants et distances au format de la langue (« 4,50 », « 0,3 ») : toFixed écrivait « 4.50 € » en français.
 const dec = (v, n = 2) => Number(v || 0).toLocaleString(getLocale(), { minimumFractionDigits: n, maximumFractionDigits: n });
 import { dateOuverturePaiements } from '../../launch';
+import BandeauOuverture from '../../components/BandeauOuverture';
 import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
@@ -298,6 +299,7 @@ export default function DriverDashboard() {
 
   return (
     <div>
+      <BandeauOuverture role="driver" />
       {/* L'INTERRUPTEUR EN TÊTE (2026-09-23). Comme l'app Uber Driver : la première chose que le
           livreur voit, c'est s'il reçoit des courses ou non, et le geste pour changer, sur toute la
           largeur. Avant, « Pause » était un petit bouton au bout d'une rangée, sous deux liens vers le

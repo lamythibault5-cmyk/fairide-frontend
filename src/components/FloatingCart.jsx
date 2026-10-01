@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -26,15 +26,24 @@ export default function FloatingCart() {
     document.documentElement.classList.add('avec-pilule-panier');
     return () => document.documentElement.classList.remove('avec-pilule-panier');
   }, [visible]);
+  // Rebond à l'arrivée d'un plat (gestes.js envolerVersPanier) ou quand le compte augmente par un autre chemin.
+  const [rebond, setRebond] = useState(0);
+  const avant = useRef(cart.count);
+  useEffect(() => {
+    const ecoute = () => setRebond((n) => n + 1);
+    window.addEventListener('fairide:panier-atterri', ecoute);
+    return () => window.removeEventListener('fairide:panier-atterri', ecoute);
+  }, []);
+  useEffect(() => { if (cart.count > avant.current) setRebond((n) => n + 1); avant.current = cart.count; }, [cart.count]);
   if (!visible) return null;
 
   return (
-    <Link to="/panier" className="panier-pilule">
+    <Link to="/panier" className={`panier-pilule${rebond ? ' panier-pilule--rebond' : ''}`} key={`pilule-${rebond}`}>
       <span className="panier-pilule-icone" aria-hidden="true">
         <Icone nom="sac" taille={20} />
         {/* Le compteur sur l'icone, comme sur une application de courses : on voit d'un coup d'oeil
             combien d'articles attendent, sans avoir a lire. */}
-        <span className="panier-pilule-compte">{cart.count}</span>
+        <span className="panier-pilule-compte" key={cart.count}>{cart.count}</span>
       </span>
       <span>{t('panier.viewCart')}</span>
       <b>{euros(cart.rawTotal)}</b>

@@ -22,7 +22,7 @@ import { prixRemise, euros } from '../prixPlat';
 // le « + ». C'est la forme qui se parcourt le plus vite au pouce (une colonne, la photo ne coupe pas le texte), et
 // un plat sans photo ne laisse plus de trou. Toute la ligne reste le bouton (voir l'ancien commentaire : une cible
 // de 30 px dans une carte de 250 obligeait à viser).
-function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
+function ItemCard({ item, onAdd, onQuickAdd, hideAdd, t, sections, language }) {
   const image = resolveItemImage(item, sections);
   // Nom et description dans la langue affichée, avec repli sur le texte du restaurateur (localizedItem).
   const { name, desc } = localizedItem(item, language);
@@ -54,19 +54,25 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
       {image ? (
         <span className="plat-visuel">
           <img loading="lazy" src={image} alt="" className="plat-photo" />
-          {cliquable && <span className="plat-ajout" aria-hidden="true">+</span>}
         </span>
-      ) : (
-        cliquable && <span className="plat-ajout plat-ajout-seul" aria-hidden="true">+</span>
-      )}
+      ) : null}
     </>
   );
   const classes = `plat${image ? '' : ' plat-sans-photo'}${indisponible ? ' plat-indisponible' : ''}`;
   if (!cliquable) return <div className={classes}>{contenu}</div>;
+  // DEUX GESTES, DEUX BOUTONS (fondateur, 2026-10-01) : toucher le plat ouvre sa fiche (photo, description,
+  // options) ; toucher le « + » l'ajoute tout de suite au panier. Deux boutons frères et non imbriqués : un bouton
+  // dans un bouton n'est pas du HTML valide, et le second toucher déclenchait aussi le premier.
   return (
-    <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
-      {contenu}
-    </button>
+    <div className={`plat-ligne${image ? '' : ' plat-ligne-sans-photo'}`}>
+      <button type="button" className={`${classes} plat-cliquable`} onClick={() => onAdd(item)} aria-label={`${name}, ${euros(remise ?? item.price)}`}>
+        {contenu}
+      </button>
+      <button type="button" className="plat-ajout" aria-label={t('menuCategories.quickAdd', { name })}
+        onClick={(e) => { e.stopPropagation(); (onQuickAdd || onAdd)(item, e.currentTarget.getBoundingClientRect(), image); }}>
+        <span aria-hidden="true">+</span>
+      </button>
+    </div>
   );
 }
 
@@ -78,7 +84,7 @@ function ItemCard({ item, onAdd, hideAdd, t, sections, language }) {
 // manuelle retombe sur l'ancienne déduction automatique (chaudes/alcool/froides) par nom, pour ne
 // pas casser les menus déjà en place. Partagé entre la page client (RestaurantMenu) et l'aperçu
 // restaurateur (RestaurantPreview) pour que les deux restent strictement identiques.
-export default function MenuCategorySections({ menu, sections, onAdd, hideAdd }) {
+export default function MenuCategorySections({ menu, sections, onAdd, onQuickAdd, hideAdd }) {
   const { t, language } = useLanguage();
   return (
     <>
@@ -97,7 +103,7 @@ export default function MenuCategorySections({ menu, sections, onAdd, hideAdd })
               <div key={group.key || '__none'}>
                 {group.label && <div className="sub-category-header"><span>{group.label}</span></div>}
                 <div className="plats-liste">
-                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} hideAdd={hideAdd} t={t} sections={sections} language={language} />)}
+                  {group.items.map((item) => <ItemCard key={item.id} item={item} onAdd={onAdd} onQuickAdd={onQuickAdd} hideAdd={hideAdd} t={t} sections={sections} language={language} />)}
                 </div>
               </div>
             ))}
