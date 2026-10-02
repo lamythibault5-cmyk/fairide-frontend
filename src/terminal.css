@@ -40,3 +40,6 @@
 .terminal-choix label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-card-sm); cursor: pointer; background: #fff; }
 .terminal-choix label.est-actif { border-color: var(--iris); box-shadow: inset 2px 0 0 var(--iris); }
 .terminal-choix input { width: auto; margin-top: 3px; }
+
+/* Terminal relié à un autre compte, ou arrêté tout seul (compte supprimé, terminal retiré). */
+.terminal-arrete { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: var(--surface-soft); border-left: 4px solid var(--iris); font-weight: 600; }

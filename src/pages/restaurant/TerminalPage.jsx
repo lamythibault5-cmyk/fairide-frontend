@@ -5,10 +5,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { dansTerminal, infosAppareil, etatImprimante, terminalAssocie, transmettreJeton } from '../../terminalBridge';
+import { dansTerminal, infosAppareil, etatImprimante, terminalAssocie, transmettreJeton, oublierJeton } from '../../terminalBridge';
 import '../../terminal.css';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
-import { abonnerTerminalNavigateur, associerTerminalNavigateur, oublierTerminalNavigateur } from '../../terminalNavigateur';
+import { abonnerTerminalNavigateur, associerTerminalNavigateur, deconnecterTerminalNavigateur } from '../../terminalNavigateur';
 
 // Ticket de test fabriqué ici, sans passer par le serveur : il vérifie seulement le canal page → service Goodcom →
 // imprimante (installation). Le test « complet », par la file d'impression, reste le bouton plus bas.
@@ -31,6 +31,8 @@ export default function TerminalPage() {
   const [donnees, setDonnees] = useState(null);
   const [busy, setBusy] = useState(false);
   const [aRetirer, setARetirer] = useState(null);
+  // Reprise d'un terminal relié à un autre compte : confirmée avant d'agir (l'autre compte perd ce terminal).
+  const [reprise, setReprise] = useState(false);
   const [ici, setIci] = useState(() => ({ terminal: dansTerminal(), associe: terminalAssocie(), imprimante: etatImprimante() }));
   // Goodcom utilisé depuis le navigateur (sans coque Android) : service d'impression détecté ? appareil associé ?
   const [goodcom, setGoodcom] = useState(null); // null = test en cours, true / false
@@ -63,6 +65,8 @@ export default function TerminalPage() {
     setBusy(true);
     try {
       const info = infosAppareil() || {};
+      // Le numéro de série suffit au serveur pour remplacer l'ancienne ligne de CET appareil dans ce commerce ; le
+      // nouveau jeton remplace l'ancien dans la coque, quel que soit le compte auquel il était relié.
       const r = await api(`/restaurants/${restoId}/terminals`, { method: 'POST', token, body: { ...info, label: info.model ? `${info.model}` : undefined } });
       if (!transmettreJeton(r.token, API_BASE)) throw new Error(t('terminal.bridgeError'));
       setIci({ terminal: true, associe: true, imprimante: etatImprimante() });
@@ -95,25 +99,35 @@ export default function TerminalPage() {
     catch (e) { toast(t('terminal.webDirectFail', { reason: t(`terminal.printer_${e.code || 'unknown'}`) }), 'erreur'); }
     finally { setBusy(false); }
   }
+  // UN TERMINAL SUIT LE COMPTE QUI S'Y CONNECTE (fondateur, 2026-10-03). Si l'appareil est déjà relié à un autre compte,
+  // on envoie le jeton qu'il détient : le serveur retire l'ancienne association et crée celle de ce compte.
   async function associerNavigateur() {
-    setBusy(true);
+    setBusy(true); setReprise(false);
     try {
-      const r = await api(`/restaurants/${restoId}/terminals`, { method: 'POST', token, body: { label: t('terminal.webLabel'), model: 'Goodcom GT81H', appVersion: 'web-1', paperColumns: 32 } });
-      associerTerminalNavigateur({ token: r.token, terminalId: r.terminal.id, restaurantId: restoId });
-      toast(t('terminal.webPaired'));
+      const r = await api(`/restaurants/${restoId}/terminals`, { method: 'POST', token, body: { label: t('terminal.webLabel'), model: 'Goodcom GT81H', appVersion: 'web-1', paperColumns: 32, previousToken: web?.config?.token } });
+      associerTerminalNavigateur({ token: r.token, terminalId: r.terminal.id, restaurantId: restoId, restaurantName: r.restaurant?.name || '' });
+      toast(t(r.takenOver ? 'terminal.webTakenOver' : 'terminal.webPaired'));
       charger();
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
+  // Déconnexion : le terminal se retire lui-même (son jeton suffit), même s'il était relié à un autre compte.
   async function dissocierNavigateur() {
-    const id = web?.config?.terminalId;
     setBusy(true);
     try {
-      if (id) await api(`/restaurants/${restoId}/terminals/${id}`, { method: 'DELETE', token }).catch(() => {});
-      oublierTerminalNavigateur();
+      await deconnecterTerminalNavigateur();
       toast(t('terminal.webUnpaired'));
       charger();
     } finally { setBusy(false); }
   }
+  function deconnecterCoque() {
+    oublierJeton();
+    setIci({ terminal: true, associe: terminalAssocie(), imprimante: etatImprimante() });
+    toast(t('terminal.webUnpaired'));
+    charger();
+  }
+  // L'appareil est-il relié à CE compte, ou à un autre ?
+  const relieIci = !!web?.config && String(web.config.restaurantId) === String(restoId);
+  const relieAilleurs = !!web?.config && !relieIci;
 
   const quand = (d) => (d ? new Date(d).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—');
 
@@ -129,7 +143,11 @@ export default function TerminalPage() {
             {ici.associe ? t('terminal.thisDevicePaired') : t('terminal.thisDeviceNotPaired')}
             {ici.imprimante ? ` · ${t('terminal.printerLabel')} : ${t(`terminal.printer_${ici.imprimante}`)}` : ''}
           </p>
-          {!ici.associe && <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={associerCeTerminal}>{t('terminal.pairThis')}</button>}
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={associerCeTerminal}>{ici.associe ? t('terminal.pairThisAgain') : t('terminal.pairThis')}</button>
+            {ici.associe && <button type="button" className="btn-ghost" disabled={busy} onClick={deconnecterCoque}>{t('terminal.webUnpair')}</button>}
+          </div>
+          {ici.associe && <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-faint)' }}>{t('terminal.pairThisAgainHelp')}</p>}
         </div>
       )}
 
@@ -143,7 +161,14 @@ export default function TerminalPage() {
               : <span className="print-etat attente">{t('terminal.webNotDetected')}</span>}
             {goodcom === false && <button type="button" className="btn-ghost" onClick={detecter}>{t('terminal.webRetry')}</button>}
           </p>
-          {web?.config ? (
+          {/* Le terminal s'est arrêté tout seul : on dit pourquoi. */}
+          {!web?.config && web?.motif && <p className="small terminal-arrete" role="status">{t(`terminal.stopped_${['ACCOUNT_DELETED', 'TERMINAL_UNKNOWN', 'TERMINAL_REVOKED'].includes(web.motif) ? web.motif : 'TERMINAL_REVOKED'}`)}</p>}
+          {relieAilleurs && (
+            <p className="small terminal-arrete" role="status">
+              {t('terminal.webOtherAccount', { name: web.config.restaurantName || (web.config.simulation ? t('terminal.webOtherSimulation') : t('terminal.webOtherUnknown')) })}
+            </p>
+          )}
+          {relieIci ? (
             <>
               <p className="small" style={{ margin: '0 0 10px' }}>
                 <span className={`print-etat ${web.imprimante === 'ok' ? 'ok' : 'attente'}`}>{t('terminal.webActive')}</span>
@@ -157,6 +182,7 @@ export default function TerminalPage() {
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {goodcom && <button type="button" className="btn-outline" disabled={busy} onClick={testDirect}>{t('terminal.webDirectTest')}</button>}
             {goodcom && !web?.config && <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={associerNavigateur}>{t('terminal.webPair')}</button>}
+            {relieAilleurs && <button type="button" className="btn-teal" disabled={busy || !restoId} onClick={() => setReprise(true)}>{t('terminal.webTakeover')}</button>}
             {web?.config && <button type="button" className="btn-ghost" disabled={busy} onClick={dissocierNavigateur}>{t('terminal.webUnpair')}</button>}
           </div>
         </div>
@@ -216,6 +242,8 @@ export default function TerminalPage() {
         </div>
       </div>
 
+      <ConfirmDialog open={reprise} title={t('terminal.webTakeover')} message={t('terminal.webTakeoverText', { name: web?.config?.restaurantName || t('terminal.webOtherUnknown') })}
+        confirmLabel={t('terminal.webTakeover')} loading={busy} onCancel={() => setReprise(false)} onConfirm={associerNavigateur} />
       <ConfirmDialog open={!!aRetirer} danger title={t('terminal.removeTitle')} message={t('terminal.removeText', { name: aRetirer?.label || '' })}
         confirmLabel={t('terminal.remove')} onCancel={() => setARetirer(null)} onConfirm={retirer} />
     </div>

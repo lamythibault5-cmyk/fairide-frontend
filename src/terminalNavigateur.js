@@ -24,15 +24,30 @@ export function configTerminalNavigateur() { return config; }
 export function abonnerTerminalNavigateur(f) { abonnes.add(f); f({ ...etat, config }); return () => abonnes.delete(f); }
 
 export function associerTerminalNavigateur(c) {
+  // Déjà en marche pour un autre compte : on arrête ses boucles et son flux (ouvert avec l'ancien jeton) avant de
+  // repartir proprement avec le nouveau.
+  if (etat.actif) { arreter(); etat = { ...etat, actif: false }; }
+  etat = { ...etat, motif: null, derniereErreur: null };
   config = c;
   try { localStorage.setItem(CLE, JSON.stringify(c)); } catch { /* sans stockage */ }
   demarrerTerminalNavigateur();
 }
-export function oublierTerminalNavigateur() {
+// `motif` : pourquoi le terminal s'est arrêté quand ce n'est pas l'utilisateur qui l'a demandé (compte supprimé,
+// terminal retiré depuis un autre appareil ou repris par un autre compte) — la page l'explique au lieu de se taire.
+export function oublierTerminalNavigateur(motif = null) {
   arreter();
   config = null;
   try { localStorage.removeItem(CLE); } catch { /* rien */ }
-  majEtat({ actif: false });
+  majEtat({ actif: false, motif });
+}
+// Déconnecter CE terminal : il se retire lui-même côté serveur avec son propre jeton — quel que soit le compte ouvert
+// sur l'appareil —, puis oublie son association. Si le serveur est injoignable, l'appareil oublie quand même.
+export async function deconnecterTerminalNavigateur() {
+  // On oublie D'ABORD (boucles arrêtées, plus aucune requête ne part), puis on retire le terminal côté serveur : une
+  // requête encore en vol ne peut plus transformer cette déconnexion voulue en « terminal retiré » affiché à l'écran.
+  const jeton = config?.token;
+  oublierTerminalNavigateur();
+  if (jeton) await api('/terminal/me', { method: 'DELETE', token: jeton, logoutOn401: false }).catch(() => {});
 }
 
 let minuteries = []; let fluxCtrl = null; let enCours = false; let aRefaire = false;
@@ -41,9 +56,22 @@ function arreter() {
   try { fluxCtrl?.abort(); } catch { /* rien */ }
   fluxCtrl = null;
 }
-const appel = (chemin, opts = {}) => api(chemin, { ...opts, token: config?.token, logoutOn401: false });
+// Chaque appel retient le jeton avec lequel il est parti : un refus ne vaut que pour CE jeton.
+const appel = (chemin, opts = {}) => {
+  const jeton = config?.token;
+  return api(chemin, { ...opts, token: jeton, logoutOn401: false }).catch((e) => { try { e.jetonTerminal = jeton; } catch { /* erreur non extensible */ } throw e; });
+};
 function sessionPerdue(e) {
-  if (e?.status === 401 || ['TERMINAL_REVOKED', 'TERMINAL_UNKNOWN'].includes(e?.code)) { oublierTerminalNavigateur(); return true; }
+  if (e?.status === 401 || ['TERMINAL_REVOKED', 'TERMINAL_UNKNOWN', 'ACCOUNT_DELETED'].includes(e?.code)) {
+    // REPRISE PAR UN AUTRE COMPTE : l'ancien jeton vient d'être retiré et le nouveau est déjà en place. Une requête
+    // partie avec l'ancien revient « terminal retiré » — elle ne doit pas effacer la nouvelle association (c'est ce
+    // qui arrivait : le terminal se déconnectait à l'instant où on le connectait au nouveau compte).
+    if (e?.jetonTerminal && config?.token && e.jetonTerminal !== config.token) return true;
+    // Déjà déconnecté (par l'utilisateur) : la réponse tardive d'une requête en vol n'a plus rien à dire.
+    if (!config) return true;
+    oublierTerminalNavigateur(['TERMINAL_REVOKED', 'TERMINAL_UNKNOWN', 'ACCOUNT_DELETED'].includes(e?.code) ? e.code : 'TERMINAL_REVOKED');
+    return true;
+  }
   return false;
 }
 
@@ -97,8 +125,14 @@ async function ecouter() {
   while (config) {
     fluxCtrl = new AbortController();
     try {
-      const r = await fetch(`${API_BASE}/terminal/events`, { headers: { Authorization: `Bearer ${config.token}`, Accept: 'text/event-stream' }, signal: fluxCtrl.signal });
-      if (r.status === 401) { oublierTerminalNavigateur(); return; }
+      const jetonFlux = config.token;
+      const r = await fetch(`${API_BASE}/terminal/events`, { headers: { Authorization: `Bearer ${jetonFlux}`, Accept: 'text/event-stream' }, signal: fluxCtrl.signal });
+      if (r.status === 401) {
+        // Même règle que sessionPerdue : si le jeton a changé entre-temps (reprise), on se reconnecte avec le nouveau.
+        if (!config) return;
+        if (config.token !== jetonFlux) continue;
+        const corps = await r.json().catch(() => ({})); oublierTerminalNavigateur(corps.code || 'TERMINAL_REVOKED'); return;
+      }
       if (!r.ok || !r.body) throw new Error(`flux ${r.status}`);
       attente = 1000;
       const lecteur = r.body.getReader(); const dec = new TextDecoder(); let tampon = '';

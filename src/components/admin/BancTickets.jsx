@@ -54,18 +54,20 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   async function connecter() {
     const coque = dansTerminal();
     // Cet appareil sert déjà de terminal à un vrai commerce : on ne lui retire pas son association.
+    // Appareil déjà relié à un vrai commerce : on le reprend pour la simulation seulement après confirmation (ce
+    // commerce perd son terminal et devra le reconnecter).
     const deja = configTerminalNavigateur();
-    if (deja && deja.simulation !== true) { toast(tr('simulation.benchAlreadyTerminal'), 'erreur'); return; }
+    if (deja && deja.simulation !== true && !window.confirm(tr('simulation.benchTakeoverConfirm', { name: deja.restaurantName || '—' }))) return;
     setOccupe('terminal');
     try {
       if (!coque && !(await serviceGoodcomDisponible({ forcer: true }))) { toast(tr('simulation.benchNoPrinter'), 'erreur'); return; }
       const infos = coque ? infosAppareil() || {} : {};
       const r = await api('/admin/simulation/terminal', {
         method: 'POST', token,
-        body: { model: infos.model || (coque ? 'Terminal Fairide' : 'Goodcom (navigateur)'), serial: infos.serial, appVersion: infos.appVersion, androidVersion: infos.androidVersion, paperColumns: infos.paperColumns || 32 }
+        body: { model: infos.model || (coque ? 'Terminal Fairide' : 'Goodcom (navigateur)'), serial: infos.serial, appVersion: infos.appVersion, androidVersion: infos.androidVersion, paperColumns: infos.paperColumns || 32, previousToken: deja?.token }
       });
       if (coque) transmettreJeton(r.token, API_BASE);
-      else associerTerminalNavigateur({ token: r.token, terminalId: r.terminalId, restaurantId: r.restaurantId, simulation: true });
+      else associerTerminalNavigateur({ token: r.token, terminalId: r.terminalId, restaurantId: r.restaurantId, simulation: true, restaurantName: tr('terminal.webOtherSimulation') });
       onImprimante(r.printer);
       toast(tr('simulation.benchConnected'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(null); }
