@@ -103,6 +103,7 @@ const SalesPage = lazyPage(() => import('./pages/client/SalesPage'));
 const AdminSalesPage = lazyPage(() => import('./pages/admin/AdminSalesPage'));
 const AdminSimulationPage = lazyPage(() => import('./pages/admin/AdminSimulationPage'));
 const AdminSponsorsPage = lazyPage(() => import('./pages/admin/AdminSponsorsPage'));
+const AdminPlacementsPage = lazyPage(() => import('./pages/admin/AdminPlacementsPage'));
 const AdminTerminalsPage = lazyPage(() => import('./pages/admin/AdminTerminalsPage'));
 
 // Barre de simulation (Admin › Simulation) : chargée seulement dans un onglet de simulation, jamais pour un vrai visiteur.
@@ -224,6 +225,7 @@ export default function App() {
           <Route path="messages" element={<AdminMessagesPage />} />
           <Route path="simulation" element={<AdminSimulationPage />} />
           <Route path="sponsors" element={<AdminSponsorsPage />} />
+          <Route path="placements" element={<AdminPlacementsPage />} />
           <Route path="terminals" element={<AdminTerminalsPage />} />
         </Route>
 

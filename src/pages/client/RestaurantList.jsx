@@ -16,6 +16,7 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
+import { epingler } from '../../misesEnAvant';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -133,6 +134,8 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
           {r.reviewCount > 0
             ? <span className="rc-note"><span aria-hidden="true">★</span> {Number(r.rating).toFixed(1)} <span className="rc-discret">({r.reviewCount})</span></span>
             : <span className="rc-nouveau">{t('restaurantList.newBadge')}</span>}
+          {/* Position payée par le commerce : toujours dite au client (classement payant, CDE VI.99). */}
+          {r.sponsorise && <span className="rc-sponsorise" title={t('restoListUi.sponsoredTitle')}>{t('restoListUi.sponsored')}</span>}
           {bande && <span className="rc-discret" title={t('restoListUi.priceBandTitle')}>{'€'.repeat(bande)}</span>}
           {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
         </p>
@@ -250,11 +253,14 @@ export default function RestaurantList() {
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
   const [inscrits, setInscrits] = useState([]);
+  const [placements, setPlacements] = useState([]);
   const toast = useToast();
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
     api('/restaurants/landing').then((l) => setInscrits((l || []).filter((r) => r.menuComplete))).catch(() => {});
+    // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
+    api('/placements/active').then((r) => setPlacements(r.placements || [])).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
@@ -351,15 +357,18 @@ export default function RestaurantList() {
     return [...liste, ...renfort];
   };
   const nonGrocery = restaurants.filter((r) => !GROCERY_TYPES.includes(r.cuisine));
-  const groceryList = completer(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)));
+  // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
+  // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
+  const groceryList = completer(epingler(restaurants.filter((r) => GROCERY_TYPES.includes(r.cuisine)), placements, 'grocery'));
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
   const PROCHES_MAX = 15;
   const parDistance = nonGrocery.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
-  const nearbyList = completer(parDistance.length
+  const nearbyList = completer(epingler(parDistance.length
     ? parDistance.slice(0, PROCHES_MAX)
-    : homeCommune ? [...nonGrocery].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : []);
+    : homeCommune ? [...nonGrocery].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
+  placements, 'nearby', parDistance.length ? parDistance : nonGrocery));
   // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   const livrables = nonGrocery.filter((r) => r.offersDelivery !== false);
@@ -369,7 +378,7 @@ export default function RestaurantList() {
   const livraisonOfferte = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => tarif.offerte || tarif.offerteDes != null)
     .sort((a, b) => (a.tarif.offerte ? 0 : a.tarif.offerteDes) - (b.tarif.offerte ? 0 : b.tarif.offerteDes)).map(({ r }) => r);
-  const offersList = completer(restaurants.filter((r) => r.hasPromo));
+  const offersList = completer(epingler(restaurants.filter((r) => r.hasPromo), placements, 'offers'));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
   // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
@@ -383,13 +392,13 @@ export default function RestaurantList() {
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
     .map(({ r }) => r);
-  const bioList = completer(parMention(platBio));
-  const veganList = completer(parMention(platVegan));
-  const healthyList = completer(nonGrocery
+  const bioList = completer(epingler(parMention(platBio), placements, 'bio'));
+  const veganList = completer(epingler(parMention(platVegan), placements, 'vegan'));
+  const healthyList = completer(epingler(nonGrocery
     .map((r) => ({ r, n: (r.menu || []).filter((m) => m.healthy).length }))
     .filter(({ n }) => n > 0)
     .sort((a, b) => b.n - a.n)
-    .map(({ r }) => r));
+    .map(({ r }) => r), placements, 'healthy'));
   // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
   // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
   // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
@@ -568,7 +577,7 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={discoverList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
+          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epingler(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay />
           {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
             <div className="empty">{t('restaurantList.empty')}</div>
           )}

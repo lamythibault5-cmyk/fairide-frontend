@@ -5,7 +5,12 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import { oublierSponsors } from '../../components/EmplacementSponsor';
+import { Link } from 'react-router-dom';
+import { oublierSponsors, VisuelSponsorDemo } from '../../components/EmplacementSponsor';
+import { reglerSimulationSponsor, simulationSponsorActive } from '../../sponsorSimulation';
+
+// Où chaque emplacement se voit sur le site (bouton « Voir en place »).
+const OU_VOIR = { accueil: '/', liste: '/restaurants', suivi: '/orders', tableau_commerce: '/dashboard' };
 
 // Admin › Collaborations / sponsoring (fondateur, 2026-10-01) : les emplacements réservés au logo d'un partenaire, un
 // fichier différent pour chacun. Rien n'est visible du public tant que « Visible du public » n'est pas coché ; l'équipe,
@@ -18,6 +23,8 @@ export default function AdminSponsorsPage() {
   const [occupe, setOccupe] = useState(null);
   const [aRetirer, setARetirer] = useState(null);
   const [brouillons, setBrouillons] = useState({});
+  const [simulation, setSimulation] = useState(() => simulationSponsorActive());
+  const basculerSimulation = (active) => { reglerSimulationSponsor(active); setSimulation(active); };
 
   const charger = useCallback(() => {
     api('/admin/sponsors', { token }).then((r) => { setSlots(r.slots || []); oublierSponsors(); }).catch((e) => toast(e.message, 'erreur'));
@@ -53,6 +60,18 @@ export default function AdminSponsorsPage() {
     <div>
       <AdminPageHeader module="sponsors" />
       <p className="small" style={{ margin: '0 0 16px', maxWidth: 780 }}>{tr('sponsors.intro')}</p>
+      <div className="card sponsor-simulation" style={{ margin: '0 0 16px' }}>
+        <label className="row" style={{ gap: 10, alignItems: 'center', cursor: 'pointer' }}>
+          <input type="checkbox" checked={simulation} onChange={(e) => basculerSimulation(e.target.checked)} />
+          <b>{tr('sponsors.simTitle')}</b>
+        </label>
+        <p className="small" style={{ margin: '6px 0 0' }}>{tr('sponsors.simHelp')}</p>
+        {simulation && (
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 10 }}>
+            {(slots || []).map((s) => <Link key={s.key} className="btn-outline" style={{ padding: '6px 12px', fontSize: 13 }} to={OU_VOIR[s.key] || '/'}>{tr('sponsors.simSee', { label: s.label.split(' — ')[0] })}</Link>)}
+          </div>
+        )}
+      </div>
       {!slots && <p className="small">…</p>}
       <div className="sponsors-grille">
         {(slots || []).map((s) => {
@@ -67,7 +86,9 @@ export default function AdminSponsorsPage() {
                 <span className={`pill ${s.visible ? 'teal' : ''}`}>{s.visible ? tr('sponsors.public') : tr('sponsors.adminOnly')}</span>
               </div>
               <div className="sponsor-apercu">
-                {s.imageUrl ? <img src={s.imageUrl} alt={s.name || s.label} /> : <span className="small">{tr('sponsors.empty')}</span>}
+                {s.imageUrl ? <img src={s.imageUrl} alt={s.name || s.label} />
+                  : simulation ? <VisuelSponsorDemo format={s.key === 'suivi' ? 'carte' : 'banniere'} />
+                    : <span className="small">{tr('sponsors.empty')}</span>}
               </div>
               <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
                 <label className="btn-teal" style={{ padding: '8px 12px', fontSize: 13, cursor: 'pointer' }}>

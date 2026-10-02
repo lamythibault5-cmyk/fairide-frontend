@@ -19,7 +19,7 @@ export const ADMIN_HUBS = [
   { key: 'orders', icon: 'commandes', modules: ['orders', 'incidents', 'reviews'] },
   // Fondateur, 2026-09-23 : la pastille « Commerces » montre le NOMBRE DE VRAIS COMMERCES inscrits (ni démo, ni test), pas
   // ce qui attend une action ; les restaurants à valider gardent leur propre pastille sur l'onglet Restaurants.
-  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
+  { key: 'partners', icon: 'commerce', modules: ['restaurants', 'placements', 'terminals', 'sales', 'crm'], badge: (o) => pastille(n(o.accounts?.restaurants?.real), 'info') },
   { key: 'couriers', icon: 'scooter', modules: ['drivers', 'couriers', 'logistics'] },
   { key: 'customers', icon: 'personnes', modules: ['clients', 'promotions', 'marketing'] },
   { key: 'inbox', icon: 'bulle', modules: ['support', 'messages', 'tasks'] },
@@ -76,6 +76,8 @@ export const ADMIN_MODULES = [
   { key: 'terminals', path: '/admin/terminals', icon: 'imprimante', hub: 'partners', badge: (o) => pastille(n(o.terminals?.offline) + n(o.terminals?.issues) + n(o.terminals?.failed), n(o.terminals?.issues) + n(o.terminals?.failed) > 0 ? 'danger' : 'warn') },
   // Collaborations / sponsoring (2026-10-01) : les emplacements de logo partenaire et leurs fichiers.
   { key: 'sponsors', path: '/admin/sponsors', icon: 'mallette', hub: 'settings', badge: aucun },
+  // Mises en avant payantes (2026-10-02) : prix des positions 1, 2, 3 par rangée, demandes des commerces.
+  { key: 'placements', path: '/admin/placements', icon: 'megaphone', hub: 'partners', badge: aucun },
   { key: 'simulation', path: '/admin/simulation', icon: 'boussole', hub: 'simulation', badge: aucun }
 ];
 
@@ -94,6 +96,7 @@ export const MODULE_ROLES = {
   sales: ['owner', 'admin', 'ops'],
   simulation: ['owner', 'admin', 'ops', 'support'],
   sponsors: ['owner', 'admin'],
+  placements: ['owner', 'admin', 'finance'],
   terminals: ['owner', 'admin', 'ops', 'support']
 };
 export function moduleAllowed(mod, role) {
