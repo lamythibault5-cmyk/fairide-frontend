@@ -123,3 +123,16 @@
 .simu-commande-carte { display: grid; gap: 10px; max-height: 320px; overflow-y: auto; }
 .simu-commande-plat { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; border-bottom: 1px dashed var(--line); }
 .simu-commande-nom { flex: 1; min-width: 0; font-size: 14px; }
+
+/* Banc d'essai des tickets (Admin › Simulation, BancTickets.jsx). */
+.banc-tickets { margin: 0 0 16px; padding: 14px; border-radius: var(--radius); background: var(--surface-soft); }
+.banc-terminal { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 12px; border-radius: 10px; background: #fff; border-left: 4px solid var(--line); margin-bottom: 12px; }
+.banc-terminal.est-connecte { border-left-color: var(--lime); }
+.banc-terminal.est-hors-ligne { border-left-color: var(--red); }
+.banc-attente { display: block; font-weight: 700; color: var(--iris); }
+.banc-types { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.banc-type { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; border: 1.5px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; min-height: 64px; transition: border-color .15s ease, transform .1s ease; }
+.banc-type:hover:not(:disabled) { border-color: var(--iris); }
+.banc-type:active:not(:disabled) { transform: scale(.98); }
+.banc-type.est-fait { border-color: var(--iris); }
+.banc-type .small { color: var(--ink-soft); }

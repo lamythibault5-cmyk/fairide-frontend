@@ -17,7 +17,7 @@ export default function RouleauTickets({ tickets = [], nouveaux = [], t, max = 6
               {heure(x.printedAt)}
               <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} title={t('simulation.printPaperHelp')} onClick={() => imprimerTicketPapier(x.lines, x.columns || 32)}>{t('simulation.printPaper')}</button>
               {onReprint && x.orderId && x.kind !== 'cancel' && (
-                <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => onReprint(x.orderId)}>{t('simulation.reprint')}</button>
+                <button type="button" className="btn-ghost" style={{ padding: '0 6px', fontSize: 12 }} onClick={() => onReprint(x.orderId, x.kind)}>{t('simulation.reprint')}</button>
               )}
             </span>
           </div>

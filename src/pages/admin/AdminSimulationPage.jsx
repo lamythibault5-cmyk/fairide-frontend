@@ -9,6 +9,7 @@ import Icone from '../../components/Icone';
 import RouleauTickets from '../../components/RouleauTickets';
 import ChoixCommerceSimule from '../../components/admin/ChoixCommerceSimule';
 import CommandeTestAdmin from '../../components/admin/CommandeTestAdmin';
+import BancTickets from '../../components/admin/BancTickets';
 import '../../simulation.css';
 
 // Admin › Simulation : parcourir Fairide comme un visiteur, un client, un restaurateur et un livreur, dans un bac
@@ -36,6 +37,8 @@ export default function AdminSimulationPage() {
   // Terminal simulé du commerce fictif : ses tickets « sortent » ici (imprimante virtuelle, relue toutes les 5 s).
   const [imprimante, setImprimante] = useState({ tickets: [], nouveaux: [], terminal: false });
   const [impression, setImpression] = useState(false);
+  // Nombre d'exemplaires d'une réimpression (banc d'essai des tickets) : le même ticket, 1 à 5 fois.
+  const [exemplaires, setExemplaires] = useState(1);
   useEffect(() => {
     let actif = true;
     const tourner = () => api('/admin/simulation/printer', { token }).then((r) => { if (actif) setImprimante(r); }).catch(() => {});
@@ -43,10 +46,10 @@ export default function AdminSimulationPage() {
     const i = setInterval(tourner, 5000);
     return () => { actif = false; clearInterval(i); };
   }, [token]);
-  async function imprimer(orderId) {
+  async function imprimer(orderId, kind) {
     setImpression(true);
     try {
-      const r = await api('/admin/simulation/print', { method: 'POST', token, body: orderId ? { orderId } : {} });
+      const r = await api('/admin/simulation/print', { method: 'POST', token, body: orderId ? { orderId, copies: exemplaires, kind: kind === 'driver' ? 'driver' : undefined } : {} });
       setImprimante(r);
       toast(orderId ? tr('simulation.reprinted') : tr('simulation.testPrinted'));
     } catch (e) { toast(e.message, 'erreur'); } finally { setImpression(false); }
@@ -169,6 +172,7 @@ export default function AdminSimulationPage() {
         <div style={{ margin: '0 0 14px' }}>
           <CommandeTestAdmin pret={!!etat?.ready} onCree={(r) => { if (r.printer) setImprimante(r.printer); charger(); }} />
         </div>
+        <BancTickets pret={!!etat?.ready} imprimante={imprimante} onImprimante={(p) => { setImprimante(p); charger(); }} exemplaires={exemplaires} onExemplaires={setExemplaires} />
         <div className="simu-grille" style={{ marginTop: 0 }}>
           <div>
             <h4 style={{ margin: '0 0 8px' }}>{tr('simulation.recentOrders')}</h4>
@@ -181,7 +185,7 @@ export default function AdminSimulationPage() {
             ))}
           </div>
           <div style={{ maxHeight: 620, overflowY: 'auto' }}>
-            <RouleauTickets tickets={imprimante.tickets} nouveaux={imprimante.nouveaux || []} t={tr} max={6} onReprint={(id) => imprimer(id)} />
+            <RouleauTickets tickets={imprimante.tickets} nouveaux={imprimante.nouveaux || []} t={tr} max={12} onReprint={(id, kind) => imprimer(id, kind)} />
           </div>
         </div>
       </div>
