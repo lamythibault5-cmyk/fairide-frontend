@@ -16,7 +16,7 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import AutoScrollRow from '../../components/AutoScrollRow';
-import { epingler } from '../../misesEnAvant';
+import { epingler, titreRangee } from '../../misesEnAvant';
 import { COMMUNES, RESTAURANT_TYPES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel } from '../../menuCategories';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
@@ -254,13 +254,15 @@ export default function RestaurantList() {
   // les démos restent dessous, pour montrer l'étendue de l'offre.
   const [inscrits, setInscrits] = useState([]);
   const [placements, setPlacements] = useState([]);
+  // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
+  const [rangeesAjoutees, setRangeesAjoutees] = useState([]);
   const toast = useToast();
 
   useEffect(() => {
     api('/restaurants').then(setRestaurants).catch((e) => toast(e.message, 'erreur')).finally(() => setLoading(false));
     api('/restaurants/landing').then((l) => setInscrits((l || []).filter((r) => r.menuComplete))).catch(() => {});
     // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
-    api('/placements/active').then((r) => setPlacements(r.placements || [])).catch(() => {});
+    api('/placements/active').then((r) => { setPlacements(r.placements || []); setRangeesAjoutees(r.sections || []); }).catch(() => {});
     // Page publique (consultable sans compte, voir App.jsx) — ces deux appels ne concernent que les
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
@@ -375,9 +377,17 @@ export default function RestaurantList() {
   const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
     .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);
+  const livraisonPasCherEpinglee = epingler(livraisonPasCher, placements, 'cheap_delivery');
   const livraisonOfferte = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
     .filter(({ tarif }) => tarif.offerte || tarif.offerteDes != null)
     .sort((a, b) => (a.tarif.offerte ? 0 : a.tarif.offerteDes) - (b.tarif.offerte ? 0 : b.tarif.offerteDes)).map(({ r }) => r);
+  const livraisonOfferteEpinglee = epingler(livraisonOfferte, placements, 'free_delivery');
+  // Une rangée par type de cuisine ajoutée dans Admin › Mises en avant : les commerces de ce type (principal ou
+  // secondaire), les épinglés en tête. Jamais complétée : une rangée « Pizza » ne montre que des pizzerias.
+  const rangeesCuisine = rangeesAjoutees.filter((s) => s.kind === 'cuisine' && s.cuisine).map((s) => ({
+    ...s,
+    liste: epingler(restaurants.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
+  })).filter((s) => s.liste.length > 0);
   const offersList = completer(epingler(restaurants.filter((r) => r.hasPromo), placements, 'offers'));
   // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
   // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
@@ -569,10 +579,13 @@ export default function RestaurantList() {
             </div>
           )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferte} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
-          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: '3 €' })} icon="scooter" list={livraisonPasCher} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionFreeDelivery')} icon="scooter" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          <Section title={t('restaurantList.sectionDeliveryFrom', { amount: '3 €' })} icon="scooter" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <EmplacementSponsor cle="liste" />
+          {rangeesCuisine.map((s) => (
+            <Section key={s.key} title={titreRangee(t, s)} icon="restaurants" list={s.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
+          ))}
           <Section title={t('restaurantList.sectionHealthy')} icon="restaurants" list={healthyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop />

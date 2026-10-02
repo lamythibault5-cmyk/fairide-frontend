@@ -6475,6 +6475,7 @@ export default {
       later: 'Later'
     },
     placements: {
+      posN: 'Positie {n}',
       title: 'Uitgelichte plaats in de lijst',
       intro: 'Verschijn als 1e, 2e of 3e in een rij van de lijst met zaken. Kies de rij, de positie en de duur: Fairide bevestigt je aanvraag voor ze zichtbaar wordt.',
       row: 'Rij',
@@ -6502,6 +6503,14 @@ export default {
       labelNote: 'Klanten zien het label “Gesponsord” op je kaart in die rij. Je verschijnt er alleen als je zaak erbij hoort (bijvoorbeeld minstens één healthy gerecht voor “Healthy”).'
     },
     adminPlacements: {
+      addPosition: 'Positie toevoegen',
+      removePosition: 'Positie {n} verwijderen',
+      positionsSaved: '{n} positie(s) te koop per rij.',
+      addRow: 'Rij toevoegen',
+      addRowPlaceholder: 'Kies een rij…',
+      rowAdded: 'Rij toegevoegd.',
+      rowRemoved: 'Rij verwijderd.',
+      removeRow: 'Deze rij verwijderen',
       intro: 'Zaken kunnen betalen om als 1e, 2e of 3e in een rij van de lijst te staan. Stel hier de prijs per positie in en aanvaard of weiger aanvragen. De klant ziet altijd het label “Gesponsord”.',
       pricesTitle: 'Prijs per week (excl. btw)',
       pricesHelp: 'Eén prijs per rij en positie. Bestaande aanvragen behouden de prijs van de dag waarop ze zijn gedaan.',

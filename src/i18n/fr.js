@@ -6520,6 +6520,7 @@ export default {
       later: 'Plus tard'
     },
     placements: {
+      posN: 'Position {n}',
       title: 'Mise en avant dans la liste',
       intro: 'Apparais en 1re, 2e ou 3e position d\'une rangée de la liste des commerces. Choisis la rangée, la position et la durée : Fairide confirme ta demande avant qu\'elle ne s\'affiche.',
       row: 'Rangée',
@@ -6547,6 +6548,14 @@ export default {
       labelNote: 'Les clients voient la mention « Sponsorisé » sur ta carte dans cette rangée. Tu n\'y apparais que si ton commerce en fait partie (par exemple au moins un plat healthy pour « Healthy »).'
     },
     adminPlacements: {
+      addPosition: 'Ajouter une position',
+      removePosition: 'Retirer la position {n}',
+      positionsSaved: '{n} position(s) en vente par rangée.',
+      addRow: 'Ajouter une rangée',
+      addRowPlaceholder: 'Choisir une rangée…',
+      rowAdded: 'Rangée ajoutée.',
+      rowRemoved: 'Rangée retirée.',
+      removeRow: 'Retirer cette rangée',
       intro: 'Les commerces peuvent payer pour apparaître en 1re, 2e ou 3e position d\'une rangée de la liste. Tu règles ici le prix de chaque position et tu acceptes ou refuses les demandes. Le client voit toujours la mention « Sponsorisé ».',
       pricesTitle: 'Prix par semaine (hors TVA)',
       pricesHelp: 'Un prix par rangée et par position. Les demandes déjà faites gardent le prix du jour où elles ont été posées.',

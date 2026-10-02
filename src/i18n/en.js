@@ -6475,6 +6475,7 @@ export default {
       later: 'Later'
     },
     placements: {
+      posN: 'Position {n}',
       title: 'Featured placement in the list',
       intro: 'Appear 1st, 2nd or 3rd in a row of the shop list. Pick the row, the position and the duration: Fairide confirms your request before it goes live.',
       row: 'Row',
@@ -6502,6 +6503,14 @@ export default {
       labelNote: 'Customers see a “Sponsored” label on your card in that row. You only appear there if your shop belongs to it (for example at least one healthy dish for “Healthy”).'
     },
     adminPlacements: {
+      addPosition: 'Add a position',
+      removePosition: 'Remove position {n}',
+      positionsSaved: '{n} position(s) on sale per row.',
+      addRow: 'Add a row',
+      addRowPlaceholder: 'Choose a row…',
+      rowAdded: 'Row added.',
+      rowRemoved: 'Row removed.',
+      removeRow: 'Remove this row',
       intro: 'Shops can pay to appear 1st, 2nd or 3rd in a row of the list. Set the price of each position here and accept or refuse requests. Customers always see the “Sponsored” label.',
       pricesTitle: 'Price per week (excl. VAT)',
       pricesHelp: 'One price per row and position. Existing requests keep the price of the day they were made.',

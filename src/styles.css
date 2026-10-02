@@ -4432,3 +4432,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 .garantie-etat { margin: 8px 0 0; font-weight: 600; }
 .garantie-historique { margin: 8px 0 0; padding-left: 18px; }
 .offre-formules .garantie-abonnement { margin: 12px 0 0; }
+/* Plus de trois positions : la grille défile horizontalement plutôt que d'écraser les cases. */
+.mea-grille--large { overflow-x: auto; padding-bottom: 4px; }
+.mea-retirer { min-width: 36px; min-height: 36px; padding: 0; color: var(--red); }
+.mea-outils { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.mea-outils-rangee { display: inline-flex; gap: 6px; align-items: center; margin-left: auto; flex-wrap: wrap; }
+.mea-outils select { min-height: 40px; }

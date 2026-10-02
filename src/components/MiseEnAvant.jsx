@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
-import { TITRES_RANGEES, euros, jourCourt } from '../misesEnAvant';
+import { titreRangee, libellePosition, euros, jourCourt } from '../misesEnAvant';
 
 // Promotions › Mise en avant (fondateur, 2026-10-02). Le commerçant choisit une rangée de la liste (« Healthy », « Autour
 // de vous »…), la 1re, 2e ou 3e position et une durée ; le prix par semaine est celui réglé par Fairide. Comme pour les
 // prix et la carte : c'est une DEMANDE, que l'équipe confirme avant qu'elle ne s'affiche.
-const POSITIONS = ['pos1', 'pos2', 'pos3'];
 
 export default function MiseEnAvant({ restoId, token, toast }) {
   const { t } = useLanguage();
@@ -24,7 +23,10 @@ export default function MiseEnAvant({ restoId, token, toast }) {
   const prix = section?.prices.find((p) => p.slot === choix.slot)?.weeklyPrice ?? 0;
   const totalHt = prix * semaines;
   const tva = totalHt * (etat?.vatRate ?? 0.21);
-  const titre = (cle, repli) => (TITRES_RANGEES[cle] ? t(`restaurantList.${TITRES_RANGEES[cle]}`) : repli);
+  const titre = (cle, repli) => titreRangee(t, { key: cle, label: repli, cuisine: etat?.sections.find((s) => s.key === cle)?.cuisine });
+  // Autant de colonnes que de positions vendues (3 par défaut, l'admin peut en ajouter) ; au-delà de 3, la grille défile.
+  const nbPositions = etat?.sections[0]?.prices.length || 3;
+  const colonnes = { gridTemplateColumns: `minmax(96px, 1.3fr) repeat(${nbPositions}, minmax(${nbPositions > 3 ? 78 : 0}px, 1fr))`, ...(nbPositions > 3 ? { minWidth: 100 + nbPositions * 84 } : {}) };
 
   async function demander() {
     setOccupe(true);
@@ -47,13 +49,13 @@ export default function MiseEnAvant({ restoId, token, toast }) {
       {!etat && <p className="small">…</p>}
       {etat && (
         <>
-          <div className="mea-grille" role="table" aria-label={t('placements.title')}>
-            <div className="mea-ligne mea-entete" role="row">
+          <div className={`mea-grille${nbPositions > 3 ? ' mea-grille--large' : ''}`} role="table" aria-label={t('placements.title')}>
+            <div className="mea-ligne mea-entete" role="row" style={colonnes}>
               <span role="columnheader">{t('placements.row')}</span>
-              {POSITIONS.map((p) => <span key={p} role="columnheader">{t(`placements.${p}`)}</span>)}
+              {etat.sections[0]?.prices.map((p) => <span key={p.slot} role="columnheader">{libellePosition(t, p.slot)}</span>)}
             </div>
             {etat.sections.map((s) => (
-              <div className="mea-ligne" role="row" key={s.key}>
+              <div className="mea-ligne" role="row" key={s.key} style={colonnes}>
                 <span role="rowheader" className="mea-rangee">{titre(s.key, s.label)}</span>
                 {s.prices.map((p) => {
                   const actif = choix?.sectionKey === s.key && choix?.slot === p.slot;
@@ -73,7 +75,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
 
           {choix && section && (
             <div className="mea-demande">
-              <b>{t('placements.summary', { row: titre(section.key, section.label), pos: t(`placements.pos${choix.slot}`) })}</b>
+              <b>{t('placements.summary', { row: titre(section.key, section.label), pos: libellePosition(t, choix.slot) })}</b>
               <div className="row" style={{ gap: 8, alignItems: 'center', margin: '8px 0', flexWrap: 'wrap' }}>
                 <button type="button" className="btn-ghost" style={{ minWidth: 44, minHeight: 44 }} aria-label="−" disabled={semaines <= 1} onClick={() => setSemaines((n) => Math.max(1, n - 1))}>−</button>
                 <span style={{ minWidth: 96, textAlign: 'center', fontWeight: 700 }}>{t('placements.weeks', { n: semaines })}</span>
@@ -95,7 +97,7 @@ export default function MiseEnAvant({ restoId, token, toast }) {
               {etat.bookings.map((b) => (
                 <div key={b.id} className="mea-reservation">
                   <div>
-                    <span className="mea-rangee">{titre(b.sectionKey, b.sectionLabel)} · {t(`placements.pos${b.slot}`)}</span>
+                    <span className="mea-rangee">{titre(b.sectionKey, b.sectionLabel)} · {libellePosition(t, b.slot)}</span>
                     <span className="small" style={{ display: 'block' }}>{jourCourt(b.startsOn)} → {jourCourt(b.endsOn)} · {euros(b.totalHt)} {t('placements.exVat')}</span>
                     {b.refusalReason && <span className="small" style={{ display: 'block' }}>{b.refusalReason}</span>}
                   </div>
