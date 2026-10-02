@@ -4426,3 +4426,9 @@ html.clavier-ouvert .dashboard-sidebar, html.clavier-ouvert .panier-pilule, html
 /* Dans la carte d'aperçu de l'admin (étroite), le visuel de démonstration passe en colonne. */
 .sponsor-apercu .sponsor-demo { flex-direction: column; align-items: flex-start; }
 .sponsor-apercu .sponsor-demo-bouton { margin-left: 0; }
+
+/* Garantie « zéro commande = zéro abonnement » (GarantieAbonnement.jsx). */
+.garantie-abonnement { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); border-left: 4px solid var(--lime); }
+.garantie-etat { margin: 8px 0 0; font-weight: 600; }
+.garantie-historique { margin: 8px 0 0; padding-left: 18px; }
+.offre-formules .garantie-abonnement { margin: 12px 0 0; }

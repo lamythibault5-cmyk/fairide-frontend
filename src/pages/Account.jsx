@@ -1,3 +1,4 @@
+import GarantieAbonnement from '../components/GarantieAbonnement';
 import { allerAuPaiement } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -800,6 +801,8 @@ export default function Account() {
             <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
               {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
             </p>
+            {/* Garantie « zéro commande = zéro abonnement » : la règle, le compteur du mois, les mois offerts ou remboursés. */}
+            <GarantieAbonnement restoId={restoId} token={token} abonne={['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus)} />
             {restaurant.subscriptionStatus === 'trialing' && (
               <p className="small" style={{ margin: '0 0 12px' }}>
                 {t('accountUi.subTrialIntro')}

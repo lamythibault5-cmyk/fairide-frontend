@@ -1,3 +1,4 @@
+import GarantieAbonnement from './GarantieAbonnement';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { datePremierPrelevement } from '../launch';
 import TerminalFairide from './TerminalFairide';
@@ -37,6 +38,8 @@ export default function OffreFormules({ payant = false, statut = null, finEssai 
         </ol>
         <p className="small" style={{ margin: '6px 0 0' }}>{t('accountUi.offre_noCommitment')}</p>
       </div>
+      {/* Zéro commande sur un mois = zéro abonnement pour ce mois (offert ou remboursé). */}
+      <GarantieAbonnement />
       {/* Le terminal : ce que c'est (image), comment ça marche, et à quelles conditions (offert aux 50 premiers avant le
           16 octobre, puis caution). */}
       <div className="offre-terminal"><TerminalFairide compact /></div>

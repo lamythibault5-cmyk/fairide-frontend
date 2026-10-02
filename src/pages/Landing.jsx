@@ -40,7 +40,7 @@ function joinCards(t, p2pOuvert = false) {
       key: 'restaurant', icon: 'commerce',
       eyebrow: t('landing.joinRestaurantRole'),
       title: t('landing.joinRestaurantTitle'),
-      points: [t('landing.joinRestaurantP1'), t('landing.joinRestaurantP2')],
+      points: [t('landing.joinRestaurantP1'), t('landing.joinRestaurantP3'), t('landing.joinRestaurantP2')],
       link: t('landing.joinRestaurantLink'),
       to: '/login?audience=partner&role=restaurant'
     },

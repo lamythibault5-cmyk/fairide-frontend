@@ -113,7 +113,7 @@ const PAGES = [
     titre: 'story.pageTitle',
     description: 'story.metaDescription',
     jsonLd: ({ langue }) => [
-      { id: 'ld-faq', donnees: faqJsonLd([1, 2, 3, 4].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
+      { id: 'ld-faq', donnees: faqJsonLd([1, 2, 3, 4, 6, 5].map((n) => ({ question: cle(`story.faqQ${n}`, langue), answer: cle(`story.faqA${n}`, langue) }))) },
       {
         id: 'ld-breadcrumb',
         donnees: breadcrumbJsonLd([
