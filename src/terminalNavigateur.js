@@ -51,7 +51,10 @@ async function battement() {
   if (!config) return;
   const ok = await serviceGoodcomDisponible({ forcer: true });
   const imprimante = ok ? 'ok' : 'printer_offline';
+  // L'imprimante revient : on vide la file tout de suite, sans attendre le prochain tour.
+  const revenue = ok && etat.imprimante === 'printer_offline';
   majEtat({ imprimante });
+  if (revenue) traiterFile();
   try {
     const r = await appel('/terminal/heartbeat', { method: 'POST', body: { appVersion: 'web-1', model: 'Goodcom (navigateur)', printerStatus: imprimante, network: navigator.onLine ? 'online' : 'offline', batteryLevel: etat.batterie ?? undefined } });
     majEtat({ enAttente: r.pendingJobs || 0 });
@@ -78,6 +81,9 @@ export async function traiterFile() {
           const code = e.code || 'unknown';
           await appel(`/terminal/jobs/${job.id}/ack`, { method: 'POST', body: { status: 'failed', errorCode: code, error: e.message } }).catch(() => {});
           majEtat({ derniereErreur: code, imprimante: code === 'printer_offline' ? 'printer_offline' : etat.imprimante });
+          // Le serveur apprend la panne tout de suite, sans attendre le battement de la minute : l'écran du commerce (et le
+          // banc d'essai) affichait encore « imprimante prête » alors qu'un ticket attendait.
+          if (code === 'printer_offline') appel('/terminal/heartbeat', { method: 'POST', body: { appVersion: 'web-1', model: 'Goodcom (navigateur)', printerStatus: 'printer_offline', network: navigator.onLine ? 'online' : 'offline' } }).catch(() => {});
           break; // imprimante en difficulté : le reste de la file attend le tour suivant
         }
       }

@@ -16,7 +16,10 @@ import { serviceGoodcomDisponible } from '../../goodcomWebPrinter';
 //   2. Un bouton par type de ticket : la commande qui le produit est fabriquée dans le bac à sable (close, jamais
 //      « à préparer ») et son ticket part dans la file.
 //   3. Réimprimer un même ticket, en 1 à 5 exemplaires : bouton « Réimprimer » de chaque ticket du rouleau.
-const TYPES = ['delivery_paid', 'delivery_driver', 'pickup_paid', 'pickup_on_site', 'scheduled', 'options_notes', 'alcohol', 'discounts', 'long', 'copies', 'driver_slip', 'cancel', 'test'];
+const TYPES_FIXES = ['delivery_paid', 'delivery_driver', 'pickup_paid', 'pickup_on_site', 'scheduled', 'options_notes', 'alcohol', 'discounts', 'long', 'copies', 'driver_slip', 'cancel', 'test'];
+// Tickets « produits » : un panier qui réunit tous les types de produits, toute la carte du commerce simulé, et une
+// entrée par catégorie de cette carte (chargées depuis l'API : elles changent avec le commerce copié).
+const TYPES_PRODUITS = ['product_kinds', 'all_products'];
 
 export default function BancTickets({ pret, imprimante, onImprimante, exemplaires, onExemplaires }) {
   const { t: tr } = useLanguage();
@@ -25,6 +28,17 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   const [occupe, setOccupe] = useState(null);
   const [faits, setFaits] = useState(() => new Set());
   const [navigateur, setNavigateur] = useState(null); // état du terminal « navigateur » de CET appareil
+  const [categories, setCategories] = useState([]);
+  useEffect(() => {
+    if (!pret) return undefined;
+    let annule = false;
+    api('/admin/simulation/ticket-types', { token }).then((r) => { if (!annule) setCategories(r.categories || []); }).catch(() => {});
+    return () => { annule = true; };
+  }, [pret, token]);
+  const TYPES = [...TYPES_FIXES, ...TYPES_PRODUITS, ...categories.map((c) => `category:${c.name}`)];
+  // Libellé et description d'un type : fixes par traduction, catégories par leur nom et leur nombre de produits.
+  const libelle = (type) => (type.startsWith('category:') ? tr('simulation.tk_category', { name: type.slice(9) }) : tr(`simulation.tk_${type}`));
+  const description = (type) => (type.startsWith('category:') ? tr('simulation.tk_category_d', { n: categories.find((c) => c.name === type.slice(9))?.count || 0 }) : tr(`simulation.tk_${type}_d`));
   useEffect(() => abonnerTerminalNavigateur(setNavigateur), []);
   // Page rechargée alors que cet appareil est le terminal de test : il reprend sa file (le terminal « navigateur » n'est
   // démarré d'office que dans l'espace restaurateur).
@@ -33,6 +47,9 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   const reel = imprimante?.realTerminal || null;
   // Ce terminal réel est-il CET appareil ? (jeton gardé ici par le terminal « navigateur », ou coque Android.)
   const ici = !!reel && (navigateur?.config?.terminalId === reel.id || dansTerminal());
+  // État de l'imprimante : celui que CET appareil constate quand il est le terminal (plus frais que le dernier
+  // battement reçu par le serveur), sinon celui que le terminal a déclaré.
+  const etatImprimanteVu = ici && !dansTerminal() && navigateur?.imprimante && navigateur.imprimante !== 'unknown' ? navigateur.imprimante : reel?.printerStatus;
 
   async function connecter() {
     const coque = dansTerminal();
@@ -66,12 +83,12 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
   async function sortir(type) {
     setOccupe(type);
     try {
-      const r = await api('/admin/simulation/ticket', { method: 'POST', token, body: { type } });
+      const r = await api('/admin/simulation/ticket', { method: 'POST', token, body: { type, copies: exemplaires } });
       onImprimante(r.printer);
       setFaits((f) => new Set(f).add(type));
       // Terminal « navigateur » sur cet appareil : on n'attend pas le prochain tour de file.
       if (ici && !dansTerminal()) traiterFile();
-      toast(tr(reel ? 'simulation.benchSentToTerminal' : 'simulation.benchSentToVirtual', { ticket: tr(`simulation.tk_${type}`) }));
+      toast(tr(reel ? 'simulation.benchSentToTerminal' : 'simulation.benchSentToVirtual', { ticket: libelle(type), n: r.copies || 1 }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(null); }
   }
   // CHOISIR QUELS TICKETS IMPRIMER (fondateur, 2026-10-02) : toucher une carte la coche ou la décoche ; « Imprimer la
@@ -94,7 +111,7 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
           <b>{reel ? tr('simulation.benchTerminalOn', { label: reel.model || reel.label }) : tr('simulation.benchTerminalOff')}</b>
           <span className="small" style={{ display: 'block' }}>
             {reel
-              ? tr(reel.online ? 'simulation.benchTerminalOnline' : 'simulation.benchTerminalOffline', { time: heure(reel.lastSeenAt), printer: tr(`simulation.benchPrinter_${['ok', 'paper_out', 'cover_open', 'printer_offline'].includes(reel.printerStatus) ? reel.printerStatus : 'unknown'}`) })
+              ? tr(reel.online ? 'simulation.benchTerminalOnline' : 'simulation.benchTerminalOffline', { time: heure(reel.lastSeenAt), printer: tr(`simulation.benchPrinter_${['ok', 'paper_out', 'cover_open', 'printer_offline'].includes(etatImprimanteVu) ? etatImprimanteVu : 'unknown'}`) })
               : tr('simulation.benchTerminalHelp')}
           </span>
           {reel && !ici && <span className="small" style={{ display: 'block' }}>{tr('simulation.benchOtherDevice')}</span>}
@@ -123,9 +140,9 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
               className={`banc-type${coche ? ' est-choisi' : ''}${occupe === type ? ' est-en-cours' : ''}`} disabled={!!occupe || !pret} onClick={() => basculer(type)}>
               <span className="banc-type-tete">
                 <span className="banc-case" aria-hidden="true">{coche ? '✓' : ''}</span>
-                <b>{tr(`simulation.tk_${type}`)}</b>
+                <b>{libelle(type)}</b>
               </span>
-              <span className="small">{tr(`simulation.tk_${type}_d`)}</span>
+              <span className="small">{description(type)}</span>
               {faits.has(type) && <span className="banc-imprime">{tr('simulation.benchPrinted')}</span>}
             </button>
           );
@@ -133,7 +150,7 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
       </div>
       <div className="row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
         <button type="button" className="btn-gold" disabled={!!occupe || !pret || choisis.size === 0} onClick={sortirLaSelection}>
-          {occupe && occupe !== 'terminal' ? tr('simulation.benchPrinting', { ticket: tr(`simulation.tk_${occupe}`) }) : tr('simulation.benchPrintSelected', { n: choisis.size })}
+          {occupe && occupe !== 'terminal' ? tr('simulation.benchPrinting', { ticket: libelle(occupe) }) : tr('simulation.benchPrintSelected', { n: choisis.size })}
         </button>
         <span className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {tr('simulation.benchReprintCopies')}
