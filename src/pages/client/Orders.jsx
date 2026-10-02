@@ -76,13 +76,14 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
       {!pourboireSeul && <div style={{ marginBottom: 10 }}>
         <div className="small" style={{ marginBottom: 4 }}>{t('review.foodRatingLabel')}</div>
         <StarsInput value={foodRating} onChange={setFoodRating} />
-        <input value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
+        {/* 1 000 caractères : la même limite que le serveur (routes/reviews.js LONGUEUR_MAX_AVIS). */}
+        <input maxLength={1000} value={foodComment} onChange={(e) => setFoodComment(e.target.value)} placeholder={t('review.foodCommentPlaceholder')} style={{ marginTop: 6 }} />
       </div>}
       {order.driverName && !pourboireSeul && (
         <div style={{ marginBottom: 10 }}>
           <div className="small" style={{ marginBottom: 4 }}>{t('review.deliveryRatingLabel')}</div>
           <StarsInput value={deliveryRating} onChange={setDeliveryRating} />
-          <input value={deliveryComment} onChange={(e) => setDeliveryComment(e.target.value)} placeholder={t('review.deliveryCommentPlaceholder')} style={{ marginTop: 6 }} />
+          <input maxLength={1000} value={deliveryComment} onChange={(e) => setDeliveryComment(e.target.value)} placeholder={t('review.deliveryCommentPlaceholder')} style={{ marginTop: 6 }} />
         </div>
       )}
       {order.driverName && (

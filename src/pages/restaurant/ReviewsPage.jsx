@@ -73,6 +73,7 @@ export default function ReviewsPage() {
                 <div style={{ marginTop: 8 }}>
                   <textarea
                     rows={3}
+                    maxLength={1000}
                     value={replyDrafts[r.id] || ''}
                     onChange={(e) => setReplyDrafts((prev) => ({ ...prev, [r.id]: e.target.value }))}
                     placeholder={t('reviewsResto.phReply')}
