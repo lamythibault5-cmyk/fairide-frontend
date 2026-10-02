@@ -233,6 +233,10 @@ export default function Orders() {
           {o.orderType === 'delivery' && !estPassee(o) && (
             <div className="small suivi-lieu"><Icone nom="position" taille={14} /> {o.address}</div>
           )}
+          {/* Motif donné par le commerce quand il refuse la commande (obligatoire depuis le 2026-10-02). */}
+          {o.status === 'refuse' && o.refusalReason && (
+            <div className="small">{t('orders.refusalReason', { reason: o.refusalReason })}</div>
+          )}
           {o.deliveryInstructions && (
             <div className="small">{deliveryInstructionLabel(o.deliveryInstructions, t)}{o.deliveryNote ? ` · ${o.deliveryNote}` : ''}</div>
           )}

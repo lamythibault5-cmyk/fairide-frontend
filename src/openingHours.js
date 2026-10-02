@@ -85,6 +85,13 @@ function getRegularOpenStatus(hours, now, todayKey, nowMinutes) {
     const { openM, closeM } = shiftToMinutes(shift);
     if (nowMinutes >= openM && nowMinutes < closeM) return { isOpen: true, opensToday: false, opensAt: null, todayKey };
   }
+  // La plage de la veille qui déborde après minuit (« 18:00 → 01:00 ») compte aussi : sans ce tour, un commerce
+  // ouvert jusqu'à 1 h s'affichait fermé de minuit à la fermeture. Même correctif que le backend (openingHours.js).
+  const veilleKey = DAY_KEYS[(DAY_KEYS.indexOf(todayKey) + 6) % 7];
+  for (const shift of (Array.isArray(hours[veilleKey]) ? hours[veilleKey] : [])) {
+    const { closeM } = shiftToMinutes(shift);
+    if (closeM > 24 * 60 && nowMinutes < closeM - 24 * 60) return { isOpen: true, opensToday: false, opensAt: null, todayKey };
+  }
   const upcomingToday = todayShifts
     .map(shiftToMinutes)
     .filter((s) => s.openM > nowMinutes)

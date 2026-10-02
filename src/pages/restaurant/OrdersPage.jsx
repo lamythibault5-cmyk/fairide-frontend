@@ -9,6 +9,7 @@ import TicketPapier from '../../components/TicketPapier';
 import { imprimerTicketPapier } from '../../impressionPapier';
 import { serviceGoodcomDisponible, imprimerSurGoodcom } from '../../goodcomWebPrinter';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import ReasonDialog from '../../components/admin/ReasonDialog';
 import { BandeauAllergie, BadgeAlcool, VerificationAge } from '../../components/conformite/CommandeConformite';
 import { buildTicketBytes, COLUMNS_58MM } from '../../escposTicket';
 import * as btPrinter from '../../bluetoothPrinter';
@@ -510,12 +511,16 @@ export default function OrdersPage() {
         loading={clotureEnCours}
         onCancel={() => setPasVenu(null)}
         onConfirm={signalerPasVenu} />
-      <ConfirmDialog open={!!aRefuser} danger
+      {/* Motif obligatoire : le serveur le refuse sans (MOTIF_REQUIS) et le transmet au client, dans son suivi et
+          dans l'e-mail de refus. Avant, le client apprenait le refus sans savoir pourquoi. */}
+      <ReasonDialog open={!!aRefuser} danger
         title={t('ordersResto.confirmRefuseTitle')}
-        message={t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })}
+        message={`${t('ordersResto.confirmRefuseText', { name: aRefuser?.clientName || '' })} ${t('ordersResto.refuseReasonHint')}`}
+        label={t('ordersResto.refuseReasonLabel')}
+        placeholder={t('ordersResto.refuseReasonPlaceholder')}
         confirmLabel={t('ordersResto.refuse')}
         onCancel={() => setARefuser(null)}
-        onConfirm={() => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse'); }} />
+        onConfirm={(motif) => { const o = aRefuser; setARefuser(null); orderAction(o.id, 'refuse', { reason: motif }); }} />
       {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
       <ConfirmDialog open={!!allergieAConfirmer}
         title={t('conformite.allergyConfirmTitle')}

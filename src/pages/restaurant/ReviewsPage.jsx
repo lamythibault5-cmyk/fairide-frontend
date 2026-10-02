@@ -41,7 +41,9 @@ export default function ReviewsPage() {
     <div>
       <h2 className="section-title" style={{ marginTop: 0 }}>{t('reviewsResto.title')}</h2>
       <div className="row" style={{ gap: 6, marginBottom: 14 }}>
-        <StarsDisplay value={restaurant.rating} />
+        {/* Pas d'étoiles sans avis, ici comme côté client : restaurants.rating vaut 4,5 par défaut en base, et le
+            commerçant voyait 4,5 étoiles remplies à côté de « aucun avis » (RES-15 du plan de test). */}
+        {restaurant.reviewCount > 0 && <StarsDisplay value={restaurant.rating} />}
         <span className="small">{restaurant.reviewCount > 0 ? t('reviewsResto.ratingWithCount', { rating: restaurant.rating.toFixed(1), count: restaurant.reviewCount }) : t('reviewsResto.noReviewsYet')}</span>
       </div>
       {(!reviews || reviews.reviews.length === 0) && <div className="empty">{t('reviewsResto.none')}</div>}
