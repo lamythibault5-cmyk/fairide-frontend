@@ -45,7 +45,7 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
 
   return (
     <div
-      className="card"
+      className={`card alerte-commandes ${active ? 'est-active' : 'est-calme'}`}
       style={{
         display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap',
         borderLeft: `4px solid ${active ? 'var(--red)' : 'var(--line)'}`,
@@ -58,9 +58,9 @@ export default function NewOrderAlertBar({ newCount, soundEnabled, setSoundEnabl
           : t('alertBar.nonePending')}
       </strong>
 
-      <span className="small" style={{ flex: 1, minWidth: 220 }}>{aide}</span>
+      <span className="small alerte-aide" style={{ flex: 1, minWidth: 220 }}>{aide}</span>
 
-      <div className="row" style={{ gap: 8 }}>
+      <div className="row alerte-actions" style={{ gap: 8 }}>
         <button
           type="button"
           className="btn-outline"

@@ -14,8 +14,10 @@ import { abonnementOuvert, dateOuvertureAbonnement } from '../launch';
 // Côté serveur : restaurants.onboarding (menuHandover.js), POST /restaurants/:id/menu/confirm.
 
 function Etape({ fait, children }) {
+  // Même corps de texte que le reste de la carte (14px) : les étapes s'affichaient en 17px, plus gros que le
+  // titre de la carte, et débordaient sur trois lignes au téléphone.
   return (
-    <li style={{ margin: '6px 0', listStyle: 'none', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+    <li style={{ margin: '6px 0', listStyle: 'none', display: 'flex', gap: 8, alignItems: 'flex-start', fontSize: 14, lineHeight: 1.45 }}>
       <span aria-hidden="true">{fait ? '✅' : '⬜'}</span>
       <span style={{ flex: 1, opacity: fait ? 0.7 : 1 }}>{children}</span>
     </li>

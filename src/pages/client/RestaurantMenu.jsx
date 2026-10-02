@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { tarifLivraison } from '../../livraison';
 import Icone from '../../components/Icone';
+import VisuelVide from '../../components/VisuelVide';
 import { commandesOuvertes, livraisonOuverte, dateOuvertureLivraison, dateOuvertureEmporter } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SkeletonCards } from '../../components/Skeleton';
@@ -394,12 +395,13 @@ export default function RestaurantMenu() {
           encadrait le sujet de la page, pas un élément parmi d'autres — et le débordement était
           un contournement de ce contour. Les deux partent ensemble. */}
       <header className="fiche-entete">
-        {(restaurant.coverImageUrl || restaurant.logoImageUrl) && (
-          <div className={`fiche-media${restaurant.coverImageUrl ? '' : ' sans-photo'}`}>
-            {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" />}
-            {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />}
-          </div>
-        )}
+        {/* Le bandeau existe toujours : sans photo de couverture (ou si elle ne charge pas), c'est un visuel aux
+            couleurs de Fairide (VisuelVide) qui tient la place — plus de bloc gris qui ressemble à une image cassée. */}
+        <div className="fiche-media">
+          <VisuelVide nom={restaurant.name} cuisine={restaurant.cuisine} taille="bandeau" className="fiche-couverture-vide" />
+          {restaurant.coverImageUrl && <img {...imgProps(restaurant.coverImageUrl, 960, '(max-width: 960px) 100vw, 960px')} alt={restaurant.name} className="fiche-couverture" fetchPriority="high" decoding="async" onError={cacherImageCassee} />}
+          {restaurant.logoImageUrl && <img {...imgProps(restaurant.logoImageUrl, 96)} alt="" className="fiche-logo" decoding="async" onError={cacherImageCassee} />}
+        </div>
         <div className="fiche-titre-ligne">
           {/* h1 et non h2 : la fiche est la page la plus importante du site pour le
               référencement et n'avait aucun titre de niveau 1. Son sujet est le commerce. */}

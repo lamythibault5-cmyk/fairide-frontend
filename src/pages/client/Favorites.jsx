@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { SkeletonCards } from '../../components/Skeleton';
+import VisuelVide from '../../components/VisuelVide';
 import EtatVide from '../../components/EtatVide';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
@@ -41,7 +42,9 @@ export default function Favorites() {
       <div className="rest-grid">
         {!loading && restaurants.map((r) => (
           <Link key={r.id} to={`/restaurants/${r.id}`} className="card rest-card">
-            {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 100vw, 480px')} alt={r.name} className="cover-banner-sm" onError={cacherImageCassee} />}
+            {r.coverImageUrl
+              ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 100vw, 480px')} alt={r.name} className="cover-banner-sm" onError={cacherImageCassee} />
+              : <VisuelVide nom={r.name} cuisine={r.cuisine} taille="bandeau" className="cover-banner-sm" />}
             <div className="pill-row">
               <span className="pill teal">{r.commune}</span>
               {r.neighborhood && <span className="pill gold">{r.neighborhood}</span>}

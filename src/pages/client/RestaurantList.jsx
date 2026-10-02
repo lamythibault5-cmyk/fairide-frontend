@@ -22,6 +22,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { getOpenStatus } from '../../openingHours';
 import { tarifLivraison, eurosCourts } from '../../livraison';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
+import VisuelVide from '../../components/VisuelVide';
 import usePageMeta from '../../hooks/usePageMeta';
 import useJsonLd from '../../seo/useJsonLd';
 import { restaurantListJsonLd, breadcrumbJsonLd, SITE_URL } from '../../seo/jsonLd';
@@ -110,9 +111,8 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
       className={`rest-card rc${isClosed ? ' rc-est-ferme' : ''}`}
     >
       <div className="rc-media">
-        {r.coverImageUrl
-          ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
-          : <PhotoVide cuisine={r.cuisine} />}
+        <VisuelVide nom={r.name} cuisine={r.cuisine} />
+        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />}
         <FavoriteHeart
           active={isFavorite}
           onClick={(e) => onToggleFavorite(e, r.id)}
@@ -153,24 +153,15 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t }) {
 
 // Un vrai commerce déjà inscrit, pas encore ouvert aux commandes (fiche pas encore publiée par Fairide) : montré pour
 // ce qu'il est — un commerce qui arrive —, sans lien vers une fiche qui ne s'ouvrirait pas.
-// Commerce sans photo de couverture : l'emoji de sa cuisine sur un fond doux, plutôt qu'un bloc gris vide
-// qui ressemble à une image qui ne charge pas.
-function PhotoVide({ cuisine }) {
-  const emoji = RESTAURANT_TYPES.find((c) => c.value === cuisine)?.emoji;
-  return (
-    <span className="rc-photo rc-photo-vide" aria-hidden="true">
-      {emoji ? <span className="rc-photo-emoji">{emoji}</span> : <Icone nom="restaurants" taille={28} />}
-    </span>
-  );
-}
+// Commerce sans photo de couverture (ou photo qui ne charge pas) : un visuel aux couleurs de Fairide, avec
+// l'initiale du nom et l'emoji de sa cuisine — voir components/VisuelVide.jsx. Il est rendu sous la photo.
 
 function CarteBientot({ r, t }) {
   return (
     <div className="rest-card rc rc-bientot" aria-label={r.name}>
       <div className="rc-media">
-        {r.coverImageUrl
-          ? <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />
-          : <PhotoVide cuisine={r.cuisine} />}
+        <VisuelVide nom={r.name} cuisine={r.cuisine} />
+        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />}
         <span className="rc-offre">{t('restaurantList.soonBadge')}</span>
       </div>
       <div className="rc-corps">

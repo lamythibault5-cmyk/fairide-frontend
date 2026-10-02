@@ -226,3 +226,100 @@
 /* Liste client : vrai commerce inscrit, pas encore ouvert aux commandes (RestaurantList.jsx, CarteBientot). */
 .rc-bientot { cursor: default; }
 .rc-bientot .rc-photo { filter: saturate(.85); }
+
+/* ============================================================================================
+   TÉLÉPHONE — soin du 2026-10-03 (fondateur : « plus fluide, plus jolie, lié à Fairide, smooth,
+   originalité à travers les sections »). Aplats seulement, pas d'ombre.
+   ============================================================================================ */
+
+/* ---------- Visuel de marque quand la photo manque (components/VisuelVide.jsx) ---------- */
+/* Rendu SOUS la photo : si elle manque ou ne charge pas (cacherImageCassee la retire), c'est lui qu'on voit.
+   Quatre aplats Fairide choisis d'après le nom, l'initiale en grand, l'emoji de la cuisine en coin. */
+.visuel-vide {
+  position: absolute; inset: 0; display: block; overflow: hidden;
+  background: var(--iris); color: var(--lime); user-select: none;
+}
+.visuel-vide--p1 { background: var(--iris-deep); color: #fff; }
+.visuel-vide--p2 { background: var(--lime); color: var(--iris); }
+.visuel-vide--p3 { background: var(--surface-soft); color: var(--iris); }
+.visuel-vide-cercle {
+  position: absolute; right: -18%; top: -45%; width: 78%; aspect-ratio: 1; border-radius: 50%;
+  background: currentColor; opacity: .16;
+}
+.visuel-vide--p2 .visuel-vide-cercle, .visuel-vide--p3 .visuel-vide-cercle { opacity: .1; }
+/* L initiale au centre (les badges vivent dans les coins : offre en haut à gauche, cœur en haut à droite, état en bas à
+   gauche) ; l emoji prend le seul coin libre, en bas à droite. */
+.visuel-vide-initiale {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -52%);
+  font-weight: 800; font-size: 78px; line-height: 1; letter-spacing: -0.04em; opacity: .92;
+}
+.visuel-vide-emoji { position: absolute; right: 12px; bottom: 10px; font-size: 26px; line-height: 1; }
+.rc-media > .rc-photo { position: relative; z-index: 1; }
+.rc-media > .rc-fav, .rc-media > .rc-offre, .rc-media > .rc-etat { z-index: 2; }
+.rc-est-ferme .visuel-vide { filter: saturate(.6) brightness(.95); }
+/* Bandeau de la fiche : le visuel tient la hauteur quand il n'y a pas de couverture. */
+.fiche-media { min-height: 220px; }
+.fiche-media > .fiche-couverture { position: relative; z-index: 1; }
+.fiche-media > .fiche-logo { z-index: 2; }
+.visuel-vide--bandeau { border-radius: var(--radius); }
+.visuel-vide--bandeau .visuel-vide-initiale { font-size: 130px; }
+.visuel-vide--bandeau .visuel-vide-emoji { font-size: 40px; right: 20px; bottom: 16px; }
+/* Carte « Favoris » (ancienne carte à bandeau) : même visuel, dans le fil. */
+.visuel-vide.cover-banner-sm { position: relative; inset: auto; height: 110px; }
+@media (max-width: 640px) {
+  .fiche-media { min-height: 170px; margin-left: -20px; margin-right: -20px; }
+  .fiche-media > .fiche-couverture { margin: 0; width: 100%; }
+  .fiche-media > .fiche-logo { left: 20px; }
+  .visuel-vide--bandeau { border-radius: 0; }
+  .visuel-vide--bandeau .visuel-vide-initiale { font-size: 96px; }
+}
+
+/* ---------- Pages qui glissent en place : fondu + léger mouvement, comme une application ---------- */
+@keyframes page-arrive { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.page-fade { animation: page-arrive .26s cubic-bezier(.2, .8, .2, 1) both; }
+@media (prefers-reduced-motion: reduce) { .page-fade { animation: none; } }
+
+/* ---------- États vides : la pastille prend la teinte Fairide plutôt qu'un gris neutre ---------- */
+.etat-vide-icone { background: rgba(59, 47, 181, 0.08); color: var(--iris); }
+
+/* ---------- Titres de sections : l'icône dans une petite tuile iris, un repère commun à toutes les rangées ---------- */
+.section-titre-icone > svg {
+  flex: 0 0 auto; box-sizing: content-box; padding: 5px; border-radius: 9px;
+  background: rgba(59, 47, 181, 0.08); color: var(--iris);
+}
+
+@media (max-width: 900px) {
+  /* Les pastilles du bas flottent sur le contenu : un voile dégradé derrière elles, pour que le texte qui
+     passe dessous s'efface au lieu de se glisser entre les ronds. Il laisse passer les gestes. */
+  .dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar::before {
+    content: ''; position: fixed; left: 0; right: 0; bottom: 0; height: calc(96px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.85) 45%, rgba(255, 255, 255, 0) 100%);
+    pointer-events: none; z-index: -1;
+  }
+  .dashboard-sidebar { isolation: isolate; }
+  /* Appui et sélection d'un onglet : un rebond court, le retour d'un vrai bouton. */
+  .dashboard-nav-link { transition: transform .15s ease, background .15s ease, color .15s ease; }
+  .dashboard-nav-link:active { transform: scale(.9); }
+  @keyframes onglet-choisi { 0% { transform: scale(.92); } 60% { transform: scale(1.06); } 100% { transform: scale(1); } }
+  .dashboard-nav-link.active { animation: onglet-choisi .28s cubic-bezier(.2, .8, .2, 1); }
+  @media (prefers-reduced-motion: reduce) { .dashboard-nav-link.active { animation: none; } }
+}
+
+/* ---------- Tactile ---------- */
+@media (hover: none) and (pointer: coarse) {
+  /* iOS zoome sur tout champ dont la police fait moins de 16px : à 15px, chaque saisie faisait sauter la page. */
+  input, select, textarea { font-size: 16px; }
+  /* Une carte ou une rangée qu'on presse s'enfonce légèrement : le doigt sait qu'il a touché. */
+  .rest-card.rc:active { transform: scale(.98); transition: transform .12s ease; }
+  .account-link-row:active, .plat-cliquable:active { transform: scale(.995); }
+}
+
+/* ---------- Espace restaurateur : l'alerte « nouvelle commande » se fait discrète quand tout est calme ---------- */
+/* Elle est montée sur chaque onglet (c'est elle qui sonne) ; au téléphone, sans commande en attente, elle
+   prenait un tiers de l'écran avant le contenu. Repliée en une ligne : le titre et les boutons. */
+@media (max-width: 640px) {
+  .alerte-commandes.est-calme { padding: 10px 14px; gap: 6px 10px; }
+  .alerte-commandes.est-calme > strong { font-size: 14px; }
+  .alerte-commandes.est-calme .alerte-aide { display: none; }
+  .alerte-commandes.est-calme .alerte-actions { margin-left: auto; }
+}
