@@ -5420,6 +5420,7 @@ export default {
       confirme_driver: 'Your courier file will be created. You will then need to upload your documents and wait for the team\'s approval before taking any delivery.'
     },
     accountUi: {
+      noCommitmentShort: 'no commitment',
       guaranteeTitle: 'Zero orders = zero subscription',
       guaranteeText: 'No orders during your free month: the next month is free too. No orders during a paid month: your €20 is refunded automatically. As soon as one order comes in during the month, that month\'s subscription is due; the 10% per order paid online still applies.',
       guaranteeNoOrder: 'No orders so far in this subscription month: if it ends that way on {date}, it will cost you nothing.',

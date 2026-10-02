@@ -5420,6 +5420,7 @@ export default {
       confirme_driver: 'Je koeriersdossier wordt aangemaakt. Daarna laad je je documenten op en wacht je op de goedkeuring van het team voor je ritten kunt aannemen.'
     },
     accountUi: {
+      noCommitmentShort: 'zonder verbintenis',
       guaranteeTitle: 'Nul bestellingen = nul abonnement',
       guaranteeText: 'Geen bestellingen tijdens je gratis maand: de volgende maand is ook gratis. Geen bestellingen tijdens een betaalde maand: je € 20 wordt automatisch terugbetaald. Zodra er in de maand één bestelling binnenkomt, is het abonnement van die maand verschuldigd; de 10% per online betaalde bestelling blijft van toepassing.',
       guaranteeNoOrder: 'Nog geen bestellingen in deze abonnementsmaand: eindigt ze zo op {date}, dan kost ze je niets.',

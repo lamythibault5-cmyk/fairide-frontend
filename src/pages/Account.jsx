@@ -868,7 +868,7 @@ export default function Account() {
                   <input id={idsA11y + '-promocode'} value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
                 </div>
                 <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: t('accountUi.firstMonthFree') })}
+                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: restaurant.freeTrialMonths === 0 ? t('accountUi.noCommitmentShort') : t('accountUi.firstMonthFree') })}
                 </button>
               </div>
             )}

@@ -5439,6 +5439,7 @@ export default {
       confirme_driver: 'Ton dossier livreur sera créé. Il faudra ensuite déposer tes documents et attendre la validation de l\'équipe avant de prendre des courses.'
     },
     accountUi: {
+      noCommitmentShort: 'sans engagement',
       guaranteeTitle: 'Zéro commande = zéro abonnement',
       guaranteeText: 'Aucune commande pendant ton mois offert : le mois suivant est offert aussi. Aucune commande pendant un mois payé : tes 20 € te sont remboursés automatiquement. Dès qu\'une commande arrive dans le mois, l\'abonnement de ce mois est dû ; les 10 % par commande payée en ligne restent applicables.',
       guaranteeNoOrder: 'Aucune commande pour l\'instant sur ce mois d\'abonnement : s\'il se termine ainsi le {date}, il ne te coûtera rien.',
