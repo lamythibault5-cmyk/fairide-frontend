@@ -7206,6 +7206,12 @@ export default {
       joinDriverP2NoP2p: 'Étudiant-indépendant ou indépendant : tu choisis ton statut'
     },
     simulation: {
+      benchPickTitle: 'Choisis les tickets à imprimer',
+      benchSelectAll: 'Tout cocher',
+      benchSelectNone: 'Tout décocher',
+      benchPrinted: 'imprimé',
+      benchPrintSelected: 'Imprimer la sélection ({n})',
+      benchPrinting: 'Impression : {ticket}…',
       benchTitle: 'Banc d\'essai des tickets',
       benchIntro: 'Vérifie que chaque type de ticket s\'imprime. Connecte l\'appareil que tu as en main comme terminal du commerce de simulation : les tickets sortent sur son imprimante. Sans terminal, ils sortent sur l\'imprimante virtuelle (et « Papier » les envoie à l\'imprimante de ce navigateur).',
       benchTerminalOff: 'Aucun terminal connecté : imprimante virtuelle',
@@ -7229,7 +7235,6 @@ export default {
       benchAlreadyTerminal: 'Cet appareil est déjà le terminal d\'un vrai commerce : je ne touche pas à son association. Utilise un autre appareil pour le test.',
       benchSentToTerminal: '« {ticket} » envoyé au terminal.',
       benchSentToVirtual: '« {ticket} » sorti sur l\'imprimante virtuelle.',
-      benchPrintAll: 'Sortir les {n} tickets d\'un coup',
       benchReprintCopies: 'Exemplaires par réimpression',
       benchReprintHelp: 'Pour réimprimer un même ticket, utilise « Réimprimer » sur le ticket dans le rouleau : il ressort marqué RÉIMPRESSION, autant de fois que réglé ici.',
       tk_delivery_paid: 'Livraison payée en ligne',

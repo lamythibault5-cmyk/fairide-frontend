@@ -74,8 +74,13 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
       toast(tr(reel ? 'simulation.benchSentToTerminal' : 'simulation.benchSentToVirtual', { ticket: tr(`simulation.tk_${type}`) }));
     } catch (e) { toast(e.message, 'erreur'); } finally { setOccupe(null); }
   }
-  async function toutSortir() {
-    for (const type of TYPES) await sortir(type);
+  // CHOISIR QUELS TICKETS IMPRIMER (fondateur, 2026-10-02) : toucher une carte la coche ou la décoche ; « Imprimer la
+  // sélection » ne sort que les tickets cochés, dans l'ordre de la grille. Rien ne part au simple toucher d'une carte.
+  const [choisis, setChoisis] = useState(() => new Set());
+  const basculer = (type) => setChoisis((c) => { const n = new Set(c); if (n.has(type)) n.delete(type); else n.add(type); return n; });
+  async function sortirLaSelection() {
+    for (const type of TYPES.filter((x) => choisis.has(x))) await sortir(type);
+    setChoisis(new Set());
   }
 
   const heure = (d) => (d ? new Date(d).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : '—');
@@ -105,16 +110,31 @@ export default function BancTickets({ pret, imprimante, onImprimante, exemplaire
           : <button type="button" className="btn-teal" disabled={!!occupe || !pret} onClick={connecter}>{occupe === 'terminal' ? '…' : tr('simulation.benchConnect')}</button>}
       </div>
 
-      <div className="banc-types">
-        {TYPES.map((type) => (
-          <button key={type} type="button" className={`banc-type${faits.has(type) ? ' est-fait' : ''}`} disabled={!!occupe || !pret} onClick={() => sortir(type)}>
-            <b>{faits.has(type) ? '✓ ' : ''}{tr(`simulation.tk_${type}`)}</b>
-            <span className="small">{tr(`simulation.tk_${type}_d`)}</span>
-          </button>
-        ))}
+      <div className="row" style={{ gap: 8, flexWrap: 'wrap', alignItems: 'center', margin: '0 0 8px' }}>
+        <b className="small">{tr('simulation.benchPickTitle')}</b>
+        <button type="button" className="btn-ghost simu-mini" disabled={!!occupe || choisis.size === TYPES.length} onClick={() => setChoisis(new Set(TYPES))}>{tr('simulation.benchSelectAll')}</button>
+        <button type="button" className="btn-ghost simu-mini" disabled={!!occupe || choisis.size === 0} onClick={() => setChoisis(new Set())}>{tr('simulation.benchSelectNone')}</button>
+      </div>
+      <div className="banc-types" role="group" aria-label={tr('simulation.benchPickTitle')}>
+        {TYPES.map((type) => {
+          const coche = choisis.has(type);
+          return (
+            <button key={type} type="button" role="checkbox" aria-checked={coche}
+              className={`banc-type${coche ? ' est-choisi' : ''}${occupe === type ? ' est-en-cours' : ''}`} disabled={!!occupe || !pret} onClick={() => basculer(type)}>
+              <span className="banc-type-tete">
+                <span className="banc-case" aria-hidden="true">{coche ? '✓' : ''}</span>
+                <b>{tr(`simulation.tk_${type}`)}</b>
+              </span>
+              <span className="small">{tr(`simulation.tk_${type}_d`)}</span>
+              {faits.has(type) && <span className="banc-imprime">{tr('simulation.benchPrinted')}</span>}
+            </button>
+          );
+        })}
       </div>
       <div className="row" style={{ gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
-        <button type="button" className="btn-gold" disabled={!!occupe || !pret} onClick={toutSortir}>{tr('simulation.benchPrintAll', { n: TYPES.length })}</button>
+        <button type="button" className="btn-gold" disabled={!!occupe || !pret || choisis.size === 0} onClick={sortirLaSelection}>
+          {occupe && occupe !== 'terminal' ? tr('simulation.benchPrinting', { ticket: tr(`simulation.tk_${occupe}`) }) : tr('simulation.benchPrintSelected', { n: choisis.size })}
+        </button>
         <span className="small" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
           {tr('simulation.benchReprintCopies')}
           <span className="exemplaires">

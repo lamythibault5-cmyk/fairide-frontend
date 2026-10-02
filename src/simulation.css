@@ -136,3 +136,11 @@
 .banc-type:active:not(:disabled) { transform: scale(.98); }
 .banc-type.est-fait { border-color: var(--iris); }
 .banc-type .small { color: var(--ink-soft); }
+/* Choix des tickets à imprimer : chaque carte est une case à cocher. */
+.banc-type { position: relative; }
+.banc-type-tete { display: flex; align-items: center; gap: 8px; }
+.banc-case { flex: 0 0 auto; width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--line); background: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; }
+.banc-type.est-choisi { border-color: var(--iris); background: var(--surface-soft); }
+.banc-type.est-choisi .banc-case { background: var(--iris); border-color: var(--iris); }
+.banc-type.est-en-cours { border-style: dashed; }
+.banc-imprime { align-self: flex-start; margin-top: 2px; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 99px; background: var(--lime); color: var(--ink); }

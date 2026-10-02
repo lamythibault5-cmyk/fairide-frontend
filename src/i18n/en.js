@@ -7159,6 +7159,12 @@ export default {
       joinDriverP2NoP2p: 'Student-self-employed or self-employed: you choose your status'
     },
     simulation: {
+      benchPickTitle: 'Choose the tickets to print',
+      benchSelectAll: 'Select all',
+      benchSelectNone: 'Clear selection',
+      benchPrinted: 'printed',
+      benchPrintSelected: 'Print selection ({n})',
+      benchPrinting: 'Printing: {ticket}…',
       benchTitle: 'Ticket test bench',
       benchIntro: 'Check that every kind of ticket prints. Connect the device in your hands as the terminal of the simulation shop: tickets come out of its printer. Without a terminal they come out of the virtual printer (and “Paper” sends them to this browser\'s printer).',
       benchTerminalOff: 'No terminal connected: virtual printer',
@@ -7182,7 +7188,6 @@ export default {
       benchAlreadyTerminal: 'This device is already the terminal of a real shop: I am leaving its pairing alone. Use another device for the test.',
       benchSentToTerminal: '“{ticket}” sent to the terminal.',
       benchSentToVirtual: '“{ticket}” printed on the virtual printer.',
-      benchPrintAll: 'Print all {n} tickets at once',
       benchReprintCopies: 'Copies per reprint',
       benchReprintHelp: 'To reprint the same ticket, use “Reprint” on the ticket in the roll: it comes out marked REPRINT, as many times as set here.',
       tk_delivery_paid: 'Delivery paid online',

@@ -7159,6 +7159,12 @@ export default {
       joinDriverP2NoP2p: 'Student-zelfstandige of zelfstandige: jij kiest je statuut'
     },
     simulation: {
+      benchPickTitle: 'Kies de tickets om af te drukken',
+      benchSelectAll: 'Alles aanvinken',
+      benchSelectNone: 'Alles uitvinken',
+      benchPrinted: 'afgedrukt',
+      benchPrintSelected: 'Selectie afdrukken ({n})',
+      benchPrinting: 'Afdrukken: {ticket}…',
       benchTitle: 'Testbank voor tickets',
       benchIntro: 'Controleer dat elk soort ticket wordt afgedrukt. Koppel het toestel dat je vasthebt als terminal van de simulatiezaak: de tickets komen uit zijn printer. Zonder terminal komen ze uit de virtuele printer (en “Papier” stuurt ze naar de printer van deze browser).',
       benchTerminalOff: 'Geen terminal gekoppeld: virtuele printer',
@@ -7182,7 +7188,6 @@ export default {
       benchAlreadyTerminal: 'Dit toestel is al de terminal van een echte zaak: ik laat die koppeling ongemoeid. Gebruik een ander toestel voor de test.',
       benchSentToTerminal: '“{ticket}” naar de terminal gestuurd.',
       benchSentToVirtual: '“{ticket}” afgedrukt op de virtuele printer.',
-      benchPrintAll: 'Alle {n} tickets in één keer afdrukken',
       benchReprintCopies: 'Exemplaren per herdruk',
       benchReprintHelp: 'Om hetzelfde ticket opnieuw af te drukken, gebruik je “Herdrukken” op het ticket in de rol: het komt eruit met HERDRUK erop, zo vaak als hier ingesteld.',
       tk_delivery_paid: 'Levering online betaald',

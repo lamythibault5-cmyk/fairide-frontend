@@ -12,7 +12,10 @@ export function epingler(liste, placements, cle, admissibles = liste) {
   const epingles = (placements || []).filter((p) => p.sectionKey === cle).sort((a, b) => a.slot - b.slot);
   if (!epingles.length || !liste) return liste;
   const parId = new Map(admissibles.map((r) => [r.id, r]));
-  const retenus = epingles.map((p) => ({ slot: p.slot, r: parId.get(p.restaurantId) })).filter((x) => x.r);
+  // Un commerce épinglé deux fois dans la même rangée (le serveur l'interdit, mais deux données contradictoires ne
+  // doivent pas dessiner deux cartes identiques) ne garde que sa meilleure position.
+  const vus = new Set();
+  const retenus = epingles.map((p) => ({ slot: p.slot, r: parId.get(p.restaurantId) })).filter((x) => x.r && !vus.has(x.r.id) && vus.add(x.r.id));
   if (!retenus.length) return liste;
   const ids = new Set(retenus.map((x) => x.r.id));
   const resultat = liste.filter((r) => !ids.has(r.id));
