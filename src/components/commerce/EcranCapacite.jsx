@@ -24,6 +24,8 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   const [rayon, setRayon] = useState(RAYON_DEFAUT);
   const [plafondLibre, setPlafondLibre] = useState(true);
   const [plafond, setPlafond] = useState(PLAFOND_DEFAUT);
+  // Montant minimum de commande (plan de test PAN-3) : vide = aucun minimum.
+  const [minimum, setMinimum] = useState('');
   const [enCours, setEnCours] = useState(false);
 
   useEffect(() => {
@@ -33,6 +35,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
       setEtat(r);
       setRayonLibre(r.deliveryRadiusIsDefault !== false); if (r.deliveryRadiusKm != null) setRayon(r.deliveryRadiusKm);
       setPlafondLibre(r.maxOrdersPerDay === null); if (r.maxOrdersPerDay !== null) setPlafond(r.maxOrdersPerDay);
+      setMinimum(r.minOrderAmount ? String(r.minOrderAmount).replace('.', ',') : '');
     }).catch((e) => toast(e.message, 'erreur'));
     return () => { annule = true; };
   }, [restoId, token, toast]);
@@ -40,9 +43,11 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
   async function enregistrer() {
     const n = Number(plafond);
     if (!plafondLibre && (!Number.isInteger(n) || n < 1)) { toast(t('editResto.capacityCapInvalid'), 'erreur'); return; }
+    const min = minimum.trim() === '' ? null : Number(minimum.replace(',', '.'));
+    if (min !== null && (!Number.isFinite(min) || min < 1 || min > 100)) { toast(t('editResto.minOrderInvalid'), 'erreur'); return; }
     setEnCours(true);
     try {
-      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n } });
+      await api(`/restaurants/${restoId}/order-limits`, { method: 'PUT', token, body: { deliveryRadiusKm: rayonLibre ? null : rayon, maxOrdersPerDay: plafondLibre ? null : n, minOrderAmount: min } });
       await loadDashboard?.(restoId);
       toast(t('editResto.capacitySaved'));
       onFermer();
@@ -95,6 +100,15 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               </div>
             )}
             <p className="small" style={{ margin: '8px 0 0', opacity: 0.8 }}>{t('editResto.capacityToday', { n: etat.ordersToday })}</p>
+          </div>
+
+          <div className="field">
+            <label htmlFor="capacite-minimum" className="titre-groupe">🧺 {t('editResto.minOrderTitle')}</label>
+            <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.minOrderHelp')}</p>
+            <div className="row" style={{ gap: 8, alignItems: 'center' }}>
+              <input id="capacite-minimum" inputMode="decimal" value={minimum} onChange={(e) => setMinimum(e.target.value)} placeholder={t('editResto.minOrderNone')} style={{ width: 120 }} />
+              <span className="small">€</span>
+            </div>
           </div>
 
           <p className="small" style={{ padding: '8px 10px', borderRadius: 8, background: 'var(--surface-soft)' }}>

@@ -15,6 +15,7 @@ import PhoneInput from '../components/PhoneInput';
 import { useLanguage } from '../context/LanguageContext';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import LigneCompte from '../components/LigneCompte';
+import MesDonnees from '../components/MesDonnees';
 import MesCasquettes from '../components/MesCasquettes';
 import InboxSection from '../components/InboxSection';
 import useInbox from '../hooks/useInbox';
@@ -652,6 +653,9 @@ export default function Account() {
         <LigneCompte icone="globe" titre={t('account.language')} sous={LANGUE_LABEL[language] || language} ouverte={ouvertes.has('langue')} onClick={() => basculer('langue')}>
           <p className="small" style={{ margin: '0 0 10px', opacity: 0.75 }}>{t('account.languageHelp')}</p>
           <LanguageSwitcher />
+        </LigneCompte>
+        <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
+          {ouvertes.has('donnees') && <MesDonnees />}
         </LigneCompte>
 
         {role === 'driver' && (

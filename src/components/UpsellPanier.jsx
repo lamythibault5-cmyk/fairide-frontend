@@ -64,8 +64,8 @@ function UpsellRow({ items, cart, restaurant }) {
           item={pickerItem}
           imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
-          onConfirm={(optionItemIds, snapshot, unitPrice, qty) => {
-            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty });
+          onConfirm={(optionItemIds, snapshot, unitPrice, qty, note) => {
+            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note });
             setPickerItem(null);
           }}
         />

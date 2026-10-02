@@ -4,7 +4,11 @@ import useRevalidation from '../../useRevalidation';
 import EtatVide from '../../components/EtatVide';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import BandeauOuverture from '../../components/BandeauOuverture';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import { preparerNouvelleCommande } from '../../recommander';
+import SignalerProbleme from '../../components/client/SignalerProbleme';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -129,6 +133,37 @@ export default function Orders() {
   const toast = useToast();
   const { previewMode } = usePreviewMode();
   const { t } = useLanguage();
+  const cart = useCart();
+  const navigate = useNavigate();
+  // Signalements déjà envoyés, par commande (plan de test USR-10) — affichés à la place du bouton.
+  const [signalements, setSignalements] = useState({});
+  // « Commander à nouveau » qui viderait le panier d'un autre commerce : demandé d'abord (plan de test USR-9).
+  const [aRecommander, setARecommander] = useState(null);
+
+  useEffect(() => {
+    if (previewMode && role === 'restaurant') return;
+    api('/me/problems', { token }).then((liste) => {
+      const parCommande = {};
+      for (const p of liste) if (!parCommande[p.orderId]) parCommande[p.orderId] = { ...p, responseWithinHours: 24 };
+      setSignalements(parCommande);
+    }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Refait le panier d'une commande passée avec la carte d'aujourd'hui (voir recommander.js).
+  async function recommander(order, confirme = false) {
+    try {
+      const { restaurant, lignes, manquants } = await preparerNouvelleCommande(order, token);
+      if (!lignes.length) { toast(t('orders.reorderNothing'), 'erreur'); return; }
+      if (!confirme && cart.hasConflict(restaurant.id)) { setARecommander(order); return; }
+      cart.addMany({ restaurantId: restaurant.id, restaurantName: restaurant.name, lignes });
+      if (manquants.length) toast(t('orders.reorderMissing', { items: manquants.join(', ') }));
+      else toast(t('orders.reorderDone'));
+      navigate('/panier');
+    } catch (e) {
+      toast(e.message, 'erreur');
+    }
+  }
 
   useEffect(() => {
     // Un restaurateur en mode aperçu n'a pas de vraies commandes client (403 côté API) — liste vide
@@ -304,10 +339,27 @@ export default function Orders() {
               onDone={(maj = {}) => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true, ...maj } : x))); }}
             />
           )}
+          {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
+          {o.paid && ['livre', 'livraison'].includes(o.status) && (
+            <SignalerProbleme order={o} token={token} toast={toast} signalement={signalements[o.id]}
+              onSignale={(s) => setSignalements((prev) => ({ ...prev, [o.id]: s }))} />
+          )}
+          {/* Commander à nouveau (USR-9) : une commande close, refaite avec la carte d'aujourd'hui. */}
+          {['livre', 'annule', 'refuse'].includes(o.status) && (o.items || []).length > 0 && (
+            <button type="button" className="btn-outline" style={{ marginTop: 8, marginLeft: 8 }} onClick={() => recommander(o)}>{t('orders.reorder')}</button>
+          )}
         </div>
         </Fragment>
       ))}
       <EmplacementSponsor cle="suivi" style={{ marginTop: 16 }} />
+      <ConfirmDialog
+        open={!!aRecommander}
+        title={t('orders.reorderConflictTitle')}
+        message={t('orders.reorderConflictText', { name: cart.restaurantName })}
+        confirmLabel={t('orders.reorder')}
+        onCancel={() => setARecommander(null)}
+        onConfirm={() => { const o = aRecommander; setARecommander(null); recommander(o, true); }}
+      />
     </div>
   );
 }

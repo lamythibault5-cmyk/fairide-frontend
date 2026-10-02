@@ -124,6 +124,8 @@ export default function Checkout() {
   if (notFound) return <div className="empty">{t('checkout.notAvailable')}</div>;
   if (!restaurant) return <SkeletonCards count={2} />;
 
+  // Ce qui manque pour atteindre le minimum du commerce (PAN-3), sur la valeur des plats avant remises, comme le serveur.
+  const manqueMinimum = restaurant.minOrderAmount ? Math.max(0, +(restaurant.minOrderAmount - cart.rawTotal).toFixed(2)) : 0;
   const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveryMode: restaurant.deliveryMode, ownDeliveryFee: restaurant.ownDeliveryFee });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
@@ -180,7 +182,7 @@ export default function Checkout() {
     }
     // Commande programmée : heure locale.
     const scheduledForISO = scheduleEnabled ? new Date(`${scheduleDate}T${scheduleTime}:00`).toISOString() : null;
-    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds }));
+    const items = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, note: l.note || undefined }));
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
     if (manque) {
       toast(manque);
@@ -452,7 +454,10 @@ export default function Checkout() {
               <span className="co-barre-montant">{euros(estimatedTotal)}</span>
               <span className="co-barre-detail">{t(cart.count > 1 ? 'checkout.barCountPlural' : 'checkout.barCount', { count: cart.count })}</span>
             </span>
-            {serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
+            {serviceOuvert(fulfillmentType, user) && !paiementBloque && manqueMinimum > 0 ? (
+              // Montant minimum du commerce (PAN-3) : le bouton laisse place à ce qui manque, comme le serveur le refuserait.
+              <span className="small co-barre-attente">{t('checkout.minOrderMissing', { min: euros(restaurant.minOrderAmount), missing: euros(manqueMinimum) })}</span>
+            ) : serviceOuvert(fulfillmentType, user) && !paiementBloque ? (
               <button className="btn-gold" disabled={placing} onClick={placeOrder}>
                 {placing ? '...' : t('checkout.validateInfo')}
               </button>
@@ -481,6 +486,7 @@ export default function Checkout() {
                     {line.optionsSnapshot?.length > 0 && (
                       <span className="small" style={{ display: 'block' }}>{line.optionsSnapshot.map((o) => o.name).join(', ')}</span>
                     )}
+                    {line.note && <span className="small" style={{ display: 'block' }}>« {line.note} »</span>}
                   </span>
                   <div className="co-qte" role="group" aria-label={item.name}>
                     <button type="button" onClick={() => cart.changeLineQty(lineKey, -1)} aria-label={t('checkout.qtyLess')}>−</button>
