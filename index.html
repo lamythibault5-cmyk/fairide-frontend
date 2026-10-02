@@ -101,10 +101,11 @@
     <!-- Le fichier de la police du mot « fairide », servi par nous : l'écran de chargement en a besoin
          avant toute autre chose (voir le @font-face du #splash plus bas). -->
     <link rel="preload" href="/fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" media="print" data-police />
-    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700..800&amp;family=Space+Grotesk:wght@400;500;700&amp;display=swap" /></noscript>
+    <!-- Polices servies par nous depuis le 2026-10-02 (public/fonts/polices.css) : la feuille Google partait avant
+         toute réponse au bandeau cookies et donnait l'adresse IP du visiteur à Google (plan de test LEG-3). Même
+         bascule media="print" → "all" qu'avant (main.jsx), pour ne jamais bloquer le démarrage. -->
+    <link rel="stylesheet" href="/fonts/polices.css" media="print" data-police />
+    <noscript><link rel="stylesheet" href="/fonts/polices.css" /></noscript>
     <!-- Le script Google Sign-In N'EST PLUS chargé ici. Posé dans ce <head>, il partait sur toutes les
          pages et avant toute réponse à la bannière cookies, alors qu'il ne sert qu'à /login : Google
          déposait ses traceurs sur l'accueil, sur une carte de restaurant, sur les pages légales. C'est

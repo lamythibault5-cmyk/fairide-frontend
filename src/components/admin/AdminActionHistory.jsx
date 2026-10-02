@@ -1,5 +1,6 @@
 import { fmtDateTime } from '../../pages/admin/adminUtils';
 import { useLanguage } from '../../context/LanguageContext';
+import { euros } from '../../prixPlat';
 
 const actionLabels = (tr) => ({
   order_status_override: tr('adminHistory.a_order_status_changed'),
@@ -32,7 +33,7 @@ function describeDetails(action, details, tr) {
   if (!details) return '';
   if (action === 'order_status_override') return `→ ${details.status}`;
   if (action === 'order_driver_reassign') return `→ ${details.driverName}`;
-  if (action === 'order_refund') return `${Number(details.amount).toFixed(2)}€ (${details.responsibility})`;
+  if (action === 'order_refund') return `${euros(Number(details.amount))} (${details.responsibility})`;
   if (action === 'restaurant_status_change' || action === 'driver_status_change' || action === 'client_status_change') return `→ ${details.status}`;
   if (action === 'note_added') return `"${details.text}"`;
   if (action === 'settings_change') return Object.entries(details).map(([k, v]) => `${k}=${v}`).join(', ');

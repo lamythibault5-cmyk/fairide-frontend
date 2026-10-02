@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { SkeletonCards } from './Skeleton';
+import { euros } from '../prixPlat';
 
 // Relevés détaillés des commissions (voir statements.js côté serveur) : le restaurateur choisit une
 // période (raccourcis ou dates libres) et une granularité — semaine, mois, trimestre — et voit chaque
@@ -28,7 +29,7 @@ function periodePreset(cle) {
   }
 }
 
-const euro = (n) => `${Number(n || 0).toFixed(2)} €`;
+const euro = (n) => euros(Number(n || 0));
 
 export default function CommissionStatements() {
   const { t } = useLanguage();

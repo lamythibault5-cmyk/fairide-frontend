@@ -72,6 +72,8 @@ export default function RestaurantMenu() {
   // Article qu'on essayait d'ajouter quand le panier contenait déjà un autre commerce (voir addToCart) —
   // conservé le temps que l'utilisateur confirme ou annule le remplacement du panier.
   const [conflictItem, setConflictItem] = useState(null);
+  // Un seul avis « commerce fermé, ton panier est gardé » par visite de la fiche.
+  const avertiFerme = useRef(false);
   const cart = useCart();
   const toast = useToast();
   const navigate = useNavigate();
@@ -288,9 +290,12 @@ export default function RestaurantMenu() {
       toast(t('restoMenuUi.toastNoOnline'));
       return;
     }
-    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen) {
-      toast(t('restoMenuUi.toastClosed'));
-      return;
+    // Commerce fermé en ce moment : on laisse composer le panier (une commande programmée reste possible, et la
+    // fiche promet « compose ton panier ») — avant, l'ajout était refusé sous un bandeau qui disait le contraire
+    // (plan de test). Le checkout et le serveur refusent toujours une commande immédiate à un commerce fermé.
+    if (!getOpenStatus(restaurant.hours, now, restaurant.closures).isOpen && !avertiFerme.current) {
+      avertiFerme.current = true;
+      toast(t('restoMenuUi.toastClosedCartKept'));
     }
     if (complet) {
       toast(t('restoMenuUi.toastFullToday'));

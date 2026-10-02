@@ -281,8 +281,12 @@ export const RESTAURANT_TYPES = [
 ];
 
 export function restaurantTypeLabel(value, t) {
-  if (t) return t(`menuCategories.cuisine.${value}`);
-  return value;
+  if (!t || !value) return value;
+  // Type absent de la table (saisi librement, ou ajouté sans traduction) : on garde le libellé tel quel plutôt que
+  // d'afficher le chemin de la clé.
+  const cle = `menuCategories.cuisine.${value}`;
+  const libelle = t(cle);
+  return libelle && libelle !== cle ? libelle : value;
 }
 
 const GENERIC_TEMPLATE = {

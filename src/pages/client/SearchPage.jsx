@@ -8,6 +8,7 @@ import { useAuth } from '../../context/AuthContext';
 import { COMMUNES, COMMUNES_SUGGEREES, RESTAURANT_TYPES } from '../../menuCategories';
 import usePageMeta from '../../hooks/usePageMeta';
 import { useLanguage } from '../../context/LanguageContext';
+import { euros } from '../../prixPlat';
 
 // Recherche transversale — un seul champ, tout ce que Fairide sait chercher.
 //
@@ -137,7 +138,7 @@ export default function SearchPage() {
     return undefined;
   }
 
-  const prix = (p) => (typeof p.price === 'number' ? `${p.price.toFixed(2)}€` : p.price ? `${Number(p.price).toFixed(2)}€` : '');
+  const prix = (p) => (typeof p.price === 'number' ? euros(p.price) : p.price ? euros(Number(p.price)) : '');
 
   return (
     <div>
@@ -241,7 +242,7 @@ export default function SearchPage() {
           <Groupe titre={t('search.myOrders')} quand={resultats.mesCommandes.length}>
             {resultats.mesCommandes.map((o) => (
               <Ligne key={o.id} to="/orders" icone="commandes" titre={o.restaurantName || o.restaurant?.name || 'Commande'}
-                sous={[statuts(t)[o.status] || o.status, o.total != null ? `${Number(o.total).toFixed(2)}€` : null].filter(Boolean).join(' · ')} />
+                sous={[statuts(t)[o.status] || o.status, o.total != null ? euros(Number(o.total)) : null].filter(Boolean).join(' · ')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.help')} quand={resultats.aide.length}>

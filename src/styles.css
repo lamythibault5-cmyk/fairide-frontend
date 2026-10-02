@@ -1459,6 +1459,9 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
    (signalé par le fondateur sur un numéro de rue inexistant, 2026-09-17). */
 /* Une erreur se dit en rouge d'état. Jamais en lime : c'est l'accent de la marque. */
 .toast-erreur { background: var(--red); color: #fff; }
+/* Bandeau hors ligne (BandeauHorsLigne.jsx) : en haut, au-dessus de tout sauf le toast ; fond encre comme le toast,
+   pas de troisième couleur de fond. */
+.bandeau-hors-ligne { position: fixed; top: 0; left: 0; right: 0; z-index: 590; background: var(--chip); color: #fff; text-align: center; font-size: 14px; font-weight: 600; padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top, 0px)); }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 /* LE MESSAGE PASSE AU-DESSUS DU MOBILIER FLOTTANT.
    Relevé au pixel : sous 900px les onglets ronds occupent de 12 à 68px du bas, et le message se

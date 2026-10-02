@@ -45,6 +45,10 @@ export default function Checkout() {
   const [addressPostalCode, setAddressPostalCode] = useState(user.addressPostalCode || '');
   const [addressCity, setAddressCity] = useState(user.addressCity || '');
   const [deliveryInstructions, setDeliveryInstructions] = useState('sonner');
+  // De l'alcool ne se dépose pas devant une porte : le livreur contrôle l'âge en main propre (plan de test LEG-9 /
+  // PAN-8, le serveur refuse aussi : DEPOT_ALCOOL_INTERDIT). L'option disparaît, et un choix déjà fait repasse à « Sonner ».
+  const panierAlcool = Object.values(cart.lines).some((l) => restaurant?.menu?.find((m) => m.id === l.itemId)?.isAlcohol);
+  useEffect(() => { if (panierAlcool && deliveryInstructions === 'deposer') setDeliveryInstructions('sonner'); }, [panierAlcool, deliveryInstructions]);
   const [deliveryNote, setDeliveryNote] = useState('');
   const [useBalance, setUseBalance] = useState(true);
   // À emporter chez un commerce qui l'accepte : payer au retrait plutôt qu'en ligne.
@@ -78,6 +82,8 @@ export default function Checkout() {
   useEffect(() => {
     if (commandeTermineeRef.current) return;
     if (!restaurantId || cart.count === 0) {
+      // Arrivé ici sans panier (lien direct, onglet rouvert) : on le dit, au lieu de changer de page sans un mot (PAN-6).
+      toast(t('checkout.toastEmptyCart'));
       navigate('/restaurants');
       return;
     }
@@ -202,7 +208,9 @@ export default function Checkout() {
           useBalance: useBalance && !surPlace,
           giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
           allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
-          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {})
+          ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {}),
+          // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
+          clientRequestId: cart.requestId
         }
       });
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
@@ -211,6 +219,10 @@ export default function Checkout() {
     } catch (e) {
       // CGU passées à une nouvelle version entre l'ouverture de la page et le clic : on affiche la case.
       if (e.code === 'CGU_A_ACCEPTER') setConformite((c) => ({ ...c, termsNeeded: true, acceptTerms: false, termsVersion: e.data?.termsVersion || c.termsVersion }));
+      // Ce panier a déjà donné une commande (payée dans un autre onglet) : on ne la repasse pas, on la montre.
+      if (e.code === 'ORDER_ALREADY_PLACED') { commandeTermineeRef.current = true; cart.clear(); toast(e.message); navigate('/orders'); return; }
+      // Pas de téléphone sur le compte : on y envoie le client, le panier l'attend.
+      if (e.code === 'PHONE_REQUIRED') { toast(e.message, 'erreur'); navigate('/account?ouvrir=connexion&retour=/checkout'); return; }
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
@@ -608,12 +620,13 @@ export default function Checkout() {
                     libelle={t('checkout.atDelivery')}
                     valeur={deliveryInstructions}
                     onChange={setDeliveryInstructions}
-                    options={DELIVERY_INSTRUCTION_OPTIONS.map((o) => ({
+                    options={DELIVERY_INSTRUCTION_OPTIONS.filter((o) => !(panierAlcool && o.value === 'deposer')).map((o) => ({
                       value: o.value,
                       label: deliveryInstructionLabel(o.value, t),
                       icone: <Icone nom={o.icon} taille={16} />
                     }))}
                   />
+                  {panierAlcool && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.noDoorDropAlcohol')}</p>}
                 </div>
                 <div className="field">
                   <label htmlFor="checkout-f-6">{t('checkout.driverNote')}</label>

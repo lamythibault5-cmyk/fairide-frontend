@@ -24,6 +24,7 @@ import { abonnementOuvert, datePremierPrelevement } from '../launch';
 import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { StarsDisplay } from '../components/Stars';
+import { euros } from '../prixPlat';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -707,7 +708,7 @@ export default function Account() {
                 {generatedCodes.map((c) => (
                   <div key={c.code} className="row" style={{ justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--line)' }}>
                     <span style={{ fontWeight: 700, letterSpacing: 1 }}>{c.code}</span>
-                    <span className="small">{c.amount.toFixed(2)}€</span>
+                    <span className="small">{euros(c.amount)}</span>
                     <span className={`pill ${c.used ? '' : 'teal'}`}>{c.used ? t('account.convert.used') : t('account.convert.unused')}</span>
                   </div>
                 ))}
@@ -736,7 +737,7 @@ export default function Account() {
                   <div className="label">{t('account.referral.statInvited')}</div>
                 </div>
                 <div className="stat-card highlight" style={{ flex: 1 }}>
-                  <div className="num">{referralStats.earnedTotal.toFixed(2)}€</div>
+                  <div className="num">{euros(referralStats.earnedTotal)}</div>
                   <div className="label">{t('account.referral.statEarned')}</div>
                 </div>
               </div>
@@ -1141,7 +1142,7 @@ function DriverActivity({ deliveries, reviews, t }) {
   return (
     <div className="stat-grid" style={{ marginTop: 0 }}>
       <div className="stat-card"><div className="num">{delivered.length}</div><div className="label">{t('account.deliveriesDone')}</div></div>
-      <div className="stat-card highlight"><div className="num">{(totalDeliveryFees + totalTips).toFixed(2)}€</div><div className="label">{t('account.estimatedEarnings')}</div></div>
+      <div className="stat-card highlight"><div className="num">{euros((totalDeliveryFees + totalTips))}</div><div className="label">{t('account.estimatedEarnings')}</div></div>
       <div className="stat-card">
         <div className="num" style={{ fontSize: 18 }}><StarsDisplay value={reviews?.avg || 0} size={18} /></div>
         <div className="label">{reviews?.count > 0 ? t('restaurantMenu.ratingReviews', { rating: reviews.avg.toFixed(1), count: reviews.count }) : t('account.noReviewsYet')}</div>

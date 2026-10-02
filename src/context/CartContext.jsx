@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { fraisService } from '../fraisService';
 import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
 
@@ -15,16 +15,24 @@ function lineKeyFor(itemId, optionItemIds) {
   return `${itemId}::${[...(optionItemIds || [])].sort().join(',')}`;
 }
 
+/* Identifiant de la demande de commande (plan de test CMD-19) : envoyé au serveur comme clientRequestId, il change à
+   CHAQUE modification du panier. Un onglet dupliqué copie le sessionStorage, donc le même identifiant : le serveur
+   renvoie alors la commande déjà créée au lieu d'en créer une seconde, et refuse une seconde fois si elle est payée.
+   Aléatoire et non tiré du contenu : le même panier recommandé un autre jour doit donner une nouvelle commande. */
+function nouvelIdDemande() {
+  try { return crypto.randomUUID(); } catch { return `p-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`; }
+}
+
 // Conservé dans sessionStorage pour survivre à un rafraîchissement de page (F5) sans persister
 // indéfiniment comme le ferait localStorage (le panier reste propre à cet onglet).
 function loadPersisted() {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return { restaurantId: null, restaurantName: '', lines: {} };
+    if (!raw) return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
     const parsed = JSON.parse(raw);
-    return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {} };
+    return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande() };
   } catch {
-    return { restaurantId: null, restaurantName: '', lines: {} };
+    return { restaurantId: null, restaurantName: '', lines: {}, requestId: nouvelIdDemande() };
   }
 }
 
@@ -35,14 +43,28 @@ export function CartProvider({ children }) {
   // name/imageUrl dénormalisés à l'ajout : le panier flottant (persistant sur toutes les pages, voir
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
   const [lines, setLines] = useState(() => loadPersisted().lines);
+  const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
+  // Nouvel identifiant à chaque changement du panier — sauf au premier rendu, qui relit celui de l'onglet.
+  const premierRendu = useRef(true);
+  useEffect(() => {
+    if (premierRendu.current) { premierRendu.current = false; return; }
+    setRequestId(nouvelIdDemande());
+  }, [restaurantId, lines]);
+  // Déconnexion VOLONTAIRE (AuthContext.logout) : le panier part avec la session — sur un appareil partagé, la
+  // personne suivante ne doit pas le trouver (plan de test PAN-1). Une session EXPIRÉE, elle, garde le panier (USR-6).
+  useEffect(() => {
+    const vider = () => { setLines({}); setRestaurantId(null); setRestaurantName(''); };
+    window.addEventListener('fairide:deconnexion', vider);
+    return () => window.removeEventListener('fairide:deconnexion', vider);
+  }, []);
 
   useEffect(() => {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines }));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId }));
     } catch {
       // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
     }
-  }, [restaurantId, restaurantName, lines]);
+  }, [restaurantId, restaurantName, lines, requestId]);
 
   const count = useMemo(() => Object.values(lines).reduce((a, l) => a + l.qty, 0), [lines]);
 
@@ -227,7 +249,7 @@ export function CartProvider({ children }) {
   const rawTotal = useMemo(() => +Object.values(lines).reduce((a, l) => a + l.unitPrice * l.qty, 0).toFixed(2), [lines]);
 
   return (
-    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, rawTotal, hasConflict, switchRestaurant, addOne, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
+    <CartContext.Provider value={{ restaurantId, restaurantName, lines, count, requestId, rawTotal, hasConflict, switchRestaurant, addOne, changeLineQty, removeLine, clear, clearLines, stashForPayment, restoreStashed, discardStashed, totals }}>
       {children}
     </CartContext.Provider>
   );

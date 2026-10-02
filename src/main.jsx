@@ -1,3 +1,5 @@
+// En premier : les dates s'affichent en heure de Bruxelles partout (voir fuseauBruxelles.js, plan de test HOR-6).
+import './fuseauBruxelles';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 /* `unstable_HistoryRouter` porte bien son nom : c'est une API que React Router ne garantit pas entre
@@ -10,6 +12,7 @@ import { unstable_HistoryRouter as HistoryRouter } from 'react-router-dom';
 import { demarrerSentry } from './sentry';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
+import BandeauHorsLigne from './components/BandeauHorsLigne';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
@@ -130,6 +133,7 @@ createRoot(document.getElementById('root')).render(
             <AuthProvider>
               <PreviewModeProvider>
                 <CartProvider>
+                  <BandeauHorsLigne />
                   <App />
                 </CartProvider>
               </PreviewModeProvider>

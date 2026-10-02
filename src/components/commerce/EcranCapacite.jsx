@@ -7,9 +7,12 @@ import { useLanguage } from '../../context/LanguageContext';
 import SousEcran from '../SousEcran';
 
 // Mon commerce › Commandes et capacité (fondateur, 2026-10-01) : jusqu'où le commerce livre, et combien de
-// commandes il accepte par jour. Les deux sont « pas de limite » par défaut ; le restaurateur ajuste s'il craint
-// de manquer de nourriture. Le plafond repart de zéro chaque jour (PUT /restaurants/:id/order-limits).
-const RAYON_DEFAUT = 5;
+// commandes il accepte par jour. Le plafond de commandes est « pas de limite » par défaut ; le restaurateur ajuste
+// s'il craint de manquer de nourriture. Il repart de zéro chaque jour (PUT /restaurants/:id/order-limits).
+// La distance, elle, n'est plus jamais illimitée (fondateur, 2026-10-02) : sans réglage, 6 km (le serveur
+// renvoie defaultRadiusKm, voir rayonLivraison.js côté backend) — un commerce qui n'y avait pas touché acceptait
+// une livraison jusqu'à Anvers. Le commerce choisit sinon sa propre distance.
+const RAYON_DEFAUT = 6;
 const PLAFOND_DEFAUT = 30;
 
 export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFermer }) {
@@ -28,7 +31,7 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
     api(`/restaurants/${restoId}/order-limits`, { token }).then((r) => {
       if (annule) return;
       setEtat(r);
-      setRayonLibre(r.deliveryRadiusKm === null); if (r.deliveryRadiusKm !== null) setRayon(r.deliveryRadiusKm);
+      setRayonLibre(r.deliveryRadiusIsDefault !== false); if (r.deliveryRadiusKm != null) setRayon(r.deliveryRadiusKm);
       setPlafondLibre(r.maxOrdersPerDay === null); if (r.maxOrdersPerDay !== null) setPlafond(r.maxOrdersPerDay);
     }).catch((e) => toast(e.message, 'erreur'));
     return () => { annule = true; };
@@ -62,8 +65,8 @@ export default function EcranCapacite({ restaurant, restoId, loadDashboard, onFe
               <span className="titre-groupe" id="capacite-rayon-titre">🛵 {t('editResto.capacityRadiusTitle')}</span>
               <p className="small" style={{ margin: '0 0 8px' }}>{t('editResto.capacityRadiusHelp')}</p>
               <label className="row small" style={{ gap: 8, alignItems: 'center', marginBottom: 8 }}>
-                <input type="checkbox" checked={rayonLibre} onChange={(e) => setRayonLibre(e.target.checked)} />
-                {t('editResto.capacityNoLimit')}
+                <input type="checkbox" checked={rayonLibre} onChange={(e) => { setRayonLibre(e.target.checked); if (e.target.checked) setRayon(etat.defaultRadiusKm || RAYON_DEFAUT); }} />
+                {t('editResto.capacityRadiusDefault', { km: km(etat.defaultRadiusKm || RAYON_DEFAUT) })}
               </label>
               {!rayonLibre && (
                 <>

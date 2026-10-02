@@ -18,12 +18,13 @@ import { estCompteReel, estCompteSupprime, estCompteTest, TestBadge, DeletedBadg
 import useEtatPage from '../../hooks/useEtatPage';
 import urlSure from '../../urlSure';
 import ouvrirDocument from '../../ouvrirDocument';
+import { euros } from '../../prixPlat';
 
 // Dossiers livreurs (statuts économie collaborative / étudiant-indépendant / indépendant) : file de
 // validation, pièces, identité, gains (brut / précompte / net par année et trimestre), contrats, journal ;
 // configuration fiscale par année, drapeau P2P (journalisé), précompte retenu par mois, exports DAC7 et
 // 281.29, journal d'audit. Aucun montant légal n'est écrit ici : tout vient de /admin/fiscal-config.
-const euro = (n) => `${Number(n || 0).toFixed(2)} €`;
+const euro = (n) => euros(Number(n || 0));
 const fmt = (d) => (d ? new Date(d).toLocaleDateString(getLocale()) : '-');
 const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewCards') }, { key: 'table', icon: '☰', label: tr('adminCommon.viewTable') }];
 const STATUTS = ['p2p', 'student_independent', 'independent'];

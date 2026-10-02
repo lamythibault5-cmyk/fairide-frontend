@@ -41,7 +41,7 @@ export default function GuidePage() {
       <p className="small" style={{ margin: '0 0 16px' }}>{t('guide.intro')}</p>
 
       {SECTIONS.map((s) => (
-        <section key={s.n} className="card" style={s.accent ? { borderLeft: '3px solid var(--gold)' } : undefined}>
+        <section key={s.n} className="card" style={s.accent ? { borderLeft: '3px solid var(--iris)' } : undefined}>
           <h3 style={{ margin: '0 0 8px', fontSize: 16 }}>{s.n}. {t(`guide.s${s.n}Title`)}</h3>
           {s.blocs.map(([type, cle], i) => {
             const dernier = i === s.blocs.length - 1;

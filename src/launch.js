@@ -10,7 +10,7 @@ export const OUVERTURE_LIVRAISON = new Date('2026-11-10T00:00:00+01:00');
 // Paiement en ligne (à emporter payé en ligne) : ouvre avec la livraison, le 10 novembre 2026 (fondateur, 2026-09-19).
 // Avant cette date, l'à emporter n'est possible que payé sur place. Miroir de FAIRIDE_ONLINE_PAYMENT_OPEN_AT.
 export const OUVERTURE_PAIEMENT_EN_LIGNE = new Date('2026-11-10T00:00:00+01:00');
-export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAIEMENT_EN_LIGNE.getTime() || !!user?.isAdmin || !!user?.simulation; }
+export function paiementEnLigneOuvert(user) { return Date.now() >= OUVERTURE_PAIEMENT_EN_LIGNE.getTime() || !!user?.isAdmin || !!user?.isTest || !!user?.simulation; }
 export function dateOuverturePaiementEnLigne(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENT_EN_LIGNE, locale); }
 // Premières commandes payées en ligne : c'est cette date qui fait courir le mois offert de l'abonnement.
 export const OUVERTURE_COMMANDES = OUVERTURE_PAIEMENT_EN_LIGNE;
@@ -24,7 +24,8 @@ function formater(date, locale) {
 
 // type : 'pickup' | 'delivery'.
 export function serviceOuvert(type, user) {
-  return Date.now() >= (OUVERTURES[type] || OUVERTURE_LIVRAISON).getTime() || !!user?.isAdmin || !!user?.simulation;
+  // Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
+  return Date.now() >= (OUVERTURES[type] || OUVERTURE_LIVRAISON).getTime() || !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
 }
 export function dateOuverture(type, locale = 'fr-BE') {
   return formater(OUVERTURES[type] || OUVERTURE_LIVRAISON, locale);

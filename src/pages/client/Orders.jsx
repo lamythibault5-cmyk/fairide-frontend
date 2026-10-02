@@ -56,7 +56,8 @@ function ReviewForm({ order, token, toast, onDone, t, pourboireSeul = false }) {
         const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
         if (pay.simulated) {
           toast(t('review.toastThanksTip'));
-          onDone();
+          // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
+          onDone({ tipPaid: true });
         } else {
           await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
         }
@@ -300,7 +301,7 @@ export default function Orders() {
           {reviewingId === o.id && (
             <ReviewForm
               order={o} token={token} toast={toast} t={t} pourboireSeul={!!o.reviewed}
-              onDone={() => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true } : x))); }}
+              onDone={(maj = {}) => { setReviewingId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, reviewed: true, ...maj } : x))); }}
             />
           )}
         </div>

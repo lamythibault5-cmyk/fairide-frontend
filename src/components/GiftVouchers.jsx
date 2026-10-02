@@ -46,7 +46,7 @@ export default function GiftVouchers({ restoId, token, toast, restaurant }) {
 
   return (
     <>
-      <div className="card" style={{ borderColor: 'var(--gold)' }}>
+      <div className="card" style={{ borderColor: 'var(--iris)' }}>
         <p className="small" style={{ margin: 0 }}><b>{t('bons.gvOnlineSoonTitle')}</b> {t('bons.gvOnlineSoon', { date: dateOuverturePaiementEnLigne(getLocale()) })}</p>
       </div>
 
