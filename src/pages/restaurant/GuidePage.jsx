@@ -12,7 +12,8 @@ import Rich from '../../components/Rich';
 // TODO fonctionnalités absentes aujourd'hui, mentionnées ici pour ne pas les réinventer ni les décrire
 // comme existantes dans le mode d'emploi. Ordre de priorité proposé :
 //   1. Web Push + son à la réception d'une nouvelle commande
-//   2. Choix du temps de préparation à l'acceptation + motif obligatoire au refus
+//   2. Choix du temps de préparation à l'acceptation (le motif obligatoire au refus est fait depuis le 2026-10-02 :
+//      PATCH /orders/:id/refuse exige `reason`, transmis au client)
 //   3. (Fait) Impression du ticket depuis la fiche commande (escposTicket.js, bluetoothPrinter.js)
 //   4. Envoi du bon de commande par WhatsApp
 //   5. Délai d'acceptation automatique avec annulation si dépassé

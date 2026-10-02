@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, follow" />
     <title>Page introuvable · fairide.be</title>
+    <!-- /nl/… et /en/… recevaient cette page en français (constaté le 2026-10-02) : un petit script externe (la CSP
+         interdit le script en ligne) la traduit d'après le préfixe de l'adresse. Sans lui, elle reste lisible en français. -->
+    <script src="/404-langue.js" defer></script>
     <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <!-- Page 404 statique, servie par Vercel avec le VRAI statut 404 pour toute adresse qui ne correspond à aucune
          route de l'application (voir vercel.json : les réécritures vers index.html ne couvrent que les routes
@@ -44,16 +47,16 @@
     <main>
       <div class="boite">
         <p class="code">404</p>
-        <h1>Cette page n'existe pas</h1>
-        <p>Le lien est peut-être périmé, ou l'adresse comporte une faute de frappe. Les commerces, eux, sont toujours là.</p>
+        <h1 data-t="titre">Cette page n'existe pas</h1>
+        <p data-t="texte">Le lien est peut-être périmé, ou l'adresse comporte une faute de frappe. Les commerces, eux, sont toujours là.</p>
         <div class="actions">
-          <a class="btn btn-lime" href="/restaurants">Voir les commerces</a>
-          <a class="btn btn-outline" href="/">Retour à l'accueil</a>
+          <a class="btn btn-lime" href="/restaurants" data-t="commerces" data-href="/restaurants">Voir les commerces</a>
+          <a class="btn btn-outline" href="/" data-t="accueil" data-href="/">Retour à l'accueil</a>
         </div>
       </div>
     </main>
     <footer>
-      <a href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite">Confidentialité</a> · <a href="/cgv">Conditions générales</a> · <a href="/aide">Aide</a>
+      <a href="/mentions-legales" data-t="mentions" data-href="/mentions-legales">Mentions légales</a> · <a href="/confidentialite" data-t="confidentialite" data-href="/confidentialite">Confidentialité</a> · <a href="/cgv" data-t="cgv" data-href="/cgv">Conditions générales</a> · <a href="/aide" data-t="aide" data-href="/aide">Aide</a>
     </footer>
   </body>
 </html>

@@ -305,7 +305,10 @@ async function principal() {
         titre,
         description,
         url: `${SITE_URL}${chemin}`,
-        image: r.imageUrl || r.image || undefined,
+        // L'API publique renvoie la photo du commerce sous coverImageUrl (logo : logoImageUrl). Seuls imageUrl/image
+        // étaient lus : toutes les fiches partageaient l'image générique, et l'aperçu WhatsApp d'une fiche ne montrait
+        // pas le commerce (SEO-1 du plan de test du 2026-10-02).
+        image: r.coverImageUrl || r.logoImageUrl || r.imageUrl || r.image || undefined,
         blocs: [
           { id: 'ld-restaurant', donnees: restaurantJsonLd(r, { url: `${SITE_URL}${chemin}` }) },
           {
