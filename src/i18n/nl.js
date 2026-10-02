@@ -6531,6 +6531,7 @@ export default {
       billing_paye: 'Betaald'
     },
     sponsor: {
+      brokenAdmin: 'Het logo voor “{label}” is niet te vinden (bestand verwijderd bij de host?). Laad het opnieuw op in Admin › Samenwerkingen / sponsoring.',
       demoAlt: 'Demovisual van een partner',
       demoBrand: 'Maison Exemple',
       demoTagline: 'Partner van Fairide · jouw boodschap hier',

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { ecouterSimulationSponsor, simulationSponsorActive } from '../sponsorSimulation';
+import urlSure from '../urlSure';
+import { ecouterSimulationSponsor, modeEmplacement, simulationSponsorActive } from '../sponsorSimulation';
 
 // EMPLACEMENT SPONSOR (fondateur, 2026-10-01). Quatre endroits du site réservés au logo d'une société partenaire (future
 // collaboration : ce type de partenariat aide Fairide à se développer). Pour l'instant, PERSONNE ne les voit sauf l'équipe :
@@ -11,11 +12,17 @@ import { ecouterSimulationSponsor, simulationSponsorActive } from '../sponsorSim
 //
 // SIMULATION (2026-10-02) : l'admin peut demander à voir chaque emplacement « comme si » un partenaire y était — le logo
 // chargé s'il existe, sinon le visuel de démonstration ci-dessous —, avec le rendu que verrait le public (pas de cadre en
-// pointillés). Réglage local à son navigateur (sponsorSimulation.js), jamais envoyé au serveur.
+// pointillés). Réglage local à son navigateur (sponsorSimulation.js), jamais envoyé au serveur. Qui voit quoi : une seule
+// règle, `modeEmplacement`.
 let cachePublic = null; let cacheEquipe = null;
 function charger(admin, token) {
-  if (admin) { if (!cacheEquipe) cacheEquipe = api('/sponsors/all', { token }).then((r) => r.slots || []).catch(() => []); return cacheEquipe; }
-  if (!cachePublic) cachePublic = api('/sponsors').then((r) => r.slots || []).catch(() => []);
+  // Un échec n'est pas gardé en mémoire : sinon une coupure réseau au premier affichage cachait les emplacements
+  // jusqu'au rechargement complet de la page.
+  if (admin) {
+    if (!cacheEquipe) cacheEquipe = api('/sponsors/all', { token }).then((r) => r.slots || []).catch(() => { cacheEquipe = null; return []; });
+    return cacheEquipe;
+  }
+  if (!cachePublic) cachePublic = api('/sponsors').then((r) => r.slots || []).catch(() => { cachePublic = null; return []; });
   return cachePublic;
 }
 export function oublierSponsors() { cachePublic = null; cacheEquipe = null; }
@@ -45,34 +52,42 @@ export default function EmplacementSponsor({ cle, style }) {
   const admin = !!user?.isAdmin;
   const [slot, setSlot] = useState(null);
   const [simulation, setSimulation] = useState(() => simulationSponsorActive());
+  // Logo publié mais introuvable (fichier supprimé chez l'hébergeur) : plutôt rien qu'une icône d'image cassée.
+  const [cassee, setCassee] = useState(false);
   useEffect(() => {
     let annule = false;
+    setCassee(false);
     charger(admin, token).then((slots) => { if (!annule) setSlot(slots.find((s) => s.key === cle) || null); });
     return () => { annule = true; };
   }, [cle, admin, token]);
   useEffect(() => ecouterSimulationSponsor(() => setSimulation(simulationSponsorActive())), []);
-  if (!admin && !(slot?.visible && slot?.imageUrl)) return null;
-  if (!slot) return null;
-  const image = slot.imageUrl
-    ? <img src={slot.imageUrl} alt={slot.name || t('sponsor.partner')} className="sponsor-image" loading="lazy" decoding="async" />
-    : null;
 
-  // Simulation : le rendu public, avec le logo chargé ou le visuel de démonstration.
-  if (admin && simulation && !slot.visible) {
+  const mode = modeEmplacement({ admin, simulation, slot });
+  if (mode === 'rien') return null;
+  if (cassee && !admin) return null;
+  const image = slot.imageUrl && !cassee
+    ? <img src={slot.imageUrl} alt={slot.name || t('sponsor.partner')} className="sponsor-image" loading="lazy" decoding="async" onError={() => setCassee(true)} />
+    : null;
+  // Le lien vient d'une saisie de l'équipe : http(s) seulement, vérifié ici aussi (le serveur le vérifie à l'entrée).
+  const lien = urlSure(slot.linkUrl);
+  const avecLien = (contenu) => (lien ? <a href={lien} target="_blank" rel="noreferrer noopener sponsored">{contenu}</a> : contenu);
+
+  if (mode === 'simulation') {
     return (
       <aside className="sponsor-emplacement sponsor-emplacement--simulation" style={style} aria-label={t('sponsor.partner')}>
         <span className="sponsor-mention">{t('sponsor.mention')} · {slot.name || t('sponsor.demoBrand')}</span>
-        {image || <VisuelSponsorDemo format={cle === 'suivi' ? 'carte' : 'banniere'} />}
+        {image ? avecLien(image) : <VisuelSponsorDemo format={cle === 'suivi' ? 'carte' : 'banniere'} />}
         <span className="sponsor-prive-badge">{t('sponsor.simulationBadge')}</span>
       </aside>
     );
   }
+  const prive = mode === 'prive' || mode === 'vide';
   return (
-    <aside className={`sponsor-emplacement${admin && !slot.visible ? ' sponsor-emplacement--prive' : ''}${!slot.imageUrl ? ' sponsor-emplacement--vide' : ''}`} style={style} aria-label={t('sponsor.partner')}>
+    <aside className={`sponsor-emplacement${prive ? ' sponsor-emplacement--prive' : ''}${!image ? ' sponsor-emplacement--vide' : ''}`} style={style} aria-label={t('sponsor.partner')}>
       <span className="sponsor-mention">{t('sponsor.mention')}{slot.name ? ` · ${slot.name}` : ''}</span>
-      {image ? (slot.linkUrl ? <a href={slot.linkUrl} target="_blank" rel="noreferrer noopener sponsored">{image}</a> : image)
-        : <span className="small sponsor-vide">{t('sponsor.emptyAdmin', { label: slot.label })}</span>}
-      {admin && !slot.visible && <span className="sponsor-prive-badge">{t('sponsor.adminOnly')}</span>}
+      {image ? avecLien(image)
+        : <span className="small sponsor-vide">{cassee ? t('sponsor.brokenAdmin', { label: slot.label }) : t('sponsor.emptyAdmin', { label: slot.label })}</span>}
+      {prive && <span className="sponsor-prive-badge">{t('sponsor.adminOnly')}</span>}
     </aside>
   );
 }

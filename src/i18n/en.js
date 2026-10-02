@@ -6531,6 +6531,7 @@ export default {
       billing_paye: 'Paid'
     },
     sponsor: {
+      brokenAdmin: 'The logo for “{label}” cannot be found (file deleted at the host?). Upload it again in Admin › Collaborations / sponsoring.',
       demoAlt: 'Demo partner creative',
       demoBrand: 'Maison Exemple',
       demoTagline: 'Fairide partner · your message here',

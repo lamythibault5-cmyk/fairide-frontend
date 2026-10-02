@@ -6576,6 +6576,7 @@ export default {
       billing_paye: 'Payée'
     },
     sponsor: {
+      brokenAdmin: 'Le logo de « {label} » est introuvable (fichier supprimé chez l\'hébergeur ?). Recharge-le dans Admin › Collaborations / sponsoring.',
       demoAlt: 'Visuel de démonstration d\'un partenaire',
       demoBrand: 'Maison Exemple',
       demoTagline: 'Partenaire de Fairide · ton message ici',

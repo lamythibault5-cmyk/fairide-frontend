@@ -17,3 +17,20 @@ export function ecouterSimulationSponsor(rappel) {
   window.addEventListener('storage', rappel);
   return () => { window.removeEventListener(EVENEMENT, rappel); window.removeEventListener('storage', rappel); };
 }
+
+// CE QU'UN EMPLACEMENT MONTRE, selon qui regarde. Une seule règle, testée à part (simulation du sponsoring) :
+//   'rien'       : rien du tout (public sans emplacement publié ; emplacement inconnu) ;
+//   'public'     : le logo publié, tel que tout le monde le voit — l'équipe le voit pareil ;
+//   'simulation' : l'équipe, simulation allumée : le rendu public avec le logo chargé ou le visuel de démonstration ;
+//   'prive'      : l'équipe, logo chargé mais pas publié (cadre en pointillés) ;
+//   'vide'       : l'équipe, aucun logo (cadre en pointillés et consigne).
+// Un visiteur ne voit JAMAIS la simulation, même s'il pose lui-même la clé dans son navigateur : elle ne compte que
+// pour un compte de l'équipe, et le serveur ne lui envoie de toute façon que les emplacements publiés.
+export function modeEmplacement({ admin, simulation, slot }) {
+  if (!slot) return 'rien';
+  const publie = !!(slot.visible && slot.imageUrl);
+  if (publie) return 'public';
+  if (!admin) return 'rien';
+  if (simulation) return 'simulation';
+  return slot.imageUrl ? 'prive' : 'vide';
+}
