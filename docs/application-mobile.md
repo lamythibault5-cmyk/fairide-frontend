@@ -29,9 +29,10 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
 
 1. **Comptes** : Apple Developer (99 $/an) et Google Play Console (25 $ une fois). Identifiant d'application
    `be.fairide.app` (`capacitor.config.json`, `android/app/build.gradle`).
-2. **Icônes et écran de lancement** : poser `assets/icon.png` (1024×1024, le vélo sur fond iris, voir
-   `public/icons/icon-512.png`) et `assets/splash.png` (2732×2732, iris uni avec le vélo centré), puis
-   `npx @capacitor/assets generate --iconBackgroundColor '#3B2FB5' --splashBackgroundColor '#3B2FB5'`.
+2. **Icônes et écran de lancement** : FAIT pour Android (`npm run app:assets` : `scripts/app-assets.mjs` dessine
+   `assets/icon*.png` et `assets/splash*.png` à partir du vélo « 5a », puis `@capacitor/assets` remplit
+   `android/app/src/main/res`). Pour iOS, une fois `ios/` créé sur le Mac :
+   `npx @capacitor/assets generate --ios --iconBackgroundColor '#3B2FB5' --splashBackgroundColor '#3B2FB5'`.
 3. **Android** : ouvrir `android/` dans Android Studio (`npm run app:android`), générer la clé de signature
    (Play App Signing conseillé), puis copier l'empreinte SHA-256 du certificat dans
    `public/.well-known/assetlinks.json` (déployer le site) — c'est ce qui fait que `https://fairide.be/…`
