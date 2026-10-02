@@ -167,6 +167,22 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
   useEffect(() => { load(); }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
   async function agir(fn, ok) { setBusy(true); try { await fn(); if (ok) toast(ok); await load(); onChanged(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); } }
   const statut = (x) => (x && STATUTS.includes(x) ? tr(`courierOnboarding.status_${x}`) : x || '-');
+  // Validation du dossier. Le serveur refuse (409 DOSSIER_INCOMPLET) tant qu'une pièce requise ou l'identité n'est pas
+  // vérifiée : on montre alors ce qui bloque et on propose de valider quand même, avec un motif obligatoire (tracé).
+  const libelleBlocage = (b) => (b === 'identite_non_verifiee' ? tr('adminCouriers.blockIdentity')
+    : b.startsWith('document_non_verifie_') ? tr('adminCouriers.blockDocUnverified', { doc: tr(`courierOnboarding.doc_${b.slice(21)}`) })
+      : tr(`courierOnboarding.missing_${b}`));
+  async function validerDossier(reason, force) {
+    setBusy(true);
+    try {
+      await api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'approved', reason: reason || undefined, force: force || undefined } });
+      toast(tr('adminCouriers.toastApproved')); await load(); onChanged();
+    } catch (e) {
+      if (e.code === 'DOSSIER_INCOMPLET' && !force) {
+        setMotifDialog({ title: tr('adminCouriers.forceTitle'), message: tr('adminCouriers.forceBody', { points: (e.data?.blocking || []).map(libelleBlocage).join(', ') }), danger: true, confirmLabel: tr('adminCouriers.forceConfirm'), run: (motif) => validerDossier(motif, true) });
+      } else toast(e.message, 'erreur');
+    } finally { setBusy(false); }
+  }
   const c = d?.courier; const s = d?.situation;
   const documents = d?.documents ?? []; const events = d?.events ?? []; const contracts = d?.contracts ?? []; const missing = d?.missing ?? [];
   const gains = d?.earnings ?? { byYear: [], byQuarter: [] };
@@ -296,7 +312,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
           <h4 className="drawer-section-title">{tr('adminCouriers.secDecision')}</h4>
           {missing.length > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--gold-deep)' }}>{tr('adminCouriers.missingList')} {missing.map((m) => tr(`courierOnboarding.missing_${m}`)).join(', ')}</p>}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-            {c.lifecycleStatus !== 'approved' && <button className="btn-teal" disabled={busy || (missing.length > 0 && c.lifecycleStatus !== 'suspended')} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: c.lifecycleStatus === 'suspended' ? 'reactivate' : 'approved', reason: reason || undefined } }), tr('adminCouriers.toastApproved')) })}>{c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve')}</button>}
+            {c.lifecycleStatus !== 'approved' && <button className="btn-teal" disabled={busy || (missing.length > 0 && c.lifecycleStatus !== 'suspended')} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve'), run: (reason) => (c.lifecycleStatus === 'suspended' ? agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'reactivate', reason: reason || undefined } }), tr('adminCouriers.toastApproved')) : validerDossier(reason, false)) })}>{c.lifecycleStatus === 'suspended' ? tr('adminCouriers.reactivate') : tr('adminCouriers.approve')}</button>}
             {c.lifecycleStatus === 'pending_review' && <button className="btn-danger-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.reject'), message: tr('adminCouriers.rejectBody'), danger: true, confirmLabel: tr('adminCouriers.reject'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'rejected', reason } }), tr('adminCouriers.toastRejected')) })}>{tr('adminCouriers.reject')}</button>}
             {/* Suspension (B7, D6) : décision humaine motivée, exposé des motifs envoyé, réexamen sous 14 jours. */}
             {['approved', 'blocked_threshold'].includes(c.lifecycleStatus) && <button className="btn-danger-ghost" disabled={busy} onClick={() => setDecisionLivreur(true)}>{tr('adminCouriers.suspend')}</button>}
