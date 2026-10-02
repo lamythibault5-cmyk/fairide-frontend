@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fairide Test E2E</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky summary bar on top, section rail on the left (chips on phone), test cards in the main column. */
+:root{
+  --bg:#f4f6f8; --surface:#ffffff; --surface2:#eef1f4; --fg:#1a2230; --muted:#5b6675; --line:#d8dee6;
+  --accent:#0e7c6b; --accent-fg:#ffffff; --accent-soft:#dff3ee;
+  --todo:#8a94a3; --pass:#1f8a4c; --fail:#c0392b; --fixed:#c47a0c; --retest:#0f7f99; --na:#6b7280;
+  --todo-soft:#eceff3; --pass-soft:#e1f4e8; --fail-soft:#fbe4e1; --fixed-soft:#fff0d6; --retest-soft:#dcf1f6; --na-soft:#e9eaee;
+  --p1:#c0392b; --p2:#c47a0c; --p3:#8a94a3;
+  --font:"Figtree",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --shadow:0 1px 2px rgba(20,30,45,.06),0 4px 14px rgba(20,30,45,.05);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#12171e; --surface:#1a212b; --surface2:#222b36; --fg:#e8edf3; --muted:#9aa6b5; --line:#2e3845;
+  --accent:#3cc7ad; --accent-fg:#0d1a17; --accent-soft:#17352f;
+  --todo:#8a94a3; --pass:#4fcf85; --fail:#ff7b6b; --fixed:#ffb648; --retest:#5fd0ea; --na:#9aa3b2;
+  --todo-soft:#252d38; --pass-soft:#163626; --fail-soft:#3d1e1a; --fixed-soft:#3b2c12; --retest-soft:#123540; --na-soft:#262c35;
+  --p1:#ff7b6b; --p2:#ffb648; --p3:#8a94a3;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#12171e; --surface:#1a212b; --surface2:#222b36; --fg:#e8edf3; --muted:#9aa6b5; --line:#2e3845;
+  --accent:#3cc7ad; --accent-fg:#0d1a17; --accent-soft:#17352f;
+  --todo:#8a94a3; --pass:#4fcf85; --fail:#ff7b6b; --fixed:#ffb648; --retest:#5fd0ea; --na:#9aa3b2;
+  --todo-soft:#252d38; --pass-soft:#163626; --fail-soft:#3d1e1a; --fixed-soft:#3b2c12; --retest-soft:#123540; --na-soft:#262c35;
+  --p1:#ff7b6b; --p2:#ffb648; --p3:#8a94a3;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.45;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{text-wrap:balance;margin:0}
+.mono{font-family:var(--mono)}
+
+/* top bar */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.top h1{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.top h1 small{display:block;font-size:12px;font-weight:500;color:var(--muted);letter-spacing:0}
+.progress{flex:1 1 260px;min-width:0}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--todo-soft)}
+.bar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--muted);margin-top:5px;font-variant-numeric:tabular-nums}
+.legend b{color:var(--fg);font-weight:600}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+.tester{display:flex;align-items:center;gap:8px}
+.tester label{font-size:12px;color:var(--muted);white-space:nowrap}
+.tester input{border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:7px 10px;width:150px}
+.tester input.need{border-color:var(--fail);box-shadow:0 0 0 3px var(--fail-soft)}
+.sync{font-size:12px;color:var(--muted);white-space:nowrap}
+.sync::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--todo);margin-right:6px}
+.sync.on::before{background:var(--pass)}
+.sync.off::before{background:var(--fixed)}
+
+/* shell */
+.shell{display:grid;grid-template-columns:270px minmax(0,1fr);gap:0;max-width:1400px;margin:0 auto}
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 74px);align-self:start;max-height:calc(100vh - 90px);overflow:auto;padding:16px 8px 16px 16px;border-right:1px solid var(--line)}
+.rail a{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:7px 10px;border-radius:8px;color:inherit;text-decoration:none;font-size:13px;line-height:1.3}
+.rail a:hover{background:var(--surface2)}
+.rail a.cur{background:var(--accent-soft)}
+.rail a .n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}
+.rail a .mini{grid-column:1/-1;height:4px;border-radius:2px;background:var(--todo-soft);display:flex;overflow:hidden}
+.rail a .mini span{height:100%}
+.rail a.new .nm::after{content:"NOUVEAU";font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-left:6px;vertical-align:1px}
+.main{padding:16px 16px 80px;min-width:0}
+
+/* toolbar */
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.tools input[type=search]{flex:1 1 220px;min-width:0;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px}
+.tools select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 10px}
+.tools .btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;font-weight:600;font-size:13px}
+.tools .btn:hover{background:var(--surface2)}
+.chk{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted);margin:0 0 14px;max-width:70ch}
+.banner{background:var(--fixed-soft);border:1px solid var(--fixed);border-radius:10px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+
+/* sections */
+.sec{margin:28px 0 10px;scroll-margin-top:90px}
+.sec h2{font-size:19px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.sec h2 .cnt{font-size:13px;color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.sec h2 .tag{font-size:10px;font-weight:700;letter-spacing:.06em;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:999px}
+.sec p{margin:3px 0 0;color:var(--muted);font-size:14px;max-width:70ch}
+.list{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+
+/* card */
+.card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--todo);border-radius:10px;box-shadow:var(--shadow);min-width:0}
+.card[data-st=pass]{border-left-color:var(--pass)}
+.card[data-st=fail]{border-left-color:var(--fail)}
+.card[data-st=fixed]{border-left-color:var(--fixed)}
+.card[data-st=retest]{border-left-color:var(--retest)}
+.card[data-st=na]{border-left-color:var(--na);opacity:.75}
+.head{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;cursor:pointer}
+.head .id{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--muted);padding-top:3px;white-space:nowrap}
+.head .ttl{flex:1;min-width:0;font-weight:600;font-size:15px}
+.head .ttl .meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.pill{font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:var(--surface2);color:var(--muted);white-space:nowrap}
+.pill.p1{color:var(--p1);background:var(--fail-soft)}
+.pill.p2{color:var(--p2);background:var(--fixed-soft)}
+.pill.p3{color:var(--p3)}
+.pill.st{color:#fff}
+.pill.st-todo{background:var(--todo)} .pill.st-pass{background:var(--pass)} .pill.st-fail{background:var(--fail)} .pill.st-fixed{background:var(--fixed)} .pill.st-retest{background:var(--retest)} .pill.st-na{background:var(--na)}
+.head .chev{color:var(--muted);transition:transform .15s;padding-top:3px}
+.card.open .head .chev{transform:rotate(90deg)}
+@media (prefers-reduced-motion:reduce){.head .chev{transition:none}}
+.body{display:none;padding:0 14px 14px;border-top:1px dashed var(--line)}
+.card.open .body{display:block}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
+.grid2>div{min-width:0}
+.lbl{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+.steps{margin:0;padding-left:20px;font-size:14px}
+.steps li{margin:2px 0}
+.exp{font-size:14px;background:var(--surface2);border-radius:8px;padding:8px 10px}
+.exp q{quotes:"« " " »"}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.acts button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 11px;font-size:13px;font-weight:600}
+.acts button:hover{background:var(--surface2)}
+.acts button.pass{color:var(--pass)} .acts button.fail{color:var(--fail)} .acts button.fixed{color:var(--fixed)} .acts button.retest{color:var(--retest)} .acts button.na{color:var(--na)}
+.acts button.cur{color:#fff;border-color:transparent}
+.acts button.cur.todo{background:var(--todo)} .acts button.cur.pass{background:var(--pass)} .acts button.cur.fail{background:var(--fail)} .acts button.cur.fixed{background:var(--fixed)} .acts button.cur.retest{background:var(--retest)} .acts button.cur.na{background:var(--na)}
+.acts button.next{box-shadow:0 0 0 2px var(--accent-soft);border-color:var(--accent)}
+.next-hint{font-size:13px;color:var(--muted);margin-top:8px}
+.fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.fields>div{min-width:0}
+.fields input,.notes textarea{width:100%;border:1px solid var(--line);background:var(--surface2);border-radius:8px;padding:7px 10px;font-size:14px}
+.notes{margin-top:10px}
+.notes textarea{min-height:64px;resize:vertical}
+.hist{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6}
+.hist b{font-weight:600;color:var(--fg)}
+.empty{color:var(--muted);font-size:14px;padding:20px 0}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:9px 14px;border-radius:999px;font-size:13px;box-shadow:var(--shadow);z-index:50}
+.foot{margin-top:40px;color:var(--muted);font-size:13px;max-width:70ch}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line);padding:10px 16px;display:flex;gap:6px;overflow-x:auto;white-space:nowrap}
+  .rail a{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);padding:6px 10px;border-radius:999px}
+  .rail a .mini{display:none}
+  .rail a.new .nm::after{content:"•"}
+  .grid2,.fields{grid-template-columns:1fr}
+  .tester input{width:120px}
+}
+</style>
+<style>[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+
+
+<header class="top">
+  <h1>Fairide · Tests de bout en bout <small>fairide.be — plan de test et suivi des correctifs · catalogue du 2 oct. 2026 · mis à jour l'après-midi</small></h1>
+  <div class="progress">
+    <div class="bar" id="bar"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="tester"><label for="tester">Testeur·euse</label><input id="tester" placeholder="Ton prénom" autocomplete="off"></div>
+  <div class="sync" id="sync">connexion…</div>
+</header>
+
+<div class="shell">
+  <nav class="rail" id="rail" aria-label="Sections"></nav>
+  <main class="main">
+    <div id="banner" class="banner" hidden></div>
+    <p class="hint">Chaque test dit <strong>quoi faire</strong> et <strong>ce qui doit se passer</strong>. Cycle : <b>Échoué</b> → quand le code est corrigé, marque <b>Corrigé</b> → refais le test → <b>Re-testé OK</b>. Les sections marquées NOUVEAU n'étaient pas dans le plan initial. P1 = bloquant pour le lancement.</p>
+    <p class="hint">Les tests signés <b>Claude (vérif. auto)</b> ont été joués le 2 octobre 2026, sans toi : contre le code réellement déployé (<span class="mono">origin/main</span> des deux dépôts, base en mémoire) ou contre la production en lecture seule. <b>Réussi</b> veut dire que tout le résultat attendu a été constaté ; <b>Échoué</b>, qu'un écart a été constaté ; <b>Corrigé</b>, que l'écart a été corrigé dans le code et revérifié hors production — reste à le constater en ligne ; <b>Re-testé OK</b>, que la correction a été constatée en production. La preuve est dans les notes de chaque test. Ce qui n'a pu être vérifié qu'en partie reste <b>À faire</b>, avec ce qui a déjà été vu en note. Ta propre saisie a toujours la priorité sur la sienne.</p>
+    <div class="tools">
+      <input type="search" id="q" placeholder="Rechercher (id, titre, message attendu)…">
+      <select id="fRole"><option value="">Tous les rôles</option><option value="client">Client</option><option value="commerce">Commerce</option><option value="coursier">Coursier</option><option value="admin">Admin</option><option value="tech">Tech</option><option value="tous">Tous</option></select>
+      <select id="fTrack"><option value="">Tracks A+B</option><option value="A">A · Simulation</option><option value="B">B · Réel</option></select>
+      <select id="fPrio"><option value="">Toutes priorités</option><option value="1">P1 bloquant</option><option value="2">P2 important</option><option value="3">P3 confort</option></select>
+      <select id="fSt"><option value="">Tous statuts</option><option value="todo">À faire</option><option value="fail">Échoué</option><option value="fixed">Corrigé (à retester)</option><option value="pass">Réussi</option><option value="retest">Re-testé OK</option><option value="na">N/A</option><option value="open">À traiter (à faire + échoué + corrigé)</option></select>
+      <label class="chk"><input type="checkbox" id="fNew"> Nouvelles sections seulement</label>
+      <label class="chk"><input type="checkbox" id="fAuto"> Vérifiés par Claude</label>
+      <label class="chk"><input type="checkbox" id="fManuel"> Reste à faire à la main</label>
+      <button class="btn" id="btnExpand">Tout déplier</button>
+      <button class="btn" id="btnReport">Copier le rapport des bugs</button>
+      <button class="btn" id="btnCsv">Exporter CSV</button><button class="btn" id="btnJson">Sauvegarder les résultats (JSON)</button><button class="btn" id="btnImport">Importer des résultats</button><input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
+    <div id="content"></div>
+    <p class="foot">Version autonome : les résultats sont enregistrés dans ce navigateur (localStorage). Pour partager avec l'équipe, utilise « Sauvegarder les résultats (JSON) » et importe le fichier chez un collègue : les résultats sont fusionnés en gardant la saisie la plus récente par test. Pour un bug : note l'appareil, le numéro de commande, ce que tu as vu, et joins une capture dans votre canal d'équipe en citant l'identifiant du test.</p>
+  </main>
+</div>
+
+<script>
+const SECTIONS = [
+  {id:"PRE", nom:"0 · Préparation", desc:"Ce qu'il faut savoir et avoir avant le premier test.", existing:true},
+  {id:"SIM", nom:"1 · Boucle complète en Simulation", desc:"Track A : tout le cycle sans argent, sans déranger les vrais coursiers.", existing:true},
+  {id:"BIZ", nom:"2 · Commerce : inscription → publication", desc:"Track B. Chaque étape débloque la suivante.", existing:true},
+  {id:"TER", nom:"3 · Terminal & impression (Goodcom)", desc:"GC Web est le seul endroit où l'imprimante Goodcom fonctionne.", existing:true},
+  {id:"COU", nom:"4 · Coursier : inscription → premier job", desc:"Approbation, Stripe Connect, plafond légal.", existing:true},
+  {id:"CLI", nom:"5 · Client : commande → avis", desc:"Compte admin ou test tant que les dates d'ouverture ne sont pas passées.", existing:true},
+  {id:"FLX", nom:"6 · Commande réelle complète (passages de relais)", desc:"Une vraie commande, de bout en bout, avec le terminal et un vrai coursier.", existing:true},
+  {id:"DEV", nom:"7 · Appareils, navigateurs, PWA, langues", desc:"Ce qui marche où.", existing:true},
+  {id:"CMD", nom:"8 · Cas limites · Commande", desc:"Chaque cas nomme le comportement prévu par le code.", existing:true},
+  {id:"PAY", nom:"9 · Cas limites · Paiement", desc:"Cartes de test uniquement si la clé Railway est sk_test_…", existing:true},
+  {id:"RES", nom:"10 · Cas limites · Côté commerce", desc:"Rappels, annulations automatiques, codes.", existing:true},
+  {id:"TRM", nom:"11 · Cas limites · Terminal", desc:"Déclencheurs, file d'attente, hors-ligne, papier.", existing:true},
+  {id:"CRS", nom:"12 · Cas limites · Côté coursier", desc:"Conditions d'accès, codes, alcool, vie privée.", existing:true},
+  {id:"USR", nom:"13 · Cas limites · Côté client", desc:"Annulations, avis, session, factures.", existing:true},
+  {id:"ADM", nom:"14 · Admin & conformité", desc:"Suspensions motivées, signalements DSA, classement.", existing:true},
+  {id:"MNU", nom:"15 · Menu, options, prix & stock", desc:"NOUVEAU — Suppléments, groupes obligatoires, TVA, rupture, photos.", existing:false},
+  {id:"PAN", nom:"16 · Panier & checkout", desc:"NOUVEAU — Persistance, montant minimum, frais, instructions.", existing:false},
+  {id:"GEO", nom:"17 · Adresses, zones & cartes", desc:"NOUVEAU — Autocomplétion, géocodage, zone de livraison, suivi en direct.", existing:false},
+  {id:"HOR", nom:"18 · Horaires, créneaux & temps", desc:"NOUVEAU — Minuit, jours fériés, changement d'heure du 25 octobre 2026.", existing:false},
+  {id:"LIV", nom:"19 · Dispatch & livraison avancée", desc:"NOUVEAU — Aucun coursier, abandon, GPS refusé, plusieurs commandes.", existing:false},
+  {id:"MON", nom:"20 · Argent : frais, pourboires, bons, remboursements", desc:"NOUVEAU — Bancontact, Apple/Google Pay, arrondis, litiges, versements.", existing:false},
+  {id:"CPT", nom:"21 · Compte & données personnelles", desc:"NOUVEAU — Inscription, mot de passe, suppression, export RGPD.", existing:false},
+  {id:"NOT", nom:"22 · Emails, push & notifications", desc:"NOUVEAU — Chaque message, dans les 3 langues, qui arrive vraiment.", existing:false},
+  {id:"SEC", nom:"23 · Sécurité & abus", desc:"NOUVEAU — Rôles, IDOR, codes à 4 chiffres, XSS, webhooks, uploads.", existing:false},
+  {id:"LEG", nom:"24 · Légal & conformité (BE / UE)", desc:"NOUVEAU — RGPD, cookies, DSA, droit de la consommation, allergènes, alcool, P2B.", existing:false},
+  {id:"OPS", nom:"25 · Opérations & support", desc:"NOUVEAU — Support, remboursements manuels, exports compta, crons, sauvegardes.", existing:false},
+  {id:"PRF", nom:"26 · Performance & fiabilité", desc:"NOUVEAU — Charge, cold start Railway, reconnexion temps réel, images.", existing:false},
+  {id:"SEO", nom:"27 · SEO, accessibilité & qualité", desc:"NOUVEAU — Balises, sitemap, lecteurs d'écran, contrastes, 404.", existing:false},
+  {id:"AML", nom:"28 · Comptes, clés et décisions (AVANT-MISE-EN-LIGNE.md)", desc:"NOUVEAU — Ce que le document « Avant la mise en ligne » demande encore et que le plan ne couvrait pas : rien qui s'écrive, tout demande un accès, une clé ou une décision.", existing:false},
+  {id:"LCH", nom:"29 · Checklist avant lancement", desc:"Configuration à vérifier le jour J (1 nov. / 10 nov. 2026).", existing:true},
+];
+
+// role: client | commerce | coursier | admin | tech | tous
+// track: A (simulation) | B (réel) | AB | - (hors parcours)
+// prio: 1 (bloquant lancement) | 2 (important) | 3 (confort)
+const TESTS = [
+// ───────── PRE
+{id:"PRE-1",s:"PRE",t:"Vérifier le mode de la clé Stripe sur Railway",r:"tech",tr:"B",p:1,
+ e:["Railway › variables › STRIPE_SECRET_KEY","Noter si elle commence par sk_live_ ou sk_test_"],
+ a:"Tu sais avant le Track B si chaque commande test est un vrai débit (à rembourser ensuite, montants petits) ou un débit de test."},
+{id:"PRE-2",s:"PRE",t:"Vérifier les trois dates d'ouverture dans les variables d'environnement",r:"tech",tr:"B",p:1,
+ e:["FAIRIDE_PICKUP_OPEN_AT = 1 nov. 2026","FAIRIDE_DELIVERY_OPEN_AT = 10 nov. 2026","FAIRIDE_ONLINE_PAYMENT_OPEN_AT = 10 nov. 2026"],
+ a:"Les trois valeurs correspondent au plan de lancement, avec le bon fuseau (Europe/Brussels) et pas UTC minuit."},
+{id:"PRE-3",s:"PRE",t:"Préparer les comptes et le matériel",r:"tous",tr:"AB",p:1,
+ e:["Terminal Goodcom avec Fairide ouvert dans GC Web","Deux téléphones (client + coursier), idéalement un Android et un iPhone","Un ordinateur pour la console admin","Quatre boîtes mail lisibles : client, commerce, coursier, admin","Un carnet : numéro de commande, heure, anomalie"],
+ a:"Tout est prêt avant de commencer ; chaque rôle a sa propre adresse email."},
+{id:"PRE-4",s:"PRE",t:"Confirmer que les comptes admin/test passent outre les dates d'ouverture",r:"admin",tr:"B",p:1,
+ e:["Se connecter avec un compte admin","Tenter une commande à emporter aujourd'hui"],
+ a:"La commande est acceptée (compteExempte dans routes/orders.js). Un compte client normal est refusé (voir CMD-1)."},
+{id:"PRE-5",s:"PRE",t:"Vérifier que le webhook Stripe pointe vers la bonne URL et le bon secret",r:"tech",tr:"B",p:1,
+ e:["Stripe Dashboard › Developers › Webhooks","Comparer l'URL avec le backend Railway en production","Comparer le signing secret avec STRIPE_WEBHOOK_SECRET"],
+ a:"Un seul endpoint actif pour la prod, les événements payment_intent.succeeded / charge.refunded / account.updated sont cochés, aucun échec de livraison récent."},
+
+// ───────── SIM
+{id:"SIM-1",s:"SIM",t:"Démarrer la simulation depuis l'admin",r:"admin",tr:"A",p:1,
+ e:["Admin › Simulation → démarrer"],
+ a:"Trois comptes de test (client, commerce, coursier) + un commerce fictif sont créés une seule fois par admin ; une session de 8 h s'ouvre pour chaque profil."},
+{id:"SIM-2",s:"SIM",t:"Le commerce de simulation est invisible pour le public",r:"client",tr:"A",p:1,
+ e:["Avec un vrai compte client (ou déconnecté), ouvrir /restaurants","Chercher le commerce de simulation, essayer son URL /restaurants/:id directement"],
+ a:"Il n'apparaît nulle part et l'URL directe ne l'affiche pas."},
+{id:"SIM-3",s:"SIM",t:"Client : commander et payer en simulation",r:"client",tr:"A",p:1,
+ e:["Profil client → ouvrir le commerce de simulation, ajouter des plats, checkout"],
+ a:"Paiement accepté sans Stripe, message « Paiement simulé : commande de simulation, rien n'est encaissé »."},
+{id:"SIM-4",s:"SIM",t:"Commerce : la commande arrive et l'imprimante virtuelle sort le ticket",r:"commerce",tr:"A",p:1,
+ e:["Profil commerce → Commandes","Regarder l'imprimante virtuelle sur la page Simulation / barre de simulation"],
+ a:"Commande visible comme nouvelle ; ticket affiché si le déclencheur est « réception » (même rendu que la Goodcom)."},
+{id:"SIM-5",s:"SIM",t:"Commerce : accepter puis marquer prête",r:"commerce",tr:"A",p:1,e:["Accepter","Marquer prête"],a:"Statuts mis à jour côté client sans rechargement."},
+{id:"SIM-6",s:"SIM",t:"Coursier : prendre le job et recevoir le code de retrait",r:"coursier",tr:"A",p:1,e:["Profil coursier → liste des jobs → prendre"],a:"Le coursier obtient un code de retrait."},
+{id:"SIM-7",s:"SIM",t:"Commerce : confirmer le retrait avec le code du coursier",r:"commerce",tr:"A",p:1,e:["Saisir le code du coursier"],a:"Statut → « en livraison » ; le client reçoit un email avec le code de livraison."},
+{id:"SIM-8",s:"SIM",t:"Coursier : livrer avec le code du client",r:"coursier",tr:"A",p:1,e:["Saisir le code de livraison du client"],a:"Commande livrée ; le client reçoit le récapitulatif et l'invitation à laisser un avis ; avis et pourboire ne s'ouvrent que maintenant."},
+{id:"SIM-9",s:"SIM",t:"Client : laisser un avis et tenter un pourboire",r:"client",tr:"A",p:2,e:["Depuis la commande livrée : avis, puis pourboire"],a:"Les deux fonctionnent (le pourboire est simulé, rien n'est encaissé)."},
+{id:"SIM-10",s:"SIM",t:"Le bouton « note » de la barre de simulation remonte à l'équipe",r:"tous",tr:"A",p:2,e:["Écrire une note depuis n'importe quel profil"],a:"La note apparaît dans Admin › Simulation."},
+{id:"SIM-11",s:"SIM",t:"Reset de la simulation",r:"admin",tr:"A",p:2,e:["Admin › Simulation → reset"],a:"Les commandes du commerce de simulation sont effacées, les comptes restent ; une nouvelle boucle est possible immédiatement."},
+{id:"SIM-12",s:"SIM",t:"La simulation ne pollue aucun compteur réel",r:"admin",tr:"A",p:1,e:["Après plusieurs boucles, ouvrir Admin › Finance / Orders / stats"],a:"Aucune commande de simulation dans les compteurs d'argent, les classements ou les statistiques publiques."},
+{id:"SIM-13",s:"SIM",t:"Expiration de la session de simulation (8 h)",r:"tous",tr:"A",p:3,e:["Revenir sur un profil de simulation après 8 h"],a:"Déconnexion propre, pas de page blanche ; redémarrer la simulation rouvre des sessions."},
+
+// ───────── BIZ
+{id:"BIZ-1",s:"BIZ",t:"Inscription d'un commerce",r:"commerce",tr:"B",p:1,e:["/login → inscription commerce"],a:"Compte créé, email de bienvenue reçu, redirection vers le tableau de bord."},
+{id:"BIZ-2",s:"BIZ",t:"Remplir le profil du commerce",r:"commerce",tr:"B",p:1,e:["/dashboard/edit : adresse, horaires, livraison et/ou à emporter, mode de paiement à emporter (en ligne, sur place, au choix du client)"],a:"Tout est sauvegardé et réaffiché à l'identique après rechargement."},
+{id:"BIZ-3",s:"BIZ",t:"Créer un menu de test varié",r:"commerce",tr:"B",p:1,e:["/dashboard/menu : un plat avec allergènes déclarés, un avec photo, un sans photo, un alcoolisé"],a:"Le plat sans photo s'affiche en carte texte compacte ; les allergènes et le badge 18+ apparaissent côté client."},
+{id:"BIZ-4",s:"BIZ",t:"Signer l'attestation carte / allergènes",r:"commerce",tr:"B",p:1,e:["Bloc conformité de la page menu → signer"],a:"Signature horodatée enregistrée ; impossible de publier sans."},
+{id:"BIZ-5",s:"BIZ",t:"Refus de commande sans abonnement actif ou sans approbation",r:"client",tr:"B",p:1,e:["Essayer de commander chez le commerce avant approbation"],a:"« Ce restaurant n'est pas encore actif sur Fairide »."},
+{id:"BIZ-6",s:"BIZ",t:"Approbation et publication par l'admin",r:"admin",tr:"B",p:1,e:["Admin › Restaurants → approuver et publier"],a:"Le commerce apparaît sur /restaurants et sa page /restaurants/:id ; email envoyé au commerce."},
+{id:"BIZ-7",s:"BIZ",t:"Bascule ouvert / fermé",r:"commerce",tr:"B",p:1,e:["Passer le commerce en « fermé », tenter une commande, repasser « ouvert »"],a:"Fermé : « Ce restaurant est actuellement fermé. » Ouvert : commande possible."},
+{id:"BIZ-8",s:"BIZ",t:"Souscription à l'abonnement",r:"commerce",tr:"B",p:1,e:["Parcours d'abonnement complet depuis le dashboard"],a:"Abonnement actif visible dans le dashboard et l'admin ; facture d'abonnement reçue ; expiration/échec de paiement → commerce repasse inactif avec email."},
+{id:"BIZ-9",s:"BIZ",t:"Stripe Connect du commerce (4e condition de commande)",r:"commerce",tr:"B",p:1,e:["Dashboard › paiements : terminer l'inscription Stripe Connect","Vérifier dans l'admin que stripe_connect_status = active","Commander en livraison / paiement en ligne chez ce commerce"],a:"Avant : « Ce restaurant n'a pas encore configuré ses paiements Fairide. » (seuls l'à emporter payé sur place reste possible). Après : commande payée en ligne acceptée. Relevé du 16/09 : 0 commerce sur 90 avait son Connect actif — AVANT-MISE-EN-LIGNE §1."},
+
+// ───────── TER
+{id:"TER-1",s:"TER",t:"Détection du service d'impression dans GC Web",r:"commerce",tr:"B",p:1,e:["Sur le Goodcom, GC Web, connecté comme commerce → /dashboard/terminal"],a:"« Service d'impression Goodcom détecté »."},
+{id:"TER-2",s:"TER",t:"Ticket de test et accents",r:"commerce",tr:"B",p:1,e:["Tester l'imprimante"],a:"Un ticket sort ; é è à ç ô ü € sont imprimés correctement."},
+{id:"TER-3",s:"TER",t:"Associer l'appareil comme terminal",r:"commerce",tr:"B",p:1,e:["Associer cet appareil comme terminal"],a:"L'appareil apparaît en ligne dans la liste des terminaux."},
+{id:"TER-4",s:"TER",t:"Choisir le déclencheur et le nombre de copies",r:"commerce",tr:"B",p:1,e:["Réception / acceptation / manuel ; copies 1–3"],a:"Le réglage est conservé après rechargement et respecté (voir TRM-1 à TRM-4)."},
+{id:"TER-5",s:"TER",t:"Bouton de test « complet » via la vraie file d'impression",r:"commerce",tr:"B",p:1,e:["Bouton de test complet plus bas sur la page"],a:"« Ticket de test envoyé au terminal » et un ticket sort."},
+{id:"TER-6",s:"TER",t:"La page doit rester ouverte, écran allumé",r:"commerce",tr:"B",p:1,e:["Fermer la page GC Web, envoyer une commande"],a:"Rien ne s'imprime tant que la page est fermée (comportement connu) ; le ticket est en file et sort à la réouverture (TRM-5)."},
+
+// ───────── COU
+{id:"COU-1",s:"COU",t:"Onboarding coursier complet",r:"coursier",tr:"B",p:1,e:["/driver/onboarding : avis à accepter, nationalité / titre de séjour, consentement biométrique, Stripe Identity, Stripe Connect"],a:"Chaque étape est enregistrée ; on peut quitter et reprendre là où on s'est arrêté."},
+{id:"COU-2",s:"COU",t:"Approbation du coursier par l'admin",r:"admin",tr:"B",p:1,e:["Admin › Couriers / Drivers → approuver"],a:"Le coursier reçoit un email ; il voit désormais les jobs."},
+{id:"COU-3",s:"COU",t:"Les quatre conditions pour prendre un job",r:"coursier",tr:"B",p:1,e:["Vérifier successivement : approuvé par l'admin · Stripe Connect actif · non en pause · sous le plafond annuel"],a:"Chaque condition manquante produit son propre message d'erreur (CRS-1 à CRS-4)."},
+{id:"COU-4",s:"COU",t:"Stripe Identity refusée ou en attente",r:"coursier",tr:"B",p:2,e:["Soumettre une pièce illisible / abandonner la vérification"],a:"Statut « en attente » ou « refusé » clair dans l'app, email avec la marche à suivre, pas de job accessible."},
+{id:"COU-5",s:"COU",t:"Stripe Connect : compte restreint après coup (document demandé)",r:"coursier",tr:"B",p:2,e:["Dans Stripe test, mettre le compte Connect en « restricted » (requirements.currently_due)"],a:"Le coursier est prévenu, les jobs sont bloqués avec le bon message, l'admin le voit."},
+
+// ───────── CLI
+{id:"CLI-1",s:"CLI",t:"Page d'accueil → code postal bruxellois → liste",r:"client",tr:"B",p:1,e:["Barre d'adresse avec un code postal de Bruxelles"],a:"/restaurants liste d'abord la commune, puis les voisines."},
+{id:"CLI-2",s:"CLI",t:"Fiche vendeur, allergènes, badge 18+",r:"client",tr:"B",p:1,e:["Ouvrir le commerce"],a:"Bloc « FicheVendeur » complet (nom, numéro d'entreprise, régime TVA), allergènes par plat, badge 18+ sur l'alcool."},
+{id:"CLI-3",s:"CLI",t:"Checkout : vendeurs par ligne, frais de service, libellé du bouton",r:"client",tr:"B",p:1,e:["Ajouter au panier → /checkout"],a:"Chaque ligne nomme son vendeur (commerce / coursier / Fairide) ; frais de service = 10 % de la livraison HTVA, TVA ajoutée, affichés en un seul montant ; le bouton dit « Commander et payer »."},
+{id:"CLI-4",s:"CLI",t:"Payer",r:"client",tr:"B",p:1,e:["Payer avec une carte (test ou réelle selon PRE-1)"],a:"Retour sur Fairide avec la commande confirmée ; email de confirmation."},
+{id:"CLI-5",s:"CLI",t:"Suivre la commande dans /orders",r:"client",tr:"B",p:1,e:["Observer les changements de statut"],a:"Statuts en direct ; infos coursier = prénom + initiale, numéro d'entreprise, régime TVA — rien de plus."},
+{id:"CLI-6",s:"CLI",t:"Avis + pourboire après livraison",r:"client",tr:"B",p:1,e:["Après livraison"],a:"Avis enregistré et visible ; pourboire = paiement séparé, 100 % au coursier."},
+
+// ───────── FLX
+{id:"FLX-1",s:"FLX",t:"Commande payée → commerce + ticket",r:"client",tr:"B",p:1,e:["Payer une commande en livraison chez le vrai commerce"],a:"Le commerce la voit ; ticket imprimé si déclencheur « réception »."},
+{id:"FLX-2",s:"FLX",t:"Rappel à 5 min sans acceptation",r:"commerce",tr:"B",p:1,e:["Ne rien faire pendant 5 min"],a:"Email de rappel au commerce (et push si activé)."},
+{id:"FLX-3",s:"FLX",t:"Acceptation",r:"commerce",tr:"B",p:1,e:["Accepter"],a:"Ticket si déclencheur « acceptation » ; le client voit « acceptée »."},
+{id:"FLX-4",s:"FLX",t:"Prête → les coursiers sont alertés",r:"commerce",tr:"B",p:1,e:["Marquer prête"],a:"Push / alerte reçue sur le téléphone coursier dans les secondes."},
+{id:"FLX-5",s:"FLX",t:"Job pris → code de retrait affiché au coursier",r:"coursier",tr:"B",p:1,e:["Prendre le job"],a:"Code de retrait visible ; ticket coursier imprimé si prévu."},
+{id:"FLX-6",s:"FLX",t:"Retrait : mauvais code puis bon code",r:"commerce",tr:"B",p:1,e:["Saisir un code faux, puis le bon"],a:"« Code de retrait incorrect » puis statut « en livraison » et email du code de livraison au client."},
+{id:"FLX-7",s:"FLX",t:"Livraison : code client → livré, coursier payé",r:"coursier",tr:"B",p:1,e:["Saisir le code de livraison"],a:"Commande livrée ; transfert Stripe Connect vers le coursier visible dans Stripe ; email récap au client."},
+{id:"FLX-8",s:"FLX",t:"Argent côté admin",r:"admin",tr:"B",p:1,e:["Admin › Orders / Finance"],a:"Le commerce reçoit exactement son prix en magasin ; Fairide garde la majoration : 10 % du prix en magasin HTVA + 21 % de TVA, soit 12,1 % du prix en magasin (≈ 10,8 % du prix affiché — un burger à 10 € en salle s'affiche 11,21 €, Fairide garde 1,00 € + 0,21 € de TVA ; modèle du 1er oct. 2026, pricing.js) ; les montants bouclent au centime avec Stripe."},
+{id:"FLX-9",s:"FLX",t:"Version à emporter : code de commande au comptoir",r:"client",tr:"B",p:1,e:["Commander à emporter → accepter → prête → le client montre son code → le commerce « confirme le retrait »"],a:"Commande clôturée ; mauvais code refusé ; email de récap."},
+{id:"FLX-10",s:"FLX",t:"À emporter payé sur place",r:"client",tr:"B",p:1,e:["Commerce en mode « sur place » ou « au choix » → commander sans payer en ligne"],a:"Pas de passage par Stripe ; le ticket mentionne « à payer sur place » et le montant ; la commande suit le même cycle."},
+
+// ───────── DEV
+{id:"DEV-1",s:"DEV",t:"Goodcom + GC Web : impression",r:"commerce",tr:"B",p:1,e:["Commande test"],a:"Imprime (la page parle au service d'impression sur ws://localhost:62769)."},
+{id:"DEV-2",s:"DEV",t:"Goodcom + Chrome : impression",r:"commerce",tr:"B",p:2,e:["Même test dans Chrome sur le terminal"],a:"Probablement OK ; Chrome peut demander l'accès au réseau local — noter le résultat (non testé à ce jour)."},
+{id:"DEV-3",s:"DEV",t:"Téléphone / PC : pas d'impression, commandes visibles",r:"commerce",tr:"B",p:2,e:["Dashboard sur un autre appareil"],a:"Commandes visibles, message clair que l'impression n'est possible que depuis le terminal."},
+{id:"DEV-4",s:"DEV",t:"iPhone / iPad : bon de livraison via AirPrint",r:"commerce",tr:"B",p:3,e:["Dialogue « imprimer le bon de livraison »"],a:"La boîte de dialogue AirPrint s'ouvre ; pas de Bluetooth."},
+{id:"DEV-5",s:"DEV",t:"PWA Android : installation, ouverture, push",r:"tous",tr:"B",p:1,e:["Installer depuis Chrome Android, fermer le navigateur, déclencher une notification"],a:"Icône sur l'écran d'accueil, ouverture plein écran, push reçue même app fermée."},
+{id:"DEV-6",s:"DEV",t:"PWA iOS : installation et push",r:"tous",tr:"B",p:1,e:["Safari → Partager → Sur l'écran d'accueil ; accepter les notifications"],a:"Push reçue (iOS 16.4+ uniquement depuis l'app installée) ; message d'aide si Safari n'est pas en mode installé."},
+{id:"DEV-7",s:"DEV",t:"Langues FR / EN / NL sur chaque écran principal",r:"tous",tr:"AB",p:1,e:["Basculer la langue sur : accueil, liste, menu, checkout, commandes, dashboard commerce, app coursier, admin"],a:"Aucun texte non traduit (surtout dans les écrans admin profonds), dates et montants formatés dans la langue (1 234,50 € vs € 1.234,50)."},
+{id:"DEV-8",s:"DEV",t:"Largeur téléphone : pas de défilement horizontal",r:"tous",tr:"AB",p:1,e:["Sur 360 px et 390 px : accueil, liste, menu, checkout, commandes"],a:"Aucun défilement horizontal, tous les boutons atteignables, textes non coupés."},
+{id:"DEV-9",s:"DEV",t:"Navigateurs : Safari iOS, Chrome Android, Samsung Internet, Firefox, Edge",r:"tous",tr:"AB",p:2,e:["Un parcours de commande complet sur chacun"],a:"Aucune différence fonctionnelle ; Stripe Checkout et le retour fonctionnent partout."},
+{id:"DEV-10",s:"DEV",t:"Zoom texte système 150 % / grandes polices",r:"tous",tr:"AB",p:3,e:["Activer les grandes polices sur Android et iOS"],a:"Les boutons restent visibles, rien ne se superpose."},
+{id:"DEV-11",s:"DEV",t:"Mode hors-ligne / réseau faible",r:"tous",tr:"AB",p:2,e:["Mode avion pendant 30 s au milieu d'un checkout et pendant un suivi de commande"],a:"Message « hors ligne » visible, pas de double commande au retour du réseau, le suivi se resynchronise."},
+{id:"DEV-12",s:"DEV",t:"Mise à jour de la PWA",r:"tous",tr:"B",p:2,e:["Déployer une nouvelle version sur Vercel, rouvrir la PWA"],a:"La nouvelle version est chargée (ou une invite « nouvelle version disponible ») — pas de version figée en cache pendant des jours."},
+// ───────── CMD (edge: ordering)
+{id:"CMD-1",s:"CMD",t:"Client normal commande avant le 1er novembre",r:"client",tr:"B",p:1,e:["Compte client ordinaire → commander à emporter"],a:"Refusé : « Les commandes à emporter ouvrent le 1er novembre 2026… »."},
+{id:"CMD-2",s:"CMD",t:"Livraison avant le 10 novembre (après le 1er)",r:"client",tr:"B",p:1,e:["Entre le 1er et le 10 nov. : commander en livraison"],a:"« La livraison ouvre le 10 novembre 2026. En attendant, tu peux commander à emporter. »"},
+{id:"CMD-3",s:"CMD",t:"Paiement en ligne avant le 10 novembre",r:"client",tr:"B",p:1,e:["Entre le 1er et le 10 nov. : à emporter avec paiement en ligne"],a:"Seul le paiement sur place est proposé ; message clair."},
+{id:"CMD-4",s:"CMD",t:"Commerce basculé « fermé »",r:"client",tr:"AB",p:1,e:["Commander"],a:"« Ce restaurant est actuellement fermé. »"},
+{id:"CMD-5",s:"CMD",t:"Hors horaires ou pendant une date de fermeture",r:"client",tr:"AB",p:1,e:["Commander à 3 h du matin / pendant un congé déclaré"],a:"Refusé, ou proposition d'un créneau programmé."},
+{id:"CMD-6",s:"CMD",t:"Mode non proposé (livraison chez un commerce à emporter seulement)",r:"client",tr:"AB",p:1,e:["Forcer le mode via l'URL ou l'API"],a:"« Ce restaurant ne propose pas ce mode de commande. »"},
+{id:"CMD-7",s:"CMD",t:"Paiement sur place chez un commerce « en ligne uniquement »",r:"client",tr:"AB",p:1,e:["Forcer le mode"],a:"« Ce commerce ne propose pas le paiement sur place… »"},
+{id:"CMD-8",s:"CMD",t:"Commune où la livraison est suspendue",r:"client",tr:"AB",p:1,e:["Admin suspend une commune → client y commande"],a:"« La livraison est momentanément indisponible dans cette commune. Le retrait reste possible. »"},
+{id:"CMD-9",s:"CMD",t:"Plat supprimé / indisponible pendant qu'il est dans le panier",r:"client",tr:"AB",p:1,e:["Ajouter au panier ; le commerce rend le plat indisponible ; payer"],a:"Commande refusée pour cet article avec un message nommant le plat ; le reste du panier est conservé."},
+{id:"CMD-10",s:"CMD",t:"Alcool dans le panier → déclaration d'âge",r:"client",tr:"AB",p:1,e:["Ajouter un plat 18+"],a:"Déclaration d'âge obligatoire au checkout ; impossible de payer sans cocher."},
+{id:"CMD-11",s:"CMD",t:"Demande allergie au checkout",r:"client",tr:"AB",p:1,e:["Remplir le champ allergie"],a:"Le commerce doit confirmer avant de préparer ; la demande est imprimée sur le ticket en évidence."},
+{id:"CMD-12",s:"CMD",t:"CGU non acceptées (nouvelle version)",r:"client",tr:"AB",p:1,e:["Admin publie une nouvelle version des CGU ; client se reconnecte et commande"],a:"Acceptation demandée au checkout ; horodatage et version enregistrés."},
+{id:"CMD-13",s:"CMD",t:"Le propriétaire commande dans son propre commerce",r:"commerce",tr:"AB",p:2,e:["Compte commerce → commander chez soi"],a:"Refusé (auto-commande interdite)."},
+{id:"CMD-14",s:"CMD",t:"31 commandes en 15 min depuis une adresse",r:"client",tr:"A",p:2,e:["Script ou répétition rapide"],a:"« Trop de commandes en peu de temps… »"},
+{id:"CMD-15",s:"CMD",t:"Commande programmée (jeudi midi passée mardi)",r:"client",tr:"AB",p:1,e:["Choisir un créneau futur"],a:"N'expire pas mardi : le commerce a jusqu'à 30 min avant le créneau ; rappel envoyé au bon moment ; le ticket indique l'heure prévue."},
+{id:"CMD-16",s:"CMD",t:"Bon cadeau : code inconnu / expiré / déjà utilisé",r:"client",tr:"AB",p:2,e:["Tester les trois cas"],a:"Message d'erreur distinct pour chacun."},
+{id:"CMD-17",s:"CMD",t:"Visiteur déconnecté ouvre un commerce depuis la liste",r:"client",tr:"B",p:1,e:["Déconnecté → /restaurants → cliquer"],a:"Envoyé vers la connexion, puis ramené sur ce commerce avec le panier intact."},
+{id:"CMD-18",s:"CMD",t:"Visiteur déconnecté ouvre un lien partagé /restaurants/:id",r:"client",tr:"B",p:1,e:["Coller le lien dans une fenêtre privée"],a:"La page s'ouvre directement, sans connexion."},
+{id:"CMD-19",s:"CMD",t:"Deux onglets : commande payée deux fois ?",r:"client",tr:"AB",p:1,e:["Ouvrir le checkout dans 2 onglets, payer dans l'un, puis dans l'autre"],a:"Une seule commande ; le second onglet affiche « commande déjà payée » ou un panier vide."},
+{id:"CMD-20",s:"CMD",t:"Double clic sur « Commander et payer »",r:"client",tr:"AB",p:1,e:["Cliquer très vite deux fois"],a:"Une seule commande / un seul PaymentIntent ; bouton désactivé pendant le traitement."},
+{id:"CMD-21",s:"CMD",t:"Prix changé par le commerce pendant que le panier est ouvert",r:"client",tr:"AB",p:2,e:["Modifier le prix d'un plat ; le client paie"],a:"Le prix facturé = prix affiché au client au moment du paiement, ou le client est prévenu et doit revalider ; jamais un montant différent de celui affiché."},
+
+// ───────── PAY
+{id:"PAY-1",s:"PAY",t:"Carte refusée (4000 0000 0000 0002)",r:"client",tr:"B",p:1,e:["Payer avec la carte de test refusée"],a:"Aucune commande marquée payée ; le client peut réessayer ; rien n'arrive au commerce."},
+{id:"PAY-2",s:"PAY",t:"3-D Secure (4000 0027 6000 3184)",r:"client",tr:"B",p:1,e:["Payer avec la carte 3DS"],a:"Défi affiché, puis payé."},
+{id:"PAY-3",s:"PAY",t:"Client ferme la page Stripe sans payer",r:"client",tr:"B",p:1,e:["Quitter Stripe Checkout"],a:"La commande n'arrive jamais au commerce ; solde / bon retenu libéré ; le panier est encore là."},
+{id:"PAY-4",s:"PAY",t:"Paiement réussi et annulation au même instant",r:"client",tr:"B",p:1,e:["Payer pendant que le commerce / l'auto-annulation annule"],a:"Remboursement automatique du paiement orphelin ; email au client."},
+{id:"PAY-5",s:"PAY",t:"Stripe renvoie le même webhook",r:"tech",tr:"B",p:1,e:["Stripe Dashboard → événement → « Resend »"],a:"Rien ne se produit deux fois : pas de double email, pas de double versement, pas de double statut."},
+{id:"PAY-6",s:"PAY",t:"Paiement partiel avec le solde Fairide",r:"client",tr:"B",p:1,e:["Solde < total → payer la différence par carte, puis faire refuser la commande"],a:"Solde re-crédité intégralement et carte remboursée."},
+{id:"PAY-7",s:"PAY",t:"Bancontact",r:"client",tr:"B",p:1,e:["Payer avec Bancontact (test : mode « succeed » / « fail »)"],a:"Succès → commande payée ; échec → pas de commande ; le retour depuis l'app bancaire revient bien sur Fairide (deeplink mobile)."},
+{id:"PAY-8",s:"PAY",t:"Apple Pay / Google Pay",r:"client",tr:"B",p:2,e:["iPhone Safari et Android Chrome"],a:"Le bouton apparaît si disponible, le paiement passe, l'email contient le bon moyen de paiement."},
+{id:"PAY-9",s:"PAY",t:"Webhook en retard (Stripe met 2 min à notifier)",r:"tech",tr:"B",p:1,e:["Désactiver temporairement l'endpoint webhook, payer, réactiver et « resend »"],a:"L'écran de retour ne dit pas « payé » tant que ce n'est pas confirmé ; la commande se débloque sans intervention manuelle quand le webhook arrive."},
+{id:"PAY-10",s:"PAY",t:"Webhook avec signature invalide",r:"tech",tr:"B",p:1,e:["POST manuel vers l'endpoint webhook sans signature valide"],a:"400/401, rien n'est modifié, événement loggé."},
+{id:"PAY-11",s:"PAY",t:"Remboursement partiel depuis l'admin",r:"admin",tr:"B",p:1,e:["Rembourser 1 article sur 3"],a:"Stripe reçoit le bon montant, le client est prévenu, la commission et la part commerce sont recalculées, la facture mentionne l'avoir."},
+{id:"PAY-12",s:"PAY",t:"Litige / chargeback Stripe",r:"admin",tr:"B",p:2,e:["Stripe test : carte 4000 0000 0000 0259 (dispute)"],a:"L'admin voit la commande en litige ; le versement coursier/commerce n'est pas annulé rétroactivement par surprise ; procédure documentée."},
+{id:"PAY-13",s:"PAY",t:"Devise et arrondis",r:"tech",tr:"AB",p:1,e:["Commande avec des prix à 3 décimales après remise/pourcentage (ex. 10 % de 12,35 €)"],a:"Tous les montants arrondis au centime de façon cohérente entre affichage, Stripe, facture et admin ; somme des lignes = total."},
+{id:"PAY-14",s:"PAY",t:"Pourboire : paiement séparé, 100 % coursier",r:"client",tr:"B",p:1,e:["Donner 2 € après livraison"],a:"Second paiement Stripe ; transfert intégral au coursier ; pas de commission ; visible dans les revenus du coursier."},
+{id:"PAY-15",s:"PAY",t:"Pourboire refusé par la banque",r:"client",tr:"B",p:3,e:["Carte refusée au pourboire"],a:"Message clair, possibilité de réessayer, la commande reste « livrée »."},
+{id:"PAY-16",s:"PAY",t:"Carte expirée / fonds insuffisants",r:"client",tr:"B",p:2,e:["4000 0000 0000 0069 (expirée), 4000 0000 0000 9995 (fonds insuffisants)"],a:"Message compréhensible, pas de commande."},
+{id:"PAY-17",s:"PAY",t:"Mode test vs live : séparation des données",r:"tech",tr:"B",p:1,e:["Passer la clé Railway en live"],a:"Aucune commande test n'apparaît dans les comptes de production ; les anciens PaymentIntents test ne cassent pas l'affichage."},
+
+// ───────── RES
+{id:"RES-1",s:"RES",t:"Le commerce n'accepte jamais",r:"commerce",tr:"AB",p:1,e:["Ne rien faire"],a:"Rappel à 5 min ; auto-annulation + remboursement complet à 15 min ; emails au client et au commerce."},
+{id:"RES-2",s:"RES",t:"Acceptation à la toute dernière seconde",r:"commerce",tr:"AB",p:1,e:["Accepter à 14:59"],a:"L'acceptation gagne ; l'auto-annulation ne fait rien."},
+{id:"RES-3",s:"RES",t:"Le commerce refuse",r:"commerce",tr:"AB",p:1,e:["Refuser avec un motif"],a:"Client intégralement remboursé (carte + solde) ; motif visible côté client."},
+{id:"RES-4",s:"RES",t:"Mauvais code de retrait coursier",r:"commerce",tr:"AB",p:1,e:["Saisir un code faux"],a:"« Code de retrait incorrect. »"},
+{id:"RES-5",s:"RES",t:"Confirmer le retrait avant « prête »",r:"commerce",tr:"AB",p:1,e:["Tenter le retrait depuis « acceptée »"],a:"« Marque d'abord la commande comme prête… »"},
+{id:"RES-6",s:"RES",t:"À emporter payé sur place, client ne vient jamais",r:"commerce",tr:"AB",p:1,e:["Bouton « Non récupérée » (seulement à emporter payé sur place, acceptée ou prête)"],a:"Commande clôturée, client informé ; le bouton n'existe pas pour une commande payée en ligne."},
+{id:"RES-7",s:"RES",t:"À emporter avec alcool, client mineur / sans pièce d'identité",r:"commerce",tr:"AB",p:1,e:["Enregistrer le refus"],a:"Commande annulée, remboursement si payée en ligne, mention conservée."},
+{id:"RES-8",s:"RES",t:"Demande allergie à confirmer",r:"commerce",tr:"AB",p:1,e:["Commande avec allergie"],a:"Impossible de passer « en préparation » sans confirmer ; la confirmation est horodatée."},
+{id:"RES-9",s:"RES",t:"Mode « pause temporaire » (trop de commandes)",r:"commerce",tr:"AB",p:2,e:["Chercher une pause de 15/30/60 min distincte de « fermé »"],a:"Les nouveaux clients voient un délai allongé ou une pause ; les commandes en cours continuent ; retour automatique à la fin."},
+{id:"RES-10",s:"RES",t:"Ajuster le temps de préparation sur une commande",r:"commerce",tr:"AB",p:2,e:["Accepter avec « +15 min »"],a:"Le client voit la nouvelle estimation ; les coursiers sont alertés plus tard."},
+{id:"RES-11",s:"RES",t:"Son / vibration à l'arrivée d'une commande",r:"commerce",tr:"B",p:1,e:["Terminal + téléphone, app en arrière-plan"],a:"Alerte sonore répétée jusqu'à ouverture ; réglable."},
+{id:"RES-12",s:"RES",t:"Plusieurs employés sur le même commerce",r:"commerce",tr:"B",p:2,e:["Deux appareils connectés au même compte acceptent la même commande"],a:"Pas de double acceptation ni de double ticket ; état cohérent sur les deux écrans."},
+{id:"RES-13",s:"RES",t:"Historique et récap journalier",r:"commerce",tr:"B",p:2,e:["Fin de journée"],a:"Liste des commandes du jour, totaux, export ; commission Fairide visible par commande."},
+{id:"RES-14",s:"RES",t:"Annulation par le commerce après acceptation",r:"commerce",tr:"AB",p:1,e:["Annuler une commande acceptée (plus d'ingrédients)"],a:"Motif obligatoire, remboursement complet, coursier libéré sans pénalité, email au client."},
+{id:"RES-15",s:"RES",t:"Page Avis du commerce sans aucun avis",r:"commerce",tr:"AB",p:3,e:["Nouveau commerce → /dashboard/reviews"],a:"Aucune étoile tant que personne n'a noté (même règle que côté client : le 4,5 par défaut de la base ne s'affiche nulle part)."},
+
+// ───────── TRM
+{id:"TRM-1",s:"TRM",t:"Déclencheur « réception »",r:"commerce",tr:"B",p:1,e:[],a:"Le ticket sort quand la commande payée arrive."},
+{id:"TRM-2",s:"TRM",t:"Déclencheur « acceptation »",r:"commerce",tr:"B",p:1,e:[],a:"Le ticket sort seulement à l'acceptation."},
+{id:"TRM-3",s:"TRM",t:"Déclencheur « manuel »",r:"commerce",tr:"B",p:1,e:[],a:"Rien ne sort tout seul ; le bouton « réimprimer » fonctionne."},
+{id:"TRM-4",s:"TRM",t:"Copies = 2 ou 3",r:"commerce",tr:"B",p:2,e:[],a:"Autant de tickets que demandé."},
+{id:"TRM-5",s:"TRM",t:"Page GC Web fermée / écran éteint à l'arrivée d'une commande",r:"commerce",tr:"B",p:1,e:[],a:"Le ticket attend en file et sort à la réouverture."},
+{id:"TRM-6",s:"TRM",t:"Le terminal perd le Wi-Fi",r:"commerce",tr:"B",p:1,e:["Couper le Wi-Fi, envoyer une commande, remettre le Wi-Fi"],a:"Affiche « hors ligne » ; à la reconnexion les tickets sortent avec « Ticket en attente : il sortira dès que le terminal sera de nouveau en ligne »."},
+{id:"TRM-7",s:"TRM",t:"Plus de papier",r:"commerce",tr:"B",p:2,e:["Retirer le rouleau"],a:"Statut visible dans la liste des terminaux ; les tickets sortent après remise du papier."},
+{id:"TRM-8",s:"TRM",t:"Aucun terminal associé, ticket de test",r:"commerce",tr:"B",p:2,e:[],a:"« Ticket de test en attente : il sortira dès qu'un terminal sera associé. »"},
+{id:"TRM-9",s:"TRM",t:"Retirer puis ré-associer le terminal",r:"commerce",tr:"B",p:2,e:[],a:"Fonctionne ; pas de doublon dans la liste."},
+{id:"TRM-10",s:"TRM",t:"Nouveau coursier après abandon du premier",r:"commerce",tr:"AB",p:2,e:[],a:"Un nouveau ticket coursier est imprimé."},
+{id:"TRM-11",s:"TRM",t:"Imprimé mais jamais accepté",r:"commerce",tr:"B",p:1,e:[],a:"Auto-annulation à 15 min quand même — imprimer ne vaut pas accepter."},
+{id:"TRM-12",s:"TRM",t:"Commande longue (15+ lignes), noms longs, accents, €",r:"commerce",tr:"B",p:1,e:[],a:"Rien de coupé ni de garbled ; suppléments et instructions bien lisibles."},
+{id:"TRM-13",s:"TRM",t:"Contenu du ticket complet",r:"commerce",tr:"B",p:1,e:["Lire un ticket réel"],a:"Numéro, heure, mode (livraison / à emporter / sur place), heure prévue si programmée, articles + options + quantités, allergie en gros, prénom client, montant, « payé en ligne / à payer », code coursier si pertinent."},
+{id:"TRM-14",s:"TRM",t:"Mise en veille automatique du terminal",r:"commerce",tr:"B",p:1,e:["Laisser le terminal 30 min sans toucher"],a:"L'écran reste allumé (réglage) ou le service se réveille ; une commande arrivée pendant la veille sort quand même."},
+
+// ───────── CRS
+{id:"CRS-1",s:"CRS",t:"Coursier non approuvé",r:"coursier",tr:"B",p:1,e:[],a:"Ne voit aucun job."},
+{id:"CRS-2",s:"CRS",t:"Stripe Connect non terminé",r:"coursier",tr:"B",p:1,e:[],a:"« Configure d'abord tes informations de paiement… »"},
+{id:"CRS-3",s:"CRS",t:"Coursier en pause",r:"coursier",tr:"B",p:1,e:[],a:"« Ton compte est en pause… »"},
+{id:"CRS-4",s:"CRS",t:"Plafond légal annuel atteint",r:"coursier",tr:"B",p:1,e:["Admin : forcer le compteur près du plafond ; livrer"],a:"Job refusé avec le message du plafond ; avertissement préalable à 70 % et 90 % (seuils du code : p2pAlertLevels)."},
+{id:"CRS-5",s:"CRS",t:"Deux coursiers prennent le même job",r:"coursier",tr:"AB",p:1,e:["Deux téléphones, même seconde"],a:"Un seul l'obtient ; l'autre : « …déjà été prise en charge par un autre livreur. »"},
+{id:"CRS-6",s:"CRS",t:"Refus d'une offre : aucune pénalité",r:"coursier",tr:"AB",p:1,e:["Refuser 5 offres de suite"],a:"Aucun changement de classement, aucune note, aucun message culpabilisant — rien ne doit jamais noter un coursier pour un refus."},
+{id:"CRS-7",s:"CRS",t:"Livrer avant confirmation du retrait",r:"coursier",tr:"AB",p:1,e:[],a:"« Confirme d'abord le retrait de la commande… »"},
+{id:"CRS-8",s:"CRS",t:"Mauvais code de livraison",r:"coursier",tr:"AB",p:1,e:[],a:"« Code de livraison incorrect. »"},
+{id:"CRS-9",s:"CRS",t:"Alcool : livraison sans vérification d'identité",r:"coursier",tr:"AB",p:1,e:[],a:"Bloqué : doit vérifier la pièce d'identité d'abord."},
+{id:"CRS-10",s:"CRS",t:"Alcool : client mineur ou absent",r:"coursier",tr:"AB",p:1,e:["Enregistrer refused_age / refused_absent"],a:"Commande annulée ; marche à suivre pour la marchandise ; rémunération du coursier conforme à la politique."},
+{id:"CRS-11",s:"CRS",t:"Avant de prendre un job : vie privée du client",r:"coursier",tr:"AB",p:1,e:["Regarder l'offre"],a:"Prix et destination approximative seulement — ni nom, ni téléphone, ni numéro de maison."},
+{id:"CRS-12",s:"CRS",t:"Téléphone verrouillé pendant la livraison",r:"coursier",tr:"B",p:2,e:["Verrouiller 3 min"],a:"La position cesse de se mettre à jour ; la carte client affiche un avertissement d'obsolescence après 2 min (limite connue)."},
+{id:"CRS-13",s:"CRS",t:"Appeler / écrire au client depuis l'app",r:"coursier",tr:"B",p:1,e:["Après prise en charge"],a:"Numéro masqué ou bouton d'appel ; plus accessible une fois la commande livrée."},
+{id:"CRS-14",s:"CRS",t:"Page revenus du coursier",r:"coursier",tr:"B",p:1,e:["Après 2–3 livraisons et un pourboire"],a:"Chaque course, pourboire, total du jour / semaine / année, cumul vers le plafond, date du prochain versement."},
+// ───────── USR
+{id:"USR-1",s:"USR",t:"Annuler tant que la commande est « nouvelle »",r:"client",tr:"AB",p:1,e:[],a:"Annulée, remboursée, commerce prévenu, ticket d'annulation si déjà imprimé."},
+{id:"USR-2",s:"USR",t:"Annuler après acceptation",r:"client",tr:"AB",p:1,e:[],a:"« Le restaurant a déjà accepté ta commande… elle ne peut plus être annulée. »"},
+{id:"USR-3",s:"USR",t:"Décliner le coursier avant le départ",r:"client",tr:"AB",p:2,e:[],a:"Coursier retiré sans pénalité, job de retour dans le pool."},
+{id:"USR-4",s:"USR",t:"Avis / pourboire avant livraison",r:"client",tr:"AB",p:1,e:[],a:"Non proposé — seulement après livraison (y compris via l'API)."},
+{id:"USR-5",s:"USR",t:"Commerce sans avis : aucune étoile",r:"client",tr:"B",p:1,e:["Nouveau commerce publié"],a:"Pas d'étoiles affichées (le 4,5 par défaut de la base ne doit jamais apparaître)."},
+{id:"USR-6",s:"USR",t:"Session expirée",r:"client",tr:"AB",p:1,e:["Token trop vieux"],a:"Renvoyé vers la connexion proprement, pas de page blanche, panier conservé."},
+{id:"USR-7",s:"USR",t:"Factures téléchargeables",r:"client",tr:"B",p:1,e:["/invoices"],a:"PDF par commande, mentions légales complètes (voir INV dans LEG)."},
+{id:"USR-8",s:"USR",t:"Avis : modération et contenu",r:"client",tr:"AB",p:2,e:["Avis avec insultes, lien, 2 000 caractères, emoji"],a:"Longueur limitée, HTML neutralisé, signalement possible, réponse du commerce possible, un seul avis par commande."},
+{id:"USR-9",s:"USR",t:"Recommander (« commander à nouveau »)",r:"client",tr:"AB",p:3,e:["Depuis une ancienne commande"],a:"Panier reconstitué ; les plats devenus indisponibles sont signalés."},
+{id:"USR-10",s:"USR",t:"Signaler un problème sur une commande livrée",r:"client",tr:"AB",p:1,e:["Article manquant / froid / jamais reçue"],a:"Formulaire avec photo, ticket créé côté admin, accusé de réception par email, délai de réponse annoncé."},
+
+// ───────── ADM
+{id:"ADM-1",s:"ADM",t:"Suspendre un commerce, un coursier ou un client",r:"admin",tr:"B",p:1,e:["Tenter une suspension sans motif, puis via le dialogue de décision"],a:"La suspension nue est refusée ; le dialogue (faits + base contractuelle) est obligatoire ; la décision motivée est envoyée à la personne (DSA)."},
+{id:"ADM-2",s:"ADM",t:"Client suspendu tente de commander",r:"client",tr:"B",p:1,e:[],a:"« Ton compte a été suspendu… »"},
+{id:"ADM-3",s:"ADM",t:"Signalement via /signaler",r:"client",tr:"B",p:1,e:["Signaler un plat / un commerce / un avis"],a:"Apparaît dans Admin › Conformité › DSA reports ; accusé de réception ; décision notifiée."},
+{id:"ADM-4",s:"ADM",t:"/classement correspond au tri réel",r:"admin",tr:"B",p:1,e:["Comparer le texte avec l'ordre affiché sur /restaurants"],a:"Le texte décrit exactement les critères appliqués."},
+{id:"ADM-5",s:"ADM",t:"Commandes de simulation hors compteurs",r:"admin",tr:"A",p:1,e:[],a:"Jamais comptées dans les montants admin."},
+{id:"ADM-6",s:"ADM",t:"Accès admin réservé",r:"tech",tr:"B",p:1,e:["Compte client → /admin et appels API admin"],a:"403 partout ; aucun menu admin visible ; voir SEC."},
+{id:"ADM-7",s:"ADM",t:"Journal d'audit des actions admin",r:"admin",tr:"B",p:2,e:["Approuver, suspendre, rembourser"],a:"Chaque action est tracée : qui, quoi, quand, sur qui."},
+{id:"ADM-8",s:"ADM",t:"Rechercher une commande par numéro / email / téléphone",r:"admin",tr:"B",p:1,e:["Support reçoit un appel"],a:"Trouvée en moins de 10 s avec l'historique complet des statuts et des paiements."},
+{id:"ADM-9",s:"ADM",t:"Forcer un statut (débloquer une commande coincée)",r:"admin",tr:"B",p:1,e:["Commande bloquée « en livraison » → forcer « livrée » / « annulée »"],a:"Possible avec motif, conséquences financières cohérentes (versement ou remboursement), emails envoyés."},
+{id:"ADM-10",s:"ADM",t:"Désapprouver / dépublier un commerce actif",r:"admin",tr:"B",p:2,e:["Avec des commandes en cours"],a:"Les commandes en cours vont au bout ; plus de nouvelle commande ; disparaît de la liste."},
+
+// ───────── MNU (new)
+{id:"MNU-1",s:"MNU",t:"Suppléments / options : groupe obligatoire à choix unique",r:"client",tr:"AB",p:1,e:["Plat avec taille obligatoire (S/M/L)"],a:"Impossible d'ajouter sans choisir ; le prix de la ligne inclut le supplément ; le ticket l'affiche."},
+{id:"MNU-2",s:"MNU",t:"Options à choix multiples avec minimum / maximum",r:"client",tr:"AB",p:1,e:["« Choisis 2 à 4 garnitures »"],a:"Les bornes sont respectées côté interface ET côté serveur (forcer via l'API)."},
+{id:"MNU-3",s:"MNU",t:"Supplément gratuit vs payant, prix négatif interdit",r:"commerce",tr:"B",p:2,e:["Créer une option à 0 €, une à 1,50 €, tenter -1 €"],a:"Les deux premières marchent ; la négative est refusée."},
+{id:"MNU-4",s:"MNU",t:"Quantité × options",r:"client",tr:"AB",p:1,e:["3 × (plat 10 € + option 2 €)"],a:"Ligne = 36 € partout (panier, checkout, email, ticket, facture)."},
+{id:"MNU-5",s:"MNU",t:"Instruction spéciale par plat",r:"client",tr:"AB",p:2,e:["« sans oignon » sur un plat"],a:"Visible sur le ticket et le dashboard ; longueur limitée ; pas d'HTML interprété."},
+{id:"MNU-6",s:"MNU",t:"Rupture de stock pendant le service",r:"commerce",tr:"AB",p:1,e:["Marquer un plat « épuisé aujourd'hui » depuis le téléphone"],a:"Disparaît ou grisé immédiatement côté client ; revient automatiquement le lendemain si c'est une rupture du jour."},
+{id:"MNU-7",s:"MNU",t:"Catégories, ordre et visibilité",r:"commerce",tr:"B",p:2,e:["Réordonner, masquer une catégorie"],a:"L'ordre côté client suit ; une catégorie vide n'est pas affichée."},
+{id:"MNU-8",s:"MNU",t:"Photo de plat : format, taille, orientation",r:"commerce",tr:"B",p:1,e:["JPEG 8 Mo portrait depuis un iPhone (HEIC), PNG, GIF, PDF renommé .jpg"],a:"HEIC converti ou refusé avec message ; orientation EXIF correcte ; PDF refusé ; image compressée (< 300 Ko affichée)."},
+{id:"MNU-9",s:"MNU",t:"Taux de TVA par type de produit",r:"tech",tr:"B",p:1,e:["Plat chaud à emporter (6 %), boisson non alcoolisée (6 %), alcool (21 %), livraison (21 %)"],a:"La TVA ventilée sur la facture est correcte par ligne ; le total TVAC = somme des HTVA + TVA."},
+{id:"MNU-10",s:"MNU",t:"Menu importé : prix plateforme vs prix en magasin",r:"commerce",tr:"B",p:1,e:["Après import Uber Eats / Deliveroo"],a:"Les prix sont corrigés à prix magasin + 12,1 % (10 % HTVA + TVA) avant publication (les imports portent ~ +39 %)."},
+{id:"MNU-11",s:"MNU",t:"Menus horaires (petit-déj jusqu'à 11 h)",r:"client",tr:"AB",p:3,e:["Si la fonctionnalité existe"],a:"Un plat hors plage n'est pas commandable ; message clair."},
+{id:"MNU-12",s:"MNU",t:"Modifier le menu pendant des commandes en cours",r:"commerce",tr:"AB",p:2,e:["Renommer / supprimer un plat déjà commandé"],a:"La commande en cours garde le nom et le prix d'origine partout (ticket, facture)."},
+{id:"MNU-13",s:"MNU",t:"Les 14 allergènes européens",r:"commerce",tr:"B",p:1,e:["Déclarer chaque allergène sur un plat"],a:"Gluten, crustacés, œufs, poissons, arachides, soja, lait, fruits à coque, céleri, moutarde, sésame, sulfites, lupin, mollusques — tous présents et traduits dans les 3 langues."},
+{id:"MNU-14",s:"MNU",t:"Photos de stock encore activées",r:"tech",tr:"B",p:1,e:["VITE_STOCK_DISH_PHOTOS"],a:"Doit être « off » avant que de vrais restaurants soient en ligne."},
+
+// ───────── PAN (new)
+{id:"PAN-1",s:"PAN",t:"Persistance du panier",r:"client",tr:"AB",p:1,e:["Ajouter, fermer l'onglet, rouvrir ; se déconnecter / reconnecter ; changer d'appareil"],a:"Panier conservé après rechargement et reconnexion ; comportement documenté entre appareils."},
+{id:"PAN-2",s:"PAN",t:"Deux commerces dans le panier",r:"client",tr:"AB",p:1,e:["Ajouter un plat chez A puis chez B"],a:"Avertissement « vider le panier ? » ; jamais une commande mixte."},
+{id:"PAN-3",s:"PAN",t:"Montant minimum de commande",r:"client",tr:"AB",p:1,e:["Commerce avec minimum 15 € → panier à 12 €"],a:"Bouton désactivé avec le montant manquant ; vérifié aussi côté serveur."},
+{id:"PAN-4",s:"PAN",t:"Frais de livraison selon la distance / seuil gratuit",r:"client",tr:"AB",p:1,e:["Adresse à 1 km, 4 km, hors zone ; panier au-dessus du seuil"],a:"Frais exacts selon la grille ; 0 € au-dessus du seuil ; hors zone bloqué."},
+{id:"PAN-5",s:"PAN",t:"Quantités : 0, 99, changement rapide",r:"client",tr:"AB",p:2,e:["Mettre 0 (supprime), 99, cliquer + très vite"],a:"Totaux justes, plafond raisonnable, pas de ligne fantôme."},
+{id:"PAN-6",s:"PAN",t:"Checkout avec panier vide / via URL directe",r:"client",tr:"AB",p:2,e:["/checkout sans panier"],a:"Redirigé vers la liste avec un message."},
+{id:"PAN-7",s:"PAN",t:"Numéro de téléphone obligatoire et validé (format BE)",r:"client",tr:"AB",p:1,e:["+32 4xx, 04xx, numéro FR, lettres"],a:"Formats belges acceptés et normalisés ; invalides refusés avec message ; le coursier reçoit un numéro appelable."},
+{id:"PAN-8",s:"PAN",t:"Instructions de livraison et code d'entrée",r:"client",tr:"AB",p:1,e:["Étage, sonnette, code porte, « laisser devant la porte »"],a:"Transmis au coursier (pas au commerce) ; « laisser devant la porte » incompatible avec l'alcool."},
+{id:"PAN-9",s:"PAN",t:"Récapitulatif avant paiement : total TTC unique et clair",r:"client",tr:"AB",p:1,e:["Lire le checkout comme un client pressé"],a:"Sous-total, livraison, frais de service, pourboire éventuel, remise, TOTAL TTC ; aucun frais surprise après Stripe."},
+{id:"PAN-10",s:"PAN",t:"Livraison « dès que possible » vs programmée : ETA affichée",r:"client",tr:"AB",p:2,e:["Les deux modes"],a:"Une estimation réaliste (préparation + trajet) affichée avant paiement et dans le suivi."},
+
+// ───────── GEO (new)
+{id:"GEO-1",s:"GEO",t:"Autocomplétion d'adresse",r:"client",tr:"AB",p:1,e:["« Rue de la Loi 16 », « Wetstraat 16 », « Av. Louise 1 bte 3 »"],a:"Les deux langues trouvent la même adresse ; la boîte / étage est conservée."},
+{id:"GEO-2",s:"GEO",t:"Adresse introuvable / géocodage échoué",r:"client",tr:"AB",p:1,e:["Adresse inventée"],a:"Message clair, possibilité de placer un point sur la carte ou de corriger ; jamais une commande avec des coordonnées 0,0."},
+{id:"GEO-3",s:"GEO",t:"Adresse hors zone de livraison",r:"client",tr:"AB",p:1,e:["Anvers, Waterloo (juste hors zone), 1000 Bruxelles"],a:"Hors zone : retrait proposé ; la limite est correcte à quelques centaines de mètres près."},
+{id:"GEO-4",s:"GEO",t:"Adresses enregistrées",r:"client",tr:"AB",p:2,e:["Enregistrer « Maison » et « Bureau », supprimer une"],a:"Sélection en un tap, suppression effective, adresse par défaut."},
+{id:"GEO-5",s:"GEO",t:"Position du coursier sur la carte client",r:"client",tr:"B",p:1,e:["Suivre une vraie livraison"],a:"Point mis à jour toutes les 10–30 s ; pas de saut aberrant ; disparaît après livraison."},
+{id:"GEO-6",s:"GEO",t:"Coursier : permission de localisation refusée",r:"coursier",tr:"B",p:1,e:["Refuser la géoloc dans le navigateur / l'OS"],a:"Explication et lien vers les réglages ; peut-il quand même livrer ? Comportement documenté."},
+{id:"GEO-7",s:"GEO",t:"Coursier : navigation vers le commerce puis le client",r:"coursier",tr:"B",p:1,e:["Bouton « itinéraire »"],a:"Ouvre Google Maps / Apple Plans / Waze avec la bonne adresse (numéro inclus) seulement après prise en charge."},
+{id:"GEO-8",s:"GEO",t:"Tuiles de carte : fournisseur et clé",r:"tech",tr:"B",p:1,e:["VITE_MAP_TILE_URL"],a:"Un fournisseur sous contrat (pas les tuiles publiques OSM) avant lancement ; attribution affichée."},
+{id:"GEO-9",s:"GEO",t:"Tri de la liste par commune puis voisines",r:"client",tr:"B",p:1,e:["1050, 1180, 1000 ; une commune sans commerce"],a:"Ordre correct ; commune vide → message + voisines ; pas de commerce fermé en tête."},
+{id:"GEO-10",s:"GEO",t:"Distance / temps affichés sur la liste",r:"client",tr:"B",p:3,e:["Comparer avec Google Maps"],a:"Écart raisonnable (< 20 %)."},
+
+// ───────── HOR (new)
+{id:"HOR-1",s:"HOR",t:"Horaires à cheval sur minuit (18:00 → 01:00)",r:"client",tr:"AB",p:1,e:["Commander à 00:30"],a:"Accepté ; la commande est rattachée au bon « jour de service » dans les récaps."},
+{id:"HOR-2",s:"HOR",t:"Deux plages par jour (midi + soir)",r:"client",tr:"AB",p:1,e:["Commander à 15:30 entre les plages"],a:"Refusé ou créneau programmé pour le soir."},
+{id:"HOR-3",s:"HOR",t:"Changement d'heure du 25 octobre 2026 (03:00 → 02:00)",r:"tech",tr:"B",p:1,e:["Commande programmée pour 02:30 le 25/10 ; rappel 5 min / annulation 15 min pendant la nuit du changement"],a:"Pas de créneau fantôme ni de double déclenchement ; toutes les heures affichées en Europe/Brussels."},
+{id:"HOR-4",s:"HOR",t:"Jours fériés belges et fermetures exceptionnelles",r:"commerce",tr:"B",p:2,e:["Déclarer le 1er et le 11 novembre fermés"],a:"Aucune commande acceptée ces jours ; la liste indique « fermé aujourd'hui »."},
+{id:"HOR-5",s:"HOR",t:"Créneaux programmés : granularité, limite max par créneau",r:"client",tr:"AB",p:2,e:["Choisir un créneau à 7 jours ; 10 commandes sur le même créneau"],a:"Horizon limité raisonnable ; capacité par créneau si prévue, sinon noté comme risque."},
+{id:"HOR-6",s:"HOR",t:"Heure affichée : serveur UTC vs client Bruxelles",r:"tech",tr:"AB",p:1,e:["Comparer l'heure d'une commande sur : email, ticket, dashboard, admin, facture"],a:"La même heure locale partout, jamais d'écart d'1 ou 2 h."},
+{id:"HOR-7",s:"HOR",t:"Compte à rebours d'acceptation visible côté commerce",r:"commerce",tr:"AB",p:2,e:["Nouvelle commande"],a:"Un minuteur 15:00 → 0 clair ; alerte visuelle aux 5 dernières minutes."},
+
+// ───────── LIV (new)
+{id:"LIV-1",s:"LIV",t:"Aucun coursier disponible",r:"commerce",tr:"AB",p:1,e:["Commande prête, aucun coursier en ligne pendant 20 min"],a:"Que se passe-t-il ? Réassignation, alerte admin, proposition « à emporter » ou annulation remboursée — comportement défini, client informé."},
+{id:"LIV-2",s:"LIV",t:"Le coursier abandonne après prise en charge",r:"coursier",tr:"AB",p:1,e:["Rendre le job avant retrait ; après retrait (cas grave)"],a:"Avant retrait : retour au pool, nouveau ticket. Après retrait : alerte admin immédiate, procédure définie."},
+{id:"LIV-3",s:"LIV",t:"Coursier injoignable (app fermée, téléphone éteint) après prise en charge",r:"admin",tr:"B",p:1,e:["Éteindre le téléphone du coursier 15 min"],a:"Alerte admin, possibilité de réassigner, client informé du retard."},
+{id:"LIV-4",s:"LIV",t:"Plusieurs commandes du même commerce en même temps",r:"coursier",tr:"AB",p:2,e:["2 commandes prêtes, 1 coursier"],a:"Peut-il en prendre 2 ? Si oui : 2 codes de retrait, 2 codes de livraison, ordre de livraison clair."},
+{id:"LIV-5",s:"LIV",t:"Client absent à la livraison (sans alcool)",r:"coursier",tr:"AB",p:1,e:["Personne ne répond, ne décroche pas"],a:"Procédure : appel, attente X min, « laisser devant la porte » si autorisé, sinon statut « non livrée » avec photo ; qui paie ?"},
+{id:"LIV-6",s:"LIV",t:"Code de livraison perdu par le client",r:"client",tr:"AB",p:1,e:["Le client n'a pas reçu l'email"],a:"Code visible dans /orders et renvoyable par SMS/email ; le coursier ne peut pas livrer sans (ou procédure admin)."},
+{id:"LIV-7",s:"LIV",t:"Offre de job : expiration et rotation",r:"coursier",tr:"AB",p:2,e:["Ne pas répondre à une offre"],a:"L'offre expire après N secondes et passe au suivant ; pas de pénalité."},
+{id:"LIV-8",s:"LIV",t:"Commerce en retard : le coursier attend",r:"coursier",tr:"AB",p:2,e:["Coursier arrivé, commande pas prête"],a:"Le coursier peut signaler l'attente ; temps d'attente visible admin ; rémunération d'attente si prévue."},
+{id:"LIV-9",s:"LIV",t:"Mauvaise commande remise au coursier",r:"commerce",tr:"AB",p:2,e:["Deux commandes, codes inversés"],a:"Le code de retrait empêche l'erreur ; test de l'erreur humaine documenté."},
+{id:"LIV-10",s:"LIV",t:"Distance maximale d'une course et estimation de rémunération",r:"coursier",tr:"AB",p:2,e:["Commande à la limite de la zone"],a:"Le prix proposé au coursier couvre la distance ; aucune course au-delà du maximum."},
+{id:"LIV-11",s:"LIV",t:"Mode « en ligne / hors ligne » du coursier",r:"coursier",tr:"B",p:1,e:["Passer hors ligne avec une livraison en cours"],a:"Impossible ou avertissement ; hors ligne = aucune offre reçue."},
+// ───────── MON (new)
+{id:"MON-1",s:"MON",t:"Répartition d'une commande : qui reçoit quoi",r:"admin",tr:"B",p:1,e:["Commande de 30 € livrée : vérifier dans Stripe les transferts commerce, coursier, Fairide"],a:"Commerce = prix magasin ; coursier = tarif course ; Fairide = majoration (12,1 % du prix magasin TVAC, ≈ 10,8 % du prix affiché) + frais de service ; somme = montant encaissé − frais Stripe."},
+{id:"MON-2",s:"MON",t:"Versement au commerce : calendrier et relevé",r:"commerce",tr:"B",p:1,e:["Dashboard › Paiements"],a:"Date du prochain versement, détail par commande, IBAN masqué, relevé téléchargeable."},
+{id:"MON-3",s:"MON",t:"Versement coursier échoué (IBAN invalide, compte restreint)",r:"admin",tr:"B",p:2,e:["Stripe test : forcer un échec de payout"],a:"Admin et coursier prévenus ; l'argent n'est pas perdu ; procédure de relance."},
+{id:"MON-4",s:"MON",t:"Remboursement complet après livraison (commande ratée)",r:"admin",tr:"B",p:1,e:["Rembourser 100 % une commande livrée"],a:"Qui supporte le coût (commerce / Fairide / coursier) ? Décision explicite dans l'interface, comptabilisée."},
+{id:"MON-5",s:"MON",t:"Geste commercial en solde Fairide",r:"admin",tr:"B",p:2,e:["Créditer 5 € sur un compte client"],a:"Solde visible, utilisable au checkout, expiration éventuelle, traçable."},
+{id:"MON-6",s:"MON",t:"Code promo : -10 %, -5 €, livraison offerte, première commande, usage unique",r:"client",tr:"AB",p:2,e:["Chaque type ; réutiliser un code unique ; cumul de deux codes"],a:"Calcul correct, TVA sur le montant remisé, pas de cumul interdit, impossible de descendre sous 0 €."},
+{id:"MON-7",s:"MON",t:"Bon cadeau : achat, envoi, utilisation partielle",r:"client",tr:"B",p:2,e:["Acheter 25 €, utiliser 10 €"],a:"Reste 15 € ; email au bénéficiaire ; facture du bon sans TVA (bon à usages multiples) selon le régime choisi."},
+{id:"MON-8",s:"MON",t:"Frais de service : calcul et affichage",r:"client",tr:"AB",p:1,e:["Livraison à 3,00 € HTVA"],a:"Frais de service = 0,30 € HTVA + TVA 21 % = 0,36 €, affiché en un seul montant ; absent en « à emporter »."},
+{id:"MON-9",s:"MON",t:"Pourboire : montants proposés, personnalisé, 0 €",r:"client",tr:"B",p:2,e:["1 €, 2 €, 5 €, personnalisé 0,50 €, 100 €"],a:"Plancher / plafond raisonnables ; pas de TVA ni commission ; dans les revenus du coursier."},
+{id:"MON-10",s:"MON",t:"Frais Stripe : qui les supporte",r:"tech",tr:"B",p:1,e:["Comparer le net Stripe avec la somme des transferts"],a:"Le modèle est cohérent (Fairide absorbe les frais) ; aucun transfert ne dépasse le disponible (sinon erreur Stripe « insufficient funds »)."},
+{id:"MON-11",s:"MON",t:"Solde Stripe insuffisant pour un transfert immédiat",r:"tech",tr:"B",p:1,e:["Nouveau compte Stripe, première livraison, délai de disponibilité des fonds"],a:"Le transfert coursier est différé ou le solde est préfinancé ; pas d'erreur silencieuse."},
+{id:"MON-12",s:"MON",t:"Plafond annuel coursier : compteur et année civile",r:"admin",tr:"B",p:1,e:["Vérifier la source du montant (brut, pourboires inclus ?), remise à zéro au 1er janvier"],a:"Règle documentée et appliquée identiquement dans l'app et l'admin ; fiche fiscale annuelle prévue."},
+
+// ───────── CPT (new)
+{id:"CPT-1",s:"CPT",t:"Inscription client : email, mot de passe faible, email déjà pris",r:"client",tr:"B",p:1,e:["« 123456 », email existant, email avec majuscules / espace"],a:"Mot de passe faible refusé (règle : 6 caractères, une majuscule, une minuscule, et pas dans une fuite connue — décision du 23/09) ; email normalisé ; message « déjà utilisé » sans révéler plus ; email de vérification."},
+{id:"CPT-2",s:"CPT",t:"Vérification de l'email",r:"client",tr:"B",p:1,e:["Lien de vérification, lien expiré, lien réutilisé"],a:"Première utilisation OK ; expiré / réutilisé → message et renvoi possible."},
+{id:"CPT-3",s:"CPT",t:"Mot de passe oublié",r:"client",tr:"B",p:1,e:["Demander, utiliser, réutiliser, email inconnu"],a:"Email reçu < 1 min ; lien à usage unique ; email inconnu → même message (pas d'énumération) ; anciennes sessions déconnectées."},
+{id:"CPT-4",s:"CPT",t:"Connexion sociale (Google / Apple) si proposée",r:"client",tr:"B",p:2,e:["Créer puis se reconnecter ; même email qu'un compte mot de passe"],a:"Fusion ou message clair ; Apple « masquer mon email » géré."},
+{id:"CPT-5",s:"CPT",t:"Modifier email / téléphone / mot de passe",r:"client",tr:"B",p:2,e:["Chaque champ"],a:"Nouveau email vérifié avant bascule ; mot de passe actuel demandé ; notification à l'ancienne adresse."},
+{id:"CPT-6",s:"CPT",t:"Suppression de compte (RGPD)",r:"client",tr:"B",p:1,e:["Supprimer avec une commande en cours ; sans ; en tant que coursier avec revenus"],a:"Refusé pendant une commande en cours ; sinon données personnelles effacées / anonymisées, factures conservées (obligation légale 7 ans), email de confirmation."},
+{id:"CPT-7",s:"CPT",t:"Export des données personnelles",r:"client",tr:"B",p:2,e:["Demander mes données"],a:"Fichier lisible (JSON/CSV) sous 30 jours max, idéalement immédiat."},
+{id:"CPT-8",s:"CPT",t:"Un email, plusieurs rôles",r:"tous",tr:"B",p:2,e:["Même email client + commerce + coursier"],a:"Comportement défini (comptes séparés ou rôle multiple) ; pas de mélange de données."},
+{id:"CPT-9",s:"CPT",t:"Sessions multiples et déconnexion partout",r:"client",tr:"B",p:3,e:["Connecté sur 2 appareils, « se déconnecter partout »"],a:"Les deux sessions tombent."},
+{id:"CPT-10",s:"CPT",t:"Mineur qui s'inscrit",r:"client",tr:"B",p:2,e:["Date de naissance < 18 ans si demandée"],a:"Règle définie (refus ou pas d'alcool) ; CGU cohérentes."},
+{id:"CPT-11",s:"CPT",t:"E-mail avec espaces autour, envoyé directement à l'API",r:"tech",tr:"AB",p:3,e:["POST /api/auth/register avec « ␣moi@exemple.be␣ » (comme une future app ou un script)","Se connecter ensuite avec « moi@exemple.be »"],a:"L'adresse est stockée sans espaces ; la connexion fonctionne."},
+
+// ───────── NOT (new)
+{id:"NOT-1",s:"NOT",t:"Inventaire de tous les emails transactionnels",r:"tech",tr:"B",p:1,e:["Lister chaque email envoyé par le code (inscription, vérification, mot de passe, confirmation commande, acceptée, refusée, prête, en livraison + code, livrée + récap, annulée, remboursée, rappel 5 min, avis, pourboire, approbation, suspension, facture, abonnement, signalement)"],a:"Chaque email est déclenché une fois, reçu, dans la langue du compte, avec un sujet clair."},
+{id:"NOT-2",s:"NOT",t:"Délivrabilité : SPF, DKIM, DMARC du domaine expéditeur",r:"tech",tr:"B",p:1,e:["mail-tester.com avec un email réel ; vérifier les enregistrements DNS de fairide.be"],a:"Score ≥ 9/10 ; pas en spam sur Gmail, Outlook, Proximus, Telenet."},
+{id:"NOT-3",s:"NOT",t:"Contenu des emails : liens, montants, heure locale, boutons",r:"tous",tr:"B",p:1,e:["Ouvrir chaque email sur mobile et desktop, mode sombre"],a:"Liens corrects (pas de localhost / preview URL), heure Europe/Brussels, lisible en mode sombre, logo chargé."},
+{id:"NOT-4",s:"NOT",t:"Push : chaque rôle, app fermée",r:"tous",tr:"B",p:1,e:["Client (statuts), commerce (nouvelle commande, rappel), coursier (offre, message)"],a:"Reçue en < 10 s ; tap ouvre le bon écran ; permission refusée → repli email."},
+{id:"NOT-5",s:"NOT",t:"SMS (si utilisé) : code de livraison, coursier en approche",r:"client",tr:"B",p:2,e:["Numéro BE, numéro étranger"],a:"Reçu ; expéditeur « Fairide » ; coût maîtrisé ; pas de SMS pour les commandes de simulation."},
+{id:"NOT-6",s:"NOT",t:"Désabonnement marketing vs transactionnel",r:"client",tr:"B",p:1,e:["Se désabonner des newsletters, puis commander"],a:"Les emails de commande continuent ; aucun marketing ; lien de désabonnement fonctionnel en un clic."},
+{id:"NOT-7",s:"NOT",t:"Email d'avis non sollicité / double",r:"client",tr:"B",p:2,e:["Livraison → attendre"],a:"Une seule invitation à laisser un avis ; aucune si l'avis est déjà laissé."},
+{id:"NOT-8",s:"NOT",t:"Fournisseur d'email en panne",r:"tech",tr:"B",p:2,e:["Clé API email invalide temporairement"],a:"La commande n'échoue pas à cause de l'email ; envoi réessayé ou loggé pour relance."},
+{id:"NOT-9",s:"NOT",t:"Notifications dans l'app (cloche) et badge",r:"tous",tr:"AB",p:3,e:["Plusieurs événements"],a:"Historique consultable, marquage lu, compteur juste."},
+
+// ───────── SEC (new)
+{id:"SEC-1",s:"SEC",t:"IDOR : accéder à la commande d'un autre",r:"tech",tr:"B",p:1,e:["GET /api/orders/:id avec l'id d'un autre client, en tant que client, commerce, coursier non assigné"],a:"403/404 partout ; idem pour factures, adresses, avis, revenus."},
+{id:"SEC-2",s:"SEC",t:"Escalade de rôle",r:"tech",tr:"B",p:1,e:["Client → endpoints commerce (accepter), coursier (prendre job), admin (approuver) ; modifier le rôle dans le JWT / le profil"],a:"Refus serveur systématique ; le rôle vient du serveur, pas du client."},
+{id:"SEC-3",s:"SEC",t:"Brute force des codes de retrait / livraison",r:"tech",tr:"B",p:1,e:["Script : 10 000 essais sur le code à 4 chiffres"],a:"Limitation (ex. 5 essais puis blocage/temporisation) ; alerte ; le code n'est pas prévisible."},
+{id:"SEC-4",s:"SEC",t:"Brute force connexion et reset de mot de passe",r:"tech",tr:"B",p:1,e:["50 tentatives / minute"],a:"Rate limit par IP et par compte ; pas de verrouillage permanent exploitable (DoS d'un compte)."},
+{id:"SEC-5",s:"SEC",t:"XSS stocké",r:"tech",tr:"AB",p:1,e:["<img src=x onerror=alert(1)> dans : nom de plat, instruction, avis, nom de commerce, adresse, nom du client"],a:"Jamais exécuté nulle part (client, dashboard, admin, email, ticket)."},
+{id:"SEC-6",s:"SEC",t:"Manipulation des prix côté client",r:"tech",tr:"AB",p:1,e:["Modifier le prix / la remise / les frais dans la requête de checkout"],a:"Le serveur recalcule tout ; le montant Stripe = calcul serveur."},
+{id:"SEC-7",s:"SEC",t:"Upload de fichiers",r:"tech",tr:"B",p:1,e:["SVG avec script, .html, .exe renommé, 50 Mo, nom de fichier ../../"],a:"Type vérifié par contenu, taille limitée, nom neutralisé, servi avec le bon Content-Type depuis un domaine/stockage séparé."},
+{id:"SEC-8",s:"SEC",t:"Secrets dans le bundle frontend",r:"tech",tr:"B",p:1,e:["Chercher sk_, secret, token, password dans les sources Vercel"],a:"Seule la clé publique Stripe ; aucune clé serveur."},
+{id:"SEC-9",s:"SEC",t:"HTTPS, HSTS, en-têtes de sécurité, CORS",r:"tech",tr:"B",p:1,e:["securityheaders.com sur fairide.be et l'API ; requête cross-origin depuis un autre site"],a:"HTTPS forcé, HSTS, CSP raisonnable, X-Frame-Options, CORS restreint à fairide.be."},
+{id:"SEC-10",s:"SEC",t:"Expiration et révocation des tokens",r:"tech",tr:"B",p:1,e:["Token d'un compte suspendu / supprimé / mot de passe changé"],a:"Refusé immédiatement ou dans un délai court et documenté."},
+{id:"SEC-11",s:"SEC",t:"Accès admin : 2FA et IP",r:"tech",tr:"B",p:2,e:["Connexion admin"],a:"2FA activée pour chaque admin ; sinon risque noté comme bloquant."},
+{id:"SEC-12",s:"SEC",t:"Énumération d'utilisateurs et de commerces",r:"tech",tr:"B",p:2,e:["/api/users/1, /api/users/2… ; messages différents « email inconnu » vs « mot de passe faux »"],a:"Pas de listing ; messages identiques."},
+{id:"SEC-13",s:"SEC",t:"Injections SQL / NoSQL",r:"tech",tr:"B",p:1,e:["' OR 1=1 --, {\"$gt\":\"\"} dans recherche, login, filtres admin"],a:"Aucun effet ; requêtes paramétrées."},
+{id:"SEC-14",s:"SEC",t:"Fuite de données personnelles dans les logs / erreurs",r:"tech",tr:"B",p:1,e:["Provoquer une erreur 500 ; lire les logs Railway"],a:"Pas de stack trace au client ; pas de numéro de carte, mot de passe ou adresse complète dans les logs."},
+{id:"SEC-15",s:"SEC",t:"Dépendances vulnérables",r:"tech",tr:"B",p:2,e:["npm audit sur les deux repos"],a:"Aucune vulnérabilité critique/haute ouverte."},
+{id:"SEC-16",s:"SEC",t:"Abus : faux commerce, faux coursier, comptes multiples",r:"admin",tr:"B",p:2,e:["Inscrire un commerce avec un faux numéro BCE"],a:"Vérification BCE (KBO) manuelle ou automatique avant approbation ; détection de doublons."},
+{id:"SEC-17",s:"SEC",t:"Clés et secrets : rotation et accès",r:"tech",tr:"B",p:2,e:["Qui a accès à Railway, Vercel, Stripe, DNS, email ?"],a:"Liste tenue ; 2FA sur chaque service ; plan de rotation si un membre part."},
+
+// ───────── LEG (new)
+{id:"LEG-1",s:"LEG",t:"Mentions légales et identité de l'entreprise",r:"tech",tr:"B",p:1,e:["Pied de page, CGU, factures"],a:"Dénomination, forme juridique, siège, numéro BCE, numéro TVA BE, email de contact, sur toutes les pages."},
+{id:"LEG-2",s:"LEG",t:"Politique de confidentialité et registre",r:"tech",tr:"B",p:1,e:["Lire la politique"],a:"Finalités, bases légales, durées, sous-traitants (Stripe, Railway, Vercel, Plausible, email, SMS, Stripe Identity biométrie), droits, DPO/contact, transferts hors UE."},
+{id:"LEG-3",s:"LEG",t:"Bandeau cookies : refuser aussi facile qu'accepter",r:"client",tr:"B",p:1,e:["Première visite ; refuser ; vérifier les cookies / stockage posés"],a:"Avant choix : aucun traceur non nécessaire ; Plausible sans cookie OK ; choix mémorisé et modifiable."},
+{id:"LEG-4",s:"LEG",t:"Consentement biométrique Stripe Identity (coursiers)",r:"coursier",tr:"B",p:1,e:["Onboarding"],a:"Consentement explicite séparé, retirable, information sur la conservation ; conforme RGPD art. 9."},
+{id:"LEG-5",s:"LEG",t:"Droit de la consommation : prix TTC, total avant paiement, bouton d'engagement",r:"client",tr:"AB",p:1,e:["Checkout"],a:"Tous les prix TTC, frais complets avant le clic, bouton « Commander et payer » (obligation de paiement explicite), confirmation sur support durable (email)."},
+{id:"LEG-6",s:"LEG",t:"Droit de rétractation : exception denrées périssables expliquée",r:"client",tr:"B",p:1,e:["CGU / confirmation"],a:"L'exclusion du droit de rétractation pour les repas est écrite ; la politique d'annulation (avant acceptation) est claire."},
+{id:"LEG-7",s:"LEG",t:"Factures conformes (TVA belge)",r:"tech",tr:"B",p:1,e:["Facture client, facture de commission au commerce, relevé coursier"],a:"Numérotation continue, date, identités + TVA des deux parties, ventilation par taux, mention d'auto-facturation si applicable ; conservées 7 ans."},
+{id:"LEG-8",s:"LEG",t:"Allergènes : information disponible avant commande (règlement UE 1169/2011)",r:"client",tr:"AB",p:1,e:["Chaque plat"],a:"Allergènes consultables avant l'achat ; attestation du commerce signée ; mention « demandez au commerce » si incomplet."},
+{id:"LEG-9",s:"LEG",t:"Alcool : âge légal et contrôle",r:"tous",tr:"AB",p:1,e:["Vérifier la règle d'âge codée (bière/vin vs spiritueux) contre la loi belge en vigueur, le contrôle à la livraison et à emporter, l'interdiction de « laisser devant la porte »"],a:"Règle cohérente dans tout le code et les CGU ; refus tracé."},
+{id:"LEG-10",s:"LEG",t:"DSA : point de contact, signalement, motivation des décisions, transparence du classement",r:"admin",tr:"B",p:1,e:["/signaler, /classement, décisions de suspension"],a:"Point de contact unique publié ; accusé de réception ; décision motivée envoyée ; possibilité de contestation."},
+{id:"LEG-11",s:"LEG",t:"Règlement P2B (plateformes → entreprises) : CGU commerces",r:"admin",tr:"B",p:2,e:["CGU commerces"],a:"Préavis de modification, motifs de suspension/résiliation, description du classement, traitement des plaintes internes."},
+{id:"LEG-12",s:"LEG",t:"Statut des coursiers : régime et plafond",r:"admin",tr:"B",p:1,e:["Vérifier le régime appliqué (économie collaborative / indépendant), le plafond annuel codé et la fiche fiscale"],a:"Plafond = valeur légale de l'année ; documents fiscaux prévus ; assurance accidents mentionnée dans les CGU coursiers."},
+{id:"LEG-13",s:"LEG",t:"Versions des CGU et preuve d'acceptation",r:"admin",tr:"B",p:1,e:["Publier une v2"],a:"Chaque acceptation stocke version + horodatage + compte ; anciennes versions archivées."},
+{id:"LEG-14",s:"LEG",t:"Hygiène et affichage : numéro AFSCA du commerce",r:"commerce",tr:"B",p:2,e:["Fiche vendeur"],a:"Le commerce déclare son enregistrement AFSCA ; vérifié avant approbation."},
+{id:"LEG-15",s:"LEG",t:"Accessibilité : déclaration et niveau",r:"tech",tr:"B",p:3,e:["Page accessibilité"],a:"Déclaration présente ; voir SEO-5 à SEO-7."},
+{id:"LEG-16",s:"LEG",t:"Durée de conservation et purge",r:"tech",tr:"B",p:2,e:["Compte inactif 3 ans ; positions GPS coursier ; logs"],a:"Politique écrite et tâche de purge réellement exécutée (positions GPS supprimées rapidement après livraison)."},
+
+// ───────── OPS (new)
+{id:"OPS-1",s:"OPS",t:"Contact support visible et testé",r:"client",tr:"B",p:1,e:["Trouver comment contacter Fairide depuis la commande, le pied de page, l'email"],a:"Email / formulaire / téléphone ; réponse auto ; qui répond le samedi soir à 21 h ?"},
+{id:"OPS-2",s:"OPS",t:"Crons : rappel 5 min et annulation 15 min après un redéploiement Railway",r:"tech",tr:"B",p:1,e:["Commande à T, redéployer le backend à T+3 min"],a:"Le rappel et l'annulation partent quand même (tâche persistante ou vérification au démarrage)."},
+{id:"OPS-3",s:"OPS",t:"Redémarrage du backend pendant une commande en cours",r:"tech",tr:"B",p:1,e:["Redémarrer Railway pendant « en livraison »"],a:"Aucun statut perdu ; websockets/polling se reconnectent ; tickets en file conservés."},
+{id:"OPS-4",s:"OPS",t:"Stripe indisponible",r:"tech",tr:"B",p:2,e:["Clé invalide 2 min"],a:"Message « paiement temporairement indisponible », pas de commande fantôme, retour normal ensuite."},
+{id:"OPS-5",s:"OPS",t:"Sauvegardes de la base et test de restauration",r:"tech",tr:"B",p:1,e:["Restaurer la sauvegarde d'hier dans un environnement de test"],a:"Sauvegarde automatique quotidienne ; restauration réussie et chronométrée."},
+{id:"OPS-6",s:"OPS",t:"Monitoring et alertes",r:"tech",tr:"B",p:1,e:["Faire planter une route ; couper le backend 2 min"],a:"Alerte (email/SMS) reçue ; page de statut ou message de maintenance côté client ; erreurs capturées (Sentry ou équivalent)."},
+{id:"OPS-7",s:"OPS",t:"Export comptable",r:"admin",tr:"B",p:1,e:["Exporter le mois : commandes, TVA par taux, commissions, versements, remboursements"],a:"CSV importable par le comptable ; totaux = Stripe."},
+{id:"OPS-8",s:"OPS",t:"Procédures écrites pour les incidents courants",r:"admin",tr:"B",p:1,e:["Commande non livrée, coursier accidenté, commerce ferme sans prévenir, client agressif, double débit"],a:"Une fiche par cas avec qui fait quoi et quels boutons admin."},
+{id:"OPS-9",s:"OPS",t:"Environnement de staging séparé",r:"tech",tr:"B",p:2,e:["URL de staging avec Stripe test et base séparée"],a:"Existe ; on peut y rejouer ce plan sans toucher la prod."},
+{id:"OPS-10",s:"OPS",t:"Mode maintenance",r:"tech",tr:"B",p:3,e:["Activer"],a:"Page claire ; commandes en cours protégées ; admin accessible."},
+{id:"OPS-11",s:"OPS",t:"Taille de la base et croissance (positions GPS, logs, notifications)",r:"tech",tr:"B",p:2,e:["Volume après 1 semaine de tests"],a:"Croissance maîtrisée ; purge automatique des tables volumineuses."},
+{id:"OPS-12",s:"OPS",t:"Déploiement du backend sans coupure",r:"tech",tr:"B",p:1,e:["Interroger /api/health toutes les 10 s pendant un déploiement Railway"],a:"Aucune réponse 502 : l'ancienne version reste en ligne jusqu'à ce que la nouvelle réponde (healthcheck Railway)."},
+
+// ───────── PRF (new)
+{id:"PRF-1",s:"PRF",t:"Cold start Railway / Vercel",r:"tech",tr:"B",p:1,e:["Première requête après 30 min d'inactivité"],a:"< 3 s ou keep-alive en place ; pas d'erreur de timeout côté Stripe webhook."},
+{id:"PRF-2",s:"PRF",t:"Charge : 50 commandes en 5 minutes",r:"tech",tr:"A",p:1,e:["Script k6 / Artillery contre la simulation"],a:"Aucune erreur 5xx, temps de réponse < 1 s, aucune commande perdue ni doublée, tickets tous imprimés."},
+{id:"PRF-3",s:"PRF",t:"Temps réel : reconnexion après coupure",r:"tous",tr:"AB",p:1,e:["Couper le réseau 1 min sur chaque rôle"],a:"Reprise automatique sans rechargement ; état exact."},
+{id:"PRF-4",s:"PRF",t:"Lighthouse mobile sur accueil, liste, menu, checkout",r:"tech",tr:"B",p:2,e:["Chrome DevTools, 4G lente"],a:"Performance ≥ 70, images en WebP/AVIF redimensionnées, pas de blocage > 3 s."},
+{id:"PRF-5",s:"PRF",t:"Liste de 200 commerces / menu de 300 plats",r:"tech",tr:"A",p:2,e:["Données de test volumineuses"],a:"Pagination ou chargement fluide ; recherche rapide."},
+{id:"PRF-6",s:"PRF",t:"Positions GPS : fréquence et batterie",r:"coursier",tr:"B",p:2,e:["2 h de livraison"],a:"Consommation acceptable ; fréquence adaptée (plus lente à l'arrêt)."},
+{id:"PRF-7",s:"PRF",t:"Limites API tierces (géocodage, cartes, email, SMS)",r:"tech",tr:"B",p:2,e:["Vérifier quotas et coût par 1 000 commandes"],a:"Quotas connus, alertes de dépassement, plan payant si nécessaire."},
+
+// ───────── SEO (new)
+{id:"SEO-1",s:"SEO",t:"Balises title / description / Open Graph",r:"tech",tr:"B",p:2,e:["Accueil, /restaurants, page commerce ; partager le lien sur WhatsApp / LinkedIn"],a:"Titre et image corrects dans l'aperçu ; page commerce avec son nom et sa photo."},
+{id:"SEO-2",s:"SEO",t:"robots.txt, sitemap.xml, canonical, hreflang FR/NL/EN",r:"tech",tr:"B",p:2,e:[],a:"Admin, dashboard, checkout exclus ; pages commerces incluses ; hreflang correct."},
+{id:"SEO-3",s:"SEO",t:"Pages 404 et 500",r:"tous",tr:"B",p:2,e:["/nimporte-quoi ; /restaurants/999999"],a:"Page de marque avec retour à l'accueil, dans la bonne langue."},
+{id:"SEO-4",s:"SEO",t:"Favicon, icônes PWA, splash, nom de l'app",r:"tech",tr:"B",p:2,e:["manifest.json"],a:"Icônes 192/512 maskable, nom « Fairide », couleur de thème."},
+{id:"SEO-5",s:"SEO",t:"Navigation au clavier",r:"tech",tr:"AB",p:2,e:["Commander uniquement au clavier"],a:"Focus visible, ordre logique, modales fermables par Échap."},
+{id:"SEO-6",s:"SEO",t:"Lecteur d'écran (VoiceOver / TalkBack)",r:"tech",tr:"AB",p:2,e:["Parcours de commande"],a:"Boutons nommés, prix annoncés, statuts annoncés, images avec alt."},
+{id:"SEO-7",s:"SEO",t:"Contrastes et taille des cibles tactiles",r:"tech",tr:"AB",p:2,e:["Audit automatique (axe) + vérification manuelle"],a:"Contraste ≥ 4,5:1 ; cibles ≥ 44 px ; pas d'information par la couleur seule."},
+{id:"SEO-8",s:"SEO",t:"Analytics : Plausible configuré",r:"tech",tr:"B",p:1,e:["VITE_PLAUSIBLE_DOMAIN sur Vercel ; événements clés (commande payée)"],a:"Visites et conversions mesurées, sans cookie, sans données personnelles."},
+
+// ───────── AML (new) — AVANT-MISE-EN-LIGNE.md
+{id:"AML-1",s:"AML",t:"JWT_SECRET présent sur Railway, puis changé",r:"tech",tr:"B",p:1,e:["Railway › Variables : JWT_SECRET existe et n'est pas vide","Poser d'abord COURIER_DATA_KEY (voir AML-2), puis remplacer JWT_SECRET par une longue chaîne aléatoire (ANCIEN_JWT_SECRET permet une rotation douce)","Redéployer"],a:"Tous les jetons émis à l'époque de la faille verify-email (jeton admin contre une simple adresse e-mail) deviennent invalides ; le site redémarre normalement. §17.2, §17.3, §18.6."},
+{id:"AML-2",s:"AML",t:"COURIER_DATA_KEY posée AVANT de toucher à JWT_SECRET",r:"tech",tr:"B",p:1,e:["Poser COURIER_DATA_KEY sur Railway","Lancer scripts/rechiffrer-donnees-livreurs.js pendant que l'ancienne et la nouvelle clé sont connues","Ouvrir la fiche d'un livreur dans l'admin"],a:"Les numéros de registre national restent lisibles après la rotation. Sans cette étape, changer JWT_SECRET les rend illisibles (la clé de chiffrement en est dérivée). §17.6."},
+{id:"AML-3",s:"AML",t:"Journaux Railway : la faille verify-email a-t-elle servi ?",r:"tech",tr:"B",p:1,e:["Parcourir les journaux des semaines passées","Chercher POST /api/auth/verify-email suivi d'une activité admin inattendue"],a:"Aucune trace — ou, s'il y en a, notification à l'Autorité de protection des données sous 72 h (obligation légale). §17.4."},
+{id:"AML-4",s:"AML",t:"Pièces d'identité des livreurs : URL Cloudinary privées",r:"tech",tr:"B",p:2,e:["Ouvrir dans une fenêtre privée l'adresse d'une pièce d'identité déjà envoyée","Vérifier que scripts/passer-documents-en-prive.js a été lancé"],a:"Le fichier n'est pas téléchargeable sans compte ; les adresses en base ont été migrées (livraison signée, durée limitée). §17.5."},
+{id:"AML-5",s:"AML",t:"CORS_ORIGINS posée en production",r:"tech",tr:"B",p:2,e:["Railway › Variables : CORS_ORIGINS = https://fairide.be, https://www.fairide.be, et les origines de l'app native (capacitor://localhost, https://localhost)","Requête avec Origin: http://localhost:5173 vers l'API"],a:"L'origine de développement est refusée ; le site et l'application mobile fonctionnent. §17.8."},
+{id:"AML-6",s:"AML",t:"Railway construit avec npm ci",r:"tech",tr:"B",p:3,e:["Railway › Settings › Build : commande de construction"],a:"npm ci (le verrou package-lock.json est respecté), pas npm install. §17.8."},
+{id:"AML-7",s:"AML",t:"Agenda iCal : option « détails » désactivée par défaut",r:"commerce",tr:"B",p:3,e:["Dashboard › agenda : lien iCal","Lire un événement dans Google/Apple Calendar"],a:"Par défaut, ni téléphone ni e-mail client dans l'agenda ; c'est au commerce de l'activer, en connaissance de cause. §17.8."},
+{id:"AML-8",s:"AML",t:"Relecture juridique de ce qui n'a pas été écrit",r:"admin",tr:"-",p:1,e:["Faire relire la politique de confidentialité, les CGU, le contrat commerce (RESTO-2026.12) et les CGV commerçants"],a:"Avis écrit sur : délégué à la protection des données, représentant UE, clauses de transfert hors UE (prestataires américains), règlement P2B (préavis, motifs, plaintes internes). §4.1, §18.4."},
+{id:"AML-9",s:"AML",t:"Accords de sous-traitance (DPA) signés",r:"admin",tr:"-",p:1,e:["Signer en ligne : Stripe, Resend, Cloudinary, Sentry, Vercel, Railway, Anthropic, Twilio","Ranger les copies datées au même endroit"],a:"Huit DPA signés et archivés (RGPD art. 28). §18.2."},
+{id:"AML-10",s:"AML",t:"Nominatim, Photon et OSRM : usage commercial acceptable ?",r:"tech",tr:"B",p:2,e:["Lire les politiques d'usage des serveurs publics","Estimer le volume d'appels par jour au lancement"],a:"Décision écrite : rester sur les serveurs publics (volume compatible) ou passer à un service payant avant le lancement. §4.1."},
+{id:"AML-11",s:"AML",t:"Restauration d'une sauvegarde dans une base vide",r:"tech",tr:"B",p:1,e:["Vérifier ce que Railway sauvegarde, à quelle fréquence, combien de temps","Restaurer une copie dans une base neuve et démarrer le backend dessus"],a:"Le serveur démarre et les données sont là ; durée de restauration notée. Une sauvegarde jamais restaurée est une supposition. §18.3 (voir aussi OPS-5)."},
+{id:"AML-12",s:"AML",t:"Promesse d'application mobile tenue",r:"admin",tr:"B",p:1,e:["Lire ce que l'accueil promet (date, iOS, Android, AppGallery)","Comparer avec l'état réel : coque Capacitor présente dans le dépôt, applications publiées ou non sur les boutiques"],a:"Ce qui est annoncé est vrai le jour où c'est lu : applis publiées, ou date repoussée, ou promesse retirée (≈ 14 clés × 3 langues). §14."},
+{id:"AML-13",s:"AML",t:"Purge automatique des données aux durées annoncées",r:"tech",tr:"B",p:2,e:["Lire le journal de la tâche horaire (retentionPurge.js)","Comparer avec Admin › Conformité › Rétention et avec la politique (compte 3 ans, journaux 12 mois, support 3 ans, demandes RGPD 5 ans)"],a:"Chaque catégorie promise est purgée et la purge journalise ce qu'elle supprime ; les catégories laissées de côté (tickets et pièces chez Cloudinary) ont une décision écrite. §18.1."},
+{id:"AML-14",s:"AML",t:"Search Console : propriété vérifiée et plan du site soumis",r:"tech",tr:"B",p:3,e:["search.google.com/search-console › fairide.be","Soumettre https://fairide.be/sitemap.xml"],a:"Propriété vérifiée, plan du site lu sans erreur. §11."},
+{id:"AML-15",s:"AML",t:"Traduction des cartes : essai sur UN commerce",r:"commerce",tr:"B",p:3,e:["Lancer la traduction de la carte d'un seul commerce","Lire la carte en NL et en EN"],a:"Les plats sont traduits correctement ; seulement ensuite, annoncer le bouton aux autres commerces. §13."},
+{id:"AML-16",s:"AML",t:"Région Railway EU West conservée",r:"tech",tr:"B",p:3,e:["Railway › projet › région de la base et du backend"],a:"EU West pour les deux — la phrase « données en Europe » reste exacte. §2."},
+{id:"AML-17",s:"AML",t:"Clé publique Web Push servie par l'API",r:"tech",tr:"B",p:2,e:["Ouvrir https://fairide-backend-production.up.railway.app/api/push/key"],a:"« enabled »: true et une longue clé. §6."},
+{id:"AML-18",s:"AML",t:"Politique de sécurité du contenu (CSP) en mode bloquant",r:"tech",tr:"B",p:2,e:["En-têtes de https://fairide.be : Content-Security-Policy (et non -Report-Only)"],a:"L'en-tête bloquant est servi. §17.7."},
+{id:"AML-19",s:"AML",t:"CSP : aucune violation dans la console",r:"tech",tr:"B",p:1,e:["F12 › Console sur : l'accueil, une fiche commerce, la carte, le paiement, la console admin, le terminal Goodcom"],a:"Aucun message « Refused to … because it violates the Content Security Policy » ; carte, connexion Google, Stripe et Sentry fonctionnent. §17.7."},
+{id:"AML-20",s:"AML",t:"Aucun caractère illisible (U+FFFD) dans les fiches publiques",r:"tech",tr:"B",p:3,e:["Parcourir les commerces publics (API /restaurants)"],a:"Zéro « � » ; Barrière, Châtelain, Mérode, Étangs correctement accentués. §15."},
+{id:"AML-21",s:"AML",t:"Chaînes françaises encore en dur",r:"tech",tr:"AB",p:3,e:["Dashboard commerce en NL / EN : motifs de suppression (EditPage.jsx), ligne de commande (OrdersPage.jsx)","Console admin en NL / EN : écrans profonds"],a:"Tout est traduit ; ~150 champs admin sans nom accessible ont reçu une étiquette. §4.3, §10."},
+{id:"AML-22",s:"AML",t:"itsme : signature du jeton vérifiée par JWKS",r:"tech",tr:"B",p:3,e:["Quand le contrat itsme est signé : activer ITSME_VERIFY_JWKS"],a:"Le jeton itsme est validé par sa signature, pas seulement par le canal TLS. §18.6."},
+
+// ───────── LCH
+{id:"LCH-1",s:"LCH",t:"Photos de stock désactivées",r:"tech",tr:"B",p:1,e:["VITE_STOCK_DISH_PHOTOS = off"],a:"Aucune photo générique sur un vrai commerce."},
+{id:"LCH-2",s:"LCH",t:"Tuiles de carte sous contrat",r:"tech",tr:"B",p:1,e:["VITE_MAP_TILE_URL renseigné"],a:"Pas d'OSM public."},
+{id:"LCH-3",s:"LCH",t:"Prix des menus importés corrigés",r:"commerce",tr:"B",p:1,e:["Chaque commerce publié"],a:"Prix magasin + 12,1 % (10 % HTVA + TVA), plus l'éventuelle hausse demandée par le commerce."},
+{id:"LCH-4",s:"LCH",t:"Plausible actif",r:"tech",tr:"B",p:1,e:[],a:"Données visibles dans Plausible."},
+{id:"LCH-5",s:"LCH",t:"Stripe en live : clés, webhook, Connect, Bancontact activé, Apple Pay domaine vérifié",r:"tech",tr:"B",p:1,e:["Checklist Stripe « Activate payments » complète"],a:"Première vraie commande de 1 € passée et remboursée."},
+{id:"LCH-6",s:"LCH",t:"Dates d'ouverture et fuseau",r:"tech",tr:"B",p:1,e:["Les 3 variables"],a:"1 nov. et 10 nov. 2026 à 00:00 Europe/Brussels."},
+{id:"LCH-7",s:"LCH",t:"Comptes de test et de simulation hors prod publique",r:"admin",tr:"B",p:1,e:["Lister les comptes « test »"],a:"Aucun compte test ne peut passer une vraie commande sans qu'on le sache ; sim invisible."},
+{id:"LCH-8",s:"LCH",t:"Domaine, HTTPS, redirections www / non-www, email @fairide.be",r:"tech",tr:"B",p:1,e:[],a:"Tout redirige vers une seule URL canonique ; certificats valides ; boîte support lue."},
+{id:"LCH-9",s:"LCH",t:"Sauvegarde + monitoring + alertes actifs",r:"tech",tr:"B",p:1,e:[],a:"Voir OPS-5, OPS-6."},
+{id:"LCH-10",s:"LCH",t:"Plan de permanence J1 → J7",r:"admin",tr:"B",p:1,e:["Qui est joignable aux heures de service, avec accès admin et Stripe"],a:"Tableau de permanence écrit et partagé."},
+{id:"LCH-11",s:"LCH",t:"Commerces prêts : terminal associé, menu signé, horaires, mode de paiement, IBAN",r:"commerce",tr:"B",p:1,e:["Checklist par commerce"],a:"100 % des commerces publiés passent la checklist."},
+{id:"LCH-12",s:"LCH",t:"Coursiers prêts : approuvés, Connect actif, app installée, push OK",r:"coursier",tr:"B",p:1,e:["Checklist par coursier"],a:"Au moins N coursiers actifs par créneau d'ouverture."},
+];
+
+const ST={todo:"À faire",pass:"Réussi",fail:"Échoué",fixed:"Corrigé",retest:"Re-testé OK",na:"N/A"};
+const ROLE={client:"Client",commerce:"Commerce",coursier:"Coursier",admin:"Admin",tech:"Tech",tous:"Tous les rôles"};
+const TRK={A:"Track A · Simulation",B:"Track B · Réel",AB:"Track A ou B","-":"Hors parcours"};
+// ---------- résultats vérifiés automatiquement (2 oct. 2026)
+// Banc d'essai : code déployé (origin/main des deux dépôts) sur une base PGlite en mémoire, ou production en lecture seule.
+// [statut, preuve]. « pass », « fail », « fixed » (corrigé, à re-tester), « retest » (corrigé puis constaté en ligne) et « na »
+// sont posés comme statut ;
+// « todo » ne fait qu'ajouter une note.
+const AUTO="Claude (vérif. auto)", AUTO_AT="2026-10-02T15:00:00.000Z";
+const BANC="Banc d'essai sur le code déployé (origin/main, base en mémoire) : ";
+const PROD="Production, lecture seule : ";
+const PRESET={
+ "PRE-2":["pass",PROD+"GET /api/orders/launch renvoie pickupOpenAt 2026-10-31T23:00Z (= 1er nov. 00:00 Bruxelles), deliveryOpenAt et onlinePaymentOpenAt 2026-11-09T23:00Z (= 10 nov. 00:00). Ce sont les valeurs réellement appliquées par le serveur, qu'elles viennent d'une variable ou du défaut du code."],
+ "PRE-4":["pass",BANC+"compte admin (contact@fairide.be) → 201, compte marqué is_test → 201, client ordinaire → 423. À noter : un prénom « Test » ou un alias +qa n'exemptent plus (seul users.is_test posé par l'équipe)."],
+ "SIM-2":["pass",BANC+"commerce is_simulation absent de GET /api/restaurants, fiche → 404 (anonyme et client), commande → 404."],
+ "BIZ-5":["pass",BANC+"admin_status pending → 400 « Ce restaurant n'est pas encore actif sur Fairide. » ; abonnement inactif → même message."],
+ "CMD-1":["pass",BANC+"423 « Les commandes à emporter ouvrent le 1er novembre 2026. D'ici là, découvre les commerces et compose ton panier. »"],
+ "CMD-2":["pass",BANC+"date d'ouverture de l'à emporter passée, livraison non : 423 « La livraison ouvre le 10 novembre 2026. En attendant, tu peux commander à emporter. »"],
+ "CMD-3":["pass",BANC+"à emporter payé en ligne → 423 « Le paiement en ligne ouvre le 10 novembre 2026. D'ici là, choisis « payer sur place » pour cette commande. » ; payé sur place → 201."],
+ "CMD-4":["pass",BANC+"400 « Ce restaurant est actuellement fermé. »"],
+ "CMD-5":["pass",BANC+"hors horaires → « Ce commerce est fermé en ce moment. Vérifie ses horaires d'ouverture. » ; fermeture déclarée → « Ce commerce est fermé exceptionnellement (Congé), réouverture prévue le 03/10/2026. »"],
+ "CMD-6":["pass",BANC+"livraison chez un commerce sans livraison → 400 « Ce restaurant ne propose pas ce mode de commande. »"],
+ "CMD-7":["pass",BANC+"400 « Ce commerce ne propose pas le paiement sur place : paie ta commande en ligne. »"],
+ "CMD-9":["fixed","« « Tiramisu » n'est plus disponible pour le moment : retire-le de ton panier pour commander le reste. » Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "CMD-10":["pass",BANC+"panier avec alcool sans ageDeclaration → 400 AGE_DECLARATION_REQUISE ; avec → 201, contains_alcohol et age_declaration_at enregistrés."],
+ "CMD-12":["pass",BANC+"compte sans CGU en vigueur → 428 CGU_A_ACCEPTER (version CGU-2026-09-25) ; avec acceptTerms → 201 et une ligne user_terms_acceptances (version, horodatage, empreinte sha256, contexte checkout)."],
+ "CMD-13":["pass",BANC+"403 SELF_ORDER_FORBIDDEN « Tu ne peux pas commander dans ton propre commerce… »"],
+ "CMD-14":["pass",BANC+"limite codée à 30 commandes / 15 min par adresse IP (commandeLimiter) ; constaté : au-delà, 429 « Trop de commandes en peu de temps, réessaie dans quelques minutes. » (compteur en mémoire, remis à zéro à chaque redéploiement)."],
+ "CMD-18":["pass",PROD+"https://fairide.be/restaurants/<id> répond 200 sans connexion, page pré-rendue avec le nom du commerce (« Maestro pizza, Pizza à Molenbeek-Saint-Jean · Fairide »), balise canonical et JSON-LD."],
+ "RES-3":["fixed","Motif obligatoire (400 MOTIF_REQUIS sans), enregistré, affiché au client dans « Mes commandes » et ajouté à l'e-mail ; boîte de dialogue de motif côté commerce. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "RES-4":["pass",BANC+"400 « Code de retrait incorrect. », puis le bon code → statut « livraison »."],
+ "RES-5":["pass",BANC+"400 « Marque d'abord la commande comme prête avant de confirmer le retrait. »"],
+ "RES-8":["pass",BANC+"accepter sans allergyAck → 403 « …confirme que tu peux la respecter, ou refuse la commande. » ; avec → allergy_ack = accepted, allergy_ack_at horodaté, allergy_ack_by = le commerçant. L'impression du ticket reste à voir sur le terminal."],
+ "RES-14":["fixed","Même correctif que RES-3, avant comme après acceptation. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "RES-15":["fixed","Plus d'étoiles sans avis dans /dashboard/reviews. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater à l'écran d'un commerce sans avis, puis « Re-testé OK »."],
+ "CRS-1":["pass",BANC+"livreur non approuvé : GET /orders/available → liste vide ; prise forcée → 403 « Ton compte livreur n'est pas encore validé par Fairide. »"],
+ "CRS-2":["pass",BANC+"403 « Configure d'abord tes informations de paiement Fairide avant de prendre des livraisons. »"],
+ "CRS-3":["pass",BANC+"403 « Ton compte est en pause — réactive-le avant de prendre des courses. »"],
+ "CRS-5":["pass",BANC+"deux prises simultanées : une 200, l'autre 400 « Cette commande a déjà été prise en charge par un autre livreur. »"],
+ "CRS-7":["pass",BANC+"400 « Confirme d'abord le retrait de la commande au restaurant avant de livrer. »"],
+ "CRS-8":["pass",BANC+"400 « Code de livraison incorrect. »"],
+ "CRS-9":["pass",BANC+"commande avec alcool, bon code sans ageCheck → 400 AGE_A_VERIFIER « …vérifie la pièce d'identité du client (18 ans ou plus)… »"],
+ "CRS-11":["pass",BANC+"l'offre listée ne contient ni nom, ni téléphone, ni numéro de maison (« Rue Secrète, 1040 Etterbeek » au lieu de « Rue Secrète 42 ») ; position arrondie à ~100 m dans le code."],
+ "USR-2":["pass",BANC+"400 « Le restaurant a déjà accepté ta commande et commence à la préparer : elle ne peut plus être annulée. Contacte-le directement. »"],
+ "USR-3":["pass",BANC+"decline-courier → 200, driver_id remis à vide, la course réapparaît dans /orders/available ; rien n'est écrit contre le livreur."],
+ "USR-4":["pass",BANC+"pourboire avant livraison → 400 « Le pourboire ne peut être laissé qu'une fois la commande livrée. » ; avis → 400 « Tu ne peux évaluer que les commandes livrées. » Côté site, les boutons ne s'affichent que si status === 'livre' (Orders.jsx:286-292)."],
+ "USR-5":["pass","Code déployé : toutes les étoiles côté client sont conditionnées à reviewCount > 0 (RestaurantList, RestaurantMenu, RestaurantPreview, RestaurantsMap, DiscoverSection ; tri par note idem). En production, aucun des 91 commerces n'a d'avis (reviewCount 0) alors que l'API renvoie une note (4,5 par défaut) : la condition est donc ce qui empêche l'affichage. Écart côté commerçant : voir RES-15."],
+ "ADM-1":["pass",BANC+"suspension sans motif (client et commerce) → 400 « Décris les faits (au moins une phrase)… », statut inchangé ; avec faits + base contractuelle → 200, statut blocked, et l'exposé des motifs part par e-mail à la personne (« Fairide — décision concernant … »)."],
+ "ADM-2":["pass",BANC+"403 « Ton compte a été suspendu. Contacte le support Fairide pour plus d'informations. »"],
+ "ADM-6":["pass",BANC+"jeton client ou commerce → 403 sur /api/admin/restaurants, /admin/users, PATCH /admin/restaurants/:id/status et /api/ADMIN/… ; "+PROD+"sans jeton → 401. Menu admin à l'écran non vérifié (ProtectedRoute)."],
+ "LEG-13":["pass",BANC+"chaque acceptation stocke version, horodatage, empreinte sha256 et compte ; les versions précédentes restent listées dans cgu.js (VERSIONS) avec leur empreinte."],
+ "MNU-13":["pass","Code déployé : 14 allergènes (allergenes.js) avec libellés fr/en/nl, et allergen1 à allergen14 présents dans fr.js, en.js et nl.js."],
+ "MON-8":["pass","Code déployé : fraisService(3,00 €) = 0,30 € HTVA + 0,06 € TVA = 0,36 € ; à emporter → 0 € (pas de frais de livraison). Au récapitulatif, Checkout.jsx affiche serviceFee + serviceFeeVat en un seul montant."],
+ "HOR-1":["fixed","Plage 18:00 → 01:00 : ouvert à 00:30, fermé à 01:30, serveur et site. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "HOR-2":["pass","Code déployé : plages 11:30–14:30 et 18:00–22:00 → 15:30 fermé, 12:00 et 19:00 ouverts ; la commande à 15:30 est refusée (CMD-5)."],
+ "SEC-1":["pass",BANC+"autre client : annulation, avis, refus du livreur, document de livraison → 403 ; pourboire, factures → 404 ; /orders/mine → 0 commande d'autrui ; adresse d'autrui : sélection → 404, suppression sans effet, absente de sa liste. Autre commerce : liste et acceptation → 403. Livreur non assigné : position et livraison → 403."],
+ "SEC-2":["pass",BANC+"client → accepter / prendre une course / routes admin → 403 ; jeton modifié (rôle admin, e-mail fondateur) sans re-signature → 401 ; alg:none → 401 ; PATCH /auth/me avec role et email → rôle et e-mail inchangés."],
+ "SEC-3":["fixed","6 mauvais codes par commande puis 429 pendant 15 min, même pour le bon code ; retrait, à emporter et livraison. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "SEC-4":["fixed","Plafond par compte (20 mauvais mots de passe / heure, toutes adresses IP confondues) en plus du plafond par IP ; levé par une réinitialisation. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "SEC-6":["pass",BANC+"price, total, subtotal, frais et commission envoyés à 0,01 € → commande à 24,00 € (2 × 12 € relus en base) ; quantités -5, 0, 0,5 et 100 refusées."],
+ "SEC-8":["pass",PROD+"148 fichiers JS du site (4,0 Mo) parcourus : aucun sk_live/sk_test/rk_, whsec_, clé Resend, Anthropic, Twilio, Cloudinary, clé privée PEM, JWT_SECRET ni VAPID privée."],
+ "SEC-9":["retest","Production, 2 oct. après déploiement : Origin: http://localhost:5173 → plus d'Access-Control-Allow-Origin (refusé) ; HTTPS, HSTS, CSP bloquante, nosniff, frame-ancestors, Referrer-Policy en place."],
+ "SEC-12":["fail","NON CORRIGÉ, VOLONTAIREMENT — décision à prendre. La connexion dit « Aucun compte avec cette adresse » (404) ou « Email ou mot de passe incorrect » (401). Les unifier ne fermerait pas l'énumération : l'inscription doit de toute façon répondre « Un compte existe déjà avec cet email » (c'est même l'attendu de CPT-1), et /auth/check-availability aussi. Les deux attendus se contredisent ; le message actuel aide le client à créer son compte. Si tu veux quand même unifier la connexion, dis-le : c'est un changement de deux lignes. Le plafond par compte (SEC-4) limite désormais l'exploitation."],
+ "SEC-15":["retest","npm audit sur le verrou de main (2 oct.) : frontend 0 ; backend 0 critique ou haute, 2 modérées (uuid via exceljs, correction cassante, usage non concerné)."],
+ "PAY-10":["fixed","Chaque webhook refusé est journalisé (console.warn, IP et raison) : à lire dans les journaux Railway après un envoi non signé. Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "SEO-1":["retest","Production, 2 oct. après déploiement : https://fairide.be/restaurants/486ac992-… (Maestro pizza) → og:image = sa photo res.cloudinary.com/…/enseigne-602ff882.jpg, et non plus l'image générique."],
+ "SEO-2":["pass",PROD+"robots.txt exclut account, checkout, panier, dashboard, driver, admin… dans les 3 langues ; sitemap.xml : 300 adresses dont 273 fiches, avec hreflang fr-BE / en-BE / nl-BE ; canonical présente sur chaque page vérifiée ; l'API répond X-Robots-Tag: noindex."],
+ "SEO-3":["retest","Production, 2 oct. après déploiement, vérifié dans Edge : /nl/xyz-nexistepas → lang nl, « Deze pagina bestaat niet » ; /en/xyz-nexistepas → « This page does not exist ». /restaurants/999999 (rendu par l'appli) reste à voir à l'écran."],
+ "SEO-4":["pass",PROD+"manifest.json : nom « Fairide — Livraison locale à Bruxelles », short_name Fairide, theme_color #3B2FB5, icônes 192, 512 et maskable-512 (toutes en 200 image/png), favicon.svg, apple-touch-icon et écran de lancement dans index.html."],
+ "SEO-8":["fail","À FAIRE TOI (aucun code à changer) : Vercel › fairide-frontend › Settings › Environment Variables → VITE_PLAUSIBLE_DOMAIN = fairide.be (Production), puis Deployments › Redeploy. Constat du 2 oct. : aucune trace de Plausible dans le site servi."],
+ "LCH-4":["fail","Voir SEO-8 : variable Vercel à poser, puis reconstruire."],
+ "GEO-8":["fail","À FAIRE TOI : choisir un fournisseur de tuiles sous contrat (MapTiler, Stadia, Thunderforest…), puis sur Vercel VITE_MAP_TILE_URL (gabarit {z}/{x}/{y} avec la clé) et VITE_MAP_TILE_ATTRIBUTION, ajouter son domaine à img-src dans vercel.json, reconstruire. Constat du 2 oct. : tuiles OpenStreetMap publiques."],
+ "LCH-2":["fail","Voir GEO-8 : fournisseur de tuiles à choisir et variable Vercel à poser."],
+ "LCH-6":["pass","Voir PRE-2 : 1er nov. 00:00 et 10 nov. 00:00 heure de Bruxelles, servis par /api/orders/launch."],
+ "CPT-1":["pass",BANC+"« 123456 » et « abcdefgh » refusés (« au moins 6 caractères… une majuscule et une minuscule ») ; e-mail en majuscules stocké en minuscules ; doublon → 409 « Un compte existe déjà avec cet email. » ; réponse needsVerification: true, canal email. Le site retire les espaces avant l'envoi (Auth.jsx) ; l'API seule ne le fait pas, voir CPT-11."],
+ "CPT-11":["fixed","E-mail stocké sans espaces, connexion avec l'adresse propre ; « ␣contact@fairide.be␣ » refusée (403). Fusionné et en ligne le 2 octobre ; couvert par les tests permanents du backend. Reste à le constater sur une vraie commande, puis « Re-testé OK »."],
+ "AML-17":["pass",PROD+"/api/push/key → {\"enabled\":true,\"key\":\"BLfn9ZDg…\"} : les clés VAPID sont prises en compte."],
+ "AML-18":["pass",PROD+"fairide.be sert Content-Security-Policy (bloquant), plus Report-Only. Reste la console, AML-19."],
+ "AML-20":["pass",PROD+"91 commerces publics parcourus via /api/restaurants : zéro U+FFFD."],
+ "AML-5":["retest","Production, 2 oct. : les origines de développement sont refusées sans CORS_ORIGINS (code). Poser la variable reste possible, plus indispensable."],
+ "CMD-8":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : commune passée inactive (delivery_zones) → livraison 400 ZONE_INACTIVE « La livraison est momentanément indisponible dans cette commune. Le retrait reste possible. » ; à emporter → 201."],
+ "CMD-16":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : code inconnu → « Ce code de bon cadeau n'existe pas chez ce commerce. » ; expiré → « Ce bon cadeau est expiré. » ; utilisé → « Ce bon cadeau est entièrement utilisé. » ; annulé → « Ce bon cadeau a été annulé. »"],
+ "CMD-15":["fixed","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : 10 min → 400 « au moins 30 minutes » ; 8 jours → 400 « 7 prochains jours » ; 48 h → 201, échéance d'acceptation au créneau − 30 min, et elle n'expire pas avant. ÉCART TROUVÉ ET CORRIGÉ : le ticket imprimait « Programmée : 11:58 » sans la date pour une commande du lendemain ; il porte désormais la date quand ce n'est pas le jour même. Corrigé sur la branche test/plan-e2e-suite (pas encore fusionnée) ; couvert par les tests permanents. À re-tester en production après fusion et déploiement."],
+ "RES-1":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : payée depuis 4 min → pas de rappel ; 6 min → rappel au commerce (« ⏰ Commande en attente… »), une seule fois ; 16 min → annulée, remboursement déclenché (même fonction que le refus), e-mails au client et au commerce. Le remboursement Stripe réel se vérifie avec PAY-*."],
+ "RES-2":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : payée depuis 14 min 54 s → toujours « nouvelle » ; acceptée → 200 ; le passage suivant de la tâche ne l'annule pas (« preparation »)."],
+ "TRM-11":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : l'annulation automatique ne regarde que le statut et l'heure de paiement, jamais l'impression : un ticket imprimé mais non accepté est annulé à 15 min comme les autres."],
+ "OPS-2":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : rappel et annulation sont décidés à partir de la base (paid_at, acceptance_reminder_sent_at) à chaque passage de la tâche, relancée chaque minute par server.js : un redéploiement ne perd rien, il retarde au plus d'une minute — plus la coupure du déploiement elle-même, voir OPS-12."],
+ "SEC-5":["pass","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : quatorze e-mails produits avec « <img src=x onerror=alert(1)> » dans le nom du client, du commerce, des plats, des options, les instructions, l'allergie et le motif de refus : aucun ne contient le HTML brut ; le ticket du terminal est du texte ESC/POS. Côté site, aucun dangerouslySetInnerHTML : React échappe tout (client, dashboard, admin)."],
+ "USR-8":["fixed","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : ÉCART TROUVÉ ET CORRIGÉ : aucune limite de longueur (3 000 caractères acceptés). Désormais 1 000 caractères au plus (avis et réponse du commerce, 400 au-delà, champ limité aussi à l'écran), notes entières de 1 à 5 (4,5 partait en erreur 500), un seul avis par commande (409), HTML stocké tel quel et affiché échappé. Signalement d'un avis via /signaler : à voir à l'écran. Corrigé sur la branche test/plan-e2e-suite (pas encore fusionnée) ; couvert par les tests permanents. À re-tester en production après fusion et déploiement."],
+ "MNU-1":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : serveur : sans taille → 400 « Choisis une option dans \"Taille\" pour Pizza. », deux tailles → 400 ; prix de la ligne avec le supplément ; le ticket imprime « + M  +2,00 € ». Reste : l'écran empêche-t-il l'ajout au panier sans choix ?"],
+ "MNU-2":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : le maximum est tenu côté serveur (3 garnitures pour 2 permises → 400 « Maximum 2 choix… »). DÉCISION : il n'existe pas de MINIMUM au-delà de 1 (option_groups n'a que required et max_selections) — « Choisis 2 à 4 garnitures » ne se configure pas. Fonction à ajouter si tu en as besoin."],
+ "MNU-4":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : 3 × (10 € + M 2 € + Olives 1,50 €) → ligne à 13,50 €, quantité 3, sous-total 40,50 €, options figées sur la ligne ; ticket « 3 x Pizza 40,50 € ». Reste : panier, checkout, e-mail et facture à l'écran. Une option d'un autre plat envoyée de force est ignorée."],
+ "MON-6":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : il N'EXISTE PAS de code promo saisi par le client (aucun champ dans l'API) : seuls les bons cadeaux et les promotions automatiques du commerce. Celles-ci sont justes : -10 % sur 12,35 € → remise 1,24 €, sous-total 11,11 € ; une remise panier plus grande que le panier ramène le total à 0, jamais en dessous. À trancher : codes promo à construire, ou test sans objet."],
+ "MON-7":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : bon de 30 € sur une commande de 12 € (code tapé « actif0001 », casse et tiret ignorés) → 12 € déduits, total 0, reste 18 € ; recrédité à 30 € si le commerce refuse ; refusé chez un autre commerce. Reste : achat du bon, e-mail au bénéficiaire, traitement TVA."],
+ "PAY-3":["todo","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : commande payée en ligne jamais réglée : annulée après 45 min, solde Fairide retenu (12 €) rendu (20 €). Reste : vérifier qu'elle n'apparaît jamais chez le commerce et que le panier est encore là."],
+ "AML-7":["na","Sans objet depuis le 25 septembre : l'agenda iCal faisait partie du module de réservation de table, retiré du code."],
+ "OPS-12":["fail","Production, 2 oct. : pendant le déploiement du commit 8d1ac4f, /api/health a répondu « 502 Application failed to respond » de 09:52 à 09:54 (UTC), soit environ 2 minutes. Pendant ce temps, aucun paiement ni webhook ne passe. Correctif : Railway › service › Settings › Healthcheck Path = /api/health (déploiement sans coupure). À faire toi."],
+ // Vérifiés en partie : note seulement, le statut reste « À faire ».
+ "PRE-1":["todo",PROD+"/api/health dit seulement que STRIPE_SECRET_KEY et STRIPE_WEBHOOK_SECRET existent (stripe:true, stripeWebhook:true, appUrl:true, email:true, ai:true, peppol:true ; sms:false, itsme:false). Le préfixe sk_test_/sk_live_ ne se lit que dans Railway."],
+ "USR-1":["todo",BANC+"annulation d'une commande « nouvelle » → 200, statut annule. Non vérifié : remboursement Stripe réel, e-mail au commerce, ticket d'annulation."],
+ "CPT-3":["todo",BANC+"e-mail connu et inconnu → même réponse 200 {\"ok\":true} ; lien réutilisé → 400 « …invalide ou a expiré » ; après réinitialisation, l'ancien jeton de session → 401. Reste : délai de réception réel de l'e-mail."],
+ "CPT-6":["todo",BANC+"suppression avec une commande en cours → 409 ORDER_IN_PROGRESS. Reste : anonymisation, conservation des factures, e-mail de confirmation, cas du livreur."],
+ "SEC-10":["todo",BANC+"mot de passe réinitialisé → l'ancien jeton est refusé (401, token_version) ; un compte supprimé est refusé par requireAuth (code). Un compte SUSPENDU garde sa session : il ne peut plus commander (ADM-2) mais reste connecté — à trancher (peut-être voulu, pour qu'il lise la décision et la conteste)."],
+ "SEC-13":["fixed","Test permanent du backend (npm test, tests/plan-de-test-*.test.js), sur le code de main : 15 recherches de la console admin × 5 charges d'injection (' OR 1=1 --, UNION SELECT password_hash…, %, _, DROP TABLE) : aucun effet, aucune fuite, requêtes paramétrées ; connexion avec {\"$gt\":\"\"} → 400. ÉCART TROUVÉ ET CORRIGÉ : un paramètre répété (?q=a&q=b) faisait tomber les quinze recherches en erreur 500. Corrigé sur la branche test/plan-e2e-suite (pas encore fusionnée) ; couvert par les tests permanents. À re-tester en production après fusion et déploiement."],
+ "PAN-7":["todo","Code déployé (phone.js) : « +32 470 12 34 56 », « 0470123456 », « 0470/12.34.56 », « 0032470123456 » → +32470123456 ; « 02 512 34 56 » → +3225123456 ; lettres et « 047012 » → refusés ; +33… accepté tel quel. Reste : caractère obligatoire au checkout et numéro transmis au livreur."],
+ "LCH-8":["todo",PROD+"http://fairide.be et https://www.fairide.be → 308 vers https://fairide.be ; http://www.fairide.be passe par https://www.fairide.be (2 sauts) ; certificats valides. Reste : la boîte support est-elle lue ?"],
+ "NOT-2":["todo",PROD+"DNS : DKIM resend._domainkey présent, SPF de send.fairide.be (amazonses), SPF racine OVH, DMARC « p=none » (aucune protection contre l'usurpation : passer à quarantine une fois les envois vérifiés). Reste : score mail-tester et arrivée en boîte de réception."],
+ "NOT-4":["todo","Voir AML-17 : l'API a ses clés VAPID. Reste : la réception sur un vrai téléphone, app fermée."],
+ "LEG-16":["todo","Code déployé : retentionPurge.js tourne au démarrage puis toutes les heures (server.js) ; la position GPS est effacée à la livraison. Le fichier écarte volontairement les tickets de support et les pièces d'identité (fichiers Cloudinary). Voir AML-13."],
+ "LCH-1":["todo",PROD+"un vrai commerce est déjà public : Maestro pizza (isDemo false, publicListed true — pas encore commandable : carte non signée, aucun service). L'état de VITE_STOCK_DISH_PHOTOS ne se lit pas de façon sûre dans le code minifié : ouvrir sa fiche et vérifier qu'aucun plat sans photo n'affiche une photo de banque d'images."],
+ "MNU-14":["todo","Voir LCH-1."],
+ "CLI-3":["todo","Code déployé (Checkout.jsx:673-681) : chaque ligne du récapitulatif nomme son vendeur (conformite.sellerFood / sellerDelivery / sellerServiceFee), frais de service affichés en un seul montant, bouton « Commander et payer » (checkout.confirmAndPay). Reste à le voir à l'écran."],
+ "AML-1":["todo","Le serveur refuse de démarrer sans JWT_SECRET en production (server.js:37) — mais seulement s'il se sait en production (NODE_ENV=production ou DATABASE_URL contenant « railway », config.js). Lire Railway pour en être sûr ; la rotation reste à faire."],
+ "AML-12":["todo","Le dépôt frontend contient désormais une coque Capacitor (android/, capacitor.config.json, scripts app:*) et l'API annonce appStoresAt 2026-10-06. Reste à savoir si les applications sont publiées sur les boutiques."],
+ "AML-13":["todo","Voir LEG-16 : la purge existe et tourne toutes les heures ; vérifier son journal et les catégories écartées."],
+ "AML-14":["todo",PROD+"un enregistrement google-site-verification est présent dans le DNS de fairide.be : la propriété est probablement vérifiée. Soumission du plan du site non vérifiable d'ici."],
+};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmtDate=iso=>{try{return new Date(iso).toLocaleString("fr-BE",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}catch{return iso}};
+
+// ---------- state
+let results={};          // id -> {status,tester,at,notes,bugDevice,bugOrder,bugSeen,history[]}
+let open=new Set();      // open cards
+let db=null, mode="local";
+const LS=k=>{try{return localStorage.getItem(k)}catch{return null}};
+const LSset=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
+try{ open=new Set(JSON.parse(LS("fairide.open")||"[]")) }catch{}
+$("#tester").value=LS("fairide.tester")||"";
+$("#tester").addEventListener("input",e=>{LSset("fairide.tester",e.target.value.trim());e.target.classList.remove("need")});
+const tester=()=>$("#tester").value.trim();
+
+function loadLocal(){ try{ results=JSON.parse(LS("fairide.results")||"{}") }catch{ results={} } }
+function saveLocal(){ LSset("fairide.results",JSON.stringify(results)) }
+
+const writeQueue={};
+async function persist(id){
+  const doc=results[id];
+  if(mode==="db"&&db){
+    const run=async()=>{ try{ await db.collection("results").doc(id).set(doc) }catch(e){ console.error(e); toast("Enregistrement refusé — vérifie ton accès (Contributeur ou plus)."); } };
+    writeQueue[id]=(writeQueue[id]||Promise.resolve()).then(run);
+    return writeQueue[id];
+  } else saveLocal();
+}
+function setStatus(id,status){
+  const name=tester();
+  if(!name){ $("#tester").classList.add("need"); $("#tester").focus(); toast("Indique d'abord ton prénom (en haut)."); return; }
+  const cur=results[id]?{...results[id]}:{history:[]};
+  if(cur.status===status) return;
+  cur.status=status; cur.tester=name; cur.at=new Date().toISOString();
+  cur.history=[...(cur.history||[]),{status,tester:name,at:cur.at}].slice(-20);
+  results[id]=cur; persist(id); renderCard(id); renderSummary();
+}
+const debounce={}, pending=new Set();
+function setField(id,field,value){
+  const cur=results[id]?{...results[id]}:{status:"todo",history:[]};
+  cur[field]=value; results[id]=cur; pending.add(id);
+  clearTimeout(debounce[id]); debounce[id]=setTimeout(async()=>{ await persist(id); pending.delete(id); },700);
+}
+
+// ---------- render
+const byId=Object.fromEntries(TESTS.map(t=>[t.id,t]));
+function status(id){ return results[id]?.status||"todo" }
+function visible(t){
+  const q=$("#q").value.trim().toLowerCase(), r=$("#fRole").value, tr=$("#fTrack").value, p=$("#fPrio").value, st=$("#fSt").value, nw=$("#fNew").checked;
+  if(q && !(t.id+" "+t.t+" "+t.a+" "+(t.e||[]).join(" ")).toLowerCase().includes(q)) return false;
+  if(r && t.r!==r && !(r!=="tous" && t.r==="tous")) return false;
+  if(tr && t.tr!==tr && t.tr!=="AB") return false;
+  if(p && String(t.p)!==p) return false;
+  const s=status(t.id);
+  if(st==="open"){ if(!["todo","fail","fixed"].includes(s)) return false } else if(st && s!==st) return false;
+  if(nw){ const sec=SECTIONS.find(x=>x.id===t.s); if(sec.existing) return false }
+  if($("#fAuto").checked && !(results[t.id]?.tester===AUTO && ["pass","fail","fixed","retest","na"].includes(s))) return false;
+  if($("#fManuel").checked && ["pass","retest","na"].includes(s)) return false;
+  return true;
+}
+function cardHTML(t){
+  const r=results[t.id]||{}, s=status(t.id), isOpen=open.has(t.id);
+  const steps=(t.e&&t.e.length)?`<ol class="steps">${t.e.map(x=>`<li>${esc(x)}</li>`).join("")}</ol>`:`<div class="steps" style="padding-left:0;color:var(--muted)">Exécuter le cas tel que décrit dans le titre.</div>`;
+  const next = s==="fail" ? `<div class="next-hint">Bug noté. Quand le correctif est déployé, marque <b>Corrigé</b>, puis refais le test.</div>`
+             : s==="fixed" ? `<div class="next-hint">Correctif déployé. Refais le test : <b>Re-testé OK</b> si ça passe, <b>Échoué</b> sinon.</div>` : "";
+  const btn=(k,cls)=>`<button data-st="${k}" class="${k} ${s===k?"cur":""} ${(s==="fail"&&k==="fixed")||(s==="fixed"&&k==="retest")?"next":""}">${ST[k]}</button>`;
+  const showBug=["fail","fixed","retest"].includes(s)||r.bugDevice||r.bugOrder||r.bugSeen;
+  const hist=(r.history||[]).length?`<div class="hist">${r.history.map(h=>`<span class="pill st st-${h.status}">${ST[h.status]}</span> <b>${esc(h.tester)}</b> · ${fmtDate(h.at)}`).join("<br>")}</div>`:"";
+  return `<article class="card ${isOpen?"open":""}" data-st="${s}" id="c-${t.id}">
+    <div class="head" data-id="${t.id}">
+      <span class="id">${t.id}</span>
+      <div class="ttl">${esc(t.t)}
+        <div class="meta"><span class="pill st st-${s}">${ST[s]}${r.tester?" · "+esc(r.tester):""}</span><span class="pill p${t.p}">P${t.p}</span><span class="pill">${ROLE[t.r]}</span><span class="pill">${TRK[t.tr]}</span></div>
+      </div>
+      <span class="chev">▶</span>
+    </div>
+    <div class="body">
+      <div class="grid2">
+        <div><div class="lbl">Comment tester</div>${steps}</div>
+        <div><div class="lbl">Résultat attendu</div><div class="exp">${esc(t.a)}</div></div>
+      </div>
+      <div class="acts">${btn("todo")}${btn("pass")}${btn("fail")}${btn("fixed")}${btn("retest")}${btn("na")}</div>
+      ${next}
+      <div class="fields" ${showBug?"":"hidden"}>
+        <div><div class="lbl">Appareil / navigateur</div><input data-f="bugDevice" placeholder="ex. Goodcom GC Web, iPhone Safari" value="${esc(r.bugDevice||"")}"></div>
+        <div><div class="lbl">N° de commande / heure</div><input data-f="bugOrder" placeholder="ex. #1042 · 14:32" value="${esc(r.bugOrder||"")}"></div>
+        <div><div class="lbl">Ce qui s'est passé</div><input data-f="bugSeen" placeholder="observé vs attendu" value="${esc(r.bugSeen||"")}"></div>
+      </div>
+      <div class="notes"><div class="lbl">Notes</div><textarea data-f="notes" placeholder="Remarques, lien vers la capture, ticket…">${esc(r.notes||"")}</textarea></div>
+      ${hist}
+    </div>
+  </article>`;
+}
+function renderCard(id){
+  const el=document.getElementById("c-"+id); if(!el) return;
+  const focused=document.activeElement, keep=focused&&el.contains(focused)?{f:focused.dataset.f,pos:focused.selectionStart}:null;
+  el.outerHTML=cardHTML(byId[id]);
+  if(keep&&keep.f){ const n=document.querySelector(`#c-${id} [data-f="${keep.f}"]`); if(n){n.focus(); try{n.setSelectionRange(keep.pos,keep.pos)}catch{}} }
+}
+function renderAll(){
+  const c=$("#content"); let html=""; let shown=0;
+  for(const sec of SECTIONS){
+    const ts=TESTS.filter(t=>t.s===sec.id&&visible(t)); if(!ts.length) continue; shown+=ts.length;
+    const done=TESTS.filter(t=>t.s===sec.id&&["pass","retest","na"].includes(status(t.id))).length, tot=TESTS.filter(t=>t.s===sec.id).length;
+    html+=`<section class="sec" id="s-${sec.id}"><h2>${esc(sec.nom)} <span class="cnt">${done}/${tot}</span>${sec.existing?"":'<span class="tag">NOUVEAU</span>'}</h2><p>${esc(sec.desc)}</p><div class="list">${ts.map(cardHTML).join("")}</div></section>`;
+  }
+  c.innerHTML=html||`<div class="empty">Aucun test ne correspond aux filtres.</div>`;
+  renderSummary();
+}
+function counts(list){ const k={todo:0,pass:0,fail:0,fixed:0,retest:0,na:0}; for(const t of list) k[status(t.id)]++; return k }
+function renderSummary(){
+  const k=counts(TESTS), tot=TESTS.length;
+  const order=["retest","pass","fixed","fail","na","todo"];
+  $("#bar").innerHTML=order.map(s=>`<span style="width:${k[s]/tot*100}%;background:var(--${s})" title="${ST[s]} ${k[s]}"></span>`).join("");
+  const blocking=TESTS.filter(t=>t.p===1&&!["pass","retest","na"].includes(status(t.id))).length;
+  $("#legend").innerHTML=order.map(s=>`<span><i style="background:var(--${s})"></i>${ST[s]} <b>${k[s]}</b></span>`).join("")+`<span>· <b>${tot}</b> tests · <b style="color:var(--fail)">${blocking}</b> P1 à boucler</span>`;
+  // rail
+  const cur=location.hash.replace("#s-","");
+  $("#rail").innerHTML=SECTIONS.map(sec=>{
+    const ts=TESTS.filter(t=>t.s===sec.id), kk=counts(ts), done=kk.pass+kk.retest+kk.na;
+    return `<a href="#s-${sec.id}" class="${sec.existing?"":"new"} ${cur===sec.id?"cur":""}"><span class="nm">${esc(sec.nom)}</span><span class="n">${done}/${ts.length}</span><span class="mini">${order.map(s=>`<span style="width:${kk[s]/ts.length*100}%;background:var(--${s})"></span>`).join("")}</span></a>`;
+  }).join("");
+}
+
+// ---------- events
+$("#content").addEventListener("click",e=>{
+  const h=e.target.closest(".head"); if(h){ const id=h.dataset.id; open.has(id)?open.delete(id):open.add(id); LSset("fairide.open",JSON.stringify([...open])); document.getElementById("c-"+id).classList.toggle("open"); return; }
+  const b=e.target.closest(".acts button"); if(b){ setStatus(b.closest(".card").id.slice(2),b.dataset.st) }
+});
+$("#content").addEventListener("input",e=>{ const f=e.target.dataset.f; if(f) setField(e.target.closest(".card").id.slice(2),f,e.target.value) });
+for(const id of ["q","fRole","fTrack","fPrio","fSt","fNew","fAuto","fManuel"]) $("#"+id).addEventListener("input",renderAll);
+$("#btnExpand").addEventListener("click",()=>{
+  const all=TESTS.filter(visible).map(t=>t.id); const expand=!all.every(id=>open.has(id));
+  all.forEach(id=>expand?open.add(id):open.delete(id)); LSset("fairide.open",JSON.stringify([...open]));
+  $("#btnExpand").textContent=expand?"Tout replier":"Tout déplier"; renderAll();
+});
+window.addEventListener("hashchange",renderSummary);
+$("#btnReport").addEventListener("click",()=>{
+  const lines=["# Fairide — rapport des bugs ("+new Date().toLocaleDateString("fr-BE")+")",""];
+  for(const s of ["fail","fixed"]){
+    const ts=TESTS.filter(t=>status(t.id)===s); if(!ts.length) continue;
+    lines.push(`## ${ST[s]} (${ts.length})`,"");
+    for(const t of ts){ const r=results[t.id]; lines.push(`- **${t.id}** ${t.t} — P${t.p}, ${ROLE[t.r]} · ${r.tester||""} ${r.at?fmtDate(r.at):""}`); if(r.bugDevice)lines.push(`  - Appareil : ${r.bugDevice}`); if(r.bugOrder)lines.push(`  - Commande : ${r.bugOrder}`); if(r.bugSeen)lines.push(`  - Observé : ${r.bugSeen}`); lines.push(`  - Attendu : ${t.a}`); if(r.notes)lines.push(`  - Notes : ${r.notes}`); }
+    lines.push("");
+  }
+  if(lines.length<=2) lines.push("Aucun test échoué ou en attente de re-test.");
+  const txt=lines.join("\n");
+  navigator.clipboard.writeText(txt).then(()=>toast("Rapport copié dans le presse-papiers.")).catch(()=>{ const ta=document.createElement("textarea"); ta.value=txt; document.body.appendChild(ta); ta.select(); toast("Sélectionne et copie le texte."); setTimeout(()=>ta.remove(),8000); });
+});
+let toastT; function toast(m){ let t=$(".toast"); if(!t){t=document.createElement("div");t.className="toast";document.body.appendChild(t)} t.textContent=m; clearTimeout(toastT); toastT=setTimeout(()=>t.remove(),3200) }
+
+// ---------- boot (standalone)
+loadLocal();
+// Résultats automatiques : posés seulement là où personne n'a encore rien saisi, ou par-dessus une version
+// plus ancienne de ces mêmes résultats automatiques. Une saisie humaine n'est jamais écrasée.
+function appliquerPreset(){
+  for(const [id,[st,preuve]] of Object.entries(PRESET)){
+    if(!byId[id]) continue;
+    const cur=results[id];
+    if(cur && cur.tester!==AUTO && (cur.status!=="todo" || cur.notes)) continue;
+    if(cur && cur.tester===AUTO && (cur.at||"")>=AUTO_AT && cur.notes===preuve) continue;
+    const status=st;
+    const avant=cur&&cur.tester===AUTO?(cur.history||[]):[];
+    const history=st==="todo"||(avant.length&&avant[avant.length-1].status===status)?avant:[...avant,{status,tester:AUTO,at:AUTO_AT}];
+    results[id]={status,tester:AUTO,at:AUTO_AT,notes:preuve,history};
+  }
+  saveLocal();
+}
+appliquerPreset(); renderAll();
+{ const v=Object.values(PRESET), c=k=>v.filter(x=>x[0]===k).length;
+  const b=$("#banner"); b.hidden=false;
+  b.innerHTML=`Vérification automatique du 2 oct. 2026 : <b>${c("pass")}</b> réussis sans toi ; <b>${c("retest")}</b> corrigés et constatés en production ; <b>${c("fixed")}</b> corrigés, à constater en ligne ; <b>${c("fail")}</b> encore échoués (réglages Railway et Vercel à faire toi-même, une décision) ; <b>${c("todo")}</b> vérifiés en partie ; <b>${c("na")}</b> sans objet. Coche « Vérifiés par Claude » pour les voir, « Reste à faire à la main » pour ta liste.`; }
+$("#sync").textContent="enregistré dans ce navigateur"; $("#sync").className="sync on";
+function download(name,text,type){ const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([text],{type})); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000) }
+$("#btnCsv").addEventListener("click",()=>{
+  const rows=[["id","section","titre","priorite","role","track","statut","testeur","date","appareil","commande","observe","notes","attendu"]];
+  for(const t of TESTS){ const r=results[t.id]||{}; rows.push([t.id,t.s,t.t,"P"+t.p,ROLE[t.r],t.tr,ST[status(t.id)],r.tester||"",r.at||"",r.bugDevice||"",r.bugOrder||"",r.bugSeen||"",r.notes||"",t.a]) }
+  download("fairide-tests-"+new Date().toISOString().slice(0,10)+".csv","\uFEFF"+rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(";")).join("\r\n"),"text/csv;charset=utf-8");
+});
+$("#btnJson").addEventListener("click",()=>download("fairide-resultats-"+new Date().toISOString().slice(0,16).replace(":","h")+".json",JSON.stringify({exportedAt:new Date().toISOString(),results},null,1),"application/json"));
+$("#btnImport").addEventListener("click",()=>$("#fileImport").click());
+$("#fileImport").addEventListener("change",e=>{
+  const f=e.target.files[0]; if(!f) return; const rd=new FileReader();
+  rd.onload=()=>{ try{ const inc=JSON.parse(rd.result).results||{}; let n=0;
+      for(const [id,r] of Object.entries(inc)){ if(!byId[id]) continue; const cur=results[id];
+        if(!cur || (r.at||"")>(cur.at||"") ){ results[id]={...r, notes: r.notes || cur?.notes || ""}; n++ } }
+      saveLocal(); renderAll(); toast(n+" test(s) mis à jour depuis le fichier."); }
+    catch{ toast("Fichier illisible.") } e.target.value=""; };
+  rd.readAsText(f);
+});
+</script>
+</body>
+</html>

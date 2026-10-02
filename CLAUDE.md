@@ -9,7 +9,7 @@ believed.
 ## What this is
 
 Fairide is a food-delivery / local-commerce platform for Brussels, positioned on a
-10% share (vs. 22-32% commission on the big platforms), taken the Uber Eats way: inside the displayed
+10% share excl. VAT (vs. 22-32% commission on the big platforms), taken the Uber Eats way: inside the displayed
 price, not as a checkout line (see « Pricing model » below). **This repo is the front end
 only.** The backend is a separate service.
 
@@ -30,6 +30,9 @@ in passing.
 
 Other dependencies: `@sentry/react` (error reporting, opt-in via env), `leaflet` (maps,
 no react-leaflet wrapper), `@dnd-kit/*` (drag-and-drop for menu ordering).
+`@capacitor/*` wraps the same `dist/` into the iOS and Android apps (`npm run app:sync`, `app:android`,
+`app:ios`); everything native goes through `src/natif.js` and `src/pushNatif.js` — see
+[docs/application-mobile.md](docs/application-mobile.md) for what is in place and what still needs store accounts.
 
 ```
 npm install       # node_modules is not checked in and may be absent — run this first
@@ -44,7 +47,8 @@ pre-existing warnings across the codebase. Don't read a clean-looking tail as su
 *your* files are absent from the output. There is nothing else to run here, so read your changes
 carefully and, where behaviour matters, check them in the browser with `npm run dev`.
 
-The backend does have tests (`npm test`, 136 of them on 2026-10-02, `node --test`). If your change touches
+The backend does have tests (`npm test`, 179 of them on 2026-10-02, `node --test`; the `plan-de-test-*` files replay the end-to-end test plan,
+[docs/fairide-tests-e2e-standalone.html](docs/fairide-tests-e2e-standalone.html), against an in-memory database). If your change touches
 anything the backend also reads — page parsing, menu shape — run them there.
 
 ### Environment variables
@@ -286,19 +290,27 @@ components live in [src/components/conformite/](src/components/conformite/), sha
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
 
-## Pricing model (decided 2026-09-23, evening — replaces the morning's "0% commission")
+## Pricing model (2026-09-23 evening, rate made explicitly excl. VAT on 2026-10-01)
 
-Menus show the **in-store price + 10%** (a €10 burger is €11 on Fairide). On an order paid online the business
-receives **exactly its in-store price**; Fairide keeps the markup, i.e. `commission` + `commission_vat` =
-subtotal × r / (1 + r) with r = `commissionRate` (0.10) — about 9.09% of the displayed price, VAT included.
-The customer additionally pays the delivery fee and a **service fee of 10% of the delivery, excl. VAT, VAT added**.
-Takeaway paid on site: no commission, no fee. The €20/month subscription is unchanged.
+Menus show the **in-store price × 1.121**: Fairide's 10% excl. VAT plus 21% VAT on it (a €10 burger in-store is
+€11.21 on Fairide: €1.00 for Fairide + €0.21 VAT). On an order paid online the business receives **exactly its
+in-store price**; Fairide keeps the markup, i.e. `commission` (excl. VAT) + `commission_vat` = in-store price × 0.121,
+about **10.8% of the displayed price**. `commissionFairide(subtotal, pricing, hausse)` in `../fairide-backend/pricing.js`
+recovers the in-store price as subtotal / (1 + r(1 + v) + h), with r = `commissionRate` (0.10, excl. VAT), v =
+`vatRateCommission` (0.21) and h the business's own optional increase (`restaurants.price_markup_percent`, 0 to
+12.1%, requested by the business and applied by the team — it is the business's money, not Fairide's).
+The customer additionally pays the delivery fee and a **service fee of 10% of the delivery, excl. VAT, VAT added**
+(€3.00 delivery → €0.30 + €0.06 = €0.36). Takeaway paid on site: no commission, no fee.
+Subscription: €20/month, first month free, with the « zéro commande = zéro abonnement » guarantee (a month without
+an order is not charged, or refunded — `../fairide-backend/garantieAbonnement.js`, since 2026-10-02).
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
   `service_fee` stores the fee excl. VAT, `service_fee_vat` its VAT — show **their sum** to the customer;
 - client estimate: [src/fraisService.js](src/fraisService.js);
-- the +10% is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js`), not at runtime;
-- legal texts: contract `RESTO-2026.12`, T&Cs `CGU-2026-09-23-b` (they tell customers prices may be higher than
+- the ×1.121 is applied when Fairide builds the menu (`../fairide-backend/scripts/prix.js --facteur`, or a CSV of
+  in-store prices), not at runtime; since 2026-10-01 the business can no longer edit dishes or prices itself
+  (`MENU_LOCKED`) — it asks, and the team applies;
+- legal texts: contract `RESTO-2026.15`, T&Cs `CGU-2026-09-25` (they tell customers prices may be higher than
   on site). Never write « le prix du commerce » or « 100 % au restaurant » in customer-facing copy.
 
 ## Three sellers per order (decided 2026-09-23)
@@ -349,7 +361,7 @@ Real, verified as absent on 2026-09-22 — not speculation.
    ([driver/Dashboard.jsx](src/pages/driver/Dashboard.jsx),
    [driver/MapPage.jsx](src/pages/driver/MapPage.jsx)), which survives a backgrounded tab far better
    than the old `setInterval` but still stops when the phone locks. There is no web fix — it needs a
-   native or Capacitor build. The customer-facing map shows a staleness warning after two minutes so
+   native plugin: the Capacitor shell exists since 2026-10-01 but has no background-location plugin yet. The customer-facing map shows a staleness warning after two minutes so
    a frozen map is at least legible
    ([DeliveryTrackingMap](src/components/DeliveryTrackingMap.jsx)).
 2. **No SSR.** `npm run build` runs a prerender ([scripts/prerender.mjs](scripts/prerender.mjs)) that writes
@@ -363,7 +375,7 @@ Real, verified as absent on 2026-09-22 — not speculation.
    `<label>` also use `htmlFor`. Follow the `htmlFor`/`id` pattern when you touch a form.
 5. **Imported prices are platform prices.** Cards imported from Uber Eats or Deliveroo carry the
    marked-up prices merchants set there to absorb a 30% commission — measured at **+39% on average**
-   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store price + 10%**, so an
+   against Snack Bodrum's counter prices. Fairide builds cards at the merchant's **in-store price × 1.121**, so an
    imported card is wrong until its prices are corrected. `../fairide-backend/scripts/prix.js` does the correction; the real prices have to come from
    the merchant. The contract deliberately does *not* oblige in-store prices — that would be a parity
    clause, see the header of `../fairide-backend/restaurantContract.js`.
