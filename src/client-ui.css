@@ -323,3 +323,28 @@
   .alerte-commandes.est-calme .alerte-aide { display: none; }
   .alerte-commandes.est-calme .alerte-actions { margin-left: auto; }
 }
+
+/* ---------- Téléphone : DEUX commerces par écran dans les rangées (fondateur, 2026-10-03) ---------- */
+/* Une carte prenait 72 % de la largeur : on n'en voyait qu'une, plus un bout de la suivante. Deux cartes entières
+   tiennent maintenant dans la largeur, avec l'amorce d'une troisième pour dire que la rangée défile. La carte est
+   resserrée en conséquence : photo un peu plus haute que large, nom sur une ligne, une seule ligne d'infos. */
+@media (max-width: 640px) {
+  .auto-scroll-row .rest-card.rc, .rest-grid-scroll .rest-card.rc { flex-basis: calc((100vw - 32px - 10px) / 2.12); }
+  .auto-scroll-row.rest-grid-loop .auto-scroll-track, .rest-grid.rest-grid-scroll { gap: 10px; }
+  .auto-scroll-row .rc-media, .rest-grid-scroll .rc-media { aspect-ratio: 4 / 3; }
+  .auto-scroll-row .rc-corps, .rest-grid-scroll .rc-corps { padding: 8px 10px 10px; gap: 2px; }
+  .auto-scroll-row .rest-card.rc .rc-nom, .rest-grid-scroll .rest-card.rc .rc-nom { font-size: 14px; }
+  .auto-scroll-row .rc-sous, .rest-grid-scroll .rc-sous { font-size: 12px; }
+  /* Une seule ligne d'infos : la note (ou « Nouveau ») et le prix d'abord ; le reste se coupe au lieu de passer à la ligne. */
+  .auto-scroll-row .rc-infos, .rest-grid-scroll .rc-infos { flex-wrap: nowrap; overflow: hidden; gap: 4px 7px; font-size: 12px; white-space: nowrap; }
+  .auto-scroll-row .rc-infos > span, .rest-grid-scroll .rc-infos > span { flex: 0 0 auto; }
+  /* Ce qui dépasse s efface en fondu plutôt que d être coupé au milieu d un mot. */
+  .auto-scroll-row .rc-infos, .rest-grid-scroll .rc-infos { -webkit-mask-image: linear-gradient(to right, #000 82%, transparent); mask-image: linear-gradient(to right, #000 82%, transparent); }
+  /* Carte « Bientôt » : pas de cœur à contourner, le badge prend toute la largeur. */
+  .rest-card.rc.rc-bientot .rc-offre { max-width: calc(100% - 12px); }
+  .auto-scroll-row .rc-offre, .rest-grid-scroll .rc-offre { font-size: 11px; padding: 4px 8px; top: 6px; left: 6px; max-width: calc(100% - 46px); }
+  .auto-scroll-row .rc-etat, .rest-grid-scroll .rc-etat { font-size: 11px; padding: 4px 8px; left: 6px; bottom: 6px; max-width: calc(100% - 12px); }
+  .auto-scroll-row .rest-card.rc .rc-fav, .rest-grid-scroll .rest-card.rc .rc-fav { top: 4px; right: 4px; }
+  .auto-scroll-row .visuel-vide-initiale, .rest-grid-scroll .visuel-vide-initiale { font-size: 54px; }
+  .auto-scroll-row .visuel-vide-emoji, .rest-grid-scroll .visuel-vide-emoji { font-size: 20px; right: 8px; bottom: 8px; }
+}
