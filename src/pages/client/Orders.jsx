@@ -9,6 +9,7 @@ import { useCart } from '../../context/CartContext';
 import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
+import ClocheNotifications from '../../components/client/ClocheNotifications';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -229,6 +230,7 @@ export default function Orders() {
   return (
     <div>
       <h1 className="page-title">{titre}</h1>
+      <ClocheNotifications />
       {enCours.length > 0 && passees.length > 0 && <h2 className="suivi-section">{t('orders.sectionCurrent')}</h2>}
       {[...enCours, ...passees].map((o, rang) => (
         <Fragment key={o.id}>

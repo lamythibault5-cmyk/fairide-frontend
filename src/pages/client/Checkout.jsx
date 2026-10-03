@@ -17,6 +17,7 @@ import ChoixAdresse from '../../components/ChoixAdresse';
 import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, dateOuverture, paiementEnLigneOuvert, dateOuverturePaiementEnLigne } from '../../launch';
+import CodePromoCheckout from '../../components/client/CodePromoCheckout';
 import CheckoutConformite from '../../components/conformite/CheckoutConformite';
 import { manqueConformite } from '../../conformite';
 
@@ -57,6 +58,8 @@ export default function Checkout() {
   // vérifié à la saisie, déduit côté serveur à la création de la commande.
   const [giftCode, setGiftCode] = useState('');
   const [giftCheck, setGiftCheck] = useState(null);
+  // Code promo de commande appliqué (MON-6, CodePromoCheckout) : { code, discount, label } ou null.
+  const [codePromo, setCodePromo] = useState(null);
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
@@ -139,7 +142,8 @@ export default function Checkout() {
   const estimatedTotalBeforeBalance = fulfillmentType === 'delivery' ? totals.total : totals.subtotal;
   const paiementBloque = enLigneFerme && modeEmporter === 'online';
   const soldeUtilise = useBalance && !surPlaceChoisi;
-  const estimatedTotal = Math.max(0, estimatedTotalBeforeBalance - (soldeUtilise ? Math.min(user.balance || 0, estimatedTotalBeforeBalance) : 0));
+  const apresCodePromo = Math.max(0, +(estimatedTotalBeforeBalance - (codePromo?.discount || 0)).toFixed(2));
+  const estimatedTotal = Math.max(0, apresCodePromo - (soldeUtilise ? Math.min(user.balance || 0, apresCodePromo) : 0));
   const scheduleTimeOptions = scheduleDate ? getScheduleTimeOptions(scheduleDate) : [];
   const scheduledPreview = scheduleDate && scheduleTime
     ? new Date(`${scheduleDate}T${scheduleTime}:00`).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
@@ -209,6 +213,7 @@ export default function Checkout() {
           } : {}),
           useBalance: useBalance && !surPlace,
           giftVoucherCode: giftCheck?.valid ? giftCode.trim() : undefined,
+          promoCode: codePromo?.code || undefined,
           allergyRequest: conformite.allergyRequest.trim() || undefined, ageDeclaration: conformite.ageDeclaration || undefined,
           ...(conformite.termsNeeded ? { acceptTerms: conformite.acceptTerms, termsVersion: conformite.termsVersion } : {}),
           // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
@@ -548,6 +553,8 @@ export default function Checkout() {
                 </p>
               )}
             </details>
+            <CodePromoCheckout token={token} toast={toast} subtotal={totals.subtotal} deliveryFee={fulfillmentType === 'delivery' ? Math.max(0, totals.deliveryFee - totals.deliveryDiscount) : 0}
+              payOnSite={surPlaceChoisi} applique={codePromo} onChange={setCodePromo} />
             <CheckoutConformite restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
           </div>
           )}
@@ -701,6 +708,7 @@ export default function Checkout() {
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
+              {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(pendingOrder.total)}</span></div>
             </div>
